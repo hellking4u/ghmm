@@ -183,7 +183,7 @@ class HMMState( xmlutil.HMMState ):
 class HMMClass( xmlutil.HMMClass ):
     def __init__(self):
         xmlutil.HMMClass.__init__(self)
-   
+	
     def edit(self, master):        
         mapedit = MapEditor(master, [self.name, self.desc], ['code','name','desc'], [3,5,35])
         print mapedit.result
@@ -392,8 +392,11 @@ class HMMEditor(SAGraphEditor):
     def OpenGraph(self):
 
         self.DeleteDrawItems() # clear screen
-        self.hasGraph = 0
-
+	if self.hasGraph == 1:
+	    self.HMM.G.Clear()
+	    self.hasGraph = 0
+	    
+	  
 	file = askopenfilename(title="Open HMM",
 			       defaultextension=".xml",
 			       filetypes = (("XML", ".xml"),
@@ -407,7 +410,6 @@ class HMMEditor(SAGraphEditor):
 	    e = extension(file)
             
 	    if e == 'xml':
-		# XXX self.HMM.G.Clear()
 		self.HMM.OpenXML(file)
 	    else:
 		print "Unknown extension"
@@ -560,7 +562,7 @@ class HMMEditor(SAGraphEditor):
                 d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr)
 
                 # We only show the label out of the editable items
-                self.HMM.G.labeling[v] = "%s\n%s" % (self.HMM.state[v].id, self.HMM.state[v].label) # XXX Hack Aaaargh!
+                self.HMM.G.labeling[v] = ValidatingString("%s" % (self.HMM.state[v].label)) # XXX Hack Aaaargh!
                 self.UpdateVertexLabel(v, 0)
                 self.HMM.id2index[self.HMM.state[v].id] = v
 
@@ -603,8 +605,13 @@ class HMMEditor(SAGraphEditor):
     
     def AddVertexCanvas(self,x,y):
 	v = GraphDisplay.AddVertexCanvas(self, x, y)
-        print "AddVertex at ",x,y
+        print "AddVertex ", v, "at ",x,y
         self.HMM.AddState(v)
+	
+    def MoveVertex(self,v,x,y,doUpdate=None):
+	GraphDisplay.MoveVertex(self, v,x,y,doUpdate)
+	state = self.HMM.state[v] # transfer the coordinate
+	self.HMM.G.embedding[state.index] = self.G.embedding[v]
 
     def AddEdge(self,tail,head):
         GraphDisplay.AddEdge(self,tail,head)
@@ -624,11 +631,17 @@ class HMMInformer(GraphInformer):
         self.itsHMM = itsHMM
 
     def VertexInfo(self,v):
-        state = self.itsHMM.state[v]
-        msg = "State '%s' class=%s (%s:%s) order=%d" % (state.id, state.state_class,
-                                                        self.itsHMM.hmmClass.name[state.state_class],
-                                                        self.itsHMM.hmmClass.desc[state.state_class],
-                                                        state.order)
+	""" v is the vertex id on the canvas, mapping to internal representation must be done from v->index """
+	state = self.itsHMM.state[v]
+	try:
+	    self.itsHMM.hmmClass.name[state.state_class]
+	    msg = "State '%s' class=%s (%s:%s) order=%d" % (state.id, state.state_class,
+							    self.itsHMM.hmmClass.name[state.state_class],
+							    self.itsHMM.hmmClass.desc[state.state_class],
+							    state.order)
+	except:
+	    msg = "State '%s' class=%s" % (state.id, state.state_class)
+							    
         if state.order == 0 and state.emissions != []:
             emsg = ""
             for e in state.emissions:
@@ -641,20 +654,24 @@ class HMMInformer(GraphInformer):
         """ Display a list of transition probabilities for this edge
             (We only draw the edge once, not as many as a number of classes)
         """
+	
         tail_state = self.itsHMM.state[tail]        
         head_state = self.itsHMM.state[head]
         # p = self.itsHMM.G.edgeWeights[0][(tail, head)]
         transitions  = []
-        nr_classes = int(self.itsHMM.hmmClass.high())-int(self.itsHMM.hmmClass.low())+1
-        for cl in range(nr_classes):
-            if self.itsHMM.G.edgeWeights[cl].has_key( (tail,head) ):
-                transitions.append(self.itsHMM.G.edgeWeights[cl][(tail,head)])
-            else:
-                transitions.append(0.0)
+	if self.itsHMM.hmmClass.size > 1:
+	    nr_classes = int(self.itsHMM.hmmClass.high())-int(self.itsHMM.hmmClass.low())+1
+	    for cl in range(nr_classes):
+		if self.itsHMM.G.edgeWeights[cl].has_key( (tail,head) ):
+		    transitions.append(self.itsHMM.G.edgeWeights[cl][(tail,head)])
+		else:
+		    transitions.append(0.0)
 
-        plist = csvFromList( transitions )
-        msg = "Transition: '%s' -> '%s'(%2d):" % (tail_state.id, head_state.id, nr_classes)
-        msg = msg + plist
+	    plist = csvFromList( transitions )
+	    msg = "Transition: '%s' -> '%s'(%2d):" % (tail_state.id, head_state.id, nr_classes)
+	    msg = msg + plist
+	else:
+	    msg = "Transition: '%s' -> '%s'" % (tail_state.id, head_state.id)
         return msg
        
         

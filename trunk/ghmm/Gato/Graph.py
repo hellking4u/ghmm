@@ -98,6 +98,17 @@ class Graph:
 	self.invAdjLists[id] = []
 	return id
 
+    def Clear(self):
+	""" Delete all vertices and edges from the subgraph. """
+	self.vertices         = [] 
+	self.adjLists         = {}
+	self.invAdjLists      = {}   # Inverse Adjazenzlisten
+	self.size          = 0
+	self.totalWeight   = 0
+	self.edgeWeights      = {}   # Dictionary of edge labellings
+	self.edgeWeights[0]   = EdgeWeight(self)
+	self.vertexWeights.clear()   # None by default
+
     def DeleteVertex(self,v):
 	""" *Internal* Delete vertex v """
         #changes by Utz: only delete if used!
@@ -444,16 +455,15 @@ class SubGraph(Graph):
 	    self.size = self.size - 1
 	else:
 	    raise NoSuchEdgeError
-
-    def Clear(self):
-	""" Delete all vertices and edges from the subgraph. """
-	self.vertices         = [] 
-	self.adjLists         = {}
-	self.invAdjLists      = {}   # Inverse Adjazenzlisten
-	self.size = 0
-	self.totalWeight   = 0
 	
-
+    def Clear(self):
+	 """ Delete all vertices and edges from the subgraph. """
+	 self.vertices         = [] 
+	 self.adjLists         = {}
+	 self.invAdjLists      = {}   # Inverse Adjazenzlisten
+	 self.size          = 0
+	 self.totalWeight   = 0
+	
     def GetNextVertexID(self):
 	""" *Internal* safeguard """
         log.error("Induced Subgraph -> GetNextVertexID should never have been called")

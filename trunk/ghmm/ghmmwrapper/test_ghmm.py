@@ -2,6 +2,11 @@ from ghmm import *
 
 print "*** EmissionSequence / SequenceSet ***"
 
+
+HMMOpen = HMMOpenFactory(GHMM_FILETYPE_XML)
+m4 = HMMOpen('/project/algorithmics/Sopra/python/simple2.xml')
+print m4
+
 alph = IntegerRange(0,7)
 
 print "list input EmssionSequence:"
@@ -125,9 +130,9 @@ l = SequenceSetOpen(F,"seq_test.sqd")
 
 print "*** Normalizing ***"
 m3 = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
-                       [[10.0,10.0,10.0],[0.0,0.0,100.0],[25.0,25.0,50.0]],
-                       [[10.0,0.0,010.0,0.0],[0.0,3.5,3.5,0.0], [5.0,5.0,5.0,5.0]],
-                       [1.0,0,0])
+                     [[10.0,10.0,10.0],[0.0,0.0,100.0],[25.0,25.0,50.0]],
+                     [[10.0,0.0,010.0,0.0],[0.0,3.5,3.5,0.0], [5.0,5.0,5.0,5.0]],
+                     [1.0,0,0])
 
 #print m3
 
@@ -144,6 +149,4 @@ print "Writing to file:"
 #HMMwriteList("er.log",mList)
 
 
-
-
-
+print m3
