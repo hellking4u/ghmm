@@ -355,11 +355,10 @@ class DiscreteHMMAlphabet(DOM_Map):
 	return self.name.keys()
 
     def buildAlphabets(self, nrOfSymbols):
-	""" Only fixed to 5 symbols for the moment """ 
-	alphas = range(1, nrOfSymbols+1)
+	alphas = range(nrOfSymbols+1)
 	alphas = map( lambda x: 'a'+ str(x), alphas)
-	for code in range(1,nrOfSymbols+1):
-	    self.addCode( code, alphas[code-1], desc = None)
+        for code in range(nrOfSymbols+1):
+	    self.addCode( code, alphas[code], desc = None)
  
 	
 class HMMClass(DOM_Map):
