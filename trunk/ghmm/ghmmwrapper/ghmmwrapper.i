@@ -22,15 +22,101 @@
 #include <ghmm/reestimate.h>
 #include <ghmm/foba.h>
 #include <ghmm/scluster.h>
+#include <ghmm/mes.h>
 #include "sdclass_change.h"
-#include "read_cxml.h"
+#include "tmtest.h"
+
+// #include "read_cxml.h"
+
+// #include "tmtest.h"
+
 %}
 
 %include carrays.i
 %include cmalloc.i
 %include cpointer.i
 %include cstring.i
-%pointer_functions(int, intp)
+// %pointer_functions(int, intp)
+
+%include constraints.i
+%include exception.i    
+%include typemaps.i
+
+// %apply Pointer NONNULL { int * };
+
+
+
+
+/*
+%exception test_free {
+  printf("Testing for NULL:\n");
+  printf("pointer : %p \n", (void *)args );
+
+  printf("value: %d \n", arg[0] );
+  
+  if (arg == NULL) {
+     PyErr_SetString(PyExc_TypeError,"No NULL pointers !");
+     return NULL;
+  } 
+  printf("Argument not NULL\n");
+  $action
+  
+}
+
+*/
+
+%apply Pointer NONNULL { int *test_pt }
+void test_free(int *test_pt );  
+
+
+%exception malloc {
+  $action
+  if (!result) {
+     PyErr_SetString(PyExc_MemoryError,"Not enough memory");
+     return NULL;
+  }
+}
+void *malloc(size_t nbytes);
+
+/* %exception free {
+  printf("Testing for NULL:\n");
+  
+  if (!args) {
+     PyErr_SetString(PyExc_TypeError,"No NULL pointers !");
+     return NULL;
+  } 
+  printf("Argument not NULL\n");
+  $action
+  
+} */ 
+
+%inline %{         
+    void *get_null(){
+        void *p = NULL;
+        return p;
+    }              
+
+%}                   
+
+%apply Pointer NONNULL { void *ptr }
+void free(void *ptr); 
+
+
+// Constraints on GHMM date types - no NULL pointers as function arguments
+%apply Pointer NONNULL { model * };
+%apply Pointer NONNULL { model ** };
+%apply Pointer NONNULL { smodel * };
+%apply Pointer NONNULL { smodel ** };
+%apply Pointer NONNULL { state * };
+%apply Pointer NONNULL { sstate * };
+%apply Pointer NONNULL { sequence_t * };
+%apply Pointer NONNULL { sequence_t ** };
+%apply Pointer NONNULL { sequence_d_t * };
+%apply Pointer NONNULL { sequence_d_t ** };
+%apply Pointer NONNULL { scluster * };
+ 
+// Constraints on general C data types - no NULL pointers as function arguments
+%apply Pointer NONNULL { int *, double *, int **, double **, void * };
 
 
 /*=============================================================================================
@@ -420,29 +506,6 @@ struct model {
 };
 typedef struct model model;
 
-/** @name model_direct
-    The complete HMM. Keeps the model parameters in a matrix form. 
-*/
-struct model_direct {
-  /** Number of states */
-  int N;
-  /** Number of outputs */  
-  int M;
-  /** Prior for the a priori probability for the model.
-      Gets the value -1 if no prior defined. */
-  double prior;
-  /** Transition matrix  */
-  double **A;
-  /** Output matrix */
-  double **B;
-  /** Initial matrix */
-  double* Pi;
-  /** A vector to know the states where the output should not be trained.
-      Default value is 0 for all states. */
-  int *fix_state;
-};
-typedef struct model_direct model_direct;
-
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -465,14 +528,6 @@ extern model** model_read(char *filename, int *mo_number);
 */
 void model_print(FILE *file, model *mo); 
 
-/**
-   Reads in a model, where the model parameters are explicit given in
-   matrix form. Memory allocation for the model is also done here.
-   @return pointer to the model
-   @param s:       scanner
-   @param multip:  multiplicity; gives how many copies should 
-   be made of the model */
-extern model*  model_direct_read(scanner_t *s, int *multip);
 
 /**
    Produces simple left-right models given sequences. 
@@ -569,8 +624,7 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
 extern int reestimate_baum_welch(model *mo, sequence_t *sq);
-// XXX need source code XXX 
-/// extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
 /******* Viterbi (viterbi.c)*******/
 /**
@@ -657,10 +711,6 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
   /* extract pointer to a state */
   state *get_stateptr(state *ary, int index) { return ary + index; }
   
-
-  void call_model_free(model *mo) {
-    model_free(&mo);
-  }
 
   void call_model_print(char *filename, model *mo) {
     FILE *fp=fopen(filename, "a");
@@ -1271,7 +1321,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
   void free_smosqd_t(smosqd_t *s){
 	  if(s){
-		free(s);
+		m_free(s);
 	 }	
   }	  
   		
@@ -1295,7 +1345,10 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 
   int  get_arrayint(int  *ary, int index) { return ary[index]; }
 
-  void free_arrayi(int *pt) { free(pt); }
+  void free_arrayi(int *pt ) { 
+          m_free(pt); 
+          (pt) = NULL;
+  }
 
   /************ Create and access double[size] arrays ************/
  
@@ -1341,10 +1394,6 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
  
   double **double_2d_array(int rows, int cols) {
-    //int i;
-    //double **array = (double **) malloc(rows*sizeof(double*));
-    //for(i=0; i < rows; i++)
-    //  array[i] = double_array(cols);
     return matrix_d_alloc(rows,cols);
   }
   
@@ -1386,8 +1435,6 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
      double ** res = (double **) malloc(sizeof(double*));
 	 res[0] = array;
 	 return res;
-	  
-	//return (double**) array;
   }	  
   
   void free_2darrayd(double **pt,int row) { matrix_d_free(&pt,row); }
@@ -1414,15 +1461,14 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 	 int ** res = (int **) malloc(sizeof(int*));
 	 res[0] = array;
 	 return res; 
-	 
-	 //return (int**) array;
   }	 
   
-  void freearray(void *pt)  { free(pt); }
-
   void free_2darrayint(int **pt, int rows,int cols) {  matrix_i_free(&pt, rows); }
 
- 
+
+  /**************** generalized deallocation *******************/  
+  void freearray(void *pt)  { m_free(pt); }
+   
 %}
 
 
