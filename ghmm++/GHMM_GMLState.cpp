@@ -61,6 +61,13 @@ GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDiscreteModel>(my_model, my_inde
   m_countme         = 0;
 }
 
+
+GHMM_GMLState::~GHMM_GMLState() {
+  if (emission != NULL) {
+    delete emission;
+  }
+}
+
 const char* GHMM_GMLState::toString() const {
   return "GHMM_GMLState";
 }
@@ -134,7 +141,7 @@ void GHMM_GMLState::fillState(sdstate* s) {
   s->countme = m_countme;
   s->fix = 0;
 
-  s->label = (char *)malloc(sizeof(label.c_str()));
+  s->label = (char *)malloc(strlen(label.c_str()) + 1);
   strcpy(s->label, label.c_str());
 }
 

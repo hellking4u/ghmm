@@ -63,7 +63,7 @@ public:
   GHMM_StateT* getMySelf() { return this; }
   
   /** Destructor. */
-  virtual ~GHMM_StateT() {}
+  ~GHMM_StateT() {}
 
   /** */
   void changeOutEdge(int target, double prob);
@@ -175,7 +175,10 @@ class GHMM_GMLState : public GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDis
   //GHMM_GMLState(GHMM_AbstractModel* my_model, int index, state* my_state);
   /** */
   GHMM_GMLState(GHMM_SWDiscreteModel* my_model, int index, sdstate* my_state);
-  
+
+  /** */
+  ~GHMM_GMLState();
+
   /** Returns name of class. */
   const char* toString() const;
 
