@@ -21,6 +21,12 @@ Emission::Emission()
   fix=0;
 }
 
+const char* Emission::toString() const
+{
+  return "Emission";
+}
+
+
 Emission::Emission(const string& tag, XMLIO_Attributes &attributes):
   XMLIO_ContentElementArrayObject<double,XMLIO_AttributedObject>(tag,attributes)
 {
@@ -28,7 +34,7 @@ Emission::Emission(const string& tag, XMLIO_Attributes &attributes):
   XMLIO_Attributes::const_iterator pos;
   /* madatory argument */  
   pos=attributes.find("State");
-  if (pos!=attributes.end())
+  if (pos==attributes.end())
     {
       cerr<<toString()<<"State id is missing!"<<endl;
     }
@@ -62,4 +68,9 @@ Emissions::Emissions()
 Emissions::Emissions(const string& tag, XMLIO_Attributes &attributes)
 {
   set_element_name("Emission");
+}
+
+const char* Emissions::toString() const
+{
+  return "Emissions";
 }

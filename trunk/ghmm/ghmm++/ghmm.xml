@@ -4,11 +4,12 @@
 Wunderschönes Hidden Markov Model
 
 <Graph id="hmm">
-<Node id="A"/>
-<Node id="B"/>
-<Edge id="a1" from="A" to="A"><Prob>1</Prob></Edge>
-<Edge id="a1" from="A" to="B"><Prob>1</Prob></Edge>
-<Edge id="a1" from="A" to="C"><Prob>1</Prob></Edge>
+ <Node id="A"/>
+ <Node id="B"/>
+ <Node id="C"/>
+ <Edge id="a1" from="A" to="A"><Prob>1</Prob></Edge>
+ <Edge id="a2" from="A" to="B"><Prob>1</Prob></Edge>
+ <Edge id="a3" from="A" to="C"><Prob>1</Prob></Edge>
 </Graph>
 
 <InitialStates>
@@ -18,21 +19,28 @@ Wunderschönes Hidden Markov Model
 </DiscretePD>
 </InitialStates>
 
+<Emissions>
+ <Emission State="A" fix="yes">1 2 3</Emission>
+ <Emission State="B">1 2 4</Emission>
+ <Emission State="C">4 5 6</Emission>
+</Emissions>
+
 <sequences type="int">
-<DiscretePD default_weight="1">
- <sequence id="10"><label>5</label> 1 2 3 4 </sequence>
- <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
- <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
- <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
-</DiscretePD>
+ <DiscretePD default_weight="1">
+  <sequence id="10"><label>5</label> 1 2 3 4 </sequence>
+  <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
+  <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
+  <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
+ </DiscretePD>
 </sequences>
 
 <sequences type="double">
-<DiscretePD default_weight="1">
- <sequence id="10"><label>5</label> 1.6 2 3 4 </sequence>
- <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
- <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
- <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
-</DiscretePD>
+ <DiscretePD default_weight="1">
+  <sequence id="10"><label>5</label> 1.6 2 3 4 </sequence>
+  <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
+  <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
+  <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
+ </DiscretePD>
 </sequences>
+
 </hmm>

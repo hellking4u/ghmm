@@ -24,7 +24,7 @@ int main()
   my_model_reader.read_file("ghmm.xml");
   if (my_model_reader.get_element()!=NULL)
     {
-      cout<<my_model_reader.toString()<<"found something: "<<endl;
+      cout<<my_model_reader.toString()<<" found something: "<<endl;
       my_model_reader.get_element()->print();
     }
   model* my_model=my_model_reader.get_element()->create_model();

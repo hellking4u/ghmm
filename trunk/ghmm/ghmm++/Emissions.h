@@ -32,8 +32,13 @@ namespace std {
 
       /** with attributes State and fix */
       Emission(const string& tag, XMLIO_Attributes &attributes);
+      /** */
+      virtual const char* toString() const;
+
     protected:
+      /** */
       string state;
+      /** */
       int fix;
     };
 
@@ -47,6 +52,10 @@ namespace std {
 
       /** sets the name of collected Elements to Emission */
       Emissions(const string& tag, XMLIO_Attributes &attributes);
+
+      /** */
+      virtual const char* toString() const;
+
     };
 
 #ifdef HAVE_NAMESPACES
