@@ -432,6 +432,7 @@ class HMMEditor(SAGraphEditor):
 
         self.DeleteDrawItems() # clear screen
 	if self.hasGraph == 1:
+            self.G.Clear()
 	    self.HMM.G.Clear()
 	    self.hasGraph = 0
 	    
@@ -488,7 +489,7 @@ class HMMEditor(SAGraphEditor):
 		    self.HMM.SaveAs(file)
 		    self.graphName = stripPath(file)
 		    self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
-		except:
+		except (xmlutil.NotValidHMMType, xmlutil.AlphabetErrorType):
 		    print "Cannot save due to error in the model: initial or alphabets."
             else:
                 self.fileName = file
@@ -729,12 +730,16 @@ class HMMInformer(GraphInformer):
         # p = self.itsHMM.G.edgeWeights[0][(tail, head)]
         transitions  = []
 	if self.itsHMM.hmmClass.size > 1:
+            
 	    nr_classes = int(self.itsHMM.hmmClass.high())-int(self.itsHMM.hmmClass.low())+1
 	    for cl in range(nr_classes):
-		if self.itsHMM.G.edgeWeights[cl].has_key( (tail,head) ):
-		    transitions.append(self.itsHMM.G.edgeWeights[cl][(tail,head)])
-		else:
-		    transitions.append(0.0)
+                if self.itsHMM.G.edgeWeights.has_key(cl):
+                    if self.itsHMM.G.edgeWeights[cl].has_key( (tail,head) ):
+                        transitions.append(self.itsHMM.G.edgeWeights[cl][(tail,head)])
+                    else:
+                        transitions.append(0.0)
+                else:
+                    transitions.append(0.0)
 
 	    plist = csvFromList( transitions )
 	    msg = "Transition: '%s' -> '%s'(%2d):" % (tail_state.id, head_state.id, nr_classes)
