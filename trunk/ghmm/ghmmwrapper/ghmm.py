@@ -197,7 +197,8 @@ class SequenceCannotBeBuild(GHMMError):
         self.message = message
     def __str__(self):
         return repr(self.message)    
- 
+
+
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain:
@@ -406,6 +407,7 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
 #Sequence, SequenceSet and derived  ------------------------------------------
 
 # XXX write to FASTA function
+# XXX check for seq_label existance
 
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
@@ -443,7 +445,7 @@ class EmissionSequence:
                 if  not path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
-                    self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
+                    self.cseq  = ghmmwrapper.seq_read(sequenceInput)
                 
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
                 if sequenceInput.seq_number > 1:
@@ -467,8 +469,7 @@ class EmissionSequence:
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
-				
-
+                
             elif isinstance(sequenceInput, str): # from file
                 # reads in the first sequence struct in the input file
                 if  not path.exists(sequenceInput):
@@ -491,6 +492,8 @@ class EmissionSequence:
     def __del__(self):
         "Deallocation of C sequence struct."
         
+        #print "__del__ EmissionSequence " + str(self.cseq)
+        
         self.cleanFunction(self.cseq)
         self.cseq = None
 
@@ -511,6 +514,19 @@ class EmissionSequence:
         
         else:
             raise IndexError    
+    
+    def getLabel(self):
+        if (self.emissionDomain.CDataType != "double"):
+            print "WARNING: Discrete sequences do not support sequence labels."
+        else:     
+            return ghmmwrapper.get_arrayl(self.cseq.seq_label,0)
+
+    def setLabel(self,value):
+        if (self.emissionDomain.CDataType != "double"):
+            print "WARNING: Discrete sequences do not support sequence labels."
+        else:     
+            ghmmwrapper.set_arrayl(self.cseq.seq_label,0,value)
+    
     
     def __str__(self):
         "Defines string representation."
@@ -715,6 +731,19 @@ class SequenceSet:
         seq.seq_number = 1
         return EmissionSequence(self.emissionDomain, seq)        
 
+    def getLabel(self,index):
+        if (self.emissionDomain.CDataType != "double"):
+            print "WARNING: Discrete sequences do not support sequence labels."
+        else:
+            return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
+            
+    def setLabel(self,index,value):
+        if (self.emissionDomain.CDataType != "double"):
+            print "WARNING: Discrete sequences do not support sequence labels."
+        else:     
+            ghmmwrapper.set_arrayl(self.cseq.seq_label,index,value)
+    
+    
     def merge(self, emissionSequences): # Only allow EmissionSequence?
         """ 
              Merge 'emisisonSequences' with 'self'.
