@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
       gsl_rng_set(RNG,atoi(argv[5]));
     else {
       /* random init */
-      gsl_rng_timeseed(RNG); //previously: gsl_rng_set(RNG,0);
+      gsl_rng_timeseed(RNG); /*previously: gsl_rng_set(RNG,0); */
     }
 
     printf("Clustering Sequences with start partition\n");

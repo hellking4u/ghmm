@@ -62,14 +62,6 @@ static int randvar_read_PHI() {
   }
   /* printf("%.4f\n", PHI[PHI_len-1]); */
 
-  /* TEST: Datei PHI_001_16.dat liest Werte fuer positive x,
-           Programm aber im Moment ausgelegt fuer Stuetzstellen x <= 0
-           bzw. PHI_001_20.dat */
-  //{ int i;
-  //  for (i = 0; i < PHI_len; i++)
-  //    PHI[i] = 1 - PHI[i]; 
-  //}
-  
   res = 0;;
 STOP:
   scanner_free(&s);
@@ -156,7 +148,6 @@ double randvar_get_xPHIless1() {
     for (x = (PHI_len-1)*X_STEP_PHI, i=PHI_len-1; i > 0; x -= X_STEP_PHI, i--)
       if (randvar_get_PHI(-x) > 0.0)
 	break;
-    //x_PHI_1 = x;
     /* Modifikation: x genau zwischen 2 Stuetzstellen! */
     x_PHI_1 = x - (double)X_STEP_PHI/2.0;
   }
@@ -360,19 +351,6 @@ double randvar_std_normal(int seed) {
 
   return( gsl_ran_gaussian(RNG, 1.0) );
 
-  /* eigene Variante */
-  if (first == 0) {
-    U = gsl_rng_uniform(RNG);
-    V = -log(gsl_rng_uniform(RNG));
-    h1 = sqrt(2*V);
-    h2 = 2*PI*U;
-    first = 1;
-    return(h1 * cos(h2));
-  }
-  else {
-    first = 0;
-    return(h1 * sin(h2));
-  }
 # undef CUR_PROC
 } /* randvar_std_normal */
 
@@ -417,10 +395,9 @@ double randvar_normal_pos(double mue, double u, int seed) {
   
   /** Inverse Transformierung mit restricted sampling nach Fishman */
   sigma = sqrt(u);
-  U = gsl_rng_uniform(RNG);               //gsl_ran_flat(RNG,0,1) ???
+  U = gsl_rng_uniform(RNG);               /*gsl_ran_flat(RNG,0,1) ??? */
   Feps = randvar_get_PHI(-(EPS_NDT+mue)/sigma);
   Us = Feps + (1-Feps)*U;
-  //t = m_min(U,(1-U));
   /* num. besser: 1-Us = 1-Feps - (1-Feps)*U, deshalb: 
      Feps1 = 1-Feps, Us1 = 1-Us */
   Feps1 = randvar_get_PHI((EPS_NDT+mue)/sigma);

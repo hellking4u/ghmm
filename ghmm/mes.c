@@ -475,7 +475,7 @@ void mes_fformat( char* txt, char* logfile, int line, char* proc_info ) {
     mes_file_win( logfile );
   } 
   if( line >= 0 ) mes_aux( MES_FLAG_FILE_WIN, ": line %d", line );
-  if( mes ) {
+  if( logfile && strlen(txt) ) {
     mes_file_win( " (" );
     mes_file_win( txt );
     mes_file_win( ")\n" );

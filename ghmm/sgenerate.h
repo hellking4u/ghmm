@@ -18,7 +18,8 @@ __copyright__
    @name generation and extention of sequences from shmm
 */
 
-//@{
+/**@{
+ */
 
 /**
  Kopiert von cgenerate.h
@@ -84,6 +85,6 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
 */
 double sgenerate_next_value(smodel *smo, double *O, const int len);
 
-//@} sgenerate section
+/*@} sgenerate section */
 
 #endif /* SGENERATE_H */

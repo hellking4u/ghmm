@@ -348,6 +348,8 @@ static char* mprintf_get_next( char** format, int* flen, int* dlen, va_list* ap 
     break;    
     
   } /* while( 1 ) */
+  /* "mprintf.c", line 350: warning: end-of-loop code not reached   */
+  /* SUN cc complains, but I am not Frank Nübel.... (achim 010422 ) */
   
   /* update format and flen: */
   *flen  -= src - *format ;

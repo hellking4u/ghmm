@@ -15,7 +15,7 @@ __copyright__
    @name root finder
  */
 
-//@{
+/*@{ */
 
 /**
    brent root finding algorithm.
@@ -33,5 +33,6 @@ double zbrent_AB(double (*func)(double, double, double, double),
 		 double x1, double x2, double tol, double A, double B, 
 		 double eps);
 
-//@}
+/*@} */
 #endif
+
