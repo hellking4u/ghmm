@@ -1,0 +1,116 @@
+/*
+ * created: 05 Feb 2002 by Peter Pipenbacher
+ * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
+ * file   : $Source$
+ * $Id$
+ */
+
+#ifndef _GHMM_CONTINUOUSMODEL_H
+#define _GHMM_CONTINUOUSMODEL_H 1
+
+#include <vector>
+#include <map>
+#include <ghmm/smodel.h>
+#include <ppghmm++/GHMM_AbstractModel.h>
+
+
+#ifdef HAVE_NAMESPACES
+namespace std {
+#endif
+
+class GHMM_ContinuousModel;
+class GHMM_Sequences;
+class GHMM_State;
+class GHMM_Transition;
+
+/** */
+class GHMM_ContinuousModel: public GHMM_AbstractModel {
+
+ public:
+
+  /** Just for reading from xml file. c_data is left uninitialized. */
+  GHMM_ContinuousModel(XMLIO_Attributes& attrs);
+  /** 
+      Constructor.
+      @param N       Number of states
+      @param M       Number of output densities per state
+      @param cos     smodel includes continuous model with one transition matrix 
+                     (cos  is set to 1) and an extension for models with several matrices
+                     (cos is set to a positive integer value > 1).
+      @param density Flag for density function. 0: normal density, 1: truncated normal 
+                     density, 2: approximated normal density.
+      @param prior   prior for a priori prob. of the model. -1 means no prior specified (all
+                     models have equal prob. a priori. 
+  */
+  GHMM_ContinuousModel(int N, int M, int cos, density_t density, double prior);
+  /** Destructor. */
+  virtual ~GHMM_ContinuousModel();
+
+  /** Returns name of class. */
+  virtual const char* toString() const;
+
+  /* Returns state with given index. */
+  sstate* getState(int index) const;
+  /** 
+      Produces sequences to a given model. All memory that is needed for the 
+      sequences is allocated inside the function. It is possible to define
+      the length of the sequences global (global_len > 0) or it can be set 
+      inside the function, when a final state in the model is reach (a state
+      with no output). If the model has no final state, the sequences will
+      have length MAX_SEQ_LEN.
+      @return             pointer to an array of sequences
+      @param seed:        initial parameter for the random value generator
+                          (an integer). If seed == 0, then the random value
+			  generator is not initialized.
+      @param global_len:  length of sequences (=0: automatically via final states)
+      @param seq_number:  number of sequences
+      @param label:       label tag
+      @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
+  */
+  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number, long label, int Tmax);
+  /**
+     Writes the model in matrix format.
+     @param file: output file
+  */
+  virtual void print(FILE *file);
+  /**
+     Baum-Welch Algorithm for SHMMs.
+     Training of model parameter with multiple double sequences (incl. scaling).
+     New parameters set directly in hmm (no storage of previous values!).
+     @return           0/-1 success/error
+     @param seq        sequences used for training.
+     @param logp       calculated log likelihood.
+     @param eps        leave reestimation loop if diff. between successive logp values 
+                       is smaller than eps.
+     @param max_iter   max. no of iterations. 
+  */
+  int reestimate_baum_welch(GHMM_Sequences* seq, double* logp, double eps, int max_iter);
+  /** */
+  int getStateID(const string& id);
+
+  /** */
+  virtual void XMLIO_finishedReading();
+  /** */
+  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+
+  /** C Model. */
+  smodel* c_model;
+  /** */
+  vector<GHMM_Transition*> transitions;
+
+
+ private:
+
+  /** */
+  vector<GHMM_State*> states;
+  /** */
+  density_t density;
+  /** */
+  map<string,int> state_by_id;
+};
+
+#ifdef HAVE_NAMESPACES
+}
+#endif
+
+#endif /* _GHMM_CONTINUOUSMODEL_H */
