@@ -85,8 +85,8 @@ def csvFromList(list, perRow = None):
         for start in xrange(0, len(list), perRow):
             result += string.join(map(str,list[start:start+perRow]), ', ') + ',\n'
         return result[0:len(result)-2]
+        
 
-    
 class ValidStringEditor(editor.StringEditor):
 
     require_right_menu = 0
@@ -295,13 +295,13 @@ class HMMEditor(SAGraphEditor):
         b.bind("<Enter>", lambda e, gd=self:gd.UpdateInfo('Edit Properties'))
 
         # disable the EditProperties button
-        b = Radiobutton(extra, width=32, padx=px, pady=py, 
-                        text='Edit State', 
-                        command=self.ChangeTool,
-                        var = self.toolVar, value='EditState', indicator=0,
-                        image=self.editIcon)
-        b.grid(row=6, column=0, padx=2, pady=2)
-        b.bind("<Enter>", lambda e, gd=self:gd.UpdateInfo('Edit State'))
+        #b = Radiobutton(extra, width=32, padx=px, pady=py, 
+        #                text='Edit State', 
+        #                command=self.ChangeTool,
+        #                var = self.toolVar, value='EditState', indicator=0,
+        #               image=self.editIcon)
+        #b.grid(row=6, column=0, padx=2, pady=2)
+        #b.bind("<Enter>", lambda e, gd=self:gd.UpdateInfo('Edit State'))
 
         GraphEditor.CreateWidgets(self)
 
@@ -388,7 +388,9 @@ class HMMEditor(SAGraphEditor):
                                                          "Enter the number of output symbols")
                 for i in xrange(nrOfSymbols):
                     self.HMM.G.vertexWeights[i] = VertexWeight(0.0)
-
+		
+		self.HMM.hmmAlphabet.buildAlphabets(nrOfSymbols)
+		
     def OpenGraph(self):
 
         self.DeleteDrawItems() # clear screen
@@ -442,9 +444,12 @@ class HMMEditor(SAGraphEditor):
             ext = string.lower(os.path.splitext(file)[1])
             if ext == '.xml':
                 self.fileName = file
-                self.HMM.SaveAs(file)
-                self.graphName = stripPath(file)
-                self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
+		try:
+		    self.HMM.SaveAs(file)
+		    self.graphName = stripPath(file)
+		    self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
+		except:
+		    print "Cannot save due to error in the model: initial or alphabets."
             else:
                 self.fileName = file
                 self.HMM.SaveAsGHMM(file)

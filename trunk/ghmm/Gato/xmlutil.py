@@ -291,6 +291,22 @@ class DOM_Map:
     def buildList(self):
 	return self.name.keys()
      
+# -------------------------------------------
+#  Exceptions
+
+class HMMEdError(Exception):
+    def __init__(self, message):
+	print "\n\n Unknown error types. Please report \n\n"
+	
+class NotValidHMMType(HMMEdError):
+    def __init__(self,message):
+       print "\n\n Probabilities missing xception: " + str(message) + "\n"
+
+class AlphabetErrorType(HMMEdError):
+    def __init__(self,message):   
+        print "\n\n Alphabet exception: " + str(message) + "\n"
+	
+	
 class DiscreteHMMAlphabet(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
@@ -308,7 +324,18 @@ class DiscreteHMMAlphabet(DOM_Map):
     def toDOM(self, XMLDoc, XMLNode):
         hmmalphabet = XMLDoc.createElement("hmm:alphabet")
         hmmalphabet.setAttribute('hmm:type', 'discrete')
-        DOM_Map.toDOM(self, XMLDoc, hmmalphabet)
+	hmmalphabet.setAttribute('hmm:low', "%s" % 0)
+        hmmalphabet.setAttribute('hmm:high', "%s" % (self.size()-1))
+        map = XMLDoc.createElement("map")  
+        for key in self.name.keys():
+            symbol = XMLDoc.createElement("symbol")
+            symbol.setAttribute('code', "%s" % key)
+            if self.hasDesc and self.desc[key] != "":
+                symbol.setAttribute('desc', "%s" % self.desc[key])
+            writeContents(XMLDoc, symbol, "%s" % self.name[key])
+            map.appendChild(symbol)
+        hmmalphabet.appendChild(map)
+	#  DOM_Map.toDOM(self, XMLDoc, hmmalphabet)
         XMLNode.appendChild(hmmalphabet)
 
     def toGHMM(self, XMLDoc, XMLNode):
@@ -318,7 +345,11 @@ class DiscreteHMMAlphabet(DOM_Map):
             alphabet.setAttribute('id', "%s" % key)
             hmmalphabet.appendChild(alphabet)
         XMLNode.appendChild(hmmalphabet)
-        
+      
+    def buildAlphabets(self, nrOfSymbols):
+	for code in range(1,nrOfSymbols):
+	    self.addCode( code, code, desc = None)
+    
     def size(self):
         return len(self.name.keys())
     
@@ -635,7 +666,19 @@ class HMM:
                 for cl in range(nr_classes):
                     self.G.edgeWeights[cl][(i,j)] = p[cl]
 
-
+    def modelCheck(self):
+	
+        # Compute sums of initial probabilities for renormalization 
+        initial_sum = 0.0
+        for s in self.state:
+            initial_sum = initial_sum + self.state[s].initial
+	
+	if initial_sum == 0.0:
+	    raise NotValidHMMType("Initial state is not specified.")
+	    
+	if self.hmmAlphabet.size() == 0.0: 
+	    raise AlphabetErrorType("Alphabet object is empty. You must create alphabet before saving.")
+	
     def toDOM(self, XMLDoc, XMLNode):
         graphml = XMLDoc.createElement("graphml")
         XMLNode.appendChild(graphml)
@@ -750,6 +793,7 @@ class HMM:
 	    # dom.unlink()
 
     def WriteXML(self, fileName):
+	self.modelCheck()   # raise exceptions here
         doc = xml.dom.minidom.Document()
         self.toDOM(doc, doc)
         file = open(fileName, 'w')
@@ -759,6 +803,7 @@ class HMM:
         doc.unlink()
 
     def WriteGHMM(self, fileName):
+	self.modelCheck()   # raise exceptions here
         doc = xml.dom.minidom.Document()
         ghmm = doc.createElement("ghmm")
         doc.appendChild(ghmm)
