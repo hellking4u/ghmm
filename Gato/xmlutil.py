@@ -208,7 +208,8 @@ class XMLElementWriter:
 
                 if XMLNode.childNodes[-1].nodeType!=node.TEXT_NODE:
                     writer.write("%s</%s>%s" % (indent,XMLNode.nodeName,newl))
-                else:  writer.write("</%s>%s" % (XMLNode.nodeName,newl))
+                else:
+                    writer.write("</%s>%s" % (XMLNode.nodeName,newl))
             else:
                 writer.write("/>%s"%(newl))
                      
@@ -390,10 +391,8 @@ class HMMState:
         self.index = nodeIndex # The node index in the underlying graph
         self.id    = ValidatingString("None") # identification by the canvas, not always the same
 	
-	self.state_class = DefaultedInt()
-	self.state_class.setDefault(0,'')
-	
-        # XXX self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
+	self.state_class = PopupableInt(0)
+        self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
 
 	self.order = DefaultedInt()
         self.order.setDefault(1, 0)
@@ -418,7 +417,7 @@ class HMMState:
         self.editableAttr = ['label', 'initial', 'order', 'background']
         self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
         
-    editableAttr = ['label', 'initial']
+    editableAttr = ['label', 'initial', 'state_class', 'order', 'background']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
     # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
@@ -453,15 +452,14 @@ class HMMState:
             dataValue = data.firstChild.nodeValue
 
             #print dataValue
-            
-            #  if dataValue == None: # use default Value
-            #     self.state_class = typed_assign(self.state_class, int(0))
-            #  else:
-            #      self.state_class = typed_assign(self.state_class, int(dataValue))
-
+                       
             if dataKey == 'class':
-                self.state_class = typed_assign(self.state_class, int(0))
-                    
+                if len(self.itsHMM.hmmClass.name2code.keys()) == 1:
+                    key = self.itsHMM.hmmClass.name2code.keys()
+                    self.state_class = typed_assign(self.state_class, self.itsHMM.hmmClass.name2code[key[0]])
+                else:
+                    self.state_class = typed_assign(self.state_class, int(dataValue)) # code for the state class
+
             elif  dataKey == 'label':
                 self.label = type(self.label)(dataValue.encode('ascii', 'replace'))
 
