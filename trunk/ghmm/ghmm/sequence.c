@@ -814,7 +814,7 @@ void sequence_clean(sequence_t *sq) {
   m_free(sq->seq_label);
   m_free(sq->seq_id);
   m_free(sq->seq_w);
-  
+  m_free(sq->states);
   sq->seq_number = 0;
   sq->total_w = 0.0;
 } /* sequence_clean */
@@ -848,6 +848,7 @@ int sequence_free(sequence_t **sq) {
   m_free((*sq)->seq_label);
   m_free((*sq)->seq_id);
   m_free((*sq)->seq_w);
+  m_free((*sq)->states);
   m_free(*sq);
   return 0;
 # undef CUR_PROC
