@@ -7,8 +7,8 @@
 __copyright__
 
 *******************************************************************************/
-
-
+#undef NDEBUG 
+#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include "sdmodel.h"
@@ -20,6 +20,9 @@ __copyright__
 #include "mes.h"
 #include "mprintf.h"
 #include "string.h"
+#include "ghmm.h"
+
+#define  __EPS 10e-6
 
 /*----------------------------------------------------------------------------*/
 static int sdmodel_state_alloc(sdstate *state, int M, int in_states,
@@ -135,31 +138,35 @@ sdmodel *sdmodel_copy(const sdmodel *mo) {
 # define CUR_PROC "sdmodel_copy"
   int i, j, k, nachf, vorg, m;
   sdmodel *m2 = NULL;
-  if(!m_calloc(m2, 1)) {mes_proc(); goto STOP;}
+  if (!m_calloc(m2, 1))        {mes_proc(); goto STOP;}
   if (!m_calloc(m2->s, mo->N)) {mes_proc(); goto STOP;}
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
-    vorg = mo->s[i].in_states;
+    vorg  = mo->s[i].in_states;
     if(!m_calloc(m2->s[i].out_id, nachf)) {mes_proc(); goto STOP;}
-    if(!m_calloc(m2->s[i].out_a, nachf)) {mes_proc(); goto STOP;}
+    m2->s[i].out_a = matrix_d_alloc(mo->cos, nachf);
     if(!m_calloc(m2->s[i].in_id, vorg)) {mes_proc(); goto STOP;}
-    if(!m_calloc(m2->s[i].in_a, vorg)) {mes_proc(); goto STOP;}
+    m2->s[i].in_a  = matrix_d_alloc(mo->cos, vorg);
+
     if(!m_calloc(m2->s[i].b, mo->M)) {mes_proc(); goto STOP;}
     /* Copy the values */
 
     for (j = 0; j < nachf; j++) {
-      for (k = 0; k < mo->cos; k++)
+      for (k = 0; k < mo->cos; k++) {
 	m2->s[i].out_a[k][j] = mo->s[i].out_a[k][j];
+      }
       m2->s[i].out_id[j] = mo->s[i].out_id[j];
     }
     for (j = 0; j < vorg; j++) {
-      for (k = 0; k < mo->cos; k++)
+      for (k = 0; k < mo->cos; k++) {
 	m2->s[i].in_a[k][j] = mo->s[i].in_a[k][j];
+      }
       m2->s[i].in_id[j] = mo->s[i].in_id[j];
     }
 
-    for (m = 0; m < mo->M; m++)
+    for (m = 0; m < mo->M; m++) {
       m2->s[i].b[m] = mo->s[i].b[m];
+    }
     m2->s[i].pi = mo->s[i].pi;
     m2->s[i].out_states = nachf;
     m2->s[i].in_states = vorg;
@@ -167,6 +174,14 @@ sdmodel *sdmodel_copy(const sdmodel *mo) {
   m2->N = mo->N;
   m2->M = mo->M;
   m2->prior = mo->prior;
+  m2->cos = mo->cos;
+  m2->model_type = mo->model_type;
+  if ( mo->model_type == kSilentStates ) {
+    assert( mo->silent != NULL );
+  }
+  if ( mo->get_class ) {
+    m2->get_class = mo->get_class;
+  }
   return(m2);
 STOP:
   sdmodel_free(&m2);
@@ -177,8 +192,8 @@ STOP:
 
 
 /*============================================================================*/
-sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
-				     long seq_number, int Tmax) {
+static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
+					      long seq_number, int Tmax) {
 # define CUR_PROC "sdmodel_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
@@ -340,6 +355,248 @@ STOP:
 } /* data */
   
 
+int  sdmodel_initSilentStates(sdmodel *mo) {
+#define CUR_PROC "sdmodel_initSilentStates"
+  int nSilentStates = 0;
+  int i, m;
+  double sum;
+  int *__silents;
+
+  if (!m_calloc(__silents, mo->N)) {mes_proc(); goto STOP;}
+  
+  for(i=0; i < mo->N; i++) {
+    for(m=0, sum=0; m < mo->M; m++) {
+      sum += mo->s[i].b[m];
+    }
+    if ( sum < __EPS ) {
+      __silents[i] = 1;
+      nSilentStates++;
+      fprintf(stderr, "Silent States %d\n", i);
+    } else
+      __silents[i] = 0;
+  }
+
+  if (nSilentStates) {
+    mo->model_type = kSilentStates;
+    mo->silent     = __silents;
+  } else {
+    mo->model_type = kNotSpecified;
+    mo->silent     = NULL;
+    m_free(__silents);
+  }
+  return(nSilentStates);
+STOP:
+  return(0);
+#undef CUR_PROC
+}
+
+/*============================================================================*/
+sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
+				     long seq_number, int Tmax) {
+# define CUR_PROC "sdmodel_generate_sequences"
+
+  /* An end state is characterized by not having out-going transition. */
+
+  sequence_t *sq = NULL;
+  int state, n, i, j, m,  reject_os, reject_tmax, badseq, trans_class;
+  double p, sum, osum = 0.0;
+  int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
+  int obsLength = 0;
+  double dummy = 0.0;
+  int silent_len = 0, badSilentStates = 0;
+  int	lastStateSilent = 0;
+
+  sq = sequence_calloc(seq_number);
+  if (!sq) { mes_proc(); goto STOP; }
+  if (len <= 0)
+    /* A specific length of the sequences isn't given. As a model should have
+       an end state, the konstant MAX_SEQ_LEN is used. */
+    len = (int)MAX_SEQ_LEN;
+  
+  if (seed > 0)
+    gsl_rng_set(RNG,seed);
+
+  // for (n = 0; n < seq_number; n++) {
+
+  n = 0;
+  reject_os = reject_tmax = 0;
+
+  while (n < seq_number) 
+    {
+      /* Test: A new seed for each sequence */
+      /*   gsl_rng_timeseed(RNG); */
+      stillbadseq = badseq = 0;
+      if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
+
+      /* Get a random initial state i */
+      p = gsl_rng_uniform(RNG);
+      sum = 0.0;
+      for (i = 0; i < mo->N; i++) {
+	sum += mo->s[i].pi;
+	if (sum >= p)
+	  break;
+      }
+      /* assert( !mo->silent[i] ); */
+
+      if ( mo->model_type == kSilentStates ) { 	
+	if ( !mo->silent[i] ) { /* first state emits */
+	  lastStateSilent = 0;
+	  silent_len      = 0;				 
+	  /* Get a random initial output m */
+	  p = gsl_rng_uniform(RNG);
+	  sum = 0.0;   
+	  for (m = 0; m < mo->M; m++) {
+	    sum += mo->s[i].b[m];
+	    if (sum >= p)
+	      break;
+	  }
+	  sq->seq[n][0] = m;
+	  state = 1;
+	} else { /* silent state: we do nothing, no output */
+	  state = 0;
+	  lastStateSilent = 1;
+	  silent_len      = 1;	
+	}
+      } else {
+	/* Get a random initial output m */
+	p = gsl_rng_uniform(RNG);
+	sum = 0.0;   
+	for (m = 0; m < mo->M; m++) {
+	  sum += mo->s[i].b[m];
+	  if (sum >= p)
+	    break;
+	}
+	sq->seq[n][0] = m;	
+	state = 1;
+      }
+
+      /* The first symbol chooses the start class */
+      trans_class = mo->get_class(&dummy,0,&osum);
+      while (state < len && 
+	     obsLength < Tmax ) {
+	/* Get a new state */
+	p = gsl_rng_uniform(RNG);
+	sum = 0.0;   
+	for (j = 0; j < mo->s[i].out_states; j++) {
+	  sum += mo->s[i].out_a[trans_class][j];   
+	  if (sum >= p) break;
+	}
+	
+	if (sum == 0.0) {
+	  if (mo->s[i].out_states > 0) {
+	    /* Repudiate the sequence, if all smo->s[i].out_a[class][.] == 0,
+	       that is, class "class" isn't used in the original data:
+	       go out of the while-loop, n should not be counted. */
+	    /* printf("Zustand %d, class %d, len %d out_states %d \n", i, class,
+	       state, smo->s[i].out_states); */
+	    badseq = 1;
+	    /* break; */
+	    
+	    /* Try: If the class is "empty", try the neighbour class;
+	       first, sweep down to zero; if still no success, sweep up to
+	       COS - 1. If still no success --> Repudiate the sequence. */
+	    if (trans_class > 0 && up == 0) {
+	      trans_class--;
+	      continue;
+	    } else {
+	      if (trans_class < mo->cos - 1) {
+		trans_class++;
+		up = 1;
+		continue;
+	      } else {
+		stillbadseq = 1;
+		break;
+	      }
+	    }
+	  } else {
+	    /* An end state is reached, get out of the while-loop */
+	    break;
+	  }
+	}
+	i = mo->s[i].out_id[j];
+
+	if (mo->model_type == kSilentStates && mo->silent[i]) { /* Get a silent state i */
+	  silent_len++;
+	  if (silent_len >= Tmax) {
+	    badSilentStates = 1;
+	    break;         /* reject this sequence */ 
+	  } else {
+	    badSilentStates = 0;
+	    lastStateSilent = 1;
+	  }
+	} else {
+	  lastStateSilent = 0;
+	  silent_len  = 0;
+	  /* Get a random output m from state i */
+	  p = gsl_rng_uniform(RNG);
+	  sum = 0.0;   
+	  for (m = 0; m < mo->M; m++) {
+	    sum += mo->s[i].b[m];
+	    if (sum >= p)
+	      break;
+	  }
+	  sq->seq[n][state] = m;
+	  state++;
+	}			
+	 
+	/* Decide the class for the next step */
+	trans_class = mo->get_class(&dummy,obsLength,&osum);
+	up = 0;
+	obsLength++;
+	
+      } /* while (state < len) , global_len depends on the data */  
+
+next_sequence:;   
+      if (badseq) {
+	reject_os_tmp++;
+      }
+      
+      if (stillbadseq) {
+	reject_os++;
+	m_free(sq->seq[n]);
+	/*  printf("cl %d, s %d, %d\n", class, i, n); */
+      } else {
+	if (badSilentStates) {
+	  reject_tmax++;
+	  m_free(sq->seq[n]);
+	} else {
+	  if ( obsLength > Tmax ) { 
+	    reject_tmax++;
+	    m_free(sq->seq[n]);
+	  } else {
+	    if (state < len)
+	      if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
+	    sq->seq_len[n] = state;
+	    /* sq->seq_label[n] = label; */
+	    /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
+	    n++;
+	  }
+	}
+      }
+	
+      /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
+      if (reject_os > 10000) {
+	mes_prot("Reached max. no. of rejections\n");
+	break;
+      }
+      if (!(n%1000)) printf("%d Seqs. generated\n", n);
+    } /* n-loop, while (n < seq_number) */
+	  
+
+  if (reject_os > 0) printf("%d sequences rejected (os)!\n", reject_os);
+  if (reject_os_tmp > 0) printf("%d sequences changed class\n", 
+				reject_os_tmp - reject_os);	
+  if (reject_tmax > 0) printf("%d sequences rejected (Tmax, %d)!\n", 
+			      reject_tmax, Tmax);
+
+  return(sq);
+ STOP:
+  sequence_free(&sq);
+  return(NULL);
+# undef CUR_PROC
+} /* data */
+
+
 /*============================================================================*/
 /* Some outputs */
 /*============================================================================*/
@@ -455,4 +712,5 @@ void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator,
   memcpy(dest->in_a,source->in_a,xxx);
   }*/ /* state_copy_to */
 
+		  	  
 /*===================== E n d   o f  f i l e  "model.c"       ===============*/

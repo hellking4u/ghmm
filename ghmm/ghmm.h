@@ -25,11 +25,12 @@ extern "C" {
 /** @name type_constants
     Constants giving model variations */
 /** Model is a left-right */
-#define kLeftRight (1);
+#define kNotSpecified (0)
+#define kLeftRight (1)
 /** Model contains silent states (i.e., states without emissions) */
-#define kSilentStates (1 << 2);
+#define kSilentStates (1 << 2)
 /** Model has states with tied emission probabilities */
-#define kTiedEmissions (1 << 3);
+#define kTiedEmissions (1 << 3)
 #define kUntied -1 
 
 /** Model has states emission probabilities conditioned on previous orders */
