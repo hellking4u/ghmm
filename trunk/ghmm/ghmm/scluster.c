@@ -131,9 +131,9 @@ int scluster_hmm(char* argv[]) {
   if(!m_calloc(cl.smo_Z_MAW, cl.smo_number)) {mes_proc(); goto STOP;}
   all_log_p = matrix_d_alloc(cl.smo_number, (int) sqd->seq_number);
   if (!all_log_p) {mes_proc(); goto STOP;}
-  if (smodel_check_compatibility(cl.smo, cl.smo_number)) { 
+  /*if (smodel_check_compatibility(cl.smo, cl.smo_number)) { 
     mes_proc(); goto STOP; 
-  } 
+    }*/ 
   if(!m_calloc(smo_changed, cl.smo_number)) {mes_proc(); goto STOP;}
   for (i = 0; i < cl.smo_number; i++) {
     cl.smo_seq[i] = NULL;
