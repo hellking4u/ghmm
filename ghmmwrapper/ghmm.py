@@ -357,7 +357,7 @@ class EmissionSequence(list):
 
     def __init__(self, emissionDomain, sequenceInput):
         self.emissionDomain = emissionDomain # XXX identical name problematic ? Noe! Good. ;)
-        self.isReference    = False # Default value: False. If the input is a reference to SequenceSet.cseq, then set to True, 
+        # XXXX How do you maintain reference to the SequenceSet.cseq?
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             if isinstance(sequenceInput, list):  
@@ -377,9 +377,9 @@ class EmissionSequence(list):
                 pass
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
                 print "pointer input"
-                # XXX Should enforce (self.cseq.seq_number == 1) 
+                # XXX Should enforce (self.cseq.seq_number == 1) and maintain reference to the parent
                 self.cseq = sequenceInput
-                self.isReference = True
+                
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
         
@@ -395,9 +395,8 @@ class EmissionSequence(list):
             elif isinstance(sequenceInput, str): # from file
                 pass
             elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
-                # XXX Should enforce (self.cseq.seq_number == 1) 
+                # XXX Should enforce (self.cseq.seq_number == 1) and maintain reference to the parent
                 self.cseq = sequenceInput
-                self.isReference = True
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
         
@@ -416,16 +415,13 @@ class EmissionSequence(list):
         #    cols = ghmmwrapper.get_arrayint(self.cseq.seq_len,0) # assume equal length
         #    self.__array = ghmmhelper.twodim_double_array(self.cseq.seq, self.cseq.seq_number, cols)
             
-    def __del__(self):
+    def __del__(self):        
+        if self.emissionDomain.CDataType == "int": # delete the C ptr to sequence_t
+            ghmmwrapper.sequence_clean(self.cseq)
+            
+        elif self.emissionDomain.CDataType == "double": # delete the C ptr to sequence_d_t
+            ghmmwrapper.sequence_d_clean(self.cseq)
 
-        if not self.isReference: # the object allocates the C-struct, must free it.
-            if self.emissionDomain.CDataType == "int": # delete the C ptr to sequence_t
-                ghmmwrapper.sequence_clean(self.cseq)
-                
-            elif self.emissionDomain.CDataType == "double": # delete the C ptr to sequence_d_t
-                ghmmwrapper.sequence_d_clean(self.cseq)
-
-        # Otherwise, let the instance of SequenceSet free the C-structure
         
     def __setitem__(self, index, value):
 
@@ -577,12 +573,12 @@ class SequenceSet:
         
         if self.emissionDomain.CDataType == "int":
             seq = ghmmwrapper.sequence_calloc(1)
-            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # int* -> int**
+            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # int* -> int** reference
             set_arrayint(seq.seq_len,0,get_arrayint(self.cseq.seq_len,index))
             seq.seq_number = 1
         if self.emissionDomain.CDataType == "double":    
             seq = ghmmwrapper.sequence_d_calloc(1)
-            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # double* -> double**
+            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # double* -> double** reference
             set_arrayint(seq.seq_len,0,get_arrayint(self.cseq.seq_len,index))
             seq.seq_number = 1
 
@@ -878,8 +874,11 @@ class HMM:
             Result: Final loglikelihood
         """
 
+        if not isinstance(trainingSequences, SequenceSet):
+            raise TypeError
+            
         if (self.emissionDomain.CDataType == "double"):
-            smosqd_cpt = self.baumWelchSetup(trainingSequences, nrSteps)        
+            smosqd_cpt = self.baumWelchSetup(trainingSequences, nrSteps)
             ghmmwrapper.sreestimate_baum_welch(smosqd_cpt)        
             likelihood = ghmmwrapper.get_arrayd(smosqd_cpt.logp, 0)
             ghmmwrapper.free_smosqd_t(smosqd_cpt)
@@ -903,9 +902,8 @@ class HMM:
         baumWelchCData = ghmmwrapper.smosqd_t_array(1)
 
         smosqd_ptr = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, 0)
-        seqdref    = trainingSequences    # type is EmissionSequence, create a reference to C sequence
         smosqd_ptr.smo  = self.cmodel
-        smosqd_ptr.sqd  = seqdref.cseq    # copy reference to sequence_d_t
+        smosqd_ptr.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
         smosqd_ptr.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
         smosqd_ptr.eps  = 10e-6
         smosqd_ptr.max_iter = nrSteps
