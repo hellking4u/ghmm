@@ -238,7 +238,7 @@ int scanner_free(scanner_t** s){
 } /* scanner_free */
 
 /*============================================================================*/
-scanner_t* scanner_alloc(char* filename){
+scanner_t* scanner_alloc(const char* filename){
 #define CUR_PROC "scanner_alloc"
   scanner_t* s = NULL;
   

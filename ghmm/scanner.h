@@ -66,7 +66,7 @@ typedef struct scanner_t {
 
   /**
    */
-scanner_t* scanner_alloc( char* filename );
+scanner_t* scanner_alloc(const char* filename );
   /**
    */
 int        scanner_consume( scanner_t* s, char ch );

@@ -270,7 +270,7 @@ char* mes_get_std_path( void );
 void  mes( int flags, int line, char* xproc, char* proc, char* format, ... );
   /**
    */
-void  mes_smart( int flags, char* txt, int bytes );
+void  mes_smart( int flags,const char* txt, int bytes );
   /**
    */
 int   mes_ability( int on );
@@ -285,7 +285,7 @@ void  mes_exit( void );
 void  mes_fformat( char* txt, char* filename, int line, char* proc_info );
   /**
    */
-void  mes_init( char* logfile, void(*winfct)(char*), int argc, char* argv[] );
+void  mes_init( char* logfile, void(*winfct)(const char*), int argc, char* argv[] );
   /**
    */
 void  mes_init_args( int argc, char*argv[]);
@@ -294,7 +294,7 @@ void  mes_init_args( int argc, char*argv[]);
 void  mes_init_logfile( char*file_name );
   /**
    */
-void  mes_init_winfct( void(win_fct)(char*) );
+void  mes_init_winfct( void(win_fct)(const char*) );
   /**
    */
 int   mes_insert( FILE* fp, char src, int cnt );
@@ -322,7 +322,7 @@ int   mes_fgetc( FILE*fp );
 int   mes_fflush( FILE* fp );
   /**
    */
-FILE* mes_fopen( char* filename, char* attribute_string );
+FILE* mes_fopen(const char* filename, char* attribute_string );
   /**
    */
 int   mes_fprintf( FILE* fp, char* format, ... );

@@ -47,7 +47,7 @@ typedef struct mes_t {
     char** argv;
     char   win_enabled;
     char   enabled;
-    void  (*win_fkt)(char*);
+    void  (*win_fkt)(const char*);
 } mes_t;
 
 #define MES_PROCESS_MAX 0x10000
@@ -154,7 +154,7 @@ static void mes_aux( int flags, char* format, ... ) {
 } /* mes_aux */
 
 /*---------------------------------------------------------------------------*/
-static int mes_filename_check( char* filename ) { 
+static int mes_filename_check(const char* filename ) { 
   int len;
   
   if( !filename ) return(-1); 
@@ -207,7 +207,7 @@ static void mes_init_std_path( char* logfile ) {
 
 
 /*============================================================================*/
-void mes_smart( int flags, char* txt, int bytes ) {
+void mes_smart( int flags,const char* txt, int bytes ) {
   char tmp[2] = {0};
   int  slen;
   
@@ -276,7 +276,8 @@ void mes_smart( int flags, char* txt, int bytes ) {
       fflush(stdout); 
     }
   }
-  if( slen > bytes ) txt[bytes-1] = tmp[0];
+  if( slen > bytes ) 
+    ((char*)(txt))[bytes-1] = tmp[0];
 } /* mes_smart */
 
 /*============================================================================*/
@@ -339,13 +340,13 @@ void mes_init_logfile( char* logfile ) {
 } /* mes_init_logfile */
 
 /*============================================================================*/
-void mes_init_winfct( void(*winfct)(char*) ) {
+void mes_init_winfct( void(*winfct)(const char*) ) {
   mes_t *mpc = mes_process_get();
   if( mpc && winfct ) mpc->win_fkt = winfct;
 } /* mes_init_winfct */
 
 /*============================================================================*/
-void mes_init( char* logfile, void(*winfct)(char*), int argc, char* argv[] ) {
+void mes_init( char* logfile, void(*winfct)(const char*), int argc, char* argv[] ) {
   mes_process_alloc();
   mes_init_args( argc, argv );
   mes_init_logfile( logfile );
@@ -577,7 +578,7 @@ int mes_realloc( void** mem, int bytes ) {
 } /* mes_realloc */
 
 /*============================================================================*/
-FILE* mes_fopen( char* filename, char*attrstr ) { 
+FILE* mes_fopen(const char* filename, char*attrstr ) { 
   FILE* fp;
   
   if( mes_filename_check(filename) ) goto STOP; 
