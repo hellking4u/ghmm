@@ -54,13 +54,11 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_t* seq) {
   default_weight=1.0;
   for (int sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
     {
-      /* vector of doubles */
-      int_sequence_vector.push_back(new int_sequence(seq->seq[sequence_pos],seq->seq_len[sequence_pos]));
+      /* vector of int */
+      int_sequence_vector.push_back(new int_sequence(seq, sequence_pos));
       /* weight */
-      weight_vector.push_back(seq->seq_w[sequence_pos]);
-      /* label: missing todo */
-      /* id: missing todo */
-    }
+      weight_vector.push_back(seq->seq_w[sequence_pos]);      
+     }
 }
 
 sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq) {
@@ -71,11 +69,9 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq) {
   for (int sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
     {
       /* vector of doubles */
-      double_sequence_vector.push_back(new double_sequence(seq->seq[sequence_pos],seq->seq_len[sequence_pos]));
+      double_sequence_vector.push_back(new double_sequence(seq, sequence_pos));
       /* weight */
       weight_vector.push_back(seq->seq_w[sequence_pos]);
-      /* label: missing todo */
-      /* id: missing todo */
     }
 }
 

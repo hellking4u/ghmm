@@ -82,6 +82,24 @@ sequences_document::sequences_document(){
   my_root=NULL;
 }
 
+sequences_document::sequences_document(sequence_d_t** seq, int seqfield_number) {
+  tag = "sequences_data";
+
+  for (int i = 0; i < seqfield_number; i++) {
+    push_back(new sequences(seq[i]));
+  }
+  my_root=NULL;
+}
+
+sequences_document::sequences_document(sequence_t** seq, int seqfield_number) {
+  tag = "sequences_data";
+
+  for (int i = 0; i < seqfield_number; i++) {
+    push_back(new sequences(seq[i]));
+  }
+  my_root=NULL;
+}
+
 sequences_document::~sequences_document(){
   SAFE_DELETE(my_root);
   while (!empty())

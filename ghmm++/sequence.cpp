@@ -7,6 +7,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <iomanip>
+#include <strstream>
 #include <cerrno>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -30,7 +32,7 @@ double_sequence::double_sequence(double* seq_data, size_t length)
   tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back(seq_data[count]);
-  label=NULL;
+  label="";
   id="";
 }
 
@@ -39,8 +41,23 @@ double_sequence::double_sequence(int* seq_data, size_t length)
   tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back(seq_data[count]);
-  label=NULL;
+  label="";
   id="";
+}
+
+double_sequence::double_sequence(sequence_d_t* seq, int sequence_pos) {
+  tag="sequence";
+  int length = seq->seq_len[sequence_pos];
+  double* seq_data=seq->seq[sequence_pos];
+  for(size_t count=0; count < length; count++)
+    push_back(seq_data[count]);
+  strstream tmpstr;
+  strstream tmpstr2;
+  tmpstr<<seq->seq_label[sequence_pos]<<ends;
+  label = tmpstr.str(); tmpstr.clear();
+  tmpstr2.setf(ios::fixed);
+  tmpstr2<<setprecision(0)<<seq->seq_id[sequence_pos]<<ends;
+  id = tmpstr2.str();
 }
 
 double* double_sequence::create_double_array() const
@@ -69,26 +86,6 @@ int* double_sequence::create_int_array() const
   return array;
 }
 
-int double_sequence::get_label_as_int() const
-{
-  if (label!=NULL)
-    {
-      return strtol(label->c_str(),NULL,0);
-    }
-  else
-    {
-      return -1;
-    }
-      
-}
-
-double double_sequence::get_id_as_double() const
-{
-  if (id.empty())
-    return -1.0;
-  else
-    return strtod(id.c_str(),NULL);
-}
 
 /***********************************************************************************/
 
@@ -102,7 +99,7 @@ int_sequence::int_sequence(int* seq_data, size_t length)
   tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back(seq_data[count]);
-  label=NULL;
+  label="";
   id="";
 }
 
@@ -111,8 +108,23 @@ int_sequence::int_sequence(double* seq_data, size_t length)
   tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back((int)floor(seq_data[count]));
-  label=NULL;
+  label="";
   id="";
+}
+
+int_sequence::int_sequence(sequence_t* seq, int sequence_pos) {
+  tag="sequence";
+  int length = seq->seq_len[sequence_pos];
+  int* seq_data=seq->seq[sequence_pos];
+  for(size_t count=0; count < length; count++)
+    push_back(seq_data[count]);
+  strstream tmpstr;
+  strstream tmpstr2;
+  tmpstr<<seq->seq_label[sequence_pos]<<ends;
+  label = tmpstr.str(); tmpstr.clear();
+  tmpstr2.setf(ios::fixed);
+  tmpstr2<<setprecision(0)<<seq->seq_id[sequence_pos]<<ends;
+  id = tmpstr2.str();
 }
 
 int* int_sequence::create_int_array() const
@@ -141,24 +153,4 @@ double* int_sequence::create_double_array() const
   return array;
 }
 
-
-int int_sequence::get_label_as_int() const
-{
-  if (label!=NULL)
-    {
-      return strtol(label->c_str(),NULL,0);
-    }
-  else
-    {
-      return -1;
-    }
-}
-
-double int_sequence::get_id_as_double() const
-{
-  if (id.empty())
-    return -1.0;
-  else
-    return strtod(id.c_str(),NULL);
-}
 

@@ -1,5 +1,5 @@
 dnl  author       : Achim Gaedke
-dnl  filename     : ghmm/configure.in
+dnl  filename     : /zpr/bspk/src/hmm/ghmm/configure.in
 dnl  created      : DATE: 2001-04-04
 dnl  $Id$
 dnl __copyright__
@@ -166,5 +166,5 @@ if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
 fi
 AC_SUBST(SUBDIRS)
 
-AC_OUTPUT(Makefile doc/Makefile ghmm/Makefile tools/Makefile tests/Makefile tests/data/Makefile doc/docu.dxx tools/ghmm-config ghmm++/Makefile)
+AC_OUTPUT(Makefile doc/Makefile ghmm/Makefile tools/Makefile tests/Makefile tests/data/Makefile doc/docu.dxx tools/ghmm-config ghmm++/Makefile ghmm++/examples/Makefile)
 

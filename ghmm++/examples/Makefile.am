@@ -1,41 +1,23 @@
 #  author       : Achim Gaedke
-#  filename     : /zpr/bspk/src/hmm/ghmm/ghmm++/Makefile.am
+#  filename     : /zpr/bspk/src/hmm/ghmm/ghmm++/examples/Makefile.am
 #  created      : DATE: 28 June 2001
 #  $Id$
 #
 # __copyright__
 
-SUBDIRS= . examples
+SUBDIRS= .
 DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
+LDADD = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/libghmm.a -lgxl $(XMLIO_LIBS)
+EXTRADIST = ghmm.xml
 
-lib_LIBRARIES = libghmm++.a
-libghmm___a_SOURCES = \
-sequence.cpp \
-sequences.cpp \
-sequences_document.cpp \
-InitialStates.cpp \
-Emissions.cpp \
-ghmm.cpp \
-ghmm_graph.cpp \
-ghmm_edge.cpp \
-ghmm_alphabet.cpp \
-ghmm_symbol.cpp
-
-pkginclude_HEADERS= \
-DiscretePD.h \
-sequence.h \
-sequences.h \
-sequences_document.h \
-InitialStates.h \
-Emissions.h \
-ghmm.h \
-ghmm_graph.h \
-ghmm_edge.h \
-ghmm_alphabet.h \
-ghmm_symbol.h
+noinst_PROGRAMS = sequence_test DiscretePD_test ghmm_test ghmm_convert
+sequence_test_SOURCES = sequence_test.cpp
+DiscretePD_test_SOURCES = DiscretePD_test.cpp
+ghmm_test_SOURCES = ghmm_test.cpp
+ghmm_convert_SOURCES = ghmm_convert.cpp
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
