@@ -32,11 +32,11 @@ int seq_d_class(int index, int t) {
 
 int main(int argc, char* argv[]) {
   //GHMM_Document      doc;
-  std::GHMM_GraphMLDoc    doc;
-  std::GHMM_SWDiscreteModel *dmo;
-  std::GHMM_Sequences* training_seq = NULL;
-  std::GHMM_Sequences* my_output = NULL;
-  std::GHMM_Alphabet*  alphas = NULL;
+  GHMM_GraphMLDoc    doc;
+  GHMM_SWDiscreteModel *dmo;
+  GHMM_Sequences* training_seq = NULL;
+  GHMM_Sequences* my_output = NULL;
+  GHMM_Alphabet*  alphas = NULL;
 
   /* Important! initialise rng  */
   std::GHMM_Toolkit::gsl_rng_init();
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
   doc.close();
 
   dmo  = doc.getDiscreteModel();
-
+  dmo->create_cmodel(0);
   //dmo->setTransition(0,0,0.0);
   //dmo->setTransition(0,1,1.0);
 

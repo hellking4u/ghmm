@@ -22,8 +22,7 @@ using namespace std;
 #endif
 
 
-GHMM_GraphMLDoc::GHMM_GraphMLDoc() {
-
+GHMM_GraphMLDoc::GHMM_GraphMLDoc(enumModelType model_type) {
   hmmclass          = NULL;
   sdiscrete_model   = NULL;
   continuous_model  = NULL;
@@ -31,6 +30,7 @@ GHMM_GraphMLDoc::GHMM_GraphMLDoc() {
   sequences        = NULL;
   reading_ghmm     = false;
   tmp_alphabets    = NULL;
+  this->model_type = model_type;
 }
 
 GHMM_GraphMLDoc::~GHMM_GraphMLDoc() {
@@ -203,7 +203,7 @@ int GHMM_GraphMLDoc::XMLIO_writeProlog() {
 
   return_result += this_result;
 
-  this_result = writef("<graphml version=\"1.0\">\n");
+  this_result = writef("<graphml version=\"1.0\">");
      
   /* Returns error code if an error occured. */
   if (this_result < 0)
@@ -228,7 +228,6 @@ int GHMM_GraphMLDoc::XMLIO_writeProlog() {
   modeltype.attributes["id"]      = "emissions";
 
   writeEndl();
-
   this_result = writeElement(&modeltype);
 
   writeEndl();
