@@ -15,6 +15,7 @@ __copyright__
 #include "matrix.h"
 #include "mes.h"
 #include <assert.h>
+#include "modelutil.h"
 
 static int foba_initforward(model *mo, double *alpha_1, int symb, 
 			    double *scale) {
@@ -237,7 +238,7 @@ int foba_backward(model *mo, const int *O, int len, double **beta, const double 
   /* topological ordering for models with silent states */
   if (mo->model_type == kSilentStates){
     //printf("silent states require topological ordering\n");
-	model_topo_ordering(mo);
+    model_topo_ordering(mo);
   }
   
   //printf("\n\n** initializing...\n");
