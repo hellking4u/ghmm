@@ -26,7 +26,7 @@ extern "C" {
  */
 
 /**
- Kopiert von cgenerate.h
+ Help "modus" for sgenerate_extensions.
 */
 
 typedef enum {
@@ -37,39 +37,53 @@ typedef enum {
 } sgeneration_mode_t;
 
 /**
+   Makes part sequences longer given a model. There are some different possibilities
+   to do this (only Viterbi or take all paths into account (beruecksichtigen) , combined with 
+   sequence begin and end).
    Verlaengert Teilsequenzen bei gegebenem Modell. Verschiedene Moeglichkeiten
    sind vorgesehen (nur Viterbi oder alle Pfade beruecksichtigen kombiniert
    mit Sequenzanfang und Sequenzende)
    Steuerung ueber mode:
+   Which method to use:
    0 = viterbi\_viterbi, 
    1 = viterbi\_all, 
    2 = all\_viterbi, 
    3 = all\_all
    (zunaechst nur all\_all moeglich)
-   Die generierten Sequenzen werden zurueckgegeben.
-   @return Pointer auf ein Feld von Gesamtsequenzen (vorgegebene 
-   Anfangssequenz und generierte Endsequenz)
-   @param smo         vorgegebenes Modell
-   @param sqd_short   Feld von Anfangssequenzen
-   @param seed        Initialisierungsvariable des Zufallsgenerators (int)
-   @param global_len  gewuenschte Sequenzlaenge (=0: autom. ueber final state)
-   @param mode        Steuerung der Generierung
+   @return pointer to a vector of all sequences (given initial sequence and generated 
+   end sequence)
+   @param smo:         given Model
+   @param sqd_short:   vector of initial sequences
+   @param seed:        initial value for random value generator (int)
+   @param global_len:  wanted length of sequences (=0: automatically over final states)
+   @param mode:        which method to use for the generator
  */
 sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short, 
 				   int seed, int global_len,
 				   sgeneration_mode_t mode);
 
 
-/** Verlaengern einer einzelnen Anfangsequenz. Sonst gleiche Funktionalitaet
-    wie sgenerate_extensions
+/** 
+    Makes one sequences longer given a model. See sgenerate_extensions for details.
+    @return pointer to the whole sequence
+    @param smo:        given model
+    @param O:          given sequence to make longer
+    @param len:        original length of sequence
+    @param new_len:    wanted length of sequence
+    @param alpha:
+    @param mode:
 */
 double *sgenerate_single_ext(smodel *smo, double *O, const int len, 
 			     int *new_len, double **alpha,
 			     sgeneration_mode_t mode);
 
 
-/** generate a single next value bases on a trained model and on a seq und
-   to length "len"
+/** Generate a single next value based on a trained model and on a seq of
+   length "len". Use the most prob. state given the seq as an initial state
+   and determin the next state und the symbol with the RNG. 
+   @param smo:        given model
+   @param O:          given sequence 
+   @param len:        length of sequence
 */
 double sgenerate_next_value(smodel *smo, double *O, const int len);
 
