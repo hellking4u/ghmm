@@ -549,6 +549,16 @@ class SequenceSet:
 
         return strout 
     
+
+
+    def __len__(self):
+        """ Return the number of sequences in the SequenceSet """
+        return self.cseq.seq_number
+
+    def sequenceLength(self, i):
+        """ Return the number of sequences in the SequenceSet """
+        return ghmmwrapper.get_arrayint(self.cseq.seq_len,i)
+        
     
     def __setitem__(self, index, value): # Only allow EmissionSequence?
         pass
@@ -866,14 +876,14 @@ class HMM:
         if self.emissionDomain.CDataType == "double":            
             getPtr = ghmmwrapper.get_row_pointer_d
             
-        logP = double_array(1)
+        logP = double_array(1) # Pointer to return value of forwardFunction
         
-        logPsum = 0
-        for i in range(emissionSequences.cseq.seq_number):
+        logPsum = 0.0
+        for i in range(len(emissionSequences)):
             seq = getPtr(emissionSequences.cseq.seq,i)
-            seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            seq_len = emissionSequences.sequenceLength(i)
             
-            res = self.forwardFunction(self.cmodel, seq, seq_len,logP)
+            res = self.forwardFunction(self.cmodel, seq, seq_len, logP)
             if res != 0:
                 print "Forward algorithm reports error for sequence " + str(res) + "."
             logPsum += ghmmwrapper.get_arrayd(logP,0)
@@ -966,7 +976,7 @@ class HMM:
         if self.emissionDomain.CDataType == "double":            
             getPtr = ghmmwrapper.get_row_pointer_d
             
-        logP = double_array(1)		
+        unused = double_array(1) # Dummy return value for forwardAlphaFunction		
      
         t = get_arrayint(emissionSequence.cseq.seq_len,0)
         calpha = matrix_d_alloc(t,self.cmodel.N)
@@ -974,7 +984,7 @@ class HMM:
 
         seq = getPtr(emissionSequence.cseq.seq,0)	
 		
-        error = self.forwardAlphaFunction(self.cmodel, seq,t, calpha, cscale, logP)
+        error = self.forwardAlphaFunction(self.cmodel, seq,t, calpha, cscale, unused)
         if error == -1:
             print "ERROR: forward finished with -1: EmissionSequence cannot be build."
             exit
@@ -984,7 +994,7 @@ class HMM:
         pyalpha = ghmmhelper.matrixd2list(calpha,t,self.cmodel.N)
         
         # deallocation
-        ghmmwrapper.freearray(logP)
+        ghmmwrapper.freearray(unused)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(calpha,t)
         return (pyalpha,pyscale) 
