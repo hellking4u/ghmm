@@ -315,6 +315,14 @@ sequence_d_t *sequence_d_create_from_sq(const sequence_t *sq);
 sequence_t *sequence_create_from_sqd(const sequence_d_t *sqd);
 
 /** 
+    Determines max sequence length in a given int sequence struct.
+    @author Peter Pipenbacher
+    @param sqd sequence struct
+    @return max sequence length
+ */
+int sequence_max_len(const sequence_t *sqd);
+
+/** 
     Determines max sequence length in a given double sequence struct.
     @param sqd sequence struct
     @return max sequence length
