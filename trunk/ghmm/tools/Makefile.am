@@ -1,14 +1,23 @@
 #  author       : Achim Gaedke
-#  filename     : ghmm/tests/data/Makefile.am
+#  filename     : ghmm/tools/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
 #
 # __copyright__
 
+DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 BUILT_SOURCES = 
 INCLUDES = -I$(top_srcdir)
+bin_PROGRAMS = probdist cluster scluster
+
+probdist_SORUCES = probdist.c
+cluster_SOURCES  = cluster.c
+scluster_SOURCES = scluster.c
+
+LDADD = ../ghmm/libghmm.a
+bin_SCRIPTS = ghmm-config
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
