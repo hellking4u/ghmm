@@ -669,18 +669,19 @@ extern int reestimate_baum_welch_label(model *mo, sequence_t *sq);
 extern int reestimate_baum_welch_nstep_label(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
 
-
-/********  Gradient Descent (gradescent.c) ********/
+/*----------------------------------------------------------------------------*/
 /**
-   Trains the model with a set of annotated sequences until the training
-   converges using gradient descent.
+   Trains the model with a set of annotated sequences till convergence using
+   gradient descent.
    Model must not have silent states. (checked in Python wrapper)
    @return            0/-1 success/error
-   @param mo:         reference to a model pointer
+   @param mo:         pointer to a model
    @param sq:         struct of annotated sequences
-   @param eta:
+   @param eta:        intial parameter eta (learning rate)
+   @param no_steps    number of training steps
  */
-extern int gradient_descent(model** mo, sequence_t *sq);
+extern int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
+
 
 /********  K-Best decoding (kbest.c) ********/
 /**
