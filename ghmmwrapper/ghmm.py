@@ -160,17 +160,21 @@ import ghmmhelper
 class GHMMError(Exception):
     """Base class for exceptions in this module."""
 
-    def __init__(self, expression, message):
-        self.expression = expression
-        self.message = message
+#    def __init__(self, expression, message):
+#        self.expression = expression
+#        self.message = message
 
+class UnknownInputType(GHMMError):
+    def __init__(self):
+        pass
 
-    
-
+class NoValidCDataType(GHMMError):
+    def __init__(self):   
+        pass
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain:
-    """ Abstract base class for emissions produced by a HMM.
+    """ Abstract base class for emissions produced by an HMM.
 
         There can be two representations for emissions:
         1) An internal, used in ghmm.py and the ghmm C-library
@@ -227,6 +231,7 @@ class Alphabet(EmissionDomain):
         for c in self.listOfCharacters:
             self.index[c] = i
             i += 1
+        self.CDataType = "int" # flag indicating which C data type should be used
 
     def internal(self, emission):
         """ Given a emission return the internal representation
@@ -276,6 +281,9 @@ def IntegerRange(a,b):
 
 
 class Float(EmissionDomain):
+
+    def __init__(self):
+        self.CDataType = "double" # flag indicating which C data type should be used
 
     def isAdmissable(self, emission):
         """ Check whether emission is admissable (contained in) the domain
@@ -335,22 +343,55 @@ class MixtureContinousDistribution(Distribution):
 class EmissionSequence(list):
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
-        domain where the emission orginate
+        domain where the emission orginated from.
     """
 
-    def __init__(self, emissionDomain, fromList = None):
-        pass
-
+    def __init__(self, emissionDomain, sequenceInput ,inputType = "pylist"):
+        self.emissionDomain = emissionDomain # XXX identical name problematic ?
+        
+        if self.emissionDomain.CDataType == "int": # underlying C data type is integer
+            if inputType == "pylist":
+                l = len(sequenceInput)
+                seq = ghmmhelper.list2arrayint(sequenceInput)
+                self.cseq = sequence_t()
+                self.cseq.seq
+                
+            elif inputType == "fromFile":    
+                pass
+            elif inputType == "fromCpointer": # for internal use mostly
+                pass
+            else:    
+                raise UnknownInputType, "inputType " + str(inputType) + " not recognized."
+        
+        elif self.emissionDomain.CDataType == "double": # underlying C data type is double
+            if inputType == "pylist":
+                pass
+            elif inputType == "fromFile":    
+                pass
+            elif inputType == "fromCpointer": # for internal use mostly
+                pass
+            else:    
+                raise UnknownInputType, "inputType " + str(inputType) + " not recognized."
+        
+        
+        else:
+            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+        
+        
+        self.c_seq 
+        
 #    def sequenceSet(self):
 #        """ Make a one-element SequenceSet out of me """
 
-
 class SequenceSet:
-    pass
+    def __init__(self, emissionDomain, fromList = None):
+        self.emissionDomain = emissionDomain # XXX identical name problematic ?
+        self.c_seq 
     
 
 def SequenceSetOpen(fileName):
-    pass
+    c_ptr = ghmmwrapper.seq_d_read(fileName)  
+    return SequenceSet(c_ptr)
 
 
 
@@ -400,7 +441,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 #initialize states
                 for i in range(cmodel.N):
                     state = ghmmwrapper.get_stateptr(states,i)
-                    state.b = ghmmhelper.emslist2array(B[i])
+                    state.b = ghmmhelper.list2arrayd(B[i])
                     state.pi = pi[i]
                     
                     #if (sum(B[i]) <= epsilon):
@@ -508,6 +549,25 @@ class HMM:
             
             Note: The implementation will not compute the full forward matrix 
         """
+        log_p = double_array(1)		
+        i = self.cmodel.N
+        logp_sum = 0
+        for seq_nr in range(mysequence.seq_c.seq_number):
+            t = get_arrayint(mysequence.seq_c.seq_len,seq_nr)
+            alpha = matrix_d_alloc(t,i)
+            scale = double_array(t)
+            
+            seq = mysequence[seq_nr]
+            error = func(self.model, seq.seq,seq.length, alpha, scale, log_p)
+            if error == -1:
+                print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
+                exit
+            logp_sum  += get_arrayd(log_p,0)
+            print "Seq " + str(seq_nr) + ": " + str(get_arrayd(log_p,0))
+            
+        return (logp_sum,scale) # XXX TEST
+
+
 
     ## Further Marginals ...
 
@@ -769,14 +829,18 @@ if __name__ == '__main__':
 						[[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
 						[1.0,0,0])
 
-	print m
+
+    print m
+
 
 	m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
 						[[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
 						[[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
 						[1.0,0,0])
 
-	print m2
+
+    print m2
+
 
 	seq_c = ghmmwrapper.seq_d_read('test10.sqd')
 	l = m2.loglikelihood_sqd(seq_c)
