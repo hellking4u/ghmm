@@ -75,9 +75,11 @@ int single_state_continuous()
 		   );
 
 
+  /* reproduce the sequence by saving and rereading the model */
   {  
     FILE *my_file;
-    char filename_buffer[]="/tmp/achimXXXXXX";
+    sequence_d_t* new_output;
+    char filename_buffer[]="/tmp/chmm_test.XXXXXX";
     int descriptor;
     int model_counter;
     smodel **model_array;
@@ -89,20 +91,40 @@ int single_state_continuous()
     smodel_print(my_file,&my_model);
     (void)fseek(my_file, 0L, SEEK_SET);
     fclose(my_file);
-    close(descriptor);
 
     /* read this model */
+    fprintf(stdout,"rereading model from file %s\n",filename_buffer);
     model_array=smodel_read(filename_buffer,&model_counter);
+
+    /* generate sequences */
+    fprintf(stdout,"generating sequences again\n");
+    new_output=smodel_generate_sequences(model_array[0],
+					 1,  /* random seed */
+					 10, /* length of sequences */
+					 10, /* sequences */
+					 0,  /* label */
+					 0   /* maximal sequence length 0: no limit*/
+					 );
+
+    sequence_d_print(stdout,     /* output file */
+		     new_output, /* sequence */
+		     0           /* do not truncate to integer*/
+		     );
+    /* free everything */
+    close(descriptor);
+    unlink(filename_buffer);
+    sequence_d_free(&new_output);
+    while(model_counter>0)
+      {
+	smodel_free(&(model_array[model_counter-1]));
+	model_counter-=1;
+      }
   }
-#if 0
-  sequence_d_gnu_print(stdout,
-		       my_output
-		       );
-#endif
+
+  sequence_d_free(&my_output);
 
   return 0;
 }
-
 
 int main()
 {
