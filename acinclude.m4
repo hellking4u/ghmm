@@ -1,12 +1,6 @@
-dnl author       : Achim Gaedke
-dnl filename     : ghmm/acinclude.m4
-dnl created      : DATE: 2001-04-04
-dnl $Id$
-
-
 # Configure path for the GNU Scientific Library
 # Christopher R. Gabriel <cgabriel@linux.it>, April 2000
-# Modified by Achim Gädke <achim.gaedke@zpr.uni-koeln.de> March 2001
+
 
 AC_DEFUN(AM_PATH_GSL,
 [
@@ -62,7 +56,7 @@ AC_ARG_ENABLE(gsltest, [  --disable-gsltest       Do not try to compile and run 
       ac_save_CFLAGS="$CFLAGS"
       ac_save_LIBS="$LIBS"
       CFLAGS="$CFLAGS $GSL_CFLAGS"
-      LIBS="$LIBS $GSL_LIBS -lgslblas"
+      LIBS="$LIBS $GSL_LIBS"
 
       rm -f conf.gsltest
       AC_TRY_RUN([
@@ -71,13 +65,13 @@ AC_ARG_ENABLE(gsltest, [  --disable-gsltest       Do not try to compile and run 
 #include <string.h>
 
 char*
-my_strdup (char *str)
+my_strdup (const char *str)
 {
   char *new_str;
   
   if (str)
     {
-      new_str = malloc ((strlen (str) + 1) * sizeof(char));
+      new_str = (char *)malloc ((strlen (str) + 1) * sizeof(char));
       strcpy (new_str, str);
     }
   else
@@ -86,7 +80,7 @@ my_strdup (char *str)
   return new_str;
 }
 
-int main ()
+int main (void)
 {
   int major = 0, minor = 0, micro = 0;
   int n;
@@ -108,7 +102,7 @@ int main ()
       (($gsl_major_version == major) && ($gsl_minor_version > minor)) ||
       (($gsl_major_version == major) && ($gsl_minor_version == minor) && ($gsl_micro_version >= micro)))
     {
-      return 0;
+      exit(0);
     }
   else
     {
@@ -118,7 +112,7 @@ int main ()
       printf("*** If gsl-config was wrong, set the environment variable GSL_CONFIG\n");
       printf("*** to point to the correct copy of gsl-config, and remove the file\n");
       printf("*** config.cache before re-running configure\n");
-      return 1;
+      exit(1);
     }
 }
 
@@ -143,7 +137,7 @@ int main ()
        else
           echo "*** Could not run GSL test program, checking why..."
           CFLAGS="$CFLAGS $GSL_CFLAGS"
-          LIBS="$LIBS $GSL_LIBS -lgslblas"
+          LIBS="$LIBS $GSL_LIBS"
           AC_TRY_LINK([
 #include <stdio.h>
 ],      [ return 0; ],
@@ -172,9 +166,5 @@ int main ()
   AC_SUBST(GSL_LIBS)
   rm -f conf.gsltest
 ])
-
-
-
-
 
 
