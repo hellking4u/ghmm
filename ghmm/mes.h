@@ -129,7 +129,7 @@ extern "C" {
 #endif
 
 #ifndef m_free
-#define m_free( p )  if(p) { free(p); (p) = NULL; }
+#define m_free( p )  if(p) { free(p); (p) = NULL; } else { printf("WARNING: m_free on NULL pointer\n"); }
 #endif
 
 #ifndef m_strlen
