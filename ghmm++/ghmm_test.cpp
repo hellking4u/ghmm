@@ -20,13 +20,20 @@ using namespace std;
 class ghmm_Document: public XMLIO_Document {
   
 public:
+  ghmm_Document(){
+    root=NULL;
+  }
+
   virtual XMLIO_Element*
   XMLIO_startTag (const string& name, XMLIO_Attributes &attrs) {
-    if (root!=NULL) {
+    if (root == NULL) {
       root=new ghmm(name,attrs);
     }
+    else {
+      cerr<<"found a second root element!"<<endl;
+    }
     return root;
-  }  
+  }
 
   virtual ghmm* get_ghmm() {
     return root;
@@ -40,8 +47,7 @@ public:
 };
 
 
-int sequence_generation_test()
-{
+int sequence_generation_test() {
   ghmm_Document my_model;
   my_model.open("ghmm.xml","r");
   my_model.readDocument();
@@ -56,19 +62,25 @@ int sequence_generation_test()
   return 0;
 }
 
-int read_test_file()
-{
+int read_test_file() {
   ghmm_Document my_model;
-  my_model.open("ghmm.xml","r");
-  my_model.readDocument();
+  if (my_model.open("ghmm.xml","r") != 0) {
+    cerr<<"error while opening ghmm.xml"<<endl;
+  }
+  if (my_model.readDocument() != 0) {
+    cerr<<"error while reading ghmm.xml"<<endl;
+  }
   my_model.close();
   ghmm* my_ghmm=my_model.get_ghmm();
 
-  if (my_ghmm!=NULL) {
+  if (my_ghmm != NULL) {
     XMLIO_Document output;
     output.open("/dev/stdout","w");
     output.writeElement(*my_ghmm);
     output.close();
+  }
+  else {
+    cout<<"no ghmm document found"<<endl;
   }
   return 0;
 }

@@ -13,7 +13,7 @@
 #endif
 
 #include <map>
-#include <xmlio/XMLIO_Element.h>
+#include <xmlio/XMLIO_AttributedElement.h>
 #include <ghmm++/DiscretePD.h>
 
 #ifdef HAVE_NAMESPACES
@@ -23,7 +23,7 @@ namespace std {
   /**
      used in InitialStates/DiscretePD for initial State distributions
    */
-  class State: public XMLIO_Element
+  class State: public XMLIO_AttributedElement
     {
     public:
       /**
@@ -31,7 +31,10 @@ namespace std {
       State(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
-      void print() const;
+      virtual const XMLIO_Attributes& XMLIO_getAttributes() const;
+      /**
+       */
+      virtual void print() const;
       /**
        */
       virtual const char* toString() const;
@@ -58,14 +61,23 @@ namespace std {
       virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes() const;
+      /**
+	 empty, if no states are given
+       */
+      virtual bool XMLIO_isEmpty() const;
+      /**
+       */
+      virtual const int XMLIO_writeContent(XMLIO_Document&) const;
+      /**
+       */
       virtual const char* toString() const {return "InitialStates";}
       /**
        */
       virtual void print() const;
       /**
        */
-      virtual map<State*,double>* get_map()
-	{
+      virtual map<State*,double>* get_map() {
 	  return state_pd;
 	}
       

@@ -53,7 +53,6 @@ namespace std {
 
       /** */
       virtual const char* toString() const;
-
     };
 
 #ifdef HAVE_NAMESPACES

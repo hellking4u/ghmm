@@ -18,6 +18,7 @@ using namespace std;
 
 State::State(const string& name, XMLIO_Attributes &attrs)
 {
+  tag="State";
   if (name=="State")
     {
       XMLIO_Attributes::const_iterator id_pos=attrs.find("id");
@@ -30,6 +31,12 @@ State::State(const string& name, XMLIO_Attributes &attrs)
     {
       cerr<<name<<": this is not State, that was expected."<<endl;
     }
+}
+
+const XMLIO_Attributes& State::XMLIO_getAttributes() const {
+  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+  attrs["id"]=id_ref;
+  return attributes;
 }
 
 void State::print() const
@@ -49,11 +56,14 @@ const string& State::get_id() const
 
 InitialStates::InitialStates(const string& name, XMLIO_Attributes &attrs)
 {
+  tag="InitialStates";
   state_pd=NULL;
 }
 
 XMLIO_Element* InitialStates::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
+  tag="InitialStates";
+  state_pd=NULL;
   if (name=="DiscretePD")
     {
       if (state_pd!=NULL)
@@ -71,6 +81,32 @@ XMLIO_Element* InitialStates::XMLIO_startTag(const string& name, XMLIO_Attribute
   return NULL;
 }
 
+bool InitialStates::XMLIO_isEmpty() const {
+  if (state_pd!=NULL) return false;
+  return true;
+}
+
+
+const int InitialStates::XMLIO_writeContent(XMLIO_Document& doc) const {
+  int result=0;
+  if (state_pd!=NULL) {
+    int tmp_result=doc.writeEndl();
+    if (tmp_result<0) return tmp_result;
+    result+=tmp_result;
+    tmp_result=doc.writeElement(*state_pd);
+    if (tmp_result<0) return tmp_result;
+    result+=tmp_result;
+    tmp_result=doc.writeEndl();
+    if (tmp_result<0) return tmp_result;
+    result+=tmp_result;
+  }
+  return result;
+}
+
+const XMLIO_Attributes& InitialStates::XMLIO_getAttributes() const {
+
+  return attributes;
+}
 
 void InitialStates::print() const
 {

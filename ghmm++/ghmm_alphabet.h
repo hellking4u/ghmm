@@ -32,6 +32,13 @@ public:
   virtual const char* toString() const;
   /** */
   virtual void print() const;
+  /**
+   */
+  virtual const XMLIO_Attributes& XMLIO_getAttributes() const;
+  /**
+     the id of this alphabet for reference
+   */
+  string id;
  private:
   void init_members();
 };

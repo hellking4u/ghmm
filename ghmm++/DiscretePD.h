@@ -23,13 +23,20 @@ namespace std {
   template <class E>
     class DiscretePD: public map<E*,double>, public XMLIO_ContentElementArrayElement<double,E>
     {
+    private:
+      /**
+       */
+      double default_weight;
+      double actual_weight;
     public:
       /**
 	 if no weight is given default_weight is 1.
        */
       DiscretePD()
 	{
+	  tag="DiscretePD";
 	  default_weight=1;
+	  actual_weight=default_weight;
 	}
 
       /**
@@ -37,6 +44,7 @@ namespace std {
        */
       DiscretePD(const string& tag, XMLIO_Attributes &attributes)
 	{
+	  tag="DiscretePD";
 	  XMLIO_Attributes::iterator default_weight_key=attributes.find("default_weight");
 	  if (default_weight_key!=attributes.end())
 	    {
@@ -82,6 +90,20 @@ namespace std {
 	}
 
       /**
+	 set default weight for attributes
+       */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes() const {
+	XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+	attrs.erase("default_weight");
+	if (default_weight!=1) {
+	  strstream tmp;
+	  tmp<<default_weight<<ends;
+	  attrs["default_weight"]=tmp.str();
+	}
+	return attributes;
+      }
+
+      /**
        */
       virtual void print() const
 	{
@@ -95,12 +117,7 @@ namespace std {
 	    }
 	}
 
-    private:
-      /**
-       */
-      double default_weight;
     };
-
 
 #ifdef HAVE_NAMESPACES
 }
