@@ -259,16 +259,8 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     mes_prot("initial_distribution\n"); goto STOP; } 
   sequence_d_copy(new_O, O, len);
   *new_len = len;
-  /* no further extension possible */
-#ifdef bausparkasse
-  if (O[len - 1] == symbol_kuend || O[len - 1] == symbol_dverz ||
-      O[len - 1] == symbol_tilgende) {
-    if(m_realloc(new_O, *new_len)) {mes_proc(); goto STOP;}
-    return new_O;
-  }
-#endif
-    /* Initial Distribution ???
-       Pi(i) = alpha_t(i)/P(O|lambda) */
+  /* Initial Distribution ???
+     Pi(i) = alpha_t(i)/P(O|lambda) */
   if (mode == all_all || mode == all_viterbi) {
     if (sfoba_forward(smo, O, len, NULL /* ?? */, alpha, scale, &log_p)) {
       mes_prot("error from sfoba_forward, unable to extend\n"); 
