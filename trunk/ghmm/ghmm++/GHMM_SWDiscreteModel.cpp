@@ -271,6 +271,7 @@ void GHMM_SWDiscreteModel::init(GHMM_Alphabet *my_alphabet) {
   c_model->prior   = -1;
   c_model->s       = NULL;
   c_model->model_type = 0;
+  c_model->silent  = NULL;
 }
 
 
@@ -292,6 +293,7 @@ void GHMM_SWDiscreteModel::init(int number_of_states, int my_M, double my_prior)
   c_model->cos     = no_classes;
   c_model->s       = (sdstate*) malloc(sizeof(sdstate) * max(c_model->N,1));
   /* initialize all states. */
+  c_model->silent  = NULL;
 
   for (i = 0; i < number_of_states; ++i) {
     c_model->s[i].pi         = 0;
