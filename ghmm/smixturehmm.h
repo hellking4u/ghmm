@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : ghmm/ghmm/smixturehmm.h
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smixturehmm.h
   created      : TIME: 18:07:43     DATE: Thu 20. July 2000
   $Id$
 
@@ -48,7 +48,7 @@ int smixturehmm_calc_priors(double **cp, sequence_d_t *sqd, smodel **smo,
 /**
  */
 int smixturehmm_calc_cp(double **cp, sequence_d_t *sqd, smodel **smo, 
-			int smo_number);
+			int smo_number, double *total_train_w);
 
 /**
 */
