@@ -69,6 +69,18 @@ AC_DEFINE(GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG,1,[root solver allocation takes on
 AC_MSG_RESULT(no)
 )
 
+dnl checking for gsl_histogram_set_ranges_uniform
+AC_MSG_CHECKING([for gsl_histogram_set_ranges_uniform])
+AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
+[
+ gsl_histogram* h;
+ (void)gsl_histogram_set_ranges_uniform(h,-10.0,10.0);
+],
+AC_MSG_RESULT(yes)
+AC_DEFINE(GSL_HISTOGRAM_SET_RANGES_UNIFORM,1,[gsl_histogram_set_ranges_uniform is defined]),
+AC_MSG_RESULT(no)
+)
+
 dnl checking if gsl_sf_erf exists
 AC_MSG_CHECKING([for gsl_sf_erf])
 AC_TRY_LINK([#include <gsl/gsl_sf.h>],
