@@ -12,8 +12,6 @@ MAINTAINERCLEANFILES = aclocal.m4 configure \
 	mkinstalldirs missing install-sh \
 	$(distdir).tar.gz -r $(distdir)
 
-.PHONY: cvsclean
-
 EXTRA_DIST = COPYRIGHT.txt GPL.txt LGPL.txt ToDo
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt

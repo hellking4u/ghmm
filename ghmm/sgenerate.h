@@ -32,22 +32,6 @@ typedef enum {
   all_all
 } sgeneration_mode_t;
 
-/** 
-    Erzeugt zu einem gegebenen Modell zufaellige Sequenzen. Speicher fuer die 
-    Sequenzen und den Laengenvektor wird in der Fkt. selbst bereitgestellt.
-    Die Laenge der Sequenzen kann global vorgegeben werden (global_len > 0)
-    oder in der Funktion dadurch bestimmt werden, dass ein "final state"
-    erreicht wird (ein state, dessen Ausgangswahrscheinlichkeiten = 0 sind).
-    @return            Pointer auf ein Feld von Sequenzen (Allozierung)
-    @param smo         vorgegebenes Modell
-    @param seed        Initialisierungsvariable des Zufallsgenerators (int)
-    @param global_len  gewuenschte Sequenzlaenge (=0: autom. ueber final state)
-    @param seq_number  gewuenschte Anzahl von Sequenzen
-    
-*/
-sequence_d_t *sgenerate_sequences(smodel* smo, int seed, int global_len,
-				  long seq_number, long label, int Tmax);
-
 /**
    Verlaengert Teilsequenzen bei gegebenem Modell. Verschiedene Moeglichkeiten
    sind vorgesehen (nur Viterbi oder alle Pfade beruecksichtigen kombiniert
