@@ -5,6 +5,10 @@
 # to be filled
 BUILT_SOURCES = 
 
-LDADD = ../lib/libghmm.a
+bin_PROGRAMS = probdist
+
+probdist_SORUCES = probdist.c
+
+LDADD = ../ghmm/libghmm.a
 bin_SCRIPTS = ghmm-config
 

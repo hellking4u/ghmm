@@ -7,6 +7,7 @@
 
 #include <float.h>
 #include <stdio.h>
+#include "mes.h"
 #include "vector.h"
 #include "rng.h"
 
