@@ -224,7 +224,7 @@ model *model_direct_read(scanner_t *s, int *multip){
     }
     else if (!strcmp(s->id, "prior")) {/*A prior model*/
       if (prior_read) {scanner_error(s,"identifier prior twice");goto STOP;}
-      mo->prior = scanner_get_double(s);
+      mo->prior = scanner_get_edouble(s);
       if ((mo->prior < 0 || mo->prior > 1) && mo->prior != -1)
 	{ scanner_error(s, "invalid model prior"); goto STOP; }
       prior_read = 1;
@@ -235,7 +235,7 @@ model *model_direct_read(scanner_t *s, int *multip){
       scanner_get_name(s);
       if (!strcmp(s->id, "vector")) {
 	scanner_consume( s, '{' ); if(s->err) goto STOP; 
-	pi_vector = scanner_get_double_array(s, &len);
+	pi_vector = scanner_get_double_earray(s, &len);
 	if (len != mo->N) {scanner_error(s, "wrong number of elements in PI"); goto STOP;}
 	scanner_consume( s, ';' ); if(s->err) goto STOP;
 	scanner_consume( s, '}' ); if(s->err) goto STOP; 

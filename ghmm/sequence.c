@@ -105,7 +105,7 @@ sequence_t* sequence_read_alloc(scanner_t *s){
 	  }
 	  if (s->c == '(') {
 	    scanner_consume(s, '('); if (s->err) goto STOP;	  
-	    sq->seq_id[sq->seq_number] = scanner_get_double(s); 
+	    sq->seq_id[sq->seq_number] = scanner_get_edouble(s); 
 	    if(s->err) goto STOP; 
 	    scanner_consume(s, ')'); if (s->err) goto STOP;
 	  }
@@ -263,7 +263,7 @@ sequence_d_t* sequence_d_read_alloc(scanner_t *s){
 	  }
 	  if (s->c == '(') {
 	    scanner_consume(s, '('); if (s->err) goto STOP;	  
-	    sqd->seq_id[sqd->seq_number] = scanner_get_double(s); 
+	    sqd->seq_id[sqd->seq_number] = scanner_get_edouble(s); 
 	    if(s->err) goto STOP; 
 	    scanner_consume(s, ')'); if (s->err) goto STOP;
 	  }
@@ -279,7 +279,7 @@ sequence_d_t* sequence_d_read_alloc(scanner_t *s){
 	  }
 	}
 	sqd->seq[sqd->seq_number] = 
-	  scanner_get_double_array(s, sqd->seq_len + sqd->seq_number);
+	  scanner_get_double_earray(s, sqd->seq_len + sqd->seq_number);
 	if (sqd->seq_len[sqd->seq_number] > MAX_SEQ_LEN) {
 	  scanner_error(s, "sequence too long"); goto STOP;
 	}

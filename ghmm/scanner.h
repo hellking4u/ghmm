@@ -91,6 +91,9 @@ void*      scanner_get_array( scanner_t* s, int*len, char* type );
 double     scanner_get_double( scanner_t* s );
   /**
    */
+double     scanner_get_edouble( scanner_t* s );
+  /**
+   */
 int        scanner_get_id( scanner_t* s );
   /**
    */
