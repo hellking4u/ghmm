@@ -72,10 +72,14 @@ static int foba_initforward(model *mo, double *alpha_1, int symb,
 
 /*----------------------------------------------------------------------------*/
 
+/** modified by Casillux to improve performance */
 static double foba_stepforward(state *s, double *alpha_t, const double b_symb) {
   int i, id;
   double value = 0.0;
-  
+
+  if (b_symb < EPS_PREC)
+    return 0. ;
+
   //printf(" *** foba_stepforward\n");
   
   for (i = 0; i < s->in_states; i++) {
@@ -292,12 +296,15 @@ int foba_backward(model *mo, const int *O, int len, double **beta, const double 
 	  
 	    sum = 0.0;
         for (j = 0; j < mo->s[id].out_states; j++) {
-	     j_id = mo->s[id].out_id[j];
-	     //printf("  von %d nach %d mit %f\n",id,j_id,mo->s[id].out_a[j]);
-	     //printf("  [%d,%d] sum += %f * 1 * %f\n",id,j_id,mo->s[id].out_a[j],beta[t+1][j_id]);
-	   
-	     sum += mo->s[id].out_a[j] * mo->s[j_id].b[O[t+1]] * beta_tmp[j_id];
-		 //sum += mo->s[id].out_a[j] * mo->s[j_id].b[O[t+1]] * beta[t+1][j_id]; // TEST 
+	      j_id = mo->s[id].out_id[j];
+	      //printf("  von %d nach %d mit %f\n",id,j_id,mo->s[id].out_a[j]);
+	      //printf("  [%d,%d] sum += %f * 1 * %f\n",id,j_id,mo->s[id].out_a[j],beta[t+1][j_id]);
+         
+          if (mo->s[j_id].b[O[t+1]] < EPS_PREC)
+            continue ;
+         
+	      sum += mo->s[id].out_a[j] * mo->s[j_id].b[O[t+1]] * beta_tmp[j_id];
+		  //sum += mo->s[id].out_a[j] * mo->s[j_id].b[O[t+1]] * beta[t+1][j_id]; // TEST 
 		 
         }	
 
