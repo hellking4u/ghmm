@@ -1,4 +1,4 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* win_config.h   Windows specific settings.  */
 
 /* Define to empty if the keyword does not work.  */
 #undef const
