@@ -505,33 +505,51 @@ double randvar_normal(double mue, double u, int seed) {
 double randvar_normal_pos(double mue, double u, int seed) {
 # define CUR_PROC "randvar_normal_pos"
   double x = -1;
-#ifndef DO_WITH_GSL
-  double sigma, U, Us, Us1, Feps, Feps1, t, T;
+  double sigma;
+#ifdef DO_WITH_GSL
+  double s;
+#else
+  double U, Us, Us1, Feps, Feps1, t, T;
 #endif
 
   if (u <= 0.0) {
     mes_prot("u <= 0.0 not allowed\n"); goto STOP;
   }
+  sigma=sqrt(u);
 
   if (seed != 0) {
     gsl_rng_set(RNG,seed);
     return(1.0);
   }
 
-#if DO_WITH_GSL
+#ifdef DO_WITH_GSL
+  /* up to version 0.8 gsl_ran_gaussian_tail can not handle negative cutoff*/
+#define GSL_RAN_GAUSSIAN_TAIL_BUG 1
+#ifdef GSL_RAN_GAUSSIAN_TAIL_BUG 
+  s = (-mue) / sigma;
+  if (s < 1)
+    {
+      do
+        {
+          x = gsl_ran_gaussian (RNG, 1.0);
+        }
+      while (x < s);
+      return x * sigma+mue;
+    }
+#endif /* GSL_RAN_GAUSSIAN_TAIL_BUG */
   /* move boundary to lower values in order to achieve maximum at mue
      gsl_ran_gaussian_tail(generator, lower_boundary, sigma)
   */
   return gsl_ran_gaussian_tail(RNG, -mue, sqrt(u))+mue;
-#else
+
+#else /* DO_WITH_GSL */
   /* Methode: solange Gauss-verteilte Zuf.Zahl erzeugen (mit GSL-Lib.), 
      bis sie im pos. Bereich liegt -> nicht effektiv, wenn mue << 0 
   while (x < 0.0) {
-    x = sqrt(u) * randvar_std_normal(seed) + mue;
+    x = sigma * randvar_std_normal(seed) + mue;
   } */
   
   /** Inverse Transformierung mit restricted sampling nach Fishman */
-  sigma = sqrt(u);
   U = gsl_rng_uniform(RNG);               /*gsl_ran_flat(RNG,0,1) ??? */
   Feps = randvar_get_PHI(-(EPS_NDT+mue)/sigma);
   Us = Feps + (1-Feps)*U;
