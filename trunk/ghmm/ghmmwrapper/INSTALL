@@ -7,6 +7,11 @@
 # __copyright__
 
 
+Run swig [Havent figured out how to pass the -c t swig]
+
+> swig -c -python ghmmwrapper.i
+
+
 With the python interpreter you want to use, run
 
 > python setup.py build
@@ -20,5 +25,8 @@ wrapper into /some/where/lib/pythonX.Y/site-packages.
 Make sure to include /some/where/lib/pythonX.Y/site-packages
 into your PYTHONPATH.
 
+If you want to insert debugging symbols use 
+
+> python setup.py build --debug
 
 
