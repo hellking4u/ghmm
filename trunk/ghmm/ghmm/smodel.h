@@ -1,8 +1,8 @@
 /*-----------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/smodel.h
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.h
   created      : TIME: 21:44:45     DATE: Sun 14. November 1999
-  last-modified: TIME: 14:19:17     DATE: Wed 07. February 2001
+  last-modified: TIME: 19:30:15     DATE: Tue 10. April 2001
 ------------------------------------------------------------------------------*/
 
 #ifndef SMODEL_H
@@ -14,353 +14,232 @@
 /**@name SHMM-Modell */
 /*@{ (Doc++-Group: smodel) */
 
-/** @name GET\_DELTA\_OSC
-    Globales define
-*/
-#define GET_DELTA_OSC(c, class) ((c) == (class) ? 1 : 0)
-
-/* @name smodel\_get\_osc
-    Bestimmung der osum-Klasse
-
-    int smodel_get_osc(double osum);
-*/
-
+/** Continuous HMM. Structures and function. 
+    smodel includes continuous model with one transition matrix 
+    (COS in const.h is set to 0) and an extension for
+    models with several matrices
+    (COS in const.h is set to a positive integer values). In the latter case
+    a suitable (depending on the spezific application) function 
+    sequence\_get\_class has to be defined */
 
 /** @name sstate
-    Grundlegende Struktur, in der alle zu einem Zustand gehoerigen Parameter
-    gespeichert werden.
+    Structure for one state.
 */
 struct sstate{
-  /** Anfangswahrscheinlichkeit */ 
+  /** initial prob. */ 
   double pi;  
-  /** ID's der Nachfolge States */ 
+  /** IDs of successor states */ 
   int *out_id;  
-  /** ID's der Vorgaenger States */    
+  /** IDs of predecessor states */
   int *in_id;
-  /** Nachfolge Uebergangswahrscheinlichkeiten */       
+  /** transition probs to successor states. It is a
+   matrix in case of mult. transition matrices (COS > 1)*/       
   double **out_a; 
-  /** Vorgaenger Uebergangswahrscheinlichkeiten */   
+  /** transition probs from predecessor states. It is a
+   matrix in case of mult. transition matrices (COS > 1) */ 
   double **in_a;
-  /** Anzahl Nachfolge States */     
+  /** number of  successor states */     
   int out_states; 
-  /** Anzahl Vorgaenger States */
+  /** number of  predecessor states */  
   int in_states;    
-  /** Gewichtsvektor. Vektor der Gewichte der versch. Verteilungen */
+  /** weight vector for output function components */
   double *c;
-  /** Mittelwertvektor. Vektor der Mittelwerte der versch. Verteilungen */
+  /** mean vector for output functions (normal density and truncated normal
+      density */
   double *mue;
-  /** Varianzvektor. 
-      Vektor der Varianzen der versch. Verteilungen */
+  /** variance vector for output functions */
   double *u;
-  /** falls fix == 1 --> c, mue, u bleiben fix, werden also nicht trainiert */
+  /** flag for fixation of parameter. If fix = 1 do not change parameters of
+   output functions, if fix = 0 do normal training. Default is 0. */
   int fix;
 };
 typedef struct sstate sstate;
 
 /** @name smodel
-    continous HMM
+    continous HMM    
 */
 struct smodel{
-  /** Zahl der Zustaende */
+  /** Number of states */
   int N;
-  /** Zahl der Verteilungen pro Zustand */   
+  /** Number of output densities per state */
   int M;
-  /** Flag fuer die zu verwendende Dichtefunktion */
+  /** Flag for density function. 0: normal density, 1: truncated normal 
+   density, 2: approximated normal density */
   density_t density;
-  /** Prior fuer die a priori Wahrscheinlichkeit des Modells.
-   Kein prior definiert: Wert auf -1 gesetzt */
+  /** prior for a priori prob. of the model. -1 means no prior specified (all
+      models have equal prob. a priori. */
   double prior;
-  /** Vektor der Zustaende */
+  /** All states of the model. Transition probs are part of the states. */
   sstate *s; 
 };
 typedef struct smodel smodel;
 
-/** @name smodel\_direct
-    Modellparameter in Matrixform fuer hmm\_input
-*/
-struct smodel_direct{
-  /** Zahl der Zustaende */
-  int N;
-  /** Zahl der Verteilungen */  
-  int M;
-  /** Flag fuer die zu verwendende Dichtefunktion */
-  density_t density;
-  /** Prior fuer die a priori Wahrscheinlichkeit des Modells.
-   Soll kein Prior verwendet werden, Wert auf -1 setzen. */
-  double prior;
-  /** Anfangsmatrix */
-  double * Pi;
-  /** 3-dim. Uebergangsmatrix (BEACHTE: O-Sum-Klasse k als erster Index) */
-  double ***A;
-  /** Matrix der Verteilungsgewichte */
-  double **C;
-  /** Matrix der Mittelwerte (NxM) */
-  double **Mue;
-  /** Matrix der Varianzen (NxM) */
-  double **U;
-  /** Vektor zur Kennzeichnung von States, deren Ausgabeparameter nicht 
-      trainiert werden sollen. Default ist 0 fuer alle states */
-  int *fix_state;
-};
-typedef struct smodel_direct smodel_direct;
-
-
-/** @name shmm_check\_t
-  */
-struct shmm_check_t{
-  /** */
-  int r_a;
-  /** */
-  int c_a;
-  /** */
-  int r_c;
-  /** */
-  int c_c;
-  /** */
-  int r_mue;
-  /** */
-  int c_mue;
-  /** */
-  int r_u;
-  /** */
-  int c_u;
-  /** */
-  int len_pi;
-  int len_fix;
-};
-typedef struct shmm_check_t shmm_check_t;
-
-/*
-  Wichtig: Include von sequence.h zur Vermeidung von Fehlern beim Uebersetzen
-  erst an dieser Stelle. (sequence.h und smodel.h includen sich gegenseitig) 
-*/
-
+/* don't include this earlier: in sequence.h smodel has to be known */
 #include "sequence.h"  
 
 
-/** Speicher eines Modells freiraeumen..
-    @return ?? 
-    @param smo  ptr. auf ptr auf Modell */
+/** Free memory smodel 
+    @return 0: success, -1: error
+    @param smo  pointer pointer of smodel */
 int     smodel_free(smodel **smo);
 
-/**
-   Einlesen einer Ascii-Datei zur Initialisierung der Modelle..
-   @return Vektor der eingelesenen Modelle
-   @param filename    Name der einzulesenden Ascii-Datei
-   @param smo_number  Zahl der eingelesenen Modelle */
+/** Reads an ascii file with specifications for one or more smodels.
+    All parameters in matrix or vector form.
+    This is necessary whenever an initial model is needed (e.g. 
+    training) or sequences have to be generated from trained models.
+    For each smodel block smodel\_read\_block() is called.
+   @return vector of read smodels
+   @param filename   input ascii file
+   @param smo_number  number of read smodels */
 smodel** smodel_read(char *filename, int *smo_number);
 
-/**
-   Einlesen eines Modells bei expliziter Angabe aller relevanten 
-   Modellparameter in Matrixform..
-   @return ??
-   @param s        scanner
-   @param multip   eingelesene Multiplizitaet; gibt Anzahl der Kopien an, 
-                   die vom eingelesenen Modell erzeugt werden sollen */
-
-smodel*  smodel_direct_read(scanner_t *s, int *multip);
+/** Reads one smodel block. It is possible to generate multiple
+    identical copies of the model read. Memory allocation is here.
+   @return pointer of smode read
+   @param s        scanner for reading
+   @param multip   number ob identical copies
+*/
+smodel*  smodel_read_block(scanner_t *s, int *multip);
 
 /**
-   Kopieren eines vorgegebenen Modells. Speicher alloc geschieht in 
-   smodel\_copy.
-   @return ??
-   @param smo   zu kopierendes Modell */
+   copies one smodel. Memory alloc is here.
+   @return pointer to smodel copy
+   @param smo   smodel to be copied  */
 smodel*  smodel_copy(const smodel *smo);
 
 /**
-   Pruefen, ob alle Normierungsbedingungen vom Modell erfuellt werden. (Summen 
-   der versch. Wahrscheinlichkeiten = 1?)
-   @return ??
-   @param smo   zu ueberpruefendes Modell */
+   Checks if smodel is well definded. E.g. sum pi = 1, only positive values 
+   etc.
+   @return 0 if smodel is ok, -1 for error
+   @param smo   smodel for  checking
+*/
 int     smodel_check(const smodel* smo);
 
 /**
-   Check Anzahl States und Anzahl Ausgabewerte in den Modellen auf
-   Uebereinstimmung..
-   @return ??
-   @param smo             Vektor der Modelle
-   @param smodel_number   Anzahl der Modelle */
+   For a vector of smodels: check that the number of states and the number
+   of output function components are the same in each smodel.
+   @return 0 if smodels are  ok, -1 for error
+   @param smo    vector of smodels for checking
+   @param smodel_number  number of smodels
+ */
 int     smodel_check_compatibility(smodel **smo, int smodel_number);
 
 /**
-   Erzeugt eine Zufallszahl der m-ten Dichtefunktion im Zustand state 
-   des Modells, entsprechend der Art der Dichtefunktion des Modells.
-   Greift dabei auf Fkt. in randvar zurueck.
-   @return                erzeugter Zufallszahlwert
-   @param smo             smodel
-   @param state           Zustand
-   @param m               Index der Dichtefunktion im Zustand */
+   Generates random symbol.
+   Generates one random number for a specified state and specified
+   output component of the given smodel.
+   @return               random number
+   @param smo     smodel
+   @param state    state
+   @param m         index of output component
+*/
 double smodel_get_random_var(smodel *smo, int state, int m);
 
-/**
-   Berechnung der Summe der log( P ( O|lambda ) ).
-   Sequenzen, die vom Modell nicht dargestellt werden koennen, werden 
-   nicht mitsummiert.
-   @return       n/-1 wobei  n = Anzahl der eingegangenen Seq./ -1 = Fehler
-   @param smo    vorgegebenes Modell
-   @param sq     vorgegebene Sequenzen       
-   @param log\_p  gesuchte Likelihood (Rückgabe)
+/** 
+    Computes sum over all sequence of
+    seq_w * log( P ( O|lambda ) ). If a sequence can't be generated by smo
+    error cost of seq_w * PRENALTY_LOGP are imposed.
+   @return       n: number of evaluated sequences, -1: error
+   @param smo   smodel
+   @param sqd    sequence struct
+   @param log\_p  evaluated log likelihood
 */
 int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
 
 /**
-   Schreiben eines Modells in Matrixform..
-   @param file   Ausgabedatei
-   @param smo    zu schreibendes Modell
+   Prints one smodel in matrix form.
+   @param file     output file
+   @param smo   smodel
 */
 void smodel_print(FILE *file, smodel *smo); 
 
 /**
-   Schreiben eines Modells in Matrixform MIT NUR EINER MATRIX A (= Ak_0).
-   @param file   Ausgabedatei
-   @param smo    zu schreibendes Modell
+   Prints one smodel with only one transition Matrix A (=Ak\_0).
+   @param file     output file
+   @param smo   smodel
 */
 void smodel_print_oneA(FILE *file, smodel *smo);
 
 /**
-   Schreiben der Uebergangsmatrix einer O-Sum-Klasse eines Modells..
-   @param file       Ausgabedatei
-   @param smo        zu schreibendes Modell
-   @param k          O-Sum-Klasse k
-   @param tab        zur Formatierung: fuehrende Tabs
-   @param separator  Formatierung: Trennzeichen der Spalten
-   @param ending     Formatierung: Endzeichen der Zeile  
+   Prints transition matrix of specified class.
+   @param file       output file
+   @param smo     smodel
+   @param k          transition class
+   @param tab      format: leading tab
+   @param separator  format: seperator
+   @param ending     format: end of data in line
 */
 void smodel_Ak_print(FILE *file, smodel *smo, int k, char *tab,
 		     char *separator, char *ending);
 
 /**
-   Schreiben der Gewichtsmatrix C eines Modells..
-   @param file       Ausgabedatei
-   @param smo        zu schreibendes Modell
-   @param tab        zur Formatierung: fuehrende Tabs
-   @param separator  Formatierung: Trennzeichen der Spalten
-   @param ending     Formatierung: Endzeichen der Zeile  
+   Prints weight matrix of output functions of an smodel.
+   @param file       output file
+   @param smo     smodel
+   @param tab      format: leading tab
+   @param separator  format: seperator
+   @param ending     format: end of data in line
 */
 void smodel_C_print(FILE *file, smodel *smo, char *tab, char *separator, 
 		    char *ending);
+
 /**
-   Schreiben der Mittelwertmatrix Mue eines Modells..
-   @param file      Ausgabedatei
-   @param smo       zu schreibendes Modell
-   @param tab       zur Formatierung: fuehrende Tabs
-   @param separator Formatierung: Trennzeichen der Spalten
-   @param ending    Formatierung: Endzeichen der Zeile  
+   Prints mean matrix of output functions of an smodel.
+   @param file       output file
+   @param smo     smodel
+   @param tab      format: leading tab
+   @param separator  format: seperator
+   @param ending     format: end of data in line
 */
 void smodel_Mue_print(FILE *file, smodel *smo, char *tab, char *separator, 
 		      char *ending);
 /**
-   Schreiben der Varianzenmatrix U eines Modells..
-   @param file      Ausgabedatei
-   @param smo       zu schreibendes Modell
-   @param tab       zur Formatierung: fuehrende Tabs
-   @param separator Formatierung: Trennzeichen der Spalten
-   @param ending    Formatierung: Endzeichen der Zeile  
+   Prints variance matrix of output functions of an smodel.
+   @param file       output file
+   @param smo     smodel
+   @param tab      format: leading tab
+   @param separator  format: seperator
+   @param ending     format: end of data in line
 */
 void smodel_U_print(FILE *file, smodel *smo, char *tab, char *separator, 
 			char *ending);
 /**
-   Schreiben des Anfangsbelegungsvektors eines Modells..
-   @param file      Ausgabedatei
-   @param smo       zu schreibendes Modell
-   @param tab       zur Formatierung: fuehrende Tabs
-   @param separator Formatierung: Trennzeichen der Spalten
-   @param ending    Formatierung: Endzeichen der Zeile  
+   Prints initial prob vector of an smodel.
+   @param file       output file
+   @param smo     smodel
+   @param tab      format: leading tab
+   @param separator  format: seperator
+   @param ending     format: end of data in line
 */
 void smodel_Pi_print(FILE *file, smodel *smo, char *tab, char *separator, 
 		     char *ending);
-
+/**
+   Prints vector of fix\_states.
+   @param file       output file
+   @param smo     smodel
+   @param tab      format: leading tab
+   @param separator  format: seperator
+   @param ending     format: end of data in line
+*/
 void smodel_fix_print(FILE *file, smodel *smo, char *tab, char *separator, 
 		     char *ending);
-/**
-   Schreiben der transponierten Uebergangsmatrix eines Modells..
-   @param file      Ausgabedatei
-   @param smo       zu schreibendes Modell
-   @param tab       zur Formatierung: fuehrende Tabs
-   @param separator Formatierung: Trennzeichen der Spalten
-   @param ending    Formatierung: Endzeichen der Zeile  
-*/
-void smodel_Ak_print_transp(FILE *file, smodel *smo, int k, char *tab,
-			    char *separator, char *ending);
-/**
-   Schreiben der transponierten Gewichtsmatrix eines Modells..
-   @param file      Ausgabedatei
-   @param smo       zu schreibendes Modell
-   @param tab       zur Formatierung: fuehrende Tabs
-   @param separator Formatierung: Trennzeichen der Spalten
-   @param ending    Formatierung: Endzeichen der Zeile  
-*/
-void smodel_C_print_transp(FILE *file, smodel *smo, char *tab, char *separator, 
-			   char *ending);
-/**
-   Schreiben der transponierten Mittelwertmatrix eines Modells..
-   @param file   Ausgabedatei
-   @param smo    zu schreibendes Modell
-   @param tab    zur Formatierung: fuehrende Tabs
-   @param separator  Formatierung: Trennzeichen der Spalten
-   @param ending     Formatierung: Endzeichen der Zeile  
-*/
-void smodel_Mue_print_transp(FILE *file, smodel *smo, char *tab, 
-			     char *separator, char *ending);
-/**
-   Schreiben der transponierten Varianzenmatrix eines Modells..
-   @param file   Ausgabedatei
-   @param smo    zu schreibendes Modell
-   @param tab    zur Formatierung: fuehrende Tabs
-   @param separator  Formatierung: Trennzeichen der Spalten
-   @param ending     Formatierung: Endzeichen der Zeile  
-*/
-void smodel_U_print_transp(FILE *file, smodel *smo, char *tab, 
-			       char *separator, char *ending);
-/**
-   Schreiben des transponierten Anfangsbelegungsvektors eines Modells..
-   @param file   Ausgabedatei
-   @param smo    zu schreibendes Modell
-   @param tab    zur Formatierung: fuehrende Tabs
-   @param separator  Formatierung: Trennzeichen der Spalten
-   @param ending     Formatierung: Endzeichen der Zeile  
-   */
-void smodel_Pi_print_transp(FILE *file, smodel *smo, char *tab, char *ending);
 
-void smodel_fix_print_transp(FILE *file, smodel *smo, char *tab, char *ending);
-
-/**
-   Schreiben eines SHMM-Modells in Matrixformat. 
-   Input  smodel\_direct (heisst: Parameter als Matrix gespeichert.)
-   @param file     Ausgabedatei
-   @param smo_d    zu schreibendes Modell in Matrixformat
-   @param multip   Modell wird in multip Kopien geschrieben
-*/
-void smodel_direct_print(FILE *file, smodel_direct *smo_d, int multip);
-
-/** Alle Pointer des Modell freigeben und auf NULL setzen, Variablen 
-    auf Null setzen..
-    @param smo_d   SHMM-Modell-Struktur (\Ref{struct smodel_direct})
-    @param check   Check-Struktur       (\Ref{struct shmm_check_t})
-*/
-void smodel_direct_clean(smodel_direct *smo_d, shmm_check_t *check); 
-
-/** Teste Kompatibiliatet der Modell-Komponenten..
-    @return ??
-    @param smo_d  SHMM-Modell-Struktur  (\Ref{struct model_direct})
-    @param check Check-Struktur         (\Ref{struct shmm_check_t})
-*/
-int smodel_direct_check_data(smodel_direct *smo_d, shmm_check_t *check); 
-
-/** Berechnung c_im * b_im[omega]..
-    @return       
-    @param smo    continous HMM
-    @param state  vorgegebener Zustand 
-    @param m      Pointer auf Ergebnisvektor (vorher allozieren!)   
-    @param omega  vorgegebener Ausgabewert 
+/** Computes the density of one symbol (omega) in a given state and a 
+    given output component
+    @return calculated density
+    @param smo smodel
+    @param state state 
+    @param m output component
+    @param omega given symbol
 */
 double smodel_calc_cmbm(smodel *smo, int state, int m, double omega);
 
-/** Berechnung b[state][omega] (mixture-pdf)..
-    @return       Wert
-    @param smo    continous HMM
-    @param state  vorgegebener Zustand
-    @param omega  vorgegebener Ausgabewert
+/** Computes the density of one symbol (omega) in a given state (sums over
+    all output components
+    @return calculated density
+    @param smo smodel
+    @param state state 
+    @param omega given symbol
 */
 double smodel_calc_b(smodel *smo, int state, double omega);
 
@@ -378,22 +257,46 @@ double smodel_calc_b(smodel *smo, int state, double omega);
 double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, 
 			    int verbose);
 
-/** Berechnung c_im * B_im[omega] (Verteilungsfunktion!)..
-    @return       
-    @param smo    continous HMM
-    @param state  vorgegebener Zustand 
-    @param m      vorgegebener Index der Verteilung   
-    @param omega  vorgegebener Ausgabewert
+/** 
+    Computes value of distribution function for a given symbol omega, a given
+    state and a given output component.
+    @return   value of distribution function
+    @param smo   smodel
+    @param state  state
+    @param m      component
+    @param omega symbol
 */
 double smodel_calc_cmBm(smodel *smo, int state, int m, double omega);
 
-/** Berechnung B[state][omega] (mixture-Verteilungsfunktion!)..
-    @return       
-    @param smo    continous HMM
-    @param state  vorgegebener Zustand
-    @param omega  vorgegebener Ausgabewert
+/** 
+    Computes value of distribution function for a given symbol omega and
+    a given  state. Sums over all components.
+    @return   value of distribution function
+    @param smo   smodel
+    @param state  state
+    @param omega symbol
 */
 double smodel_calc_B(smodel *smo, int state, double omega);
+
+/** Computes the number of free parameters in an array of
+   smodels. E.g. if the number of parameter from pi is N - 1.
+   Counts only those parameters, that can be changed during  
+   training. If pi[i] = 0 it is not counted, since it can't be changed.
+   @return number of free parameters
+   @param smo smodel
+   @param smo\_number number of smodels
+*/
+int smodel_count_free_parameter(smodel **smo, int smo_number);
+
+
+/*============================================================================*/
+
+
+
+/* keep the following functions for first distribution???
+   --> BK ? 
+*/
+
 
 /** Intervall(a,b) mit  B(a) < 0.01, B(b) > 0.99
     @param smo    continous HMM
@@ -459,7 +362,6 @@ int smodel_chisquare_index(smodel *smo, sequence_d_t *sqd, double **x,
 
 int smodel_idiffsum_lowerbound(smodel *smo,sequence_d_t *sqd,double *idiffsum);
 
-int smodel_count_free_parameter(smodel **smo, int smo_number);
 
 #endif
 

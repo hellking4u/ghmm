@@ -1,8 +1,8 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/smodel.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.c
   created      : TIME: 21:54:32     DATE: Sun 14. November 1999
-  last-modified: TIME: 09:56:46     DATE: Wed 14. March 2001
+  last-modified: TIME: 16:37:31     DATE: Wed 11. April 2001
 *******************************************************************************/
 
 #include <float.h>
@@ -21,18 +21,6 @@
 #include "randvar.h"
 
 
-/*----------------------------------------------------------------------------*/
-#if 0
-int smodel_get_osc(double osum) {
-  int class;
-  /* Ziel: osum zwischen 0 u. 80 auf COS-1 Klassen verteilen, 
-     Rest in Klasse COS-1 */
-  class = floor(osum * (COS-1) / 80.0);
-  if (class < 0) class = 0;
-  if (class >= COS) class = COS-1;
-  return class;
-}
-#endif
 
 /*----------------------------------------------------------------------------*/
 static int smodel_state_alloc(sstate *state, int M, int in_states,
@@ -44,13 +32,13 @@ static int smodel_state_alloc(sstate *state, int M, int in_states,
   if(!m_calloc(state->u, M)) {mes_proc(); goto STOP;}
   if (out_states > 0) {
     if(!m_calloc(state->out_id, out_states)) {mes_proc(); goto STOP;}
-    /* Erweiterung: out_a ist Matrix statt Vektor */
+    /* if COS > 1: out_a is a matrix */
     state->out_a = matrix_d_alloc(COS, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
     if(!m_calloc(state->in_id, in_states)) {mes_proc(); goto STOP;}
-    /* Erweiterung: in_a ist Matrix statt Vektor */
+    /* if COS > 1: in_a is a matrix */
     state->in_a = matrix_d_alloc(COS, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
   }
@@ -76,8 +64,6 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
   }
 
   for (i = 0; i < smo->N; i++) {
-    /* Erweiterung: zusaetzliche Schleife ueber die KLassen; 
-       ACHTUNG: Uebergang wird angelegt, wenn er in mind. einer Klasse != 0! */
     exist = 0;
     for (c = 0; c < COS; c++) {
       if (a_matrix[c][index][i]) { 
@@ -85,7 +71,8 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
 	break;
       }
     }
-    if (exist) { /* Uebergang zum Nachfolger i moeglich */
+    /* transition to successor possible at least in one transition class */
+    if (exist) { 
       if (count_out >= smo->s[index].out_states) {mes_proc(); return(-1);}
       smo->s[index].out_id[count_out] = i;
       for (c = 0; c < COS; c++) 
@@ -99,7 +86,8 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
 	break;
       }
     }
-    if (exist) { /* Uebergang vom Vorgaenger i moeglich */  
+    /* transition to predecessor possible at least in one transition class */
+    if (exist) {
       if (count_in >= smo->s[index].in_states) {mes_proc(); return(-1);}
       smo->s[index].in_id[count_in] = i;
       for (c = 0; c < COS; c++)
@@ -128,11 +116,11 @@ smodel **smodel_read(char *filename, int *smo_number) {
       (*smo_number)++;
       /* more mem */	 
       if (m_realloc(smo, *smo_number)) { mes_proc(); goto STOP; }
-      smo[*smo_number - 1] = smodel_direct_read(s, (int *) &new_models); 
+      smo[*smo_number - 1] = smodel_read_block(s, (int *) &new_models); 
       if (!smo[*smo_number - 1]) { mes_proc(); goto STOP; }
-      /* gelesenes Modell kopieren */
+      /* copy smodel */
       if (new_models > 1) { 
-	/* "-1" wg. smo_number++ schon oben */
+	/* "-1" due to  (*smo_number)++ from above  */
 	if (m_realloc(smo, *smo_number - 1 + new_models)) { 
 	  mes_proc(); goto STOP; 
 	}
@@ -160,8 +148,8 @@ STOP:
 
 
 /*============================================================================*/
-smodel *smodel_direct_read(scanner_t *s, int *multip){
-#define CUR_PROC "smodel_direct_read"
+smodel *smodel_read_block(scanner_t *s, int *multip){
+#define CUR_PROC "smodel_read_block"
   int i,j,osc, m_read, n_read, pi_read, a_read, c_read, mue_read, 
     u_read, len, density_read, out, in, prior_read, fix_read;
   smodel *smo      = NULL;
@@ -186,37 +174,37 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
     scanner_consume(s, '='); if(s->err) goto STOP;
     if (!strcmp(s->id, "multip")) {
       *multip = scanner_get_int(s);
-      if (*multip < 1) {/* Bloedsinn, daher Angabe ignorieren */
+      if (*multip < 1) {/* ignore: make no sense */
 	*multip = 1;
 	mes_prot("Multip < 1 ignored\n");
       }
     }
-    else if (!strcmp(s->id, "M")) {/* Anzahl Dichtefkt. */
+    else if (!strcmp(s->id, "M")) {/* number of output components */
       if (m_read) {scanner_error(s, "identifier M twice"); goto STOP;}
       smo->M = scanner_get_int(s);
       m_read = 1;
     }
-    else if (!strcmp(s->id, "N")) {/* Anzahl Zustaende */
+    else if (!strcmp(s->id, "N")) {/* number of states */
       if (n_read) {scanner_error(s, "identifier N twice"); goto STOP;}
       smo->N = scanner_get_int(s);
       if (!m_calloc(smo->s, smo->N)) {mes_proc(); goto STOP;}
       n_read = 1;
     }   
-    else if (!strcmp(s->id, "density")) {/* Art der Dichtefunktion */
+    else if (!strcmp(s->id, "density")) {/* which density function? */
       if (density_read) {scanner_error(s,"identifier density twice");goto STOP;}
       smo->density = (density_t)scanner_get_int(s);
       if ((int)smo->density < 0 || smo->density >= density_number)
 	{ scanner_error(s, "unknown typ of density function"); goto STOP; }
       density_read = 1;
     }   
-    else if (!strcmp(s->id, "prior")) {/* Modellprior */
+    else if (!strcmp(s->id, "prior")) {/* modelprior */
       if (prior_read) {scanner_error(s,"identifier prior twice");goto STOP;}
       smo->prior = scanner_get_double(s);
       if ((smo->prior < 0 || smo->prior > 1) && smo->prior != -1)
 	{ scanner_error(s, "invalid model prior"); goto STOP; }
       prior_read = 1;
     }   
-    else if (!strcmp(s->id, "Pi")) {/* Initial State WSK */
+    else if (!strcmp(s->id, "Pi")) {/* Initial State Prob. */
       if (!n_read) {scanner_error(s, "need N as a range for Pi"); goto STOP;}
       if (pi_read) {scanner_error(s, "identifier Pi twice"); goto STOP;}
       scanner_get_name(s);
@@ -250,8 +238,8 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
     }
-    /* 1.Art Uebergangs.WSK: EINE Matrix A -> soll fuer alle Klassen gelten */
-    else if (!strcmp(s->id, "A")) {/* Uebergangs.WSK */
+    /* 1. Possibility: one matrix for all transition classes */
+    else if (!strcmp(s->id, "A")) {
       if (!n_read) {scanner_error(s, "need N as a range for A"); goto STOP;}
       if (a_read) {scanner_error(s, "Identifier A twice"); goto STOP;}
       if (!m_calloc(a_matrix, smo->N)) {mes_proc(); goto STOP;}
@@ -265,7 +253,7 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
       else {
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
-      /* Erweiterung: eingelesene A-Matrix auf 3-Dim Matrix vervielfaeltigen */
+      /* copy transition matrix to all transition classes */
       if (!m_calloc(a_3dmatrix, COS)) {mes_proc(); goto STOP;}
       a_3dmatrix[0] = a_matrix;
       for (i = 1; i < COS; i++) {
@@ -273,16 +261,13 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
 	if (!a_3dmatrix[i]) {mes_proc(); goto STOP;}
       }
     }
-    /* 2.Art Uebergangs.WSK: (Klassenanzahl) COS viele Matritzen Ak */
-    else if (!strncmp(s->id, "Ak_", 3)) {/* Uebergangs.WSK */
+    /* 2. Possibility: one matrix for each transition class specified */
+    else if (!strncmp(s->id, "Ak_", 3)) {
       if (!n_read) {scanner_error(s, "need N as a range for A"); goto STOP;}
       if (a_read) {scanner_error(s, "identifier A twice"); goto STOP;}
       if (!m_calloc(a_3dmatrix, COS)) {mes_proc(); goto STOP;}
       for (osc = 0; osc < COS; osc++) {
 	if (!m_calloc(a_3dmatrix[osc], smo->N)) {mes_proc(); goto STOP;}
-/* 	scanner_consume( s, '(' ); if(s->err) goto STOP;   */
-/* 	scanner_get_int(s); if(s->err) goto STOP;   */
-/* 	scanner_consume( s, ')' ); if(s->err) goto STOP;   */
 	scanner_get_name(s);
 	if (!strcmp(s->id, "matrix")) {
 	  if (matrix_d_read(s, a_3dmatrix[osc], smo->N, smo->N)){
@@ -294,7 +279,7 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
 	}
 	if (osc < COS-1) {
 	  scanner_consume( s, ';' ); if(s->err) goto STOP;
-	  /* naechste Matrix lesen */
+	  /* read next matrix */
 	  scanner_get_name(s);
 	  if (strncmp(s->id, "Ak_", 3)) {
 	    scanner_error(s, "to less matrices Ak"); goto STOP;
@@ -304,7 +289,7 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
       }
       a_read = 1;
     }
-    else if (!strcmp(s->id, "C")) {/* Gewichte der Dichtefkt. */
+    else if (!strcmp(s->id, "C")) {/* weight for output components */
       if ((!n_read)||(!m_read)){
 	scanner_error(s, "need M and N as a range for C"); goto STOP;
       }
@@ -321,7 +306,7 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
     }
-    else if (!strcmp(s->id, "Mue")) {/* Mittelwerte der Normalvert. */
+    else if (!strcmp(s->id, "Mue")) {/* mean of normal density */
       if ((!n_read)||(!m_read)){
 	scanner_error(s, "need M and N as a range for Mue"); goto STOP;
       }
@@ -338,7 +323,7 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
     }
-    else if (!strcmp(s->id, "U")) {/* Varianzen der Normalvert. */
+    else if (!strcmp(s->id, "U")) {/* variances of normal density */
       if ((!n_read)||(!m_read)){
 	scanner_error(s, "need M and N as a range for U"); goto STOP;
       }
@@ -368,17 +353,17 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
     scanner_error(s, "some identifier not specified (N, M, Pi, A, C, Mue, U or density)"); 
     goto STOP;
   }
-  /* kein prior gelesen --> WErt auf -1 setzten */
+  /* set prior to -1 it none was specified */
   if (prior_read == 0)
     smo->prior = -1;
-  /* default fuer fix ist 0 */
+  /* default for fix is 0 */
   if (fix_read == 0) {
     if (!m_calloc(fix_vektor, smo->N)) {mes_proc(); goto STOP;}
     for (i = 0; i < smo->N; i++)
       fix_vektor[i] = 0;
   }
-  /* Speicher Alloc fuer Modell: Aufpassen: Matrizen Ak koennen versch. sein;
-     sobald in EINER der versch. Klassen aij > 0 wird Uebergang dazugenommen */
+  /* memory alloc for all transition matrices. If a transition is possible in one
+     class --> alloc memory for all classes */
   for (i = 0; i < smo->N; i++) {
     for (j = 0; j < smo->N; j++) {
       out = in = 0;
@@ -393,7 +378,7 @@ smodel *smodel_direct_read(scanner_t *s, int *multip){
     }
     if (smodel_state_alloc(smo->s + i, smo->M, smo->s[i].in_states,
 			   smo->s[i].out_states)) { mes_proc(); goto STOP; }
-    /* Eingelesene Parameter auf Modell uebertragen */
+    /* copy values read to smodel */
     if(smodel_copy_vectors(smo, i, pi_vektor, fix_vektor, a_3dmatrix, c_matrix, mue_matrix,
 			   u_matrix)) {mes_proc(); goto STOP;}
   }
@@ -416,7 +401,7 @@ STOP:
   smodel_free(&smo);
   return NULL;
 #undef CUR_PROC
-} /* smodel_direct_read */
+} /* smodel_read_block */
 
 
 /*============================================================================*/
@@ -460,7 +445,7 @@ smodel *smodel_copy(const smodel *smo) {
     if(!m_calloc(sm2->s[i].c, smo->M)) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].mue, smo->M)) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].u, smo->M)) {mes_proc(); goto STOP;}
-    /* Werte kopieren */     
+    /* copy values */     
     for (j = 0; j < nachf; j++) {
       for (k = 0; k < COS; k++)
 	sm2->s[i].out_a[k][j] = smo->s[i].out_a[k][j];
@@ -499,15 +484,14 @@ int smodel_check(const smodel* smo) {
   int res = -1;
   double sum;
   int i,k,j;
-  /* Summe der Pi[i] == 1 */
+  /* sum  Pi[i] == 1 ? */
   sum = 0.0;
   for (i = 0; i < smo->N; i++) {
     sum += smo->s[i].pi;
   }
   if ( fabs(sum - 1.0) >= EPS_PREC )
     { mes_prot("sum Pi[i] != 1.0\n"); goto STOP; }
-  /* printf("Summe der Pi[i] = %8.5f\n", sum); */
-  /* in fix nur 0/1 Eintraege */
+  /* only 0/1 in fix? */
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].fix != 0 && smo->s[i].fix != 1) {
       mes_prot("in vector fix_state only 0/1 values!\n"); goto STOP;
@@ -519,13 +503,11 @@ int smodel_check(const smodel* smo) {
 	mprintf(NULL,0,"out_states = 0 (state %d -> final state!)\n",i); 
       mes_prot(str);
     }
-    /* Summe der a[i][k][j] */
+    /* sum  a[i][k][j] */
     for (k = 0; k < COS; k++) {
       sum = 0.0;
       for (j = 0; j < smo->s[i].out_states; j++) {
 	sum += smo->s[i].out_a[k][j];
-	/* printf("    out_a[%d][%d][%d] = %8.5f\n", 
-	          i, k, j, smo->s[i].out_a[j]); */
       }
       if ( fabs(sum - 1.0) >= EPS_PREC ) { 
 	char *str = 
@@ -535,7 +517,7 @@ int smodel_check(const smodel* smo) {
 	/* goto STOP; */
       }
     }
-    /* Summe der c[j] */
+    /* sum c[j] */
     sum = 0.0;
     for (j = 0; j < smo->M; j++)
       sum += smo->s[i].c[j];
@@ -606,12 +588,12 @@ int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p) {
   *log_p = 0.0;
   for (i = 0; i < sqd->seq_number; i++) {
     if (sfoba_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
-      *log_p += log_p_i;
+      *log_p += log_p_i * sqd->seq_w[i];
       matched++;
     }
     else  {
       /* Test: high costs for each unmatched Seq. */
-      *log_p -= 100.0;
+      *log_p += PENALTY_LOGP * sqd->seq_w[i];
       matched++;
       /*      mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
     }
@@ -627,7 +609,7 @@ STOP:
 
 
 /*============================================================================*/
-/* Diverse Ausgaben */
+/* various print functions
 /*============================================================================*/
 
 
@@ -688,8 +670,8 @@ void smodel_Mue_print(FILE *file, smodel *smo, char *tab, char *separator,
 /*============================================================================*/
 void smodel_U_print(FILE *file, smodel *smo, char *tab, char *separator, 
 			char *ending) {
-  /*** BEACHTE: U sollte mindestens so genau ausgegeben werden, so dass
-       der kleinstmoegliche Wert EPS_U in const.h noch erfasst wird */
+  /* attention: choose precision big enough to allow printing of  
+     EPS_U in const.h */
   int i, j;
   for (i = 0; i < smo->N; i++) {
     fprintf(file, "%s", tab);
@@ -721,101 +703,6 @@ void smodel_fix_print(FILE *file, smodel *smo, char *tab, char *separator,
   fprintf(file, "%s\n", ending);
 } 
 
-/*============================================================================*/
-
-void smodel_Ak_print_transp(FILE *file, smodel *smo, int k, char *tab, 
-			    char *separator, char *ending) {
-# define CUR_PROC "smodel_A_print_transp"
-  int i, j;
-  int *out_state;
-
-  if(!m_calloc(out_state, smo->N)) {mes_proc(); goto STOP;}
-  for (i = 0; i < smo->N; i++)
-    out_state[i] = 0;
-
-  for (j = 0; j < smo->N; j++) {
-    fprintf(file, "%s", tab);
-    if (smo->s[0].out_states != 0 && 
-	smo->s[0].out_id[out_state[0]] == j) {
-      fprintf(file, "%.2f", smo->s[0].out_a[k][out_state[0]]);
-      (out_state[0])++;
-    }
-    else 
-      fprintf(file, "0.00");
-    for (i = 1; i < smo->N; i++) {
-      if (smo->s[i].out_states != 0 && 
-	  smo->s[i].out_id[out_state[i]] == j) {
-	fprintf(file, "%s %.2f", separator, smo->s[i].out_a[k][out_state[i]]);
-	(out_state[i])++;
-      }
-      else 
-	fprintf(file, "%s 0.00", separator);
-    }
-    fprintf(file, "%s\n", ending);
-  }
-STOP:
-  m_free(out_state);
-  return;
-# undef CUR_PROC
-} /* smodel_A_print_transp */
-
-/*============================================================================*/
-
-void smodel_C_print_transp(FILE *file, smodel *smo, char *tab, char *separator, 
-			   char *ending) {
-  int i, j;
-  for (j = 0; j < smo->M; j++) {
-    fprintf(file, "%s", tab);
-    fprintf(file, "%.2f", smo->s[0].c[j]);
-    for (i = 1; i < smo->N; i++)
-      fprintf(file, "%s %.2f", separator, smo->s[i].c[j]);
-    fprintf(file, "%s\n", ending);
-  }
-} /* smodel_C_print_transp */
-
-/*============================================================================*/
-
-void smodel_Mue_print_transp(FILE *file, smodel *smo, char *tab, 
-			     char *separator, char *ending) {
-  int i, j;
-  for (j = 0; j < smo->M; j++) {
-    fprintf(file, "%s", tab);
-    fprintf(file, "%.2f", smo->s[0].mue[j]);
-    for (i = 1; i < smo->N; i++)
-      fprintf(file, "%s %.2f", separator, smo->s[i].mue[j]);
-    fprintf(file, "%s\n", ending);
-  }
-} /* smodel_Mue_print_transp */
-
-/*============================================================================*/
-
-void smodel_U_print_transp(FILE *file, smodel *smo, char *tab, 
-			       char *separator, char *ending) {
-  int i, j;
-  for (j = 0; j < smo->M; j++) {
-    fprintf(file, "%s", tab);
-    fprintf(file, "%.2f", smo->s[0].u[j]);
-    for (i = 1; i < smo->N; i++)
-      fprintf(file, "%s %.2f", separator, smo->s[i].u[j]);
-    fprintf(file, "%s\n", ending);
-  }
-} /* smodel_U_print_transp */
-
-/*============================================================================*/
-
-void smodel_Pi_print_transp(FILE *file, smodel *smo, char *tab, char *ending) {
-  int i;
-  for (i = 0; i < smo->N; i++)
-    fprintf(file, "%s%.2f%s\n", tab, smo->s[i].pi, ending);
-} /* smodel_Pi_print_transp */
-
-/*============================================================================*/
-
-void smodel_fix_print_transp(FILE *file, smodel *smo, char *tab, char *ending) {
-  int i;
-  for (i = 0; i < smo->N; i++)
-    fprintf(file, "%s%d%s\n", tab, smo->s[i].fix, ending);
-} 
 
 /*============================================================================*/
 void smodel_print(FILE *file, smodel *smo) {
@@ -856,7 +743,7 @@ void smodel_print_oneA(FILE *file, smodel *smo) {
   fprintf(file, "\tfix_state = vector {\n");
   smodel_fix_print(file, smo, "\t", ",", ";");
   fprintf(file, "\t};\n");
-  /*** BEACHTE: es wird vorausgesetzt, dass alle Ak gleich sind! */
+  /* Attention: assumption is: A_k are all the same */
   fprintf(file, "\tA = matrix {\n");
   smodel_Ak_print(file, smo, 0, "\t", ",", ";");
   fprintf(file, "\t};\n");
@@ -870,136 +757,6 @@ void smodel_print_oneA(FILE *file, smodel *smo) {
   fprintf(file, "\t};\n");
   fprintf(file, "};\n\n");
 } /* smodel_print */
-
-
-/*============================================================================*/
-void smodel_direct_print(FILE *file, smodel_direct *smo_d, int multip) {
-  int i, j, k;
-  for (i = 0; i < multip; i++) {
-    fprintf(file, "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n", 
-	    smo_d->M, smo_d->N, (int)smo_d->density);
-    fprintf(file, "\tprior = %.3f;\n", smo_d->prior);
-    /* Pi */
-    fprintf(file, "\tPi = vector {\n");
-    fprintf(file, "\t%.4f", smo_d->Pi[0]);
-    for (j = 1; j < smo_d->N; j++)
-      fprintf(file, ", %.4f", smo_d->Pi[j]);
-    fprintf(file, ";\n\t};\n");
-    /* fix_state */
-    fprintf(file, "\tfix_state = vector {\n");
-    fprintf(file, "\t%d", smo_d->fix_state[0]);
-    for (j = 1; j < smo_d->N; j++)
-      fprintf(file, ", %d", smo_d->fix_state[j]);
-    fprintf(file, ";\n\t};\n");
-    /* A */
-    for (k = 0; k < COS; k++) {
-      fprintf(file, "\tAk_%d = matrix {\n", k);
-      matrix_d_print(file, smo_d->A[k], smo_d->N, smo_d->N, "\t", ",", ";");
-      fprintf(file, "\t};\n");
-    }
-    /* C */
-    fprintf(file, "\tC = matrix {\n");
-    matrix_d_print(file, smo_d->C, smo_d->N, smo_d->M, "\t", ",", ";");
-    /* Mue */
-    fprintf(file, "\t};\n\tMue = matrix {\n");
-    matrix_d_print(file, smo_d->Mue, smo_d->N, smo_d->M, "\t", ",", ";");
-    /* U */
-    fprintf(file, "\t};\n\tU = matrix {\n");
-    matrix_d_print(file, smo_d->U, smo_d->N, smo_d->M, "\t", ",", ";");
-    fprintf(file, "\t};\n");
-    /* Schlusszeile */
-    fprintf(file, "};\n\n");    
-  }
-} /* smodel_direct_print */
-
-/*============================================================================*/
-
-void smodel_direct_clean(smodel_direct *smo_d, shmm_check_t *check) {
-  int i, k;  
-  if( !smo_d ) return;
-  smo_d->M = smo_d->N = 0;
-  smo_d->density = -1;
-  smo_d->prior = -1;
-  if (smo_d->A) {
-    for (k = 0; k < COS; k++)
-      matrix_d_free(&(smo_d->A[k]), check->r_a);
-    m_free(smo_d->A);
-  }
-  if (smo_d->C) {
-    for (i = 0; i < check->r_c; i++)
-      m_free(smo_d->C[i]);
-    m_free(smo_d->C);
-  }
-  if (smo_d->Mue) {
-    for (i = 0; i < check->r_mue; i++)
-      m_free(smo_d->Mue[i]);
-    m_free(smo_d->Mue);
-  }
-  if (smo_d->U) {
-    for (i = 0; i < check->r_u; i++)
-      m_free(smo_d->U[i]);
-    m_free(smo_d->U);
-  }
-  if (smo_d->Pi) 
-    m_free(smo_d->Pi);
-  if (smo_d->fix_state) 
-    m_free(smo_d->fix_state);
-  smo_d->A = NULL;
-  smo_d->C = smo_d->Mue = smo_d->U = NULL;
-  smo_d->Pi = NULL;
-  smo_d->fix_state = NULL;
-} /* smodel_direct_clean */
- 
- 
-/*============================================================================*/
-int smodel_direct_check_data(smodel_direct *smo_d, shmm_check_t *check) {
-#define CUR_PROC "smodel_direct_check_data"
-  char *str;
-  if (check->r_a != smo_d->N || check->c_a != smo_d->N) {
-    str = mprintf(NULL, 0, "Incompatible dim. A (%d X %d) and N (%d)\n", 
-		  check->r_a, check->c_a, smo_d->N); 
-    mes_prot(str);
-    m_free(str);
-    return (-1);
-  }
-  if (check->r_c != smo_d->N || check->c_c != smo_d->M) {
-    str = mprintf(NULL,0,"Incompatible dim. C (%d X %d) and N X M (%d X %d)\n",
-		  check->r_c, check->c_c, smo_d->N, smo_d->M);
-    mes_prot(str);
-    m_free(str);
-    return (-1);
-  }
-  if (check->r_mue != smo_d->N || check->c_mue != smo_d->M) {
-    str = mprintf(NULL,0,"Incompatible dim. Mue(%d x %d) and N x M(%d x %d)\n",
-		  check->r_mue, check->c_mue, smo_d->N, smo_d->M);
-    mes_prot(str);
-    m_free(str);
-    return (-1);
-  }
-  if (check->r_u != smo_d->N || check->c_u != smo_d->M) {
-    str = mprintf(NULL,0,"Incompatible dim.U(%d x %d) and N x M(%d x %d)\n",
-		  check->r_u, check->c_u, smo_d->N, smo_d->M);
-    mes_prot(str);
-    m_free(str);
-    return (-1);
-  }
-  if (check->len_pi != smo_d->N) {
-    str = mprintf(NULL, 0, "Incompatible dim. Pi (%d) and N (%d)\n", 
-		  check->len_pi, smo_d->N); 
-    mes_prot(str);
-    m_free(str);
-    return (-1);
-  }
-  if ((int)smo_d->density < 0 || smo_d->density >= density_number) {
-    str = mprintf(NULL, 0, "Unknown typ of density function (%d)\n", 
-		  smo_d->density); 
-    mes_prot(str);
-    m_free(str);
-    return (-1);
-  }
-  return 0;
-#undef CUR_PROC
-} /* smodel_direct_check_data */
 
 
 /*============================================================================*/
@@ -1076,10 +833,7 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
     seq0 = sgenerate_sequences(smo1, 1998, maxT+1, 1, 0, 0);
     
     if (seq0->seq_len[0] < maxT) { /* There is an absorbing state */
-      
-      /* BEACHTE: Annahme, dass Modell ein eindeutiges Endsymbol liefert,
-	 deshalb Bedingung des festen Startzustands weggenommen */
-      
+            
       /* For now check that Pi puts all weight on state */
       /*
 	t = 0;
@@ -1257,7 +1011,41 @@ double smodel_calc_B(smodel *smo, int state, double omega) {
   return(B);
 } /* smodel_calc_B */
 
+/*============================================================================*/
+/* What is the dimension of the modell ( = dimension of the parameter vektor) ?
+   count the number of free parameters in a field of models; used for calc. BIC
+   Only those parameters, that can be changed during  training.
+   mixture coeff from smix and priors are not counted! 
+*/
+int smodel_count_free_parameter(smodel **smo, int smo_number) {
+  int i, k;
+  int pi_counted = 0, cnt = 0;
 
+  for (k = 0; k < smo_number; k++) {
+    pi_counted = 0;
+    // for states 
+    for (i = 0; i < smo[k]->N; i++) {
+      if (smo[k]->s[i].out_states > 1) 
+	// multipl. with COS correct ???
+	cnt += COS * (smo[k]->s[i].out_states - 1);
+      if (smo[k]->s[i].pi != 0 && smo[k]->s[i].pi != 1) {
+	pi_counted = 1;
+	cnt++;
+      }
+      if (!smo[k]->s[i].fix) {
+	if (smo[k]->M == 1) cnt += 2; // mu, sigma
+	else cnt += (3 * smo[k]->M); // c, mu, sigma
+      }
+    } // for (i ..)
+    if (pi_counted) cnt--; /* due to condition: sum(pi) = 1 */
+    if (smo[k]->M > 1) cnt--; /* due to condition: sum(c) = 1 */
+  }
+
+  return cnt;
+}
+
+/*============================================================================*/
+/*============================================================================*/
 /*============================================================================*/
 /* interval (a,b) with ~ B(a) < 0.01, B(b) > 0.99 */  
 void smodel_get_interval_B(smodel *smo, int state, double *a, double *b) {
@@ -1812,35 +1600,3 @@ STOP:
 # undef CUR_PROC
 }
 
-/*============================================================================*/
-/* What is the dimension of the modell ( = dimension of the parameter vektor) ?
-   count the number of free parameters in a field of models; used for calc. BIC
-   Only those parameters, that can be changed during  training.
-   mixture coeff from smix and priors are not counted! 
-*/
-int smodel_count_free_parameter(smodel **smo, int smo_number) {
-  int i, k;
-  int pi_counted = 0, cnt = 0;
-
-  for (k = 0; k < smo_number; k++) {
-    pi_counted = 0;
-    // for states 
-    for (i = 0; i < smo[k]->N; i++) {
-      if (smo[k]->s[i].out_states > 1) 
-	// multipl. with COS correct ???
-	cnt += COS * (smo[k]->s[i].out_states - 1);
-      if (smo[k]->s[i].pi != 0 && smo[k]->s[i].pi != 1) {
-	pi_counted = 1;
-	cnt++;
-      }
-      if (!smo[k]->s[i].fix) {
-	if (smo[k]->M == 1) cnt += 2; // mu, sigma
-	else cnt += (3 * smo[k]->M); // c, mu, sigma
-      }
-    } // for (i ..)
-    if (pi_counted) cnt--; /* due to condition: sum(pi) = 1 */
-    if (smo[k]->M > 1) cnt--; /* due to condition: sum(c) = 1 */
-  }
-
-  return cnt;
-}
