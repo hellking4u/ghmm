@@ -31,7 +31,6 @@ void gsl_rng_timeseed(gsl_rng * r)
   /*  tm = time(NULL); */
   tm = rand();
   gsl_rng_set(r, tm);
-  /* Printing commented out 04.02.01 by Disa */
   /* printf("# using GSL rng '%s' seed=%ld\n", gsl_rng_name(r), tm);  */
   fflush(stdout);
 }

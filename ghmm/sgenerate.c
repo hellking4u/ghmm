@@ -178,10 +178,9 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
 	while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
       }
       if (sum == 0.0) {
-	/* Versuch: bei "leerer" class die Nachbarklassen probieren; 
-	   erst sweep down bis null; falls immer noch ohne Erfolg sweep 
-	   up bis COS - 1. Falls immer noch kein Erfolg --> Sequenz
-	   verwerfen.
+	/* Test: If an "empty" class, try the neighbour class;
+	   first, sweep down to zero, if still no success sweep up 
+	   to COs - 1. If still no success --> discard the sequence.
 	*/
 	if (class > 0 && up == 0) {
 	  class--;
@@ -278,11 +277,11 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
 
 
     for (i = 0; i < smo->N; i++) {
-      /* alpha ist skaliert! */
+      /* alpha is scaled! */
       initial_distribution[i] = alpha[len - 1][i]; 
       sum += initial_distribution[i];
     }
-    /* nicht ok.? auf eins skalieren? */
+    /* nicht ok.? scale to one? */
     for (i = 0; i < smo->N; i++) {
       initial_distribution[i] /= sum;                
     }
@@ -301,7 +300,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     while (i > 0 && initial_distribution[i] == 0.0) i--;
   }  
   /* TEST */
-  /* bereits zu Beginn in einem Endzustand? Wie ist das moeglich? */
+  /* Already at the beginning in an end state? How is that possible? */
   if (smo->s[i].out_states == 0) {
     printf("Beginn: Endzustand, State %d\n", i);
     for (k = 0; k < len; k++)
@@ -330,10 +329,9 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
       while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
     }
     if (sum == 0.0) {
-      /* Versuch: bei "leerer" class die Nachbarklassen probieren; 
-	 erst sweep down bis null; falls immer noch ohne Erfolg sweep 
-	 up bis COS - 1. Falls immer noch kein Erfolg --> Sequenz
-	 verwerfen.
+      /* Test: If an "empty" class, try the neighbour class;
+	 first, sweep down to zero, if still no success sweep up 
+	 to COs - 1. If still no success --> discard the sequence.
       */
       if (class > 0 && up == 0) {
 	class--;
@@ -399,8 +397,8 @@ STOP:
    to length "len". Use the most prob. state given the seq as an initial state
    and determin the next state und the symbol with the RNG.
 
-   wird diese Fkt. fuer EIN O und aufeinanderfolg. "len" aufgerufen, so kann
-   noch deutlich optimiert werden
+   If this function is called for one O successive "len", then it's possible
+   to optimize some more.
 */
 
 double sgenerate_next_value(smodel *smo, double *O, const int len) {
