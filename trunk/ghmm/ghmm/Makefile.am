@@ -1,4 +1,3 @@
-#  author       : Achim Gaedke
 #  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
@@ -14,7 +13,7 @@ lib_LTLIBRARIES = libghmm.la
 libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
 libghmm_la_SOURCES= foba.c foba.h \
                   matrix.c  matrix.h \
-                  model.c model.h \
+                  model.c modelutil.c model.h \
                   cluster.c cluster.h \
                   scluster.c scluster.h \
                   root_finder.c root_finder.h \
@@ -25,10 +24,9 @@ libghmm_la_SOURCES= foba.c foba.h \
                   vector.c vector.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
-				  sdfoba.c sdfoba.h \
                   sviterbi.c sviterbi.h \
                   smodel.c smodel.h \
-		  sdmodel.c sdviterbi.c sdmodel.h ghmm.h \
+		  ghmm.h \
                   sreestimate.c sreestimate.h \
                   sgenerate.c sgenerate.h \
                   smixturehmm.c smixturehmm.h \
@@ -55,7 +53,6 @@ pkginclude_HEADERS = ghmm.h \
                   sfoba.h \
                   sviterbi.h \
                   smodel.h \
-		  sdmodel.h \
                   sreestimate.h \
                   sgenerate.h \
                   smixturehmm.h \
