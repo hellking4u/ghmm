@@ -462,15 +462,24 @@ model *model_copy(const model *mo) {
   model *m2 = NULL;
   if(!m_calloc(m2, 1)) {mes_proc(); goto STOP;}
   if (!m_calloc(m2->s, mo->N)) {mes_proc(); goto STOP;}
+  if (!m_calloc(m2->silent, mo->N)) {mes_proc(); goto STOP;}
+  if (mo->model_type & kTiedEmissions) {
+    if (!m_calloc(m2->tied_to, mo->N)) {mes_proc(); goto STOP;}
+  }
+  else m2->tied_to = NULL;
+  
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
+
     if(!m_calloc(m2->s[i].out_id, nachf)) {mes_proc(); goto STOP;}
     if(!m_calloc(m2->s[i].out_a, nachf)) {mes_proc(); goto STOP;}
     if(!m_calloc(m2->s[i].in_id, vorg)) {mes_proc(); goto STOP;}
     if(!m_calloc(m2->s[i].in_a, vorg)) {mes_proc(); goto STOP;}
-    if(!m_calloc(m2->s[i].b, mo->M)) {mes_proc(); goto STOP;}
-    /* Copy the values */
+    /* allocate enough memory for higher order states */
+    if(!m_calloc(m2->s[i].b, pow(mo->M, mo->s[i].order+1))) {mes_proc(); goto STOP;}
+    
+    /* copy the values */
     for (j = 0; j < nachf; j++) {
       m2->s[i].out_a[j] = mo->s[i].out_a[j];
       m2->s[i].out_id[j] = mo->s[i].out_id[j];
@@ -479,15 +488,31 @@ model *model_copy(const model *mo) {
       m2->s[i].in_a[j] = mo->s[i].in_a[j];
       m2->s[i].in_id[j] = mo->s[i].in_id[j];
     }
-    for (m = 0; m < mo->M; m++)
+    /* copy all b values for higher order states */
+    for (m = 0; m < pow(mo->M, mo->s[i].order+1); m++)
       m2->s[i].b[m] = mo->s[i].b[m];
-    m2->s[i].pi = mo->s[i].pi;
+
+    m2->s[i].pi         = mo->s[i].pi;
+    m2->s[i].fix        = mo->s[i].fix;
+    if (mo->model_type & kSilentStates)
+      m2->silent[i]     = mo->silent[i];
+    if (mo->model_type & kTiedEmissions)
+      m2->tied_to[i] = mo->tied_to[i];
+    if (mo->model_type & kLabeledStates)
+      m2->s[i].label    = mo->s[i].label;
+    if (mo->model_type & kHigherOrderEmissions)
+      m2->s[i].order    = mo->s[i].order;
     m2->s[i].out_states = nachf;
-    m2->s[i].in_states = vorg;
+    m2->s[i].in_states  = vorg;
   }
+
   m2->N = mo->N;
   m2->M = mo->M;
   m2->prior = mo->prior;
+  m2->maxorder = mo->maxorder;
+  m2->model_type = mo->model_type;
+  /* not necessary but the history is at least initialised */
+  m2->emission_history = mo->emission_history;
   return(m2);
 STOP:
   model_free(&m2);
@@ -554,7 +579,6 @@ STOP:
 } /* model_check */
 
 /*============================================================================*/
-
 int model_check_compatibility(model **mo, int model_number) {
 #define CUR_PROC "model_check_compatibility"
   int i, j;
@@ -570,8 +594,8 @@ int model_check_compatibility(model **mo, int model_number) {
       }
       if (mo[i]->M != mo[j]->M) {
 	char *str = 
-	  mprintf(NULL, 0, "ERROR: different number of possible outputs in model  %d (%d) and model %d (%d)", 
-		  i, mo[i]->M, j, mo[j]->M); 
+	  mprintf(NULL, 0, "ERROR: different number of possible outputs in model %d (%d) and model %d (%d)",
+                  i, mo[i]->M, j, mo[j]->M);
 	mes_prot(str);
 	m_free(str);
 	return (-1);
@@ -582,7 +606,6 @@ int model_check_compatibility(model **mo, int model_number) {
 } /* model_check_compatibility */
 
 /*============================================================================*/
-
 model *model_generate_from_sequence(const int *seq, int seq_len, int anz_symb) {
 #define CUR_PROC "model_generate_from_sequence"
   int i;
@@ -591,6 +614,8 @@ model *model_generate_from_sequence(const int *seq, int seq_len, int anz_symb) {
   if(!m_calloc(mo, 1)) {mes_proc(); goto STOP;}
   mo->N = seq_len; 
   mo->M = anz_symb;
+  /* All models generated from sequences have to be LeftRight-models */
+  mo->model_type = kLeftRight;
 
   /* Allocate memory for all vectors */
   if (!m_calloc(mo->s, mo->N)) {mes_proc(); goto STOP;}
@@ -645,7 +670,45 @@ STOP:
 } /* model_generate_from_sequence */
 
 
+/*===========================================================================*/
+
+inline int get_random_output(model *mo, int i, int position) {
+  
+  int m, e_index;
+  double p, sum;
+
+  
+  p = gsl_rng_uniform(RNG);
+  sum = 0.0;
+
+  for (m = 0; m < mo->M; m++) {
+    /* get the right index for higher order emission models */
+    e_index = get_emission_index(mo, i, m, position);
+    
+    /* get the probability, exit, if the index is -1 */
+    if (-1 != e_index) {
+      sum += mo->s[i].b[e_index];
+      if (sum >= p)
+	break;
+    }
+    else {
+      fprintf(stderr, "ERROR: State has order %d, but in the history are only %d emissions.\n"
+	      ,mo->s[i].order, position);
+      exit(1);
+    }
+  }
+
+  if (mo->M==m) {
+    fprintf(stderr, "ERROR: no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n"
+	    ,sum, p);
+    exit(1);
+  }
+  
+  return(m); 
+} /* get_random_output */
+
 /*============================================================================*/
+
 sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 				     long seq_number, int Tmax) {
 # define CUR_PROC "model_generate_sequences"
@@ -653,10 +716,10 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
   /* An end state is characterized by not having an output probabiliy. */
 
   sequence_t *sq = NULL;
-  int i, j, m,temp;
+  int i, j, m, temp, index;
   double p, sum;
   int len = global_len;
-  //int silent_len = 0;
+  /* int silent_len = 0; */
   int n=0;
   int incomplete_seq = 0;
   int state=0;
@@ -672,9 +735,9 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 	gsl_rng_set(RNG,seed);
   }
    
-while (n < seq_number) {
-	//printf("sequenz n = %d\n",n);
-    //printf("incomplete_seq: %d\n",incomplete_seq);
+  while (n < seq_number) {
+  /* printf("sequenz n = %d\n",n);
+     printf("incomplete_seq: %d\n",incomplete_seq); */
 	
     if (incomplete_seq == 0) { 
 	    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
@@ -690,49 +753,39 @@ while (n < seq_number) {
 	   break;
     }
     
-  	if ( mo->model_type == kSilentStates ){
-	  if (!mo->silent[i]) { /* first state emits */
-	    //printf("first state %d not silent\n",i);
-		  
-		/* Get a random initial output m */
-        p = gsl_rng_uniform(RNG);
-	    sum = 0.0;   
-        for (m = 0; m < mo->M; m++) {
-          sum += mo->s[i].b[m];
-          if (sum >= p)
-	        break;
-        }
-          sq->seq[n][state] = m;
-          state = state+1;
-	  }
-	  else {  /* silent state: we do nothing, no output */
-		//printf("first state %d silent\n",i);
-		//state = 0; 
-		//silent_len = silent_len + 1; 
-	  }
-   }
-	else {
-	  /* Get a random initial output m */
-	  p = gsl_rng_uniform(RNG);
-	  sum = 0.0;   
-	  for (m = 0; m < mo->M; m++) {
-	    sum += mo->s[i].b[m];
-		 if (sum >= p)
-	      break;
-	  }
-	  sq->seq[n][state] = m;	
-	  state = state + 1;
+    if ( (mo->model_type & kHigherOrderEmissions) && (mo->s[i].order > 0) ) {
+      fprintf(stderr, "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n"
+	      ,i, mo->s[i].order);
+      exit(1); 	 
+    } 	 
+  	 
+    if (mo->model_type & kSilentStates && mo->silent[i]) {
+      /* silent state: we do nothing, no output */
+      /* printf("first state %d silent\n",i);
+	 state = 0; 
+	 silent_len = silent_len + 1; */
     }
-	/* check whether sequence was completed by inital state*/ 
-	if (state >= len && incomplete_seq == 1){
+    else {
+      /* first state emits */
+      /* printf("first state %d not silent\n",i); */
+      
+      /* Get a random initial output m */
+      m = get_random_output(mo, i, state);
+      update_emission_history(mo, m);
+      sq->seq[n][state] = m;
+      state = state+1;
+    }
+	
+    /* check whether sequence was completed by inital state*/ 
+    if (state >= len && incomplete_seq == 1){
  	    
-		//printf("assinging length %d to sequence %d\n",state,n);
-		//printf("sequence complete...\n");
-		sq->seq_len[n] = state;    
-		incomplete_seq = 0;
-		n++;
-		continue;
-	}
+      /* printf("assinging length %d to sequence %d\n",state,n);
+	 printf("sequence complete...\n"); */
+      sq->seq_len[n] = state;    
+      incomplete_seq = 0;
+      n++;
+      continue;
+    }
     while (state < len) {		
 	  /* Get a random state i */
      p = gsl_rng_uniform(RNG);
@@ -743,12 +796,12 @@ while (n < seq_number) {
 	      break;
      }
 
-	//printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state);
+     /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state); */
 	 
 	if (sum == 0.0) {
 	    if (state < len) {
 			incomplete_seq = 1;			
-			//printf("final state reached - aborting\n");
+			/* printf("final state reached - aborting\n"); */
 			break;
 		}
 		else {
@@ -757,9 +810,9 @@ while (n < seq_number) {
 		}
 	 }	
      i = mo->s[i].out_id[j];
-     if (mo->model_type == kSilentStates && mo->silent[i]) { /* Get a silent state i */
-	    //printf("silent state \n");
-        //silent_len += 1;
+     if ((mo->model_type & kSilentStates) && mo->silent[i]) { /* Get a silent state i */
+       /* printf("silent state \n");
+	  silent_len += 1; */
 		/*if (silent_len >= Tmax) {
 		   printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
 		   incomplete_seq = 0;
@@ -770,13 +823,8 @@ while (n < seq_number) {
 	  }  
 	  else {
 		/* Get a random output m from state i */
-      	p = gsl_rng_uniform(RNG);
-        sum = 0.0;   
-        for (m = 0; m < mo->M; m++) {
-	    	sum += mo->s[i].b[m];
-	      	if (sum >= p)
-	        	break;
-        }
+	m = get_random_output(mo, i, state);
+	update_emission_history(mo, m);
         sq->seq[n][state] = m;
         state++;
       }	
@@ -797,23 +845,22 @@ STOP:
   
 /*============================================================================*/
 
-
 double model_likelihood(model *mo, sequence_t *sq) {
 # define CUR_PROC "model_likelihood"
   double log_p_i, log_p;
   int found, i,j;
 	
-  //printf("***  model_likelihood:\n");
+  /* printf("***  model_likelihood:\n"); */
   
   found = 0;
   log_p = 0.0;
   for (i = 0; i < sq->seq_number; i++) {
     
-	//printf("sequence:\n");
-	//for (j=0;j < sq->seq_len[i];j++) { 
-	//	printf("%d, ",sq->seq[i][j]);
-	//}
-	//printf("\n"); 
+/* 	printf("sequence:\n"); */
+/* 	for (j=0;j < sq->seq_len[i];j++) {  */
+/* 		printf("%d, ",sq->seq[i][j]); */
+/* 	} */
+/* 	printf("\n"); */
 	   
 	  
 	if (foba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i)  == -1) {
@@ -821,7 +868,7 @@ double model_likelihood(model *mo, sequence_t *sq) {
 	  goto STOP;
 	}
 	
-	//printf("\nlog_p_i = %f\n", log_p_i);
+/* 	printf("\nlog_p_i = %f\n", log_p_i); */
     
 	if (log_p_i != +1) {
       log_p += log_p_i;
@@ -910,7 +957,7 @@ void model_A_print(FILE *file, model *mo, char *tab, char *separator,
     }
     else fprintf(file, "0.00");
     for (j = 1; j < mo->N; j++) {
-      if (mo->s[i].out_states > out_state && 
+      if (mo->s[i].out_states > out_state &&
 	  mo->s[i].out_id[out_state] == j) {
 	fprintf(file, "%s %.2f", separator, mo->s[i].out_a[out_state]);
 	out_state++;
@@ -923,15 +970,23 @@ void model_A_print(FILE *file, model *mo, char *tab, char *separator,
 
 /*============================================================================*/
 
-void model_B_print(FILE *file, model *mo, char *tab, char *separator, 
+void model_B_print(FILE *file, model *mo, char *tab, char *separator,
 		   char *ending) {
   int i, j;
+
   for (i = 0; i < mo->N; i++) {
     fprintf(file, "%s", tab);
     fprintf(file, "%.2f", mo->s[i].b[0]);
-    for (j = 1; j < mo->M; j++)
-      fprintf(file, "%s %.2f", separator, mo->s[i].b[j]);
-    fprintf(file, "%s\n", ending);
+    if (!(mo->model_type & kHigherOrderEmissions)) {
+      for (j = 1; j < mo->M; j++)
+	fprintf(file, "%s %.2f", separator, mo->s[i].b[j]);
+      fprintf(file, "%s\n", ending);
+    }
+    else {
+      for (j = 1; j < pow(mo->M, mo->s[i].order + 1); j++)
+	fprintf(file, "%s %.2f", separator, mo->s[i].b[j]);
+      fprintf(file, "%s\n", ending);
+    }
   }
 } /* model_B_print */
 
@@ -1017,9 +1072,19 @@ void model_Pi_print_transp(FILE *file, model *mo, char *tab, char *ending) {
 
 /*============================================================================*/
 
+void model_label_print(FILE *file, model *mo, char *tab, char *separator, char *ending) {
+  int i;
+  fprintf(file, "%s%d", tab, mo->s[0].label);
+  for (i = 1; i < mo->N; i++)
+    fprintf(file, "%s %d", separator, mo->s[i].label);
+  fprintf(file, "%s\n", ending);
+} /* model_label_print*/
+
+/*============================================================================*/
 void model_print(FILE *file, model *mo) {
   fprintf(file, "HMM = {\n\tM = %d;\n\tN = %d;\n", mo->M, mo->N);
   fprintf(file, "\tprior = %.3f;\n", mo->prior);
+  fprintf(file, "\tModel Type = %d;\n", mo->model_type);
   fprintf(file, "\tA = matrix {\n");
   model_A_print(file, mo, "\t", ",", ";");
   fprintf(file, "\t};\n\tB = matrix {\n");
@@ -1028,6 +1093,8 @@ void model_print(FILE *file, model *mo) {
   model_Pi_print(file, mo, "\t", ",", ";");
   fprintf(file, "\t};\n\tfix_state = vector {\n");
   model_fix_print(file, mo, "\t", ",", ";");
+  fprintf(file, "\t};\n\tlabel_state = vector {\n");
+  model_label_print(file, mo, "\t", ",", ";");
   fprintf(file, "\t};\n};\n\n");
 } /* model_print */
 
@@ -1148,7 +1215,7 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
   int step_width = 0;
   int steps = 1;
 
-  //printf("***  model_prob_distance:\n");
+  /* printf("***  model_prob_distance:\n"); */
    
   if (verbose) { /* If we are doing it verbosely we want to have 40 steps */ 
     step_width = maxT / 40;
@@ -1269,13 +1336,13 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
 		seq0->seq_len[0] = t;
 	
 	p0 = model_likelihood(mo1, seq0);
-	//printf("   P(O|m1) = %f\n",p0);
+	/* printf("   P(O|m1) = %f\n",p0); */
 	if (p0 == +1) { /* error! */
 	 	mes_prot("seq0 can't be build from mo1!");
 	  goto STOP;
 	}	  
 	p = model_likelihood(mo2, seq0);
-	//printf("   P(O|m2) = %f\n",p);
+	/* printf("   P(O|m2) = %f\n",p); */
 	if (p == +1) { /* what shall we do now? */
 	    mes_prot("problem: seq0 can't be build from mo2!");
 	  goto STOP;
@@ -1393,19 +1460,17 @@ void state_clean(state *my_state) {
 
 
  /*==========================Labeled HMMS ================================*/         
-
            
-sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len,
-				     long seq_number, int Tmax) {
+sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax) {
 # define CUR_PROC "model_label_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
 
   sequence_t *sq = NULL;
-  int i, j, m,temp;
+  int i, j, m, temp, index, transition_impossible, j_id;
   double p, sum;
   int len = global_len;
-  //int silent_len = 0;
+  /*int silent_len = 0;*/
   int n=0;
   int incomplete_seq = 0;
   int state=0;
@@ -1427,173 +1492,428 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len,
   if (seed > 0) {
 	gsl_rng_set(RNG,seed);
   }
-   
-
-while (n < seq_number) {
-	//printf("sequenz n = %d\n",n);
-    //printf("incomplete_seq: %d\n",incomplete_seq);
-	
+  
+  
+  while (n < seq_number) {
+    /* printf("sequenz n = %d\n",n);
+       printf("incomplete_seq: %d\n",incomplete_seq);
+    */
     if (incomplete_seq == 0) { 
-	    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
-   		if (mo->model_type == kSilentStates){
-          
-          printf("Model has silent states. \n");  
-          /* for silent models we have to allocate for the maximal possible number of lables*/
-          if(!m_calloc(sq->state_labels[n], len * mo->N)) {mes_proc(); goto STOP;}
-        }    
-        else {
-            printf("Model has no silent states. \n");
-            if(!m_calloc(sq->state_labels[n], len)) {mes_proc(); goto STOP;}
-        }
-        label_index = 0;
-        state = 0;
+      if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
+      
+      if (mo->model_type & kSilentStates){
+	
+	/* printf("Model has silent states.\n"); */
+	/* for silent models we have to allocate for the maximal possible number of lables*/
+	if(!m_calloc(sq->state_labels[n], len * mo->N)) {mes_proc(); goto STOP;}
+      }    
+      else {
+	/* printf("Model has no silent states.\n"); */
+	if(!m_calloc(sq->state_labels[n], len)) {mes_proc(); goto STOP;}
+      }
+      label_index = 0;
+      state = 0;
     }
-   
-	/* Get a random initial state i */
+    
+    /* Get a random initial state i */
     p = gsl_rng_uniform(RNG);
-	sum = 0.0;
+    sum = 0.0;
     for (i = 0; i < mo->N; i++) {
       sum += mo->s[i].pi;
       if (sum >= p)
-	   break;
+	break;
+    }
+    
+    if (!(mo->model_type & kHigherOrderEmissions) && 0 < mo->s[i].order){
+      fprintf(stderr, "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n"
+	      , i, mo->s[i].order);
+      exit(1);
     }
     
     /* add label of fist state to the label list */
     sq->state_labels[n][label_index] = mo->s[i].label;
     label_index++;
     
-  	if ( mo->model_type == kSilentStates ){
-	  if (!mo->silent[i]) { /* first state emits */
-	    //printf("first state %d not silent\n",i);
-		  
-		/* Get a random initial output m */
-        p = gsl_rng_uniform(RNG);
-	    sum = 0.0;   
-        for (m = 0; m < mo->M; m++) {
-          sum += mo->s[i].b[m];
-          if (sum >= p)
-	        break;
-        }
-          sq->seq[n][state] = m;
-          state = state+1;
-	  }
-	  else {  /* silent state: we do nothing, no output */
-		//printf("first state %d silent\n",i);
-		//state = 0; 
-		//silent_len = silent_len + 1; 
-	  }
-   }
-	else {
-	  /* Get a random initial output m */
-	  p = gsl_rng_uniform(RNG);
-	  sum = 0.0;   
-	  for (m = 0; m < mo->M; m++) {
-	    sum += mo->s[i].b[m];
-		 if (sum >= p)
-	      break;
-	  }
-	  sq->seq[n][state] = m;	
-	  state = state + 1;
+    if (mo->model_type & kSilentStates && mo->silent[i]) {
+      /* silent state: we do nothing, no output */
+      /* printf("first state %d silent\n",i);
+	 state = 0; 
+	 silent_len = silent_len + 1; */
     }
+    else {
+      /* first state emits */
+      /* printf("first state %d not silent\n",i); */
+	
+      /* Get a random initial output m */
+      m = get_random_output(mo, i, state);
+      update_emission_history(mo, m);
+      sq->seq[n][state] = m;
+      state = state+1;
+    }
+    
 	/* check whether sequence was completed by inital state*/ 
 	if (state >= len && incomplete_seq == 1){
- 	    
-		//printf("assinging length %d to sequence %d\n",state,n);
-		//printf("sequence complete...\n");
-		
-        sq->seq_len[n] = state;    
-	
-        sq->state_labels_len[n] = label_index;
-		
-        printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]);
+	  
+	  /* printf("assinging length %d to sequence %d\n",state,n);
+	     printf("sequence complete...\n"); */
+	  
+	  sq->seq_len[n] = state;    
+	  
+	  sq->state_labels_len[n] = label_index;
+	  
+	  /* printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
+	  
+	  if (mo->model_type & kSilentStates){
+	    printf("reallocating\n");
+	    if (m_realloc(sq->state_labels[n], sq->state_labels_len[n])){mes_proc(); goto STOP;}
+	  }  
         
-        if (mo->model_type == kSilentStates){
-          printf("reallocating\n");
-          if (m_realloc(sq->state_labels[n], sq->state_labels_len[n])){mes_proc(); goto STOP;}
-        }  
-        
-  		incomplete_seq = 0;
-		n++;
-        continue;
+	  incomplete_seq = 0;
+	  n++;
+	  continue;
 	}
-    while (state < len) {		
-	  /* Get a random state i */
-     p = gsl_rng_uniform(RNG);
-	  sum = 0.0;   
-     for (j = 0; j < mo->s[i].out_states; j++) {
-	    sum += mo->s[i].out_a[j];   
-	    if (sum >= p)
-	      break;
-     }
-
-     i = mo->s[i].out_id[j];
-    
-    /* add label of state to the label list */
-    sq->state_labels[n][label_index] = mo->s[i].label;
-    label_index++;	
+	while (state < len) {
+	  if (state < mo->maxorder){
+	    /* if maxorder is not yet reached, we should only go to states with order < state */
+	    transition_impossible = 1;
+	    for (j = 0; j < mo->s[i].out_states; j++) {
+		    j_id=mo->s[i].out_id[j];/* aufpassen! */
+	      if ( (mo->s[j_id].order) < (state)) {
+		transition_impossible = 0;
+		break;
+	      }
+	    }
+	    if (1 == transition_impossible) {
+	      fprintf(stderr, "No possible transition from state %d, due to too high order of all successor states. Position: %d", i, state);
+	      exit(1);
+	    }
+	    do {
+	      /* Get a random state i */
+	      p = gsl_rng_uniform(RNG);
+	      sum = 0.0;   
+	      for (j = 0; j < mo->s[i].out_states; j++) {
+		    j_id=mo->s[i].out_id[j];
+			sum += mo->s[i].out_a[j];   
+		    if (sum >= p)
+		  break;
+	      }
+	    } while (mo->s[j_id].order >= state); /* hier auch aufpassen! */
+	  }
+	  else {
+	    /* Get a random state i */
+	    p = gsl_rng_uniform(RNG);
+	    sum = 0.0;   
+	    for (j = 0; j < mo->s[i].out_states; j++) {
+	      sum += mo->s[i].out_a[j];   
+	      if (sum >= p)
+		break;
+	    }
+	  }
+	  i = mo->s[i].out_id[j];
+	  
+	  /* add label of state to the label list */
+	  sq->state_labels[n][label_index] = mo->s[i].label;
+	  label_index++;
      
-    //printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state);
-	 
-	if (sum == 0.0) {
+	  /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state); */
+	  
+	  if (sum == 0.0) {
 	    if (state < len) {
-			incomplete_seq = 1;			
-			//printf("final state reached - aborting\n");
-			break;
-		}
-		else {
-			n++;
-			break;
-		}
-	 }	
-     
-     if (mo->model_type == kSilentStates && mo->silent[i]) { /* Got a silent state i */
-	    //printf("silent state \n");
-        //silent_len += 1;
-		/*if (silent_len >= Tmax) {
-		   printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
-		   incomplete_seq = 0;
-		   sq->seq_len[n] = state; 
-		   n++; 
-		   break;
-		}*/
+	      incomplete_seq = 1;			
+	      /* printf("final state reached - aborting\n"); */
+	      break;
+	    }
+	    else {
+	      n++;
+	      break;
+	    }
+	  }	
+	  
+	  if (mo->model_type & kSilentStates && mo->silent[i]) { /* Got a silent state i */
+	    /* printf("silent state \n");
+	       silent_len += 1;
+	       if (silent_len >= Tmax) {
+	       printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
+	       incomplete_seq = 0;
+	       sq->seq_len[n] = state; 
+	       n++; 
+	       break;
+	       }*/
 	  }  
 	  else {
-		/* Get a random output m from state i */
-      	p = gsl_rng_uniform(RNG);
-        sum = 0.0;   
-        for (m = 0; m < mo->M; m++) {
-	    	sum += mo->s[i].b[m];
-	      	if (sum >= p)
-	        	break;
-        }
-        sq->seq[n][state] = m;
-        state++;
-      }	
+	    /* Get a random output m from state i */
+	    m = get_random_output(mo, i, state);
+	    update_emission_history(mo, m);
+	    sq->seq[n][state] = m;
+	    state++;
+	  }	
 	  if (state == len ){
-	     incomplete_seq = 0;
-  	 	 
-         sq->state_labels_len[n] = label_index;
-		
-         printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]);
+	    incomplete_seq = 0;
+	    
+	    sq->state_labels_len[n] = label_index;
+	    
+	    /* printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
         
-         if (mo->model_type == kSilentStates){
-           printf("reallocating\n");
-           if (m_realloc(sq->state_labels[n], sq->state_labels_len[n])){mes_proc(); goto STOP;}
-         } 
-         
-         sq->seq_len[n] = state;    
-		 n++;
+	    if (mo->model_type & kSilentStates){
+	      printf("reallocating\n");
+	      if (m_realloc(sq->state_labels[n], sq->state_labels_len[n])) {
+		mes_proc(); goto STOP;
+	      }
+	    } 
+	    
+	    sq->seq_len[n] = state;    
+	    n++;
 	  }  
 	}  /* while (state < len) */  
- } /* while( n < seq_number )*/
-
-return(sq);
-STOP:
+  } /* while( n < seq_number )*/
+  
+  return(sq);
+ STOP:
   sequence_free(&sq);
   return(NULL);
 # undef CUR_PROC
 } /* data */
+ 
+ 
+/** gets correct index for emission array b of state j */
+int get_emission_index(model* mo, int j , int obs, int t ){
+
+	int index;	                    
+
+    	if (!(mo->model_type & kHigherOrderEmissions))
+	  return(obs);
+      
+	if (mo->s[j].order>t)
+	  return -1;
+	
+	if( mo->s[j].order > mo->maxorder ){
+		fprintf(stderr, "Order %d of state %d exceeds maximum state order (maxorder=%d)\n",
+		      mo->s[j].order ,j, mo->maxorder);
+		return -1;
+	}
+	
+	return (mo->emission_history * mo->M) % (int)pow(mo->M, mo->s[j].order+1) + obs;
+}
+
+
+/** updates emission history */
+void update_emission_history(model* mo, int obs){
+	
+  /* left-shift the history, truncate to history length and
+     add the last observation */
+  if (mo->model_type & kHigherOrderEmissions)
+    mo->emission_history = (mo->emission_history * mo->M) 
+                            % (int)pow(mo->M, mo->maxorder) + obs;
+}
+
+
+
+/** updates emission history for backward algorithm*/
+void update_emission_history_front(model* mo, int obs){
   
+  /*removes the most significant position (right-shift) and add the last seen
+    observation (left-shifted with the length of history) */
+  if (mo->model_type & kHigherOrderEmissions)
+    mo->emission_history = ((int)pow(mo->M, mo->maxorder-1) * obs)
+                              + mo->emission_history / mo->M;
+  
+}
+
+
+/*----------------------------------------------------------------------------*/
+/* Scales the output and transitions probs of all states in a given model */
+int model_normalize(model* mo) {
+#define CUR_PROC "model_normalize"
+
+  int i, j, res, m, first, j_id, i_id;
+  int size=1;
+  double sum;
+
+  res = 0;
+
+  for (i=0; i < mo->N; i++) {
+
+    /* check model_type before using state order */
+    if (mo->model_type & kHigherOrderEmissions)
+      size = pow(mo->M, mo->s[i].order);
+
+    /* normalize transition probabilities */
+    if (vector_normalize(mo->s[i].out_a, mo->s[i].out_states ) == -1 ) {
+      res = -1;
+    }
+    /* for every outgoing probability update the corrosponding incoming probability */
+    for (j=0; j < mo->s[i].out_states; j++) {
+      j_id = mo->s[i].out_id[j];
+      for (m=0; m < mo->s[j_id].in_states; m++) { 
+	if (i == mo->s[j_id].in_id[m]) {
+	  i_id=m;
+	  break;
+	}
+      }
+      mo->s[j_id].in_a[i_id] = mo->s[i].out_a[j];
+    }
+    /* normalize emission probabilities */
+    for (m=0; m<size; m++){
+      first = m * mo->M;
+      sum = 0.0;
+      for (j=first; j<first + mo->M; j++)
+	sum = sum + mo->s[i].b[j];
+
+      if (sum==0) {
+	return -1;
+      }
+      for (j=first; j<first+mo->M; j++)
+	mo->s[i].b[j] /= sum;
+    }   
+  }
+
+  return res;
+#undef CUR_PROC
+} /* model_normalize */
+
+
+/*----------------------------------------------------------------------------*/
+int model_add_noise(model* mo, double level, int seed) {
+#define CUR_PROC "model_add_noise_A"
+
+  int h, i, j, hist;
+  int size=1;
+
+  if (level>1.0)
+     level = 1.0;
+
+  for (i=0; i < mo->N; i++) {
+    for (j=0; j < mo->s[i].out_states; j++)
+      /* add noise only to out_a, in_a is updated on normalisation */
+      mo->s[i].out_a[j] *= (1-level) + (gsl_rng_uniform(RNG)*2*level);
+
+    if (mo->model_type & kHigherOrderEmissions)
+      size = pow(mo->M, mo->s[i].order);
+    for (hist=0; hist<size; hist++)
+      for (h=hist*mo->M; h<hist*mo->M+mo->M; h++)
+	mo->s[i].b[h] *= (1-level) + (gsl_rng_uniform(RNG)*2*level);
+  }
+  
+  return model_normalize(mo);
+
+#undef CUR_PROC
+}
+
+
+/*----------------------------------------------------------------------------*/
+int model_apply_background (model *mo, double* background_weight) {
+# define CUR_PROC "model_apply_background"
+
+  int i,j, size;
+  
+  if (!mo->model_type && kHasBackgroundDistributions) {
+    mes_prot("Error: No background distributions");
+    return -1;
+  }
+
+  for (i=0; i < mo->N; i++) {
+    if (mo->background_id[i] != kNoBackgroundDistribution) {
+      if (mo->s[i].order != mo->bp->order[mo->background_id[i]]) {
+	mes_prot("Error: State and background order do not match");
+	return -1;
+      }
+
+      /* XXX Cache in background_distributions */
+      size = (int)pow(mo->M, mo->s[i].order+1);
+      for (j=0; j<size; j++)
+	mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
+	  + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
+    }
+  }
+
+  return 0;
+#undef CUR_PROC
+} /* model_apply_background */
+
+
+/*----------------------------------------------------------------------------*/
+int model_get_uniform_background (model* mo, sequence_t* sq) {
+# define CUR_PROC "get_background"
+
+  int h, i, j, m, n, t;
+  int e_index, size;
+  double sum;
+
+  if (!(mo->model_type & kHasBackgroundDistributions)) {
+    mes_prot("Error: Model has no background distribution");
+    return -1;
+  }
+
+  mo->bp=NULL;
+  if(!m_malloc(mo->background_id, mo->N)) {mes_proc(); goto STOP;}
+
+  /* create a background distribution for each state */
+  for (i=0; i < mo->N; i++) {
+    mo->background_id[i] = mo->s[i].order;
+  }
+  
+  /* allocate */
+  if (!m_calloc(mo->bp, 1)) {mes_proc(); goto STOP;}
+  if (!m_calloc(mo->bp->order, mo->maxorder)) {mes_proc(); goto STOP;}
+	
+  /* set number of distributions */
+  mo->bp->n = mo->maxorder;
+	
+  /* set br->order */
+  for (i=0; i < mo->N; i++)
+    if (mo->background_id[i] != kNoBackgroundDistribution)
+      mo->bp->order[mo->background_id[i]] = mo->s[i].order;
+	
+  /* allocate and initialize br->b with zeros*/
+  if (!m_calloc(mo->bp->b, mo->bp->n)) {mes_proc(); goto STOP;}
+
+  for (i=0; i < mo->bp->n; i++)
+    if(!m_malloc(mo->bp->b[i], (int)pow(mo->M, mo->bp->order[i]+1))) {mes_proc(); goto STOP;}
+  
+  for (i=0; i < mo->bp->n; i++) {
+
+    /* find a state with the current order */ 
+    for (j=0; j < mo->N; j++)
+      if (mo->bp->order[i] == mo->s[j].order)
+	break;
+
+    /* initialize with ones as psoudocounts */
+    size = (int)pow(mo->M, mo->bp->order[n]+1);
+    for (m=0; m<size; m++)
+      mo->bp->b[i][m] = 1.0;
+
+    for (n=0; n<sq->seq_number; n++) {
+
+      for (t=0; t<mo->bp->order[i]; t++)
+	update_emission_history(mo, sq->seq[n][t]);
+
+      for (t=mo->bp->order[i]; t<sq->seq_len[n]; t++) {
+      
+	e_index = get_emission_index(mo, j, sq->seq[n][t], t);
+	if (-1 != e_index)
+	  mo->bp->b[i][e_index]++;
+      }
+    }
+
+    /* normalise */
+    size = (int)pow(mo->M, mo->bp->order[n]);
+    for (h=0; h<size; h+=mo->M) {
+      for (m=h; m<h+mo->M; m++)
+	sum+=mo->bp->b[i][m];
+      for (m=h; m<h+mo->M; m++)
+	mo->bp->b[i][m]/=sum;
+    }
+
+  }
+	
+  return 0;
+  
+ STOP:
+
+
+  return -1;
+# undef CUR_PROC
+}/* end get_background */
 /*============================================================================*/
-          
- /*===================== E n d   o f  f i l e  "model.c"       ===============*/
+
+/*===================== E n d   o f  f i l e  "model.c"       ===============*/

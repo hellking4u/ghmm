@@ -25,9 +25,12 @@ extern "C" {
     and background_distributions.b
 */
 struct background_distributions {
-	int n;		/* Number of distributions */
-	int* order;	/* Order of the respective distribution */	
-	double **b;  	/* The probabilities */ 
+  /** Number of distributions */
+  int n;
+  /** Order of the respective distribution */
+  int* order;
+  /** The probabilities */ 
+  double **b;
 };
 typedef struct background_distributions background_distributions;
 
@@ -85,7 +88,6 @@ struct model {
       distributions*/
   double prior;
 
- 
   /* contains a arbitrary name for the model */
   char* name;
   
@@ -98,6 +100,13 @@ struct model {
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
   int* silent; /*AS*/
+
+  /** Int variable for the maximum level of higher order emissions */
+  int maxorder;
+  /** saves the history of emissions as int, 
+      the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
+      see ...*/
+  int emission_history;
 
   /** Flag variables for each state indicating whether the states emissions
       are tied to another state. Groups of tied states are represented
@@ -132,6 +141,7 @@ struct model {
       For each state the array background_id indicates which of the background
       distributions to use in parameter estimation. A value of kNoBackgroundDistribution
       indicates that none should be used.
+
 
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
   int *background_id;
@@ -443,7 +453,7 @@ int model_direct_check_data(model_direct *mo_d, hmm_check_t *check);
                  sequences with a toal langth of at least maxT will be 
 		 generated)
     @param symmetric  flag, whether to symmetrize distance (not implemented yet)
-    @param verbose  flag, whether to monitor distance in 40 steps. 
+    @param verbose  flag, whether to monitor distance in 40 steps.
                     Prints to stdout (yuk!)
 */
 double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
@@ -459,6 +469,86 @@ void state_clean(state *my_state);
 
 sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
 
+
+/** 
+	Calculates the right index for emission array b of state j in model mo
+	given an observation obs and taking the state order into account,
+	returns -1 if state order exceeds number of so far emitted characters
+    @param  mo:  model
+	@param   j:  state id 
+	@param obs:  integer observation to be updated with
+    @param   t:  position of obs in sequence (time)
+*/ 
+int get_emission_index (model* mo, int j , int obs, int t );
+
+
+/**
+	Updates emission history of model mo, discarding the oldest and 'adding' the
+	new observation by using modulo and multiplication	
+    @param  mo:  model to be updated
+	@param obs:  integer observation to be updated with
+*/
+void update_emission_history(model* mo, int obs);
+
+
+/**
+	Updates emission history of model mo for backward algorithm by 'adding'
+	observation obs to the left,
+	(example: obs = 3
+	          2 0 0 1 --> 3 2 0 0 )
+	@param  mo:  model to be updated
+	@param obs:  integer observation to be updated with
+*/
+void update_emission_history_front(model* mo, int obs);
+
+
+/**
+    Uses vector_normalize in vector.h
+    Normalizes the transition and output probs for each state
+    in the given model
+    @author Heval Benav
+    @return 0 if normalization went through
+	@param mo: model to be normalized
+
+*/
+int model_normalize(model* mo);
+
+/**
+   Add a specific level of noise to the model parameters
+   @return     :        -1 on error, 0 else
+   @param mo   :        a pointer to the model
+   @param level:        amount of noise to use,
+                        a noise level of 0.0 doesn't change the model
+   @param seed :        seed for ramdom number generator
+*/
+int model_add_noise(model* mo, double level, int seed);
+
+/**
+   Apply the background distributions to the emission probabilities of states of
+   the model which have one specified (background_id[state_id] != kNoBackgroundDistribution).
+
+   @return    :                -1 on error, 0 else
+   @param mo  :                a pointer to the model
+   @param background_weight:   a parameter controlling the weight given to the
+                               background. Note, should be between 0 and 1.
+*/
+int model_apply_background(model *mo, double* background_weight);
+
+
+/**
+   Calculates the background distribution for a sequence_t
+   the calculated distribution is uniform, every state with the same order
+   has the same background distribution.
+   Set more sophisticated background distribution from python.
+   Caution: overwrites the pointer to previous defined background distributions!
+   @return    : -1 on error, 0 else
+   @param mo  :	a pointer to the model
+   @param sq  : a pointer to a sequence_t struct
+   
+*/
+int model_get_uniform_background(model* mo, sequence_t* sq);
+
+
 /**
    Copies a given state. Allocates the necessary memory.
    @author Peter Pipenbacher
@@ -466,17 +556,17 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
    @param my_state:  state to copy */
 #if 0
   state* state_copy(state *my_state);
-#endif  
+#endif
 
 /**
    Copies a given state to a given destination.
    @author Peter Pipenbacher
-   @param source:  state to copy 
+   @param source:  state to copy
    @param dest:    destination */
 #if 0
   void state_copy_to(state *source, state* dest);
 #endif
-  
+
 #ifdef __cplusplus
 }
 #endif

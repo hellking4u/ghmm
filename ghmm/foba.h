@@ -73,6 +73,7 @@ int foba_backward(model *mo, const int *O, int length, double **beta,
   */
 int foba_logp(model *mo, const int *O, int len, double *log_p);
 
+
 /** Forward-Algorithm (lean version).
   Calculates log( P(O|lambda) ) for a given double sequence and a given model.
   @param smo      model
@@ -90,7 +91,7 @@ int foba_label_forward(model *mo, const int *O, const int *label, int len, doubl
 int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
 
 
-
+int foba_label_backward(model* mo, const int* O, const int* label, int len, double** beta, double* scale, double* log_p);
 
 /*@} (Doc++-Group: foba) */
 
