@@ -124,6 +124,27 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         del(self.oneState)
 
 
+class DiscreteModelHMMTests(unittest.TestCase):
 
+    def setUp(self):
+        self.linearmodel = self.oneModel()
+
+    def oneModel(self):
+        A  = [[0.3, 0.6,0.1],[0.0, 0.5, 0.5],[0.0,0.0,1.0]]
+        B  = [[0.5, 0.5],[0.5,0.5],[1.0,0.0]]
+        pi = [1.0, 0.0, 0.0]
+        return ghmm.HMMFromMatrices(ghmm.IntegerRange(0,2),
+                                    ghmm.DiscreteDistribution(ghmm.IntegerRange(0,2)),
+                                    A, B, pi)
+        
+    def testdel(self):
+        """  test for explicit construction and destruction """
+        del self.linearmodel
+        print "===== testing for construction/destruction ===="
+        for i in range(100):
+            mo = self.oneModel()
+
+    # TO DO: testing XML-file read
+    
 if __name__ == '__main__':
     unittest.main()
