@@ -25,12 +25,12 @@ swiglib_path  = os.path.split(swiglib)[0]
 ghmmlib_path  = runtool('ghmm-config','--lib-prefix')
 gslprefix = runtool('gsl-config', '--prefix')
 
-#print "********* PATHS ***********"
-#print "ghmmprefix " ,ghmmprefix
-#print "swiglib ", swiglib
-#print "swiglib_path ",swiglib_path
-#print "ghmmlib_path ", ghmmlib_path
-#print "**************************"
+print "********* PATHS ***********"
+print "ghmmprefix " ,ghmmprefix
+print "swiglib ", swiglib
+print "swiglib_path ",swiglib_path
+print "ghmmlib_path ", ghmmlib_path
+print "**************************"
 
 
     
