@@ -80,7 +80,7 @@ int two_states_coin_toss()
   double **forward_alpha;
   double forward_scale[10];
   int *viterbi_path;
-
+  int i;
   /* flags indicating whether a state is silent */
   int silent_array[2] =  {0,0}; 
 
@@ -129,11 +129,15 @@ int two_states_coin_toss()
   if (viterbi_path==NULL)
     {fprintf(stderr,"viterbi failed!"); return 1;}
 
-  fprintf(stdout,"viterbi path:\n");
-  vector_i_print(stdout,viterbi_path,10,""," ","\n");
+  fprintf(stdout,"reverse viterbi path (last symbol->first):\n");
+  i = (my_output->seq_len[0]*my_model.N)-1;
+  while( viterbi_path[i] != -1 ) {
+    printf(" %d, ", viterbi_path[i--]);
+  }
+  printf("\n");
 
   fprintf(stdout,
-	  "probability of this sequence (viterbi algorithm): %f\n",
+	  "log-p of this sequence (viterbi algorithm): %f\n",
 	  log_p_viterbi);
 
   /* allocate matrix for forward algorithm */
@@ -161,7 +165,7 @@ int two_states_coin_toss()
   /* alpha matrix */
   fprintf(stdout,"Done.\nalpha matrix from forward algorithm:\n");
   matrix_d_print(stdout,forward_alpha,10,2,""," ","\n");
-  fprintf(stdout,"probability of this sequence (forward algorithm): %f\n",log_p_forward);
+  fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */
   stat_matrix_d_free(&forward_alpha);
