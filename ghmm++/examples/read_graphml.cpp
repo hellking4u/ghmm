@@ -87,42 +87,40 @@ int main(int argc, char* argv[]) {
       dmo->B_print(stdout,""," ","\n");
     }
 
-	sequence_t* seqs;
+  sequence_t* seqs;
+  
+  
+  //my_output = dmo->generate_sequences(1,10,10,10);
+  seqs = sdmodel_generate_sequences(dmo->c_model,1,10,10,20);  	
+  sequence_print(stdout,seqs);
+  
+  printf("Pause....\nPlease check your sequences before continuing:\n");
+  
 
-	dmo->c_model->model_type = kSilentStates;
-	//dmo->c_model->get_class  = seq_d_class;
-
-	//my_output = dmo->generate_sequences(1,10,10,10);
-	seqs = sdmodel_generate_sequences(dmo->c_model,1,10,10,20);  	
-	sequence_print(stdout,seqs);
-
-	printf("Pause....\nPlease check your sequences before continuing:\n");
-
-
-	std::GHMM_GMLClass *dco = new std::GHMM_GMLClass( doc.getClass() );
-
-	doc.open("gml2.xml","w"); // Try writing to a new format!!!!
-	doc.writeElement(dco); 
-	doc.writeEndl();
-	doc.writeElement(dmo->getAlphabet());
-	doc.writeEndl();
-	doc.writeElement(dmo);
-	doc.writeEndl();
-	doc.close();
-	SAFE_DELETE( dco );
-
-	doc.open(stdout, "w");
-	doc.writeEndl();
-	// doc.writeElement(my_output);
-	doc.writeEndl();
-	doc.close();
-	  
-	cout << "Wrote to gml2.xml" << endl;
-
-	delete my_output;
-	delete alphas;
-
-	// SAFE_DELETE(dmo);
-
-	return 0;
+  std::GHMM_GMLClass *dco = new std::GHMM_GMLClass( doc.getClass() );
+  
+  doc.open("gml2.xml","w"); // Try writing to a new format!!!!
+  doc.writeElement(dco); 
+  doc.writeEndl();
+  doc.writeElement(dmo->getAlphabet());
+  doc.writeEndl();
+  doc.writeElement(dmo);
+  doc.writeEndl();
+  doc.close();
+  SAFE_DELETE( dco );
+  
+  doc.open(stdout, "w");
+  doc.writeEndl();
+  // doc.writeElement(my_output);
+  doc.writeEndl();
+  doc.close();
+  
+  cout << "Wrote to gml2.xml" << endl;
+  
+  delete my_output;
+  delete alphas;
+  
+  // SAFE_DELETE(dmo);
+  
+  return 0;
 }

@@ -141,7 +141,7 @@ XMLIO_Element* GHMM_GraphMLDoc::XMLIO_startTag(const string& my_tag, XMLIO_Attri
 		GHMM_Alphabet *alphas = tmp_alphabets;
 		assert( alphas != NULL );
 		assert( hmmclass != NULL );
-		if ( hmmclass->size() == 1 ) { // a set of transition matrices
+		if ( hmmclass->size() < 1 ) { // a set of transition matrices
 		  sdiscrete_model = new GHMM_SWDiscreteModel(tmp_alphabets, 1); // 1 class
 		  return sdiscrete_model;
 		}
