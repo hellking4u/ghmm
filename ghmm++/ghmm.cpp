@@ -22,6 +22,8 @@ hmm::hmm(const string& tag, XMLIO_Attributes &attributes)
   hmm_model=NULL;
   shmm_model=NULL;
   Initial=NULL;
+  ghmm_Emissions=NULL;
+  ghmm_graph=NULL;
   type='\0';
 
   /* read attributes */
@@ -110,8 +112,16 @@ XMLIO_Object* hmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribute
     }
   else if (tag=="Emissions")
     {
-      cerr<<toString()<<": "<<tag<<" not implemented... DoItNOW"<<endl;
-      return new XMLIO_IgnoreObject();      
+      if (ghmm_Emissions!=NULL)
+	{
+	  cerr<<toString()<<" only one Emissions section expected"<<endl;
+	  return new XMLIO_IgnoreObject();
+	}
+      else
+	{
+	  ghmm_Emissions=new Emissions(tag,attributes);
+	  return ghmm_Emissions;
+	}
     }
   else
     {
@@ -149,8 +159,11 @@ void hmm::print() const
   else
     cout<<"no graph!"<<endl;
       
-  cout<<"Emissions: ToDoNOW"<<endl
-      <<"Alphabet: ToDoNOW"<<endl;
+  if (ghmm_Emissions!=NULL)
+    ghmm_Emissions->print();
+  else
+    cout<<"no emissions!"<<endl;
+  cout<<"Alphabet: ToDoNOW"<<endl;
 }
 
 const char* hmm::toString() const
@@ -242,4 +255,9 @@ smodel* hmm::create_smodel() const
 }
 
 
-
+hmm::~hmm()
+{
+  SAFE_DELETE(ghmm_Emissions);
+  SAFE_DELETE(ghmm_graph);
+  SAFE_DELETE(Initial);
+}

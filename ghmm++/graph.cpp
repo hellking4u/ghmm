@@ -11,8 +11,8 @@
 
 #include <iostream>
 #include <iterator>
-#include "graph.h"
 #include "xmlio/XMLIO_IgnoreObject.h"
+#include "graph.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -114,8 +114,6 @@ const string& Edge::get_from_id() const
 
 Graph::Graph(const string& tag, XMLIO_Attributes &attributes)
 {
-  edge_id_counter=0;
-  node_id_counter=0;
   XMLIO_Attributes::const_iterator pos=attributes.find("id");
   if (pos!=attributes.end())
     {
@@ -151,35 +149,37 @@ XMLIO_Object* Graph::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribu
 void Graph::XMLIO_endTag(const string& tag)
 {
   /* should add element to several internal structures... */
-  /* add nodes to node_id map */
+  /* add nodes to node_idx map */
   if (tag=="Node")
     {
       Node* last_node=vector<Node*>::back();
       /* test whether node id is unique */
-      if (node_ids.find(last_node->get_id())==node_ids.end())
+      if (node_idx.find(last_node->get_id())!=node_idx.end())
 	{
-	  cerr<<toString()<<"double node id "<<last_node->get_id()<<" found"<<endl;
+	  cerr<<toString()<<": double node id "<<last_node->get_id()<<" found, ignored it!"<<endl;
 	}
       else
 	{
-	  node_ids.insert(pair<const string,int>(last_node->get_id(),node_id_counter));
-	  node_id_counter++;
+	  node_idx.insert(pair<const string,int>(last_node->get_id(),
+						 vector<Node*>::size()
+						 ));
 	}
       
     }
-  /* add edges to edge_id map */
+  /* add edges to edge_idx map */
   else if (tag=="Edge")
     {
       Edge* last_edge=vector<Edge*>::back();
       /* test whether node id is unique */
-      if (edge_ids.find(last_edge->get_id())==edge_ids.end())
+      if (edge_idx.find(last_edge->get_id())!=edge_idx.end())
 	{
-	  cerr<<toString()<<"double edge id "<<last_edge->get_id()<<" found"<<endl;
+	  cerr<<toString()<<": double edge id "<<last_edge->get_id()<<" found"<<endl;
 	}
       else
 	{
-	  edge_ids.insert(pair<const string,int>(last_edge->get_id(),edge_id_counter));
-	  edge_id_counter++;
+	  edge_idx.insert(pair<const string,int>(last_edge->get_id(),
+						 vector<Edge*>::size()
+						 ));
 	}
     }
 }
@@ -192,64 +192,83 @@ void Graph::XMLIO_getCharacters(const string& characters)
 void Graph::XMLIO_finishedReading()
 {
   /* sanity check */
+  const enum {missing_edge_ignore, missing_edge_add} missing_edge_policy = missing_edge_add ;
 
   /* collect transitions, indexed by order in vector */
-  vector<Edge*>::iterator edge_pos=vector<Edge*>::begin();
-  while (edge_pos!=vector<Edge*>::end())
+  for(int edge_idx=0; edge_idx<vector<Edge*>::size();edge_idx++)
     {
-      const string& from=(*edge_pos)->get_from_id();
-      const string& to=(*edge_pos)->get_to_id();
+      const string& from=vector<Edge*>::at(edge_idx)->get_from_id();
+      const string& to=vector<Edge*>::at(edge_idx)->get_to_id();
       /* exist nodes in map ? what is the id? */
-      int from_id;
-      map<string,int>::iterator from_node_pos=node_ids.find(from);
-      if (from_node_pos==node_ids.end())
+      int from_idx;
+      map<string,int>::iterator from_node_pos=node_idx.find(from);
+      if (from_node_pos==node_idx.end())
 	{
-	  cerr<<"found unknown from-node id during transition collection"<<endl;
-	  node_ids.insert(pair<const string,int>(from,node_id_counter));
-	  from_id=node_id_counter;
-	  node_id_counter++;
+	  if (missing_edge_policy==missing_edge_ignore)
+	    {
+	      cerr<<"found unknown from-node id during transition collection, ignoring"<<endl;
+	      continue;
+	    }
+	  else
+	    {
+	      /* fake node */
+	      cerr<<"found unknown from-node id during transition collection, adding it"<<endl;
+	      XMLIO_Attributes attrs;
+	      attrs.insert(pair<const string,string>("id",from));
+	      (void)XMLIO_startTag("Node",attrs);
+	      XMLIO_endTag("Node");
+	      from_idx=vector<Node*>::size()-1;
+	    }
 	}
       else
 	{
-	  from_id=from_node_pos->second;
+	  from_idx=from_node_pos->second;
 	}
-      int to_id;
-      map<string,int>::iterator to_node_pos=node_ids.find(to);
-      if (to_node_pos==node_ids.end())
+      int to_idx;
+      map<string,int>::iterator to_node_pos=node_idx.find(to);
+      if (to_node_pos==node_idx.end())
 	{
-	  cerr<<"found unknown from-node id during transition collection"<<endl;
-	  node_ids.insert(pair<const string,int>(to,node_id_counter));
-	  to_id=node_id_counter;
-	  node_id_counter++;
+	  if (missing_edge_policy==missing_edge_ignore)
+	    {
+	      cerr<<"found unknown to-node id during transition collection, ignoring"<<endl;
+	      continue;
+	    }
+	  else
+	    {
+	      /* fake node */
+	      cerr<<"found unknown to-node id during transition collection, adding it"<<endl;
+	      XMLIO_Attributes attrs;
+	      attrs.insert(pair<const string,string>("id",to));
+	      (void)XMLIO_startTag("Node",attrs);
+	      XMLIO_endTag("Node");
+	      to_idx=vector<Edge*>::size()-1;
+	    }
 	}
       else
 	{
-	  to_id=to_node_pos->second;
+	  to_idx=to_node_pos->second;
 	}
 
-      /* more than one edge between two points allowed ! */
+      /* more than one edge between two points allowed at this point ! */
 
       /* adiascence list */
-      map<int,set<int> >::iterator from_to_map_pos=from_to_map.find(from_id);
+      map<int,set<int> >::iterator from_to_map_pos=from_to_map.find(from_idx);
       if (from_to_map_pos==from_to_map.end())
 	{
-	  from_to_map.insert(pair<const int,set<int> >(from_id,set<int>()));
-	  from_to_map_pos=from_to_map.find(from_id);
+	  from_to_map.insert(pair<const int,set<int> >(from_idx,set<int>()));
+	  from_to_map_pos=from_to_map.find(from_idx);
 	}
-      /* overkill ... need index of vector<Edge*> */
-      from_to_map_pos->second.insert(distance(vector<Edge*>::begin(),edge_pos));
+      from_to_map_pos->second.insert(edge_idx);
 
       /* inverse adiascence list */
-      map<int,set<int> >::iterator to_from_map_pos=to_from_map.find(to_id);
+      map<int,set<int> >::iterator to_from_map_pos=to_from_map.find(to_idx);
       if (to_from_map_pos==to_from_map.end())
 	{
-	  to_from_map.insert(pair<const int,set<int> >(to_id,set<int>()));
-	  to_from_map_pos=to_from_map.find(to_id);
+	  to_from_map.insert(pair<const int,set<int> >(to_idx,set<int>()));
+	  to_from_map_pos=to_from_map.find(to_idx);
 	}
-      /* overkill ... need index of vector<Edge*> */
-      to_from_map_pos->second.insert(distance(vector<Edge*>::begin(),edge_pos));
-      ++edge_pos;
-    }
+      to_from_map_pos->second.insert(edge_idx);
+    } /* for edge_idx */
 }
 
 const char* Graph::toString() const

@@ -24,8 +24,8 @@ DiscretePD.cpp DiscretePD.h \
 sequences.cpp sequences.h \
 graph.cpp graph.h \
 InitialStates.cpp InitialStates.h \
+Emissions.cpp Emissions.h \
 ghmm.cpp ghmm.h
-
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
