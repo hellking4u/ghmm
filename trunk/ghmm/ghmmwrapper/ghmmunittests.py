@@ -906,6 +906,17 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         seq2 = self.model.sample(10,100,seed=3586662)
         
 
+class XMLIOTests(unittest.TestCase):
+
+    def setUp(self):
+        self.model = None
+
+    def testReadHMMed(self):
+        self.model = ghmm.HMMOpenXML('multexon-4.xml')
+        del self.model
+        self.model = ghmm.HMMOpenXML('test2.xml')
+        del self.model
+        
 if __name__ == '__main__':
     unittest.main()
 

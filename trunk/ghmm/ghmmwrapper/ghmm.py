@@ -1268,7 +1268,11 @@ class HMMFromMatricesFactory(HMMFactory):
                 for i in range(cmodel.N):
                     state = ghmmwrapper.get_stateptr(states,i)
                     # compute state order
-                    order = ( log(len(B[i]),cmodel.M) -1)
+                    if cmodel.M > 1:
+                        order = ( log(len(B[i]),cmodel.M) -1)
+                    else:
+                        order = len(B[i]) - 1
+                        
                     #print "order in state ",i," = ", order
                     # check or valid number of emission parameters
                     order = int(order)
@@ -1486,7 +1490,11 @@ class BackgroundDistribution:
             order = ghmmwrapper.int_array(distNum)
             b = ghmmwrapper.double_2d_array_nocols(distNum)
             for i in range(distNum):
-                o = log(len(bgInput[i]),len(emissionDomain)) -1
+                if len(emissionDomain) > 1:
+                    o = log(len(bgInput[i]),len(emissionDomain)) -1
+                else:
+                    o = len(bgInput[i]) - 1
+                         
                 assert (o % 1) == 0, "Ivalid order of distribution " + str(i) + ": " + str(o)
 
                 ghmmwrapper.set_arrayint(order,i, int(o))
