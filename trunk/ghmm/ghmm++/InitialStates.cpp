@@ -42,9 +42,14 @@ const char* State::toString() const
   return "State";
 }
 
+const string& State::get_id() const
+{
+  return id_ref;
+}
+
 InitialStates::InitialStates(const string& tag, XMLIO_Attributes &attributes)
 {
-  state_pd=NULL;  
+  state_pd=NULL;
 }
 
 XMLIO_Object* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
@@ -66,14 +71,18 @@ XMLIO_Object* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes 
     }
 }
 
+
 void InitialStates::print() const
 {
+  cout<<toString()<<endl;
   if (state_pd==NULL)
     {
-      cout<<"no InitialState distribution"<<endl;
+      cout<<"empty"<<endl;
+      return;
     }
   else
     {
       state_pd->print();
     }
 }
+

@@ -25,19 +25,75 @@ namespace std {
      Node used in Graph
    */
   class Node: public XMLIO_Object
-    {};
+    {
+    public:
+      /** */
+      Node(const string& tag, XMLIO_Attributes &attributes);
+      /** Returns name of class. */
+      virtual const char* toString() const;
+      /** dumps all content to cout */
+      virtual void print() const;
+      /**
+	 return id of this model
+       */
+      virtual const string& get_id() const;
+    private:
+      string id;
+    };
 
   /**
      Edge used in Graph
    */
   class Edge: public XMLIO_Object
-    {};
+    {
+    public:
+      /** */
+      Edge(const string& tag, XMLIO_Attributes &attributes);
+      /** Returns name of class. */
+      virtual const char* toString() const;
+      /** dumps all content to cout */
+      virtual void print() const;
+      /**
+	 return id of this model
+       */
+      virtual const string& get_id() const;
+    private:
+      string id;
+      string from;
+      string to;
+      vector<double> class_weights;
+    };
 
   /**
      Graph, conform to GXL, uses Edge and Node
    */
   class Graph:public XMLIO_Object, public vector<Node*>, public vector<Edge*>
-    {};
+    {
+    public:
+      /** */
+      Graph(const string& tag, XMLIO_Attributes &attributes);
+      /**
+	 expected elements are: Graph, Initial, Emissions and Sequences
+       */
+      virtual XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      /** */
+      virtual void XMLIO_endTag(const string& tag);
+      /** */
+      virtual void XMLIO_getCharacters(const string& characters);
+      /** */
+      virtual void XMLIO_finishedReading();
+      /** Returns name of class. */
+      virtual const char* toString() const;
+      /** dumps all content to cout */
+      virtual void print() const;
+      /**
+	 return id of this model
+       */
+      virtual const string& get_id() const;
+    private:
+      /** id is mandatory for gxl graphs */
+      string id;
+    };
 
 #ifdef HAVE_NAMESPACES
 }
