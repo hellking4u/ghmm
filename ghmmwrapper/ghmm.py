@@ -1321,6 +1321,13 @@ class HMMFromMatricesFactory(HMMFactory):
                 if cmodel.maxorder > 0:
                     #print "Set kHigherOrderEmissions"
                     cmodel.model_type += 16     #kHigherOrderEmissions
+
+                # initialize lookup table for powers of the alphabet size,
+                # speeds up models with higher order states
+                powLookUp = [1] * (maxorder+2)
+                for i in range(1,len(powLookUp)):
+                    powLookUp[i] = powLookUp[i-1] * cmodel.M
+                cmodel.pow_lookup = ghmmhelper.list2arrayint(powLookUp)
                 
                 # check for state labels
                 if labelDomain is not None and labelList is not None:

@@ -532,7 +532,12 @@ struct model {
   int* topo_order; 
   int  topo_order_length;
 
+  /** pow_lookup is a array of precomputed powers
 
+      It contains in the i-th entry M (alphabet size) to the power of i
+      The last entry is maxorder+1
+  */
+  int *pow_lookup;
 };
 typedef struct model model;
 
