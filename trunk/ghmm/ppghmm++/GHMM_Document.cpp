@@ -77,8 +77,6 @@ XMLIO_Element* GHMM_Document::XMLIO_startTag(const string& tag, XMLIO_Attributes
     }
     
     if (tag == "sequences") {
-      fprintf(stderr,"<sequences>\n");
-      
       sequences = new GHMM_Sequences(attrs);
       
       return sequences;

@@ -13,6 +13,7 @@
 #include <ghmm/model.h>
 #include <xmlio/XMLIO_Element.h>
 
+#include <ppghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -67,5 +68,7 @@ class GHMM_State: public XMLIO_Element {
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#include <ppghmm++/close_code.h>
 
 #endif /* _GHMM_STATE_H */

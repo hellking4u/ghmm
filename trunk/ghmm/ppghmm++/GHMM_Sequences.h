@@ -13,6 +13,7 @@
 #include "ghmm/sequence.h"
 #include "ppghmm++/GHMM_Types.h"
 
+#include <ppghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -118,6 +119,8 @@ class GHMM_Sequences: public XMLIO_Element {
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#include <ppghmm++/close_code.h>
 
 #endif /* _GHMM_SEQUENCES_H */
 

@@ -12,6 +12,8 @@
 
 #include <xmlio/XMLIO_Document.h>
 
+#include <ppghmm++/begin_code.h>
+
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
@@ -65,5 +67,7 @@ class GHMM_Document: public XMLIO_Document {
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#include <ppghmm++/close_code.h>
 
 #endif /* _GHMM_DOCUMENT_H */

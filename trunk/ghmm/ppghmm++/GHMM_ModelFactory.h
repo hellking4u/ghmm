@@ -10,6 +10,7 @@
 
 #include <vector>
 
+#include <ppghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -35,5 +36,7 @@ class GHMM_ModelFactory {
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#include <ppghmm++/close_code.h>
 
 #endif /* _GHMM_MODELFACTORY_H */
