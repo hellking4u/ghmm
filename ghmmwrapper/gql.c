@@ -1,3 +1,13 @@
+/* author       : Wasinee Rungsarityotin and Benjamin Georgi
+ *  filename    : ghmmwrapper/gql.c
+ *  created      : DATE: September, 2003
+ *
+ * $Id$
+ */
+
+/*
+  __copyright__
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,78 +15,11 @@
 #include <ghmm/matrix.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
-#include <ghmm/sdmodel.h>
 #include <ghmm/smodel.h>
 #include <ghmm++/GHMM_convertXMLtoC.h>
 #include <float.h>
 #include <assert.h>
 
-/***
-model *graphmlToModel(char *filename)
-{
-  model_t   *mymodel;
-  model     *cmodel;
-
-  mymodel = graphmldoc_cwrapper(filename);
-
-  if (mymodel != NULL)
-    {
-      if (mymodel->model_id == DISCRETE)
-	{
-	  cmodel = (model*)(mymodel->model_pt); 
-	  free((void*) mymodel);
-	  return cmodel;
-	}
-      else
-	{
-	  fprintf(stderr, "graphmlToModel: I need to a DISCRETE model\n");
-	  free((void*) mymodel);
-	  return NULL;
-	}
-    }
-}****/
-/* the actual pointer to C struct model */
-
-
-static int __seq_d_class(const double *O, int index, double *osum) {
-  return 0; 
-}
-
-static sdmodel *graphmlTosdModel(char *filename)
-{
-  model_t   *mymodel;
-  sdmodel     *cmodel;
-  int nsilents=0;
-
-  mymodel = graphmldoc_cwrapper(filename);
-
-  if (mymodel != NULL)
-    {
-      if (mymodel->model_id == DISCRETE)
-	{
-	  cmodel = (sdmodel*)(mymodel->model_pt); /* the actual pointer to C struct model */
-	  nsilents = sdmodel_initSilentStates( cmodel );
-	  fprintf(stderr, "In Main: # Silent States %d\n", nsilents);
-
-	  if ( cmodel->cos > 1 ) {
-	    fprintf(stderr, "You have switching model\n.");
-	    fprintf(stderr, "Must set the function pointer sdmodel->get_class\n");
-	    
-	  } else {
-	    cmodel->get_class = __seq_d_class;
-	  }
-	 
-	  free((void*) mymodel);
-	  return cmodel;
-	}
-      else
-	{
-	  fprintf(stderr, "graphmlToModel: I need a DISCRETE model\n");
-	  free((void*) mymodel);
-	  return NULL;
-	}
-    }
-}
 
 static double *log_p_pt;
 static int seq_rank(const void *a1, const void *a2);
@@ -179,6 +122,24 @@ void smodel_set_transition(smodel *smo, int i, int j, int cos, double prob) {
   }
 }
 
+
+double smodel_get_transition(smodel *smo, int i, int j, int cos) {
+  int in, out;
+  if (cos >= smo->cos) {
+    fprintf(stderr, "smodel_get_transition(0): cos > state->cos\n");
+    exit(-1);	
+  }
+  if (smo->s && smo->s[i].out_a && smo->s[j].in_a) {
+    for(out=0; out < smo->s[i].out_states; out++) {
+      if ( smo->s[i].out_id[out] == j ) {
+	return 	smo->s[i].out_a[cos][out];
+      }
+    }
+  }
+  fprintf(stderr, "smodel_get_transition(1): data structure not initialized\n");
+  return 0.0;
+}
+
 void smodel_set_mean(smodel *smo, int i, double *mu) {
   int m;
   if (smo->s != NULL) {
@@ -190,8 +151,10 @@ void smodel_set_mean(smodel *smo, int i, double *mu) {
 void smodel_set_variance(smodel *smo, int i, double *variance) {
   int m;
   if (smo->s != NULL) {
-    for(m = 0; m < smo->M; m++)
+    for(m = 0; m < smo->M; m++) {
       smo->s[i].u[m] = variance[m];
+      assert( smo->s[i].u[m] > 0.0 );
+    }
   }
 }
 
@@ -219,8 +182,8 @@ int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double 
       matched++;
     }
     else  {
-      /* Test: high costs for each unmatched Seq. */
-      log_ps[i] = 0.0;
+      /* Test: very small log score for sequence cannot be produced */
+      log_ps[i] = -DBL_MAX;
       /*      mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
     }
   }
@@ -247,11 +210,13 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
       matched++;
     }
     else  {
-      /* Test: high costs for each unmatched Seq. */
-      log_ps[i] = 0.0;
-      /*      mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
+      /* Test: very small log score for sequence cannot be produced. */
+      log_ps[i] = -DBL_MAX;
+      /* fprintf(stderr,"sequence[%d] cannot be build.\n", i); */
     }
   }
+
+  smodel_print( stderr, smo );
 
   res=matched;
   if (matched == 0) { 
