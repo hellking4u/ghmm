@@ -6,9 +6,7 @@
 # __copyright__
 
 MAINTAINERCLEANFILES = Makefile.in
-
-BUILT_SOURCES = 
-INCLUDES = -I$(top_srcdir)
+EXTRA_DIST = test.smo test10.sqd test100.sqd viterbi.sh
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
