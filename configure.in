@@ -1,4 +1,4 @@
-dnl  author       : Achim Gaedke
+dnl  author       : Achim Gaedke, Peter Pipenbacher
 dnl  filename     : /zpr/bspk/src/hmm/ghmm/configure.in
 dnl  created      : DATE: 2001-04-04
 dnl  $Id$
@@ -10,6 +10,18 @@ AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(ghmm,0.3)
 dnl implicit in AM_INIT_AUTOMAKE...
 dnl AC_PROG_MAKE_SET
+
+dnl load CXXFLAGS from cache
+AC_CACHE_CHECK(for CXXFLAGS, ac_cv_cxxflags, 
+[if test -z "$CXXFLAGS"; then ac_cv_cxxflags="-O2"; else ac_cv_cxxflags="$CXXFLAGS"; fi
+])
+CXXFLAGS="$ac_cv_cxxflags"
+
+dnl load CFLAGS from cache
+AC_CACHE_CHECK(for CFLAGS, ac_cv_cflags, 
+[if test -z "$CFLAGS"; then ac_cv_cflags="-O2"; else ac_cv_cflags="$CFLAGS"; fi
+])
+CFLAGS="$ac_cv_cflags"
 
 dnl Checks for programs.
 AC_PROG_CC
