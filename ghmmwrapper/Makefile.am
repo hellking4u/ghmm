@@ -5,15 +5,16 @@
 # __copyright__
 
 SUBDIRS = .
-MAINTAINERCLEANFILES = Makefile.in
+#MAINTAINERCLEANFILES = Makefile.in
 
 #NOTE: C-Files will be seperatly compiled by Python setup
-DISTFILES = ghmm.py ghmmhelper.py \
+DISTFILES = ghmm.py ghmmhelper.py xmlutil.py \
             ghmmwrapper.i \
             setup.py \
             sdclass_change.c sdclass_change.h read_cxml.c read_cxml.h gql.c \
             mixture.py \
-            test100.sqd test2.smo
+            test100.sqd test2.smo \
+            Makefile.am
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
