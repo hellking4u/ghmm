@@ -21,7 +21,8 @@ sequence_t* std::return_sequences(const char* file);
 class double_sequence: public XMLIO_ArrayObject<double>
 {
 public:
-  double_sequence(XMLIO_Attributes &attributes);
+  double_sequence(){label=NULL; id="";}
+  double_sequence(const string& name, XMLIO_Attributes &attributes);
   ~double_sequence();
   XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
   double* create_double_array() const;
@@ -36,7 +37,8 @@ private:
 class int_sequence: public XMLIO_ArrayObject<int>
 {
 public:
-  int_sequence(XMLIO_Attributes &attributes);
+  int_sequence(){label=NULL; id="";}
+  int_sequence(const string& name, XMLIO_Attributes &attributes);
   ~int_sequence();
   XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
   double* create_double_array() const;
