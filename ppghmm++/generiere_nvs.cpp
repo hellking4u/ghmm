@@ -1,7 +1,15 @@
-#include <math.h>
 #include "ppghmm++/GHMM_Sequences.h"
 #include "ppghmm++/GHMM_ContinuousModel.h"
 #include "ppghmm++/GHMM_Document.h"
+#ifdef HAVE_CMATH
+#  include <cmath>
+#else
+#  include <math.h>
+#endif
+
+#ifdef HAVE_NAMESPACES
+using namespace std;
+#endif
 
 int main(int argc, char* argv[]) {
   unsigned int i;
