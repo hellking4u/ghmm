@@ -8,6 +8,8 @@
 # tests and examples
 
 AUTOMAKE_OPTIONS = dejagnu
+EXPECT=$(EXPECT_FOR_DEJAGNU)
+RUNTEST=$(RUNTEST_FOR_DEJAGNU)
 
 CLEANFILES = ghmm.log ghmm.sum site.exp site.bak
 MAINTAINERCLEANFILES = Makefile.in

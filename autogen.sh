@@ -16,3 +16,5 @@ automake --add-missing --copy
 
 #creates configure from configure.in
 autoconf
+
+
