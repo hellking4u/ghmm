@@ -1,3 +1,10 @@
+/*
+  author: Achim Gaedke
+  created: 26. June 2001
+  file: xmlio/examples/ghmm/sequences.h
+  $Id$
+ */
+
 #ifndef GHMMPP_SEQUENCES_H
 #define GHMMPP_SEQUENCES_H
 
@@ -15,10 +22,6 @@
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
-
-  /**
-   */
-  sequence_t* std::return_sequences(const char* file);
 
   /**
    */
@@ -55,6 +58,9 @@ namespace std {
       /**
        */
       double get_id_as_double() const;
+      /**
+       */
+      virtual void print() const;
     private:
       /**
        */
@@ -99,6 +105,9 @@ namespace std {
       /**
        */
       double get_id_as_double() const;
+      /**
+       */
+      virtual void print() const;
     private:
       /**
        */
@@ -152,6 +161,9 @@ namespace std {
       /**
        */
       sequence_d_t* create_sequence_d_t() const;
+      /**
+       */
+      virtual void print() const;
       
     private:
       /**
@@ -221,6 +233,9 @@ namespace std {
       /**
        */
       sequence_d_t* create_sequence_d_t() const;
+      /**
+       */
+      virtual void print() const;
       
     private:
       /**

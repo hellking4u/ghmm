@@ -1,7 +1,7 @@
 /*
   author: Achim Gaedke
   created: 26. June 2001
-  file: xmlio/examples/ghmm/sequence_reader.cpp
+  file: xmlio/examples/ghmm/sequences.cpp
   $Id$
  */
 
@@ -121,6 +121,10 @@ double double_sequence::get_id_as_double() const
     return strtod(id.c_str(),NULL);
 }
 
+void double_sequence::print() const
+{
+  XMLIO_ArrayObject<double>::print();
+}
 
 /***********************************************************************************/
 
@@ -224,6 +228,12 @@ double int_sequence::get_id_as_double() const
     return strtod(id.c_str(),NULL);
 }
 
+void int_sequence::print() const
+{
+  XMLIO_ArrayObject<int>::print();
+}
+
+
 /***********************************************************************************/
 
 
@@ -263,7 +273,7 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_t* seq)
   for (int sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
     {
       /* vector of doubles */
-      double_sequence_vector.push_back(new double_sequence(seq->seq[sequence_pos],seq->seq_len[sequence_pos]));
+      int_sequence_vector.push_back(new int_sequence(seq->seq[sequence_pos],seq->seq_len[sequence_pos]));
       /* weight */
       weight_vector.push_back(seq->seq_w[sequence_pos]);
       /* label: missing todo */
@@ -422,6 +432,46 @@ sequence_d_t* sequences_DiscretePD::create_sequence_d_t() const
   return seq;
 }
 
+void sequences_DiscretePD::print() const
+{
+  if (type=="int")
+    {
+      cout<<"type is "<<type<<endl;
+      vector<double>::const_iterator weight_pos=weight_vector.begin();
+      for (vector<int_sequence*>::const_iterator pos=int_sequence_vector.begin();
+	   pos != int_sequence_vector.end();
+	   ++pos)
+	{
+	  if (weight_pos != weight_vector.end())
+	    {
+	      cout<<*weight_pos<<" ";
+	      ++weight_pos;
+	    }
+	  (*pos)->print();
+	}
+    }
+  else if (type=="double")
+    {
+      cout<<"type is "<<type<<endl;
+      vector<double>::const_iterator weight_pos=weight_vector.begin();
+      for (vector<double_sequence*>::const_iterator pos=double_sequence_vector.begin();
+	   pos != double_sequence_vector.end();
+	   ++pos)
+	{
+	  if (weight_pos != weight_vector.end())
+	    {
+	      cout<<*weight_pos<<" ";
+	      ++weight_pos;
+	    }
+	  (*pos)->print();
+	}      
+    }
+  else
+    {
+      cerr<<toString()<<": type "<<type<<" not supported!"<<endl;
+    }
+}
+
 /***********************************************************************************/
 
 sequences::sequences()
@@ -500,6 +550,15 @@ const char* sequences::toString() const
   return "sequences";
 }
 
+void sequences::print() const
+{
+  cout<<toString()<<":"<<endl;
+  if (sequence_array!=NULL)
+    sequence_array->print();
+  else
+    cout<<"no sequences available"<<endl;
+}
+
 XMLIO_Object* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="DiscretePD")
@@ -539,7 +598,6 @@ sequenceReader::~sequenceReader()
       SAFE_DELETE(front());
       pop_front();
     }
-
 }
 
 XMLIO_Object* sequenceReader::XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes) {
@@ -566,18 +624,6 @@ size_t sequenceReader::read_sequences(const string& filename)
   close();
   return size();
 }
-
-/***********************************************************************************/
-
-sequence_t* std::return_sequences(const char* file)
-{
-  sequenceReader* reader=new sequenceReader();
-  (void)reader->read_sequences(file);
-  sequence_t* seq=reader->front()->create_sequence_t();
-  return seq;
-}
-
-
 
 
 
