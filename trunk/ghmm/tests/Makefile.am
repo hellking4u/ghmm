@@ -7,12 +7,15 @@
 
 # tests and examples
 
+AUTOMAKE_OPTIONS = dejagnu
+
+CLEANFILES = ghmm.log ghmm.sum site.exp site.bak
+MAINTAINERCLEANFILES = Makefile.in
+
 INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
 noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols
-
-TESTS=
 
 LDADD = ../ghmm/libghmm.a
 

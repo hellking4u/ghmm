@@ -5,6 +5,9 @@
 #
 # __copyright__
 
+MAINTAINERCLEANFILES = Makefile.in
+
+
 INCLUDES = -I$(top_srcdir)
 lib_LIBRARIES = libghmm.a
 
