@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <math.h>
 #include <gsl/gsl_sf.h>
 #include <gsl/gsl_histogram.h>
@@ -7,7 +10,7 @@
 #include <stdlib.h>
 
 
-#ifndef HAVE_GSL_HISTOGRAM_SET_RANGES_UNIFORM
+#ifndef GSL_HISTOGRAM_SET_RANGES_UNIFORM
 int gsl_histogram_set_ranges_uniform(gsl_histogram* h, double xmin, double xmax )
 {
   size_t i;
