@@ -569,7 +569,8 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
 extern int reestimate_baum_welch(model *mo, sequence_t *sq);
-extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+// XXX need source code XXX 
+/// extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
 /******* Viterbi (viterbi.c)*******/
 /**
@@ -642,6 +643,12 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
 
 %inline%{
 	
+  /* allocation of an empty model struct */
+  model *new_model() {
+     return (struct model *)(struct model *) calloc(1, sizeof(struct model));    
+  }
+    
+    
   /* allocation of an array of state structs*/
   state *arraystate(int size) {
     return (state *) malloc(size*sizeof(state));
@@ -665,17 +672,22 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
       fclose(fp);
     }
   }
+  
 
+  void call_model_free(model * mo)	{ model_free(&mo); }
+  
+  model *get_model_ptr(model **mo, int index) { return mo[index]; }
+    
   model **cast_model_ptr(model *mo){
-    /*model** res = (model**) malloc(sizeof(model*));
-      res[0] = mo;*/
     model** result = &mo;
-    /*printf("cast_model_ptr %xlu %xlu\n", (unsigned long)mo, (unsigned long)result);*/
-     return result;
-
+    return result;
   }   
+
+  
   
 %}
+
+
 
 /*=============================================================================================
   =============================== sdmodel.c  ============================================== */
@@ -1024,6 +1036,12 @@ extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
 
 %inline %{
 
+  /* allocation of an empty smodel struct */
+  smodel *new_smodel() {
+     return (struct smodel *)(struct smodel *) calloc(1, sizeof(struct smodel));    
+  }
+
+    
   /* array of sstate structs */
   sstate *arraysstate(int size) { 
     return (sstate *) malloc(size*sizeof(sstate));
@@ -1406,6 +1424,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 
   void free_2darrayint(int **pt, int rows,int cols) {  matrix_i_free(&pt, rows); }
 
+ 
 %}
 
 
