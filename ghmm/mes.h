@@ -42,6 +42,23 @@ extern "C" {
 #define MES_PROT            MES_FLAG_FILE_WIN, __LINE__ ,MES_PROC_INFO, CUR_PROC
 #define MES_PROT_TIME       MES_FLAG_TIME_WIN, __LINE__ ,MES_PROC_INFO, CUR_PROC
 
+/* stuff from sys.h */
+
+#if defined(_WIN32)
+#define sleep( x )     Sleep(1000*x)
+#define getthreadid()  GetCurrentThreadId()
+#define getprocessid() GetCurrentProcessId()
+#else 
+#include <unistd.h>
+#define Sleep( x ) \
+  if(1){ int t=clock()+(x/1000.0)*CLOCKS_PER_SEC; while(clock() < t);} else
+#define getthreadid()  1
+#define getprocessid() 1
+#endif /* defined(WIN32) */
+
+
+/* end stuff from sys.h */
+
 /* stuff from stdmacro.h */
 
 #if 0

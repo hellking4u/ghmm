@@ -72,9 +72,6 @@ long scluster_update_label(long *oldlabel, long *seq_label, long seq_number,
 void scluster_print_likelihood(FILE *outfile, scluster_t *cl);
 
 ///
-int scluster_calc_print_indices(FILE *outfile, scluster_t *cl);
-
-///
 int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p,
 			double *log_p);
 
@@ -97,3 +94,8 @@ void scluster_print_header(FILE *file, char* argv[]);
 //@}
 
 #endif /* SCLUSTER_H */
+
+
+
+
+

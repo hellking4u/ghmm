@@ -450,33 +450,3 @@ void matrix_d_copy(double **src, double **target, int rows, int cols) {
     for (j = 0; j < cols; j++)
       target [ i ][ j ] = src [ i ][ j ];
 }
-
-/*============================================================================*/
-
-/*  calculate "target" as neighbour matrix from "src", preserve strucure 
-    and row  norm */
-void matrix_d_neighbour(double **src, double **target, int rows, int cols, 
-			double eps) {
-  int i, k;
-  double sum, tmp;
-
-  for (i = 0; i < rows; i++) {
-    sum = 1.0;
-    for (k = 0; k < cols; k++) {
-      if (src[i][k] > 0) {
-	/*  Creates a random number on the interval [0, eps] */
-	tmp = schange_rand_2(eps); 
-	sum += tmp;
-	target[i][k] = tmp + src[i][k];
-      }
-      else
-	target[i][k] = 0.0;
-    }
-    
-    /* norm to 1 */
-    for (k = 0; k < cols; k++) 
-      target[i][k] /= sum;
-  }
-}
-
-/*============================================================================*/
