@@ -5,6 +5,14 @@
   $Id$
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <ghmm/vector.h>
 #include <ghmm/rng.h>
@@ -127,7 +135,7 @@ int my_model()
 int main()
 {
   /* Important! initialise rng  */
-  gsl_rng_init();
+  ghmm_rng_init();
 
   return my_model();
 }

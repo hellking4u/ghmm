@@ -265,7 +265,7 @@ void testBaumwelch(){
 
 int main(){
 
-  gsl_rng_init();
+  ghmm_rng_init();
   testBaumwelch();
 
 }

@@ -5,6 +5,14 @@
   $Id$
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <ghmm/matrix.h>
@@ -129,7 +137,7 @@ int single_state_continuous()
 int main()
 {
   /* Important! initialise rng  */
-  gsl_rng_init();
+  ghmm_rng_init();
 
   return single_state_continuous();
 }

@@ -1,6 +1,6 @@
 from pyghmm import *
 
-gsl_rng_init() #Init random number generator
+ghmm_rng_init() #Init random number generator
 
 #smodel_run_clustering("test2.smo","test10.sqd")
 
