@@ -81,8 +81,10 @@ GHMM_GMLContinuousModel.h \
 GHMM_GMLTransition.h \
 GHMM_GMLAlphabet.h \
 GHMM_GMLClass.h \
+GHMM_GMLEmission.h \
 GHMM_StateT.hh \
 GHMM_AbstractModelT.hh \
+GHMM_DiscreteModelT.hh \
 GHMM_SWDiscreteModel.h 
 
 
