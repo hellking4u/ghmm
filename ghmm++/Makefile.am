@@ -17,7 +17,7 @@ INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
 
 pkgincludedir = $(includedir)/ghmm++
 
-LDFLAGS = $(XMLIO_LIBS)
+AM_LDFLAGS = $(XMLIO_LIBS)
 
 lib_LTLIBRARIES = libghmm++.la
 libghmm___la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
