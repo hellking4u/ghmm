@@ -39,7 +39,7 @@
 #  endif
 # else
 # ifdef WIN32
-#  ifdef XMLIO_EXPORTS
+#  ifdef GHMM_EXPORTS
 #    define DECLSPEC	__declspec(dllexport)
 #  else
 #    define DECLSPEC	__declspec(dllimport)
@@ -73,19 +73,9 @@
 #  include <math.h>
 #endif
 
-#ifdef _MSC_VER 
-// needed to cope with bug in MS library: 
-// it fails to define min/max 
-
-template <class T> inline T max(const T& a, const T& b) { 
-  return (a > b) ? a : b;
-} 
-
-template <class T> inline T min(const T& a, const T& b) { 
-  return (a < b) ? a : b;
-} 
-
-#endif 
+/* define MIN, MAX macros */
+#define MAX(a,b) ((a > b) ? a : b)
+#define MIN(a,b) ((a < b) ? a : b)
 
 #if defined(HAVE_NAMESPACES) && defined(__SUNPRO_CC)
 /* for SC5.0 in /usr/include/floatingpoint.h (SunOs 2.7) */

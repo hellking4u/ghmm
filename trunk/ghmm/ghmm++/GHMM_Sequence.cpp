@@ -85,7 +85,7 @@ void GHMM_Sequence::XMLIO_finishedReading() {
 
 
 void GHMM_Sequence::resize(int new_len) {
-  int new_alloc_len = max(1,new_len);
+  int new_alloc_len = MAX(1,new_len);
 
   switch (sequence_type) {
 
