@@ -158,7 +158,6 @@ void hmm::print() const
     ghmm_graph->print();
   else
     cout<<"no graph!"<<endl;
-      
   if (ghmm_Emissions!=NULL)
     ghmm_Emissions->print();
   else
