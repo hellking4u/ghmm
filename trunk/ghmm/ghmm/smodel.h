@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : ghmm/ghmm/smodel.h
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.h
   created      : TIME: 21:44:45     DATE: Sun 14. November 1999
   $Id$
 
@@ -67,8 +67,8 @@ struct smodel{
   /** Number of output densities per state */
   int M;
   /** smodel includes continuous model with one transition matrix 
-    (cos  is set to 0) and an extension for models with several matrices
-    (cos is set to a positive integer values).*/
+    (cos  is set to 1) and an extension for models with several matrices
+    (cos is set to a positive integer value > 1).*/
   int cos;
   /** Flag for density function. 0: normal density, 1: truncated normal 
    density, 2: approximated normal density */
