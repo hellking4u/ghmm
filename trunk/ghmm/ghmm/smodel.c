@@ -25,8 +25,11 @@ __copyright__
 
 
 /*----------------------------------------------------------------------------*/
-static int smodel_state_alloc(sstate *state, int M, int in_states,
-			      int out_states) {
+static int smodel_state_alloc(sstate *state,
+			      int M,
+			      int in_states,
+			      int out_states,
+			      int cos) {
 # define CUR_PROC "smodel_state_alloc"
   int res = -1;
   if(!m_calloc(state->c, M)) {mes_proc(); goto STOP;}
@@ -34,14 +37,12 @@ static int smodel_state_alloc(sstate *state, int M, int in_states,
   if(!m_calloc(state->u, M)) {mes_proc(); goto STOP;}
   if (out_states > 0) {
     if(!m_calloc(state->out_id, out_states)) {mes_proc(); goto STOP;}
-    /* if COS > 1: out_a is a matrix */
-    state->out_a = matrix_d_alloc(COS, out_states);
+    state->out_a = matrix_d_alloc(cos, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
     if(!m_calloc(state->in_id, in_states)) {mes_proc(); goto STOP;}
-    /* if COS > 1: in_a is a matrix */
-    state->in_a = matrix_d_alloc(COS, in_states);
+    state->in_a = matrix_d_alloc(cos, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
   }
   res = 0;
@@ -67,7 +68,7 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
 
   for (i = 0; i < smo->N; i++) {
     exist = 0;
-    for (c = 0; c < COS; c++) {
+    for (c = 0; c < smo->cos; c++) {
       if (a_matrix[c][index][i]) { 
 	exist = 1;
 	break;
@@ -77,12 +78,12 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
     if (exist) { 
       if (count_out >= smo->s[index].out_states) {mes_proc(); return(-1);}
       smo->s[index].out_id[count_out] = i;
-      for (c = 0; c < COS; c++) 
+      for (c = 0; c < smo->cos; c++) 
 	smo->s[index].out_a[c][count_out] = a_matrix[c][index][i];
       count_out++;
     }
     exist = 0;
-    for (c = 0; c < COS; c++) {
+    for (c = 0; c < smo->cos; c++) {
       if (a_matrix[c][i][index]) { 
 	exist = 1;
 	break;
@@ -92,7 +93,7 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
     if (exist) {
       if (count_in >= smo->s[index].in_states) {mes_proc(); return(-1);}
       smo->s[index].in_id[count_in] = i;
-      for (c = 0; c < COS; c++)
+      for (c = 0; c < smo->cos; c++)
 	smo->s[index].in_a[c][count_in] = a_matrix[c][i][index];
       count_in++;
     }
@@ -116,7 +117,7 @@ smodel **smodel_read(char *filename, int *smo_number) {
     scanner_consume(s, '='); if(s->err) goto STOP;
     if (!strcmp(s->id, "SHMM") || !strcmp(s->id, "shmm")) {
       (*smo_number)++;
-      /* more mem */	 
+      /* more mem */
       if (m_realloc(smo, *smo_number)) { mes_proc(); goto STOP; }
       smo[*smo_number - 1] = smodel_read_block(s, (int *) &new_models); 
       if (!smo[*smo_number - 1]) { mes_proc(); goto STOP; }
@@ -152,7 +153,7 @@ STOP:
 /*============================================================================*/
 smodel *smodel_read_block(scanner_t *s, int *multip){
 #define CUR_PROC "smodel_read_block"
-  int i,j,osc, m_read, n_read, pi_read, a_read, c_read, mue_read, 
+  int i,j,osc, m_read, n_read, pi_read, a_read, c_read, mue_read, cos_read, 
     u_read, len, density_read, out, in, prior_read, fix_read;
   smodel *smo      = NULL;
   double *pi_vektor = NULL, **a_matrix = NULL, ***a_3dmatrix = NULL;
@@ -160,7 +161,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
   int *fix_vektor = NULL;
   
   m_read = n_read = pi_read = a_read = c_read = mue_read = u_read 
-    = density_read = prior_read = fix_read = 0;
+    = density_read = prior_read = fix_read = cos_read = 0;
   *multip = 1; /* default */
   if (!(m_calloc(smo, 1))) { mes_proc(); goto STOP; }
   scanner_consume( s, '{' ); if(s->err) goto STOP; 
@@ -168,7 +169,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
     scanner_get_name(s);
     if (strcmp(s->id, "M") && strcmp(s->id, "N") && strcmp(s->id, "Pi") &&
 	strcmp(s->id, "A") && strcmp(s->id, "C") && strcmp(s->id, "Mue") &&
-	strcmp(s->id, "U") && strcmp(s->id, "multip") && 
+	strcmp(s->id, "U") && strcmp(s->id, "multip") && strcmp(s->id, "cos") &&
 	strcmp(s->id, "prior") && strcmp(s->id, "fix_state") &&
 	strcmp(s->id, "density") && strncmp(s->id, "Ak_", 3) ) {
       scanner_error(s, "unknown identifier"); goto STOP;
@@ -205,6 +206,13 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
       if ((smo->prior < 0 || smo->prior > 1) && smo->prior != -1)
 	{ scanner_error(s, "invalid model prior"); goto STOP; }
       prior_read = 1;
+    }
+    else if (!strcmp(s->id, "cos")) {/* modelprior */
+      if (cos_read) {scanner_error(s,"identifier cos twice");goto STOP;}
+      smo->cos = scanner_get_int(s);
+      if (smo->cos <= 0)
+	{ scanner_error(s, "invalid model cos"); goto STOP; }
+      cos_read = 1;
     }   
     else if (!strcmp(s->id, "Pi")) {/* Initial State Prob. */
       if (!n_read) {scanner_error(s, "need N as a range for Pi"); goto STOP;}
@@ -256,9 +264,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
       /* copy transition matrix to all transition classes */
-      if (!m_calloc(a_3dmatrix, COS)) {mes_proc(); goto STOP;}
-      a_3dmatrix[0] = a_matrix;
-      for (i = 1; i < COS; i++) {
+      for (i = 0; i < smo->cos; i++) {
 	a_3dmatrix[i] = matrix_d_alloc_copy(smo->N, smo->N, a_matrix);
 	if (!a_3dmatrix[i]) {mes_proc(); goto STOP;}
       }
@@ -267,8 +273,8 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
     else if (!strncmp(s->id, "Ak_", 3)) {
       if (!n_read) {scanner_error(s, "need N as a range for A"); goto STOP;}
       if (a_read) {scanner_error(s, "identifier A twice"); goto STOP;}
-      if (!m_calloc(a_3dmatrix, COS)) {mes_proc(); goto STOP;}
-      for (osc = 0; osc < COS; osc++) {
+      if (!m_calloc(a_3dmatrix, smo->cos)) {mes_proc(); goto STOP;}
+      for (osc = 0; osc < smo->cos; osc++) {
 	if (!m_calloc(a_3dmatrix[osc], smo->N)) {mes_proc(); goto STOP;}
 	scanner_get_name(s);
 	if (!strcmp(s->id, "matrix")) {
@@ -279,7 +285,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 	else {
 	  scanner_error(s, "unknown identifier"); goto STOP;
 	}
-	if (osc < COS-1) {
+	if (osc < smo->cos-1) {
 	  scanner_consume( s, ';' ); if(s->err) goto STOP;
 	  /* read next matrix */
 	  scanner_get_name(s);
@@ -369,7 +375,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
   for (i = 0; i < smo->N; i++) {
     for (j = 0; j < smo->N; j++) {
       out = in = 0;
-      for (osc = 0; osc < COS; osc++) {
+      for (osc = 0; osc < smo->cos; osc++) {
 	if (a_3dmatrix[osc][i][j] > 0.0)
 	  out = 1;
 	if (a_3dmatrix[osc][j][i] > 0.0)
@@ -379,13 +385,13 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
       smo->s[i].in_states += in;
     }
     if (smodel_state_alloc(smo->s + i, smo->M, smo->s[i].in_states,
-			   smo->s[i].out_states)) { mes_proc(); goto STOP; }
+			   smo->s[i].out_states, smo->cos)) { mes_proc(); goto STOP; }
     /* copy values read to smodel */
     if(smodel_copy_vectors(smo, i, pi_vektor, fix_vektor, a_3dmatrix, c_matrix, mue_matrix,
 			   u_matrix)) {mes_proc(); goto STOP;}
   }
   if (a_3dmatrix)
-    for (i = 0; i < COS; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
+    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
   m_free(a_3dmatrix);
   matrix_d_free(&c_matrix, smo->N);
   matrix_d_free(&mue_matrix, smo->N);
@@ -394,7 +400,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
   return(smo);
 STOP:
   if (a_3dmatrix) 
-    for (i = 0; i < COS; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
+    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
   m_free(a_3dmatrix);
   matrix_d_free(&c_matrix, smo->N);
   matrix_d_free(&mue_matrix, smo->N);
@@ -415,8 +421,8 @@ int smodel_free(smodel **smo) {
   for (i = 0; i < (*smo)->N; i++) {
     m_free((*smo)->s[i].out_id);
     m_free((*smo)->s[i].in_id);
-    matrix_d_free(&((*smo)->s[i].out_a), COS);
-    matrix_d_free(&((*smo)->s[i].in_a), COS);
+    matrix_d_free(&((*smo)->s[i].out_a), (*smo)->cos);
+    matrix_d_free(&((*smo)->s[i].in_a), (*smo)->cos);
     m_free((*smo)->s[i].c);
     m_free((*smo)->s[i].mue);
     m_free((*smo)->s[i].u);
@@ -439,22 +445,22 @@ smodel *smodel_copy(const smodel *smo) {
     nachf = smo->s[i].out_states;
     vorg = smo->s[i].in_states;
     if(!m_calloc(sm2->s[i].out_id, nachf)) {mes_proc(); goto STOP;}
-    sm2->s[i].out_a = matrix_d_alloc(COS, nachf);
+    sm2->s[i].out_a = matrix_d_alloc(smo->cos, nachf);
     if(!sm2->s[i].out_a) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].in_id, vorg)) {mes_proc(); goto STOP;}
-    sm2->s[i].in_a = matrix_d_alloc(COS, vorg);
+    sm2->s[i].in_a = matrix_d_alloc(smo->cos, vorg);
     if(!sm2->s[i].in_a) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].c, smo->M)) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].mue, smo->M)) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].u, smo->M)) {mes_proc(); goto STOP;}
     /* copy values */     
     for (j = 0; j < nachf; j++) {
-      for (k = 0; k < COS; k++)
+      for (k = 0; k < smo->cos; k++)
 	sm2->s[i].out_a[k][j] = smo->s[i].out_a[k][j];
       sm2->s[i].out_id[j] = smo->s[i].out_id[j];
     }
     for (j = 0; j < vorg; j++) {
-      for (k = 0; k < COS; k++)
+      for (k = 0; k < smo->cos; k++)
 	sm2->s[i].in_a[k][j] = smo->s[i].in_a[k][j];
       sm2->s[i].in_id[j] = smo->s[i].in_id[j];
     }
@@ -506,7 +512,7 @@ int smodel_check(const smodel* smo) {
       mes_prot(str);
     }
     /* sum  a[i][k][j] */
-    for (k = 0; k < COS; k++) {
+    for (k = 0; k < smo->cos; k++) {
       sum = 0.0;
       for (j = 0; j < smo->s[i].out_states; j++) {
 	sum += smo->s[i].out_a[k][j];
@@ -589,7 +595,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
   /* Endzustand dadurch charakterisiert, dass es keine Ausgangswahrsch. gibt */
 
   sequence_d_t *sq = NULL;
-  int state, n, i, j, m, reject_os, reject_tmax, badseq, class, tilgphase = 0;
+  int state, n, i, j, m, reject_os, reject_tmax, badseq, class;
   double p, sum, osum = 0.0;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
 
@@ -650,7 +656,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     state = 1;
 
     /* Anfangsklasse nach erstem Symbol */
-    class = sequence_d_class(sq->seq[n], 0, &osum, &tilgphase);
+    class = sequence_d_class(sq->seq[n], 0, &osum);
     while (state < len) {
       /* neuen Zustand i wuerfeln: */
       p = gsl_rng_uniform(RNG);
@@ -676,14 +682,14 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	  
 	  /* Versuch: bei "leerer" class die Nachbarklassen probieren; 
 	     erst sweep down bis null; falls immer noch ohne Erfolg sweep 
-	     up bis COS - 1. Falls immer noch kein Erfolg --> Sequenz
+	     up bis cos - 1. Falls immer noch kein Erfolg --> Sequenz
 	     verwerfen.
 	  */
 	  if (class > 0 && up == 0) {
 	    class--;
 	    continue;
 	  }
-	  else if (class < COS - 1) {
+	  else if (class < smo->cos - 1) {
 	    class++;
 	    up = 1;
 	    continue;
@@ -719,7 +725,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
       sq->seq[n][state] = smodel_get_random_var(smo, i, m);
 
       /* class fuer naechsten Schritt bestimmen */
-      class = sequence_d_class(sq->seq[n], state, &osum, &tilgphase);
+      class = sequence_d_class(sq->seq[n], state, &osum);
       up = 0;
       state++;
 
@@ -897,8 +903,8 @@ void smodel_fix_print(FILE *file, smodel *smo, char *tab, char *separator,
 /*============================================================================*/
 void smodel_print(FILE *file, smodel *smo) {
   int k;
-  fprintf(file, "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n", 
-	  smo->M, smo->N, (int)smo->density);
+  fprintf(file, "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n\tcos = %d;\n", 
+	  smo->M, smo->N, (int)smo->density, smo->cos);
   fprintf(file, "\tprior = %.5f;\n", smo->prior);
   fprintf(file, "\tPi = vector {\n");
   smodel_Pi_print(file, smo, "\t", ",", ";");
@@ -906,7 +912,7 @@ void smodel_print(FILE *file, smodel *smo) {
   fprintf(file, "\tfix_state = vector {\n");
   smodel_fix_print(file, smo, "\t", ",", ";");
   fprintf(file, "\t};\n");
-  for (k = 0; k < COS; k++) {
+  for (k = 0; k < smo->cos; k++) {
     fprintf(file, "\tAk_%d = matrix {\n", k);
     smodel_Ak_print(file, smo, k, "\t", ",", ";");
     fprintf(file, "\t};\n");
@@ -924,8 +930,8 @@ void smodel_print(FILE *file, smodel *smo) {
 /*============================================================================*/
 /* needed for hmm_input: only one A (=Ak_1 = Ak_2...) is written */
 void smodel_print_oneA(FILE *file, smodel *smo) {
-  fprintf(file, "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n", 
-	  smo->M, smo->N, (int)smo->density);
+  fprintf(file, "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n\tcos = %d;\n", 
+	  smo->M, smo->N, (int)smo->density,smo->cos);
   fprintf(file, "\tprior = %.3f;\n", smo->prior);
   fprintf(file, "\tPi = vector {\n");
   smodel_Pi_print(file, smo, "\t", ",", ";");
@@ -1215,9 +1221,9 @@ int smodel_count_free_parameter(smodel **smo, int smo_number) {
     pi_counted = 0;
     /* for states */
     for (i = 0; i < smo[k]->N; i++) {
-      if (smo[k]->s[i].out_states > 1) 
+      if (smo[k]->s[i].out_states > 1)
 	/* multipl. with COS correct ??? */
-	cnt += COS * (smo[k]->s[i].out_states - 1);
+	cnt += smo[k]->cos * (smo[k]->s[i].out_states - 1);
       if (smo[k]->s[i].pi != 0 && smo[k]->s[i].pi != 1) {
 	pi_counted = 1;
 	cnt++;

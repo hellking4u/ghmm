@@ -64,7 +64,7 @@ int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
 		  double **alpha, double *scale, double *log_p) {
 # define CUR_PROC "sfoba_forward"
   int res = -1;  
-  int i, t, osc, tilgphase = 0;
+  int i, t, osc =0 ;
   double c_t, osum = 0.0;
 
   /* calculate alpha and scale for t = 0 */
@@ -80,7 +80,7 @@ int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
   else {
     *log_p = - log(1/scale[0]);
     /* dummy function, returns 0 at the moment */
-    osc = sequence_d_class(O, 0, &osum, &tilgphase); 
+    osc = sequence_d_class(O, 0, &osum); 
     for (t = 1; t < T; t++) {
       scale[t] = 0.0;
       /* b not calculated yet */
@@ -109,7 +109,7 @@ int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
 	alpha[t][i] *= c_t;
       /* summation of log(c[t]) for calculation of log( P(O|lambda) ) */
       *log_p -= log(c_t);
-      osc = sequence_d_class(O, t, &osum, &tilgphase);
+      osc = sequence_d_class(O, t, &osum);
     }
   }
   /* log_p should not be smaller than value used for seqs. that 
@@ -129,7 +129,7 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
 		   double **beta, const double *scale) {
 # define CUR_PROC "sfoba_backward"
   double *beta_tmp, sum, c_t, osum;
-  int i, j, j_id, t, osc, t2, tilgphase;
+  int i, j, j_id, t, osc, t2;
   int res = -1;
   if (!m_calloc(beta_tmp, smo->N)) {mes_proc(); goto STOP;}
 
@@ -153,7 +153,7 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
   /* Backward Step for t = T-2, ..., 0 */
   /* beta_tmp: Vector for storage of scaled beta in one time step */
   for (t = 0; t < T-1; t++) 
-    osc = sequence_d_class(O, t, &osum, &tilgphase);
+    osc = sequence_d_class(O, t, &osum);
   for (t = T-2; t >= 0; t--) {
     if (b == NULL)
       for (i = 0; i < smo->N; i++) {
@@ -178,7 +178,7 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
     for (i = 0; i < smo->N; i++) 
       beta_tmp[i] = beta[t][i] * c_t;
     for (t2 = 0; t2 < t; t2++)
-      osc = sequence_d_class(O, t2, &osum, &tilgphase);
+      osc = sequence_d_class(O, t2, &osum);
   }
   res = 0;
 STOP:

@@ -30,6 +30,7 @@ __copyright__
 #define MESINFO MES_FILE
 
 typedef struct local_store_t {
+  int cos;
   double *pi_num;
   double pi_denom;
   double ***a_num;
@@ -69,13 +70,14 @@ static local_store_t *sreestimate_alloc(const smodel *smo) {
   int i;
   local_store_t* r = NULL;
   if (!m_calloc(r, 1)) {mes_proc(); goto STOP;}
+  r->cos=smo->cos;
   if (!m_calloc(r->pi_num, smo->N)) {mes_proc(); goto STOP;}
   if (!m_calloc(r->a_num, smo->N)) {mes_proc(); goto STOP;}
   for (i = 0; i < smo->N; i++) {
-    r->a_num[i] = matrix_d_alloc(COS, smo->s[i].out_states);
+    r->a_num[i] = matrix_d_alloc(smo->cos, smo->s[i].out_states);
     if (!r->a_num[i]) {mes_proc(); goto STOP;}
   }
-  r->a_denom =  matrix_d_alloc(smo->N, COS);
+  r->a_denom = matrix_d_alloc(smo->N, smo->cos);
   if (!r->a_denom) {mes_proc(); goto STOP;}
   /***/
   if (!m_calloc(r->c_denom, smo->N)) {mes_proc(); goto STOP;}
@@ -106,7 +108,7 @@ static int sreestimate_free(local_store_t **r, int N) {
   if( !*r ) return(0);
   m_free((*r)->pi_num);  
   for (i = 0; i < N; i++)
-    matrix_d_free( &((*r)->a_num[i]), COS);
+    matrix_d_free( &((*r)->a_num[i]), (*r)->cos);
   m_free((*r)->a_num);
   matrix_d_free( &((*r)->a_denom), N);
   /***/
@@ -129,7 +131,7 @@ static int sreestimate_init(local_store_t *r, const smodel *smo) {
   r->pi_denom = 0.0;
   for (i = 0; i < smo->N; i++) {
     r->pi_num[i] = 0.0;
-    for (osc = 0; osc < COS; osc++) {
+    for (osc = 0; osc < smo->cos; osc++) {
       r->a_denom[i][osc] = 0.0;
       for (j = 0; j < smo->s[i].out_states; j++)
 	r->a_num[i][osc][j] = 0.0;
@@ -230,7 +232,7 @@ static int sreestimate_setlambda(local_store_t *r, smodel *smo) {
     smo->s[i].pi =  r->pi_num[i] * pi_factor;
     
     /* A */
-    for (osc = 0; osc < COS; osc++) {
+    for (osc = 0; osc < smo->cos; osc++) {
       /* note: denom. might be 0; never reached state? */
       a_denom_pos = 1;
       if (r->a_denom[i][osc] <= DBL_MIN) {
@@ -242,7 +244,7 @@ static int sreestimate_setlambda(local_store_t *r, smodel *smo) {
 	  else {
 	    /* Test: sum all ingoing == 0 ? */
 	    p_i = smo->s[i].pi;
-	    for (g = 0; g < COS; g++)
+	    for (g = 0; g < smo->cos; g++)
 	      for (h = 0; h < smo->s[i].in_states; h++)
 		p_i += smo->s[i].in_a[g][h];
 	    if (p_i == 0)
@@ -483,7 +485,7 @@ static int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
       for (t = 0; t < T_k; t++) {	
 	c_t = 1/scale[t]; 
 	if (t > 0) {
-	  osc = sequence_d_class(O[k], t - 1, &osum, &tilgphase); /* dummy */
+	  osc = sequence_d_class(O[k], t - 1, &osum); /* dummy */
 	  /* A: starts at t=1 !!! */
 	  r->a_denom[i][osc] += seq_w[k] * alpha[t-1][i] * beta[t-1][i];
 	  for (j = 0; j < smo->s[i].out_states; j++) {

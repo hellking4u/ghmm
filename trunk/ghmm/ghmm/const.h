@@ -56,13 +56,10 @@ __copyright__
 /* in float.h: DBL_EPSILON = 0.000000000000000222044604925031... 
 */
 
-/**
-   Anzahl von O-Sum-Klassen.
-*/
-
-/* #define COS 6 */
-
+#if 0
+/* now a member of smodel */
 #define COS 1
+#endif
 
 /** Wert der fuer log_p zur Berechnung von Zielfunktionen
     eingesetzt wird, wenn sfoba_logp den Wert -1

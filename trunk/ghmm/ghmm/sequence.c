@@ -926,7 +926,7 @@ STOP:
 
 /*============================================================================*/
 
-int sequence_d_class(const double *O, int index, double *osum, int *phase) {
+int sequence_d_class(const double *O, int index, double *osum) {
 #define CUR_PROC "sequence_d_class"
   return 0;
 # undef CUR_PROC

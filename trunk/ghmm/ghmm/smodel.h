@@ -19,9 +19,9 @@ __copyright__
 
 /** Continuous HMM. Structures and function. 
     smodel includes continuous model with one transition matrix 
-    (COS in const.h is set to 0) and an extension for
+    (COS  is set to 0) and an extension for
     models with several matrices
-    (COS in const.h is set to a positive integer values). In the latter case
+    (COS is set to a positive integer values). In the latter case
     a suitable (depending on the spezific application) function 
     sequence\_get\_class has to be defined */
 
@@ -30,13 +30,13 @@ __copyright__
 */
 struct sstate{
   /** initial prob. */ 
-  double pi;  
+  double pi;
   /** IDs of successor states */ 
   int *out_id;  
   /** IDs of predecessor states */
   int *in_id;
   /** transition probs to successor states. It is a
-   matrix in case of mult. transition matrices (COS > 1)*/       
+   matrix in case of mult. transition matrices (COS > 1)*/
   double **out_a; 
   /** transition probs from predecessor states. It is a
    matrix in case of mult. transition matrices (COS > 1) */ 
@@ -66,6 +66,10 @@ struct smodel{
   int N;
   /** Number of output densities per state */
   int M;
+  /** smodel includes continuous model with one transition matrix 
+    (cos  is set to 0) and an extension for models with several matrices
+    (cos is set to a positive integer values).*/
+  int cos;
   /** Flag for density function. 0: normal density, 1: truncated normal 
    density, 2: approximated normal density */
   density_t density;
@@ -154,8 +158,8 @@ double smodel_get_random_var(smodel *smo, int state, int m);
     @param Tmax        maximal sequence length (more documentation needed)
 */
 
-sequence_d_t *sgenerate_sequences(smodel* smo, int seed, int global_len,
-				  long seq_number, long label, int Tmax);
+sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
+					long seq_number, long label, int Tmax);
 
 /** 
     Computes sum over all sequence of
@@ -312,8 +316,6 @@ int smodel_count_free_parameter(smodel **smo, int smo_number);
 
 
 /*============================================================================*/
-
-
 
 /* keep the following functions for first distribution???
    --> BK ? 
