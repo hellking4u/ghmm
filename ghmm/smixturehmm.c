@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : ghmm/ghmm/smixturehmm.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smixturehmm.c
   created      : TIME: 14:35:48     DATE: Thu 20. July 2000
   $Id$
 
@@ -23,8 +23,8 @@ __copyright__
 #include "sequence.h"
 #include "const.h"
 
-double total_train_w = 0.0;
-double total_test_w = 0.0;
+//double total_train_w = 0.0;
+//double total_test_w = 0.0;
 
 #if 0 /* no main */
 /*============================================================================*/
@@ -160,12 +160,7 @@ int main(int argc, char* argv[]) {
 
       cp = matrix_d_alloc(sqd_train->seq_number, smo_number);
       if (!cp) { mes_proc(); goto STOP;}
-      /* total_w is needed several times --> global variable */
-      total_train_w = total_test_w = 0.0;
-      for (i = 0; i < sqd_train->seq_number; i++)
-	total_train_w += sqd_train->seq_w[i];
-      for (i = 0; i < sqd_test->seq_number; i++)
-	total_test_w += sqd_test->seq_w[i];
+
       /* Initial values for component probs for all seqs. and model priors
 	 before the actual  clustering starts */
       if (smixturehmm_init(cp, sqd_train, smo, smo_number, mode) == -1) {
@@ -292,21 +287,31 @@ int smixturehmm_cluster(FILE *outfile, double **cp, sequence_d_t *sqd,
 #define CUR_PROC "smixturehmm_cluster"
   int i, k, iter = 0;
   double likelihood, old_likelihood, delta_likelihood = 1000000.0;
+  double total_train_w = 0.0;
   char *str;
   double *save_w;
-  double model_weight, log_p;
+  double model_weight, log_p, sum = 0.0;
   smosqd_t *smo_sqd; /* this structure is used by sreestimate() */
 
   if(!m_calloc(smo_sqd, 1)) {mes_proc(); goto STOP;}
   /*  smo_sqd->max_iter = MAX_ITER_BW; */
-  smo_sqd->max_iter = 20;
+  smo_sqd->max_iter = 10;
   smo_sqd->eps = EPS_ITER_BW;
   smo_sqd->logp = &log_p;
   smo_sqd->sqd = sqd;
  
   if(!m_calloc(save_w, sqd->seq_number)) {mes_proc(); goto STOP;}
-  for (i = 0; i < sqd->seq_number; i++)
+  for (i = 0; i < sqd->seq_number; i++) {
     save_w[i] = sqd->seq_w[i];
+    total_train_w += save_w[i];
+  }
+  for (k = 0; k < smo_number; k++) {
+    sum = 0.0;
+    for (i = 0; i < sqd->seq_number; i++)
+      sum += cp[i] [k] * sqd->seq_w[i];
+    smo[k]->prior = sum / total_train_w;
+  }
+
   sequence_d_mix_like(smo, smo_number, sqd, &old_likelihood);
   printf("Initial Likelihood %.4f\n", old_likelihood);
   fprintf(outfile, "Initial Likelihood %.4f\n", old_likelihood);
@@ -336,7 +341,7 @@ int smixturehmm_cluster(FILE *outfile, double **cp, sequence_d_t *sqd,
       sqd->seq_w[i] = save_w[i];
     
     sequence_d_mix_like(smo, smo_number, sqd, &likelihood);   
-    if (smixturehmm_calc_cp(cp, sqd, smo, smo_number) == -1) {
+    if (smixturehmm_calc_cp(cp, sqd, smo, smo_number, &total_train_w) == -1) {
       str = mprintf(NULL, 0, "Error iteration %d\n", iter);
       mes_prot(str); m_free(str); goto STOP;
     }
@@ -431,10 +436,8 @@ int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
     printf("Unknown Init Mode %d \n", mode);
     return -1;
   }
-  /* calculate and set model priors */
-  return smixturehmm_calc_priors(cp, sqd, smo, smo_number);
 
-
+  return 0;
  STOP:
   return -1;
   
@@ -442,7 +445,8 @@ int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
 } /* smixturehmm_compprob_init */
 
 /*============================================================================*/
-
+/* currently not activated */
+# if 0
 int smixturehmm_calc_priors(double **cp, sequence_d_t *sqd, smodel **smo,
 			    int smo_number) {
 #define CUR_PROC "smixturehmm_calc_priors"
@@ -466,7 +470,7 @@ int smixturehmm_calc_priors(double **cp, sequence_d_t *sqd, smodel **smo,
   return -1;
 #undef CUR_PROC
 } /* smixturehmm_calc_priors */
-
+#endif
 
 /*============================================================================*/
 /* calculate component probs for all sequences and all components */
@@ -474,12 +478,12 @@ int smixturehmm_calc_priors(double **cp, sequence_d_t *sqd, smodel **smo,
    total_train_w, otherwise errors in calculating model priors occur
 */
 int smixturehmm_calc_cp(double **cp, sequence_d_t *sqd, smodel **smo, 
-			int smo_number) {
+			int smo_number, double *total_train_w) {
 #define CUR_PROC "smixturehmm_calc_cp"
   int i;
   char *str;
   double errorseqs = 0.0;
-  total_train_w = 0.0;
+  *total_train_w = 0.0;
   for (i = 0; i < sqd->seq_number; i++) 
     if (smap_bayes(smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) == -1) {
       /* all cp[i] [ . ] are set to zero; seq. will be ignored for reestimation!!! */
@@ -494,7 +498,7 @@ int smixturehmm_calc_cp(double **cp, sequence_d_t *sqd, smodel **smo,
       }
     }
     else
-      total_train_w += sqd->seq_w[i];
+      *total_train_w += sqd->seq_w[i];
   
   return 0;
  STOP:
