@@ -148,8 +148,6 @@ import copy
 from os import path
 from math import log,ceil
 
-print "** I'm the ghmm in ~/hmm/ghmm **"
-
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
