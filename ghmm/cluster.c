@@ -1,8 +1,8 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /homes/hmm/bknab/src/cluster.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/cluster.c
   created      : TIME: 10:55:33     DATE: Tue 02. June 1998
-  last-modified: TIME: 10:53:16     DATE: Wed 10. March 1999
+  last-modified: TIME: 14:59:40     DATE: Mon 09. April 2001
 *******************************************************************************/
 /* $Id: */ 
 #include <stdio.h>
@@ -49,9 +49,9 @@ int main(int argc, char* argv[]) {
 /*============================================================================*/
 int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
 # define CUR_PROC "cluster_hmm"
-  int res = -1, i, iter = 0;
-  sequence_t *sq = NULL;
-  long j, changes = 1; /* muss > 0 ! */
+  int res = -1, i, iter = 0, sq_number;
+  sequence_t *sq = NULL, **sq_vec = NULL;
+  long j, changes = 1; 
   long *oldlabel;
   double log_p;
   FILE *outfile = NULL;
@@ -63,8 +63,12 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
 /*----------------------------------------------------------------------------*/
 
   /* Speicher alloc und Daten einlesen: Sequenzen und Initialmodelle */
-  sq = sequence_read(seq_file);
-  if (!sq) {mes_proc(); goto STOP;}
+  sq_vec = sequence_read(seq_file, &sq_number);
+  if (!sq_vec[0]) {mes_proc(); goto STOP;}
+  if (sq_number > 1) 
+    mes_prot("Warning: seq. file contains multiple seq. arrays. \
+                      Only first array is used for clustering\n");
+  sq = sq_vec[0];
   fprintf(outfile, "Cluster Sequences\n");
   sequence_print(outfile, sq);
   cl.mo = model_read(mo_file, &cl.mo_number);
