@@ -54,12 +54,13 @@ while 1:
         l[i] += logalpha # l[i] = ( log( a_k * P[seq i| model k]) )
     print l
     mixture_likelihood = numarray.sum(numarray.sum(l))
-    print "# iter %s joint likelihood = %f" % (iter, mixture_likelihood) 
+
+    print "# iter %s joint likelihood = %f" % (iter, mixture_likelihood)  # output
 
     improvement = mixture_likelihood - last_mixture_likelihood
     if iter > maxiter or improvement < eps:
         break
-
+    
     # Compute P[model j| seq i]
     for i in xrange(len(seqs)):
         #l[i] += logalpha # l[i] = ( log( a_k * P[seq i| model k]) )
@@ -78,5 +79,4 @@ while 1:
         for i in xrange(len(seqs)):
             seqs.setWeight(i,math.exp(l[i,j]))
         m.baumWelch(seqs, 10, 0.0001)
-
     iter += 1

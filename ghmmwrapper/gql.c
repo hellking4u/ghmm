@@ -197,7 +197,7 @@ int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double 
   /* return number of "matched" sequences */
   return res;
 }
-
+/*
 
 int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps) {
   int matched, res;
@@ -205,8 +205,6 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
   int i;
   res=-1;
   matched=0;
-  
-  // sequence_d_print(stdout,sqd,0);
   
   for ( i = 0; i < sqd->seq_number; i++) {
     if (sfoba_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
@@ -216,17 +214,15 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
     else  {
       /* Test: very small log score for sequence cannot be produced. */
       log_ps[i] = -DBL_MAX;
-      /* fprintf(stderr,"sequence[%d] cannot be build.\n", i); */
+      /* fprintf(stderr,"sequence[%d] cannot be build.\n", i); 
     }
   }
-
-  // smodel_print( stderr, smo );
 
   res=matched;
   if (matched == 0) { 
     fprintf(stderr, "smodel_likelihood: NO sequence can be build.\n"); 
   }
 
-  /* return number of "matched" sequences */
+   return number of "matched" sequences 
   return res;
-}
+} */
