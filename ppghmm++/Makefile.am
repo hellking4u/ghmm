@@ -29,6 +29,8 @@ GHMM_Emission.cpp \
 GHMM_State.cpp
 
 pkginclude_HEADERS = \
+begin_code.h \
+close_code.h \
 GHMM_DiscreteModel.h \
 GHMM_ContinuousModel.h \
 GHMM_AbstractModel.h \
@@ -39,7 +41,8 @@ GHMM_ModelFactory.h \
 GHMM_Document.h \
 GHMM_Transition.h \
 GHMM_Emission.h \
-GHMM_State.h
+GHMM_State.h \
+GHMM_Types.h
 
 #noinst_PROGRAMS = coin_toss_test chmm generiere_nvs
 noinst_PROGRAMS = generiere_nvs
