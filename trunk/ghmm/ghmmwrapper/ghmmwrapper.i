@@ -50,7 +50,8 @@
 %apply Pointer NONNULL { scluster * };
  
 // Constraints on general C data types - no NULL pointers as function arguments
-%apply Pointer NONNULL { int *, double *, int **, double **, void * };
+// XXX certain arguments are supposed to be NULL
+// %apply Pointer NONNULL { int *, double *, int **, double **, void * };
 
 
 /*=============================================================================================
@@ -135,10 +136,21 @@ extern void matrix_d_print(FILE *file, double **matrix, int rows, int columns,
   =============================== sequence.c  ============================================== */
 		
 		
+/**@name sequences  (double and int) */
+/*@{ (Doc++-Group: sequence) */
+/** @name struct sequence_t
+    Sequence structure for integer sequences. 
+    Contains an array of sequences and corresponding
+    data like sequence label, sequence weight, etc. Sequences may have different
+    length.    
+ */
+
 struct sequence_t {
-  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
+  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
   int **seq;
+  /** matrix of state ids  */
+  int **states;
   /** array of sequence length */
   int *seq_len;
   /**  array of sequence labels */
@@ -151,6 +163,11 @@ struct sequence_t {
   long seq_number;
   /** sum of sequence weights */
   double total_w;
+  
+  /* matrix of state labels corresponding to seq */
+  int **state_labels; 
+  /* number of labels for each sequence */  
+  int *state_labels_len;        
 };
 typedef struct sequence_t sequence_t;
 
@@ -329,6 +346,9 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
    void free_sequence_d(sequence_d_t *seq) { 
 	  sequence_d_free(&seq);}
   
+   void free_sequence(sequence_t *seq) { 
+	  sequence_free(&seq);}
+      
   sequence_d_t *seq_d_read(char* filename ){
 	  int i;
 	  sequence_d_t** s;
@@ -366,20 +386,31 @@ struct state {
   double pi;
   /** Output probability */
   double *b;
-  /** ID of the following state */ 
+  int order;
+  
+  /** IDs of the following states */ 
   int *out_id;  
-  /** ID of the previous state */    
+  /** IDs of the previous states */    
   int *in_id;
-  /** Transition probability to a successor */
+
+  /** transition probs to successor states. */
   double *out_a; 
-  /** Transition probablity to a precursor */
+  /** transition probs from predecessor states. */ 
   double *in_a;
+
+  /** Transition probability to a successor 
+      double *out_a; */
+  /** Transition probablity to a precursor 
+      double *in_a;*/
+
   /** Number of successor states */     
   int out_states; 
   /** Number of precursor states */
   int in_states;  
   /** if fix == 1 --> b stays fix during the training */
   int fix;
+
+  int label;  
 };
 typedef struct state state;
 
@@ -399,10 +430,11 @@ struct model {
       distributions*/
   double prior;
 
+ 
   /* contains a arbitrary name for the model */
   char* name;
   
-  /** Contains bit flags for varios model extensions such as
+   /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
   int model_type;
@@ -432,14 +464,25 @@ struct model {
       For higher order emissions, the emission are conditioned on the state s
       as well as the previous emission_order[s] observed symbols.
 
-      Note: emission_order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
-  int* emission_order; 
-  int  topo_order_length; /*WR*/
-  int* topo_order;        /*WR*/
-  	
+      The emissions are stored in the state's usual double* b. The order is
+      set state.order.
+
+      Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
+  
+  /** 
+      Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
+  int *background_id;
+  background_distributions* bp;
+
+  /** (WR) added these variables for topological ordering of silent states 
+      Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
+   */
+  int* topo_order; 
+  int  topo_order_length;
+
+
 };
 typedef struct model model;
-
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -560,6 +603,9 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 extern int reestimate_baum_welch(model *mo, sequence_t *sq);
 extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
+extern void reestimate_update_tie_groups(model *mo);
+
+
 /******* Viterbi (viterbi.c)*******/
 /**
   Viterbi algorithm. Calculates the Viterbi path (the optimal path trough
@@ -571,6 +617,8 @@ extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, 
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
+
+// XXX use swig OUTPUT typemap
 extern int *viterbi(model *mo, int *o, int len, double *log_p);
 
 /**
@@ -639,6 +687,11 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
 */
 extern void model_set_transition(model *mo, int i, int j, double prob);
 
+/* Labeled HMMs */
+extern int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+extern int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
+
+
 
 
 %inline%{
@@ -682,7 +735,10 @@ extern void model_set_transition(model *mo, int i, int j, double prob);
   
 %}
 
+/*=============================================================================================
+  =============================== labeled models (model.c)  ============================================== */
 
+extern sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
 
 /*=============================================================================================
   =============================== sdmodel.c  ============================================== */
@@ -1309,7 +1365,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 
   double get_arrayd(double *ary, int index) { return ary[index]; }
   
-  void free_arrayd(double *pt) { m_free(pt); }
+  void free_arrayd(double *pt) { m_free(pt); (pt) = NULL;}
   
   /************  Create and access sort of long[size] arrays **************/
     
@@ -1323,7 +1379,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
   double get_arrayl(long *ary, int index) { return ary[index]; }
   
-  void free_arrayl(long *ary) {m_free(ary);}
+  void free_arrayl(long *ary) {m_free(ary);(ary) = NULL;}
   
   /*********** Create and access char** arrays ***********/
   char **char_array(int size) {
