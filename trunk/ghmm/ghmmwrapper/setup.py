@@ -32,7 +32,7 @@ ghmmlib_path  = runtool('ghmm-config','--lib-prefix')
 # defined symbols in link
 
 print "================================================================================"
-print "BUG:  Please run the following command: swig -c -python ghmmwrapper.i"
+print "Please run the following command first: swig -c -python ghmmwrapper.i"
 print "================================================================================"
    
 setup(name="ghmmwrapper",
@@ -41,7 +41,7 @@ setup(name="ghmmwrapper",
       author="GHMM authors",
       author_email="ghmm@sf.net",
       url="http://ghmm.org",
-      py_modules = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer'],
+      py_modules = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','xmlutil'],
       ext_modules = [Extension('_ghmmwrapper',
                                ['sdclass_change.c',
                                 'gql.c', 'read_cxml.c', 'ghmmwrapper_wrap.c'],
