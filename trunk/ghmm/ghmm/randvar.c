@@ -60,19 +60,18 @@ double gsl_sf_erf(double x)
 
 #endif /* DO_WITH_GSL */
 
-
-/* Liste fuer vorberechnete Werte der Dichtefkt. einer N(0,1)-Verteilung 
-   Wertebereich x=0,00 - 19.99 */
+/* A list of already calculated values of the density function of a 
+   N(0,1)-distribution, with x in [0.00, 19.99] */
 #define PDFLEN 2000
-#define X_STEP_PDF 0.01  /* Schrittweite */
-#define X_FAKT_PDF 100   /* aequivalent zur Schrittweite */
+#define X_STEP_PDF 0.01  /* step size */
+#define X_FAKT_PDF 100   /* equivalent to step size */
 static double pdf_stdnormal[PDFLEN];
 static int pdf_stdnormal_exists = 0;
 
-/* Liste fuer vorberechnete Werte PHI der Gaussverteilung wird eingelesen
-   Wertebereich x = -9,999 - 0 */
-#define X_STEP_PHI 0.001  /* Schrittweite */
-#define X_FAKT_PHI 1000   /* aequivalent zur Schrittweite */
+/* A list of already calulated values PHI of the Gauss distribution is
+   read in, x in [-9.999, 0] */
+#define X_STEP_PHI 0.001  /* step size */
+#define X_FAKT_PHI 1000   /* equivalent to step size*/
 static int PHI_len = 0;
 static double x_PHI_xy = -1.0;
 static double x_PHI_1 = -1.0;
@@ -117,14 +116,14 @@ static int randvar_init_PHI() {
 #ifdef HAVE_LIBPTHREAD
   static pthread_mutex_t lock;
 #endif /* HAVE_LIBPTHREAD */
-  /* PHI einlesen */
+  /* Read PHI in */
   if (!PHI_len) {
 #ifdef HAVE_LIBPTHREAD
-    pthread_mutex_lock(&lock); /* Setzen eines Locks, da Clustern parallel */
+    pthread_mutex_lock(&lock); /* Put on a lock, because the clustering is parallel */
 #endif /* HAVE_LIBPTHREAD */
     if (randvar_read_PHI() == -1) {mes_proc(); goto STOP;};
 #ifdef HAVE_LIBPTHREAD
-    pthread_mutex_unlock(&lock); /* Freigabe des Locks */
+    pthread_mutex_unlock(&lock); /* Take the lock off */
 #endif /* HAVE_LIBPTHREAD */
   }
   return 0;
@@ -169,7 +168,7 @@ double randvar_get_PHI(double x) {
 
   if (randvar_init_PHI() == -1) {mes_proc(); goto STOP;}
 
-  /* lineare Interpolation (Alternative: Runden mit i=m_int(fabs(x)*X_FAKT))*/
+  /* Linear interpolation (Alternative: Round off with i=m_int(fabs(x)*X_FAKT))*/
   i = (int)(fabs(x) * X_FAKT_PHI); 
   if (i >= PHI_len-1) {
     i = PHI_len-1;
@@ -177,7 +176,7 @@ double randvar_get_PHI(double x) {
   }
   else
     phi_x = PHI[i] + (fabs(x) - i*X_STEP_PHI) * (PHI[i+1]-PHI[i])/X_STEP_PHI;
-  /* ACHTUNG: PHI fuer negative Werte tabelliert! */
+  /* NOTA BENE: PHI is tabulated for negative values! */
   if (x > 0.0)
     return(1.0 - phi_x);
   else
@@ -191,9 +190,7 @@ STOP:
 
 
 /*============================================================================*/
-/* Wann wird PHI[x,0,1] == 1?
-   when equals PHI to 1 due to precision?
- */
+/* When is PHI[x,0,1] == 1? */
 double randvar_get_xPHIless1() {
 # define CUR_PROC "randvar_get_xPHIless1"
 #ifdef DO_WITH_GSL
@@ -218,11 +215,11 @@ double randvar_get_xPHIless1() {
   int i;
   if (x_PHI_1 == -1) {
     if (randvar_init_PHI() == -1) {mes_proc(); goto STOP;}    
-    /* der letzte Wert der Tabelle hat auf jeden Fall den Wert 1 */
+    /* The last value of the table is 1 */
     for (x = (PHI_len-1)*X_STEP_PHI, i=PHI_len-1; i > 0; x -= X_STEP_PHI, i--)
       if (randvar_get_PHI(-x) > 0.0)
 	break;
-    /* Modifikation: x genau zwischen 2 Stuetzstellen! */
+    /* Modification: x exactly between 2 sampling points! */
     x_PHI_1 = x - (double)X_STEP_PHI/2.0;
   }
   return(x_PHI_1);
@@ -234,7 +231,7 @@ STOP:
 
 #if 0 /* is not in use */
 /*============================================================================*/
-/* Wann wird PHI[x,0,1] ==  PHI[y,0,1] fuer hintereinanderliegende x,y ?*/
+/* When is PHI[x,0,1] ==  PHI[y,0,1] for consecutive x and y ?*/
 double randvar_get_xPHIxgleichPHIy() {
 # define CUR_PROC "randvar_get_xPHIxgleichPHIy"
   double x,y;
@@ -258,8 +255,8 @@ STOP:
 
 /*============================================================================*/
 double randvar_get_1overa(double x, double mean, double u) {
-  /* Berechnung von 1/a(x, mean, u) 
-     mit a: Integral von x bis \infty ueber die Gaussdichte */
+  /* Calulates 1/a(x, mean, u), with a = the integral from x til \infty over
+     the Gauss density function */
 # define CUR_PROC "randvar_get_1overa"
 
 #ifdef DO_WITH_GSL
@@ -293,24 +290,24 @@ double randvar_get_1overa(double x, double mean, double u) {
 
   y = 1/sqrt(u);
   z = (x - mean) * y; 
-  /* lineare Interpolation (Alternative: Runden mit i=m_int(fabs(z)*X_FAKT))*/
+ /* Linear interpolation (Alternative: Round off with i=m_int(fabs(z)*X_FAKT))*/
   i = (int)(fabs(z)*X_FAKT_PHI); 
  
   if (i >= PHI_len-1) { 
     i = PHI_len-2;
-    /* urspruenglich:
-       i = PHI_len-1; letzter Wert im Table ist aber null */
+    /* Originally:
+       i = PHI_len-1; but then, the last value in the table is zero! */
     phi_z = PHI[i];
   }
   else
     phi_z = PHI[i] + (fabs(z)-i*X_STEP_PHI) * (PHI[i+1]-PHI[i])/X_STEP_PHI;
-  /* ACHTUNG: PHI fuer negative Werte tabelliert! */
+  /* NOTA BENE: PHI is tabulated for negative values! */
   if (z > 0.0) {
     if (phi_z ==  0) {
       mes_proc(); goto STOP;
     }
     else
-      a = 1 / phi_z; /* PHI zwischen 0.5 und 1 */ /*??? zwischen 0.5 und 0 ! */   
+      a = 1 / phi_z; /* PHI between 0.5 and 1 */ /*??? between 0.5 and 0 ! */   
   }
   else {
     a = 1 - phi_z;
@@ -331,15 +328,15 @@ STOP:
 
 
 /*============================================================================*/
-/* BEMERKUNG: 
-   Berechnung dieser Dichtefunktion getestet, indem fuer beliebige
-   mue und u die Integralsumme berechnet wurde:
+/* REMARK:
+   The calulation of this density function was testet, by calculating the 
+   following integral sum for arbitrary mue and u:
      for (x = 0, x < ..., x += step(=0.01/0.001/0.0001)) 
        isum += step * randvar_normal_density_pos(x, mue, u);
-   In allen Testfaellen "konvergierte" isum deutlich gegen 1 ! 
+   In each case, the sum "converged" evidently towards 1!
    (BK, 14.6.99)
-   AENDERUNG:
-   Bei -EPS_NDT (const.h) stutzen, damit x=0 keine Probleme bereitet
+   CHANGE:
+   Truncate at -EPS_NDT (const.h), so that x = 0 doesn't lead to a problem.
    (BK, 15.3.2000)
 */ 
 double randvar_normal_density_pos(double x, double mean, double u) { 
@@ -388,7 +385,7 @@ double randvar_normal_density(double x, double mean, double u) {
     mes_prot("u <= 0.0 not allowed\n");
     goto STOP;
   }
-  /* evtl Nenner < EPS??? abfangen ? */
+  /* The denominator is possibly < EPS??? Check that ? */
 #ifdef DO_WITH_GSL
   /* double gsl_ran_gaussian_pdf (double x, double sigma) */
   return gsl_ran_gaussian_pdf(x-mean,sqrt(u));
@@ -434,17 +431,17 @@ double randvar_normal_density_approx(double x, double mean, double u) {
   }
   if (!pdf_stdnormal_exists) {
 #ifdef HAVE_LIBPTHREAD
-    pthread_mutex_lock(&lock); /* Setzen eines Locks, da Clustern parallel */
+    pthread_mutex_lock(&lock); /* Put on a lock, because the clustering is parallel   */
 #endif /* HAVE_LIBPTHREAD */
     randvar_init_pdf_stdnormal();
 #ifdef HAVE_LIBPTHREAD
-    pthread_mutex_unlock(&lock); /* Freigabe des Locks */
+    pthread_mutex_unlock(&lock); /* Take the lock off */
 #endif /* HAVE_LIBPTHREAD */
   }
   y = 1/sqrt(u);
   z = fabs((x - mean)*y);
   i = (int)(z * X_FAKT_PDF);
-  /* lineare Interpolation: */
+  /* linear interpolation: */
   if (i >= PDFLEN-1) {
     i = PDFLEN-1;
     pdf_x = y * pdf_stdnormal[i];
@@ -543,17 +540,17 @@ double randvar_normal_pos(double mue, double u, int seed) {
   return gsl_ran_gaussian_tail(RNG, -mue, sqrt(u))+mue;
 
 #else /* DO_WITH_GSL */
-  /* Methode: solange Gauss-verteilte Zuf.Zahl erzeugen (mit GSL-Lib.), 
-     bis sie im pos. Bereich liegt -> nicht effektiv, wenn mue << 0 
+  /* Method: Generate Gauss-distributed random nunbers (with GSL-lib.),
+     until a positive one is found -> not very effective if mue << 0
   while (x < 0.0) {
     x = sigma * randvar_std_normal(seed) + mue;
   } */
   
-  /** Inverse Transformierung mit restricted sampling nach Fishman */
+  /* Inverse transformation with restricted sampling by Fishman */
   U = gsl_rng_uniform(RNG);               /*gsl_ran_flat(RNG,0,1) ??? */
   Feps = randvar_get_PHI(-(EPS_NDT+mue)/sigma);
   Us = Feps + (1-Feps)*U;
-  /* num. besser: 1-Us = 1-Feps - (1-Feps)*U, deshalb: 
+  /* Numerically better: 1-Us = 1-Feps - (1-Feps)*U, therefore: 
      Feps1 = 1-Feps, Us1 = 1-Us */
   Feps1 = randvar_get_PHI((EPS_NDT+mue)/sigma);
   Us1 = Feps1 - Feps1*U;
@@ -606,7 +603,7 @@ double randvar_normal_cdf(double x, double mean, double u) {
   /* PHI(x)=erf(x/sqrt(2))/2+0.5 */
   return (gsl_sf_erf((x-mean)/sqrt(u*2.0))+1.0)/2.0;
 #else
-  /* evtl Nenner < EPS abfangen ? */
+  /* The denominator is possibly < EPS??? Check that ? */
   return(randvar_get_PHI((x - mean)/sqrt(u)));
 #endif /* DO_WITH_GSL */
 STOP:
@@ -629,7 +626,7 @@ double randvar_normal_pos_cdf(double x, double mean, double u) {
    */
   return 1.0+(gsl_sf_erf((x-mean)/sqrt(u*2))-1.0)/gsl_sf_erfc((-mean)/sqrt(u*2));
 #else
-  /* evtl Nenner < EPS abfangen ? */
+  /*The denominator is possibly < EPS??? Check that ? */
   Fx = randvar_get_PHI((x - mean)/sqrt(u));
   c = randvar_get_1overa(-EPS_NDT, mean, u);
   return(c*(Fx-1)+1);
