@@ -4,12 +4,61 @@ import os.path
 from modhmmer import *
 from random import *
 
-def emslist2array(lisems):
-    "converts emission list to C double array"
-    arrems = ghmmwrapper.double_array(len(lisems))
-    for i in range(len(lisems)):
-        ghmmwrapper.set_arrayd(arrems,i,lisems[i])
-    return arrems
+
+def list2arrayd(lisems):
+	"converts python list to C double array"
+	arrems = ghmmwrapper.double_array(len(lisems))
+	for i in range(len(lisems)):
+		ghmmwrapper.set_arrayd(arrems,i,lisems[i])
+	return arrems
+
+def list2arrayint(lisems):
+	"converts python list to C int array"
+	arrems = ghmmwrapper.int_array(len(lisems))
+	for i in range(len(lisems)):
+		ghmmwrapper.set_arrayint(arrems,i,lisems[i])
+	return arrems
+
+
+def list2matrixd(matrix):
+    """ Allocation and initialization of a double** based on a   
+        two dimensional Python list (list of lists). The number of elements
+        in each column can vary.
+    """
+    rows = len(matrix)
+    
+    seq = ghmmwrapper.double_2d_array_nocols(rows)
+    col_len = []
+    for i in range(rows):
+        l = len(matrix[i])
+        col = ghmmwrapper.double_array(l)
+        for j in range(l):
+            ghmmwrapper.set_arrayd(col,j,matrix[i][j]) 
+        
+        ghmmwrapper.set_2d_arrayd_col(seq,i,col)
+        col_len.append(l)
+
+    return (seq,col_len)    
+
+def list2matrixint(matrix):
+    """ Allocation and initialization of an int** based on a   
+        two dimensional Python list (list of lists). The number of elements
+        in each column can vary.
+    """
+    rows = len(matrix)
+    
+    seq = ghmmwrapper.int_2d_array_nocols(rows)
+    col_len = []
+    for i in range(rows):
+        l = len(matrix[i])
+        col = ghmmwrapper.int_array(l)
+        for j in range(l):
+            ghmmwrapper.set_arrayint(col,j,matrix[i][j]) 
+        
+        ghmmwrapper.set_2d_arrayint_col(seq,i,col)
+        col_len.append(l)
+
+    return (seq,col_len)    
 
 
 def extract_out(lisprobs):
@@ -33,12 +82,6 @@ def extract_out(lisprobs):
         ghmmwrapper.set_arrayd(trans_prob,i,lisprobs[lis[i]])
     return [len(lis),trans_id,trans_prob]
 
-def list2arrayd(lisems):
-	"converts python list to C double array"
-	arrems = ghmmwrapper.double_array(len(lisems))
-	for i in range(len(lisems)):
-		ghmmwrapper.set_arrayd(arrems,i,lisems[i])
-	return arrems
 
 
 def extract_out_probs(lisprobs,cos):
@@ -150,4 +193,7 @@ class double_array:
             strout += "\t"
             strout += "\n"
         return strout
+		
+			
+
 

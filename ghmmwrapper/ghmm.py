@@ -356,21 +356,27 @@ class EmissionSequence(list):
     """
 
     def __init__(self, emissionDomain, sequenceInput):
-        self.emissionDomain = emissionDomain # XXX identical name problematic ? Noe!
+        self.emissionDomain = emissionDomain # XXX identical name problematic ? Noe! Good. ;)
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             if isinstance(sequenceInput, list):  
-                l = len(sequenceInput)
-                seq = ghmmhelper.list2arrayint(sequenceInput)
+                print "list input"
+
+                (seq,l) = ghmmhelper.list2matrixint([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_calloc(1)
-#                self.cseq.seq = seq
-                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l)
+                self.cseq.seq = seq
+                self.cseq.seq_number = 1
+                set_arrayint(self.cseq.seq_len,0,l[0]) 
                 
             elif isinstance(sequenceInput, str): # from file
-                # Does it make sense to read only one sequence from file??
+                print "file input"
+                
+                # Does it make sense to read only one sequence from file?? 
                 # sequence_t **sequence_read(const char *filename, int *seq_arrays)
                 pass
-            elif isinstance(sequenceInput, ghmmwrapper.sequence_tPtr): # inputType == "fromCpointer", internal use
+            elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
+                print "pointer input"
+                
                 # Should check for sequence_t
                 self.cseq = sequenceInput
             else:    
@@ -378,15 +384,16 @@ class EmissionSequence(list):
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             if isinstance(sequenceInput, list): 
-                l = len(sequenceInput)
-                seq = ghmmhelper.list2arrayd(sequenceInput)
+                (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_d_calloc(1)
                 self.cseq.seq = seq
-                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l)
+                self.cseq.seq_number = 1
+                set_arrayint(self.cseq.seq_len,0,1)
+				
 
             elif isinstance(sequenceInput, str): # from file
                 pass
-            elif isinstance(sequenceInput, ghmmwrapper.sequence_d_tPtr): # inputType == "fromCpointer", internal 
+            elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
                 self.cseq = sequenceInput
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
@@ -397,16 +404,17 @@ class EmissionSequence(list):
 
         self.cseq_number = self.cseq.seq_number
         
-        # internal only
-        if self.emissionDomain.CDataType == "int": 
-            pass
+        # Not sure where this was going, so I commented it out for now.
+		# internal only
+        #if self.emissionDomain.CDataType == "int": 
+        #    pass
         
-        elif self.emissionDomain.CDataType == "double":
-            cols = ghmmwrapper.get_arrayint(self.cseq.seq_len,0) # assume equal length
-            self.__array = ghmmhelper.twodim_double_array(self.cseq.seq, self.cseq.seq_number, cols)
+        #elif self.emissionDomain.CDataType == "double":
+        #    cols = ghmmwrapper.get_arrayint(self.cseq.seq_len,0) # assume equal length
+        #    self.__array = ghmmhelper.twodim_double_array(self.cseq.seq, self.cseq.seq_number, cols)
             
     def __del__(self):
-        del self.__array # delete Python reference to the twodim array of double
+        # del self.__array # delete Python reference to the twodim array of double # XXX 
         
         if self.emissionDomain.CDataType == "int": # delete the C ptr to sequence_t
             ghmmwrapper.sequence_clean(self.cseq)
@@ -415,18 +423,43 @@ class EmissionSequence(list):
             ghmmwrapper.sequence_d_clean(self.cseq)
 
     def __setitem__(self, index, value):
-        # XXX What should be the interface?
-        pass
+        # XXX What should be the interface? 
+        # Something like this ?
+		if self.emissionDomain.CDataType == "int":
+			set_2d_arrayint(self.seq_c.seq,0,index,value)
+		elif self.emissionDomain.CDataType == "double":
+			set_2d_arrayd(self.seq_c.seq,0,index,value)
+		
 
     def __getitem__(self, index):
         """ Return a single sequence of integer or double """
         # XXX Should it return a list instead of a C-array ?
-
+		# XXX For a single Sequence seq[i] should return the ith symbol, shouldn't it ? Like this:
+        
+		
         if self.emissionDomain.CDataType == "double":
-            carray = ghmmwrapper.get_row_pointer_d(self.cseq.seq, index)
+            symbol = ghmmwrapper.get_2d_arrayd(self.cseq.seq,0 ,index)
         elif self.emissionDomain.CDataType == "int":
-            carray = ghmmwrapper.get_row_pointer_int(self.cseq.seq, index)
-        return  carray        
+            symbol = ghmmwrapper.get_2d_arrayint(self.cseq.seq,0 ,index)
+        return  symbol    
+		
+		
+		#if self.emissionDomain.CDataType == "double":
+        #    carray = ghmmwrapper.get_row_pointer_d(self.cseq.seq, index)
+        #elif self.emissionDomain.CDataType == "int":
+        #    carray = ghmmwrapper.get_row_pointer_int(self.cseq.seq, index)
+        #return  carray        
+
+    def __str__(self):
+        "Defines string representation."
+        
+        seq = self.cseq
+        strout = ""
+        strout += "\nEmissionSequence Instance:\nlength " + str(get_arrayint(seq.seq_len,0))+ ", weight " + str(get_arrayd(seq.seq_w,0))  + ":\n"
+        for j in range(get_arrayint(seq.seq_len,0) ):
+            strout += str(self[j]) + " "    
+           
+    	return strout		
 
 #    def sequenceSet(self):
 #        """ Make a one-element SequenceSet out of me """
@@ -446,9 +479,19 @@ class SequenceSet:
                 ghmmwrapper.freearray(ptNumber)
 
             elif isinstance(sequenceSetInput, list): 
-                pass
+                seq_nr = len(sequenceSetInput)
+                self.cseq_number = seq_nr 
+                self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
+                self.cseq.seq_number = seq_nr
 
-            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_tPtr): # inputType == sequence_t**
+                (seq,lenghts) = ghmmhelper.list2matrixint(sequenceSetInput)
+
+                self.cseq.seq = seq
+                for i in range(seq_nr):
+					ghmmwrapper.set_arrayint(self.cseq.seq_len,i ,lenghts[i])
+
+
+            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_t): # inputType == sequence_t**
                 self.cseq = sequenceSetInput
                 
             else:    
@@ -456,7 +499,15 @@ class SequenceSet:
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             if isinstance(sequenceSetInput, list): 
-                pass
+                seq_nr = len(sequenceSetInput)
+                self.cseq_number = seq_nr # XXX cseq_number is a little redundant, isn't it ?
+                self.cseq = ghmmwrapper.sequence_d_calloc(seq_nr)
+                self.cseq.seq_number = seq_nr
+
+                (seq,lenghts) = ghmmhelper.list2matrixd(sequenceSetInput)
+                self.cseq.seq = seq
+                for i in range(seq_nr):
+					ghmmwrapper.set_arrayint(self.cseq.seq_len, i, lenghts[i])
 
             elif isinstance(sequenceSetInput, str): # from file
                 print "fromFile", type(self.cseq), sequenceSetInput                
@@ -474,31 +525,83 @@ class SequenceSet:
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
-        # internal only
+        # XXX I'm not quite sure what you wanted to do here. The code below stores a row pointer for each sequence
+        # in __array so that __getitem__ can return an EmissionSequence object (s.b)   XXX
+        self.__array = []
         if self.emissionDomain.CDataType == "int": 
-            self.__array = ghmmhelper.int_array(self.cseq.seq)
+            for index in range(self.cseq_number):
+                oneseq = ghmmwrapper.get_row_pointer_int(self.cseq.seq,index)
+                self.__array.append(oneseq)
+                
+           # self.__array = ghmmhelper.int_array(self.cseq.seq)
         elif self.emissionDomain.CDataType == "double":
             self.__array = []
             for index in range(self.cseq_number):
-                oneset = ghmmwrapper.get_seq_d_ptr(self.cseq, index) # return sequence_d_t
+                oneset = ghmmwrapper.get_row_pointer_d(self.cseq.seq, index) 
                 self.__array.append(oneset)
 
+
+        # internal only
+#        if self.emissionDomain.CDataType == "int": 
+#           pass
+           # self.__array = ghmmhelper.int_array(self.cseq.seq)
+#        elif self.emissionDomain.CDataType == "double":
+#            self.__array = []
+#            for index in range(self.cseq_number):
+#                oneset = ghmmwrapper.get_seq_d_ptr(self.cseq.seq, index) # return sequence_d_t 
+#                self.__array.append(oneset)
+
     def __del__(self):
-        self.cseq_number = 0
+        pass
+		#self.cseq_number = 0
+        #if self.emissionDomain.CDataType == "int":
+        #    ghmmwrapper.sequence_free(self.cseq)
+            
+        #elif self.emissionDomain.CDataType == "double":
+        #    ghmmwrapper.sequence_d_free(self.cseq)
+            
+    def __str__(self):
+        "Defines string representation."
+        seq = self.cseq
+        strout =  "\nNumber of sequences: " + str(seq.seq_number)
+        
         if self.emissionDomain.CDataType == "int":
-            ghmmwrapper.sequence_free(self.cseq)
-            
-        elif self.emissionDomain.CDataType == "double":
-            ghmmwrapper.sequence_d_free(self.cseq)
-            
+           for i in range(seq.seq_number):
+                strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(get_arrayd(seq.seq_w,i))  + ":\n"
+                for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
+                    strout += str( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) ) + " "
+
+        if self.emissionDomain.CDataType == "double":        
+            for i in range(seq.seq_number):
+                strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(get_arrayd(seq.seq_w,i))  + ":\n"
+                for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
+                    strout += str( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) ) + " "
+
+        return strout 
+    
+    
     def __setitem__(self, index, value): # Only allow EmissionSequence?
         pass
         
     def __getitem__(self, index):
-        """ Return a set of sequences from an array of sequence sets with index = 'index'
-            Implementation: Create an instance of EmissionSequence with a reference to sequence_t or sequence_d_t
+        """ Return an EmissionSequence object initialized with sequence 'index'.
+        
         """
-        return EmissionSequence(self.emissionDomain, self.__array[index])
+        
+        # Right now only the pointer is passed. Do we want to have a real copy of the sequence instead ?
+        
+        if self.emissionDomain.CDataType == "int":
+            seq = ghmmwrapper.sequence_calloc(1)
+            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # int* -> int**
+            set_arrayint(seq.seq_len,0,get_arrayint(self.cseq.seq_len,index))
+            seq.seq_number = 1
+        if self.emissionDomain.CDataType == "double":    
+            seq = ghmmwrapper.sequence_d_calloc(1)
+            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # double* -> double**
+            set_arrayint(seq.seq_len,0,get_arrayint(self.cseq.seq_len,index))
+            seq.seq_number = 1
+
+        return EmissionSequence(self.emissionDomain, seq)
 
 
         
@@ -1064,33 +1167,32 @@ class GaussianEmissionHMM(HMM):
 
 
 
-if __name__ == '__main__':
-    m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
-                        [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-                        [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
-                        [1.0,0,0])
+#if __name__ == '__main__':
+ #   m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
+ #                       [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+ #                       [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
+ #                       [1.0,0,0])
 
     
-    print m
+  #  print m
 
 
-    m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
-                         [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-                         [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
-                         [1.0,0,0])
+   # m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
+    #                     [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+     #                    [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
+      #                   [1.0,0,0])
     
 
-    print m2
+#    print m2
 
 
-    seq_c = ghmmwrapper.seq_d_read('test10.sqd')
-    l = m2.loglikelihood_sqd(seq_c)
+    #seq_c = ghmmwrapper.seq_d_read('test10.sqd')
+    #l = m2.loglikelihood_sqd(seq_c)
     
-    for i in xrange(seq_c.seq_number):
-        print ghmmwrapper.get_arrayd(l,i), 
+    #for i in xrange(seq_c.seq_number):
+    #    print ghmmwrapper.get_arrayd(l,i), 
         
-
-        #m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
+       #m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
         #m = HMMOpen("test.smo")
 
         #seqs = SequenceSetOpen('test.sqd')

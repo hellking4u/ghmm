@@ -1239,12 +1239,20 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
  
   double **double_2d_array(int rows, int cols) {
-    int i;
+    //int i;
     //double **array = (double **) malloc(rows*sizeof(double*));
     //for(i=0; i < rows; i++)
     //  array[i] = double_array(cols);
     return matrix_d_alloc(rows,cols);
   }
+  
+  double **double_2d_array_nocols(int rows){
+	return (double **) malloc(rows*sizeof(double*));
+  }	  
+  
+  void set_2d_arrayd_col(double **ary, int index, double *col){
+	  ary[index] = col;
+  }	  
   
   void set_2d_arrayd(double **ary, int index1,int index2, double value) {
     ary[index1][index2] = value;
@@ -1272,13 +1280,38 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 	printf("\n");  	
   }
 
+  double** cast_ptr_d(double* array){
+     double ** res = (double **) malloc(sizeof(double*));
+	 res[0] = array;
+	 return res;
+	  
+	//return (double**) array;
+  }	  
+  
   void free_2darrayd(double **pt,int row) { matrix_d_free(&pt,row); }
    
   /************  Create and access int[size1][size2] arrays ************/
   
+   int **int_2d_array_nocols(int rows){
+	return (int **) malloc(rows*sizeof(int*));
+  }	  
+  
+  void set_2d_arrayint_col(int **ary, int index, int *col){
+	  ary[index] = col;
+  }	  
+  
   /* Get two dimensional array entry */
   int  get_2d_arrayint (int **ary, int index1, int index2) {return ary[index1][index2]; }
    
+   int** cast_ptr_int(int* array){
+
+	 int ** res = (int **) malloc(sizeof(int*));
+	 res[0] = array;
+	 return res; 
+	 
+	 //return (int**) array;
+  }	 
+  
   void freearray(void *pt)  { free(pt); }
 
   void free_2darrayint(int **pt, int rows,int cols) {  matrix_i_free(&pt, rows); }
