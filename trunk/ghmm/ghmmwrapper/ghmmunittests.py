@@ -60,6 +60,7 @@ import ghmm
 import ghmmwrapper
 import random
 import ghmmwrapper
+from Numeric import array, sum
 
 class AlphabetTests(unittest.TestCase):
     """Unittests for Emissiondomains subclasses"""
@@ -114,8 +115,8 @@ class AlphabetTests(unittest.TestCase):
         self.assertEqual(len(self.binaryAlphabet),2)
         self.assertEqual(len(self.dnaAlphabet),len(self.dna))
 
-        self.assertEqual(self.binaryAlphabet.size(),2)
-        self.assertEqual(self.dnaAlphabet.size(),len(self.dna))
+        self.assertEqual(len(self.binaryAlphabet),2)
+        self.assertEqual(len(self.dnaAlphabet),len(self.dna))
     
 
 class EmissionSequenceTests(unittest.TestCase):
@@ -123,9 +124,11 @@ class EmissionSequenceTests(unittest.TestCase):
     def setUp(self):
         i_alph = ghmm.IntegerRange(0,5)
         d_alph = ghmm.Float()
+        l_domain = ghmm.LabelDomain(['E','R','T'])
         self.i_seq = ghmm.EmissionSequence(i_alph,[1,2,0,0,0,3,4])
         self.d_seq = ghmm.EmissionSequence(d_alph,[1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3])
-        
+        self.labeled = ghmm.EmissionSequence(ghmm.DNA, list('acgttgatgga'),labelDomain=l_domain,
+                                            labelInput= ['E','R','T','T','T','E','R','T','T','T','R'])
         
     def testprint(self):
         # print"\ntestprint ",
@@ -177,12 +180,29 @@ class EmissionSequenceTests(unittest.TestCase):
         self.assertEqual(w2,2.0)
 
     def testlabelaccess(self):
-        self.i_seq.getLabel()   
-        l = self.d_seq.getLabel()
+        self.i_seq.getSeqLabel()   
+        l = self.d_seq.getSeqLabel()
         self.assertEqual(l,-1)
-        self.d_seq.setLabel(5)
-        l = self.d_seq.getLabel()
+        self.d_seq.setSeqLabel(5)
+        l = self.d_seq.getSeqLabel()
         self.assertEqual(l,5)
+
+    def testerrors(self):
+        pass
+
+
+    def testlabeled(self):
+        #testing length
+        self.assertEqual(len(self.labeled), 11)
+        #testing sequence
+        sequence = ""
+        for i in range(len(self.labeled) ):
+            sequence += str( self.labeled.emissionDomain.external(self.labeled[i]) )
+        self.assertEqual(sequence,'acgttgatgga')
+        label = []
+        for i in range(len(self.labeled) ):
+            label.append(self.labeled.labelDomain.external(self.labeled.getSymbol(self.labeled.cseq.state_labels, 0, i)))
+        self.assertEqual(label,['E','R','T','T','T','E','R','T','T','T','R'])
 
 
 class SequenceSetTests(unittest.TestCase):
@@ -190,10 +210,53 @@ class SequenceSetTests(unittest.TestCase):
     def setUp(self):
         self.i_alph = ghmm.IntegerRange(0,7)
         self.d_alph = ghmm.Float()
+        self.l_domain = ghmm.LabelDomain(['E','R','T'])
+        
         self.i_seq = ghmm.SequenceSet(self.i_alph,[ [1,2,3,4,5],[0,3,0],[4,3,2,2,1,1,1,1], [0,0,0,2,1],[1,1,1,1,1,1] ])
         self.d_seq = ghmm.SequenceSet(self.d_alph,[ [1.5,2.3,3.7,4.1,5.1],[0.0,3.1,0.7],[4.4,3.05,2.0,2.4,1.2,1.8,1.0,1.0], [0.4,0.1,0.33,2.7,1.345],[1.0,1.0,1.0,1.0,1.0,1.0] ])
+
+        self.seqList = [list('aaaa'),
+                        list('acctttg'),
+                        list('ttgggaaaaaa'),
+                        list('ggggggggggggggtaaatttaa'),
+                        list('gggttccgcggaagggggggggctttta')]
+        self.labelList = [['E','R','T','T'],
+                          ['E','R','T','T','E','R','T'],
+                          ['E','R','T','T','R','T','T','R','T','E','T'],
+                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','E','T'],
+                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R'],]        
  
- 
+        self.l_seq  = ghmm.SequenceSet(ghmm.DNA, self.seqList,labelDomain=self.l_domain,labelInput= self.labelList)
+
+
+    def testlabelseqset(self):
+        self.assertEqual(len(self.l_seq), 5)
+
+        for i in range(len(self.l_seq)):
+            
+            # testing length
+            self.assertEqual(len(self.l_seq.getSequence(i)), len(self.seqList[i]))
+
+            # testing sequence
+            sequence = map(self.l_seq.emissionDomain.external, self.l_seq.getSequence(i))
+            seq = []
+            for j in range(len(sequence)):
+                seq.append(sequence[j])
+            self.assertEqual(seq, self.seqList[i])
+
+            # testing labels
+            label =  self.l_seq.getStateLabel(i)
+            self.assertEqual(label, self.labelList[i])
+
+    # XXX check different input types
+    def testseqerror(self):
+        
+        # self.assertRaises(ghmm.UnknownInputType,ghmm.SequenceSet,)        
+        pass
+        
+        
+
+    
     def testprint(self):
         # print"\ntestprint ",
         s = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111"
@@ -201,6 +264,8 @@ class SequenceSetTests(unittest.TestCase):
 
         s2 = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 3, weight 1.0:\n0.0 3.1 0.7 \nSeq 2, length 8, weight 1.0:\n4.4 3.05 2.0 2.4 1.2 1.8 1.0 1.0 \nSeq 3, length 5, weight 1.0:\n0.4 0.1 0.33 2.7 1.345 \nSeq 4, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 "
         self.assertEqual(str(self.d_seq),s2)
+
+        # XXX str(self.l_seq)
 
        
     def testattributes(self):
@@ -272,15 +337,14 @@ class SequenceSetTests(unittest.TestCase):
        # print"\ntestwrite ",
        self.i_seq.write("ghmmunittests_testwrite.seq") 
        self.d_seq.write("ghmmunittests_testwrite.seq") 
-       
-       
+
        
     def testlabelaccess(self):
-       self.i_seq.getLabel(2)   
-       l = self.d_seq.getLabel(3)
+       self.i_seq.getSeqLabel(2)   
+       l = self.d_seq.getSeqLabel(3)
        self.assertEqual(l,-1)
-       self.d_seq.setLabel(3,8)
-       l = self.d_seq.getLabel(3)
+       self.d_seq.setSeqLabel(3,8)
+       l = self.d_seq.getSeqLabel(3)
        self.assertEqual(l,8)
   
 
@@ -424,128 +488,43 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         tbeta = [[4.7023258381970328e-08, 4.9049616680238656e-08, 0.0], [7.6476880486013323e-08, 6.4441989048444649e-08, 6.6750394439163752e-08], [8.8750912271283831e-08, 1.2605202032733066e-07, 7.7899391106213753e-08], [2.2011649936367936e-07, 7.3372166454559791e-08, 1.9293676580713878e-07], [1.6587541968363728e-07, 1.6284216085683634e-07, 0.0], [2.4289833862457832e-07, 2.384210962051186e-07, 2.1510070859124783e-07], [3.6006136297026356e-07, 3.5355497724012001e-07, 3.149099666605184e-07], [5.3239905136437518e-07, 5.2230051265933332e-07, 4.6706904583339767e-07], [7.8672756150767899e-07, 7.7355627164113784e-07, 6.8966832440908326e-07], [1.1663284814732837e-06, 1.1403771297198445e-06, 1.0226275022771564e-06], [1.714512214353699e-06, 1.6998533968533427e-06, 1.5032019384574995e-06], [2.5739016260687412e-06, 2.4652804933957476e-06, 2.2566986508042196e-06], [3.6664866296729512e-06, 3.824485370363713e-06, 3.2146265694123342e-06], [5.9362270415318522e-06, 5.0020643568148523e-06, 5.2046463209454594e-06], [6.8965796192940052e-06, 9.7951420679827902e-06, 6.046644019275137e-06], [1.7099966432088887e-05, 5.6999888106962961e-06, 1.4992564389769576e-05], [1.2807225714868792e-05, 1.2697725891613874e-05, 0.0], [1.90357833216616e-05, 1.82324548941977e-05, 1.6857301306648554e-05], [2.7183129465348012e-05, 2.8354523406566898e-05, 2.3774387573954338e-05], [4.398420608268567e-05, 3.7062569873039537e-05, 3.8586960502901783e-05], [5.110751220623913e-05, 7.2587481104513543e-05, 4.4802335690955294e-05], [0.00012671566938798117, 4.2238556462660399e-05, 0.00011110328740486767], [4.7070434823434923e-05, 9.4140869646869846e-05, 0.0], [0.00015207371250648203, 0.00030414742501296406, 0.00015690144941144974], [0.00035483866251512469, 0.00025908854723326563, 0.00050691237502160675], [0.00032265374981534008, 0.00064530749963068016, 0.00028161798612311482], [0.00086550594401837283, 0.00063195672102928807, 0.001075512499384467], [0.00078700200351784007, 0.0015740040070356801, 0.00068690947937966095], [0.0021111017999601578, 0.0042222035999203156, 0.0026233400117261336], [0.0049259041999070345, 0.0098518083998140691, 0.0070370059998671923], [0.011493776466449746, 0.022987552932899492, 0.016419680666356781], [0.026818811755049406, 0.029554356731528338, 0.038312588221499154], [0.047237233589054815, 0.034490678493595578, 0.04122950562635707], [0.042712271973826509, 0.085424543947653017, 0.037489867927821281], [0.11091827741152124, 0.12223204997326255, 0.14237423991275502], [0.19536557500155205, 0.1426478801598634, 0.17051858167217759], [0.17665106399716793, 0.35330212799433586, 0.15505204365202543], [0.45874009543404987, 0.45169198441535702, 0.58883687999055978], [0.68462986472880094, 0.66707525281267788, 0.59755723854134746], [1.0, 1.0, 0.87773059580615509]]
         self.assertEqual(beta,tbeta)
 
-
-class EmissionSequenceTests(unittest.TestCase):
-
-    def setUp(self):
-        self.model   = self.oneModel()
-        self.labeled = ghmm.EmissionSequence(ghmm.DNA, 'acgttgatgga',
-                                               ['E','R','T','T','T','E','R','T','T','T','R'],
-                                               self.model)
-        
-    def oneModel(self):
-        A  = [[0.3,0.6,0.1], [0.0,0.5,0.5], [0.0,0.0,1.0]]
-        B  = [[0.5,0.2,0.2,0.1], [0.7,0.1,0.15,0.05], [1.0,0.0,0.0,0.0]]
-        pi = [1.0, 0.0, 0.0]
-        labellist = ['E','R','T']
-        return ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA),
-                                    A, B, pi, None, None, labellist)
+        # XXX test for tied states
+        # XXX test for background distributions
 
 
-    def test_errors(self):
-        pass
+#class XXX:
+#    def oneModel(self):
+#        A  = [[0.3,0.6,0.1], [0.0,0.5,0.5], [0.0,0.0,1.0]]
+#        B  = [[0.5,0.2,0.2,0.1], [0.7,0.1,0.15,0.05], [1.0,0.0,0.0,0.0]]
+#        pi = [1.0, 0.0, 0.0]
+#        labellist = ['E','R','T']
+#        return ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA),
+#                                    A, B, pi, None, None, labellist)
 
 
-    def test_labeled(self):
-        #testing length
-        self.assertEqual(len(self.labeled), 11)
-        #testing sequence
-        sequence = ""
-        for i in range(len(self.labeled) ):
-            sequence += str( self.labeled.emissionDomain.external(self.labeled[i]) )
-        self.assertEqual(sequence,'acgttgatgga')
-        label = []
-        for i in range(len(self.labeled) ):
-            label.append(self.model.int2Label(self.labeled.getSymbol(self.labeled.cseq.state_labels, 0, i)))
-        self.assertEqual(label,['E','R','T','T','T','E','R','T','T','T','R'])
-        
-
-
-class SequenceSetTests(unittest.TestCase):
-
-    def setUp(self):
-        self.seqList = ['aaaa',
-                        'acctttg',
-                        'ttgggaaaaaa',
-                        'ggggggggggggggtaaatttaa',
-                        'gggttccgcggaagggggggggctttta']
-        self.labelList = [['E','R','T','T'],
-                          ['E','R','T','T','E','R','T'],
-                          ['E','R','T','T','R','T','T','R','T','E','T'],
-                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','E','T'],
-                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R'],]
-        self.model   = self.oneModel()
-        self.seqSet  = ghmm.SequenceSet(ghmm.DNA, self.seqList, self.labelList, self.model)
-
-    def teardown(self):
-        del self.seqList
-        del self.labelList
-        del self.model
-        del self.seqSet
-        
-    def oneModel(self):
-        A  = [[0.3,0.6,0.1], [0.0,0.5, 0.5], [0.0,0.0,1.0]]
-        B  = [[0.5,0.2,0.2,0.1], [0.7,0.1,0.15,0.05], [1.0,0.0,0.0,0.0]]
-        pi = [1.0, 0.0, 0.0]
-        labellist = ['E','R','T']
-        return ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA),
-                                    A, B, pi, None, None, labellist)
-
-    def test_seqSet(self):
-        self.assertEqual(len(self.seqSet), 5)
-
-        for i in range(len(self.seqSet)):
-            
-            # testing length
-            self.assertEqual(len(self.seqSet.getSequence(i)), len(self.seqList[i]))
-
-            # testing sequence
-            sequence = map(self.seqSet.emissionDomain.external, self.seqSet.getSequence(i))
-            seq = ""
-            for j in range(len(sequence)):
-                seq += sequence[j]
-            self.assertEqual(seq, self.seqList[i])
-
-            # testing labels
-            label = map(self.model.int2Label, self.seqSet.getLabel(i))
-            self.assertEqual(label, self.labelList[i])
-
-            
-    def test_seqSError1(self):
-        try:
-            ghmm.SequenceSet(ghmm.DNA, self.seqList, self.labelList)
-        except ghmm.UnknownInputType:
-            pass
-        else:
-            fail("expected a ghmm.UnknownInputType")
-
-    def test_seqSError2(self):
-        try:
-            ghmm.SequenceSet( ghmm.DNA, 'acccgt', self.seqList, self.oneModel)
-        except ghmm.UnknownInputType:
-            pass
-        else:
-            fail("expected a ghmm.UnknownInputType")
-
-
-class BackwardFunctionTest(unittest.TestCase):
+class StateLabelHMMTests(unittest.TestCase):
 
     def setUp(self):
         random.seed(0)
         slength = 45
         self.labels = ['One']*slength
         self.allLabels = ['a','b','c','d','e','f','g']
-        #,'h','i','j','k','l','m','n','o']
-        self.model  = self.oneModel(['One']*11)
-        self.model2 = self.oneModel(self.allLabels)
+        self.l_domain= ghmm.LabelDomain(['One','a','b','c','d','e','f','g'])
         
-        sequence = ""
-        for i in range(slength):
-            sequence += random.choice(ghmm.DNA.listOfCharacters)
-        self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.labels, self.model)
 
-    def tearDown(self):
-        del self.model
+        self.A = [[0.0,0.5,0.5],[0.4,0.2,0.4],[0.3,0.3,0.4]]
+        self.B = [[0.2,0.1,0.1,0.6],[0.3,0.1,0.1,0.5],
+                  [0.25,0.25,0.25,0.25,   0.0, 0.0, 1.0, 0.0,   0.25,0.25,0.25,0.25,  0.25,0.25,0.25,0.25]]
+        self.pi = [1.0,0,0.0]
+
+        self.l_domain2 = ghmm.LabelDomain(['fst','scd','thr'])
+        self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
+
+        sequence = []
+        for i in range(slength):
+            sequence.append(random.choice(ghmm.DNA.listOfCharacters))
+        self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelDomain=self.l_domain,labelInput=self.labels)
+
 
     #create a random model with len(LabelList) states and 
     def oneModel(self, LabelList):
@@ -586,125 +565,139 @@ class BackwardFunctionTest(unittest.TestCase):
             pi[i] /= pisum
 
         return ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA),
-                                    A, B, pi, None, None, LabelList)
+                                    A, B, pi, None, self.l_domain, LabelList)
+            
+    def testsample(self):
+        # print"\ntestsample ",
+        seq = self.model.sampleSingle(100,seed=3586662)
+        seq2 = self.model.sample(10,100,seed=3586662)
+        
+    def testaccessfunctions(self):
+
+        # print"\ntestaccessfunctions",
+
+        self.assertEqual(self.model.N,3)
+        self.assertEqual(self.model.M,4)
+        
+        pi = self.model.getInitial(2)
+        self.assertEqual(pi,0)
+        self.model.setInitial(2,0.5,fixProb=1)
+        pi = self.model.getInitial(2)
+        self.assertEqual(pi,0.5)
+        
+        trans = self.model.getTransition(0,1)
+        self.assertEqual(trans, 0.5)
+        self.model.setTransition(0,1,0.6)
+        trans = self.model.getTransition(0,1)
+        self.assertEqual(trans, 0.6)
+        
+        emission = self.model.getEmission(1)
+        self.assertEqual(emission, [0.3,0.1,0.1,0.5] )
+        
+        # introducing silent state
+        self.model.setEmission(1,[0.0,0.0,0.0,0.0])
+        emission = self.model.getEmission(1)
+        self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
+        self.assertEqual(self.model.cmodel.model_type & 4, 4)
+        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),1)
+        
+        # removing silent state
+        self.model.setEmission(1,[0.2,0.2,0.2,0.4])
+        emission = self.model.getEmission(1)
+        self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
+        print "model_type = ",self.model.cmodel.model_type
+        self.assertEqual(self.model.cmodel.model_type & 4,0)
+        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),0)
+        
+        # inserting silent state
+        self.model.setEmission(0,[0.0,0.0,0.0,0.0])
+        emission = self.model.getEmission(0)
+        self.assertEqual(emission,[0.0,0.0,0.0,0.0])  
+        self.assertEqual(self.model.cmodel.model_type & 4,4)
+        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,0),1)
+
+        # label access
+        labels = self.model.getLabels()
+        self.assertEqual(labels,['fst','scd','thr'])
+        self.model.setLabels(['fst','thr','fst'])
+        labels = self.model.getLabels()
+        self.assertEqual(labels,['fst','thr','fst']) 
     
-    def test_oneLabelCompare(self):
+    def testonelabelcomparebackward(self):
+        model  = self.oneModel(['One']*11)
+        
         labelSequence      = self.labels
-        (alpha, scale)     = self.model.forward( self.tSeq)
-        (b_beta)           = self.model.backward( self.tSeq, scale)
-        (bl_logp, bl_beta) = self.model.backwardLabels( self.tSeq, labelSequence, scale)
+        (alpha, scale)     = model.forward( self.tSeq)
+        (b_beta)           = model.backward( self.tSeq, scale)
+        (bl_logp, bl_beta) = model.backwardLabels( self.tSeq, labelSequence, scale)
 
         #compare beta matrizes from backward and backwardLabels (all states share one label)
         self.assertEqual(b_beta, bl_beta)
 
 
-    def test_allDifferentLabels(self):
+    def testalldifferentlabelsbackward(self):
+        model2 = self.oneModel(self.allLabels)
+        
         labelSequence = self.allLabels*4
 
-        sequence = ""
+        sequence = []
         for i in range(len(labelSequence)):
-            sequence += random.choice(ghmm.DNA.listOfCharacters)
+            sequence.append(random.choice(ghmm.DNA.listOfCharacters))
 
-        Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelSequence, self.model2)
+        Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain,labelSequence)
         
-        (fl_logp, alpha, scale) =  self.model2.forwardLabels( Seq, labelSequence)
-        (bl_logp, bl_beta)      = self.model2.backwardLabels( Seq, labelSequence, scale)
+        (fl_logp, alpha, scale) =  model2.forwardLabels( Seq, labelSequence)
+        (bl_logp, bl_beta)      = model2.backwardLabels( Seq, labelSequence, scale)
 
         #check if the beta matrix is at the appropriated entries 0 or different from 0 
         for i in range(len(bl_beta)):
             i = len(bl_beta)-i-1
             for j in range(len(bl_beta[i])):
-                if self.model2.index[labelSequence[i]] == ghmmwrapper.get_stateptr(self.model2.cmodel.s,j).label:
+                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_stateptr(model2.cmodel.s,j).label:
                     self.assertNotEqual(bl_beta[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(bl_beta[i][j]) )
                 else:
                     self.assertEqual(bl_beta[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(bl_beta[i][j]))
 
-class ForwardFunctionTest(unittest.TestCase):
-
-    def setUp(self):
-        random.seed(0)
-        slength = 45
-        self.labels = ['One']*slength
-        self.allLabels = ['a','b','c','d','e','f','g']
-        self.model  = self.oneModel(['One']*11)
-        self.model2 = self.oneModel(self.allLabels)
+    def testonelabelcompareforward(self):
+        model  = self.oneModel(['One']*11)
         
-        sequence = ""
-        for i in range(slength):
-            sequence += random.choice(ghmm.DNA.listOfCharacters)
-        self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.labels, self.model)
-
-    def tearDown(self):
-        del self.model
-
-    #create a random model with len(LabelList) states and 
-    def oneModel(self, LabelList):
-        no_states = len(LabelList)
-        A = []
-        B = []
-        pi = []
-        pisum = 0
-        for i in range(no_states):
-            asum = 0
-            A_e = []
-            #get a random A-row
-            for j in range(no_states):
-                A_e.append(random.random())
-                asum += A_e[-1]
-            #normalize this A-row
-            for j in range(no_states):
-                A_e[j] /= asum
-            A.append(A_e)
-            
-            bsum = 0
-            B_e = []
-            #get a random B-row
-            for j in range(4):
-                B_e.append(random.random())
-                bsum += B_e[-1]
-            #normalize this B-row
-            for j in range(4):
-                B_e[j] /= bsum
-            B.append(B_e)
-            
-            #get random pi
-            pi.append(random.random())
-            pisum += pi[-1]
-
-        #normalize pi
-        for i in range(no_states):
-            pi[i] /= pisum
-
-        return ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA),
-                                    A, B, pi, None, None, LabelList)
-    
-    def test_oneLabelCompare(self):
         labelSequence          = self.labels
-        (alpha, scale)         = self.model.forward(self.tSeq)
-        (logp, lalpha, lscale) = self.model.forwardLabels(self.tSeq, labelSequence )
+        (alpha, scale)         = model.forward(self.tSeq)
+        (logp, lalpha, lscale) = model.forwardLabels(self.tSeq, labelSequence )
 
-        #compare beta matrizes from backward and backwardLabels (all states share one label)
+        # compare beta matrizes from backward and backwardLabels (all states share one label)
+        # XXX due to small numerical instabilites we have to round for 15 decimal positions
+        #f = lambda x: round(x,17) #XXX
+        #for i in range(len(alpha)):
+        #    alpha[i] = map(f, alpha[i])
+        #    lalpha[i] = map(f, lalpha[i])        
+        
         self.assertEqual(alpha, lalpha)
+
+        #scale = map(f, scale)
+        #lscale = map(f, lscale)        
         self.assertEqual(scale, lscale)
 
-    def test_allDifferentLabels(self):
+    def testalldifferentlabelsforward(self):
+        model2  = self.oneModel(['One']*11)
+        
         labelSequence = self.allLabels*4
 
-        sequence = ""
+        sequence = []
         for i in range(len(labelSequence)):
-            sequence += random.choice(ghmm.DNA.listOfCharacters)
+            sequence.append(random.choice(ghmm.DNA.listOfCharacters))
 
-        Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelSequence, self.model2)
+        Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain,labelSequence)
         
-        (logp, alpha, scale) =  self.model2.forwardLabels( Seq, labelSequence)
+        (logp, alpha, scale) =  model2.forwardLabels( Seq, labelSequence)
 
-        #check if the beta matrix is at the appropriated entries 0 or different from 0 
+        #check if the beta matrix is 0 or different from 0 at the appropriate entries 
         for i in range(len(alpha)):
             i = len(alpha)-i-1
             for j in range(len(alpha[i])):
-                if self.model2.index[labelSequence[i]] == ghmmwrapper.get_stateptr(self.model2.cmodel.s,j).label:
+                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_stateptr(model2.cmodel.s,j).label:
                     self.assertNotEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]) )
                 else:
@@ -712,7 +705,40 @@ class ForwardFunctionTest(unittest.TestCase):
                                         + ", value: " + str(alpha[i][j]))
 
 
+
+    def testkbest(self): 
+        seq = self.model.sampleSingle(20, seed=3586662)
+        path = self.model.kbest(seq)
+        self.assertEqual(path,(['fst', 'scd', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'fst', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd'], -34.988617932063683)) 
                 
+    def testgradientdescent(self):
+        A2 = [[0.3,0.2,0.5],[0.1,0.8,0.1],[0.1,0.4,0.5]]
+        B2 = [[0.4,0.2,0.2,0.2],[0.4,0.2,0.2,0.2],
+             [0.2,0.1,0.1,0.6,   0.25,0.25,0.25,0.25,   0.5,0.1,0.3,0.1, 0.2,0.1,0.1,0.6]]
+        pi2 = [0.5,0.5,0.0] 
+    
+        model2 = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), A2, B2, pi2,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
+        
+        train = self.model.sample(10,300,seed=3586662)
+        model2.gradientSearch(train)
+
+    def testbaumwelch(self):
+        # print"\ntestbaumwelch ",
+        seq = self.model.sample(100,100,seed=3586662)
+        self.model.baumWelchLabels(seq,5,0.01)
+        
+        self.model.setEmission(2,[0.25,0.25,0.25,0.25])
+        self.model.cmodel.model_type = 1
+        ghmmwrapper.set_arrayint(self.model.cmodel.silent,2,0)
+        self.model.baumWelchLabels(seq,5,0.01)   
+    
+   
+    def testviterbilabels(self):
+        seq = self.model.sampleSingle(20,seed=3586662)
+        p = self.model.viterbiLabels(seq)
+        self.assertEqual(p, (['fst', 'scd', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'fst', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd'], -34.98861793206369))
+
+    
     # TO DO: testing XML-file read
    
 
@@ -782,6 +808,7 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         # print"\ntestdel ",
         del(self.model)
 
+
 class GaussianMixtureHMMTests(unittest.TestCase):
     def setUp(self):
         # print"setUp"
@@ -797,30 +824,45 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
 
     def testcomponentfixing(self):
-        f = model.getMixtureFix(0)
+        f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,0,0])
-        model.setMixtureFix(0,[0,1,0])    
-        f = model.getMixtureFix(0)
+        self.model.setMixtureFix(0,[0,1,0])    
+        f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,1,0])
-        model.setMixtureFix(1,[1,1,1])    
-        f = model.getMixtureFix(1) 
+        self.model.setMixtureFix(1,[1,1,1])    
+        f = self.model.getMixtureFix(1) 
         self.assertEqual(f,[1,1,1])
         
         # XXX check mu,v,u
 
+    def testtomatrices(self):
+        # print"\ntesttomatrices ",
+        tA,tB,tpi = self.model.toMatrices()
+        
+        self.assertEqual(self.A,tA)
+        self.assertEqual(self.B,tB)
+        self.assertEqual(self.pi,tpi)    
+        
+        
+    def testsample(self):
+        # print"\ntestsample ",
+        seq = self.model.sampleSingle(100,seed=3586662)
+        seq2 = self.model.sample(10,100,seed=3586662)
+        
 
 if __name__ == '__main__':
     unittest.main()
 
 
 suite = unittest.TestSuite()
+
+################################################################
 #suite.addTest(AlphabetTests("testinternalexternal"))
 #suite.addTest(AlphabetTests("testinternalexternalSequence"))
 #suite.addTest(AlphabetTests("testlen"))
-
 #runner = unittest.TextTestRunner()
 # runner.run(suite)
-
+################################################################
 
 
 

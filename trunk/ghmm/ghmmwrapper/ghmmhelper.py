@@ -6,18 +6,18 @@ from random import *
 
 
 def list2arrayd(lisems):
-	"converts python list to C double array"
-	arrems = ghmmwrapper.double_array(len(lisems))
-	for i in range(len(lisems)):
-		ghmmwrapper.set_arrayd(arrems,i,lisems[i])
-	return arrems
+    "converts python list to C double array"
+    arrems = ghmmwrapper.double_array(len(lisems))
+    for i in range(len(lisems)):
+        ghmmwrapper.set_arrayd(arrems,i,lisems[i])
+    return arrems
 
 def list2arrayint(lisems):
-	"converts python list to C int array"
-	arrems = ghmmwrapper.int_array(len(lisems))
-	for i in range(len(lisems)):
-		ghmmwrapper.set_arrayint(arrems,i,lisems[i])
-	return arrems
+    "converts python list to C int array"
+    arrems = ghmmwrapper.int_array(len(lisems))
+    for i in range(len(lisems)):
+        ghmmwrapper.set_arrayint(arrems,i,lisems[i])
+    return arrems
 
 
 def arrayd2list(carray,length):
@@ -86,16 +86,27 @@ def list2matrixint(matrix):
 
     return (seq,col_len)    
 
+def matrixint2list(cmatrix,row,col):
+    llist = []
+    for i in range(row):
+        llist.append([])    
+     
+    for i in range(row):
+        for j in range(col):
+            llist[i].append(ghmmwrapper.get_2d_arrayint(cmatrix,i,j) )
+    return llist       
+        
+
 
 def extract_out(lisprobs):
     """ Helper function for building HMMs from matrices: Used for
-	    transition matrices without  transition classes.
+        transition matrices without  transition classes.
 
-		Extract out-/ingoing transitions from the row-vector resp. the
-		column vector (corresponding to incoming transitions) of the
-		transition matrix
+        Extract out-/ingoing transitions from the row-vector resp. the
+        column vector (corresponding to incoming transitions) of the
+        transition matrix
 
-		Allocates: .[out|in]_id and .[out|in]_a vectors
+        Allocates: .[out|in]_id and .[out|in]_a vectors
     """
     lis = []
     for i in range(len(lisprobs)):
@@ -110,42 +121,105 @@ def extract_out(lisprobs):
 
 
 
-def extract_out_probs(lisprobs,cos):
+#def extract_out_probs(lisprobs,cos):
 ##    """ Helper function for building HMMs from matrices: Used for
-##	    transition matrices with 'cos' transition classes.
-
-##		Extract out-/ingoing transitions from a matric consiting of
-##		the row-vectors resp. the column vectors (corresponding to
-##		incoming transitions) of the 'cos' transition matrices.
-##		Hence, input is a 'cos' x N matrix.
-
-##		Allocates: .[out|in]_id vector and .[out|in]_a array (of size cos x N)
+##        transition matrices with 'cos' transition classes.
+##        Extract out-/ingoing transitions from a matric consiting of
+##        the row-vectors resp. the column vectors (corresponding to
+##        incoming transitions) of the 'cos' transition matrices.
+##        Hence, input is a 'cos' x N matrix.
+##        Allocates: .[out|in]_id vector and .[out|in]_a array (of size cos x N)
 ##    """
-	lis = []
-	# parsing indixes belonging to postive probabilites
-	for j in range(cos):
-		for i in range(len(lisprobs[0])):
-			if lisprobs[j][i] != 0 and i not in lis:
-				lis.append(i)
-	# print "lis: ", lis			
+#    lis = []
+    # parsing indixes belonging to postive probabilites
+#    for j in range(cos):
+#        for i in range(len(lisprobs[0])):
+#            if lisprobs[j][i] != 0 and i not in lis:
+#                lis.append(i)
+#    print "lis: ", lis            
+#    trans_id   = ghmmwrapper.int_array(len(lis))
+#    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
+    # creating list with positive probabilities
+#    for k in range(cos):
+#        for j in range(len(lis)):
+#            ghmmwrapper.set_2d_arrayd(probsarray,k,j, lisprobs[k][lis[j]])
+#    trans_prob = twodim_double_array(probsarray, cos, len(lis)) # python CLASS, C internal
+#    
+#    print trans_prob
+    # initializing c state index array
+#    for i in range(len(lis)):
+#        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
+#    return [len(lis),trans_id,trans_prob]
+
+def extract_out_cos(transmat, cos, state):
+    """ Helper function for building HMMs from matrices: Used for
+        transition matrices with 'cos' transition classes.
+
+        Extract outgoing transitions for 'state' from the complete list
+        of transition matrices
+
+        Allocates: .out_id vector and .out_a array (of size cos x N)
+    """
+    
+    lis = []
+    # parsing indixes belonging to postive probabilites
+    for j in range(cos):
+        for i in range(len(transmat[j][state])):
+            if transmat[j][state][i] != 0.0 and i not in lis:
+                lis.append(i)
+
+    #lis.sort()
+    #print "lis: ", lis            
+    
+    trans_id   = ghmmwrapper.int_array(len(lis))
+    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
+    
+    # creating list with positive probabilities
+    for k in range(cos):
+        for j in range(len(lis)):
+            ghmmwrapper.set_2d_arrayd(probsarray,k,j, transmat[k][state][lis[j]])
+    
+    # initializing C state index array
+    for i in range(len(lis)):
+        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
+    return [len(lis),trans_id,probsarray]
+
+def extract_in_cos(transmat, cos, state):
+    """ Helper function for building HMMs from matrices: Used for
+        transition matrices with 'cos' transition classes.
+
+        Extract ingoing transitions for 'state' from the complete list
+        of transition matrices
+
+        Allocates: .in_id vector and .in_a array (of size cos x N)
+    """
+    lis = []
+
+    # parsing indixes belonging to postive probabilites
+    for j in range(cos):
+        transmat_col_state = map( lambda x: x[state], transmat[j])
+        for i in range(len(transmat_col_state)):
+            
+            if transmat_col_state[i] != 0.0 and i not in lis:
+                lis.append(i)
+
+    #lis.sort()
+    #print "lis: ", lis            
 
 
-	trans_id   = ghmmwrapper.int_array(len(lis))
-	probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
-	
-	# creating list with positive probabilities
-	for k in range(cos):
-		for j in range(len(lis)):
-			ghmmwrapper.set_2d_arrayd(probsarray,k,j, lisprobs[k][lis[j]])
-
-	trans_prob = twodim_double_array(probsarray, cos, len(lis)) # python CLASS, C internal
-	
-	#print trans_prob
-	
-	# initializing c state index array
-	for i in range(len(lis)):
-		ghmmwrapper.set_arrayint(trans_id,i,lis[i])
-	return [len(lis),trans_id,trans_prob]
+    
+    trans_id   = ghmmwrapper.int_array(len(lis))
+    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
+    
+    # creating list with positive probabilities
+    for k in range(cos):
+        for j in range(len(lis)):
+            ghmmwrapper.set_2d_arrayd(probsarray,k,j, transmat[k][lis[j]][state])
+    
+    # initializing C state index array
+    for i in range(len(lis)):
+        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
+    return [len(lis),trans_id,probsarray]
 
 class twodim_double_array:
     "Two-dimensional C-Double Array"
@@ -219,7 +293,14 @@ class double_array:
             strout += "\t"
             strout += "\n"
         return strout
-		
-			
-
+        
+            
+def classNumber(A):
+    """ Returns the number of transition classes in the matrix A   """
+    cos = 0
+    if type(A[0][0]) == list:
+        cos = len(A)
+    else: 
+        cos = 1
+    return cos
 

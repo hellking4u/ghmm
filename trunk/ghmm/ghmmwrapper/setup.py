@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #
-# Package pyghmm
+# Package ghmm
 #
 #
 #
-from distutils.core import setup, Extension
+from distutils.core import setup, Extension,DistutilsExecError
 import os
 
 # Adapted from Achim Gaedke's pygsl
