@@ -37,7 +37,7 @@ dna_SOURCES = dna.cpp
 vector_test_SOURCES = vector_test.cpp
 create_sequence_SOURCES = create_sequence.cpp
 read_graphml_SOURCES = read_graphml.cpp
-testviterbi_SOURCES = testviterbi.cpp
+
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
