@@ -37,6 +37,17 @@ extern "C" {
 
 int reestimate_baum_welch(model *mo, sequence_t *sq);
 
+/** Just like reestimate_baum_welch, but you can limit
+    the 
+  @return            0/-1 success/error
+  @param mo          initial model
+  @param sq          training sequences
+  @param max_step    maximal number of Baum-Welch steps
+  @param likelihood_delta minimal improvement in likelihood required for carrying on. Relative value
+  to log likelihood
+  */
+int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+
 #ifdef __cplusplus
 }
 #endif

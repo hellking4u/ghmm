@@ -324,6 +324,12 @@ STOP:
 /*============================================================================*/
 int reestimate_baum_welch(model *mo, sequence_t *sq) {
 # define CUR_PROC "reestimate_baum_welch"
+  return reestimate_baum_welch_nstep(mo, sq, MAX_ITER_BW, EPS_ITER_BW);
+# undef CUR_PROC
+} /* reestimate_baum_welch */
+/*============================================================================*/
+int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta) {
+# define CUR_PROC "reestimate_baum_welch"
   int n, k, valid;
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
@@ -336,7 +342,7 @@ int reestimate_baum_welch(model *mo, sequence_t *sq) {
   n = 1;
 
   /* main loop Baum-Welch-Alg. */
-  while (n <= MAX_ITER_BW) { 
+  while (n <= max_step) { 
     
     if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq, 
 			    &log_p, sq->seq_w) == -1) { 
@@ -375,7 +381,7 @@ int reestimate_baum_welch(model *mo, sequence_t *sq) {
     }
       
     /* stop iterations? */
-    if ( diff < fabs((double)EPS_ITER_BW * log_p) ) {
+    if ( diff < fabs((double)likelihood_delta * log_p) ) {
       printf("Convergence after %d steps\n", n); 
       break;
     }
@@ -410,4 +416,4 @@ STOP:
   reestimate_free(&r, mo->N);
   return(-1);
 # undef CUR_PROC
-} /* reestimate_baum_welch */
+} /* reestimate_baum_welch_nstep */
