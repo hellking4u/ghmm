@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : ghmm/ghmm/smodel.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.c
   created      : TIME: 21:54:32     DATE: Sun 14. November 1999
   $Id$
 
@@ -248,6 +248,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
     }
     /* 1. Possibility: one matrix for all transition classes */
     else if (!strcmp(s->id, "A")) {
+      if (!cos_read) {scanner_error(s, "cos unknown (needed for dim(A))"); goto STOP;}
       if (!n_read) {scanner_error(s, "need N as a range for A"); goto STOP;}
       if (a_read) {scanner_error(s, "Identifier A twice"); goto STOP;}
       if (!m_calloc(a_matrix, smo->N)) {mes_proc(); goto STOP;}
@@ -269,6 +270,10 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
     }
     /* 2. Possibility: one matrix for each transition class specified */
     else if (!strncmp(s->id, "Ak_", 3)) {
+      if (!cos_read)  {
+	scanner_error(s, "cos unknown (needed for dim(A))"); 
+	goto STOP;
+      }
       if (!n_read) {scanner_error(s, "need N as a range for A"); goto STOP;}
       if (a_read) {scanner_error(s, "identifier A twice"); goto STOP;}
       if (!m_calloc(a_3dmatrix, smo->cos)) {mes_proc(); goto STOP;}
@@ -288,7 +293,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 	  /* read next matrix */
 	  scanner_get_name(s);
 	  if (strncmp(s->id, "Ak_", 3)) {
-	    scanner_error(s, "to less matrices Ak"); goto STOP;
+	    scanner_error(s, "not enough matrices Ak"); goto STOP;
 	  }
 	  scanner_consume(s, '='); if(s->err) goto STOP;
 	}
@@ -472,6 +477,7 @@ smodel *smodel_copy(const smodel *smo) {
     sm2->s[i].out_states = nachf;
     sm2->s[i].in_states = vorg;
   }
+  sm2->cos = smo->cos;
   sm2->N = smo->N;
   sm2->M = smo->M;
   sm2->density = smo->density;
