@@ -264,7 +264,8 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
     for(hist = 0; hist < pow(mo->M, mo->s[i].order); hist++) {
       if (r->b_denom[i][hist] < EPS_PREC) {
 	factor = 0.0;
-	if (mo->model_type & kHasBackgroundDistributions) 
+	
+    if (mo->model_type & kHasBackgroundDistributions) 
 	  background_weight[i] = 1.0;
       } else {
 	factor = ( 1.0 / r->b_denom[i][hist] );
