@@ -51,7 +51,10 @@ struct sdstate {
   /** if fix == 1 --> b stays fix during the training */
   int fix;
   char *label;
-  int countme; /* WS: if 1 then counts me, 0 don't count me */
+  /* XXX Specific variable for ProfileHMM to count the number of
+     match states. Not elegant solution.
+     WS: if 1 then counts me, 0 don't count me */
+  int countme; 
 };
 typedef struct sdstate sdstate;
 
@@ -191,6 +194,8 @@ extern "C" {
 
   /*============================================================================*/
   /** Viterbi for switching discrete model
+   *  sdviterbi, sdfoba -- not yet functional
+   *  Need Andreas 's input
    */
   void sdmodel_topo_ordering(sdmodel *mo);
 

@@ -16,6 +16,7 @@
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
+#include <ghmm/sfoba.h>
 /*#include <ghmm++/GHMM_convertXMLtoC.h>*/
 #include <float.h>
 #include <assert.h>
@@ -124,7 +125,7 @@ void smodel_set_transition(smodel *smo, int i, int j, int cos, double prob) {
 
 
 double smodel_get_transition(smodel *smo, int i, int j, int cos) {
-  int in, out;
+  int out;
   if (cos >= smo->cos) {
     fprintf(stderr, "smodel_get_transition(0): cos > state->cos\n");
     exit(-1);	
