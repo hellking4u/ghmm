@@ -490,12 +490,9 @@ class HMMEditor(SAGraphEditor):
             ext = string.lower(os.path.splitext(file)[1])
             if ext == '.xml':
                 self.fileName = file
-		try:
-		    self.HMM.SaveAs(file)
-		    self.graphName = stripPath(file)
-		    self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
-		except (xmlutil.NotValidHMMType, xmlutil.AlphabetErrorType):
-		    print "Cannot save due to error in the model: initial or alphabets."
+                self.HMM.SaveAs(file)
+                self.graphName = stripPath(file)
+                self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
             else:
                 self.fileName = file
                 self.HMM.SaveAsGHMM(file)

@@ -823,15 +823,18 @@ class HMM:
 	    # dom.unlink()
 
     def WriteXML(self, fileName):
-	self.modelCheck()   # raise exceptions here
-        doc = xml.dom.minidom.Document()
-        self.toDOM(doc, doc)
-        file = open(fileName, 'w')
-        # xml.dom.ext.PrettyPrint(doc, file)        
-        file.write(toprettyxml(doc)) # problem with white spaces
-        file.close()
-        doc.unlink()
-
+        try:
+            self.modelCheck()   # raise exceptions here
+            doc = xml.dom.minidom.Document()
+            self.toDOM(doc, doc)
+            file = open(fileName, 'w')
+            # xml.dom.ext.PrettyPrint(doc, file)        
+            file.write(toprettyxml(doc)) # problem with white spaces
+            file.close()
+            doc.unlink()
+        except HMMEdError:
+            print "HMMEdError: No file was written due to errors in the model."
+            
     def WriteGHMM(self, fileName):
 	self.modelCheck()   # raise exceptions here
         doc = xml.dom.minidom.Document()
