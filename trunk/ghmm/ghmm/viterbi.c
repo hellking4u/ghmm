@@ -171,7 +171,11 @@ int *viterbi( model *mo, int *o, int len, double *log_p)
   local_store_t *v;
   int len_path  = mo->N*len;
   
-  if (mo->topo_order == NULL) {
+  printf("---- viterbi -----\n");
+
+  if (mo->model_type == kSilentStates && 
+      mo->silent != NULL && 
+      mo->topo_order == NULL) {
     model_topo_ordering( mo ); /* Should we call it here ???? */
   }
 
