@@ -347,8 +347,11 @@ class DiscreteHMMAlphabet(DOM_Map):
         XMLNode.appendChild(hmmalphabet)
       
     def buildAlphabets(self, nrOfSymbols):
-	for code in range(1,nrOfSymbols):
-	    self.addCode( code, code, desc = None)
+	""" Only fixed to 5 symbols for the moment """ 
+	alphas = range(1, nrOfSymbols+1)
+	alphas = map( lambda x: 'a'+ str(x), alphas)
+	for code in range(0,nrOfSymbols):
+	    self.addCode( code, alphas[code], desc = None)
     
     def size(self):
         return len(self.name.keys())
