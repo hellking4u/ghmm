@@ -275,6 +275,7 @@ int foba_backward(model *mo, const int *O, int len, double **beta, double *scale
   int i, j, j_id, t, k, id;
   int res = -1;
   int e_index;
+  /* int beta_out=0; */
   double emission;
 
   if (!m_calloc(beta_tmp, mo->N)) {mes_proc(); goto STOP;}
@@ -366,7 +367,7 @@ int foba_backward(model *mo, const int *O, int len, double **beta, double *scale
         sum = 0.0;
         for (j = 0; j < mo->s[i].out_states; j++) {
 	  j_id = mo->s[i].out_id[j];
-	  if (mo->silent[j_id] == 0) {
+	  if (!(mo->model_type & kSilentStates) || !(mo->silent[j_id])) {
 	    /* get emission index */
 	    e_index = get_emission_index(mo,j_id,O[t+1],t+1);
 	    if (e_index != -1) {
@@ -386,6 +387,7 @@ int foba_backward(model *mo, const int *O, int len, double **beta, double *scale
 	//  printf("  --> beta[%d][%d] = %f\n",t,i,sum);
 	
 	beta[t][i] = sum;
+	/* if (beta[t][i] < .01 || beta[t][i] > 100) beta_out++; */
       }	
     }
     
@@ -411,6 +413,8 @@ int foba_backward(model *mo, const int *O, int len, double **beta, double *scale
 	 p += mo->s[i].pi * mo->s[i].b[O[0]]*beta[0][i];
   }	 
   printf("Backward: %f\n",p); */
+
+  /* printf("betas out of [.01 100]: %d (%f %)\n", beta_out, (float)beta_out/(mo->N*len)); */
 	  
 res = 0;
 STOP:
@@ -710,6 +714,7 @@ int foba_label_backward(model* mo, const int* O, const int* label, int len,
   int i, j, j_id, t;
   int res = -1;
   int e_index;
+  /* int beta_out=0; */
   double emission;
 
   if (!m_calloc(beta_tmp, mo->N)) {mes_proc(); goto STOP;}
@@ -766,12 +771,15 @@ int foba_label_backward(model* mo, const int* O, const int* label, int len,
 	sum += mo->s[i].out_a[j] * emission * beta_tmp[j_id];
       }
       beta[t][i] = sum;
+      /* if (beta[t][i] < .01 || beta[t][i] > 100) beta_out++; */
     }
     
     for (i = 0; i < mo->N; i++)
       beta_tmp[i] = beta[t][i]/scale[t];
   }
   
+  /* printf("labeled betas out of [.01 100]: %d (%f %)\n", beta_out, (float)beta_out/(mo->N*len)); */
+
   res = 0;
  STOP:
   m_free(beta_tmp);
