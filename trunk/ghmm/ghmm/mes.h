@@ -80,37 +80,6 @@ extern "C" {
 
 /* stuff from stdmacro.h */
 
-#if 0
-/* old things... better to be replaced by system headers*/
-
-#ifndef MAX_INT
-#define MAX_INT 0x7FFFFFFF
-#endif
-
-#ifndef MAX_NEG_INT
-#define MAX_NEG_INT 0x80000000
-#endif
-
-#ifndef MAX_UNSIGNED
-#define MAX_UNSIGNED 0xFFFFFFFF
-#endif
-
-#ifndef SEEK_SET 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-#endif
-
-#ifndef CLOCKS_PER_SEC
-#define CLOCKS_PER_SEC 1000000
-#endif
-
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-
-#endif /* 0 */
-
 #ifndef strtoupper
 #define strtoupper(str) if(1){char*p=(str);if(p)for(;*p;p++)*p=toupper(*p);}else
 #endif
@@ -259,12 +228,6 @@ extern "C" {
   /**
    */  
 #define mes_win( txt )      mes_smart( MES_FLAG_WIN, txt, -1 )
-  /**
-   */  
-#define mes_clock_abs( txt1, txt2 ) mes( MES_WIN, "%s(%T)%s", txt1, txt2 )
-  /**
-   */  
-#define mes_clock_rel( txt1, txt2 ) mes( MES_WIN, "%s(%t)%s", txt1, txt2 )
   
   /**
    */  
@@ -382,11 +345,6 @@ int   mes_rename( char* oldname, char* newname );
   /**
    */
 FILE* mes_tmpfile( void );
-#if 0
-  /**
-   */
-char* mes_tmpname(char *str);
-#endif
 
 #ifdef __cplusplus
 }

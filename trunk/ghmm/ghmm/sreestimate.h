@@ -33,13 +33,13 @@ extern "C" {
     sequence struct. Is used by sreestimate\_baum\_welch for 
     parameter reestimation.
  */
-struct smosqd_t{
+struct smosqd_t {
   /** pointer of continuous model*/
   smodel *smo;
   /** sequence\_d\__t pointer */
   sequence_d_t *sqd;
   /** calculated log likelihood */
-  double *logp;
+  double* logp;
   /** leave reestimation loop if diff. between successive logp values 
       is smaller than eps */
   double eps;

@@ -11,9 +11,10 @@ __copyright__
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+
 #ifdef WIN32
-#include <windows.h>
-#include <io.h>
+#  include <windows.h>
+#  include <io.h>
 #endif
 
 #include "mes.h"
@@ -22,10 +23,10 @@ __copyright__
 /* from sys.h */
 
 #if defined( _WINDOWS ) || defined( _DOS ) || defined(_PPC)
-#define strcasecmp( a, b ) strcmpi( a, b )
-#define PathSepChar ('\\')
+#  define strcasecmp( a, b ) strcmpi( a, b )
+#  define PathSepChar ('\\')
 #else   
-#define PathSepChar ('/')
+#  define PathSepChar ('/')
 #endif
 
 
@@ -936,18 +937,3 @@ FILE* mes_tmpfile(void) {
   return(NULL);    
 # undef CUR_PROC
 } /* mes_tmpfile */
-
-/*============================================================================*/
-#if 0
-char* mes_tmpname(char *str) { 
-# define CUR_PROC "mes_tmpname"
-  str = tmpnam( str );
-  if( str ) return(str); 
-  else {
-    mes_time();
-    mes_file_win( "tmpname: no success\n" );
-  } 
-  return(NULL);    
-# undef CUR_PROC
-} /* mes_tmpname */
-#endif
