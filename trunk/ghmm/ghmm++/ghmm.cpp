@@ -204,9 +204,17 @@ model* ghmm::create_model() const
     }
   
   return_model->N=my_graph->vector<gxl_node*>::size();   /* number of states */
-  /* number of symbols */
-  return_model->M=0; /* ToDo: Alphabet->vector<Emission*>::size() */
   return_model->prior=prior;
+
+  /* number of symbols */
+  if (my_alphabet!=NULL)
+    {
+      return_model->M=my_alphabet->size();
+    }
+  else
+    {
+      return_model->M=0;
+    }
 
   /* allocate state array */
   return_model->s=(state*)malloc(sizeof(state)*return_model->N); /* state pointer array */
@@ -289,6 +297,32 @@ model* ghmm::create_model() const
 	  ++tranisiton_pos;
 	  array_pos++;
 	}
+
+      /* emission probabilities */
+      this_state->b=(double*)calloc(sizeof(double),return_model->M);
+      if (ghmm_Emissions!=NULL)
+	{
+	  /* find emission information */
+	  Emissions::const_iterator emissions_pos=ghmm_Emissions->begin();
+	  while(emissions_pos!=ghmm_Emissions->end() && (*emissions_pos)->state!=node_id)
+	    ++emissions_pos;
+	  if (emissions_pos!=ghmm_Emissions->end())
+	    {
+	      const Emission& my_emission=**emissions_pos;
+	      /* found it */
+	      /* set fix state */
+	      int emission_prob_idx=0;
+	      this_state->fix=my_emission.fix;
+	      /* iterate over sequence of probabilities */
+	      for (Emission::const_iterator emission_pos=my_emission.begin();
+		   emission_pos!=my_emission.end() && emission_prob_idx<return_model->M;
+		   ++emission_pos)
+		{
+		  if (emission_pos->content!=NULL)
+		      this_state->b[emission_prob_idx++]=*(emission_pos->content);
+		} /* for emission_pos */
+	    }
+	} /* ghmm_Emissions!=NULL */
 
       ++node_pos;
       state_counter++;
