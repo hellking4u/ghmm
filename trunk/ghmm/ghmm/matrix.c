@@ -1,10 +1,12 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/matrix.c
+  filename     : ghmm/ghmm/matrix.c
   created      : TIME: ?            DATE: ?
-  last-modified: TIME: 17:44:48     DATE: Fri 26. January 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
-/* $Id$ */
 
 #include <math.h>
 #include <float.h>

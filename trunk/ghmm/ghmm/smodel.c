@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.c
+  filename     : ghmm/ghmm/smodel.c
   created      : TIME: 21:54:32     DATE: Sun 14. November 1999
-  last-modified: TIME: 16:37:31     DATE: Wed 11. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <float.h>

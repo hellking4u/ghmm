@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sfoba.c
+  filename     : ghmm/ghmm/sfoba.c
   created      : TIME: 16:45:09     DATE: Mon 15. November 1999
-  last-modified: TIME: 10:17:26     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <math.h>

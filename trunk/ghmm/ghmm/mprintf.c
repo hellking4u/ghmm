@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Frank Nübel
-  filename     : /vol/cumulus/lib/libglob/src/mprintf.c
+  filename     : ghmm/ghmm/mprintf.c
   created      : TIME: 11:27:16     DATE: Wed 14. May 1997
-  last-modified: TIME: 14:49:16     DATE: Wed 19. November 1997
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <stdio.h>

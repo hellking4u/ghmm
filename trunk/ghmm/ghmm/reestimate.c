@@ -1,10 +1,13 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/reestimate.c
+  filename     : ghmm/ghmm/reestimate.c
   created      : TIME: 11:54:33     DATE: Mon 16. February 1998
-  last-modified: TIME: 13:29:56     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
-/* $Id$ */
+
 
 #include "mes.h"
 #include "mprintf.h"

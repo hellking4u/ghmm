@@ -1,9 +1,13 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/foba.c
+  filename     : ghmm/ghmm/foba.c
   created      : TIME: 00:00:00     DATE: Tue 00. xxx 0000
-  last-modified: TIME: 10:31:22     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
+
 #include "foba.h"
 #include "math.h"
 #include "const.h"

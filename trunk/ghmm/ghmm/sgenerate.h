@@ -1,8 +1,11 @@
 /*------------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/sgenerate.h
+  filename     : ghmm/ghmm/sgenerate.h
   created      : TIME: 09:33:23     DATE: Tue 16. November 1999
-  last-modified: TIME: 18:31:55     DATE: Tue 05. September 2000
+  $Id$
+
+__copyright__
+
 ------------------------------------------------------------------------------*/
 #ifndef SGENERATE_H
 #define SGENERATE_H

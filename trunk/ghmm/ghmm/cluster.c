@@ -1,10 +1,13 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/cluster.c
+  filename     : ghmm/ghmm/cluster.c
   created      : TIME: 10:55:33     DATE: Tue 02. June 1998
-  last-modified: TIME: 14:59:40     DATE: Mon 09. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
-/* $Id: */ 
+
 #include <stdio.h>
 #include "mprintf.h"
 #include "mes.h"
@@ -16,35 +19,6 @@
 #include "foba.h"
 #include "const.h"
 #include "matrix.h"
-
-
-#if 0
-/*============================================================================*/
-int main(int argc, char* argv[]) {
-#define CUR_PROC "main"
-  int exitcode = -1;
-  if (argc == 4 || argc == 5) {
-    if (argc == 5) {
-      int j;
-      gsl_rng_set(RNG,atoi(argv[4]));
-      for (j = 0; j < 100; j++)
-	printf("%d \n", m_int(gsl_rng_uniform(RNG) * 10));
-      exit(1);
-    }
-    else
-      gsl_rng_set(RNG,0);
-    exitcode = cluster_hmm(argv[1], argv[2], argv[3]);
-  }
-  else {
-    mes_prot
-      ("Insufficient arguments. \
-        Usage: cluster [sequence file][model file][outfile] <seed>\n"); 
-  }
-  return exitcode;
-# undef CUR_PROC
-} /* main */
-
-#endif /* 0 */
 
 /*============================================================================*/
 int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {

@@ -1,3 +1,13 @@
+/*******************************************************************************
+  author       : Bernhard Knab
+  filename     : ghmm/ghmm/gauss_tail.c
+  created      : March 2001 by Achim Gaedke from hmm/src/creestimate.c
+  $Id$
+
+__copyright__
+
+*******************************************************************************/
+
 #include <float.h>
 #include <math.h>
 #include "const.h"

@@ -1,9 +1,13 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/bknab/src/vector.h
+  filename     : ghmm/ghmm/vector.h
   created      : TIME: 17:46:40     DATE: Thu 18. February 1999
-  last-modified: TIME: 10:25:05     DATE: Thu 02. December 1999
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
+
 #ifndef VECTOR_H
 #define VECTOR_H
 /**@name Vektor-Funktionen */

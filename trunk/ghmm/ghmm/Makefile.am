@@ -1,4 +1,7 @@
-# ghmm/lib/Makefile.am
+#  author       : Achim Gaedke
+#  filename     : ghmm/ghmm/Makefile.am
+#  created      : DATE: April 2001
+#  $Id$
 
 lib_LIBRARIES = libghmm.a
 

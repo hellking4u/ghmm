@@ -1,10 +1,13 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/reestimate.h
+  filename     : ghmm/ghmm/reestimate.h
   created      : TIME: 12:39:14     DATE: Wed 18. February 1998
-  last-modified: TIME: 13:04:46     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
-/* $Id$ */
+
 
 #ifndef REESTIMATE_H
 #define REESTIMATE_H

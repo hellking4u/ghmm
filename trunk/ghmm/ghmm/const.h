@@ -1,10 +1,12 @@
 /******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/const.h
+  filename     : ghmm/ghmm/const.h
   created      : TIME: 13:05:23     DATE: Fri 20. February 1998
-  last-modified: TIME: 09:23:38     DATE: Wed 14. March 2001
+  $Id$ 
+
+__copyright__
+
 *******************************************************************************/
-/* $Id$ */
 
 #ifndef CONST_H
 #define CONST_H

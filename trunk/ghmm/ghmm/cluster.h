@@ -1,12 +1,15 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /homes/hmm/bknab/src/cluster.h
+  filename     : ghmm/ghmm/cluster.h
   created      : TIME: 11:17:55     DATE: Tue 02. June 1998
-  last-modified: TIME: 10:52:05     DATE: Wed 10. March 1999
-*/
+  $Id$ 
+
+__copyright__
+
+*********************************************************************************/
 
 
-/* $Id: */ 
+
 
 #ifndef CLUSTER_H
 #define CLUSTER_H

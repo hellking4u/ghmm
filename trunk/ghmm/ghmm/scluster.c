@@ -1,7 +1,11 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/scluster.c
+  filename     : ghmm/ghmm/scluster.c
   created      : TIME: 15:47:54     DATE: Tue 16. November 1999
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <stdio.h>

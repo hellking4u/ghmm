@@ -1,3 +1,14 @@
+/*******************************************************************************
+  author       : Bernd Wichern
+  filename     : ghmm/ghmm/sequence.h
+  created      : TIME: 11:29:02     DATE: Thu 12. February 1998
+  $Id$
+
+__copyright__
+
+*****************************************************************************/
+
+
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 
