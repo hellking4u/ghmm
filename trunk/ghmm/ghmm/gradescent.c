@@ -19,7 +19,7 @@ __copyright__
 #include "foba.h"
 #include "reestimate.h"
 #include "gradescent.h"
-
+#include "ghmm.h"
 
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
@@ -406,7 +406,8 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
     }
 
     /* restore "tied_to" property */
-    reestimate_update_tie_groups(mo);
+    if (mo->model_type & kTiedEmissions)
+      reestimate_update_tie_groups(mo);
     
   FREE:
     reestimate_free_matvek(alpha, beta, scale, seq_len);
