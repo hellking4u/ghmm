@@ -39,6 +39,6 @@ CFLAGS="$CFLAGS $GSL_CFLAGS"
 LIBS="$LIBS $GSL_LIBS -lgslblas"
 dnl CPPFLAGS="$CPPFLAGS -I`$GSL_CONFIG --prefix`/include"
 
-AC_OUTPUT(Makefile doc/Makefile ghmm/Makefile tools/Makefile tests/Makefile doc/docu.dxx)
+AC_OUTPUT(Makefile doc/Makefile ghmm/Makefile tools/Makefile tests/Makefile doc/docu.dxx tools/ghmm-config)
 
 

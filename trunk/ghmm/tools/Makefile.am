@@ -1,4 +1,10 @@
-# ghmm/tools/Makefile.am
+# $Name$
+# $Author$
+# $Date$, $Revision$"
 
-BUILT_SOURCES = probdist.c
+# to be filled
+BUILT_SOURCES = 
+
 LDADD = ../lib/libghmm.a
+bin_SCRIPTS = ghmm-config
+
