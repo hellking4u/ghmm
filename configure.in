@@ -218,7 +218,7 @@ AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm interpolation algorit
 
 SUBDIRS="ghmm tools tests doc VisualC"
 if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
- SUBDIRS="$SUBDIRS ghmm++ ppghmm++"
+ SUBDIRS="$SUBDIRS ghmm++"
 fi
 AC_SUBST(SUBDIRS)
 
@@ -230,10 +230,8 @@ tests/Makefile \
 tests/data/Makefile \
 doc/docu.dxx \
 tools/ghmm-config \
-ppghmm++/Makefile \
 ghmm++/Makefile \
 ghmm++/examples/Makefile \
 VisualC/Makefile \
 VisualC/coin_toss_test/Makefile \
-VisualC/ghmm/Makefile \
-VisualC/ghmmpp/Makefile)
+VisualC/ghmm/Makefile)

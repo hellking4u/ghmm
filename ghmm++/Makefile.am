@@ -7,12 +7,11 @@
 
 # tests and examples
 
-SUBDIRS = .
+SUBDIRS = . examples
 CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD    = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
 
 pkgincludedir = $(includedir)/ghmm++
 
@@ -52,16 +51,6 @@ GHMM_Types.h \
 GHMM_IntVector.h \
 GHMM_DoubleVector.h \
 GHMM_DoubleMatrix.h
-
-#noinst_PROGRAMS =  chmm generiere_nvs
-noinst_PROGRAMS = generiere_nvs generiere_nvs_old_files coin_toss_test
-
-coin_toss_test_SOURCES = coin_toss_test.cpp
-
-#chmm_SOURCES = chmm.cpp
-
-generiere_nvs_SOURCES = generiere_nvs.cpp
-generiere_nvs_old_files_SOURCES = generiere_nvs_old_files.cpp
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt

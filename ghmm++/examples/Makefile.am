@@ -10,14 +10,15 @@ DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a -lgxl $(XMLIO_LIBS)
-EXTRADIST = ghmm.xml
+LDADD    = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
+EXTRADIST = nvs.xml nvs.mod nvs.sqd 
 
-noinst_PROGRAMS = sequence_test DiscretePD_test ghmm_test ghmm_convert
-sequence_test_SOURCES = sequence_test.cpp
-DiscretePD_test_SOURCES = DiscretePD_test.cpp
-ghmm_test_SOURCES = ghmm_test.cpp
-ghmm_convert_SOURCES = ghmm_convert.cpp
+noinst_PROGRAMS = chmm generiere_nvs generiere_nvs_old_files coin_toss_test
+
+coin_toss_test_SOURCES = coin_toss_test.cpp
+chmm_SOURCES = chmm.cpp
+generiere_nvs_SOURCES = generiere_nvs.cpp
+generiere_nvs_old_files_SOURCES = generiere_nvs_old_files.cpp
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
