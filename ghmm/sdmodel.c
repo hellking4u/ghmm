@@ -57,6 +57,9 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
   double log_p_i, log_p;
   int found, i;
 
+  fprintf(stderr, "sdfoba_logp: this function is not yet fully implemented\n");
+  return 0.0;
+
   found = 0;
   log_p = 0.0;
   for (i = 0; i < sq->seq_number; i++) {
