@@ -6,7 +6,13 @@
 *******************************************************************************/
 /* $Id$ */
 
-#include "config.h"
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 /* #if __EXPERIMENTAL__ == 3 */
 

@@ -1,8 +1,26 @@
 At the moment just static libraries can be build on Windows.
 Dynamic link library (dll) support will be added later.
 
+
+
 Visual C++
 ----------
+
+a) Preparing gsl
+
+   The Windows version of gsl 1.0, that compiles with
+   Visual C++ can be downloaded from 
+
+   http://www.network-theory.co.uk/gsl/freedownloads.html
+
+   Download the Source code package and compile it.
+   Don't forget to run COPY_GSL_HEADERS.bat afterwards, 
+   which copies all header files to the gsl/ subdirectory.
+
+   In the following documentation we assume that the gsl 
+   directory is c:\prefix\gsl-1.0\ while prefix depends
+   on the location to which you have unzipped the package.
+   
 
 a) Building ghmm.lib
 
@@ -13,11 +31,18 @@ a) Building ghmm.lib
    Now you have to ensure that the required gsl library
    is found. Change to ghmm project setting and add
    the include directory of the gsl library at C/C++ - 
-   Preprocessor - Additional include dirs. You also may 
-   add this path to the global search directories of 
-   VisualC++, so that gsl headers will be found by all 
-   of your projects. To do this add the gsl include 
-   directory to tools - directories.
+   Preprocessor - Additional include dirs. 
+
+   You will find the include dirs:
+   ..\..\,..\..\..\gsl-1.0
+   
+   If the prefixes of gsl and ghmm are different you have 
+   to change it to ..\..\,c:\prefix\gsl-1.0\
+
+   You also may add c:\prefix\gsl-1.0\ to the global search 
+   directories of VisualC++, so that gsl headers will be 
+   found by all of your projects. To do this add 
+   c:\prefix\gsl-1.0\ to tools - directories.
 
    Since gsl.lib is needed for successfully linking our
    project, copy gsl.lib to the main ghmm directory
