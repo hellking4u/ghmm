@@ -1,82 +1,29 @@
 #include <math.h>
 #include <gsl/gsl_sf.h>
+#include <gsl/gsl_histogram.h>
 #include <ghmm/rng.h>
 #include <ghmm/randvar.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-/* helper function and structure for rng tests */
 
-typedef struct {
-  double start;
-  double step;
-  double end;
-  size_t num;
-  unsigned int* bins;
-} bin_row;
-
-/* I like object orientation! */
-
-int clear_bin_row(bin_row* bins)
+#ifndef HAVE_GSL_HISTOGRAM_SET_RANGES_UNIFORM
+int gsl_histogram_set_ranges_uniform(gsl_histogram* h, double xmin, double xmax )
 {
-  int i;
-  for (i=0; i<bins->num; i++) bins->bins[i]=0;
-  return i;
-}
+  size_t i;
 
-int measure_bin_row(bin_row* bins, double start, double end)
-{
-      bins->start=start;
-      bins->end=end;
-      bins->step=(end-start)/bins->num;
-}
-
-bin_row* create_bin_row(double start, double end, size_t num)
-{
-  bin_row* bins=NULL;
-  /* sanity check */
-  if (start==end || num<=0) return NULL;
-  bins=(bin_row*)malloc(sizeof(bin_row)+sizeof(int)*num);
-  if (bins==NULL)
-    return bins;
-  else
+  if (xmin >= xmax)
     {
-      bins->num=num;
-      bins->bins=(unsigned int*)((void*)bins+sizeof(bin_row));
-      (void)measure_bin_row(bins,start,end);
-      (void)clear_bin_row(bins);
-      return bins;
+      GSL_ERROR_VAL ("xmin must be less than xmax", GSL_EINVAL, 0);
     }
-}
 
-void delete_bin_row(bin_row* bins)
-{
-  if (bins!=NULL) free(bins);
-}
-
-
-int count_in_bin_row(bin_row* bins, double value)
-{
-  if (value<bins->start || value>bins->end)
-    return -1;
-  else 
+  for (i = 0; i < h->n + 1; i++)
     {
-      size_t bin_num;
-      bin_num=floor((value-bins->start)/bins->step);
-      /* paranoid for very small/big numbers */
-      if (bin_num>=bins->num) return -1;
-      bins->bins[bin_num]++;
-      return 0;
+      h->range[i] = xmin + ((double) i / (double) h->n) * (xmax - xmin);
     }
+  return h->n;
 }
-
-int lineprint_bin_row(bin_row* bins, FILE* file)
-{
-  int i;
-  for (i=0; i<bins->num; i++)
-    fprintf(file,"%f\t%d\n",i*bins->step+bins->start,bins->bins[i]);
-  return i;
-}
+#endif /* HAVE_GSL_HISTOGRAM_SET_RANGES_UNIFORM */
 
 /* bisection algorithms to explore precision*/
 int greatest_thats_different_from_1(void)
@@ -127,7 +74,6 @@ int least_thats_different_from_0(void)
   return 0;
 }
 
-
 int print_PHI_table(void)
 {
   long i;
@@ -145,81 +91,106 @@ int print_PHI_table(void)
   printf("Erzeugte %d Werte\n",i);
 }
 
-void test_bins(void)
-{
-  int i;
-  bin_row* bins;
-  bins=create_bin_row(-10,10,100);
-
-  gsl_rng_init();
-  fprintf(stdout,"plot '-'\n");
-  for (i=0; i<100000; i++)
-    count_in_bin_row(bins,randvar_std_normal(0));
-  (void)lineprint_bin_row(bins,stdout);
-  fprintf(stdout,"e\n");
-
-  delete_bin_row(bins);
-}
-
-
 /* create a gnuplot file with pictures from randomnumbers*/
 void gnuplot_show_distributions(void)
 {
   /* where output goes */
   FILE* file;
-  const int generate_count=10000;
+  const int generate_count=100000;
   /* count how often generator was used*/
   int generate_counter;
   /* row of bins */
-  bin_row* bins;
+  gsl_histogram* bins;
 
   /* now to stdout*/
   file=stdout;
   /* init bin_row */
-  bins=create_bin_row(-10,10,100);
+  bins=gsl_histogram_calloc_uniform(100,-10.0,10.0);
   /* initialise generator */
   gsl_rng_init();
 
   /* prepare output for gnuplot */
-  fprintf(file,"set terminal png small color\n");
+  fprintf(file,"set terminal postscript eps\n");
 
   /* generate a normal distribution picture */
-  fprintf(file,"set output 'std_normal_dist.png'; plot '-' title 'standard normal distribution'\n");
+  fprintf(file,"set output 'std_normal_dist.eps'; plot '-' using 1:3 title 'standard normal distribution'\n");
   for (generate_counter=0; generate_counter<generate_count; generate_counter++)
-    count_in_bin_row(bins,randvar_std_normal(0));
-  (void)lineprint_bin_row(bins,file);
+    gsl_histogram_increment(bins,randvar_std_normal(0));
+  (void)gsl_histogram_fprintf (file, bins, "%f","%f");
   fprintf(file,"e\n");
 
-  /* generate  two truncated normal distribution pictures */
-  measure_bin_row(bins,-10,10);
-  fprintf(file,"set output 'trunc_normal_dist.png';\n\
-plot '-' title '1st','-' title '2nd', '-' title '3rd'\n");
+  /* generate  three truncated normal distribution in one picture */
+  gsl_histogram_set_ranges_uniform(bins,-2,10);
+  fprintf(file,"set output 'trunc_normal_dist.eps';\n\
+plot '-' using 1:3 title 'mue=-4','-' using 1:3 title 'mue=0', '-' using 1:3 title 'mue=4'\n");
 
-  clear_bin_row(bins);
+  /* generate histogram with mue=-4 */
+  gsl_histogram_reset(bins);
   for (generate_counter=0; generate_counter<generate_count; generate_counter++)
-    /*    count_in_bin_row(bins,randvar_normal_pos(0,1,0)); */
-    count_in_bin_row(bins,gsl_ran_gaussian_tail(RNG,-4,1));
-  (void)lineprint_bin_row(bins,file);
+    gsl_histogram_increment(bins,randvar_normal_pos(-4,1,0));
+  (void)gsl_histogram_fprintf (file, bins, "%f","%f");
   fprintf(file,"e\n");
 
-  clear_bin_row(bins);
+  /* generate histogram with mue=0 */
+  gsl_histogram_reset(bins);
   for (generate_counter=0; generate_counter<generate_count; generate_counter++)
-    count_in_bin_row(bins,gsl_ran_gaussian_tail(RNG,0,1));
-  (void)lineprint_bin_row(bins,file);
+    gsl_histogram_increment(bins,randvar_normal_pos(0,1,0));
+  (void)gsl_histogram_fprintf (file, bins, "%f","%f");
   fprintf(file,"e\n");
 
-  clear_bin_row(bins);
+  /* generate histogram with mue=4 */
+  gsl_histogram_reset(bins);
   for (generate_counter=0; generate_counter<generate_count; generate_counter++)
-    count_in_bin_row(bins,gsl_ran_gaussian_tail(RNG,4,1));
-  (void)lineprint_bin_row(bins,file);
+    gsl_histogram_increment(bins,randvar_normal_pos(4,1,0));
+  (void)gsl_histogram_fprintf (file, bins, "%f","%f");
   fprintf(file,"e\n");
 
   /* terminate gnuplot */
   fprintf(file,"set output; quit\n");
 
   /* cleanup */
-  delete_bin_row(bins);
+  gsl_histogram_free(bins);
+}
+
+void gnuplot_show_distributions_pdf(void)
+{
+  /* where output goes */
+  FILE* file;
+  /* ranges */
+  double xmin=-2;
+  double xmax=10;
+  double now;
+  double samples;
+  double step;
+
+  file=stdout;
+  samples=100;
+  step=(xmax-xmin)/samples;
+
+  /* prepare output for gnuplot */
+  fprintf(file,"set terminal postscript eps\n");
+
+  fprintf(file,"set output 'trunc_normal_pdf.eps';\n\
+plot '-' title 'mue=-4','-' title 'mue=0', '-' title 'mue=4'\n");
   
+  for (now=xmin; now<=xmax;now+=step)
+    {
+      fprintf(file,"%f\t%f\n",now,randvar_normal_density_pos(now,-4.0,1.0));
+    }
+  fprintf(file,"e\n");
+  for (now=xmin; now<=xmax;now+=step)
+    {
+      fprintf(file,"%f\t%f\n",now,randvar_normal_density_pos(now,0,1.0));
+    }
+  fprintf(file,"e\n");
+  for (now=xmin; now<=xmax;now+=step)
+    {
+      fprintf(file,"%f\t%f\n",now,randvar_normal_density_pos(now,4.0,1.0));
+    }
+  fprintf(file,"e\n");
+
+  /* terminate gnuplot */
+  fprintf(file,"set output; quit\n");
 }
 
 int main()
@@ -229,6 +200,6 @@ int main()
   (void)least_thats_different_from_0();
 #endif
 
-  gnuplot_show_distributions();
+  gnuplot_show_distributions_pdf();
   return 0;
 }
