@@ -78,5 +78,15 @@ Now the build tree is ready. Execute make for the build process.
 More about this topic in INSTALL.
 
 
+clean up:
+=========
+
+there are different cleaning levels available in the makefile:
+
+mostly-clean
+clean
+distclean
+maintainer-clean
+
 
 
