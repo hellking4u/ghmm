@@ -23,7 +23,7 @@ CCLD     = $(CC) -lstdc++
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
 LDADD    = $(top_builddir)/ghmm++/.libs/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
-EXTRADIST = nvs.xml nvs.mod nvs.sqd gene_hmm.gml
+EXTRA_DIST = nvs.xml nvs.mod nvs.sqd gene_hmm.gml
 
 noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence read_xml read_cxml
 
