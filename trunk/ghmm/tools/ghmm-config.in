@@ -56,7 +56,7 @@ while test $# -gt 0; do
       echo @CFLAGS@ -I${prefix}/include
       ;;
     --libs)
-      echo @LIBS@ -L${prefix}/lib -lghmm
+      echo -L${prefix}/lib -lghmm @LIBS@
       ;;
     --copyright)
       copyright
