@@ -14,42 +14,43 @@ __copyright__
 /**@name Konstanten */
 /*@{ (Doc++-Group: Konstanten) */
 
-/**
-  Konvergenz: Abbruch von Baum-Welch-Reeestimate, falls Differenz 
-  aufeinanderfolgender Iterationen log(P) kleiner als (EPS\_ITER\_BW * log(P))..
-  */
+
+/** 
+    Convergence: Halt criterium for Baum-Welch reestimation if the difference
+    of log(P) in two consecutive iterations is smaller than (EPS\_ITER\_BW * log(P))..
+*/
 /* #define EPS_ITER_BW      0.00001 */
 #define EPS_ITER_BW      0.0001
 
 /**
-  Absolute Differenz zweier Zahlen kleiner EPS\_PREC, dann: Zahlen sind gleich 
-  (anstatt Abfrage auf null)
+  If the absolute difference of two numbers is smaller the EPS_PREC, then the
+  numbers are equal. (Instead of using zero )
   */
 #define EPS_PREC         1E-8
 
 /**
-  Gesetztes Minimum fuer U
+  Minimum value for U
   */
 #define EPS_U            1E-4
 
 /**
-  Gesetztes Maximum fuer U (Wendepunkt bei 100 ?)
+  Maximum value for U (Turning point at 100 ?)
   */
 #define MAX_U            10000
 
 /**
-  Maximale Zahl von Iterationen in reestimate
+  Maximum number of iterations in reestimate
   */
 #define MAX_ITER_BW      500
 
 /**
-  Maximale Laenge einer Sequenz
+  Maximum length of a sequence
   */
 #define MAX_SEQ_LEN 30
 /* #define MAX_SEQ_LEN      1000000 */
 
 /**
-  Maximale Zahl von Sequenzen 
+  Maximum number of sequences 
   */
 #define MAX_SEQ_NUMBER   1500000
 
@@ -57,21 +58,19 @@ __copyright__
 */
 
 #if 0
-/* now a member of smodel */
+/* Now a member of smodel */
 #define COS 1
 #endif
 
-/** Wert der fuer log_p zur Berechnung von Zielfunktionen
-    eingesetzt wird, wenn sfoba_logp den Wert -1
-    (Fehler) zurueckliefert. Der Wert von sfoba gelieferte 
-    Wert - DBL_MAX ist dafuer unbrauchbar.
-*/
-    
+/**
+   A value that is put in for log_p in the calculation of
+   the objective function if sfoba_logp returns -1 (error).
+*/   
 #define PENALTY_LOGP -500.0
 
 /**
-  Linke Grenze fuer gestutzte NormalDichte
-  */
+   The left limit for the normal density
+*/
 #define EPS_NDT  0.1
 
 /*@} (Doc++-Group: Constants) */
