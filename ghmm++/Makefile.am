@@ -85,7 +85,8 @@ GHMM_GMLEmission.h \
 GHMM_StateT.hh \
 GHMM_AbstractModelT.hh \
 GHMM_DiscreteModelT.hh \
-GHMM_SWDiscreteModel.h 
+GHMM_SWDiscreteModel.h \
+GHMM_Computation.h
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt

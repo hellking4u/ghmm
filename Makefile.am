@@ -31,6 +31,7 @@ GPL.txt \
 LGPL.txt \
 ToDo \
 win_config.h \
+autogen.sh \
 README.Win
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
