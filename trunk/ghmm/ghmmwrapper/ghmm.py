@@ -373,7 +373,7 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
         pass
 
 #-------------------------------------------------------------------------------
-#- Sequence, SequenceSet and derived  ------------------------------------------
+#Sequence, SequenceSet and derived  ------------------------------------------
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
@@ -697,7 +697,7 @@ def SequenceSetOpen(emissionDomain, fileName):
 
 
 #-------------------------------------------------------------------------------
-#- HMMFactory and derived  -----------------------------------------------------
+# HMMFactory and derived  -----------------------------------------------------
 class HMMFactory:
     """ A HMMFactory is the base class of HMM factories.
         A HMMFactory has just a constructor and a () method
@@ -1003,7 +1003,7 @@ HMMFromMatrices = HMMFromMatricesFactory()
 
 
 #-------------------------------------------------------------------------------
-#- HMM and derived  ------------------------------------------------------------
+#- HMM and derived  
 class HMM:
 
     def __init__(self, emissionDomain, distribution, cmodel):
