@@ -177,8 +177,8 @@ double GHMM_DiscreteModel::prob_distance(GHMM_DiscreteModel* m, int maxT, int sy
 }
 
 
-GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int index, 
-						   GHMM_DoubleVector *scale, double *log_p) const {
+GHMM_DoubleMatrix* GHMM_DiscreteModel::foba_forward(GHMM_Sequences* seq, int index, 
+						    GHMM_DoubleVector *scale, double *log_p) const {
   int len = seq->getLength(index);
   GHMM_DoubleMatrix *alpha = new GHMM_DoubleMatrix(len,c_model->N);
 
@@ -190,7 +190,7 @@ GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int inde
 
   scale->resize(len);
 
-  int result = foba_forward(c_model,seq->getIntSequence(index),len,alpha->c_matrix,scale->c_vector,log_p);
+  int result = ::foba_forward(c_model,seq->getIntSequence(index),len,alpha->c_matrix,scale->c_vector,log_p);
 
   if (result == -1)
     SAFE_DELETE(alpha);
@@ -202,14 +202,14 @@ GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int inde
 }
 
 
-int GHMM_DiscreteModel::fobaBackward(GHMM_Sequences* seq, int index, double **beta, 
-			      const double *scale) const {
-  return foba_backward(c_model,seq->getIntSequence(index),seq->getLength(index),beta,scale);
+int GHMM_DiscreteModel::foba_backward(GHMM_Sequences* seq, int index, double **beta, 
+				      const double *scale) const {
+  return ::foba_backward(c_model,seq->getIntSequence(index),seq->getLength(index),beta,scale);
 }
 
 
-int GHMM_DiscreteModel::fobaLogp(GHMM_Sequences* seq, int index, double *log_p) const {
-  return foba_logp(c_model,seq->getIntSequence(index),seq->getLength(index),log_p);
+int GHMM_DiscreteModel::foba_logp(GHMM_Sequences* seq, int index, double *log_p) const {
+  return ::foba_logp(c_model,seq->getIntSequence(index),seq->getLength(index),log_p);
 }
 
 

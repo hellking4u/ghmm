@@ -56,3 +56,95 @@ GHMM_DoubleVector* GHMM_DoubleMatrix::times_vec(GHMM_DoubleVector* vec) {
 
   return result_vector;
 }
+
+
+void GHMM_DoubleMatrix::print_prec(FILE *file, int width, int prec, char *tab, 
+				   char *separator, char *ending) {
+  matrix_d_print_prec(file,c_matrix,rows,cols,width,prec,tab,separator,ending);
+}
+
+
+int GHMM_DoubleMatrix::notzero_columns() {
+  return matrix_d_notzero_columns(c_matrix,rows,cols);
+}
+
+
+int GHMM_DoubleMatrix::notzero_rows() {
+  return matrix_d_notzero_rows(c_matrix,cols,rows);
+}
+
+
+int GHMM_DoubleMatrix::normalize() {
+  return matrix_d_normalize(c_matrix,rows,cols);
+}
+
+
+void GHMM_DoubleMatrix::random_values(double min, double max) {
+  matrix_d_random_values(c_matrix,rows,cols,min,max); 
+}
+
+
+void GHMM_DoubleMatrix::random_const_values(double min, double max, double c) {
+  matrix_d_random_const_values(c_matrix,rows,cols,min,max,c);
+}
+
+
+void GHMM_DoubleMatrix::const_values(double c) {
+  matrix_d_const_values(c_matrix,rows,cols,c); 
+}
+
+
+void GHMM_DoubleMatrix::left_right_strict() {
+  matrix_d_left_right_strict(c_matrix,rows,cols); 
+}
+
+
+void GHMM_DoubleMatrix::random_left_right(double **matrix, int rows, int cols) {
+  matrix_d_random_left_right(c_matrix,rows,cols); 
+}
+
+
+void GHMM_DoubleMatrix::const_preserve_struct(double c) {
+  matrix_d_const_preserve_struct(c_matrix,rows,cols,c);
+}
+
+
+void GHMM_DoubleMatrix::random_preserve_struct(double **matrix, int rows, int cols) {
+  random_preserve_struct(c_matrix,rows,cols);
+}
+
+
+int GHMM_DoubleMatrix::gaussrows_values(GHMM_DoubleVector* mue, double u) {
+  return matrix_d_gaussrows_values(c_matrix,rows,cols,&mue->c_vector,u);
+}
+
+
+GHMM_DoubleMatrix* GHMM_DoubleMatrix::transpose() {
+  GHMM_DoubleMatrix* new_matrix = new GHMM_DoubleMatrix(cols,rows);
+
+  matrix_d_transpose(c_matrix,rows,cols,new_matrix->c_matrix);
+
+  return new_matrix;
+}
+
+
+/*
+GHMM_DoubleVector* GHMM_DoubleMatrix::cholesky(double **a, double *b, int dim) {
+  return matrix_cholesky(a,b,dim,x);
+}
+*/
+
+
+/*
+double GHMM_DoubleMatrix::det_symposdef() {
+  return matrix_det_symposdef(c_matrix,dim,det);
+}
+*/
+
+GHMM_DoubleMatrix* GHMM_DoubleMatrix::copy() {
+  GHMM_DoubleMatrix* new_matrix = new GHMM_DoubleMatrix(rows,cols);
+
+  matrix_d_copy(c_matrix,new_matrix->c_matrix,rows,cols);
+
+  return new_matrix;
+}

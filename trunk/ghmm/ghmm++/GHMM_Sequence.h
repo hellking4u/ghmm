@@ -40,6 +40,18 @@ class GHMM_Sequence: public XMLIO_ArrayElement<string> {
   /** */
   virtual void XMLIO_finishedReading();
 
+  /**
+     Prints one array of sequences in a file.
+     @param file       output file
+     @param discrete   switch: 0 means double output for symbols,  
+                       1 means truncate symbols to integer
+  */
+  void print(FILE *file, int discrete = 0) const;
+  /** Sets double value at given position in sequence. */
+  void setDouble(int index, double value);
+  /** Sets integer value at given position in sequence. */
+  void setInt(int index, int value);
+
   /** Type of current sequence. */
   GHMM_SequenceType sequence_type;
 

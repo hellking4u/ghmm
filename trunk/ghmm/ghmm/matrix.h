@@ -92,7 +92,7 @@ void matrix_d_print_prec(FILE *file, double **matrix, int rows, int columns,
 			 char *ending);
 
 /**
-  Writes a integer matrix (without parenthesis).
+  Writes an integer matrix (without parenthesis).
   @param file:       output file
   @param matrix:     matrix to write
   @param rows:       number of rows
@@ -115,7 +115,7 @@ void matrix_i_print(FILE *file, int **matrix, int rows, int columns,
 int matrix_d_read(scanner_t *s, double **matrix, int max_row, int max_column);
 
 /**
-  Reads in a integer matrix.
+  Reads in an integer matrix.
   @return 0 for succes; -1 for error
   @param s:          scanner
   @param matrix:     matrix to read
