@@ -38,6 +38,8 @@ extern "C" {
 
 #define kHasBackgroundDistributions (1 << 5);
 
+#define kNoBackgroundDistribution -1
+
 
 #endif
 
