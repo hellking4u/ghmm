@@ -1,9 +1,12 @@
 /*
- * created: 21 Jan 2002 by Peter Pipenbacher
- * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
- * file   : $Source$
- * $Id$
- */
+  created: 21 Jan 2002 by Peter Pipenbacher
+  authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
+  file   : $Source$
+  $Id$
+
+  __copyright__
+
+*/
 
 #include <xmlio/XMLIO_Definitions.h>
 #include "ghmm++/GHMM_IntVector.h"
@@ -65,14 +68,8 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my
 
 
 GHMM_DiscreteModel::~GHMM_DiscreteModel() {
-  //  unsigned int i;
-
   /* frees model. */  
   model_free(&c_model);
-
-  /* delete all states. */
-  //  for (i = 0; i < states.size(); ++i)
-  //    delete states[i];
 }
 
 
@@ -135,25 +132,11 @@ void GHMM_DiscreteModel::print(FILE *file) const {
 }
 
 
-/**
-   Writes transition matrix of a model.
-   @param file: output file
-   @param tab:  format: leading tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
 void GHMM_DiscreteModel::A_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_A_print(file,c_model,tab,separator,ending);
 }
 
 
-/**
-   Writes output matrix of a model.
-   @param file: output file
-   @param tab:  format: leading tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
 void GHMM_DiscreteModel::B_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_B_print(file,c_model,tab,separator,ending);
 }
@@ -164,13 +147,6 @@ void GHMM_DiscreteModel::Pi_print(FILE *file, char *tab, char *separator, char *
 }
 
 
-/**
-   Writes fix vector of a matrix.
-   @param file: output file
-   @param tab:  format: leading Tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
 void GHMM_DiscreteModel::fix_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_fix_print(file,c_model,tab,separator,ending);
 }

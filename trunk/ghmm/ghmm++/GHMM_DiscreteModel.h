@@ -4,7 +4,7 @@
   file   : $Source$
   $Id$
 
-__copyright__
+  __copyright__
 
 */
 
