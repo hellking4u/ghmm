@@ -627,14 +627,21 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
   state *get_stateptr(state *ary, int index) { return ary + index; }
   
   void call_model_print(char *filename, model *mo) {
-  FILE *fp=fopen(filename, "a");
-  if (fp == NULL) {
-    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
-  } else {
-    model_print(fp, mo);
-    fclose(fp);
+    FILE *fp=fopen(filename, "a");
+    if (fp == NULL) {
+      fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
+    } 
+    else {
+      model_print(fp, mo);
+      fclose(fp);
+    }
   }
-}
+
+  model **cast_model_ptr(model *mo){
+     model** res = (model**) malloc(sizeof(model*));
+     res[0] = mo;
+     return res;
+  }   
   
 %}
 
@@ -1016,6 +1023,12 @@ extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
   smodel *get_smodel_ptr(smodel **smo, int index) { return smo[index]; }
  
   void set_smodel_ptr(smodel **smo_array ,smodel *smo, int index) { smo_array[index] = smo; }
+  
+  smodel **cast_smodel_ptr(smodel *smo){
+     smodel** res = (smodel**) malloc(sizeof(smodel*));
+     res[0] = smo;
+     return res;
+  }   
   
   // write a smodel to a file
   void call_smodel_print(char *filename, smodel *smo) {
