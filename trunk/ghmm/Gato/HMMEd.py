@@ -390,10 +390,8 @@ class HMMEditor(SAGraphEditor):
                     self.HMM.G.vertexWeights[i] = VertexWeight(0.0)
 
     def OpenGraph(self):
-        # clear screen
 
-        self.HMM.G.Clear()        
-        self.DeleteDrawItems()
+        self.DeleteDrawItems() # clear screen
         self.hasGraph = 0
 
 	file = askopenfilename(title="Open HMM",
@@ -409,6 +407,7 @@ class HMMEditor(SAGraphEditor):
 	    e = extension(file)
             
 	    if e == 'xml':
+		# XXX self.HMM.G.Clear()
 		self.HMM.OpenXML(file)
 	    else:
 		print "Unknown extension"
@@ -470,9 +469,9 @@ class HMMEditor(SAGraphEditor):
                     for key in key_list:
                         transition_probabilities[key]=1.0/len(key_list)
                 e=ProbEditorBasics.emission_data(transition_probabilities)
-                d = ProbEditorDialogs.emission_dialog(self,
-                                                      e,
-                                                      "transition probs from state %d" % tail)
+                d=ProbEditorDialogs.emission_dialog(self,
+                                                    e,
+                                                    "transition probs from state %d" % tail)
                 if d.success():
                     # write back normalized probabilities
                     for key in transition_probabilities.keys():

@@ -60,10 +60,10 @@ class Graph:
 
 	Vertices are specified via id (integer number) and edges via
 	(tail,head)-tuples 
-
 	NOTE: ids are supposed to be consecutive and ranging from 0
 	to G.Order() - 1 !!! Use the labeling to *display* other numbers
 	for vertices.
+        NOTE [Utz]: I guess, ids start with 1...
 
 	At least one set of edge weights is assumed to exist and accessible
 	as self.edgeWeights[0]; self.euclidian and Euclidify refer to this
@@ -98,8 +98,25 @@ class Graph:
 	self.invAdjLists[id] = []
 	return id
 
+    def DeleteVertex(self,v):
+	""" *Internal* Delete vertex v """
+        #changes by Utz: only delete if used!
+        if (len(self.labeling.label)>0):
+            del(self.labeling.label[v]) # XXX
+            del(self.embedding.label[v]) # XXX
+	# delete incident edges
+	outVertices = self.OutNeighbors(v)[:] # Need a copy here
+	inVertices = self.InNeighbors(v)[:]
+	for w in outVertices:
+	    self.DeleteEdge(v,w)
+	for w in inVertices:
+	    if w != v: # We have already deleted loops
+		self.DeleteEdge(w,v)
+	#del(self.G.adjLists[v]) # XXX
+	# and finally the vertex itself
+	self.vertices.remove(v) # XXX        
 
-    def AddEdge(self,tail,head):
+    def AddEdge(self,tail,head,w=-1,cl=0):
 	""" Add an edge (tail,head). Returns nothing
 	    Raises GraphNotSimpleError if
 	    - trying to add a loop
@@ -119,6 +136,9 @@ class Graph:
 	self.invAdjLists[head].append(tail)
 	self.size = self.size + 1
 
+        if (w>=0):
+            self.edgeWeights[0][(tail,head)] = 0.0
+            self.edgeWeights[cl][(tail,head)] = w
 
     def DeleteEdge(self,tail,head):
 	""" Deletes edge (tail,head). Does *not* handle undirected graphs
@@ -339,14 +359,6 @@ class Graph:
             about the graph """
         return "<HTML><BODY> <H3>No information available</H3></BODY></HTML>"
 
-    def Clear(self):
-	""" Delete all vertices and edges from the subgraph. """
-	self.vertices         = [] 
-	self.adjLists         = {}
-	self.invAdjLists      = {}   # Inverse Adjazenzlisten
-	self.size = 0
-	self.totalWeight   = 0
-
 
 ################################################################################
 #
@@ -390,47 +402,6 @@ class SubGraph(Graph):
 	    self.invAdjLists[v] = []
 	except:
 	    raise NoSuchVertexError
-
-    def DeleteVertex(self,v):
-	""" *Internal* Delete vertex v """ 
-	del(self.labeling.label[v]) # XXX
-	del(self.embedding.label[v]) # XXX
-	# delete incident edges
-	outVertices = self.OutNeighbors(v)[:] # Need a copy here
-	inVertices = self.InNeighbors(v)[:]
-	for w in outVertices:
-	    self.DeleteEdge(v,w)
-	for w in inVertices:
-	    if w != v: # We have already deleted loops
-		self.DeleteEdge(w,v)
-	#del(self.G.adjLists[v]) # XXX
-	# and finally the vertex itself
-	self.vertices.remove(v) # XXX        
-
-    def AddEdge(self,tail,head,w=-1,cl=0):
-	""" Add an edge (tail,head). Returns nothing
-	    Raises GraphNotSimpleError if
-	    - trying to add a loop
-	    - trying to add an edge multiply 
-
-	    In case of directed graphs (tail,head) and (head,tail)
-	    are distinct edges """
-
-	if self.simple == 1 and tail == head: # Loop
-	    raise GraphNotSimpleError
-	if self.directed == 0 and tail in self.adjLists[head]: 
-	    raise GraphNotSimpleError
-	if head in self.adjLists[tail]: # Multiple edge
-	    raise GraphNotSimpleError
-	    
-	self.adjLists[tail].append(head)
-	self.invAdjLists[head].append(tail)
-	self.size = self.size + 1
-
-        if (w>=0):
-            self.edgeWeights[0][(tail,head)] = 0.0
-            self.edgeWeights[cl][(tail,head)] = w
-
 
     def AddEdge(self,tail,head):
 	""" Add an edge from the supergraph to the subgraph.
