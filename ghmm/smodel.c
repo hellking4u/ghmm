@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /amnt/Twister/files/c0t1d0s2/bspk/src/hmm/ghmm/ghmm/smodel.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.c
   created      : TIME: 21:54:32     DATE: Sun 14. November 1999
   $Id$
 
@@ -205,7 +205,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 	{ scanner_error(s, "invalid model prior"); goto STOP; }
       prior_read = 1;
     }
-    else if (!strcmp(s->id, "cos")) {/* modelprior */
+    else if (!strcmp(s->id, "cos")) {/* number of transition classes */
       if (cos_read) {scanner_error(s,"identifier cos twice");goto STOP;}
       smo->cos = scanner_get_int(s);
       if (smo->cos <= 0)
