@@ -57,13 +57,10 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
   double log_p_i, log_p;
   int found, i;
 
-  fprintf(stderr, "sdfoba_logp: this function is not yet fully implemented\n");
-  return 0.0;
-
   found = 0;
   log_p = 0.0;
   for (i = 0; i < sq->seq_number; i++) {
-    // XXXXX FIX sdfoba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i);
+    sdfoba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i);
 
     if (log_p_i != +1) {
       log_p += log_p_i;
@@ -81,16 +78,6 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
 #undef CUR_PROC
 } /*sdmodel_likelihood */
 
-int sdfoba_forward(sdmodel *mo, const int *O, int length, double **alpha, 
-		   double *scale, double *log_p)
-{
-#define CUR_PROC "sdfoba_forward"
-
-  fprintf(stderr, "sdfoba_forward: this function is not yet fully implemented\n");
-  return -1;
-
-#undef CUR_PROC
-} /* sdfoba_forward */
                                                    
 /*----------------------------------------------------------------------------*/
 
