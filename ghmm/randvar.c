@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/randvar.c
-*       Authors:  Bernhard Knab
+*       Authors:  Bernhard Knab, Benjamin Rich
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -214,7 +214,6 @@ double randvar_get_PHI(double x) {
     return(1.0 - phi_x);
   else
     return(phi_x);
- STOP:
 #endif /* DO_WITH_GSL */
 STOP:
   return(-1.0);
@@ -256,7 +255,6 @@ double randvar_get_xPHIless1() {
     x_PHI_1 = x - (double)X_STEP_PHI/2.0;
   }
   return(x_PHI_1);
- STOP:
 #endif
 STOP:
   return(-1.0);
