@@ -79,39 +79,75 @@ def extract_out_probs(lisprobs,cos):
 	return [len(lis),trans_id,trans_prob]
 
 class twodim_double_array:
-	"Two-dimensional C-Double Array"
+    "Two-dimensional C-Double Array"
+    
+    def __init__(self,array, rows, columns, rowlabels=None, columnlabels=None):
+        "Constructor"
+        self.array = array
+        self.rows = rows
+        self.columns = columns
+        self.size = (rows,columns)
+        self.rowlabels =rowlabels
+        self.columnlabels = columnlabels
+        
+    def __getitem__(self,index):
+        "defines twodim_double_array[index[0],index[1]]"
+        return ghmmwrapper.get_2d_arrayd(self.array,index[0],index[1])
 
-	def __init__(self,array, rows, columns, rowlabels=None, columnlabels=None):
-		"Constructor"
-		self.array = array
-		self.rows = rows
-		self.columns = columns
-		self.size = (rows,columns)
-		self.rowlabels =rowlabels
-		self.columnlabels = columnlabels
+    def __setitem__(self,index,value):
+        "defines twodim_double_array[index[0],index[1]]"
+        if (len(index) == 2):
+            ghmmwrapper.set_2d_arrayd(self.array,index[0],index[1],value)
+                
+    def __str__(self):
+        "defines string representation"
+        strout = "\n"
+        if (self.columnlabels is not None):
+            for k in range(len(self.columnlabels)):
+                strout+="\t"
+                strout+= str(self.columnlabels[k])
+                strout += "\n"
+        for i in range(self.rows):
+            if (self.rowlabels is not None):
+                strout += str(self.rowlabels[i])
+                strout += "\t"
+            for j in range(self.columns):
+                strout += "%2.4f" % self[i,j]
+                strout += "\t"
+                strout += "\n"
+        return strout
 
-	def __getitem__(self,index):
-		"defines twodim_double_array[index[0],index[1]]"
-		return get_2d_arrayd(self.array,index[0],index[1])
 
-	def __setitem__(self,index,value):
-		"defines twodim_double_array[index[0],index[1]]"
-		set_2d_arrayd(self.array,index[0],index[1],value)
+class double_array:
+    """A C-double array"""
 
-	def __str__(self):
-		"defines string representation"
-		strout = "\n"
-		if (self.columnlabels is not None):
-			for k in range(len(self.columnlabels)):
-				strout+="\t"
-				strout+= str(self.columnlabels[k])
-			strout += "\n"
-		for i in range(self.rows):
-			if (self.rowlabels is not None):
-				strout += str(self.rowlabels[i])
-			strout += "\t"
-			for j in range(self.columns):
-				strout += "%2.4f" % self[i,j]
-				strout += "\t"
-			strout += "\n"
-		return strout
+    def __init__(self, array, columns, columnlabels=None):
+        """Constructor"""
+        self.array = array
+        self.rows = 1
+        self.columns = columns
+        self.size = columns
+        self.columnlabels = columnlabels
+
+    def __getitem__(self,index):
+        """defines double_array[index] """
+        return ghmmwrapper.get_arrayd(self.array,index)
+
+    def __setitem__(self,index,value):
+        """ double_array[index] = value """
+        ghmmwrapper.set_arrayd(self.array,index,value)
+
+    def __str__(self):
+        """defines string representation"""
+        strout = "\n"
+        if (self.columnlabels is not None):
+            for k in range(len(self.columnlabels)):
+                strout+="\t"
+                strout+= str(self.columnlabels[k])
+                strout += "\n"
+        for i in range(self.columns):
+            strout += "%2.4f" % self[i]
+            strout += "\t"
+            strout += "\n"
+        return strout
+

@@ -134,6 +134,8 @@ struct sequence_t {
 };
 typedef struct sequence_t sequence_t;
 
+%pointer_functions(sequence_t **, sequence_setPtr)
+
 /** @name struct sequence_d_t
     Sequence structure for double sequences. 
     Contains an array of sequences and corresponding
@@ -158,6 +160,7 @@ struct sequence_d_t {
 };
 typedef struct sequence_d_t sequence_d_t;
 
+%pointer_functions(sequence_d_t **, sequence_d_setPtr)
 
 /**
    Memory allocation for an integer sequence struct. Allocates arrays of lenght
@@ -170,12 +173,29 @@ extern sequence_t *sequence_calloc(long seq_number);
 
 
 /**
+   Memory allocation for a double  sequence struct. Allocates arrays of lenght
+   seq\_number. NO allocation for the actual sequence, since its length is 
+   unknown.
+   @param seq\_number:  number of sequences
+   @return:     pointer of sequence struct
+*/
+extern sequence_d_t *sequence_d_calloc(long seq_number);
+
+/**
    Cleans integer sequence pointers in sequence struct. sets 
    seq\_number to zero.
    Differs from sequence\_free since memory is not freed here. 
    @param sq sequence structure
   */
-void sequence_clean(sequence_t *sq);
+extern void sequence_clean(sequence_t *sq);
+
+/**
+   Cleans integer sequence pointers in sequence struct. sets 
+   seq\_number to zero.
+   Differs from sequence\_free since memory is not freed here. 
+   @param sq sequence structure
+  */
+extern void sequence_d_clean(sequence_d_t *sq);
 
 /**
   Prints one array of integer sequences in a file.
