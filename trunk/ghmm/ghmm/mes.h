@@ -208,115 +208,163 @@ extern "C" {
 
 /* end of things from stdmacro.h */
 
-///  
+  /**
+   */  
 #define mes_check_ptr( arg, call) \
   if(!(arg)) { mes_err( #arg, MES_0_PTR, MES_PROC_INFO ); call; } else
-///  
+  /**
+   */  
 #define mes_check_bnd( arg, bnd, call ) \
   if((arg) > (bnd)){ mes_err( #arg, MES_BIG_ARG, MES_PROC_INFO ); call;} else
-///  
+  /**
+   */  
 #define mes_check_0( arg, call ) \
   if(!(arg)) { mes_err( #arg, MES_0_ARG, MES_PROC_INFO ); call;} else
-///  
+  /**
+   */  
 #define mes_check_neg( arg, call ) \
   if((arg)<0){ mes_err( #arg, MES_NEG_ARG, MES_PROC_INFO );call;} else
-///  
+  /**
+   */  
 #define mes_check_expr( arg, call ) \
   if(!(arg)){ mes_err( #arg, MES_FALSE_ARG, MES_PROC_INFO );call;} else
   
   
-///  
+  /**
+   */  
 #define mes_file( txt )     mes_smart( MES_FLAG_FILE, txt, -1 )
-///  
+  /**
+   */  
 #define mes_file_win( txt ) mes_smart( MES_FLAG_FILE_WIN, txt, -1 )
-///  
+  /**
+   */  
 #define mes_win( txt )      mes_smart( MES_FLAG_WIN, txt, -1 )
-///  
+  /**
+   */  
 #define mes_clock_abs( txt1, txt2 ) mes( MES_WIN, "%s(%T)%s", txt1, txt2 )
-///  
+  /**
+   */  
 #define mes_clock_rel( txt1, txt2 ) mes( MES_WIN, "%s(%t)%s", txt1, txt2 )
   
-///  
+  /**
+   */  
 #define mes_proc()      mes( MES_PROT, NULL )
-///  
+  /**
+   */  
 #define mes_prot( txt ) mes( MES_PROT_TIME, txt )
 
-///
+  /**
+   */
 char* mes_get_std_path( void );
 
-///
+  /**
+   */
 void  mes( int flags, int line, char* xproc, char* proc, char* format, ... );
-///
+  /**
+   */
 void  mes_smart( int flags, char* txt, int bytes );
-///
+  /**
+   */
 int   mes_ability( int on );
-///
+  /**
+   */
 void  mes_err( char* txt, int error_nr, char* proc_info );
-///
+  /**
+   */
 void  mes_exit( void );
-///
+  /**
+   */
 void  mes_fformat( char* txt, char* filename, int line, char* proc_info );
-///
+  /**
+   */
 void  mes_init( char* logfile, void(*winfct)(char*), int argc, char* argv[] );
-///
+  /**
+   */
 void  mes_init_args( int argc, char*argv[]);
-///
+  /**
+   */
 void  mes_init_logfile( char*file_name );
-///
+  /**
+   */
 void  mes_init_winfct( void(win_fct)(char*) );
-///
+  /**
+   */
 int   mes_insert( FILE* fp, char src, int cnt );
-///
+  /**
+   */
 void  mes_time( void );
-///
+  /**
+   */
 void  mes_va( int flags,int line,char*xproc,char*proc,char*format,va_list args);
-///
+  /**
+   */
 int   mes_win_ability( int on );
 
-///
+  /**
+   */
 void* mes_calloc( int bytes );
-///
+  /**
+   */
 int   mes_copy( char *oldname, char *newname );
-///
+  /**
+   */
 int   mes_fgetc( FILE*fp );
-///
+  /**
+   */
 int   mes_fflush( FILE* fp );
-///
+  /**
+   */
 FILE* mes_fopen( char* filename, char* attribute_string );
-///
+  /**
+   */
 int   mes_fprintf( FILE* fp, char* format, ... );
-///
+  /**
+   */
 int   mes_fputc( FILE*fp, char chr );
-///
+  /**
+   */
 int   mes_fputs( FILE*fp, char* str );
-///
+  /**
+   */
 int   mes_fread( FILE* fp, void* mem, int bytes );
-///
+  /**
+   */
 int   mes_fread_quiet( FILE* fp, void* mem, int bytes );
-///
+  /**
+   */
 int   mes_fseek( FILE*fp, long offset, int fromwhere );
 #ifdef WIN32
-///
+  /**
+   */
 int mes_fseek64( FILE *fp, unsigned int uoff, unsigned int loff, int fromwhere );
 #endif
-///
+  /**
+   */
 int   mes_ftell( FILE* fp );
-///
+  /**
+   */
 int   mes_fwrite( FILE* fp, void* mem, int bytes );
-///
+  /**
+   */
 void* mes_malloc( int bytes );
-///
+  /**
+   */
 int   mes_move( char* oldname, char* newname );
-///
+  /**
+   */
 int   mes_realloc( void** mem, int bytes );
-///
+  /**
+   */
 int   mes_remove( char* filename );
-///
+  /**
+   */
 int   mes_rename( char* oldname, char* newname );
-///
+  /**
+   */
 FILE* mes_tmpfile( void );
 #if 0
-///
+  /**
+   */
 char* mes_tmpname(char *str);
 #endif
 

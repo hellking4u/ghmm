@@ -17,13 +17,17 @@ __copyright__
 extern "C" {
 #endif /*__cplusplus*/
 
-///  
+  /**
+   */
 char* mprintf( char* dst, int maxlen, char* format, ... );
-///  
+  /**
+   */  
 char* mprintf_dyn( char* dst, int maxlen, char* format, ... );
-///  
+  /**
+   */  
 char* mprintf_va( char* dst, int maxlen, char* format, va_list args );
-///  
+  /**
+   */  
 char* mprintf_va_dyn( char* dst, int maxlen, char* format, va_list args );
 
 

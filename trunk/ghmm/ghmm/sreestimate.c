@@ -213,7 +213,7 @@ static int sreestimate_setlambda(local_store_t *r, smodel *smo) {
   int res = -1;
   int i, j, m, l, j_id, osc;
   double pi_factor, a_factor_i = 0.0, c_factor_i = 0.0, u_im, mue_im, 
-    mue_left, mue_right, A, B, Atil, Btil; //Q;
+    mue_left, mue_right, A, B, Atil, Btil; /* Q; */
   int a_num_pos, a_denom_pos, c_denom_pos, c_num_pos;
   char *str;
 

@@ -17,7 +17,7 @@ __copyright__
  @name cluster
  */
 
-//@{
+/*@{ */
 
 /**
  */
@@ -33,28 +33,35 @@ struct cluster_t{
     Anzahl der eingelesenen Modelle */
   int mo_number;
 };
-///
+/**
+ */
 typedef struct cluster_t cluster_t;
 
-///
+/**
+ */
 int cluster_ausgabe(cluster_t *cl, sequence_t *sq, FILE *outfile,
 		    char *out_filename);
 
-///
+/**
+ */
 int cluster_avoid_empty_model(long *best_model, long seq_number, int mo_number);
 
-///
+/**
+ */
 int cluster_hmm(char *seq_file, char *mo_file, char *out_file);
 
-///
+/**
+ */
 int cluster_update(cluster_t *cl, sequence_t *sq);
 
-///
+/**
+ */
 long cluster_update_label(long *oldlabel, long *seq_label, long seq_number);
 
-///
+/**
+ */
 void cluster_print_likelihood(FILE *outfile, cluster_t *cl);
 
-//@} cluster documentation
+/*@} cluster documentation */
 
 #endif /* CLUSTER_H */

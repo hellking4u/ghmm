@@ -19,7 +19,8 @@ __copyright__
    @name scluster
  */
 
-//@{
+/*@{
+ */
 
 #define CLASSIFY 0 /* Switch for Classificator: 0 == MD, 1 == MAW */
 
@@ -46,35 +47,44 @@ struct scluster_t{
       im Fall des MAW-Klassifikators. Wird berechnet mit smap_bayes */
   double *smo_Z_MAW;
 };
-///
+/**
+ */
 typedef struct scluster_t scluster_t;
 
 
-///
+/**
+ */
 int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
 		 char *argv[]);
 
-///
+/**
+ */
 int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl);
 
-///
+/**
+ */
 int scluster_hmm(char *argv[]);
 
-///
+/**
+ */
 int scluster_update(scluster_t *cl, sequence_d_t *sqd);
 
-///
+/**
+ */
 long scluster_update_label(long *oldlabel, long *seq_label, long seq_number, 
 			   long *smo_changed);
 
-///
+/**
+ */
 void scluster_print_likelihood(FILE *outfile, scluster_t *cl);
 
-///
+/**
+ */
 int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p,
 			double *log_p);
 
-///
+/**
+ */
 void scluster_prob(smosqd_t *cs);
 
 /** int scluster_labels_from_kmeans(sequence_d_t *sqd, int smo_number); */
@@ -87,10 +97,11 @@ int scluster_random_labels(sequence_d_t *sqd, int smo_number);
 int  scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int seq_id, 
 			      double *log_apo);
 
-///
+/**
+ */
 void scluster_print_header(FILE *file, char* argv[]);
 
-//@}
+/*@} */
 
 #endif /* SCLUSTER_H */
 

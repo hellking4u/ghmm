@@ -172,7 +172,7 @@ sequence_d_t *sgenerate_sequences(smodel* smo, int seed, int global_len,
     if (stillbadseq) {
       reject_os++;
       m_free(sq->seq[n]);
-      //      printf("cl %d, s %d, %d\n", class, i, n);
+      /*      printf("cl %d, s %d, %d\n", class, i, n); */
     }
     else if (state > Tmax) {
       reject_tmax++;
@@ -183,7 +183,7 @@ sequence_d_t *sgenerate_sequences(smodel* smo, int seed, int global_len,
 	if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
       sq->seq_len[n] = state;
       sq->seq_label[n] = label;
-      //vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ","");
+      /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */

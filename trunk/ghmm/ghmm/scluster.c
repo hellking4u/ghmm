@@ -41,7 +41,6 @@ __copyright__
 
 int scluster_hmm(char* argv[]) {
 # define CUR_PROC "scluster_hmm"
-  //  int res = -1, i, k, iter = 0, sqd_number;
   char *seq_file = argv[1],  *smo_file = argv[2], *out_filename = argv[3];
   int labels = atoi(argv[4]);
   int res = -1, i, k, iter = 0, sqd_number, idummy;
@@ -140,9 +139,9 @@ int scluster_hmm(char* argv[]) {
 
   /* eps_bw: stopping criterion in baum-welch
      max_iter_bw: max. number of baum-welch iterations */
-  eps_bw = 0.0;    // not used
-  q = 0.1;         // ???
-  max_iter_bw = 20; //MAX_ITER_BW;
+  eps_bw = 0.0;    /* not used */
+  q = 0.1;         /* ??? */
+  max_iter_bw = 20; /*MAX_ITER_BW; */
   
 /*------------------------main loop-------------------------------------------*/
   /* do it until no sequence changes model; 
@@ -254,8 +253,8 @@ int scluster_hmm(char* argv[]) {
        (Alternative: eps veraendern */
     if (changes == 0 && max_iter_bw < MAX_ITER_BW) {
       max_iter_bw = MAX_ITER_BW;
-      changes = 1; // damit wieder reestimiert und zugeordnet wird 
-      for (i = 0; i < cl.smo_number; i++) smo_changed[i] = 1; // " 
+      changes = 1; /* damit wieder reestimiert und zugeordnet wird  */
+      for (i = 0; i < cl.smo_number; i++) smo_changed[i] = 1;
       fprintf(outfile, "max_iter_bw := %d\n", max_iter_bw);
       fprintf(stdout, "*** max_iter_bw := %d ***\n", max_iter_bw);
     }
@@ -396,7 +395,7 @@ int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
     //vector_d_print(outfile, sqd->seq[k], sqd->seq_len[k]," "," ","");
     //}     
     //}
-    
+  
     fprintf(outfile, "(%ld sequences)\n\n", cl->seq_counter[i]);
     }
   */

@@ -18,7 +18,7 @@ double pmue(double mue, double A, double B, double eps) {
   Atil = A + eps;
   Btil = B + eps*A;
   u = Btil - mue*Atil;
-  //if (u < EPS_U) u = (double)EPS_U; ACHTUNG: wuerde Fkt.wert verfaelschen!
+  /* if (u < EPS_U) u = (double)EPS_U; ACHTUNG: wuerde Fkt.wert verfaelschen! */
   if (u <= DBL_MIN)
     return(mue - A);
   feps = randvar_normal_density_trunc(-eps, mue, u, -eps);
@@ -37,7 +37,7 @@ double pmue_interpol(double mue, double A, double B, double eps) {
   Atil = A + eps;
   Btil = B + eps*A;
   u = Btil - mue*Atil;
-  //if (u < EPS_U) u = (double)EPS_U; ACHTUNG: wuerde Fkt.wert verfaelschen!
+  /*if (u < EPS_U) u = (double)EPS_U; ACHTUNG: wuerde Fkt.wert verfaelschen!*/
   if (u <= DBL_MIN)
     return(mue - A);
 
@@ -71,7 +71,7 @@ double pmue_interpol(double mue, double A, double B, double eps) {
   else {
     pz = p1 + (fabs(z)-i1*randvar_get_xstepphi()) 
       * (p2 - p1)/randvar_get_xstepphi();
-    //pz = p1;
+    /* pz = p1; */
   }
   return(pz);
 }

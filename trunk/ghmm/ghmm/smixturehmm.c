@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     if (argc == 11)
       gsl_rng_set(RNG,atoi(argv[10]));
     else {      
-      gsl_rng_timeseed(RNG); //vorher: gsl_rng_set(RNG,0);
+      gsl_rng_timeseed(RNG); /* vorher: gsl_rng_set(RNG,0); */
     }
   }
   else {
@@ -298,7 +298,7 @@ int smixturehmm_cluster(FILE *outfile, double **cp, sequence_d_t *sqd,
   smosqd_t *smo_sqd; /* this structure is used by sreestimate() */
 
   if(!m_calloc(smo_sqd, 1)) {mes_proc(); goto STOP;}
-  //  smo_sqd->max_iter = MAX_ITER_BW;
+  /*  smo_sqd->max_iter = MAX_ITER_BW; */
   smo_sqd->max_iter = 20;
   smo_sqd->eps = EPS_ITER_BW;
   smo_sqd->logp = &log_p;
@@ -400,7 +400,7 @@ int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
       if (smap_bayes(smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) == -1) {
 	str = mprintf(NULL, 0, 
 		      "Can't determine comp. prob for seq ID %.0f \n", sqd->seq_id[i]);
-	mes_prot(str); m_free(str); //goto STOP;
+	mes_prot(str); m_free(str); /* goto STOP; */
       }
   }
 
@@ -413,7 +413,7 @@ int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
       if (bm == -1) {
 	str = mprintf(NULL, 0, 
 		      "Can't determine comp. prob for seq ID %.0f \n", sqd->seq_id[i]);
-	mes_prot(str); m_free(str); //goto STOP;
+	mes_prot(str); m_free(str); /* goto STOP; */
       }
       cp[i][bm] = 1.0;
     }    
@@ -482,7 +482,7 @@ int smixturehmm_calc_cp(double **cp, sequence_d_t *sqd, smodel **smo,
   total_train_w = 0.0;
   for (i = 0; i < sqd->seq_number; i++) 
     if (smap_bayes(smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) == -1) {
-      // all cp[i] [ . ] are set to zero; seq. will be ignored for reestimation!!!
+      /* all cp[i] [ . ] are set to zero; seq. will be ignored for reestimation!!! */
       str = mprintf(NULL, 0, 
 		  "Warning[%d]: Can't determine comp. prob for seq ID %.0f\n", i ,sqd->seq_id[i]);
       mes_prot(str); m_free(str);

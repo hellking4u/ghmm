@@ -895,7 +895,7 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
 	  mes_prot("seq0 can't be build from smo1!");
 	  goto STOP;
 	}
-	n = smodel_likelihood(smo2, seq0, &p); // == -1: KEINE Seq. erzeugbar
+	n = smodel_likelihood(smo2, seq0, &p); /* ==-1: KEINE Seq. erzeugbar*/
 	if (n < seq0->seq_number) {
 	  mes(MES_WIN,
 	      "problem: some seqences in seq0 can't be build from smo2\n");
@@ -935,7 +935,7 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
 	  mes_prot("seq0 can't be build from smo1!");
 	  goto STOP;
 	}
-	n = smodel_likelihood(smo2, seq0, &p); // == -1: KEINE Seq. erzeugbar
+	n = smodel_likelihood(smo2, seq0, &p); /*== -1: KEINE Seq. erzeugbar*/
 	if (n < seq0->seq_number) {
 	  mes(MES_WIN,
 	      "problem: some sequences in seq0 can't be build from smo2\n");
@@ -1026,20 +1026,20 @@ int smodel_count_free_parameter(smodel **smo, int smo_number) {
 
   for (k = 0; k < smo_number; k++) {
     pi_counted = 0;
-    // for states 
+    /* for states */
     for (i = 0; i < smo[k]->N; i++) {
       if (smo[k]->s[i].out_states > 1) 
-	// multipl. with COS correct ???
+	/* multipl. with COS correct ??? */
 	cnt += COS * (smo[k]->s[i].out_states - 1);
       if (smo[k]->s[i].pi != 0 && smo[k]->s[i].pi != 1) {
 	pi_counted = 1;
 	cnt++;
       }
       if (!smo[k]->s[i].fix) {
-	if (smo[k]->M == 1) cnt += 2; // mu, sigma
-	else cnt += (3 * smo[k]->M); // c, mu, sigma
+	if (smo[k]->M == 1) cnt += 2; /* mu, sigma */
+	else cnt += (3 * smo[k]->M); /* c, mu, sigma */
       }
-    } // for (i ..)
+    } /* for (i ..) */
     if (pi_counted) cnt--; /* due to condition: sum(pi) = 1 */
     if (smo[k]->M > 1) cnt--; /* due to condition: sum(c) = 1 */
   }

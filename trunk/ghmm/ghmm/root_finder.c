@@ -12,7 +12,7 @@ __copyright__
 #include <gsl/gsl_roots.h>
 
 
-/* struct for function pointer and parameters except 1st one*/
+/* struct for function pointer and parameters except 1st one */
 struct parameter_wrapper{
   double (*func)(double, double, double, double);
   double x2;
@@ -27,7 +27,7 @@ double function_wrapper(double x, void* p)
 {
   struct parameter_wrapper* param=(struct parameter_wrapper*)p;
   return param->func(x,param->x2,param->x3,param->x4);
-};
+}
 
 
 /*
@@ -38,15 +38,18 @@ double zbrent_AB(double (*func)(double, double, double, double),
 		 double A, double B, double eps)
 {
   /* initialisation of wrapper structure */
-  struct parameter_wrapper param={func,A,B,eps};
-
-  gsl_function f={&function_wrapper,&param};
-  gsl_interval x={x1,x2};
+  struct parameter_wrapper param;
+  gsl_function f;
+  gsl_interval x;
   gsl_root_fsolver* s;
-
-  double tolerance=tol;
+  double tolerance;
   int success=0;
   double result=0;
+
+  param.func=func; param.x2=A; param.x3=B; param.x4=eps;
+  f.function=&function_wrapper; f.params=(void*)&param;
+  x.lower=x1; x.upper=x2;
+  tolerance=tol;
 
   /* initialisation */
   s = gsl_root_fsolver_alloc (gsl_root_fsolver_brent, &f, x);
@@ -76,4 +79,8 @@ double zbrent_AB(double (*func)(double, double, double, double),
   gsl_root_fsolver_free(s);
 
   return result;
-};
+}
+
+
+
+

@@ -16,11 +16,13 @@ __copyright__
 /**@name smap functions */
 /*@{ */
 
-///
+/**
+ */
 int smap_classify(smodel **smo, double *result, int smo_number, 
 		   double *O, int T);
 
-///
+/**
+ */
 int smap_bayes(smodel **smo, double *result, int smo_number, double *O, int T);
 
 /*@} */
