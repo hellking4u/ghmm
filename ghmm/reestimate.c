@@ -380,6 +380,7 @@ int reestimate_baum_welch(model *mo, sequence_t *sq) {
 int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta) {
 # define CUR_PROC "reestimate_baum_welch"
   int n, k, valid;
+  int res = -1;
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
  
@@ -459,10 +460,10 @@ int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double 
   
   /* check new parameter for plausibility */
   /* if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
-  return(0);
+  res = 1;
 
 STOP:
   reestimate_free(&r, mo->N);
-  return(-1);
+  return(res);
 # undef CUR_PROC
 } /* reestimate_baum_welch_nstep */
