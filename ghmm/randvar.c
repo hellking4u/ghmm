@@ -203,6 +203,7 @@ double randvar_get_PHI(double x) {
     return(1.0 - phi_x);
   else
     return(phi_x);
+ STOP:
 #endif /* DO_WITH_GSL */
   return(-1.0);
 # undef CUR_PROC
@@ -243,6 +244,7 @@ double randvar_get_xPHIless1() {
     x_PHI_1 = x - (double)X_STEP_PHI/2.0;
   }
   return(x_PHI_1);
+ STOP:
 #endif
   return(-1.0);
 # undef CUR_PROC
