@@ -53,8 +53,7 @@ typedef struct sequence_t sequence_t;
     length.    
  */
 struct sequence_d_t {
-  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
-   */
+  /** sequence array. sequence[i][j] = j-th symbol of i-th seq. */
   double **seq;
   /** array of sequence length */
   int *seq_len;

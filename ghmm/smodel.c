@@ -608,7 +608,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 
   sq = sequence_d_calloc(seq_number);
   if (!sq) { mes_proc(); goto STOP; }
-
+	
   /* A specific length of the sequences isn't given. As a model should have
      an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
@@ -617,6 +617,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
   /* Maximum length of a sequence not given */
   if (Tmax <= 0)
     Tmax = (int)MAX_SEQ_LEN;
+
   
   /* gsl is also used by randvar_std_normal 
      seed == -1: Initialization, has already been done outside the function */
@@ -630,7 +631,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 
   n = 0;
   reject_os = reject_tmax = 0;
-
+  
   while (n < seq_number) {
     /* Test: A new seed for each sequence */
     /*   gsl_rng_timeseed(RNG); */
@@ -798,7 +799,7 @@ int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p) {
       /* Test: high costs for each unmatched Seq. */
       *log_p += PENALTY_LOGP * sqd->seq_w[i];
       matched++;
-      /*      mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
+      mes(MES_WIN, "sequence[%d] can't be build.\n", i); 
     }
   }
   if (!matched)
@@ -1033,8 +1034,10 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
  
   for (k = 0; k < 2; k++) {
     
-    seq0 = smodel_generate_sequences(smo1, 0, maxT+1, 1, 0, 0);
+    seq0 = smodel_generate_sequences(smo1, 0, maxT+1, 1, 0, maxT+1);
     
+	//sequence_d_print(stdout,seq0,0);
+	
     if (seq0->seq_len[0] < maxT) { /* There is an absorbing state */
             
       /* For now check that Pi puts all weight on state */
@@ -1051,13 +1054,13 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
       
       left_to_right = 1;
       total = seq0->seq_len[0];
-      
-      while (total <= maxT) {
+   
+   while (total <= maxT) {
 	
 	/* create a additional sequences at once */
 	a = (maxT - total) / (total / seq0->seq_number) + 1;
 	/* printf("total=%d generating %d", total, a); */
-	tmp = smodel_generate_sequences(smo1, 0, 0, a, 0, 0);
+	tmp = smodel_generate_sequences(smo1, 0, 0, a, 0, maxT+1);
 	sequence_d_add(seq0, tmp);
 	sequence_d_free(&tmp);  
 
@@ -1094,6 +1097,8 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
 	  /* error! */
 	  mes_prot("seq0 can't be build from smo1!");
 	  goto STOP;
+	
+	
 	}
 	n = smodel_likelihood(smo2, seq0, &p); /* ==-1: KEINE Seq. erzeugbar*/
 	if (n < seq0->seq_number) {
@@ -1103,6 +1108,8 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
 	  goto STOP;
 	}
 
+	//printf("1/%d *(%f - %f)\n",t,p0,p);
+	
 	d = 1.0 / t * (p0 -  p);
 
 	if (symmetric) {
@@ -1127,8 +1134,8 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
       
       true_len = seq0->seq_len[0];
       
-      for (t=step_width, i=0; t <= maxT; t+= step_width, i++) {
-	seq0->seq_len[0] = t;
+    for (t=step_width, i=0; t <= maxT; t+= step_width, i++) {
+      seq0->seq_len[0] = t;
 	
 	if (smodel_likelihood(smo1, seq0, &p0) == -1) {
 	  /* error case */
@@ -1143,6 +1150,8 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
 	  goto STOP;
 	}
 
+	//printf("1/%d *(%f - %f)\n",t,p0,p);
+	
 	d = 1.0 / t * (p0 -  p);
 	
 	if (symmetric) {
