@@ -62,7 +62,7 @@ The objects one has to deal with in HMM modelling are the following
    is the view of the application using ghmm.py. The internal one
    is what is used in both ghmm.py and the ghmm C-library. Representations
    can coincide, but this is not guaranteed. Most prominently discrete
-   alphabets of size k are represented as [0,1,2,...,k] internally.
+   alphabets of size k are represented as [0,1,2,...,k-1] internally.
    It is the domain objects job to provide a mapping between representations
    in both directions.
 
@@ -151,14 +151,14 @@ The objects one has to deal with in HMM modelling are the following
 import xmlutil
 import ghmmwrapper
 import ghmmhelper
-import re
 import modhmmer
+import re
 import StringIO
 
 from os import path
 from math import log
 
-ghmmwrapper.gsl_rng_init() #Init random number generator
+ghmmwrapper.gsl_rng_init() # Initialize random number generator
 
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
@@ -431,7 +431,7 @@ class EmissionSequence:
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,1)
-                
+				
 
             elif isinstance(sequenceInput, str): # from file
                 # reads in the first sequence struct in the input file
@@ -456,12 +456,12 @@ class EmissionSequence:
 
     def __len__(self):
         "Returns the length of the sequence."
-        return ghmmwrapper.get_arrayint(self.cseq.seq_len,0)    
+        return ghmmwrapper.get_arrayint(self.cseq.seq_len,0)	
 
 
     def __setitem__(self, index, value):
         self.setSymbol(self.seq_c.seq,0,index,value)
-        
+		
 
     def __getitem__(self, index):
         """ Return the symbol at position 'index'. """
@@ -479,7 +479,7 @@ class EmissionSequence:
         for j in range(ghmmwrapper.get_arrayint(seq.seq_len,0) ):
             strout += str( self.emissionDomain.external(self[j]) )   
            
-        return strout        
+    	return strout		
 
     def sequenceSet(self):
         """ Return a one-element SequenceSet with this sequence."""
@@ -506,7 +506,7 @@ class SequenceSet:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
-            self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign a int* to a position within a int**
+            self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within an int**
             self.cleanFunction = ghmmwrapper.sequence_clean
             self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
             
@@ -543,7 +543,7 @@ class SequenceSet:
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
-            self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign an double* to a position within a double**
+            self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign a double* to a position within a double**
             self.cleanFunction = ghmmwrapper.sequence_d_clean
             self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
                         
@@ -639,7 +639,7 @@ class SequenceSet:
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)                            
         
-        self.addSeqFunction(self.cseq,emissionSequences.cseq)
+        self.addSeqFunction(self.cseq, emissionSequences.cseq)
         
         # XXX delete merged source sequences ?
         # emissionSequences.cleanFunction(emissionSequences.cseq) 
@@ -659,7 +659,7 @@ class SequenceSet:
             seq_id = int(ghmmwrapper.get_arrayd(self.cseq.seq_id, seqIndixes[i]))
             ghmmwrapper.set_arrayd(seq.seq_id, i, seq_id)
             seq_label = ghmmwrapper.get_arrayl(self.cseq.seq_label, i)
-            ghmmwrapper.set_arrayl(seq.seq_label, i, seq_label)
+            ghmmwrapper.set_arrayl(seq.seq_label, i, int(seq_label))
             # XXX temp for GQL/ISMB to suppress |0| in SQD-file outputs
             #seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
             #ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
@@ -728,60 +728,51 @@ class HMMOpenFactory(HMMFactory):
 
     def __call__(self, fileName, modelIndex = None):
      
-        if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
-            print "File type: XML"
-            hmm_dom = xmlutil.HMM(fileName)
-            emission_domain = hmm_dom.AlphabetType()
-            if emission_domain == int:
-                emission_domain = IntegerRange(0, hmm_dom.hmmAlphabet.size())
-                distribution = DiscreteDistribution(emission_domain)
-    
-            # build adjacency list
-            [A, B, pi] = hmm_dom.buildMatrices()
-            print A
-            print B
-            print pi
-            return HMMFromMatrices(emission_domain, distribution, A, B, pi)
-        
-        elif self.defaultFileType == GHMM_FILETYPE_SMO: # SMO file:
-            # MO & SMO Files
-            (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
-            nrModelPtr = ghmmwrapper.int_array(1)
-            models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+    	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
+    	    print "File type: XML"
+    	    hmm_dom = xmlutil.HMM(fileName)
+    	    emission_domain = hmm_dom.AlphabetType()
+    	    if emission_domain == int:
+    		emission_domain = IntegerRange(0, hmm_dom.hmmAlphabet.size())
+    		distribution = DiscreteDistribution(emission_domain)
+    		# build adjacency list
+    		[A, B, pi] = hmm_dom.buildMatrices()
+    		print A
+	    	print B
+	    	print pi
+	    	return HMMFromMatrices(emission_domain, distribution, A, B, pi)
+	    
+        elif self.defaultFileType == GHMM_FILETYPE_SMO:
+	        # MO & SMO Files
+    	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+    	    nrModelPtr = ghmmwrapper.int_array(1)
+    	    models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
             nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
             if modelIndex == None:
-                cmodel = ghmmwrapper.get_smodel_ptr(models, 0) # XXX Who owns the pointer?
+        	    cmodel = ghmmwrapper.get_smodel_ptr(models, 0) # XXX Who owns the pointer?
             else:
                 if modelIndex < nrModels:
                     cmodel = ghmmwrapper.get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
                 else:
-                    print "modelIndex too large -- only have ", nrModels
-                    return None
-            m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+        		    print "modelIndex too large -- only have ", nrModels
+		            return None
+    	    m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             return m
         
-        else:  
-            # HMMER file
-            try:
-                f = open(fileName,'r')    
-                h = modhmmer.hmmer(f)
-                f.close()
-            except IOError,info:
-                 sys.stderr.write(str(info) + "\n")
-                 sys.exit(1)
-
-            [A,B,pi,name] = h.ghmmMatrices()
-
-            if h.m == 4: # DNA model
+        else:   
+            # HMMER format models
+            h = modhmmer.hmmer(fileName)
+            
+            if h.m == 4:  # DNA model
                 emission_domain = DNA
-            elif h.m == 20:  # Protein model
+            elif h.m == 20:   # Peptide model    
                 emission_domain = AminoAcids
-            else:  # some arbitrary symbols     
-                emission_domain = IntegerRange[0,h.m]
+            else:   # some other model
+                emission_domain = IntegerRange(0,h.m)
             distribution = DiscreteDistribution(emission_domain)
             
-            return HMMFromMatrices(emission_domain, distribution, A, B, pi)
-    
+            [A,B,pi,modelName] = h.getGHMMmatrices()
+            return  HMMFromMatrices(emission_domain, distribution, A, B, pi)
 
     def all(self, fileName):
         # MO & SMO Files
@@ -862,18 +853,19 @@ class HMMOpenFactory(HMMFactory):
 
         return (None, None, None)
             
+HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
+HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
 
 
 def readMultipleHMMERModels(fileName):
     """
-        Reads file containing multiple models in HMMER format, returns
-        list of HMMs.
+        Reads a file containing multiple HMMs in HMMER format, returns list of
+        HMM objects.
     
     """
-    f = open(fileName,"r")
-
-    string = ""
     modelList = []
+    string = ""
+    f = open(fileName,"r")
     
     res = re.compile("^//")
     stat = re.compile("^ACC\s+(\w+)")
@@ -887,28 +879,15 @@ def readMultipleHMMERModels(fileName):
         match = res.match(line)
         if match:
             fileLike = StringIO.StringIO(string)
-            h = modhmmer.hmmer(fileLike)
-            if h.m == 4: # DNA model
-                emission_domain = DNA
-            elif h.m == 20:  # Protein model
-                emission_domain = AminoAcids
-            else:  # some arbitrary symbols     
-                emission_domain = IntegerRange[0,h.m]
-            distribution = DiscreteDistribution(emission_domain)
-            [A,B,pi,name] = h.ghmmMatrices()
-            modelList.append(HMMFromMatrices(emission_domain, distribution, A, B, pi))    
+            modelList.append(HMMOpenHMMER(fileLike))
+            string = ""
+            match = None
 
-    f.close()
     return modelList
     
-    
-        
-
-HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
-HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER)
 
 class HMMFromMatricesFactory(HMMFactory):
-    def __call__(self, emissionDomain, distribution, A, B, pi):
+    def __call__(self, emissionDomain, distribution, A, B, pi,hmmName = None):
 
         if isinstance(emissionDomain,Alphabet):
 
@@ -1179,7 +1158,7 @@ class HMM:
     ## Further Marginals ...
 
     def logprob(self, emissionSequence, stateSequence):
-        """ log P[ emissionSequence, stateSequence| m] 
+        """log P[ emissionSequence, stateSequence| m] 
         
             Defined in derived classes.
         """
