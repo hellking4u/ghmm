@@ -20,7 +20,8 @@ extern "C" {
 /**
    Viterbi algorithm: calculation of the viterbi path (best possible
    state sequenz for a given sequenz and a given model (smo)). Also 
-   calculates logp according to this path.
+   calculates logp according to this path, the matrices in the local_store
+   struct are allocated using stat_matrix_d_alloc.
   @return        Viterbi-path 
   @param smo    model
   @param o       double-sequence

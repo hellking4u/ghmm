@@ -62,11 +62,11 @@ static int smap_classify_free(local_store_t **map, int mo_number, int T) {
   m_free((*map)->alpha_1);
   m_free((*map)->error);
   m_free((*map)->prior);
-  matrix_d_free(&((*map)->scale));
-  matrix_d_free(&((*map)->p));
-  matrix_d_free(&((*map)->sum_alpha));
+  matrix_d_free(&((*map)->scale), mo_number);
+  matrix_d_free(&((*map)->p), mo_number);
+  matrix_d_free(&((*map)->sum_alpha), mo_number);
   for (i = 0; i < mo_number; i++)
-    matrix_d_free(&((*map)->alpha[i]));
+    matrix_d_free(&((*map)->alpha[i]), T);
   m_free(*map);
 
   return 0;

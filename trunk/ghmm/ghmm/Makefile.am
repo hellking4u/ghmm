@@ -13,7 +13,7 @@ lib_LTLIBRARIES = libghmm.la
 libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
 libghmm_la_SOURCES= foba.c foba.h \
                   matrix.c  matrix.h \
-                  model.c modelutil.c model.h \
+                  model.c model.h \
                   cluster.c cluster.h \
                   scluster.c scluster.h \
                   root_finder.c root_finder.h \
@@ -26,7 +26,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   sfoba.c sfoba.h \
                   sviterbi.c sviterbi.h \
                   smodel.c smodel.h \
-		  ghmm.h \
+                  ghmm.h \
                   sreestimate.c sreestimate.h \
                   sgenerate.c sgenerate.h \
                   smixturehmm.c smixturehmm.h \

@@ -224,11 +224,11 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
 
   } /* for n .. < seq_number */
 
-  matrix_d_free(&alpha);
+  matrix_d_free(&alpha, max_short_len);
   m_free(scale);
   return sq;
 STOP:
-  matrix_d_free(&alpha);
+  matrix_d_free(&alpha, max_short_len);
   sequence_d_free(&sq);
   return(NULL);
 # undef CUR_PROC
@@ -486,7 +486,7 @@ double sgenerate_next_value(smodel *smo, double *O, const int len) {
   res = smodel_get_random_var(smo, i, m);
 
  STOP:
- matrix_d_free(&alpha);
+ matrix_d_free(&alpha, len);
  m_free(scale);
   return res;
 # undef CUR_PROC

@@ -225,8 +225,8 @@ static void model_topo_ordering(model *mo)
   //for(i=0; i < mo->topo_order_length; i++) {
   //  fprintf(stderr, "%d, ", mo->topo_order[i]);
   //}
-  topo_free(&v, mo->N, 1, 1);
- STOP:
+  STOP:
+   topo_free(&v, mo->N, 1, 1);	  
 #undef CUR_PROC
 }
 
@@ -444,13 +444,13 @@ model *model_direct_read(scanner_t *s, int *multip){
       mes_proc(); goto STOP;
     }
   }
-  matrix_d_free(&a_matrix );
-  matrix_d_free(&b_matrix );
+  matrix_d_free(&a_matrix, mo->N);
+  matrix_d_free(&b_matrix, mo->N );
   m_free(pi_vector);
   return(mo);
 STOP:
-  matrix_d_free(&a_matrix);
-  matrix_d_free(&b_matrix);
+  matrix_d_free(&a_matrix, mo->N);
+  matrix_d_free(&b_matrix, mo->N);
   m_free(pi_vector);
   model_free(&mo);
   return NULL;
@@ -803,11 +803,6 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
   int incomplete_seq = 0;
   int state=0;
   
-  
-  //printf("***  model_generate_sequences:\n");
-		  
-  //printf("oben: state= %d, len= %d ",state,len);
-  
   sq = sequence_calloc(seq_number);
   if (!sq) { mes_proc(); goto STOP; }
   if (len <= 0)
@@ -816,7 +811,6 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
     len = (int)MAX_SEQ_LEN;
   
   if (seed > 0) {
-    //printf("not Random is ok \n");
 	gsl_rng_set(RNG,seed);
   }
    
@@ -825,7 +819,6 @@ while (n < seq_number) {
     //printf("incomplete_seq: %d\n",incomplete_seq);
 	
     if (incomplete_seq == 0) { 
- 		//printf("next sequence %d\n",n);
 	    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
    		state = 0;
     }
@@ -839,22 +832,7 @@ while (n < seq_number) {
 	   break;
     }
     
-   	/*###############################################
-    if ( mo->model_type == kSilentStates ){
-		//printf("es gibt silent states\n");
-		/*###############################################
-    	printf("silent array:\n");
-		for (temp = 0;temp < mo->N;temp++){
-	   		printf("s: %d, ",mo->silent[temp]);
-		}
-		printf("\n");
-	}
-	else {
-		//printf("es gibt keine silent states\n");
-	}
-	/*###############################################*/	
-		
-	if ( mo->model_type == kSilentStates ){
+  	if ( mo->model_type == kSilentStates ){
 	  if (!mo->silent[i]) { /* first state emits */
 	    //printf("first state %d not silent\n",i);
 		  
@@ -868,8 +846,6 @@ while (n < seq_number) {
         }
           sq->seq[n][state] = m;
           state = state+1;
-        //sq->seq[n][state] = m;
-		//  state = 1;
 	  }
 	  else {  /* silent state: we do nothing, no output */
 		//printf("first state %d silent\n",i);
@@ -887,10 +863,8 @@ while (n < seq_number) {
 	      break;
 	  }
 	  sq->seq[n][state] = m;	
-	  //sq->seq[n][0] = m;	
 	  state = state + 1;
-	  //state = 0;
-   }
+    }
 	/* check whether sequence was completed by inital state*/ 
 	if (state >= len && incomplete_seq == 1){
  	    
@@ -948,13 +922,10 @@ while (n < seq_number) {
         sq->seq[n][state] = m;
         state++;
       }	
-	  //printf("state: %d,  len: %d\n",state,len);
 	  if (state == len ){
-	    //printf("sequence complete\n\n");
-	    incomplete_seq = 0;
-  	   // printf("assinging length %d to sequence %d\n",state,n);
- 		sq->seq_len[n] = state;    
-		n++;
+	     incomplete_seq = 0;
+  	 	 sq->seq_len[n] = state;    
+		 n++;
 	  }  
 	}  /* while (state < len) */  
  } /* while( n < seq_number )*/

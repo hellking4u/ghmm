@@ -44,7 +44,23 @@ double** matrix_d_alloc_copy(int rows, int columns, double **copymatrix);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-int matrix_d_free(double ***matrix);
+int matrix_d_free(double ***matrix, long zeilen);
+
+/**
+  Allocation of a static double matrix with a single malloc. 
+  @return pointer to a matrix
+  @param rows: number of rows
+  @param columns: number of columns
+  */
+double** stat_matrix_d_alloc(int n, int m);
+
+/**
+  Free the memory of a static double matrix.
+  @return 0 for succes; -1 for error
+  @param  matrix: matrix to free
+  @param  rows: number of rows
+  */
+int stat_matrix_d_free(double ***matrix);
 
 /**
   Allocation of a integer matrix.

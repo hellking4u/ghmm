@@ -134,7 +134,7 @@ int two_states_coin_toss()
 
   /* allocate matrix for forward algorithm */
   fprintf(stdout,"applying forward algorithm to the sequence...");
-  forward_alpha=matrix_d_alloc(10,2);
+  forward_alpha=stat_matrix_d_alloc(10,2);
   if (forward_alpha==NULL)
     {
       fprintf(stderr,"\n could not alloc forward_alpha matrix\n");
@@ -150,7 +150,7 @@ int two_states_coin_toss()
 		   &log_p_forward))
     {
       fprintf(stderr,"foba_logp failed!");
-      matrix_d_free(&forward_alpha);
+      stat_matrix_d_free(&forward_alpha);
       return 1;
     }
 
@@ -160,7 +160,7 @@ int two_states_coin_toss()
   fprintf(stdout,"probability of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */
-  matrix_d_free(&forward_alpha);
+  stat_matrix_d_free(&forward_alpha);
   return 0;
 }
 

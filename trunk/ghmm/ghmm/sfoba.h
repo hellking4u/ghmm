@@ -62,7 +62,8 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
 /**
   Calculation of  log( P(O|lambda) ). 
   Done by calling sfoba\_forward. Use this function if only the
-  log likelihood and not alpha[t][i] is needed.
+  log likelihood and not alpha[t][i] is needed, alpha matrix is allocated with
+  stat_matrix_d_alloc
   @param smo      model
   @param O        sequence
   @param T         length of sequence

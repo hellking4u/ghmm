@@ -191,9 +191,9 @@ STOP:
 int sfoba_logp(smodel *smo, const double *O, int T, double *log_p) {
 # define CUR_PROC "sfoba_logp"
   int res = -1;
-
   double **alpha, *scale = NULL;
-  alpha = matrix_d_alloc(T, smo->N);
+ 
+  alpha = stat_matrix_d_alloc(T, smo->N);
   if (!alpha) {mes_proc(); goto STOP;}
   if (!m_calloc(scale, T)) {mes_proc(); goto STOP;}
   /* run forward alg. */
@@ -204,7 +204,7 @@ int sfoba_logp(smodel *smo, const double *O, int T, double *log_p) {
   res = 0;
 
 STOP:
-  matrix_d_free(&alpha);
+  stat_matrix_d_free(&alpha);
   m_free(scale);
   return(res);
 # undef CUR_PROC

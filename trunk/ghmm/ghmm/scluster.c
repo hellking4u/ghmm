@@ -1,5 +1,5 @@
 /*******************************************************************************
-  author       : Bernhard Knab
+  author       : Bernhard Knab, Benjamin Georgi
   filename     : ghmm/ghmm/scluster.c
   created      : TIME: 15:47:54     DATE: Tue 16. November 1999
   $Id$
@@ -248,8 +248,7 @@ int scluster_hmm(char* argv[]) {
       if (CLASSIFY == 1) { 
 	     idummy = scluster_log_aposteriori(&cl, sqd, j, &log_apo);
 	  if (idummy == -1) {
-	     str = mprintf(NULL, 0 , "Warn: no model fits to Seq %10.0f, use 
-				 PENALTY_LOGP\n", sqd->seq_id[j]);	     
+	     str = mprintf(NULL, 0 , "Warn: no model fits to Seq %10.0f, use PENALTY_LOGP\n", sqd->seq_id[j]);	     
 	  mes_prot(str); m_free(str);
 	  cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * PENALTY_LOGP;
 	  continue;
@@ -365,13 +364,13 @@ int scluster_hmm(char* argv[]) {
 #endif
 
       /* update model priors */
-      if (CLASSIFY == 1) {
-	if (sqd->total_w == 0) {
-	  mes_prot("weights = 0!\n"); goto STOP;
-	}
-	for (i = 0; i < cl.smo_number; i++) 
-	  cl.smo[i]->prior = cl.smo_seq[i]->total_w / sqd->total_w;      
+    if (CLASSIFY == 1) {
+	  if (sqd->total_w == 0) {
+	    mes_prot("weights = 0!\n"); goto STOP;
       }
+	  for (i = 0; i < cl.smo_number; i++) 
+	    cl.smo[i]->prior = cl.smo_seq[i]->total_w / sqd->total_w;      
+    }
 
       fprintf(outfile, "\ntotal Prob. after %d.reestimate:\n", iter);
       scluster_print_likelihood(outfile, &cl);
@@ -390,11 +389,34 @@ STOP:
 #if POUT == 0
   pthread_attr_destroy(&Attribute);
 #endif /* POUT */
-  /* ...still div. free! */
+  /* XXX ...still div. free! XXX*/
   if (outfile) fclose(outfile);
   return(res);
 # undef CUR_PROC
 }/* scluster_hmm */
+
+/*============================================================================*/
+
+int scluster_t_free(scluster_t *scl){
+	int i;
+	#define CUR_PROC "scluster_t_free"
+	mes_check_ptr(scl, return(-1));
+    if( !scl ) return(0);
+	
+	for (i=0;i<=scl->smo_number;i++){
+		smodel_free(&(scl->smo[i]));
+		sequence_d_free(&(scl->smo_seq[i]));
+	}
+	printf("hier1\n");
+	m_free(scl->smo);
+	m_free(scl->smo_seq);
+	
+	m_free(scl->seq_counter);
+	m_free(scl->smo_Z_MD);
+	m_free(scl->smo_Z_MAW);
+	return 0;
+	# undef CUR_PROC
+}
 
 /*============================================================================*/
 int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,

@@ -24,7 +24,8 @@ extern "C" {
 /**
   Viterbi algorithm. Calculates the Viterbi path (the optimal path trough
   the model) and the Viterbi probability to a given model and a given 
-  sequence.
+  sequence. The matrices in the local_store struct are allocated using
+  stat_matrix_d_alloc.
   @return Viterbi path
   @param mo:    model
   @param o:     sequence

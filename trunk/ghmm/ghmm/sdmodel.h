@@ -72,8 +72,7 @@ struct sdmodel {
   /** Prior for the a priori probability for the model.
       A value of -1 indicates that no prior is defined. */
   double prior;
-  /** pointer to class function
-   */
+  /** pointer to class function   */
   int (*get_class)(int*,int);
       
   /*int (*get_class)(const double*,int,double*);*/

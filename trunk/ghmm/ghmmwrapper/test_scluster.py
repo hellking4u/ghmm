@@ -15,37 +15,32 @@ for i in range(2):
 	change = res.cluster_onestep()
 
 # adding model to clustering	
-print "***** adding 1 model"
-m = SHMM("test_add.smo") # reading .smo file into SHMM object
-res.add_SHMM_model(m,0.2)  
+#print "***** adding 1 model"
+#m = SHMM("test_add.smo") # reading .smo file into SHMM object
+#res.add_SHMM_model(m,0.2)  
 
 # two iterations of clustering
-for i in range(2):
-	change = res.cluster_onestep(1)
+#for i in range(2):
+#	change = res.cluster_onestep(1)
 
 # adding sequences to clustering
-print "***** adding 10 sequences"
-s2 = sequence_d(seq_d_read("test_add.sqd")) # reading .sqd file into sequence_d object
-res.add_sequence_d(s2)
-print "new number of sequences " + str(res.seq.seq_number)
+#print "***** adding 10 sequences"
+#s2 = sequence_d(seq_d_read("test_add.sqd")) # reading .sqd file into sequence_d object
+#res.add_sequence_d(s2)
+#print "new number of sequences " + str(res.seq.seq_number)
 
 
 # two iterations of clustering
-for i in range(2):
-	change = res.cluster_onestep(1)
+#for i in range(2):
+#	change = res.cluster_onestep(1)
 
-# Output
-# printing clustering to STDOUT
-#print res.sclustering 
-# saving results in files clust1.
-#scluster_print(res.sclustering.scluster_t, res.seq,["clust1","clust1","clust1","clust1"])
 
-print "***** removing model with ID 1"
-res.remove_model(1)
+#print "***** removing model with ID 1"
+#res.remove_model(1)
 
 # two iterations of clustering
-for i in range(2):
-	change = res.cluster_onestep(1)
+#for i in range(2):
+#	change = res.cluster_onestep(1)
 
 
 # distance between models
@@ -69,24 +64,24 @@ for i in range(2):
 #print "symmetric distance(m1,m0) = " + str(d3)
 
 # merging two models
-print "\n\n*** adding yet another model"
-m = SHMM("test.smo") # reading .smo file into SHMM object
-res.add_SHMM_model(m,0.15)
+#print "\n*** adding yet another model"
+#m = SHMM("test.smo") # reading .smo file into SHMM object
+#res.add_SHMM_model(m,0.15)
 
 # two iterations of clustering
-for i in range(2):
-	change = res.cluster_onestep(1)
+#for i in range(2):
+#	change = res.cluster_onestep(1)
 
-print "***  merging models with IDs 0 and 2"
-res.merge_models(0,2)
+#print "***  merging models with IDs 0 and 2"
+#res.merge_models(0,2)
 
 # two iterations of clustering
-for i in range(2):
-	change = res.cluster_onestep(1)
+#for i in range(2):
+#	change = res.cluster_onestep(1)
 
 # deviating models
-print "***** deviating model"
-res.deviate_model(3, 0.001, 0.001, 0.001,  0.001,0.2)
+#print "*** deviating model"
+#res.deviate_model(3, 0.001, 0.001, 0.001,  0.001,0.2)
 # arguments are: (	  model ID, 
 #	 				  deviation of transitions,
 #					  deviation of means,
@@ -96,21 +91,32 @@ res.deviate_model(3, 0.001, 0.001, 0.001,  0.001,0.2)
 # deviation d means new_value = old_value + x, where x is randomly from [-d,d]
 
 # two iterations of clustering
-for i in range(2):
-	change = res.cluster_onestep(1)
+#for i in range(2):
+#	change = res.cluster_onestep(1)
 
-m0 = res.get_model(2) 
-m1 = res.get_model(0) 
+#m0 = res.get_model(3) 
+#m1 = res.get_model(5) 
 #s1 = SHMM("blae",0,m0,1)  # initializing Python SHMM object from smodel pointers
 #s2 = SHMM("blae",0,m1,1)  #  m0 and m1
-print "***** calculating model distance"
-d = prob_distance_smodel(m0,m1,2000) # (third argument is sequence lenght)
-print "distance(m0,m1) = " + str(d)
-d2 = prob_distance_smodel(m1,m0,2000) # (third argument is sequence lenght)
-print "distance(m1,m0) = " + str(d2)
+#print "*** calculating model distance"
+#d = prob_distance_smodel(m0,m1,2000) # (third argument is sequence lenght)
+#print "distance(m0,m1) = " + str(d)
+#d2 = prob_distance_smodel(m1,m0,2000) # (third argument is sequence lenght)
+#print "distance(m1,m0) = " + str(d2)
+
+#print "***  updating C sequence labels with python model IDs"
+#res.update_labels()
+
+# Output
+# printing clustering to STDOUT
+#print "\nRESULTS:\n"
+#print res.sclustering 
+# saving results in files clust1.
+#scluster_print(res.sclustering.scluster_t, res.seq,["clust1","clust1","clust1","clust1"])
+
 
 # freeing memory  
-#print "freeing ..."
-#res.free_scluster()  
-
+print "freeing ..."
+res.free_scluster()  
+print "** Finshed **"
 
