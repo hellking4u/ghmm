@@ -556,7 +556,7 @@ class HMMEditor(SAGraphEditor):
 
                     for code in self.HMM.hmmAlphabet.name.keys():
                         label = self.HMM.hmmAlphabet.name[code]
-                        weight = state.emissions[code-1]
+                        weight = state.emissions[code] 
                         emission_probabilities.update({label:weight})
                         
                     # Normalize ... should be member function
@@ -572,7 +572,7 @@ class HMMEditor(SAGraphEditor):
                         # write back normalized probabilities
                         for key in emission_probabilities.keys():
                             code = self.HMM.hmmAlphabet.name2code[key]
-                            state.emissions[code-1] = emission_probabilities[key] / emission_probabilities.sum	
+                            state.emissions[code] = emission_probabilities[key] / emission_probabilities.sum	
 
     def EditHMMObj(self, event):
         # register values
