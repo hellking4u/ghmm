@@ -528,13 +528,18 @@ class HMMState:
         writeData(XMLDoc, node, 'label', self.label)
         writeData(XMLDoc, node, 'class', self.state_class)
         writeData(XMLDoc, node, 'initial', self.initial / initial_sum)
-       
-	pos = self.itsHMM.G.embedding[self.index] 
-        pos_elem = XMLDoc.createElement("pos")
-        pos_elem.setAttribute('x', "%s" % pos.x)
-        pos_elem.setAttribute('y', "%s" % pos.y)
-        writeXMLData(XMLDoc, node, 'ngeom', pos_elem)
 
+        pos_elem = XMLDoc.createElement("pos")
+        try:
+            pos = self.itsHMM.G.embedding[self.index] 
+            pos_elem.setAttribute('x', "%s" % pos.x)
+            pos_elem.setAttribute('y', "%s" % pos.y)
+            writeXMLData(XMLDoc, node, 'ngeom', pos_elem)
+        except:
+            pos_elem.setAttribute('x', "%s" % 100)
+            pos_elem.setAttribute('y', "%s" % 50)
+            writeXMLData(XMLDoc, node, 'ngeom', pos_elem)
+            
         if not self.order.useDefault:
             writeData(XMLDoc, node, 'order', self.order)
 
@@ -584,7 +589,31 @@ class HMMState:
         writeXMLTextNode(XMLDoc, node, 'emission', string.join(map(str,self.emissions),'\n'))
         XMLNode.appendChild(node)
         
-        
+
+    def fromDiscreteState( self, id, pi, B, label, order, tiedto=None, background=False ):
+        """ Convert from ghmm.DiscreteEmissionHMM to the member attributes
+        """
+        self.id = id
+        self.index = self.itsHMM.G.AddVertex()
+        self.initial = typed_assign(self.initial, float(pi))
+        self.label   = type(self.label)(label)	
+	self.order = DefaultedInt(order)
+
+        self.order = typed_assign(self.order, int(order))
+        self.order.useDefault = 0
+        self.emissions = B
+
+        if tiedto is None:
+            self.tiedto.useDefault = 1
+        else:
+            self.tiedto = typed_assign(self.tiedto, tiedto)
+            self.tiedto.useDefault = 0
+
+        if background is True:
+            self.background = PopupableInt(-1)
+            self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
+
+
 class HMM:    
     def __init__(self, XMLFileName = None, G = None):
 
@@ -766,7 +795,8 @@ class HMM:
             a distribution is a list of real values of length N^(order+1).   
         """        
         return (self.backgroundDistributions.dist, self.backgroundDistributions.order)
-         
+
+        
     def buildMatrices(self):    
 	""" return [alphabets_code, A, B, pi, state_orders] """
 	pi = []
