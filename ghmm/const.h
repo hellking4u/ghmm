@@ -46,7 +46,7 @@ __copyright__
 /**
   Maximum length of a sequence
   */
-#define MAX_SEQ_LEN 30
+#define MAX_SEQ_LEN 1000
 /* #define MAX_SEQ_LEN      1000000 */
 
 /**
