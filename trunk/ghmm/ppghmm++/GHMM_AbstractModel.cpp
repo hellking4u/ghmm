@@ -61,7 +61,7 @@ GHMM_State* GHMM_AbstractModel::getState(const string& id) const {
 GHMM_State* GHMM_AbstractModel::getState(int index) const {
   if (index >= (int) states.size()) {
     fprintf(stderr,"GHMM_AbstractModel::getState(int):\n");
-    fprintf(stderr,"State no. %d does not exist. Model has %d states.\n",index,states.size());
+    fprintf(stderr,"State no. %d does not exist. Model has %d states.\n",index,(int) states.size());
     exit(1);
   }
 
