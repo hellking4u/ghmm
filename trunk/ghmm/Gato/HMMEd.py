@@ -241,6 +241,13 @@ class HMM (xmlutil.HMM):
         self.DocumentName = "graphml"
         if XMLFileName != None:
             self.OpenXML(XMLFileName)
+
+    def Clear(self):
+        xmlutil.HMM.Clear(self)                  # base class clear!
+        self.hmmAlphabet = DiscreteHMMAlphabet() # My alphabet class (not base class) with editor widget
+        self.hmmClass    = HMMClass()            # My HMMclass (not base class) with editor widget
+        
+
         
 class HMMEditor(SAGraphEditor):
 
@@ -432,6 +439,7 @@ class HMMEditor(SAGraphEditor):
 	if self.hasGraph == 1:
             self.G.Clear()
 	    self.HMM.G.Clear()
+            self.HMM.Clear()
 	    self.hasGraph = 0
 	    
 	  

@@ -607,6 +607,27 @@ class HMM:
             self.OpenXML(XMLFileName)
 
 
+
+    def Clear(self):
+        #self.G = None
+
+        self.Pi = {}
+        self.id2index = {}
+            
+        self.hmmAlphabet = DiscreteHMMAlphabet()
+        self.hmmClass    = HMMClass()
+        
+        self.editableAttr = {}
+        self.editableAttr['HMM'] = ['desc']
+        self.desc = ValidatingString()       
+
+        self.state = {}
+
+        self.backgroundDistributions = NamedDistributions(self)
+
+        self.DocumentName = "graphml"        
+
+
     def AddState(self, id, label='None'):
         state = HMMState(-1, self)
         state.id = id
