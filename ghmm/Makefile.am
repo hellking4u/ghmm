@@ -8,7 +8,6 @@
 SUBDIRS = .
 MAINTAINERCLEANFILES = Makefile.in
 
-#FIXME: expat config
 INCLUDES = -I$(top_srcdir)
 lib_LIBRARIES = libghmm.a
 
@@ -35,9 +34,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   mprintf.c mprintf.h \
                   scanner.c scanner.h \
                   gauss_tail.c gauss_tail.h \
-                  smap_classify.c smap_classify.h \
-                  xmlio.c xmlio.h 
-
+                  smap_classify.c smap_classify.h
 
 pkginclude_HEADERS = foba.h \
                   matrix.h \

@@ -1,7 +1,7 @@
 /*
   author: Achim Gaedke
-  created: 9. Juli 2001
-  file: xmlio/examples/ghmm++/ghmm.cpp
+  created: 2001-07-09
+  file: ghmm/ghmm++/ghmm.cpp
   $Id$
  */
 
@@ -18,142 +18,6 @@
 using namespace std;
 #endif
 
-ghmm::ghmm(const string& name, XMLIO_Attributes &attrs)
-{
-  /* do some initialisation */ 
-  Initial=NULL;
-  ghmm_Emissions=NULL;
-  my_graph=NULL;
-  type='\0';
-
-  /* read attributes */
-  
-  XMLIO_Attributes::const_iterator pos;
-  /* madatory argument */  
-  pos=attrs.find("type");
-  if (pos!=attrs.end())
-    {
-      if (pos->second=="discrete")
-	{
-	  /* discrete type */
-	  type='d';
-	}
-      else if (pos->second=="continuous")
-	{
-	  /* continuous type */
-	  type='c';
-	}
-      else if (pos->second=="switched")
-	{
-	  /* switched type */
-	  type='s';
-	}
-      else
-	{
-	  cerr<<toString()<<": unknown type "<<pos->second<<endl;
-	}
-    }
-  else
-    {
-      /**/
-      cerr<<toString()<<": type attribute missing"<<endl;
-    }
-
-  pos=attributes.find("prior");
-  if (pos!=attributes.end())
-    {
-      double* tmp_prior_pointer=NULL;
-      (void)XMLIO_evaluate_token(pos->second,0,pos->second.size(),tmp_prior_pointer);
-      if (tmp_prior_pointer==NULL)
-	{
-	  cerr<<toString()<<": attribute value of prior is not a double"<<endl;
-	  prior=1;
-	}
-      else
-	{
-	  prior=*tmp_prior_pointer;
-	  delete tmp_prior_pointer;
-	}
-    }
-}
-
-XMLIO_Element* ghmm::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
-{
-  /* what's next? */
-  if (name=="graph")
-    {
-      if (my_graph!=NULL)
-	{
-	  cerr<<toString()<<" only one graph expected"<<endl;
-	  return NULL;
-	}
-      else
-	{
-	  my_graph=new ghmm_graph(name,attrs);
-	  return my_graph;
-	}
-    }
-  else if (name=="InitialStates")
-    {
-      if (Initial!=NULL)
-	{
-	  cerr<<toString()<<": initial States allready existing, appending new section"<<endl;
-	}
-      else
-	{
-	  Initial=new InitialStates(name,attrs);
-	}
-      return Initial;
-    }
-  else if (name=="Alphabet")
-    {
-      if (my_alphabet==NULL)
-	{
-	  my_alphabet=new ghmm_alphabet(name,attrs);
-	  return my_alphabet;
-	}
-      else
-	{
-	  cerr<<toString()<<": alphabet allready existing,ignoring"<<endl;
-	  return NULL;
-	}
-
-    }
-  else if (name=="Emissions")
-    {
-      if (ghmm_Emissions!=NULL)
-	{
-	  cerr<<toString()<<" only one Emissions section expected"<<endl;
-	  return NULL;
-	}
-      else
-	{
-	  ghmm_Emissions=new Emissions(name,attrs);
-	  return ghmm_Emissions;
-	}
-    }
-  else
-    {
-      cerr<<toString()<<": found unexpected element "<<name<<", ignoring"<<endl;
-      return NULL;
-    }
-}
-
-void ghmm::XMLIO_endTag(const string& name)
-{
-  /* not needed now */
-}
-
-void ghmm::XMLIO_getCharacters(const string& characters)
-{
-  /* do nothing...*/
-}
-
-void ghmm::XMLIO_finishedReading()
-{
-  /* done at graph...*/
-  /* more needed here */
-}
 
 void ghmm::print() const
 {
@@ -406,5 +270,213 @@ ghmm::~ghmm()
   SAFE_DELETE(Initial);
 }
 
+/* all xml stuff */
 
 
+ghmm::ghmm(const string& name, XMLIO_Attributes &attrs)
+{
+  /* do some initialisation */ 
+  tag=name;
+  Initial=NULL;
+  ghmm_Emissions=NULL;
+  my_graph=NULL;
+  type='\0';
+
+  /* read attributes */
+  
+  XMLIO_Attributes::const_iterator pos;
+  /* madatory argument */  
+  pos=attrs.find("type");
+  if (pos!=attrs.end())
+    {
+      if (pos->second=="discrete")
+	{
+	  /* discrete type */
+	  type='d';
+	}
+      else if (pos->second=="continuous")
+	{
+	  /* continuous type */
+	  type='c';
+	}
+      else if (pos->second=="switched")
+	{
+	  /* switched type */
+	  type='s';
+	}
+      else
+	{
+	  cerr<<toString()<<": unknown type "<<pos->second<<endl;
+	}
+    }
+  else
+    {
+      /**/
+      cerr<<toString()<<": type attribute missing"<<endl;
+    }
+
+  pos=attributes.find("prior");
+  if (pos!=attributes.end())
+    {
+      double* tmp_prior_pointer=NULL;
+      (void)XMLIO_evaluate_token(pos->second,0,pos->second.size(),tmp_prior_pointer);
+      if (tmp_prior_pointer==NULL)
+	{
+	  cerr<<toString()<<": attribute value of prior is not a double"<<endl;
+	  prior=1;
+	}
+      else
+	{
+	  prior=*tmp_prior_pointer;
+	  delete tmp_prior_pointer;
+	}
+    }
+}
+
+XMLIO_Element* ghmm::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
+{
+  /* what's next? */
+  if (name=="graph")
+    {
+      if (my_graph!=NULL)
+	{
+	  cerr<<toString()<<" only one graph expected"<<endl;
+	  return NULL;
+	}
+      else
+	{
+	  my_graph=new ghmm_graph(name,attrs);
+	  return my_graph;
+	}
+    }
+  else if (name=="InitialStates")
+    {
+      if (Initial!=NULL)
+	{
+	  cerr<<toString()<<": initial States allready existing, appending new section"<<endl;
+	}
+      else
+	{
+	  Initial=new InitialStates(name,attrs);
+	}
+      return Initial;
+    }
+  else if (name=="Alphabet")
+    {
+      if (my_alphabet==NULL)
+	{
+	  my_alphabet=new ghmm_alphabet(name,attrs);
+	  return my_alphabet;
+	}
+      else
+	{
+	  cerr<<toString()<<": alphabet allready existing,ignoring"<<endl;
+	  return NULL;
+	}
+
+    }
+  else if (name=="Emissions")
+    {
+      if (ghmm_Emissions!=NULL)
+	{
+	  cerr<<toString()<<" only one Emissions section expected"<<endl;
+	  return NULL;
+	}
+      else
+	{
+	  ghmm_Emissions=new Emissions(name,attrs);
+	  return ghmm_Emissions;
+	}
+    }
+  else
+    {
+      cerr<<toString()<<": found unexpected element "<<name<<", ignoring"<<endl;
+      return NULL;
+    }
+}
+
+void ghmm::XMLIO_endTag(const string& name)
+{
+  /* not needed now */
+}
+
+void ghmm::XMLIO_getCharacters(const string& characters)
+{
+  /* do nothing...*/
+}
+
+void ghmm::XMLIO_finishedReading()
+{
+  /* done at graph...*/
+  /* more needed here */
+}
+
+const int
+ghmm::XMLIO_writeContent(XMLIO_Document& doc) const {
+  int result=doc.writeEndl();
+  
+  /* graph */
+  doc.writeComment("graph");
+  doc.writeEndl();
+  if (my_graph!=NULL) {
+    doc.writeElement(*my_graph);
+    doc.writeEndl();
+  }
+    
+
+  /* initial states */
+  doc.writeComment("initial states");
+  doc.writeEndl();
+  if (Initial!=NULL) {
+    doc.writeElement(*Initial);
+    doc.writeEndl();
+  }
+
+  /* emissions */
+  doc.writeComment("emissions");
+  doc.writeEndl();
+  if (ghmm_Emissions!=NULL) {
+    doc.writeElement(*ghmm_Emissions);
+    doc.writeEndl();
+  }
+
+  /* alphabet */
+  doc.writeComment("alphabet");
+  doc.writeEndl();
+  if (my_alphabet!=NULL) {
+    doc.writeElement(*my_alphabet);
+    doc.writeEndl();
+  }
+
+  return result;
+}
+
+const XMLIO_Attributes&
+ghmm::XMLIO_getAttributes() const {
+
+  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+
+  attrs.erase("type");
+  if (type=='d') {
+    attrs["type"]="discrete";
+  }
+  else if (type=='c') {
+    attrs["type"]="continuous";
+  }
+  else if (type=='s') {
+    attrs["type"]="switched";
+  }
+
+  attrs.erase("prior");
+  if (prior>0) {
+    strstream prior_val;
+    prior_val<<prior<<ends;
+    attrs["prior"]=prior_val.str();
+  }
+
+  if (!id.empty()){
+    attrs["id"]=id;
+  }
+
+  return attributes;
+}

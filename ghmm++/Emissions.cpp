@@ -16,57 +16,49 @@
 using namespace std;
 #endif
 
-Emission::Emission()
-{
+Emission::Emission() {
+  tag="Emission";
   fix=0;
 }
 
-const char* Emission::toString() const
-{
+const char* Emission::toString() const {
   return "Emission";
 }
 
-
 Emission::Emission(const string& name, XMLIO_Attributes &attrs):
-  XMLIO_ContentElementArrayElement<double,XMLIO_AttributedElement>(name,attrs)
-{
-  fix=0;
+  XMLIO_ContentElementArrayElement<double,XMLIO_AttributedElement>(name,attrs) {
+  tag="Emission";
+  fix=0;  
   XMLIO_Attributes::const_iterator pos;
-  /* madatory argument */  
+  /* madatory argument */
   pos=attrs.find("State");
-  if (pos==attrs.end())
-    {
+  if (pos==attrs.end()) {
       cerr<<toString()<<"State id is missing!"<<endl;
-    }
-  else
-    {
+  }
+  else {
       state=pos->second;
-    }
+  }
   pos=attrs.find("fix");
-  if (pos!=attrs.end())
-    {
-      if (pos->second.empty() || pos->second=="yes")
-	{
-	  fix=1;
-	}
-      else if (pos->second=="no")
-	{
-	  fix=0;
-	}
-      else
-	{
-	  cerr<<toString()<<": in attribute fix yes, no or '' expected"<<endl;
-	}
+  if (pos!=attrs.end()) {
+    if (pos->second.empty() || pos->second=="yes") {
+      fix=1;
     }
+    else if (pos->second=="no") {
+	  fix=0;
+    }
+      else {
+	cerr<<toString()<<": in attribute fix yes, no or '' expected"<<endl;
+      }
+  }
 }
 
-Emissions::Emissions()
-{
+Emissions::Emissions() {
+  tag="Emissions";
   set_element_name("Emission");
 }
 
-Emissions::Emissions(const string& name, XMLIO_Attributes &attrs)
-{
+Emissions::Emissions(const string& name, XMLIO_Attributes &attrs) {
+  tag=name;
   set_element_name("Emission");
 }
 

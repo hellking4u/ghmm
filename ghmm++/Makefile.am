@@ -9,8 +9,8 @@ SUBDIRS= .
 DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir)
-LDADD = libghmm++.a $(top_builddir)/ghmm/libghmm.a -lgxl -lxmlio -lexpat
+INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
+LDADD = libghmm++.a $(top_builddir)/ghmm/libghmm.a -lgxl $(XMLIO_LIBS)
 
 noinst_PROGRAMS = sequence_test DiscretePD_test ghmm_test
 sequence_test_SOURCES = sequence_test.cpp
