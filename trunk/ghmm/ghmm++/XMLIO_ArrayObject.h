@@ -1,12 +1,14 @@
 #ifndef _XMLIO_ARRAYOBJECT_H
 #define _XMLIO_ARRAYOBJECT_H 1
 
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <xmlio/XMLIO_Object.h>
 
-int* get_token(const string&, int&);
+size_t evaluate_token(const string& characters , const size_t position, const size_t length,int* &return_int);
+size_t evaluate_token(const string& characters , const size_t position, const size_t length, double* &return_double);
 
 template<class T>
 class XMLIO_Array: public XMLIO_Object, public vector<T> {
@@ -17,21 +19,22 @@ class XMLIO_Array: public XMLIO_Object, public vector<T> {
   }
 
   void XMLIO_getCharacters(const string& characters){
-    T* new_member;
-    int position=0;
-    do
+    for (int position=0 ; position<characters.size(); position++)
       {
-	new_member=get_token(characters, position);
-	if (new_member!=NULL)
-	  {
-	    push_back(*new_member);
-	    SAFE_DELETE(new_member);
-	  }
-      } 
-    while (position<characters.size());
+	/* delete leading spaces */
+	if (isspace(characters[position])) continue;
+	int length=0;
+	while (position+length<characters.size() && !isspace(characters[length])) length++;
+	T* new_element;
+	(void)evaluate_token(characters, position, length, new_element);
+	if (new_element!=NULL)
+	  push_back(*new_element);
+	else
+	  cerr<<"can not evaluate "<<characters.substr(position,length)<<endl;
+	SAFE_DELETE(new_element);
+	position+=length;
+      }
   }
-
-  char word_seperator;
 };
 
 class XMLIO_StringObject: public XMLIO_Object, public string

@@ -5,7 +5,7 @@
 #
 # __copyright__
 
-SUBDIRS=
+SUBDIRS= .
 DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
