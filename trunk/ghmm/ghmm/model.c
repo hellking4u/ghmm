@@ -397,6 +397,7 @@ int model_check(const model* mo) {
   }
   if ( fabs(sum - 1.0) >= EPS_PREC )
     { mes_prot("sum Pi[i] != 1.0\n"); goto STOP; }
+  /* check each state */
   for (i = 0; i < mo->N; i++) {
     sum = 0.0;
     if (mo->s[i].out_states == 0) {
@@ -404,7 +405,7 @@ int model_check(const model* mo) {
 	mprintf(NULL,0,"out_states = 0 (state %d -> final state!)\n",i); 
       mes_prot(str);
     }
-    /* Sum the a[i][j]'s */
+    /* Sum the a[i][j]'s : normalized out transitions */
     for (j = 0; j < mo->s[i].out_states; j++) {
       sum += mo->s[i].out_a[j];
       /* printf("    out_a[%d][%d] = %8.5f\n", i,j, mo->s[i].out_a[j]); */
@@ -416,7 +417,7 @@ int model_check(const model* mo) {
       m_free(str);
       /* goto STOP; */
     }
-    /* Sum the b[j]'s */
+    /* Sum the b[j]'s: normalized emission probs */
     sum = 0.0;
     for (j = 0; j < mo->M; j++)
       sum += mo->s[i].b[j];
@@ -426,7 +427,7 @@ int model_check(const model* mo) {
       mes_prot(str);
       m_free(str);
       goto STOP;
-    }
+    } /* i over all states */
   }
   
   res = 0;
