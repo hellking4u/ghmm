@@ -3,7 +3,7 @@
 #  created      : DATE: April 2001
 #  $Id$
 
-SUBDIRS =
+SUBDIRS = .
 MAINTAINERCLEANFILES = Makefile.in
 
 #******************  Doc++ *******************

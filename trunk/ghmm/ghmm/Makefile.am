@@ -5,7 +5,7 @@
 #
 # __copyright__
 
-SUBDIRS=
+SUBDIRS = .
 MAINTAINERCLEANFILES = Makefile.in
 
 #FIXME: expat config
@@ -28,6 +28,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   sviterbi.c sviterbi.h \
                   smodel.c smodel.h \
                   sreestimate.c sreestimate.h \
+                  sgenerate.c sgenerate.h \
                   smixturehmm.c smixturehmm.h \
                   const.h \
                   mes.c mes.h \
@@ -54,6 +55,7 @@ pkginclude_HEADERS = foba.h \
                   sviterbi.h \
                   smodel.h \
                   sreestimate.h \
+                  sgenerate.h \
                   smixturehmm.h \
                   const.h \
                   mes.h \
