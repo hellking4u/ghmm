@@ -20,6 +20,7 @@ __copyright__
     data like sequence label, sequence weight, etc. Sequences may have different
     length.    
  */
+
 struct sequence_t {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
    */
@@ -46,7 +47,7 @@ typedef struct sequence_t sequence_t;
     length.    
  */
 struct sequence_d_t {
-    /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
+  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
    */
   double **seq;
   /** array of sequence length */
@@ -55,7 +56,7 @@ struct sequence_d_t {
   long *seq_label;
   /**  array of sequence IDs*/
   double *seq_id;
-  /** positiv! sequence weights.  default is 1 = no weight */
+  /** positive! sequence weights.  default is 1 = no weight */
   double *seq_w;
   /** total number of sequences */
   long seq_number;
@@ -188,6 +189,13 @@ int sequence_d_add(sequence_d_t *target, sequence_d_t *source);
   @param sequence    array of sequences
   */
 void sequence_print(FILE *file, sequence_t *sequence);
+
+/**
+  Prints one array of integer sequences in a xml file
+  @param file       output file
+  @param sequence   array of sequences
+  */
+void sequence_print_xml(FILE *file, sequence_t *sequence);
 
 /**
    Prints one array of integer sequences in Mathematica format.
