@@ -163,18 +163,21 @@ ghmmwrapper.gsl_rng_init() #Init random number generator
 
 class GHMMError(Exception):
     """Base class for exceptions in this module."""
-
-#    def __init__(self, expression, message):
-#        self.expression = expression
-#        self.message = message
+    def __init__(self, message):
+        self.message = message
 
 class UnknownInputType(GHMMError):
-    def __init__(self):
-        pass
+    def __init__(self,message):
+       print "\n\n UnknownInputType Exception: " + str(message) + "\n"
 
 class NoValidCDataType(GHMMError):
-    def __init__(self):   
-        pass
+    def __init__(self,message):   
+        print "\n\n NoValidCDataType: " + str(message) + "\n"
+        
+class badCPointer(GHMMError):
+    def __init__(self,message):   
+        print "\n\nbadCPointer Exception: " + str(message) + "\n"
+                
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain:
@@ -363,8 +366,6 @@ class EmissionSequence(list):
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             if isinstance(sequenceInput, list):  
-                print "list input"
-
                 (seq,l) = ghmmhelper.list2matrixint([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_calloc(1)
                 self.cseq.seq = seq
@@ -372,14 +373,13 @@ class EmissionSequence(list):
                 set_arrayint(self.cseq.seq_len,0,l[0]) 
                 
             elif isinstance(sequenceInput, str): # from file
-                print "file input"
-                
                 # Does it make sense to read only one sequence from file?? 
                 # sequence_t **sequence_read(const char *filename, int *seq_arrays)
                 pass
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
-                print "pointer input"
                 # XXX Should enforce (self.cseq.seq_number == 1) and maintain reference to the parent
+                if sequenceInput.seq_number > 1:
+                    raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
                 
             else:    
@@ -398,6 +398,8 @@ class EmissionSequence(list):
                 pass
             elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
                 # XXX Should enforce (self.cseq.seq_number == 1) and maintain reference to the parent
+                if sequenceInput.seq_number > 1:
+                    raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
@@ -823,6 +825,7 @@ class HMM:
         self.viterbiFunction = ""
         self.forwardFunction = ""
         self.forwardAlphaFunction = ""
+        self.backwardBetaFunction = ""
         
     def loglikelihood(self, emissionSequences): 
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -912,7 +915,7 @@ class HMM:
         return baumWelchCData
     
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
-        """ Setup necessary temporary variables for Baum-Welch-reestimation.
+        """ Compute one iteration of Baum Welch estimation.
             Use baum_welch_setup and baum_welch_step if you want more control
             over the training, compute diagnostics or do noise-insertion
 
@@ -941,24 +944,23 @@ class HMM:
             getPtr = ghmmwrapper.get_row_pointer_d
             
         logP = double_array(1)		
-        i = self.cmodel.N
-
-
+     
         t = get_arrayint(emissionSequence.cseq.seq_len,0)
-        calpha = matrix_d_alloc(t,i)
+        calpha = matrix_d_alloc(t,self.cmodel.N)
         cscale = double_array(t)
 
         seq = getPtr(emissionSequence.cseq.seq,0)	
 		
         error = self.forwardAlphaFunction(self.cmodel, seq,t, calpha, cscale, logP)
         if error == -1:
-            print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
+            print "ERROR: forward finished with -1: EmissionSequence cannot be build."
             exit
         
         # translate alpha / scale to python lists 
         pyscale = ghmmhelper.arrayd2list(cscale, t)
-        pyalpha = ghmmhelper.matrixd2list(calpha,t,i)
+        pyalpha = ghmmhelper.matrixd2list(calpha,t,self.cmodel.N)
         
+        # deallocation
         ghmmwrapper.freearray(logP)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(calpha,t)
@@ -972,6 +974,33 @@ class HMM:
             Result: the (N x T)-matrix containing the backward-variables
         """
 
+        if self.emissionDomain.CDataType == "int":
+            getPtr = ghmmwrapper.get_row_pointer_int
+        if self.emissionDomain.CDataType == "double":            
+            getPtr = ghmmwrapper.get_row_pointer_d
+        
+        seq = getPtr(emissionSequence.cseq.seq,0)
+        
+        # parsing 'scalingVector' to C double array.
+        cscale = ghmmhelper.list2arrayd(scalingVector)
+        
+        # alllocating beta matrix
+        t = get_arrayint(emissionSequence.cseq.seq_len,0)
+        cbeta = ghmmwrapper.double_2d_array(t, self.cmodel.N)
+        
+        error = self.backwardBetaFunction(self.cmodel,seq,t,cbeta,cscale)
+        if error == -1:
+            print "ERROR: backward finished with -1: EmissionSequence cannot be build."
+            exit
+        
+        pybeta = ghmmhelper.matrixd2list(cbeta,t,self.cmodel.N)
+
+        # deallocation
+        ghmmwrapper.freearray(cscale)
+        ghmmwrapper.free_2darrayd(cbeta,t)
+        return pybeta
+        
+        
     
 
     def viterbi(self, emissionSequences):
@@ -1094,7 +1123,8 @@ class DiscreteEmissionHMM(HMM):
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
         self.forwardFunction = ghmmwrapper.foba_logp
-        self.forwardAlphaFunction = ghmmwrapper.foba_forward        
+        self.forwardAlphaFunction = ghmmwrapper.foba_forward      
+        self.backwardBetaFunction = ghmmwrapper.foba_backward  
       
     def __str__(self):
         hmm = self.cmodel
@@ -1138,6 +1168,7 @@ class GaussianEmissionHMM(HMM):
         self.viterbiFunction = ghmmwrapper.sviterbi
         self.forwardFunction = ghmmwrapper.sfoba_logp
         self.forwardAlphaFunction = ghmmwrapper.sfoba_forward
+        self.backwardBetaFunction = ghmmwrapper.sfoba_backward 
 
     def loglikelihood_sqd(self, sequenceSet):
         # XXX REMOVE soon XXX
@@ -1229,8 +1260,80 @@ class GaussianEmissionHMM(HMM):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) # XXX label assignment
+        seqPtr = self.samplingFunction(self.cmodel,0,T,1,0,-1) # XXX label assignment
         return EmissionSequence(self.emissionDomain,seqPtr)
+        
+    def forward(self, emissionSequence):
+        """
+
+            Result: the (N x T)-matrix containing the forward-variables
+                    and the scaling vector
+        """
+                      
+        if not isinstance(emissionSequence,EmissionSequence):
+            print "EmissionSequence required." # XXX plug in exception somtimes XXX
+            exit
+
+        if self.emissionDomain.CDataType == "int":
+            getPtr = ghmmwrapper.get_row_pointer_int
+        if self.emissionDomain.CDataType == "double":            
+            getPtr = ghmmwrapper.get_row_pointer_d
+            
+        logP = double_array(1)		
+        i = self.cmodel.N
+
+
+        t = get_arrayint(emissionSequence.cseq.seq_len,0)
+        calpha = matrix_d_alloc(t,i)
+        cscale = double_array(t)
+
+        seq = getPtr(emissionSequence.cseq.seq,0)	
+		
+        error = self.forwardAlphaFunction(self.cmodel, seq,t, None, calpha, cscale, logP)
+        if error == -1:
+            print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
+            exit
+        
+        # translate alpha / scale to python lists 
+        pyscale = ghmmhelper.arrayd2list(cscale, t)
+        pyalpha = ghmmhelper.matrixd2list(calpha,t,i)
+        
+        ghmmwrapper.freearray(logP)
+        ghmmwrapper.freearray(cscale)
+        ghmmwrapper.free_2darrayd(calpha,t)
+        return (pyalpha,pyscale)         
+        
+    def backward(self, emissionSequence, scalingVector):
+        """
+
+            Result: the (N x T)-matrix containing the backward-variables
+        """
+
+        if self.emissionDomain.CDataType == "int":
+            getPtr = ghmmwrapper.get_row_pointer_int
+        if self.emissionDomain.CDataType == "double":            
+            getPtr = ghmmwrapper.get_row_pointer_d
+        
+        seq = getPtr(emissionSequence.cseq.seq,0)
+        
+        # parsing 'scalingVector' to C double array.
+        cscale = ghmmhelper.list2arrayd(scalingVector)
+        
+        # alllocating beta matrix
+        t = get_arrayint(emissionSequence.cseq.seq_len,0)
+        cbeta = ghmmwrapper.double_2d_array(t, self.cmodel.N)
+        
+        error = self.backwardBetaFunction(self.cmodel,seq,t,None,cbeta,cscale)
+        if error == -1:
+            print "ERROR: backward finished with -1: EmissionSequence cannot be build."
+            exit
+        
+        pybeta = ghmmhelper.matrixd2list(cbeta,t,self.cmodel.N)
+
+        # deallocation
+        ghmmwrapper.freearray(cscale)
+        ghmmwrapper.free_2darrayd(cbeta,t)
+        return pybeta        
 
 
 

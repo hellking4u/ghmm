@@ -205,6 +205,9 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
   int i;
   res=-1;
   matched=0;
+  
+  sequence_d_print(stdout,sqd,0);
+  
   for ( i = 0; i < sqd->seq_number; i++) {
     if (sfoba_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
       log_ps[i] = log_p_i;

@@ -14,8 +14,8 @@
 #
 
 # Make sure these locate your installation of SWIG
-TOP        = /home/rungsari/SWIG-1.3.17
-SWIG       = swig
+TOP        = /project/algorithmics/
+SWIG       = /project/algorithmics/bin/swig
 TARGET     = ghmmwrapper
 INTERFACE  = ghmmwrapper.i
 SWIGOPT    = 

@@ -1400,7 +1400,9 @@ class scluster_env:
 
 					if p > 0:
 						trans_rand = p + uniform(-trans_dev,trans_dev)
-						
+						if trans_rand < 0:
+							trans_rand = 0
+							print "transitions smaller 0 set to 0."
 						#print "  ",p," -->  ", trans_rand
 						
 						set_2d_arrayd(state.out_a,tclass,sid,trans_rand)

@@ -1,4 +1,4 @@
-from new_ghmmex import *
+from pyghmm import *
 
 gsl_rng_init() #Init random number generator
 
@@ -16,7 +16,7 @@ for i in range(2):
 
 # adding model to clustering	
 #print "***** adding 1 model"
-#m = SHMM("test_add.smo") # reading .smo file into SHMM object
+#m = hmm_smodel("test_add.smo") # reading .smo file into hmm_smodel object
 #res.add_SHMM_model(m,0.2)  
 
 # two iterations of clustering
@@ -24,15 +24,15 @@ for i in range(2):
 #	change = res.cluster_onestep(1)
 
 # adding sequences to clustering
-#print "***** adding 10 sequences"
-#s2 = sequence_d(seq_d_read("test_add.sqd")) # reading .sqd file into sequence_d object
-#res.add_sequence_d(s2)
-#print "new number of sequences " + str(res.seq.seq_number)
+print "***** adding 10 sequences"
+s2 = sequence_d(seq_d_read("test_add.sqd")) # reading .sqd file into sequence_d object
+res.add_sequence_d(s2)
+print "new number of sequences " + str(res.seq.seq_number)
 
 
 # two iterations of clustering
-#for i in range(2):
-#	change = res.cluster_onestep(1)
+for i in range(2):
+	change = res.cluster_onestep(1)
 
 
 #print "***** removing model with ID 1"
@@ -48,8 +48,8 @@ for i in range(2):
 #m0 = get_smodel_ptr(res.sclustering.scluster_t.smo,0) 
 #m1 = get_smodel_ptr(res.sclustering.scluster_t.smo,1)
 
-#s1 = SHMM("blae",0,m0,1)  # initializing Python SHMM object from smodel pointers
-#s2 = SHMM("blae",0,m1,1)  #  m0 and m1
+#s1 = hmm_smodel("blae",0,m0,1)  # initializing Python hmm_smodel object from smodel pointers
+#s2 = hmm_smodel("blae",0,m1,1)  #  m0 and m1
 #print s1  # printing out these models for testing purposes
 #print s2
 
@@ -65,7 +65,7 @@ for i in range(2):
 
 # merging two models
 #print "\n*** adding yet another model"
-#m = SHMM("test.smo") # reading .smo file into SHMM object
+#m = hmm_smodel("test.smo") # reading .smo file into hmm_smodel object
 #res.add_SHMM_model(m,0.15)
 
 # two iterations of clustering
@@ -96,8 +96,8 @@ for i in range(2):
 
 #m0 = res.get_model(3) 
 #m1 = res.get_model(5) 
-#s1 = SHMM("blae",0,m0,1)  # initializing Python SHMM object from smodel pointers
-#s2 = SHMM("blae",0,m1,1)  #  m0 and m1
+#s1 = hmm_smodel("blae",0,m0,1)  # initializing Python hmm_smodel object from smodel pointers
+#s2 = hmm_smodel("blae",0,m1,1)  #  m0 and m1
 #print "*** calculating model distance"
 #d = prob_distance_smodel(m0,m1,2000) # (third argument is sequence lenght)
 #print "distance(m0,m1) = " + str(d)
