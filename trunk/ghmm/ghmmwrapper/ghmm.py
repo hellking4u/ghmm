@@ -126,7 +126,7 @@ The objects one has to deal with in HMM modelling are the following
    HMMOpen(fileName, type=HMM.FILE_XML)
    HMMFromMatrix(emission_domain, distribution, A, B, pi) # B is a list of distribution parameters
 
-   # XXX do we need dsitribution here?
+   # XXX do we need distribution here? I think we need it to interpret the parameters in B.
 
    Dynamic construction: Providing a context for dynamically
    editing existing HMMs or creating them from scratch
@@ -361,8 +361,8 @@ class EmissionSequence(list):
     """
 
     def __init__(self, emissionDomain, sequenceInput):
-        self.emissionDomain = emissionDomain # XXX identical name problematic ? Noe! Good. ;)
-        # XXXX How do you maintain reference to the SequenceSet.cseq?
+        self.emissionDomain = emissionDomain 
+        # XXX How do you maintain reference to the SequenceSet.cseq?
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             if isinstance(sequenceInput, list):  
@@ -377,7 +377,7 @@ class EmissionSequence(list):
                 # sequence_t **sequence_read(const char *filename, int *seq_arrays)
                 pass
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
-                # XXX Should enforce (self.cseq.seq_number == 1) and maintain reference to the parent
+                # XXX Should maintain reference to the parent
                 if sequenceInput.seq_number > 1:
                     raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
@@ -397,7 +397,7 @@ class EmissionSequence(list):
             elif isinstance(sequenceInput, str): # from file
                 pass
             elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
-                # XXX Should enforce (self.cseq.seq_number == 1) and maintain reference to the parent
+                # XXX Should maintain reference to the parent
                 if sequenceInput.seq_number > 1:
                     raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
@@ -408,7 +408,7 @@ class EmissionSequence(list):
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
-        self.cseq_number = self.cseq.seq_number
+        self.sequenceNumber = self.cseq.seq_number
         
     def __del__(self):        
         if self.emissionDomain.CDataType == "int": # delete the C ptr to sequence_t
@@ -454,21 +454,20 @@ class EmissionSequence(list):
 
 class SequenceSet:
     def __init__(self, emissionDomain, sequenceSetInput, seqNumber=0):
-        self.emissionDomain = emissionDomain # XXX identical name problematic ?
-        self.cseq_number    = seqNumber
+        self.emissionDomain = emissionDomain 
+        self.sequenceNumber    = seqNumber
         self.cseq = None
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             if isinstance(sequenceSetInput, str): # from file
-                ptNumber = ghmmwrapper.int_array(1)
-                pt_pt_seq = ghmmwrapper.sequence_read(sequenceSetInput, ptNumber)
-                self.cseq  = ghmmwrapper.get_seq_ptr(pt_pt_seq, 0) # XXX need because sequence_read returns sequence_t**
-                self.cseq_number = ghmmwrapper.get_arrayint(ptNumber,0)
+                # XXX reads in the first sequence struct in the input file
+                self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
+                self.sequenceNumber = self.cseq.seq_number
                 ghmmwrapper.freearray(ptNumber)
 
             elif isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
-                self.cseq_number = seq_nr 
+                self.sequenceNumber = seq_nr 
                 self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
                 self.cseq.seq_number = seq_nr
 
@@ -488,7 +487,7 @@ class SequenceSet:
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
-                self.cseq_number = seq_nr # XXX cseq_number is a little redundant, isn't it ?
+                self.sequenceNumber = seq_nr # XXX sequenceNumber is a little redundant, isn't it ?
                 self.cseq = ghmmwrapper.sequence_d_calloc(seq_nr)
                 self.cseq.seq_number = seq_nr
 
@@ -499,11 +498,8 @@ class SequenceSet:
 
             elif isinstance(sequenceSetInput, str): # from file
                 print "fromFile", sequenceSetInput                
-                ptNumber = ghmmwrapper.int_array(1)
-                pt_pt_seqd = ghmmwrapper.sequence_d_read(sequenceSetInput, ptNumber)
-                # XXX need because sequence_d_read returns sequence_d_t**
-                self.cseq  = ghmmwrapper.get_seq_d_ptr(pt_pt_seqd, 0) 
-                self.cseq_number = ghmmwrapper.get_arrayint(ptNumber,0)
+                self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
+                self.sequenceNumber = self.cseq.seq_number
                 ghmmwrapper.freearray(ptNumber)
                 
             elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
@@ -517,13 +513,13 @@ class SequenceSet:
 
         self.__array = []
         if self.emissionDomain.CDataType == "int": 
-            for index in range(self.cseq_number):
+            for index in range(self.sequenceNumber):
                 oneseq = ghmmwrapper.get_row_pointer_int(self.cseq.seq,index)
                 self.__array.append(oneseq)
                 
         elif self.emissionDomain.CDataType == "double":
             self.__array = []
-            for index in range(self.cseq_number):
+            for index in range(self.sequenceNumber):
                 oneset = ghmmwrapper.get_row_pointer_d(self.cseq.seq, index) 
                 self.__array.append(oneset)
 
@@ -935,8 +931,7 @@ class HMM:
         """
                       
         if not isinstance(emissionSequence,EmissionSequence):
-            print "EmissionSequence required." # XXX plug in exception somtimes XXX
-            exit
+            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
@@ -973,6 +968,8 @@ class HMM:
 
             Result: the (N x T)-matrix containing the backward-variables
         """
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
@@ -1004,9 +1001,9 @@ class HMM:
     
 
     def viterbi(self, emissionSequences):
-        """ Compute the Viterbi-path for each sequence in emission_sequences
+        """ Compute the Viterbi-path for each sequence in emissionSequences
 
-            emission_sequences can either be a SequenceSet or a Sequence
+            emission_sequences can either be a SequenceSet or an EmissionSequence
 
             Result: [q_0, ..., q_T] the viterbi-path of emission_sequences is an emmissionSequence
             object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
@@ -1208,40 +1205,37 @@ class GaussianEmissionHMM(HMM):
    
 
     def __str__(self):
-        # XXX This currently works also for emission classes and mixtures: specialize
         hmm = self.cmodel
         strout = "\nOverview of HMM:"
         strout += "\nNumber of states: " + str(hmm.N)
         strout += "\nNumber of mixture components: " + str(hmm.M)
-        strout += "\nNumber of Output-Classes: " + str(hmm.cos)
         
         for k in range(hmm.N):
-            print k
             state = ghmmwrapper.get_sstate(hmm, k)
             strout += "\n\nState number "+ str(k) + ":"
-            strout += "\nInitial probability: " + str(state.pi)
-            strout += "\n"+ str(hmm.M) + " density function(s):\n"
+            strout += "\nInitial probability: " + str(state.pi) + "\n"
+
             weight = ""
             mue = ""
             u =  ""
-            for outp in range(hmm.M):
-                weight += str(ghmmwrapper.get_arrayd(state.c,outp)) + ", "
-                mue += str(ghmmwrapper.get_arrayd(state.mue,outp)) + ", "
-                u += str(ghmmwrapper.get_arrayd(state.u,outp)) + ", "
-                strout += "  pdf component weights : " + str(weight) + "\n"
-                strout += "  mean vector: " + str(mue) + "\n"
-                strout += "  variance vector: " + str(u) + "\n"
-                strout += "\nOutgoing transitions:"
+           
+            weight += str(ghmmwrapper.get_arrayd(state.c,0)) + ", "
+            mue += str(ghmmwrapper.get_arrayd(state.mue,0)) + ", "
+            u += str(ghmmwrapper.get_arrayd(state.u,0)) + ", "
+           
+            strout += "  mean: " + str(mue) + "\n"
+            strout += "  variance: " + str(u) + "\n"
+            strout += "\nOutgoing transitions:"
 
-                for i in range( state.out_states):
-                    strout += "\ntransition to node " + str(ghmmwrapper.get_arrayint(state.out_id,i) )
-                    for j in range(hmm.cos):
-                        strout += "\n\tin class " + str(j) + " with probablity = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,j,i))
-                strout +=  "\nIngoing transitions:"
-                for i in range(state.in_states):
-                    strout += "\ntransition from node " + str(ghmmwrapper.get_arrayint(state.in_id,i) )
-                    for j in range(hmm.cos):
-                        strout += "\n\tin class "+str(j)+" with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,j,i))
+            for i in range( state.out_states):
+                strout += "\ntransition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) )
+                for j in range(hmm.cos):
+                    strout += "\n\tin class " + str(j) + " with probablity = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,j,i))
+            strout +=  "\nIngoing transitions:"
+            for i in range(state.in_states):
+                strout += "\ntransition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) )
+                for j in range(hmm.cos):
+                    strout += "\n\tin class "+str(j)+" with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,j,i))
             strout += "\nint fix:" + str(state.fix) + "\n"
         return strout
 
@@ -1269,10 +1263,9 @@ class GaussianEmissionHMM(HMM):
             Result: the (N x T)-matrix containing the forward-variables
                     and the scaling vector
         """
-                      
         if not isinstance(emissionSequence,EmissionSequence):
-            print "EmissionSequence required." # XXX plug in exception somtimes XXX
-            exit
+            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+
 
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
@@ -1308,6 +1301,8 @@ class GaussianEmissionHMM(HMM):
 
             Result: the (N x T)-matrix containing the backward-variables
         """
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
@@ -1336,36 +1331,4 @@ class GaussianEmissionHMM(HMM):
         return pybeta        
 
 
-
-#if __name__ == '__main__':
- #   m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
- #                       [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
- #                       [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
- #                       [1.0,0,0])
-
-    
-  #  print m
-
-
-   # m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
-    #                     [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-     #                    [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
-      #                   [1.0,0,0])
-    
-
-#    print m2
-
-
-    #seq_c = ghmmwrapper.seq_d_read('test10.sqd')
-    #l = m2.loglikelihood_sqd(seq_c)
-    
-    #for i in xrange(seq_c.seq_number):
-    #    print ghmmwrapper.get_arrayd(l,i), 
-        
-       #m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
-        #m = HMMOpen("test.smo")
-
-        #seqs = SequenceSetOpen('test.sqd')
-        #l = m.baumWelch(seqs, 100, 0.001)
-        #print l
 
