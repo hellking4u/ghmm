@@ -500,7 +500,7 @@ class SequenceSet:
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             # necessary C functions for accessing the sequence_t struct
-            self.calloc = ghmmwrapper.sequence_calloc
+            self.sequenceAllocationFunction = ghmmwrapper.sequence_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
@@ -537,7 +537,7 @@ class SequenceSet:
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             # necessary C functions for accessing the sequence_d_t struct
-            self.calloc =  ghmmwrapper.sequence_d_calloc
+            self.sequenceAllocationFunction =  ghmmwrapper.sequence_d_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
@@ -622,7 +622,7 @@ class SequenceSet:
         sequence 'index'.
         
         """
-        seq = self.calloc(1)
+        seq = self.sequenceAllocationFunction(1)
         seq.seq = self.castPtr(self.__array[index]) # int* -> int** reference
         ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
         seq.seq_number = 1
@@ -648,7 +648,7 @@ class SequenceSet:
        
         """
         seqNumber = len(seqIndixes)       
-        seq = self.calloc(seqNumber)
+        seq = self.sequenceAllocationFunction(seqNumber)
         seq.seq = self.emptySeq(seqNumber)
         for i in range(seqNumber):
             self.setSeq(seq.seq,i,self.__array[ seqIndixes[i] ]) 
