@@ -12,6 +12,7 @@
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
 #include "ghmm/matrix.h"
+#include "ghmm/model.h"
 
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Document.h>
@@ -469,6 +470,17 @@ sdstate* GHMM_SWDiscreteModel::getCState(int index) const
   }  
   return &c_model->s[index]; 
 }
+
+
+model *GHMM_SWDiscreteModel::create_cmodel(int kclass) {
+  model *new_model;
+  if ( kclass <  c_model->cos ) {
+    new_model = sdmodel_to_model(c_model, kclass);
+    return new_model;
+  }
+  return NULL;
+}
+
 
 void GHMM_SWDiscreteModel::XMLIO_finishedReading() {
   unsigned int i;
