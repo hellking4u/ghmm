@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /homes/hmm/bknab/src/sfoba.h
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sfoba.h
   created      : TIME: 16:47:16     DATE: Mon 15. November 1999
-  last-modified: TIME: 16:49:48     DATE: Mon 15. November 1999
+  last-modified: TIME: 20:06:23     DATE: Tue 10. April 2001
 ------------------------------------------------------------------------------*/
 
 #ifndef SFOBA_H
@@ -10,56 +10,59 @@
 
 #include "smodel.h"
 
-/**@name SHMM Vorwaerts-Rueckwaerts-Algorithmus */
+/**@name SHMM Forward-Backward-Algorithm */
 /*@{ (Doc++-Group: sfoba) */
 
-/** Forward-Algorithmus.
-  Berechnung von alpha[t][i], Skalierungsfaktoren scale[t] und 
-  log( P(O|lambda) ) bei gegebener Sequenz und gegebenem Modell.
-  @param smo      vorgebenes Modell
-  @param O        Sequenz
-  @param T        Laenge der Sequenz
-  @param b        Matrix mit bereits berechneten b's (Ausgabe"wahrsch."),
-                  darf auch NULL sein!
+/** Forward-Backward-Algorithm for multiple double
+    sequences with scaling.
+    For reference see:  
+    Rabiner, L.R.: "`A Tutorial on Hidden {Markov} Models and Selected
+                Applications in Speech Recognition"', Proceedings of the IEEE,
+	77, no 2, 1989, pp 257--285
+*/
+	
+
+/** Forward-Algorithm.
+  Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
+  a given double sequence and a given model.
+  @param smo      model
+  @param O        sequence
+  @param T        length of sequence
+  @param b        matrix with precalculated output probabilities. May be NULL
   @param alpha    alpha[t][i]
-  @param scale    Skalierungsfaktoren
-  @param log_p    log( P(O|lambda) )
+  @param scale    scale factors
+  @param log_p    log likelihood log( P(O|lambda) )
+  @return 0 for success, -1 for error
   */
 int sfoba_forward(smodel *smo, const double *O, int T, double ***b, 
 		  double **alpha, double *scale, double *log_p);
 
 /** 
-  Backward-Algorithmus. Berechnung von beta[t][i], bei gegebener Sequenz und
-  gegebenem Modell. Skalierungsfaktoren werden uebergeben und nicht neu
-  berechnet, da schon aus forward-Alg. bekannt
-  @param smo      vorgebenes Modell
-  @param O        Sequenz
-  @param T        Laenge der Sequenz
-  @param b        Matrix mit bereitsberechneten b's (Ausgabe"wahrsch."),
-                  darf auch NULL sein!
+  Backward-Algorithm. 
+  Calculates beta[t][i] given a double sequence and a model. Scale factors 
+  given as parameter (come from sfoba\_forward).
+  @param smo      model
+  @param O          sequence
+  @param T        length of sequence
+  @param b        matrix with precalculated output probabilities. May be NULL
   @param beta     beta[t][i]
-  @param scale    vorgegebene Skalierungsfaktoren
+  @param scale    scale factors
+  @return 0 for success, -1 for error
   */
 int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
 		   double **beta, const double *scale);
 
 /**
-  Berechnung von log( P(O|lambda) ). 
-  Geschieht durch Aufruf von sfoba\_forward.
-  Funktion der Wahl, wenn es ausschliesslich um die Berechnung der
-  "Wahrscheinlichkeit" der Sequenz geht, und nicht um alpha[t][i]. 
-  @param smo      vorgebenes Modell
-  @param O        Sequenz
-  @param T        Laenge der Sequenz
-  @param log_p    log( P(O|lambda) )
+  Calculation of  log( P(O|lambda) ). 
+  Done by calling sfoba\_forward. Use this function if only the
+  log likelihood and not alpha[t][i] is needed.
+  @param smo      model
+  @param O        sequence
+  @param T         length of sequence
+  @param log_p    log likelihood log( P(O|lambda) )
+  @return 0 for success, -1 for error
   */
 int sfoba_logp(smodel *smo, const double *O, int T, double *log_p);
-
-
-int sfoba_forwardBS(smodel *smo, const double *O, int T, double ***b,
-		    double **alpha, double *scale, double *log_p);
-
-int sfoba_logpBS(smodel *smo, const double *O, int T, double *log_p);
 
 
 /*@} (Doc++-Group: sfoba) */
