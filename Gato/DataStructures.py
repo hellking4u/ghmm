@@ -172,6 +172,9 @@ class EdgeWeight(EdgeLabeling):
 	    except KeyError:
 		return self.label[e]
 
+    def has_key(self,k):
+        return self.label.has_key(k)
+
     def QInteger(self):
 	""" Returns 1 if all weights are integers, 0 else """
 	return self.integer

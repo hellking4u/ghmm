@@ -339,6 +339,14 @@ class Graph:
             about the graph """
         return "<HTML><BODY> <H3>No information available</H3></BODY></HTML>"
 
+    def Clear(self):
+	""" Delete all vertices and edges from the subgraph. """
+	self.vertices         = [] 
+	self.adjLists         = {}
+	self.invAdjLists      = {}   # Inverse Adjazenzlisten
+	self.size = 0
+	self.totalWeight   = 0
+
 
 ################################################################################
 #
@@ -382,6 +390,47 @@ class SubGraph(Graph):
 	    self.invAdjLists[v] = []
 	except:
 	    raise NoSuchVertexError
+
+    def DeleteVertex(self,v):
+	""" *Internal* Delete vertex v """ 
+	del(self.labeling.label[v]) # XXX
+	del(self.embedding.label[v]) # XXX
+	# delete incident edges
+	outVertices = self.OutNeighbors(v)[:] # Need a copy here
+	inVertices = self.InNeighbors(v)[:]
+	for w in outVertices:
+	    self.DeleteEdge(v,w)
+	for w in inVertices:
+	    if w != v: # We have already deleted loops
+		self.DeleteEdge(w,v)
+	#del(self.G.adjLists[v]) # XXX
+	# and finally the vertex itself
+	self.vertices.remove(v) # XXX        
+
+    def AddEdge(self,tail,head,w=-1,cl=0):
+	""" Add an edge (tail,head). Returns nothing
+	    Raises GraphNotSimpleError if
+	    - trying to add a loop
+	    - trying to add an edge multiply 
+
+	    In case of directed graphs (tail,head) and (head,tail)
+	    are distinct edges """
+
+	if self.simple == 1 and tail == head: # Loop
+	    raise GraphNotSimpleError
+	if self.directed == 0 and tail in self.adjLists[head]: 
+	    raise GraphNotSimpleError
+	if head in self.adjLists[tail]: # Multiple edge
+	    raise GraphNotSimpleError
+	    
+	self.adjLists[tail].append(head)
+	self.invAdjLists[head].append(tail)
+	self.size = self.size + 1
+
+        if (w>=0):
+            self.edgeWeights[0][(tail,head)] = 0.0
+            self.edgeWeights[cl][(tail,head)] = w
+
 
     def AddEdge(self,tail,head):
 	""" Add an edge from the supergraph to the subgraph.
