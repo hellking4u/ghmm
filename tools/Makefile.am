@@ -4,7 +4,7 @@
 
 # to be filled
 BUILT_SOURCES = 
-
+INCLUDES = -I$(top_srcdir)
 bin_PROGRAMS = probdist
 
 probdist_SORUCES = probdist.c

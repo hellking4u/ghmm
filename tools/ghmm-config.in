@@ -3,6 +3,14 @@
 # $Author$
 # $Date$, $Revision$"
 
+copyright()
+{
+cat <<EOF
+__copyright__
+EOF
+}
+
+
 usage()
 {
         cat <<EOF
@@ -13,6 +21,7 @@ Options:
         [--version]
         [--libs]
         [--cflags]
+        [--copyright]
         [--help]
 EOF
         exit $1
@@ -47,6 +56,8 @@ while test $# -gt 0; do
     --libs)
       echo @LIBS@
       ;;
+    --copyright)
+      copyright
     --help)
       usage 0
       ;;
@@ -56,7 +67,4 @@ while test $# -gt 0; do
   esac
   shift
 done
-
-
-
 

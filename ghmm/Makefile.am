@@ -26,7 +26,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   gauss_tail.c gauss_tail.h
 
 
-include_HEADERS = foba.h \
+pkginclude_HEADERS = foba.h \
                   matrix.h \
                   model.h \
                   cluster.h \
@@ -49,21 +49,3 @@ include_HEADERS = foba.h \
                   scanner.h \
                   gauss_tail.h
 
-install-includeHEADERS: $(include_HEADERS)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(includedir)
-	$(mkinstalldirs) $(DESTDIR)$(includedir)/ghmm
-	@list='$(include_HEADERS)'; for p in $$list; do \
-	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
-	  f=`basename $$p`; \
-	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/ghmm/$$f"; \
-	 $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/ghmm/$$f; \
-	done
-
-uninstall-includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	list='$(include_HEADERS)'; for p in $$list; do \
-	  f=`basename $$p`; \
-	  rm -f $(DESTDIR)$(includedir)/ghmm/$$f; \
-	done
-	-rmdir $(DESTDIR)$(includedir)/ghmm

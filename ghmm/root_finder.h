@@ -1,3 +1,7 @@
+/*
+__copyright__
+*/
+
 #ifndef ROOT_FINDER_H
 #define ROOT_FINDER_H
 
