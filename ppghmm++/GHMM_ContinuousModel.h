@@ -13,6 +13,7 @@
 #include <ghmm/smodel.h>
 #include <ppghmm++/GHMM_AbstractModel.h>
 
+#include <ppghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -110,5 +111,7 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#include <ppghmm++/close_code.h>
 
 #endif /* _GHMM_CONTINUOUSMODEL_H */

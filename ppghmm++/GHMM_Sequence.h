@@ -11,6 +11,7 @@
 #include <xmlio/XMLIO_ArrayElement.h>
 #include "ppghmm++/GHMM_Sequences.h"
 
+#include <ppghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -48,5 +49,7 @@ class GHMM_Sequence: public XMLIO_ArrayElement<string> {
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#include <ppghmm++/close_code.h>
 
 #endif /* _GHMM_SEQUENCE_H */

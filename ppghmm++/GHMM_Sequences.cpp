@@ -355,7 +355,6 @@ unsigned int GHMM_Sequences::getLength(int index) const {
 XMLIO_Element* GHMM_Sequences::XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes) {
   if (my_tag == "sequence") {
     GHMM_Sequence* sequence = new GHMM_Sequence(sequence_type,last_weight);
-    fprintf(stderr,"<sequence id=\"%s\">\n",my_attributes["id"].c_str());
     sequences.push_back(sequence);
 
     last_weight = 1;
@@ -371,8 +370,6 @@ XMLIO_Element* GHMM_Sequences::XMLIO_startTag(const string& my_tag, XMLIO_Attrib
 
 
 void GHMM_Sequences::XMLIO_finishedReading() {
-  fprintf(stderr,"</sequences>\n");
-
   if (sequence_type == GHMM_INT)
     c_i_sequences = sequence_calloc(0);
 
