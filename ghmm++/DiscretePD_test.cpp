@@ -2,9 +2,8 @@
 #include <config.h>
 #endif
 
-#include <xmlio/XMLIO_ObjectReader.h>
-#include "sequences.h"
-#include "DiscretePD.h"
+#include <xmlio/XMLIO_ArrayReader.h>
+#include <ghmm++/InitialStates.h>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;

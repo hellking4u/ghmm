@@ -49,8 +49,11 @@ AC_CHECK_LIB(expat,XML_ParserCreate)
 
 AC_ARG_WITH(xmlio,
 [  --with-xmlio=DIR        with xmlio library available at the given prefix],
-[CXXFLAGS="$CXXFLAGS -I$with_xmlio/include"
-LIBS="$LIBS -L$with_xmlio/lib"]
+[
+XMLIO_PREFIX="$with_xmlio"
+CXXFLAGS="$CXXFLAGS -I$XMLIO_PREFIX/include"
+LIBS="$LIBS -L$XMLIO_PREFIX/lib"
+AC_SUBST(XMLIO_PREFIX)]
 )
 
 dnl following tests with C
