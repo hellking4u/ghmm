@@ -410,6 +410,19 @@ int model_free(model **mo) {
 } /* model_free */   
 
 
+int model_free_background_distributions(background_distributions *bg){
+#define CUR_PROC "model_free_background_distributions"
+  int i;
+  if (bg->order)
+    m_free(bg->order);
+  if (bg->b)  
+    matrix_d_free(&(bg->b),bg->n);
+  m_free(bg); 
+ 
+  return(0);    
+#undef CUR_PROC      
+}    
+
 /*===========================================================================
 
 int model_free(model **mo) {
@@ -1799,7 +1812,63 @@ int model_add_noise(model* mo, double level, int seed) {
 #undef CUR_PROC
 }
 
+/*----------------------------------------------------------------------------*/
+/** 
+   Allocates a new background_distributions struct and assigs the arguments to
+   the respective fields. Note: The arguments need allocation outside of this
+   function.
+   
+   @return    :               new pointer to a background_distributions struct
+   @param n   :               number of distributions
+   @param order:              orders of the distribtions
+   @param B:                  matrix of distribution parameters
+*/
+background_distributions *model_alloc_background_distributions(int n,int m, int *orders, double **B) {
+#define CUR_PROC "model_alloc_background_distributions"
+    background_distributions *ptbackground = (background_distributions *) calloc(1, sizeof(background_distributions));
+    ptbackground->n = n;
+    ptbackground->m = m;
+    if ( orders != NULL && B != NULL ) {
+      ptbackground->order = orders;
+      ptbackground->b = B;
+    } else {
+      m_free(ptbackground);
+      return NULL;
+    }
+    return ptbackground;
+#undef CUR_PROC
+  }
 
+/*----------------------------------------------------------------------------*/  
+
+background_distributions *model_copy_background_distributions(background_distributions *bg){
+#define CUR_PROC "model_copy_background_distributions"
+  int i,j,b_i_len;
+  int* new_order;
+  double** new_b;
+    
+  if (!m_malloc(new_order,bg->n)) {mes_proc(); goto STOP;}
+  if (!m_calloc(new_b, bg->n)) {mes_proc(); goto STOP;}    
+
+  for(i=0;i<bg->n;i++){
+    new_order[i] = bg->order[i];
+    b_i_len = (int)pow(bg->m, bg->order[i]+1);
+    if (!m_calloc(new_b[i], b_i_len)) {mes_proc(); goto STOP;}   
+    for(j=0;j<b_i_len;j++){
+      new_b[i][j] = bg->b[i][j]; 
+    }
+  }      
+
+  return model_alloc_background_distributions(bg->n, bg->m, new_order, new_b);
+
+STOP:
+  
+  return NULL;
+                    
+#undef CUR_PROC          
+}  
+    
+  
 /*----------------------------------------------------------------------------*/
 int model_apply_background (model *mo, double* background_weight) {
 # define CUR_PROC "model_apply_background"
@@ -1821,7 +1890,7 @@ int model_apply_background (model *mo, double* background_weight) {
       /* XXX Cache in background_distributions */
       size = (int)pow(mo->M, mo->s[i].order+1);
       for (j=0; j<size; j++)
-	mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
+	    mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
 	  + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
     }
   }

@@ -27,6 +27,8 @@ extern "C" {
 struct background_distributions {
   /** Number of distributions */
   int n;
+  /** Number of symbols in alphabet */
+  int m;
   /** Order of the respective distribution */
   int* order;
   /** The probabilities */ 
@@ -534,6 +536,21 @@ int model_add_noise(model* mo, double level, int seed);
 */
 int model_apply_background(model *mo, double* background_weight);
 
+
+/** 
+   Allocates a new background_distributions struct and assigs the arguments to
+   the respective fields. Note: The arguments need allocation outside of this
+   function.
+   
+   @return    :               new pointer to a background_distributions struct
+   @param n   :               number of distributions
+   @param order:              orders of the distribtions
+   @param B:                  matrix of distribution parameters
+*/
+background_distributions *model_alloc_background_distributions(int n,int m, int *orders, double **B);
+
+background_distributions *model_copy_background_distributions(background_distributions *bg);
+int model_free_background_distributions(background_distributions *bg);
 
 /**
    Calculates the background distribution for a sequence_t
