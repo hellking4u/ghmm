@@ -330,13 +330,13 @@ class HMMEditor(SAGraphEditor):
         b.bind("<Enter>", lambda e, gd=self:gd.UpdateInfo('Edit Properties'))
 
         # disable the EditProperties button
-        #b = Radiobutton(extra, width=32, padx=px, pady=py, 
-        #                text='Edit State', 
-        #                command=self.ChangeTool,
-        #                var = self.toolVar, value='EditState', indicator=0,
-        #               image=self.editIcon)
-        #b.grid(row=6, column=0, padx=2, pady=2)
-        #b.bind("<Enter>", lambda e, gd=self:gd.UpdateInfo('Edit State'))
+##        b = Radiobutton(extra, width=32, padx=px, pady=py, 
+##                        text='Edit State', 
+##                        command=self.ChangeTool,
+##                        var = self.toolVar, value='EditState', indicator=0,
+##                       image=self.editIcon)
+##        b.grid(row=6, column=0, padx=2, pady=2)
+##        b.bind("<Enter>", lambda e, gd=self:gd.UpdateInfo('Edit State'))
 
         GraphEditor.CreateWidgets(self)
 
@@ -359,7 +359,7 @@ class HMMEditor(SAGraphEditor):
 	elif self.mode == 'EditProperties':
 	    self.EditPropertiesUp(event)
         elif self.mode == 'EditState': # test EditObj
-            self.EditStateUp(event)
+            self.EditHMMObj(event)
 
     def makeMenuBar(self):
 	self.menubar = Menu(self,tearoff=0)
@@ -385,10 +385,8 @@ class HMMEditor(SAGraphEditor):
 	self.graphMenu.add_command(label='Edit Prior', command=self.EditPrior)
 	self.graphMenu.add_command(label='Edit Background Distributions', command=self.EditBackgroundDistributions)
 	self.graphMenu.add_separator()
-	self.graphMenu.add_checkbutton(label='Grid', 
-						  command=self.ToggleGridding)	
-	self.menubar.add_cascade(label="HMM", menu=self.graphMenu, 
-				 underline=0)
+	self.graphMenu.add_checkbutton(label='Grid', command=self.ToggleGridding)
+	self.menubar.add_cascade(label="HMM", menu=self.graphMenu, underline=0)
 
 	self.master.configure(menu=self.menubar)
 
@@ -439,8 +437,7 @@ class HMMEditor(SAGraphEditor):
 	  
 	file = askopenfilename(title="Open HMM",
 			       defaultextension=".xml",
-			       filetypes = (("XML", ".xml"),
-                                            )
+			       filetypes = (("XML", ".xml"),)
 			       )
 	if file is "": 
 	    print "cancelled"
@@ -526,7 +523,8 @@ class HMMEditor(SAGraphEditor):
                         head = int(key[3:])
                         self.HMM.G.edgeWeights[0][(tail,head)]=transition_probabilities[key]/transition_probabilities.sum
 
-	    else: # We have a vertex
+	    else:
+                # We have a vertex
 		v = self.FindVertex(event)
 		if v != None:
                     state = self.HMM.state[v]
@@ -566,6 +564,28 @@ class HMMEditor(SAGraphEditor):
                             code = self.HMM.hmmAlphabet.name2code[key]
                             state.emissions[code-1] = emission_probabilities[key] / emission_probabilities.sum	
 
+    def EditHMMObj(self, event):
+        # register values
+        editor.register_attr("itsEditor", None)
+ 	editor.register_attr("G", None)
+	editor.register_attr("Pi", None)
+        editor.register_attr("id2index", None)
+
+        editor.register_attr("hmmAlphabet", None)
+        editor.register_attr("hmmClass", None)
+        
+        editor.register_attr("editableAttr", None)
+
+
+        editor.register_attr("backgroundDistributions", None)
+
+                        
+        editor.register_attr("state", editor.EntryEditor)
+                
+        # Edit this State with editobj widget  
+        editobj.edit(self.HMM)
+        
+        
     def EditStateUp(self,event):
         print 'Calling EditObj'
 	if event.widget.find_withtag(CURRENT):
@@ -574,7 +594,6 @@ class HMMEditor(SAGraphEditor):
 	    if not "edges" in tags:
 		v = self.FindVertex(event)
                 # print "Found Vertex " + "%s" % v
-
                 # hidden attributes set to None
                 editor.register_attr("state_class", None)
                 editor.register_attr("emissions", None) # hidden
@@ -591,7 +610,6 @@ class HMMEditor(SAGraphEditor):
                 
                 # register values
                 editor.register_attr("label", ValidStringEditor)
-                editor.register_attr("initial", ProbabilityEditor)
                 
                 # Edit this State with editobj widget  
                 editobj.edit(self.HMM.state[v])
@@ -754,9 +772,9 @@ class HMMInformer(GraphInformer):
 ################################################################################
 if __name__ == '__main__':
     
-    # Make HMMState available in the EditObj evaluation environment
+    # Make HMM available in the EditObj evaluation environment
+    editobj.EVAL_ENV["HMM"] = HMM
     editobj.EVAL_ENV["HMMState"] = HMMState
-    
     graphEditor = HMMEditor(Tk())
     graphEditor.NewGraph(2)
     graphEditor.mainloop()

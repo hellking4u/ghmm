@@ -17,7 +17,6 @@
 
 import sys, types, copy, bisect, Tkinter
 
-sys.path.append('/home/rungsari/EditObj-0.4/lib/python2.2/site-packages') 
 import editobj, editobj.eventobj as eventobj
 
 from Tkinter import *
