@@ -35,6 +35,7 @@ static int pdf_stdnormal_exists = 0;
 #define X_STEP_PHI 0.001  /* Schrittweite */
 #define X_FAKT_PHI 1000   /* aequivalent zur Schrittweite */
 #define PHI_DATEI_NAME "/usr/users/disa/lib/PHI_001_20.dat"
+#warning "PHI_DATE_NAME depreciated!"
 static double* PHI = NULL;
 static int PHI_len = 0;
 static double x_PHI_1 = -1.0;
