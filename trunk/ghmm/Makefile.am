@@ -30,7 +30,8 @@ COPYRIGHT.txt \
 GPL.txt \
 LGPL.txt \
 ToDo \
-win_config.h
+win_config.h \
+README.Win
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

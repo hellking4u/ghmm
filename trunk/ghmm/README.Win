@@ -1,0 +1,41 @@
+At the moment just static libraries can be build on Windows.
+Dynamic link library (dll) support will be added later.
+
+Visual C++
+----------
+
+a) Building ghmm.lib
+
+   Go into the VisualC directory that is created, and 
+   double-click on the VC++ workspace file ghmm.dsw. 
+   This should open up VisualC.
+
+   Now you have to ensure that the required gsl library
+   is found. Change to ghmm project setting and add
+   the include directory of the gsl library at C/C++ - 
+   Preprocessor - Additional include dirs. You also may 
+   add this path to the global search directories of 
+   VisualC++, so that gsl headers will be found by all 
+   of your projects. To do this add the gsl include 
+   directory to tools - directories.
+
+   Since gsl.lib is needed for successfully linking our
+   project, copy gsl.lib to the main ghmm directory
+   (the directory that contains README.Win).
+
+   Now we are ready to build ghmm.lib.
+
+b) Building example programs:
+
+   Project files of some example programs are also included
+   in the ghmm workspace. They should compile without any
+   further adjustments. To run them, go to the appropriate
+   directory (e.g. VisualC/coin_toss_test/Release) and double
+   click the created .exe file.
+
+
+Other Compiler:
+---------------
+
+Also other compiler should work well. But we have not tested
+any so far.
