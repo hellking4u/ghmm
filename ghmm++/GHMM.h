@@ -8,6 +8,7 @@
 #ifndef _GHMM_H
 #define _GHMM_H 1
 
+#include "ghmm++/GHMM_Sequence.h"
 #include "ghmm++/GHMM_Sequences.h"
 #include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_State.h"

@@ -99,7 +99,7 @@ int two_states_coin_toss() {
   fprintf(stdout,"applying forward algorithm to the sequence...");
 
   /* run foba_forward */
-  forward_alpha = my_model.fobaForward(my_output,0,NULL,&log_p_forward);
+  forward_alpha = my_model.foba_forward(my_output,0,NULL,&log_p_forward);
   
   if (!forward_alpha) {
     fprintf(stderr,"foba_logp failed!");

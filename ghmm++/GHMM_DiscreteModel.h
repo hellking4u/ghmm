@@ -108,7 +108,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param scale    scale factors
       @return 0 for success, -1 for error
   */
-  int fobaBackward(GHMM_Sequences* seq, int index, double **beta, const double *scale) const;
+  int foba_backward(GHMM_Sequences* seq, int index, double **beta, const double *scale) const;
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
       a given double sequence and a given model.
@@ -119,8 +119,8 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param log\_p:  log likelihood log( P(O|lambda) )
       @return NULL on error, alpha matrix on success
   */
-  GHMM_DoubleMatrix* fobaForward(GHMM_Sequences* seq, int index, GHMM_DoubleVector* scale, 
-				 double *log_p) const;
+  GHMM_DoubleMatrix* foba_forward(GHMM_Sequences* seq, int index, GHMM_DoubleVector* scale, 
+				  double *log_p) const;
   /**
      Calculation of  log( P(O|lambda) ). 
      Done by calling sfoba\_forward. Use this function if only the
@@ -130,7 +130,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param log\_p    log likelihood log( P(O|lambda) )
      @return 0 for success, -1 for error
   */
-  int fobaLogp(GHMM_Sequences* seq, int index, double *log_p) const;
+  int foba_logp(GHMM_Sequences* seq, int index, double *log_p) const;
   /**
      Writes fix vector of a matrix.
      @param file: output file

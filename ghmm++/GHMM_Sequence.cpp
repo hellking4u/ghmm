@@ -130,3 +130,25 @@ void GHMM_Sequence::init_DOUBLE(int len, int my_weight) {
   resize(len);
   weight = my_weight;
 }
+
+
+void GHMM_Sequence::setDouble(int index, double value) {
+  if (c_d_sequences)
+    if (c_d_sequences->seq_len[0] > index)
+      c_d_sequences->seq[0][index] = value;
+}
+
+
+void GHMM_Sequence::setInt(int index, int value) {
+  if (c_i_sequences)
+    if (c_i_sequences->seq_len[0] > index)
+      c_i_sequences->seq[0][index] = value;
+}
+
+
+void GHMM_Sequence::print(FILE *file, int discrete) const {
+  if (sequence_type == GHMM_INT)
+    sequence_print(file,c_i_sequences);
+  if (sequence_type == GHMM_DOUBLE)
+    sequence_d_print(file,c_d_sequences,discrete);
+}

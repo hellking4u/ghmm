@@ -103,7 +103,7 @@ class GHMM_Sequences: public XMLIO_Element {
   */
   int max_len() const;
   /**
-     Prints one array of integer sequences in a file.
+     Prints one array of sequences in a file.
      @param file       output file
      @param discrete   switch: 0 means double output for symbols,  
                        1 means truncate symbols to integer
