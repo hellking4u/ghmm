@@ -11,11 +11,11 @@ __copyright__
 #ifndef GHMMUTIL_H
 #define GHMMUTIL_H
 
-#ifndef DO_WITH_GSL
+//#ifndef DO_WITH_GSL
 
 /* Non-GSL version declared here */
 
-#else
+//#else
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -36,6 +36,6 @@ typedef gsl_rng GHMM_RNG;
 #define GHMM_RNG_ENV_SETUP gsl_rng_env_setup
 #define GHMM_RNG_ALLOC gsl_rng_alloc
 
-#endif
+//#endif
 
 #endif /* GHMMUTIL_H */
