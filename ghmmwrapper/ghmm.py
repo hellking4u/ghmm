@@ -148,9 +148,11 @@ The objects one has to deal with in HMM modelling are the following
 
 """
 
+import xmlutil
 import ghmmwrapper
 import ghmmhelper
 import re
+
 from os import path
 from math import log
 
@@ -359,10 +361,13 @@ class MixtureContinousDistribution(Distribution):
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
-        domain where the emission orginated from.
+        domain where the emission orginated from.        
     """
 
+    # XXX Who is maintaining a reference to the SequenceSet.cseq?
+    
     def __init__(self, emissionDomain, sequenceInput):
+
         self.emissionDomain = emissionDomain 
         # XXX How do you maintain reference to the SequenceSet.cseq?
         
@@ -503,7 +508,7 @@ class SequenceSet:
                     ghmmwrapper.set_arrayint(self.cseq.seq_len,i ,lenghts[i])
 
 
-            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_t): # inputType == sequence_t**
+            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_t): # inputType == sequence_t*
                 self.cseq = sequenceSetInput
                 
             else:    
@@ -535,10 +540,11 @@ class SequenceSet:
                     ghmmwrapper.set_arrayint(self.cseq.seq_len, i, lenghts[i])
 
             elif isinstance(sequenceSetInput, str): # from file
-                print "fromFile", sequenceSetInput                
+                print "fromFile", sequenceSetInput                                
                 self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
                                 
             elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
+
                 self.cseq = sequenceSetInput
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
@@ -692,21 +698,37 @@ class HMMOpenFactory(HMMFactory):
             self.defaultFileType = defaultFileType
 
     def __call__(self, fileName, modelIndex = None):
-        # MO & SMO Files
-        (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
-        nrModelPtr = ghmmwrapper.int_array(1)
-        models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
-        nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
-        if modelIndex == None:
-            cmodel = ghmmwrapper.get_smodel_ptr(models, 0) # XXX Who owns the pointer?
-        else:
-            if modelIndex < nrModels:
-                cmodel = get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
-            else:
-                print "modelIndex too large -- only have ", nrModels
-                return None
-        m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-        return m
+     
+	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
+	    print "File type: XML"
+	    hmm_dom = xmlutil.HMM(fileName)
+	    emission_domain = hmm_dom.AlphabetType()
+	    if emission_domain == int:
+		emission_domain = IntegerRange(0, hmm_dom.hmmAlphabet.size())
+		distribution = DiscreteDistribution(emission_domain)
+		# build adjacency list
+		[A, B, pi] = hmm_dom.buildMatrices()
+		print A
+		print B
+		print pi
+		return HMMFromMatrices(emission_domain, distribution, A, B, pi)
+	    
+	else:
+	    # MO & SMO Files
+	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+	    nrModelPtr = ghmmwrapper.int_array(1)
+	    models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+	    nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
+	    if modelIndex == None:
+		cmodel = get_smodel_ptr(models, 0) # XXX Who owns the pointer?
+	    else:
+		if modelIndex < nrModels:
+		    cmodel = get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
+		else:
+		    print "modelIndex too large -- only have ", nrModels
+		    return None
+	    m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+	    return m
 
 
     def all(self, fileName):

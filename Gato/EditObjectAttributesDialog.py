@@ -353,8 +353,9 @@ class EditObjectAttributesDialog(tkSimpleDialog.Dialog):
 
                 value = self.edit[attr_name].get()
 
-                if self.object.__dict__[attr_name].validate(value) == 0:
-                    raise ValueError
+		# XXX HACK ValidatingString became str at some point... this is extremely bad
+		if self.object.__dict__[attr_name].validate(value) == 0:
+		    raise ValueError
 
 	    except ValueError:
 		msg = "Please enter a valid value for %s" % attr_name
@@ -451,7 +452,19 @@ class  ValidatingFloat(float, AlwaysValidate):
     
 class  ValidatingString(str, AlwaysValidate):
     """Editable replacement for strings"""
-    pass
+    def __init__(self, val=None):
+	if val != None:
+	    self.__val = str(val)
+
+    def getValue(self):
+        return self.__val
+    
+    def setValidate(self, value):
+        if (self.validate(value)):
+            self.__val = value
+            return 1
+        else:         # raise exception ValueError
+            return 0
 
 class PopupableInt(int, Popupable):
     """A replacement for ints editable via a pop-up"""
@@ -489,7 +502,6 @@ class DefaultedFloat(float, WithDefault):
 class DefaultedString(str, WithDefault):
     """An editable strinf with a default value"""    
     pass
-
 
 #======================================================================
 #

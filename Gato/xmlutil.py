@@ -288,7 +288,9 @@ class DOM_Map:
             map.appendChild(symbol)
         XMLNode.appendChild(map)
    
-
+    def buildList(self):
+	return self.name.keys()
+     
 class DiscreteHMMAlphabet(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
@@ -319,12 +321,21 @@ class DiscreteHMMAlphabet(DOM_Map):
         
     def size(self):
         return len(self.name.keys())
-
     
+    def buildList(self):
+	return self.name.keys()
+	
 class HMMClass(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
+	self.size = 1
 
+    def low(self): #XXX
+	return 0
+    
+    def high(self):
+	return 0
+    
     def fromDOM(self, XMLNode):
         """Take dom subtree representing a <hmm:class></hmm:class> element"""
         self.initialize()
@@ -337,20 +348,23 @@ class HMMClass(DOM_Map):
 
             
 class HMMState:
+
     def __init__(self, nodeIndex, itsHMM):
 
         self.initial  = Probability("0.0")
-        self.label    = ValidatingString("<none>")
-        
-        self.itsHMM       = itsHMM
-
+        self.label    =  ValidatingString("None")
+        self.itsHMM   = itsHMM
+	print type(self.label)
+	
         self.index = nodeIndex # The node index in the underlying graph
-        
-        self.id = ValidatingString("%s" % nodeIndex)
-        self.state_class = PopupableInt()        
-        self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
+        self.id    = nodeIndex # identification by the canvas, not always the same
+	
+	self.state_class = DefaultedInt()
+	self.state_class.setDefault(0,'')
+	
+        # XXX self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
 
-        self.order = DefaultedInt()
+	self.order = DefaultedInt()
         self.order.setDefault(1, 0)
 
         self.emissions = []
@@ -474,7 +488,8 @@ class HMMState:
         writeData(XMLDoc, node, 'label', self.label)
         writeData(XMLDoc, node, 'class', self.state_class)
         writeData(XMLDoc, node, 'initial', self.initial / initial_sum)
-        pos = self.itsHMM.G.embedding[self.index]
+       
+	pos = self.itsHMM.G.embedding[self.index] 
         pos_elem = XMLDoc.createElement("pos")
         pos_elem.setAttribute('x', "%s" % pos.x)
         pos_elem.setAttribute('y', "%s" % pos.y)
@@ -542,7 +557,7 @@ class HMM:
         self.id2index = {}
 
         self.hmmAlphabet = DiscreteHMMAlphabet()
-        self.hmmClass = HMMClass()
+        self.hmmClass    = HMMClass()
         
         self.editableAttr = {}
         self.editableAttr['HMM'] = ['desc']
@@ -557,15 +572,15 @@ class HMM:
             self.OpenXML(XMLFileName)
 
 
-    def AddState(self, id,label):
+    def AddState(self, id, label='None'):
         state = HMMState(-1, self)
         state.index = self.G.AddVertex()
         state.id = id
         self.id2index[state.id] = state.index
-        self.state[state.index] = state
+        self.state[state.id] = state # XXX Use canvas id
         self.G.embedding[state.index] = Point2D(10.0,10.0)#
-        state.label = label
-        self.G.labeling[state.index] = "%s\n%s" % (state.id, state.label)
+        state.label = typed_assign(state.label, label)
+        self.G.labeling[state.index] = "%s" % (state.label)
         return state.index
         
     def DeleteState(self, index):
@@ -676,6 +691,48 @@ class HMM:
             
         graphml.appendChild(graph)
 
+    def AlphabetType(self):
+	""" return the type of emission domain 
+	    XXX should call the method in HMMAlphabet
+	"""
+	return int
+    
+    def ClassType(self):
+	pass
+    
+    def DistributionType(self):
+	pass
+    
+    def buildMatrices(self):    
+	""" return A, B, pi """
+	pi = []
+	B  = []
+	A  = []
+	nstates = len(self.state.keys())
+	orders = {}
+	k = 0 # C style index
+	for s in self.state.values(): # ordering from XML
+	    orders[s.index] = k
+	    k = k + 1
+	    
+	for s in self.state.values(): # a list of indices
+	    pi.append(s.initial)
+	    
+	    size = self.hmmAlphabet.size() # XXX first order only
+	    if size != len(s.emissions):
+		raise ValueError
+	    else:
+		B.append(s.emissions) # emission
+	    
+	    # transition probability
+	    v = s.index
+	    outprobs = [0.0] * nstates
+	    for outid in self.G.OutNeighbors(v)[:]:
+		myorder = orders[outid]
+		outprobs[myorder] = self.G.edgeWeights[0][(v,outid)]
+	    A.append(outprobs)
+	return [A, B, pi]
+    
     def OpenXML(self, fileName):
         dom = xml.dom.minidom.parse(fileName)
         if dom.documentElement.tagName == "ghmm":
@@ -689,9 +746,8 @@ class HMM:
             #ghmmdom.unlink()
         else:
             assert dom.documentElement.tagName == "graphml"   
-
-        self.fromDOM(dom)
-        dom.unlink()
+	    self.fromDOM(dom)
+	    # dom.unlink()
 
     def WriteXML(self, fileName):
         doc = xml.dom.minidom.Document()
@@ -729,7 +785,6 @@ if __name__ == '__main__':
 
     hmmobj = HMM()
     hmmobj.OpenXML(sys.argv[1])
-
     hmmobj.WriteXML("utz.xml")
-    # dom.unlink()
+    
 
