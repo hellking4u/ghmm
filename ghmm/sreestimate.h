@@ -1,50 +1,53 @@
 /*-----------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /zpr/bspk/data/hmm/ngayeva/hmm/src/sreestimate.h
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sreestimate.h
   created      : TIME: 17:18:06     DATE: Mon 15. November 1999
-  last-modified: TIME: 13:54:34     DATE: Wed 20. December 2000
+  last-modified: TIME: 13:01:18     DATE: Tue 10. April 2001
 ------------------------------------------------------------------------------*/
 #ifndef SREESTIMATE_H
 #define SREESTIMATE_H
 #include "smodel.h"
 
-/**@name SHMM-Baum-Welch-Algorithmus */
+/**@name SHMM-Baum-Welch-Algorithm */
 /*@{ (Doc++-Group: sreestimate) */
 
-/**
-  Struktur zur Uebergabe an sreestimate_baum_welch: Modell, Sequenzfeld
-  und berechnete Likelihood.. */
+/** Baum-Welch-Algorithm for parameter reestimation (training) in
+    a continuous (continuous output functions) HMM. Scaled version
+    for multiple sequences. Sequences may carry different weights 
+    For reference see:  
+    Rabiner, L.R.: "`A Tutorial on Hidden {Markov} Models and Selected
+                Applications in Speech Recognition"', Proceedings of the IEEE,
+	77, no 2, 1989, pp 257--285    
+*/
+
+/** @name struct smosqd_t
+    structure that combines a continuous model (smo) and an integer
+    sequence struct. Is used by sreestimate\_baum\_welch for 
+    parameter reestimation.
+ */
 struct smosqd_t{
-  /** HMM-Modell Pointer */
+  /** pointer of continuous model*/
   smodel *smo;
-  /** sequence_t Pointer */
+  /** sequence\_d\__t pointer */
   sequence_d_t *sqd;
-  /** berechnete Likelihood */
+  /** calculated log likelihood */
   double *logp;
-  /** Schranke, die beim sreestimate als Abbruch genommen werden kann
-      eps < EPS_ITER_BW: EPS_ITER_BW verwenden */
+  /** leave reestimation loop if diff. between successive logp values 
+      is smaller than eps */
   double eps;
-  /** Max-Anzahl Iterationen fuer sreestimate 
-      max_iter > MAX_ITER_BW: MAX_ITER_BW verwenden */
+  /** max. no of iterations */
   int max_iter;
 }; 
 typedef struct smosqd_t smosqd_t;
 
 /**
-  Baum-Welch Algorithmus für SHMMs.
-  Training der Modellparameter nach Baum-Welch bei
-  multiplen Eingabesequenzen inklusive Scaling. Die errechneten 
-  Modellparameter werden direkt im uebergebenen Modell verändert.
-  @return            0/-1 (Fehler) 
-  @param smo         Initialmodell
-  @param sqd         Trainingssequenzen
+  Baum-Welch Algorithm for SHMMs.
+  Training of model parameter with multiple double sequences (incl. scaling).
+  New parameters set directly in hmm (no storage of previous values!).
+  @return            0/-1 success/error
+  @param cs         initial model and train sequences
   */
-/* int sreestimate_baum_welch(smodel *smo, sequence_d_t *sqd); */
 int sreestimate_baum_welch(smosqd_t *cs);
-
-/* bereits im creestimate definiert: */
-/* Fkt. zum Loesen der Nullstellengleichungen fuer abgeschn. Normaldichte */
-/* double pvonmue(double mue, double A, double B); */
 
 #endif /* SREESTIMATE_H */
 
