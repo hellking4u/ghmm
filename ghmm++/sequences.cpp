@@ -367,7 +367,7 @@ size_t sequenceReader::read_sequences(const string& filename)
 
 /***********************************************************************************/
 
-sequence_t* return_sequences(const char* file)
+sequence_t* std::return_sequences(const char* file)
 {
   sequenceReader* reader=new sequenceReader();
   (void)reader->read_sequences(file);

@@ -15,7 +15,7 @@
 namespace std {
 #endif
 
-sequence_t* return_sequences(const char* file);
+sequence_t* std::return_sequences(const char* file);
 
 class double_sequence: public XMLIO_ArrayObject<double>
 {
