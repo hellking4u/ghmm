@@ -63,6 +63,7 @@ pkginclude_HEADERS = foba.h \
 
 # must be eleminated...
 pkgdata_DATA = PHI_001_20.dat
+EXTRA_DIST= PHI_001_20.dat
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
