@@ -59,6 +59,16 @@
 
 #define  __EPS 10e-6
 
+/* Using floating point exceptions */
+#ifdef DEBUG_FPE
+#include <fenv.h>
+static void __attribute__ ((constructor)) trapfpe(void)
+{
+  /* Enable some exceptions. At startup all exceptions are masked. */
+  feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
+}
+#endif
+
 typedef enum DFSFLAG
   { DONE, NOTVISITED, VISITED } DFSFLAG;
 
@@ -1803,20 +1813,19 @@ int model_normalize(model* mo) {
 	  break;
 	}
       }
+      if (i_id == mo->s[j_id].in_states) {
+	char *str = mprintf(NULL, 0, "Outgoing transition from state %d to \
+           state %d has no corresponding incoming transition.\n", i, j_id);
+	mes_prot(str);
+	return -1;
+      }
       mo->s[j_id].in_a[i_id] = mo->s[i].out_a[j];
     }
     /* normalize emission probabilities */
     for (m=0; m<size; m++){
-      first = m * mo->M;
-      sum = 0.0;
-      for (j=first; j<first + mo->M; j++)
-	sum = sum + mo->s[i].b[j];
-
-      if (sum==0) {
-	return -1;
+      if (vector_normalize(&(mo->s[i].b[m*mo->M]), mo->M ) == -1 ) {
+	res = -1;
       }
-      for (j=first; j<first+mo->M; j++)
-	mo->s[i].b[j] /= sum;
     }   
   }
 
@@ -1849,6 +1858,194 @@ int model_add_noise(model* mo, double level, int seed) {
   
   return model_normalize(mo);
 
+#undef CUR_PROC
+}
+
+/*----------------------------------------------------------------------------*/
+int model_add_transition(state* s, int start, int dest, double prob) {
+#define CUR_PROC "model_add_transition"
+
+    int i;
+
+    /* resize the arrays */
+    if (m_realloc(s[dest].in_id,   s[dest].in_states+1))   { mes_proc(); goto STOP; }
+    if (m_realloc(s[dest].in_a,    s[dest].in_states+1))   { mes_proc(); goto STOP; }
+    if (m_realloc(s[start].out_id, s[start].out_states+1)) { mes_proc(); goto STOP; }
+    if (m_realloc(s[start].out_a,  s[start].out_states+1)) { mes_proc(); goto STOP; }
+
+    s[dest].in_states   += 1;
+    s[start].out_states += 1;
+
+    /* search the right place to insert while moving greater entrys one field back */
+    for (i=s[start].out_states-1; i>=0; i--) {
+	if (i==0 || dest>s[start].out_id[i-1]) {
+	    s[start].out_id[i] = dest;
+	    s[start].out_a[i]  = prob;
+	    break;
+	} else {
+	    s[start].out_id[i] = s[start].out_id[i-1];
+	    s[start].out_a[i]  = s[start].out_a[i-1];
+	}
+    }
+
+    /* search the right place to insert while moving greater entrys one field back */
+    for (i=s[dest].in_states-1; i>=0; i--)
+	if (i==0 || start>s[dest].in_id[i-1]) {
+	    s[dest].in_id[i] = start;
+	    s[dest].in_a[i]  = prob;
+	    break;
+	} else {
+	    s[dest].in_id[i] = s[dest].in_id[i-1];
+	    s[dest].in_a[i]  = s[dest].in_a[i-1];
+	}
+    
+    return 0;
+STOP:
+    return -1;
+#undef CUR_PROC
+}
+
+/*----------------------------------------------------------------------------*/
+int model_del_transition(state* s, int start, int dest) {
+#define CUR_PROC "model_del_transition"
+
+    int i, j;
+
+    /* search ... */
+    for (j=0; dest!=s[start].out_id[j]; j++) 
+	if (j==s[start].out_states) {
+	    mes_prot("No such transition");
+	    return -1;
+	}
+    /* ... and replace outgoing */
+    for (i=j+1; i<s[start].out_states; i++) {
+	s[start].out_id[i-1] = s[start].out_id[i];
+	s[start].out_a[i-1]  = s[start].out_a[i];
+    }
+
+    /* search ... */
+    for (j=0; start!=s[dest].in_id[j]; j++) 
+	if (j==s[dest].in_states) {
+	    mes_prot("No such transition");
+	    return -1;
+	}
+    /* ... and replace incoming */
+    for (i=j+1; i<s[dest].in_states; i++) {
+	s[dest].in_id[i-1] = s[dest].in_id[i];
+	s[dest].in_a[i-1]  = s[dest].in_a[i];
+    }
+    
+    /* reset number */
+    s[dest].in_states   -= 1;
+    s[start].out_states -= 1;
+
+    /* free memory */
+    if (m_realloc(s[dest].in_id, s[dest].in_states)) { mes_proc(); goto STOP; }
+    if (m_realloc(s[dest].in_a,  s[dest].in_states)) { mes_proc(); goto STOP; }
+    if (m_realloc(s[start].out_id, s[start].out_states)) { mes_proc(); goto STOP; }
+    if (m_realloc(s[start].out_a,  s[start].out_states)) { mes_proc(); goto STOP; }
+
+    return 0;
+STOP:
+    return -1;
+#undef CUR_PROC
+}
+
+/*----------------------------------------------------------------------------*/
+/** 
+   Allocates a new background_distributions struct and assigs the arguments to
+   the respective fields. Note: The arguments need allocation outside of this
+   function.
+   
+   @return     :               0 on success, -1 on error
+   @param mo   :               one model
+   @param cur  :               a id of a state
+   @param times:               number of times the state cur is at least evaluated
+*/
+int model_apply_duration(model* mo, int cur, int times) {
+#define CUR_PROC "model_apply_duration"
+
+    int i, j, last, size;
+
+    if (mo->model_type & kSilentStates) {
+	mes_prot("Sorry, apply_duration doesn't support silent states yet\n");
+	return -1;
+    }
+
+    last   = mo->N;
+    mo->N += times-1;
+
+    if (m_realloc(mo->s, mo->N)) { mes_proc(); goto STOP; }
+    if (mo->model_type & kSilentStates) {
+	if (m_realloc(mo->silent, mo->N)) { mes_proc(); goto STOP; }
+	if (m_realloc(mo->topo_order, mo->N)) { mes_proc(); goto STOP; }
+    }
+    if (mo->model_type & kTiedEmissions)
+	if (m_realloc(mo->tied_to, mo->N)) { mes_proc(); goto STOP; }
+    if (mo->model_type & kHasBackgroundDistributions)
+	if (m_realloc(mo->background_id, mo->N)) { mes_proc(); goto STOP; }
+
+    size = pow(mo->M, mo->s[cur].order+1);
+    for (i=last; i<mo->N; i++) {
+	/* set the new state */
+	mo->s[i].pi    = 0.0;
+	mo->s[i].order = mo->s[cur].order;
+	mo->s[i].fix   = mo->s[cur].fix;
+	mo->s[i].label = mo->s[cur].label;
+	mo->s[i].in_a       = NULL;
+	mo->s[i].in_id      = NULL;
+	mo->s[i].in_states  = 0;
+	mo->s[i].out_a      = NULL;
+	mo->s[i].out_id     = NULL;
+	mo->s[i].out_states = 0;
+
+	if (!m_malloc(mo->s[i].b, size)) { mes_proc(); goto STOP; }
+	for (j=0; j<size; j++)
+	    mo->s[i].b[j] = mo->s[cur].b[j];
+	
+	if (mo->model_type & kSilentStates) {
+	    mo->silent[i] = mo->silent[cur];
+	    /* XXX what to do with topo_order
+	    mo->topo_order[i] = ????????????; */
+	}
+	if (mo->model_type & kTiedEmissions)
+	    /* XXX is there a clean solution for tied states?
+	       what if the current state is a tie group leader?
+	       the last added state should probably become
+	       the new tie group leader */
+	    mo->tied_to[i] = kUntied;
+	if (mo->model_type & kHasBackgroundDistributions)
+	    mo->background_id[i] = mo->background_id[cur];
+    }
+
+    /* move the outgoing transitions to the last state*/
+    while (mo->s[cur].out_states>0) {
+	if (mo->s[cur].out_id[0]==cur) {
+	    model_add_transition(mo->s, mo->N-1, mo->N-1, mo->s[cur].out_a[0]);
+	    model_del_transition(mo->s, cur    , mo->s[cur].out_id[0]);
+	} else {
+	    model_add_transition(mo->s, mo->N-1, mo->s[cur].out_id[0], mo->s[cur].out_a[0]);
+	    model_del_transition(mo->s, cur    , mo->s[cur].out_id[0]);
+	}
+    }
+    
+    /* set the linear transitions through all added states */
+    model_add_transition(mo->s, cur, last, 1.0);
+    for (i=last+1; i<mo->N; i++) {
+	model_add_transition(mo->s, i-1, i, 1.0);
+    }
+
+    if (model_normalize(mo)) goto STOP;
+
+    return 0;
+ STOP:
+    /* Fail hard if these realloc fail. They shouldn't because we have the memory
+       and try only to clean up! */
+    if (m_realloc(mo->s,             last)) { mes_proc(); exit(1); }
+    if (m_realloc(mo->tied_to,       last)) { mes_proc(); exit(1); }
+    if (m_realloc(mo->background_id, last)) { mes_proc(); exit(1); }
+    mo->N = last;
+    return -1;
 #undef CUR_PROC
 }
 
@@ -1923,7 +2120,7 @@ int model_apply_background (model *mo, double* background_weight) {
   for (i=0; i < mo->N; i++) {
     if (mo->background_id[i] != kNoBackgroundDistribution) {
       if (mo->s[i].order != mo->bp->order[mo->background_id[i]]) {
-	mes_prot("Error: State and background order do not match");
+	mes_prot("Error: State and background order do not match\n");
 	return -1;
       }
 
