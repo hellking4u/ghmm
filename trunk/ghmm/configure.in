@@ -28,9 +28,11 @@ AM_PATH_GSL(0.7,,AC_MSG_ERROR("GSL Version 0.7 or higher required."))
 
 dnl Checks for libraries.
 AC_CHECK_LIB(pthread, pthread_join)
+AC_CHECK_LIB(expat, XML_ParserCreate)
 
 dnl Checks for header files.
 AC_HEADER_STDC
+AC_CHECK_HEADERS(expat.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
