@@ -59,6 +59,10 @@ class GHMM_Sequences: public XMLIO_Element {
   int add(GHMM_Sequence* source);
   /** */
   void clean_cpp();
+  /** Copy content from C sequence to this object. */
+  void copyFromSequences(sequence_t* seq);
+  /** Copy content from C sequence to this object. */
+  void copyFromSequences(sequence_d_t* seq);
   /** Returns double sequence with given index. 
       Aborts program if object doesn't contain double sequences. */
   double* getDoubleSequence(int index) const;
@@ -94,7 +98,7 @@ class GHMM_Sequences: public XMLIO_Element {
      Reads one or several arrays of sequences. 
      @param filename    input filename
   */
-  void read(char *filename);
+  void read(const string& filename);
 
   /** */
   virtual void XMLIO_finishedReading();

@@ -11,41 +11,28 @@ int main(int argc, char* argv[]) {
   int j;
   double logp;
   
-  GHMM_Sequences* trainingsseq;
+  GHMM_Sequences trainingsseq(GHMM_DOUBLE);
   GHMM_Sequences* genseq;
-  GHMM_ContinuousModel* smo;
-  GHMM_Document doc;
+  GHMM_ContinuousModel smo;
 
-  if (argc<2) {
-    fprintf(stderr,"generiere_nvs needs a file as argument\n");
+  if (argc < 3) {
+    fprintf(stderr,"generiere_nvs nvs.mod nvs.sqd\n");
     exit(1);
   }
 
-  if (0!=doc.open(argv[1],"r")) {
-    fprintf(stderr,"generiere_nvs could not open file %s\n",argv[1]);
-    exit(1);
-  }
+  smo.read(argv[1]);
+  trainingsseq.read(argv[2]);
 
-  doc.readDocument();
-  doc.close();
+  smo.reestimate_baum_welch(&trainingsseq,&logp,0.00001,35);
 
-  smo          = doc.getContinuousModel();
-  trainingsseq = doc.getSequences();
-
-  smo->reestimate_baum_welch(trainingsseq,&logp,0.00001,35);
-
-  smo->print(stdout);
+  smo.print(stdout);
   for (j = 0; j < 200; j++) {
-    genseq = smo->generate_sequences(0,20,1,1,20);
+    genseq = smo.generate_sequences(0,20,1,1,20);
     for (i = 0; i < genseq->getLength(0); i++) 
       printf("%8f\n",(genseq->getDoubleSequence(0)[i]));
   }
 
-  if (genseq)
-    delete genseq;
-
-  delete smo;
-  delete trainingsseq;
+  delete genseq;
 
   //printf("Generierte Sequenzen :\n");
   // sequence_d_print(stdout,genseq,0);
