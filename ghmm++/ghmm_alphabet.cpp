@@ -22,8 +22,8 @@ ghmm_alphabet::ghmm_alphabet():
   init_members();
 }
 
-ghmm_alphabet::ghmm_alphabet(const string& tag, XMLIO_Attributes &attributes):
-  XMLIO_ElementArrayElement<ghmm_symbol>(tag,attributes)
+ghmm_alphabet::ghmm_alphabet(const string& name, XMLIO_Attributes &attrs):
+  XMLIO_ElementArrayElement<ghmm_symbol>(name,attrs)
 {
   init_members();
 }

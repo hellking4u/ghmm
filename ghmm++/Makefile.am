@@ -20,6 +20,7 @@ ghmm_test_SOURCES = ghmm_test.cpp
 lib_LIBRARIES = libghmm++.a
 libghmm___a_SOURCES = \
 DiscretePD.cpp \
+sequence.cpp \
 sequences.cpp \
 sequences_document.cpp \
 InitialStates.cpp \
@@ -32,6 +33,7 @@ ghmm_symbol.cpp
 
 pkginclude_HEADERS= \
 DiscretePD.h \
+sequence.h \
 sequences.h \
 sequences_document.h \
 InitialStates.h \

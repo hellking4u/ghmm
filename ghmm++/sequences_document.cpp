@@ -35,21 +35,21 @@ sequences_document::root_element::root_element(list<sequences*>* the_seq_list) {
 
     
 XMLIO_Element*
-sequences_document::root_element::XMLIO_startTag(const string& tag, XMLIO_Attributes& attrs){
-  if (tag == "sequences") {
+sequences_document::root_element::XMLIO_startTag(const string& name, XMLIO_Attributes& attrs){
+  if (name == "sequences") {
     if (actual_sequences != NULL) {
       cerr<<"root_element::XMLIO_startTag: Internal Error! actual_sequences!=NULL"<<endl;
       SAFE_DELETE(actual_sequences);
     }
-    actual_sequences = new sequences(tag,attrs);
+    actual_sequences = new sequences(name,attrs);
     return actual_sequences;
   }
   return NULL;
 }
 
 void 
-sequences_document::root_element::XMLIO_endTag (const string& tag){
-  if (tag!="sequences") return;
+sequences_document::root_element::XMLIO_endTag (const string& name){
+  if (name!="sequences") return;
   if (seq_list==NULL) {
     cerr<<"expecting existent sequences list!"<<endl;
     return;
@@ -112,13 +112,13 @@ sequences_document::write_sequences(const string& filename) {
 
 
 XMLIO_Element* 
-sequences_document::XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes) {
+sequences_document::XMLIO_startTag(const string& name, XMLIO_Attributes& attrs) {
   if (my_root==NULL)
-    my_root=new root_element(tag,attributes,this);
+    my_root=new root_element(name,attrs,this);
   return my_root;
 }
 
 void 
-sequences_document::XMLIO_endTag(const string& tag){
+sequences_document::XMLIO_endTag(const string& name){
   SAFE_DELETE(my_root);
 }

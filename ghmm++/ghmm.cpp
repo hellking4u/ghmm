@@ -18,7 +18,7 @@
 using namespace std;
 #endif
 
-ghmm::ghmm(const string& tag, XMLIO_Attributes &attributes)
+ghmm::ghmm(const string& name, XMLIO_Attributes &attrs)
 {
   /* do some initialisation */ 
   Initial=NULL;
@@ -30,8 +30,8 @@ ghmm::ghmm(const string& tag, XMLIO_Attributes &attributes)
   
   XMLIO_Attributes::const_iterator pos;
   /* madatory argument */  
-  pos=attributes.find("type");
-  if (pos!=attributes.end())
+  pos=attrs.find("type");
+  if (pos!=attrs.end())
     {
       if (pos->second=="discrete")
 	{
@@ -77,10 +77,10 @@ ghmm::ghmm(const string& tag, XMLIO_Attributes &attributes)
     }
 }
 
-XMLIO_Element* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* ghmm::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
   /* what's next? */
-  if (tag=="graph")
+  if (name=="graph")
     {
       if (my_graph!=NULL)
 	{
@@ -89,11 +89,11 @@ XMLIO_Element* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribu
 	}
       else
 	{
-	  my_graph=new ghmm_graph(tag,attributes);
+	  my_graph=new ghmm_graph(name,attrs);
 	  return my_graph;
 	}
     }
-  else if (tag=="InitialStates")
+  else if (name=="InitialStates")
     {
       if (Initial!=NULL)
 	{
@@ -101,15 +101,15 @@ XMLIO_Element* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribu
 	}
       else
 	{
-	  Initial=new InitialStates(tag,attributes);
+	  Initial=new InitialStates(name,attrs);
 	}
       return Initial;
     }
-  else if (tag=="Alphabet")
+  else if (name=="Alphabet")
     {
       if (my_alphabet==NULL)
 	{
-	  my_alphabet=new ghmm_alphabet(tag,attributes);
+	  my_alphabet=new ghmm_alphabet(name,attrs);
 	  return my_alphabet;
 	}
       else
@@ -119,7 +119,7 @@ XMLIO_Element* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribu
 	}
 
     }
-  else if (tag=="Emissions")
+  else if (name=="Emissions")
     {
       if (ghmm_Emissions!=NULL)
 	{
@@ -128,18 +128,18 @@ XMLIO_Element* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribu
 	}
       else
 	{
-	  ghmm_Emissions=new Emissions(tag,attributes);
+	  ghmm_Emissions=new Emissions(name,attrs);
 	  return ghmm_Emissions;
 	}
     }
   else
     {
-      cerr<<toString()<<": found unexpected element "<<tag<<", ignoring"<<endl;
+      cerr<<toString()<<": found unexpected element "<<name<<", ignoring"<<endl;
       return NULL;
     }
 }
 
-void ghmm::XMLIO_endTag(const string& tag)
+void ghmm::XMLIO_endTag(const string& name)
 {
   /* not needed now */
 }

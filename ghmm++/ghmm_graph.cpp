@@ -19,8 +19,8 @@ ghmm_graph::ghmm_graph():
   gxl_graph()
 {}
 
-ghmm_graph::ghmm_graph(const string& tag, XMLIO_Attributes &attributes):
-  gxl_graph(tag,attributes)
+ghmm_graph::ghmm_graph(const string& name, XMLIO_Attributes &attrs):
+  gxl_graph(name,attrs)
 {}
 
 const char* ghmm_graph::toString() const
@@ -29,16 +29,16 @@ const char* ghmm_graph::toString() const
 }
 
 
-XMLIO_Element* ghmm_graph::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* ghmm_graph::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
-  if (tag=="edge")
+  if (name=="edge")
     {
-      gxl_edge* new_edge=new ghmm_edge(tag,attributes);
+      gxl_edge* new_edge=new ghmm_edge(name,attrs);
       vector<gxl_edge*>::push_back(new_edge);
       return new_edge;
     }
   else
-    return gxl_graph::XMLIO_startTag(tag,attributes);
+    return gxl_graph::XMLIO_startTag(name,attrs);
 }
 
 

@@ -22,20 +22,20 @@ ghmm_edge::ghmm_edge():
   gxl_edge()
 {}
 
-ghmm_edge::ghmm_edge(const string& tag, XMLIO_Attributes &attributes):
-  gxl_edge(tag,attributes)
+ghmm_edge::ghmm_edge(const string& name, XMLIO_Attributes &attrs):
+  gxl_edge(name,attrs)
 {}
 
-XMLIO_Element* ghmm_edge::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* ghmm_edge::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
   /* handle weight class information */
-  return gxl_edge::XMLIO_startTag(tag,attributes);
+  return gxl_edge::XMLIO_startTag(name,attrs);
 }
 
-void ghmm_edge::XMLIO_endTag(const string& tag)
+void ghmm_edge::XMLIO_endTag(const string& name)
 {
-  gxl_edge::XMLIO_endTag(tag);
-  if (tag=="attr")
+  gxl_edge::XMLIO_endTag(name);
+  if (name=="attr")
     {
       /* find out, if there are transitions*/
       gxl_attr* last_attr=my_attrs.back();

@@ -16,19 +16,19 @@
 using namespace std;
 #endif
 
-State::State(const string& tag, XMLIO_Attributes &attributes)
+State::State(const string& name, XMLIO_Attributes &attrs)
 {
-  if (tag=="State")
+  if (name=="State")
     {
-      XMLIO_Attributes::const_iterator id_pos=attributes.find("id");
-      if (id_pos==attributes.end())
+      XMLIO_Attributes::const_iterator id_pos=attrs.find("id");
+      if (id_pos==attrs.end())
 	cerr<<"no id in State's attributes found!"<<endl;
       else
 	id_ref=id_pos->second;
     }
   else
     {
-      cerr<<tag<<": this is not State, that was expected."<<endl;
+      cerr<<name<<": this is not State, that was expected."<<endl;
     }
 }
 
@@ -47,14 +47,14 @@ const string& State::get_id() const
   return id_ref;
 }
 
-InitialStates::InitialStates(const string& tag, XMLIO_Attributes &attributes)
+InitialStates::InitialStates(const string& name, XMLIO_Attributes &attrs)
 {
   state_pd=NULL;
 }
 
-XMLIO_Element* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* InitialStates::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
-  if (tag=="DiscretePD")
+  if (name=="DiscretePD")
     {
       if (state_pd!=NULL)
 	{
