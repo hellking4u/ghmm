@@ -374,6 +374,7 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
     def get(self):
         pass
 
+
 #-------------------------------------------------------------------------------
 #Sequence, SequenceSet and derived  ------------------------------------------
 class EmissionSequence:
@@ -772,7 +773,7 @@ class HMMOpenFactory(HMMFactory):
             distribution = DiscreteDistribution(emission_domain)
             
             [A,B,pi,modelName] = h.getGHMMmatrices()
-            return  HMMFromMatrices(emission_domain, distribution, A, B, pi)
+            return  HMMFromMatrices(emission_domain, distribution, A, B, pi, modelName)
 
     def all(self, fileName):
         # MO & SMO Files
@@ -874,7 +875,7 @@ def readMultipleHMMERModels(fileName):
         m = stat.match(line)
         if m:
             name = m.group(1)
-            print "reading model " + name + " ",
+            print "reading model " + name + " "
             
         match = res.match(line)
         if match:
@@ -898,7 +899,12 @@ class HMMFromMatricesFactory(HMMFactory):
                 cmodel.N = len(A)
                 cmodel.M = emissionDomain.size()
                 cmodel.prior = -1 # No 
-                cmodel.name = 'Unused'
+                
+                # assign model identifier (if specified)
+                if hmmName != None:
+                    cmodel.name = hmmName
+                else:
+                    cmodel.name = 'Unused'
                 
                 states = ghmmwrapper.arraystate(cmodel.N)
 
@@ -1080,7 +1086,7 @@ class HMM:
         self.backwardBetaFunction = ""   # C function backkward algorithm (beta matrix)
         self.getStatePtr = ""            # C function to get a pointer to a state struct
         self.getModelPtr = ""            # C function to get a pointer to the model struct
-        
+        self.distanceFunction = ""       # C function to compute a probabilistic distance between models
         
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
@@ -1177,6 +1183,13 @@ class HMM:
     def baumWelchDelete(self):
         pass
         
+    # extern double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
+    def distance(self,model, seqLength):
+        """ Returns the distance between 'self.cmodel' and 'model'.   """
+        return self.distanceFunction(self.cmodel, model.cmodel, seqLength,0,0)
+              
+    
+    
     def forward(self, emissionSequence):
         """
 
@@ -1439,7 +1452,9 @@ class DiscreteEmissionHMM(HMM):
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
         self.getModelPtr = ghmmwrapper.cast_model_ptr
-      
+        self.distanceFunction = ghmmwrapper.model_prob_distance
+        
+        
     def __str__(self):
         hmm = self.cmodel
         strout = "\nOverview of HMM:\n"
@@ -1589,6 +1604,7 @@ class GaussianEmissionHMM(HMM):
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
         self.fileWriteFunction = ghmmwrapper.call_smodel_print
         self.getModelPtr = ghmmwrapper.cast_smodel_ptr
+        self.distanceFunction = ghmmwrapper.smodel_prob_distance
         
         # Baum Welch context, call baumWelchSetup to initalize
         self.BWcontext = ""

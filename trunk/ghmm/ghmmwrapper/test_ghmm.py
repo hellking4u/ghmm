@@ -1,134 +1,172 @@
 from ghmm import *
 
-#print "*** EmissionSequence / SequenceSet ***"
+print "GHMM Tests:"
 
-
-#HMMOpen = HMMOpenFactory(GHMM_FILETYPE_XML)
-#m4 = HMMOpen('/project/algorithmics/Sopra/python/simple2.xml')
-#print m4
+print "\n*** EmissionSequence / SequenceSet ***"
 
 alph = IntegerRange(0,7)
 
-#print "list input EmssionSequence:"
+print "- Discrete case"
+print "\nlist input EmssionSequence:"
 s = EmissionSequence(alph,[1,2,0,0,0,3,4])
-#print s
-
-
+print s
 
 #print "list(EmissionSequence)"
-l = list(s)
+#l = list(s)
 #print l
 
-
-
-#print "\nlist input SequenceSet:"
+print "\n\nlist input SequenceSet:"
 s2 = SequenceSet(alph,[ [1,2,3,4,5],[0,3,0],[4,3,2,2,1,1,1,1], [0,0,0,2,1],[1,1,1,1,1,1] ])
-#print s2
+print s2
 
-#print "writing SequenceSet to file."
-s2.write("blablatest.seq")
+print "\nwriting SequenceSet to file."
+s2.write("test_ghmm_d.seq")
 
-#print "\nSequenceSet.getSubset"
+print "\nSequenceSet.getSubset"
 s4 = s2.getSubset([0,2,4])
-#print s4
+print s4
 
-
-#print "pointer input EmissionSequence"
+print "\npointer input EmissionSequence"
 s3 = s2[1] # call to SequenceSet.__getitem__
-#print s3
+print s3
 
 
-#print "*** Discrete Emission Model ***"
+print "- Continous case"
+
+alph = Float()
+
+print "\nlist input EmssionSequence:"
+s = EmissionSequence(alph,[1.3,2.1,0.8,0.1,0.03,3.6,43.3])
+print s
+
+#print "list(EmissionSequence)"
+#l = list(s)
+#print l
+
+print "\n\nlist input SequenceSet:"
+s2 = SequenceSet(alph,[ [1.5,2.3,3.7,4.1,5.1],[0.0,3.1,0.7],[4.4,3.05,2.0,2.4,1.2,1.8,1.0,1.0], [0.4,0.1,0.33,2.7,1.345],[1.0,1.0,1.0,1.0,1.0,1.0] ])
+print s2
+
+print "\nwriting SequenceSet to file."
+s2.write("test_ghmm_c.seq")
+
+print "\nSequenceSet.getSubset"
+s4 = s2.getSubset([1,3,0])
+print s4
+
+print "\npointer input EmissionSequence"
+s3 = s2[1] # call to SequenceSet.__getitem__
+print s3
+
+
+
+print "\n*** Discrete Emission Model ***"
 
 m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
                        [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]],
                        [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]],
                        [1.0,0,0])
 
+print m
+
 trans = m.getTransition(0,1)
-#print "a[0,1] = " + str(trans)
+print "a[0,1] = " + str(trans)
 
 emission = m.getEmission(1)
-#print emission
+print emission
 
-
-#print m
-
-#print "Sample:"					   
+print "\nSample:"					   
 s4 = m.sample(4,15)
-#print str(s4) + "\n"
+print str(s4) + "\n"
 
+print "\nSampleSingle :"					   
 s5 = m.sampleSingle(10)
-#print str(s5) + "\n"
+print str(s5) + "\n"
 
-#print "merging two sequences:"
+print "\nMerging two sequences:"
 s4.merge(s5)
-#print s4
+print s4
 
-#print "training model"
-#m.baumWelch(s5)
-#print m
+print "\nTraining model"
+m.baumWelch(s5)
+print m
 
-#print "Viterbi:"
+print "\nViterbi:"
 path = m.viterbi(s5)
-#print str(path) + "\n"
+print str(path) + "\n"
 
-#print "forward"
+print "\nForward"
 logp1 = m.loglikelihood(s5)
-#print "logp = " + str(logp1) + "\n"
+print "logp = " + str(logp1) + "\n"
 
-#print "logprob:"
-#logp2 = m.logprob(s5,[0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1])
-#print logp2, " -> " + str(2.71**logp2)
+print "\nlogprob:"
+logp2 = m.logprob(s5,[0, 2, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1])
+print logp2, " -> " + str(2.71**logp2)
 
+print "\nForward matrices"
 (alpha,scale) = m.forward(s5)
-#print "alpha:\n" + str(alpha) + "\n"
-#print "scale = " + str(scale) + "\n"	
+print "alpha:\n" + str(alpha) + "\n"
+print "scale = " + str(scale) + "\n"	
 
 beta = m.backward(s5,scale)
-#print "beta = \n " + str(beta) + "\n"
+print "beta = \n " + str(beta) + "\n"
 
 
-# print "\n\n\n *** Gaussian Model ***"
+print "\n\n\n *** Gaussian Model ***"
 F = Float()            		   
 m2 = HMMFromMatrices(F,GaussianDistribution(F),
-                         [[0.0,1.0,0],[0.5,0.0,0.5],[0.3,0.3,0.0]],
+                         [[0.0,1.0,0],[0.5,0.0,0.5],[0.3,0.3,0.4]],
                          [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
                          [1.0,0,0])
 
-#print m2
+m4 = HMMFromMatrices(F,GaussianDistribution(F),
+                         [[0.0,1.0,0],[0.5,0.0,0.5],[0.3,0.3,0.4]],
+                         [[0.0,1.3],[-1.0,0.1], [1.0,0.6]],
+                         [1.0,0,0])
+
+print m2
 trans = m2.getTransition(2,0)
-#print "a[2,2] = " + str(trans)
+print "a[2,2] = " + str(trans)
                          
-#print "Sample:"
+print "\nSample:"
 cs1 = m2.sample(4,15)                         
-#print str(cs1) + "\n"
+print str(cs1) + "\n"
 
-#print "SampleSingle:"
+print "\nSampleSingle:"
 cs2 = m2.sampleSingle(10)                         
-#print str(cs2) + "\n"
+print str(cs2) + "\n"
 
-#print "Viterbi"
+print "\nget subset"
+cs3 = cs1.getSubset([0,2])
+print cs3
+
+print "\nViterbi"
 spath = m2.viterbi(cs1)
-#print str(spath) + "\n"
+print str(spath) + "\n"
 
-
-#print "forward"
+print "\nForward"
 logp = m2.loglikelihood(cs1)    
-#print "logp = " + str(logp) + "\n"
+print "logp = " + str(logp) + "\n"
 
+print "\nForward matrices"
 (salpha,sscale) = m2.forward(cs2)
-#print "alpha:\n" + str(salpha) + "\n"
-#print "scale = " + str(sscale) + "\n"	
+print "alpha:\n" + str(salpha) + "\n"
+print "scale = " + str(sscale) + "\n"	
 
+print "\nBackward matrix"
 beta = m2.backward(cs2,sscale)
-#print "beta = \n " + str(beta) + "\n"
+print "beta = \n " + str(beta) + "\n"
 
-
+print "Reading SequenceSet from .sqd file"
 l = SequenceSetOpen(F,"seq_test.sqd")
-#print l
+print l
 
-#print "*** Normalizing ***"
+print "Model distances (continous):"
+d = m2.distance(m4,1000)
+print "distance= " + str(d)
+
+
+print "*** Normalizing  discrete model***"
 m3 = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
                      [[10.0,10.0,10.0],[0.0,0.0,100.0],[25.0,25.0,50.0]],
                      [[10.0,0.0,010.0,0.0],[0.0,3.5,3.5,0.0], [5.0,5.0,5.0,5.0]],
@@ -136,17 +174,21 @@ m3 = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
 
 #print m3
 
-#m3.normalize()
+m3.normalize()
+
+print "\nModel distance (discrete):"
+d = m3.distance(m,1000) 
+print "distance = " + str(d)
 
 #print m3
 
-# print "Writing to file:"
-#m.write("er.log")
-#m3.write("er.log")
-#m2.write("er2.log")
+print "\nWriting to file:"
+m.write("er.log")
+m3.write("er.log")
+m2.write("er2.log")
 
-#mList = [m,m2,m3]
-#HMMwriteList("er.log",mList)
+mList = [m,m2,m3]
+HMMwriteList("er.log",mList)
 
 
 print "\n\n\n *** GaussianMixture Model ***"
@@ -167,29 +209,35 @@ print m_mix
 trans = m2.getTransition(2,0)
 print "a[2,0] = " + str(trans)
                          
-print "Sample:"
+print "\nSample:"
 mseq1 = m_mix.sample(4,15)                         
 print str(mseq1) + "\n"
 
-print "SampleSingle:"
+print "\nSampleSingle:"
 mseq2 = m_mix.sampleSingle(10)                         
 print str(mseq2) + "\n"
 
-print "Viterbi"
+print "\nViterbi"
 mixpath = m_mix.viterbi(mseq2)
 print str(mixpath) + "\n"
 
 
-print "forward"
+print "\nForward"
 logp = m_mix.loglikelihood(mseq1)    
 print "logp = " + str(logp) + "\n"
 
+print "\nForward matrices"
 (salpha,sscale) = m_mix.forward(mseq2)
 print "alpha:\n" + str(salpha) + "\n"
 print "scale = " + str(sscale) + "\n"	
 
+print "\nBackward matrices"
 beta = m_mix.backward(mseq2,sscale)
 print "beta = \n " + str(beta) + "\n"
 
 
 
+print "*** Reading XML-HMM from file."
+HMMOpen = HMMOpenFactory(GHMM_FILETYPE_XML)
+m4 = HMMOpen('/project/algorithmics/Sopra/python/simple2.xml')
+print m4
