@@ -31,6 +31,69 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #  include "config.h"
 #endif
 
+#ifndef DO_WITH_GSL
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+double zbrent_AB(double (*func)(double, double, double, double),
+		 double x1, double x2, double tol,
+		 double A, double B, double eps)
+{
+    fprintf(stderr, "Function zbrent_AB() not implemented!\n");
+    exit(1);
+
+    /*
+    double a, b, c;
+    double fa, fb, fc;
+
+    a = min(x1, x2);
+    fa = (*func)(a);
+    c = max(x1, x2);
+    fc = (*func)(c);
+    b = (c - a)/2.0;
+    fb = (*func)(b);
+
+    while (fabs(c - a) > tol + (tol * min(fabs(a), fabs(c))))
+    {
+        r = fb/fc;
+        s = fb/fa;
+        t = fa/fc;
+        p = s * (t * (r - t) * (c - b) - (1.0 - r) * (b - a));
+        q = (t - 1.0) * (r - 1.0) * (s - 1.0);
+
+        x = b + p/q;
+
+        if (x > a && x < c)
+        {
+            / * Accept interpolating point * /
+            if (x < b)
+            {
+                c = b;
+                fc = fb;
+                b = x;
+                fb = (*func)(b);
+            }
+            else if (x > b)
+            {
+                a = b;
+                fa = fb;
+                b = x;
+                fb = (*func)(b);
+            }
+        }
+        else
+        {
+            / * Use bisection * /
+        }
+    }
+    */
+}
+
+
+#else
+
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 
@@ -125,7 +188,7 @@ double zbrent_AB(double (*func)(double, double, double, double),
 
   return result;
 }
-
+#endif
 
 
 

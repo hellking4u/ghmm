@@ -1,6 +1,17 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifndef DO_WITH_GSL
+
+/* This test is not perfomed */
+int main()
+{
+  return 0;
+}
+
+#else
+
 #include <math.h>
 #include <gsl/gsl_sf.h>
 #include <gsl/gsl_histogram.h>
@@ -207,3 +218,5 @@ int main()
   gnuplot_show_distributions_pdf();
   return 0;
 }
+
+#endif
