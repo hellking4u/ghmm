@@ -8,6 +8,8 @@ __copyright__
 
 *******************************************************************************/
 
+#include "config.h"
+
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 
@@ -52,7 +54,12 @@ double zbrent_AB(double (*func)(double, double, double, double),
   tolerance=tol;
 
   /* initialisation */
+#ifdef GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG
+  s = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
+  gsl_root_fsolver_set (s,&f,x);
+#else
   s = gsl_root_fsolver_alloc (gsl_root_fsolver_brent, &f, x);
+#endif
 
   /* iteration */
   do {
