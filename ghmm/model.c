@@ -84,6 +84,17 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
 
 
 /*----------------------------------------------------------------------------*/
+inline int model_ipow(int x, unsigned int n) {
+  int result=1;
+  while (n!=0){
+    if (n&1) result*= x;
+    x*=x;
+    n>>=1;
+  }
+  return result;
+}
+  
+/*----------------------------------------------------------------------------*/
 static int model_state_alloc(state *state, int M, int in_states,
 			     int out_states) {
 # define CUR_PROC "model_state_alloc"
@@ -515,7 +526,7 @@ int model_free(model **mo) {
 /*============================================================================*/
 model *model_copy(const model *mo) {
 # define CUR_PROC "model_copy"
-  int i, j, nachf, vorg, m;
+  int i, j, nachf, vorg, m, size;
   model *m2 = NULL;
   if(!m_calloc(m2, 1)) {mes_proc(); goto STOP;}
   if (!m_calloc(m2->s, mo->N)) {mes_proc(); goto STOP;}
@@ -538,7 +549,7 @@ model *model_copy(const model *mo) {
     if(!m_calloc(m2->s[i].in_id, vorg)) {mes_proc(); goto STOP;}
     if(!m_calloc(m2->s[i].in_a, vorg)) {mes_proc(); goto STOP;}
     /* allocate enough memory for higher order states */
-    if(!m_calloc(m2->s[i].b, pow(mo->M, mo->s[i].order+1))) {mes_proc(); goto STOP;}
+    if(!m_calloc(m2->s[i].b, model_ipow(mo->M, mo->s[i].order+1))) {mes_proc(); goto STOP;}
     
     /* copy the values */
     for (j = 0; j < nachf; j++) {
@@ -550,7 +561,8 @@ model *model_copy(const model *mo) {
       m2->s[i].in_id[j] = mo->s[i].in_id[j];
     }
     /* copy all b values for higher order states */
-    for (m = 0; m < pow(mo->M, mo->s[i].order+1); m++)
+    size = model_ipow(mo->M, mo->s[i].order+1);
+    for (m=0; m<size; m++)
       m2->s[i].b[m] = mo->s[i].b[m];
 
     m2->s[i].pi         = mo->s[i].pi;
@@ -1035,7 +1047,7 @@ void model_A_print(FILE *file, model *mo, char *tab, char *separator,
 
 void model_B_print(FILE *file, model *mo, char *tab, char *separator,
 		   char *ending) {
-  int i, j;
+  int i, j, size;
 
   for (i = 0; i < mo->N; i++) {
     fprintf(file, "%s", tab);
@@ -1046,7 +1058,8 @@ void model_B_print(FILE *file, model *mo, char *tab, char *separator,
       fprintf(file, "%s\n", ending);
     }
     else {
-      for (j = 1; j < pow(mo->M, mo->s[i].order + 1); j++)
+      size = model_ipow(mo->M, mo->s[i].order + 1);
+      for (j=1; j<size; j++)
 	fprintf(file, "%s %.2f", separator, mo->s[i].b[j]);
       fprintf(file, "%s\n", ending);
     }
@@ -1737,49 +1750,29 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
 # undef CUR_PROC
 } /* data */
  
- 
+
+/*----------------------------------------------------------------------------*/ 
 /** gets correct index for emission array b of state j */
-int get_emission_index(model* mo, int j , int obs, int t ){
-
-	int index;	                    
-
-    	if (!(mo->model_type & kHigherOrderEmissions))
-	  return(obs);
-      
-	if (mo->s[j].order>t)
-	  return -1;
-	
-	if( mo->s[j].order > mo->maxorder ){
-		fprintf(stderr, "Order %d of state %d exceeds maximum state order (maxorder=%d)\n",
-		      mo->s[j].order ,j, mo->maxorder);
-		return -1;
-	}
-	
-	return (mo->emission_history * mo->M) % (int)pow(mo->M, mo->s[j].order+1) + obs;
+inline int get_emission_index(model* mo, int j , int obs, int t ){
+    	if (!(mo->model_type & kHigherOrderEmissions)) return(obs);
+	if (mo->s[j].order>t) return -1;
+	return (mo->emission_history * mo->M) % model_ipow(mo->M, mo->s[j].order+1) + obs;
 }
 
-
 /** updates emission history */
-void update_emission_history(model* mo, int obs){
-	
+inline void update_emission_history(model* mo, int obs){
   /* left-shift the history, truncate to history length and
      add the last observation */
   if (mo->model_type & kHigherOrderEmissions)
-    mo->emission_history = (mo->emission_history * mo->M) 
-                            % (int)pow(mo->M, mo->maxorder) + obs;
+    mo->emission_history = (mo->emission_history * mo->M) % model_ipow(mo->M, mo->maxorder) + obs;
 }
 
-
-
 /** updates emission history for backward algorithm*/
-void update_emission_history_front(model* mo, int obs){
-  
+inline void update_emission_history_front(model* mo, int obs){
   /*removes the most significant position (right-shift) and add the last seen
     observation (left-shifted with the length of history) */
   if (mo->model_type & kHigherOrderEmissions)
-    mo->emission_history = ((int)pow(mo->M, mo->maxorder-1) * obs)
-                              + mo->emission_history / mo->M;
-  
+    mo->emission_history = (model_ipow(mo->M, mo->maxorder-1) * obs) + mo->emission_history / mo->M;
 }
 
 
@@ -1798,7 +1791,7 @@ int model_normalize(model* mo) {
 
     /* check model_type before using state order */
     if (mo->model_type & kHigherOrderEmissions)
-      size = pow(mo->M, mo->s[i].order);
+      size = model_ipow(mo->M, mo->s[i].order);
 
     /* normalize transition probabilities */
     if (vector_normalize(mo->s[i].out_a, mo->s[i].out_states ) == -1 ) {
@@ -1850,7 +1843,7 @@ int model_add_noise(model* mo, double level, int seed) {
       mo->s[i].out_a[j] *= (1-level) + (GHMM_RNG_UNIFORM(RNG)*2*level);
 
     if (mo->model_type & kHigherOrderEmissions)
-      size = pow(mo->M, mo->s[i].order);
+      size = model_ipow(mo->M, mo->s[i].order);
     for (hist=0; hist<size; hist++)
       for (h=hist*mo->M; h<hist*mo->M+mo->M; h++)
 	mo->s[i].b[h] *= (1-level) + (GHMM_RNG_UNIFORM(RNG)*2*level);
@@ -1985,7 +1978,7 @@ int model_apply_duration(model* mo, int cur, int times) {
     if (mo->model_type & kHasBackgroundDistributions)
 	if (m_realloc(mo->background_id, mo->N)) { mes_proc(); goto STOP; }
 
-    size = pow(mo->M, mo->s[cur].order+1);
+    size = model_ipow(mo->M, mo->s[cur].order+1);
     for (i=last; i<mo->N; i++) {
 	/* set the new state */
 	mo->s[i].pi    = 0.0;
@@ -2089,7 +2082,7 @@ background_distributions *model_copy_background_distributions(background_distrib
 
   for(i=0;i<bg->n;i++){
     new_order[i] = bg->order[i];
-    b_i_len = (int)pow(bg->m, bg->order[i]+1);
+    b_i_len = model_ipow(bg->m, bg->order[i]+1);
     if (!m_calloc(new_b[i], b_i_len)) {mes_proc(); goto STOP;}   
     for(j=0;j<b_i_len;j++){
       new_b[i][j] = bg->b[i][j]; 
@@ -2125,7 +2118,7 @@ int model_apply_background (model *mo, double* background_weight) {
       }
 
       /* XXX Cache in background_distributions */
-      size = (int)pow(mo->M, mo->s[i].order+1);
+      size = model_ipow(mo->M, mo->s[i].order+1);
       for (j=0; j<size; j++)
 	    mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
 	  + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
@@ -2174,7 +2167,7 @@ int model_get_uniform_background (model* mo, sequence_t* sq) {
   if (!m_calloc(mo->bp->b, mo->bp->n)) {mes_proc(); goto STOP;}
 
   for (i=0; i < mo->bp->n; i++)
-    if(!m_malloc(mo->bp->b[i], (int)pow(mo->M, mo->bp->order[i]+1))) {mes_proc(); goto STOP;}
+    if(!m_malloc(mo->bp->b[i], model_ipow(mo->M, mo->bp->order[i]+1))) {mes_proc(); goto STOP;}
   
   for (i=0; i < mo->bp->n; i++) {
 
@@ -2184,7 +2177,7 @@ int model_get_uniform_background (model* mo, sequence_t* sq) {
 	break;
 
     /* initialize with ones as psoudocounts */
-    size = (int)pow(mo->M, mo->bp->order[n]+1);
+    size = model_ipow(mo->M, mo->bp->order[n]+1);
     for (m=0; m<size; m++)
       mo->bp->b[i][m] = 1.0;
 
@@ -2202,7 +2195,7 @@ int model_get_uniform_background (model* mo, sequence_t* sq) {
     }
 
     /* normalise */
-    size = (int)pow(mo->M, mo->bp->order[n]);
+    size = model_ipow(mo->M, mo->bp->order[n]);
     for (h=0; h<size; h+=mo->M) {
       for (m=h; m<h+mo->M; m++)
 	sum+=mo->bp->b[i][m];

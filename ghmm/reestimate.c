@@ -76,9 +76,9 @@ static local_store_t *reestimate_alloc(const model *mo) {
   if (!m_calloc(r->a_denom, mo->N)) {mes_proc(); goto STOP;}
   //hier muss mehr platz:
   //r->b_num = stat_matrix_d_alloc(mo->N, mo->M);
-  r->b_num = stat_matrix_d_alloc(mo->N, pow(mo->M,(mo->maxorder)+1));
+  r->b_num = stat_matrix_d_alloc(mo->N, model_ipow(mo->M,mo->maxorder+1));
   if (!(r->b_num)) {mes_proc(); goto STOP;}
-  r->b_denom = stat_matrix_d_alloc(mo->N, pow(mo->M, mo->maxorder));
+  r->b_denom = stat_matrix_d_alloc(mo->N, model_ipow(mo->M, mo->maxorder));
   if (!(r->b_denom)) {mes_proc(); goto STOP;}
   return(r);
  STOP:
@@ -108,18 +108,23 @@ static int reestimate_free(local_store_t **r, int N) {
 /*----------------------------------------------------------------------------*/
 static int reestimate_init(local_store_t *r, const model *mo) {
 # define CUR_PROC "reestimate_init"
-  int i, j, m, b_len, hist;
+
+  int i, j, m, size, b_len;
+
+  size = model_ipow(mo->M, mo->maxorder);
+  b_len = size*mo->M;
+
   r->pi_denom = 0.0;
+
   for (i = 0; i < mo->N; i++) {
     r->pi_num[i] = 0.0;
     r->a_denom[i] = 0.0;
     for (j = 0; j < mo->s[i].out_states; j++)
       r->a_num[i][j] = 0.0;
     //mehr platz
-    for (hist = 0; hist < pow(mo->M, mo->maxorder); hist++)
-      r->b_denom[i][hist] = 0.0;
-    b_len=pow(mo->M,(mo->maxorder)+1);
-    for (m = 0; m < b_len; m++)
+    for (m=0; m<size; m++)
+      r->b_denom[i][m] = 0.0;
+    for (m=0; m<b_len; m++)
       r->b_num[i][m] = 0.0;
   }
   return(0);
@@ -170,7 +175,7 @@ void reestimate_update_tie_groups(model *mo) {
   
   if (mo->model_type & kHigherOrderEmissions) {
     /*  printf("reestimate_update_tie_groups: Allocating for higher order states\n"); */
-    if (!m_malloc(new_emissions,pow(mo->M,(mo->maxorder)+1))){
+    if (!m_malloc(new_emissions, model_ipow(mo->M, mo->maxorder+1))) {
       mes_proc(); 
       goto STOP;
     }  
@@ -183,10 +188,8 @@ void reestimate_update_tie_groups(model *mo) {
     }  
   }
   
-  for(i=0;i<mo->N;i++){
-    
-    bi_len= pow(mo->M,mo->s[i].order+1);
-    
+  for (i=0; i<mo->N; i++){
+    bi_len = model_ipow(mo->M, mo->s[i].order+1);
     /* find tie group leaders */  
     if (mo->tied_to[i] == i) {
       nr = 1.0;
@@ -254,11 +257,11 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
   int res = -1;
   int h, i, j, m, l, j_id, positive, bi_len;
   double factor, p_i;
-  int hist, col;
+  int hist, col, size;
   mes_check_0(r->pi_denom, goto STOP); 
   for (i = 0; i < mo->N; i++) {
     /* Pi */
-    bi_len=pow(mo->M, (mo->s[i].order)+1);
+    bi_len = model_ipow(mo->M, mo->s[i].order+1);
     mo->s[i].pi =  r->pi_num[i] / r->pi_denom;
     /* A */
     /* note: denom. might be 0; never reached state? */
@@ -317,14 +320,13 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
       continue;
     
     /* B */
-    for(hist = 0; hist < pow(mo->M, mo->s[i].order); hist++) {
-      if (r->b_denom[i][hist] < EPS_PREC) {
-	    factor = 0.0;
-	
-      }
-      else {
-	    factor = ( 1.0 / r->b_denom[i][hist] );
-      }
+    size = model_ipow(mo->M, mo->s[i].order);
+    for (hist=0; hist<size; hist++) {
+      if (r->b_denom[i][hist] < EPS_PREC)
+	factor = 0.0;
+      else
+	factor = ( 1.0 / r->b_denom[i][hist] );
+
       positive = 0;
     /* hier:
 	 /* TEST: denom. < numerator */
@@ -374,7 +376,7 @@ static int reestimate_one_step(model *mo, local_store_t *r,
   int T_k;
   double gamma;
   double log_p_k;
-  int first, hist, col;
+  int first, hist, col, size;
 
   /* first set maxorder to zero if model_type & kHigherOrderEmissions is FALSE 
      
@@ -407,12 +409,12 @@ static int reestimate_one_step(model *mo, local_store_t *r,
       for (i = 0; i < mo->N; i++) {
 	/* Pi */
 	//hier:
-	bi_len=pow(mo->M, mo->s[i].order+1);
+	bi_len = model_ipow(mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
 
 	/* A */
-	for (t = 0; t < T_k - 1; t++) {
+	for (t=0; t<T_k-1; t++) {
 	  update_emission_history(mo, O[k][t]);
 	  r->a_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i];
 	  for (j = 0; j < mo->s[i].out_states; j++) {
@@ -447,10 +449,11 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 	*/
 
 	/* XXX TODO correct higher emissions*/
-	for(hist = 0; hist < pow(mo->M, mo->s[i].order); hist++) {
+	size = model_ipow(mo->M, mo->s[i].order);
+	for (hist=0; hist<size; hist++) {
 	  first = hist*mo->M;
-	  for (m = first;  m < first + mo->M; m++) {
-	    for (t = 0; t < T_k; t++) {
+	  for (m=first;  m<first+mo->M; m++) {
+	    for (t=0; t<T_k; t++) {
 	      if ( get_emission_index(mo, i, O[k][t], t) == m ) {
 		gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
 		if (gamma < EPS_PREC) {
@@ -630,7 +633,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
   int T_k;
   double gamma;
   double log_p_k;
-  int first, hist, col;
+  int first, hist, col, size;
 
   /* first set maxorder to zero if model_type & kHigherOrderEmissions is FALSE 
      
@@ -663,11 +666,11 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
       for (i = 0; i < mo->N; i++) {
 	/* Pi */
 	//hier:
-	bi_len=pow(mo->M, mo->s[i].order+1);
+	bi_len = model_ipow(mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
 	/* A */
-	for (t = 0; t < T_k - 1; t++) {
+	for (t=0; t<T_k-1; t++) {
 	  update_emission_history(mo, O[k][t]);
 	  r->a_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i];
 	  for (j = 0; j < mo->s[i].out_states; j++) {
@@ -691,10 +694,11 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
 	  continue;
 	/* B */
 
-	for(hist = 0; hist < pow(mo->M, mo->s[i].order); hist++) {
+	size = model_ipow(mo->M, mo->s[i].order);
+	for (hist=0; hist<size; hist++) {
 	  first = hist*mo->M;
-	  for (m = first;  m < first + mo->M; m++) {
-	    for (t = 0; t < T_k; t++) {
+	  for (m=first;  m<first+mo->M; m++) {
+	    for (t=0; t<T_k; t++) {
 	      if (get_emission_index(mo, i, O[k][t], t) == m &&
 		  label[k][t]==mo->s[i].label) {
 		gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );

@@ -247,6 +247,11 @@ typedef struct hmm_check_t hmm_check_t;
 extern "C" {
 #endif
 
+/*----------------------------------------------------------------------------*/
+/** 
+    binary algorithm to compute powers of integers efficiently
+    see Knuth, TAOCP, Vol 2, 4.6.3 */
+inline int model_ipow(int x, unsigned int n);
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -500,22 +505,20 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
 	Calculates the right index for emission array b of state j in model mo
 	given an observation obs and taking the state order into account,
 	returns -1 if state order exceeds number of so far emitted characters
-    @param  mo:  model
+	@param  mo:  model
 	@param   j:  state id 
 	@param obs:  integer observation to be updated with
-    @param   t:  position of obs in sequence (time)
+	@param   t:  position of obs in sequence (time)
 */ 
-int get_emission_index (model* mo, int j , int obs, int t );
-
+inline int get_emission_index (model* mo, int j , int obs, int t );
 
 /**
 	Updates emission history of model mo, discarding the oldest and 'adding' the
 	new observation by using modulo and multiplication	
-    @param  mo:  model to be updated
+	@param  mo:  model to be updated
 	@param obs:  integer observation to be updated with
 */
-void update_emission_history(model* mo, int obs);
-
+inline void update_emission_history(model* mo, int obs);
 
 /**
 	Updates emission history of model mo for backward algorithm by 'adding'
@@ -525,17 +528,15 @@ void update_emission_history(model* mo, int obs);
 	@param  mo:  model to be updated
 	@param obs:  integer observation to be updated with
 */
-void update_emission_history_front(model* mo, int obs);
+inline void update_emission_history_front(model* mo, int obs);
 
 
 /**
     Uses vector_normalize in vector.h
     Normalizes the transition and output probs for each state
     in the given model
-    @author Heval Benav
     @return 0 if normalization went through
-	@param mo: model to be normalized
-
+    @param mo: model to be normalized
 */
 int model_normalize(model* mo);
 
