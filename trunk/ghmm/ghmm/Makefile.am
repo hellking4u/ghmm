@@ -13,7 +13,8 @@ lib_LTLIBRARIES = libghmm.la
 libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
 libghmm_la_SOURCES= foba.c foba.h \
                   matrix.c  matrix.h \
-                  model.c model.h \
+                  model.c model.h\
+                  modelutil.c modelutil.h \
                   cluster.c cluster.h \
 		  scluster.c scluster.h \
                   root_finder.c root_finder.h \
