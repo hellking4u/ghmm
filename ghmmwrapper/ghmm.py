@@ -1112,15 +1112,16 @@ class HMM:
         self.getModelPtr = ""            # C function to get a pointer to the model struct
         self.distanceFunction = ""       # C function to compute a probabilistic distance between models
         
-    def __del__(self):
-        """ Deallocation routine for the underlying C data structures. """
-        print "HMM.__del__", self.cmodel, self.getModelPtr(self.cmodel)
-        if self.cmodel is not None:
-            modelPtr = self.getModelPtr(self.cmodel)
-            self.freeFunction(modelPtr)
-            self.cmodel = 0
-        else:
-            print "OOPS. __del__ called twice"
+##    def __del__(self):
+##        """ Deallocation routine for the underlying C data structures. """
+##        print "HMM.__del__", self.cmodel, self.getModelPtr(self.cmodel)
+##        ghmmwrapper.call_model_free(self.cmodel)
+####        if self.cmodel is not None:
+####            modelPtr = self.getModelPtr(self.cmodel)
+####            self.freeFunction(modelPtr)
+####            self.cmodel = 0
+####        else:
+####            print "OOPS. __del__ called twice"
     
     
     def loglikelihood(self, emissionSequences): 

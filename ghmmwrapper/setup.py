@@ -19,11 +19,9 @@ def runtool(tool, argument_string):
         raise DistutilsExecError, "could not run %s. Check your path." % tool
     return output
 
-xmlioprefix = runtool('xmlio-config', '--prefix')
 ghmmprefix  = runtool('ghmm-config' , '--prefix')
 swiglib = runtool('swig','-swiglib')
 swiglib_path  = os.path.split(swiglib)[0]
-xmliolib_path = xmlioprefix + '/lib'
 ghmmlib_path  = runtool('ghmm-config','--lib-prefix')
     
 # BUG: Including 'ghmmwrapper.i' in Extension source list causes
@@ -41,16 +39,15 @@ setup(name="ghmmwrapper",
       author="GHMM authors",
       author_email="ghmm@sf.net",
       url="http://ghmm.org",
-      py_modules = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','xmlutil','DataStructures','Graph','GraphUtil',
-                    'GatoGlobals','EditObjectAttributesDialog'],
+      py_modules = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','xmlutil','DataStructures',
+                    'Graph','GraphUtil', 'GatoGlobals','EditObjectAttributesDialog'],
       ext_modules = [Extension('_ghmmwrapper',
                                ['sdclass_change.c',
-                                'gql.c', 'read_cxml.c', 'ghmmwrapper_wrap.c'],
-                               include_dirs = [xmlioprefix + '/include',ghmmprefix + '/include'],
-                               library_dirs = [xmliolib_path , ghmmlib_path ,swiglib_path],
+                                'gql.c', 'ghmmwrapper_wrap.c'],
+                               include_dirs = [ghmmprefix + '/include'],
+                               library_dirs = [ghmmlib_path ,swiglib_path],
                                libraries = ['gsl','stdc++','gsl','gslcblas','m','ghmm',
-                                            'ghmm++', 'xmlio', 'swigpy'
-                                            ]
+                                            'swigpy']
                                )
                      ]
      )
