@@ -96,7 +96,7 @@ int two_states_coin_toss() {
   viterbi_path->print(stdout,""," ","\n");
 
   fprintf(stdout,
-	  "probability of this sequence (viterbi algorithm): %f\n",
+	  "log-p of this sequence (viterbi algorithm): %f\n",
   	  log_p_viterbi);
 
   /* allocate matrix for forward algorithm */
@@ -113,7 +113,7 @@ int two_states_coin_toss() {
   /* alpha matrix */
   fprintf(stdout,"Done.\nalpha matrix from forward algorithm:\n");
   forward_alpha->print(stdout,""," ","\n");
-  fprintf(stdout,"probability of this sequence (forward algorithm): %f\n",log_p_forward);
+  fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
 
   /* change initialise probabilities */
   my_model.getState(0)->setInitialProbability(0.1);
