@@ -18,6 +18,7 @@ int sequences_read_write(){
   sequences_document seq;
   (void)seq.read_sequences(filename);
   seq.write_sequences("/dev/stdout");
+  return 0;
 }
 
 int sequenceReader_test()

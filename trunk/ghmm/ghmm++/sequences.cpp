@@ -12,281 +12,12 @@
 #include "config.h"
 #endif
 
-#include "sequences.h"
+#include "ghmm++/sequence.h"
+#include "ghmm++/sequences.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
-
-/***********************************************************************************/
-/* templates are better! */
-
-double_sequence::double_sequence(double* seq_data, size_t length)
-{
-  tag="sequence";
-  for(size_t count=0; count<length; count++)
-    push_back(seq_data[count]);
-  label=NULL;
-  id="";
-}
-
-double_sequence::double_sequence(int* seq_data, size_t length)
-{
-  tag="sequence";
-  for(size_t count=0; count<length; count++)
-    push_back(seq_data[count]);
-  label=NULL;
-  id="";
-}
-
-double_sequence::double_sequence(const string& name, XMLIO_Attributes &attributes)
-{
-  tag=name;
-  XMLIO_Attributes::iterator id_key=attributes.find("id");
-  if (id_key!=attributes.end())
-    {
-      id=id_key->second;
-    }
-  label=NULL;
-}
-
-double_sequence::~double_sequence()
-{
-  SAFE_DELETE(label);
-}
-
-XMLIO_Element* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
-{
-  if (tag=="label")
-    {
-      if (label==NULL)
-	{
-	  label=new XMLIO_StringElement();
-	  return label;
-	}
-      else
-	{
-	  cout<<"Only one label allowed in sequence"<<endl;
-	}
-    }
-  else
-    {
-      cout<<tag<<" not supported in sequence"<<endl;
-    }
-  return NULL;
-}
-
-
-const XMLIO_Attributes&
-double_sequence::XMLIO_getAttributes () const{
-  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
-  attrs.clear();
-  if (!id.empty())
-    attrs["id"]=id;
-  return attributes;
-}
-
-const int double_sequence::XMLIO_writeContent (XMLIO_Document& doc) const
-{
-  int result=0;
-  int tmp_result;
-  if (label!=NULL) {
-    tmp_result=doc.writeElement(*label);
-    if (tmp_result<0) return tmp_result;
-  }
-  tmp_result=XMLIO_ArrayElement<double>::XMLIO_writeContent(doc);
-  if (tmp_result<0) return tmp_result;
-  return result+tmp_result;
-}
-
-
-double* double_sequence::create_double_array() const
-{
-  double* array=(double*)malloc(sizeof(double)*size());
-  XMLIO_ArrayElement<double>::const_iterator iter=begin();
-  int i=0;
-  while (iter!=end())
-    {
-      array[i]=*iter;
-      i++;iter++;
-    }
-  return array;
-}
-
-int* double_sequence::create_int_array() const
-{
-  int* array=(int*)malloc(sizeof(int)*size());
-  XMLIO_ArrayElement<double>::const_iterator iter=begin();
-  int i=0;
-  while (iter!=end())
-    {
-      array[i]=(int)*iter;
-      i++;iter++;
-    }
-  return array;
-}
-
-int double_sequence::get_label_as_int() const
-{
-  if (label!=NULL)
-    {
-      return strtol(label->c_str(),NULL,0);
-    }
-  else
-    {
-      return -1;
-    }
-      
-}
-
-double double_sequence::get_id_as_double() const
-{
-  if (id.empty())
-    return -1.0;
-  else
-    return strtod(id.c_str(),NULL);
-}
-
-void double_sequence::print() const
-{
-  XMLIO_ArrayElement<double>::print();
-}
-
-/***********************************************************************************/
-
-int_sequence::int_sequence(int* seq_data, size_t length)
-{
-  tag="sequence";
-  for(size_t count=0; count<length; count++)
-    push_back(seq_data[count]);
-  label=NULL;
-  id="";
-}
-
-int_sequence::int_sequence(double* seq_data, size_t length)
-{
-  tag="sequence";
-  for(size_t count=0; count<length; count++)
-    push_back((int)floor(seq_data[count]));
-  label=NULL;
-  id="";
-}
-
-int_sequence::int_sequence(const string& name, XMLIO_Attributes &attributes)
-{
-  tag=name;
-  XMLIO_Attributes::iterator id_key=attributes.find("id");
-  if (id_key!=attributes.end())
-    {
-      id=id_key->second;
-    }
-  label=NULL;
-}
-
-int_sequence::~int_sequence()
-{
-  SAFE_DELETE(label);
-}
-
-XMLIO_Element* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
-{
-  if (tag=="label")
-    {
-      if (label==NULL)
-	{
-	  label=new XMLIO_StringElement();
-	  return label;
-	}
-      else
-	{
-	  cout<<"Only one label allowed in sequence"<<endl;
-	}
-    }
-  else
-    {
-      cout<<tag<<" not supported in sequence"<<endl;
-      return NULL;
-    }
-  return NULL;
-}
-
-const XMLIO_Attributes&
-int_sequence::XMLIO_getAttributes () const{
-  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
-  attrs.clear();
-  if (!id.empty())
-    attrs["id"]=id;
-  return attributes;
-}
-
-const int int_sequence::XMLIO_writeContent (XMLIO_Document& doc) const
-{
-  int result=0;
-  int tmp_result;
-  if (label!=NULL) {
-    tmp_result=doc.writeElement(*label);
-    if (tmp_result<0) return tmp_result;
-  }
-  tmp_result=XMLIO_ArrayElement<int>::XMLIO_writeContent(doc);
-  if (tmp_result<0) return tmp_result;
-  return result+tmp_result;
-}
-
-int* int_sequence::create_int_array() const
-{
-  int* array=(int*)malloc(sizeof(int)*size());
-  XMLIO_ArrayElement<int>::const_iterator iter=begin();
-  int i=0;
-  while (iter!=end())
-    {
-      array[i]=*iter;
-      i++;iter++;
-    }
-  return array;
-}
-
-double* int_sequence::create_double_array() const
-{
-  double* array=(double*)malloc(sizeof(double)*size());
-  XMLIO_ArrayElement<int>::const_iterator iter=begin();
-  int i=0;
-  while (iter!=end())
-    {
-      array[i]=(double)*iter;
-      i++;iter++;
-    }
-  return array;
-}
-
-
-int int_sequence::get_label_as_int() const
-{
-  if (label!=NULL)
-    {
-      return strtol(label->c_str(),NULL,0);
-    }
-  else
-    {
-      return -1;
-    }
-}
-
-double int_sequence::get_id_as_double() const
-{
-  if (id.empty())
-    return -1.0;
-  else
-    return strtod(id.c_str(),NULL);
-}
-
-void int_sequence::print() const
-{
-  XMLIO_ArrayElement<int>::print();
-}
-
-
-/***********************************************************************************/
-
 
 sequences_DiscretePD::sequences_DiscretePD(int** data, double* weight_data, size_t length, size_t number) {
   tag="DiscretePD";
@@ -349,11 +80,11 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq) {
 }
 
 
-sequences_DiscretePD::sequences_DiscretePD (XMLIO_Attributes& attributes, const string& sequence_type) {
+sequences_DiscretePD::sequences_DiscretePD (XMLIO_Attributes& attrs, const string& sequence_type) {
   tag="DiscretePD";
   type=sequence_type;
-  XMLIO_Attributes::iterator default_weight_key=attributes.find("default_weight");
-  if (default_weight_key!=attributes.end())
+  XMLIO_Attributes::iterator default_weight_key=attrs.find("default_weight");
+  if (default_weight_key!=attrs.end())
     {
       errno=0;
       default_weight=strtod(default_weight_key->second.c_str(),NULL);
@@ -385,13 +116,13 @@ sequences_DiscretePD::~sequences_DiscretePD()
 void sequences_DiscretePD::XMLIO_finishedReading()
 {}
 
-XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& name, XMLIO_Attributes &attributes)
+XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
   if (name=="sequence")
     {
       if (type=="int")
 	{
-	  int_sequence* new_sequence=new int_sequence(name,attributes);
+	  int_sequence* new_sequence=new int_sequence(name,attrs);
 	  int_sequence_vector.push_back(new_sequence);
 	  weight_vector.push_back(actual_weight);
 	  actual_weight=default_weight;
@@ -399,7 +130,7 @@ XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& name, XMLIO_At
 	}
       else if (type=="double")
 	{
-	  double_sequence* new_sequence=new double_sequence(name,attributes);
+	  double_sequence* new_sequence=new double_sequence(name,attrs);
 	  double_sequence_vector.push_back(new_sequence);
 	  weight_vector.push_back(actual_weight);
 	  actual_weight=default_weight;
@@ -418,7 +149,7 @@ XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& name, XMLIO_At
     }
 }
 
-void sequences_DiscretePD::XMLIO_endTag(const string& tag)
+void sequences_DiscretePD::XMLIO_endTag(const string& name)
 {}
 
 void sequences_DiscretePD::XMLIO_getCharacters(const string& characters)
@@ -490,6 +221,7 @@ const int sequences_DiscretePD::XMLIO_writeContent (XMLIO_Document& doc) const {
 	}
       return result;
   }
+  return 0;
 }
 
 
@@ -621,12 +353,12 @@ sequences::sequences(sequence_d_t* seq)
   sequence_array=new sequences_DiscretePD(seq);  
 }
 
-sequences::sequences(const string& name, XMLIO_Attributes& attributes)
+sequences::sequences(const string& name, XMLIO_Attributes& attrs)
 {
   tag=name;
   sequence_array=NULL;
-  XMLIO_Attributes::iterator type_key=attributes.find("type");
-  if (type_key!=attributes.end())
+  XMLIO_Attributes::iterator type_key=attrs.find("type");
+  if (type_key!=attrs.end())
     {
       type=type_key->second;
       if (type_key->second!="int" && type_key->second!="double")
@@ -678,13 +410,13 @@ void sequences::print() const
     cout<<"no sequences available"<<endl;
 }
 
-XMLIO_Element* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* sequences::XMLIO_startTag(const string& name, XMLIO_Attributes &attrs)
 {
-  if (tag=="DiscretePD")
+  if (name=="DiscretePD")
     {
       if (sequence_array==NULL)
 	{
-	  sequence_array=new sequences_DiscretePD(attributes,type);
+	  sequence_array=new sequences_DiscretePD(attrs,type);
 	  return sequence_array;
 	}
       else
@@ -694,12 +426,12 @@ XMLIO_Element* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &at
     }
   else
     {
-      cout<<tag<<" not allowed in sequences"<<endl;
+      cout<<name<<" not allowed in sequences"<<endl;
     }
   return NULL;
 }
 
-void sequences::XMLIO_endTag(const string& tag)
+void sequences::XMLIO_endTag(const string& name)
 {}
 
 const XMLIO_Attributes&
@@ -720,14 +452,23 @@ sequences::XMLIO_isEmpty () const{
 
 const int
 sequences::XMLIO_writeContent (XMLIO_Document& doc) const{
+  int result=0;
   if (sequence_array!=NULL) {
-    doc.writeEndl();
-    return doc.writeElement(*sequence_array);
-    doc.writeEndl();
+    int tmp_result;
+    tmp_result=doc.writeEndl();
+    if (tmp_result < 0) return tmp_result;
+    result+=tmp_result;
+    tmp_result=doc.writeElement(*sequence_array);
+    if (tmp_result < 0) return tmp_result;
+    result+=tmp_result;
+    tmp_result=doc.writeEndl();
+    if (tmp_result < 0) return tmp_result;
+    result+=tmp_result;
   }
   else {
-    return doc.writeComment("no sequences");
+    result=doc.writeComment("no sequences");
   }
+  return result;
 }
 
 

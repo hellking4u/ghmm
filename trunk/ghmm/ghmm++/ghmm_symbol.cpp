@@ -31,12 +31,12 @@ ghmm_symbol::ghmm_symbol(int my_code, const string& my_symbol):
   code=my_code;
 }
 
-ghmm_symbol::ghmm_symbol(const string& tag, XMLIO_Attributes &attributes):
-  XMLIO_StringElement(tag,attributes)
+ghmm_symbol::ghmm_symbol(const string& name, XMLIO_Attributes &attrs):
+  XMLIO_StringElement(name,attrs)
 {
   init_members();
-  XMLIO_Attributes::const_iterator pos=attributes.find("code");
-  if (pos!=attributes.end())
+  XMLIO_Attributes::const_iterator pos=attrs.find("code");
+  if (pos!=attrs.end())
     {
       int* new_code=NULL;
       (void)XMLIO_evaluate_token(pos->second,0,pos->second.size(),new_code);

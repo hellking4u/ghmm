@@ -17,117 +17,12 @@
 #include <xmlio/XMLIO_Element.h>
 #include <xmlio/XMLIO_StringElement.h>
 #include <xmlio/XMLIO_ArrayElement.h>
+#include <ghmm++/sequence.h>
 #include <ghmm/sequence.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
-
-  /**
-   */
-  class double_sequence: public XMLIO_ArrayElement<double>
-    {
-    public:
-      /**
-       */
-      double_sequence(double* seq_data, size_t length);
-      /**
-       */
-      double_sequence(int* seq_data, size_t length);
-      /**
-       */
-      double_sequence(){label=NULL; id="";}
-      /**
-       */
-      double_sequence(const string& name, XMLIO_Attributes &attributes);
-      /**
-       */
-      ~double_sequence();
-      /**
-       */
-      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
-      /**
-       */
-      virtual const XMLIO_Attributes& XMLIO_getAttributes () const;
-      /**
-       */
-      virtual const int XMLIO_writeContent (XMLIO_Document& doc) const;
-      /**
-       */
-      double* create_double_array() const;
-      /**
-       */
-      int* create_int_array() const;
-      /**
-       */
-      int get_label_as_int() const;
-      /**
-       */
-      double get_id_as_double() const;
-      /**
-       */
-      virtual void print() const;
-    private:
-      /**
-       */
-      XMLIO_StringElement* label;
-      /**
-       */
-      string id;
-    };
-
-  /**
-   */
-  class int_sequence: public XMLIO_ArrayElement<int>
-    {
-    public:
-      /**
-       */
-      int_sequence(){label=NULL; id="";}
-      /**
-       */
-      int_sequence(int* seq_data, size_t length);
-      /**
-       */
-      int_sequence(double* seq_data, size_t length);
-      /**
-       */
-      int_sequence(const string& name, XMLIO_Attributes &attributes);
-      /**
-       */
-      ~int_sequence();
-      /**
-       */
-      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
-      /**
-       */
-      virtual const XMLIO_Attributes& XMLIO_getAttributes () const;
-      /**
-       */
-      virtual const int XMLIO_writeContent (XMLIO_Document& doc) const;
-      /**
-       */
-      double* create_double_array() const;
-      /**
-       */
-      int* create_int_array() const;
-      /**
-       */
-      int get_label_as_int() const;
-      /**
-       */
-      double get_id_as_double() const;
-      /**
-       */
-      virtual void print() const;
-    private:
-      /**
-       */
-      XMLIO_StringElement* label;
-      /**
-       */
-      string id;
-    };
 
   /**
    */
