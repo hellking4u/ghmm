@@ -405,7 +405,7 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
 #-------------------------------------------------------------------------------
 #Sequence, SequenceSet and derived  ------------------------------------------
 
-# write to FASTA function
+# XXX write to FASTA function
 
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
@@ -691,8 +691,8 @@ class SequenceSet:
         
         self.addSeqFunction(self.cseq, emissionSequences.cseq)
         
-        # XXX delete merged source sequences ?
-        # emissionSequences.cleanFunction(emissionSequences.cseq) 
+        emissionSequences.cleanFunction(emissionSequences.cseq) 
+        emissionSequences.cseq = None
 
     def getSubset(self, seqIndixes):
         """ Returns a SequenceSet containing (references to) the sequences with the indixes in
@@ -711,9 +711,8 @@ class SequenceSet:
             seq_label = ghmmwrapper.get_arrayl(self.cseq.seq_label, i)
             ghmmwrapper.set_arrayl(seq.seq_label, i, int(seq_label))
 
-            # XXX temp for GQL/ISMB to suppress |0| in SQD-file outputs
-            #seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
-            #ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
+            seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
+            ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
              
             
         seq.seq_number = seqNumber
@@ -775,6 +774,8 @@ GHMM_FILETYPE_SMO = 'smo'
 GHMM_FILETYPE_XML = 'xml'
 GHMM_FILETYPE_HMMER = 'hmm'
 
+
+# XXX modelName support for all file formats
 class HMMOpenFactory(HMMFactory):
 
     def __init__(self, defaultFileType=None):
@@ -795,12 +796,11 @@ class HMMOpenFactory(HMMFactory):
     		distribution = DiscreteDistribution(emission_domain)
     		# build adjacency list
     		[A, B, pi] = hmm_dom.buildMatrices()
-    		print A
-	    	print B
-	    	print pi
+    		#print A
+	    	#print B
+	    	#print pi
 	    	return HMMFromMatrices(emission_domain, distribution, A, B, pi)
 	    
-        # XXX model support !!! XXX
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
 	        # MO & SMO Files
     	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
@@ -848,7 +848,6 @@ class HMMOpenFactory(HMMFactory):
             return  HMMFromMatrices(emission_domain, distribution, A, B, pi, modelName)
 
     
-    #  XXX model support missing  XXX
     def all(self, fileName):
         
         if not path.exists(fileName):
@@ -857,11 +856,17 @@ class HMMOpenFactory(HMMFactory):
         # MO & SMO Files
         (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
         nrModelPtr = ghmmwrapper.int_array(1)
-        models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+        if hmmClass == DiscreteEmissionHMM:
+            models = hmmwrapper.model_read(fileName, nrModelPtr)
+            getPtr = ghmmwrapper.get_model_ptr
+        else:    
+            models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+            getPtr = ghmmwrapper.get_smodel_ptr
+
         nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
         result = []
         for i in range(nrModels):
-            cmodel = ghmmwrapper.get_smodel_ptr(models, i)
+            cmodel = ghmmwrapper.getPtr(models, i)
             m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             result.append(m)
         return result
@@ -931,7 +936,11 @@ class HMMOpenFactory(HMMFactory):
                 hmm_class = GaussianEmissionHMM            
                 return (hmm_class, emission_domain, distribution)
 
-        # XXX support for Gaussian Mixtuer HMM
+            elif cos == 1 and M > 1 and density == 0:
+                emission_domain = Float()
+                distribution = GaussianMixtureDistribution
+                hmm_class = GaussianMixtureHMM
+                return (hmm_class, emission_domain, distribution)
 
         return (None, None, None)
             
@@ -1141,7 +1150,6 @@ class HMMFromMatricesFactory(HMMFactory):
 HMMFromMatrices = HMMFromMatricesFactory()
 
 
-
 #-------------------------------------------------------------------------------
 #- HMM and derived  
 class HMM:
@@ -1225,7 +1233,7 @@ class HMM:
             ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
             if ret_val == -1:
                 
-                # print "Warning: forward returned -1: Sequence", i,"cannot be build."
+                print "Warning: forward returned -1: Sequence", i,"cannot be build."
                 # XXX Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
@@ -1449,6 +1457,11 @@ class HMM:
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
         state = self.getStatePtr(self.cmodel.s,i)
+        
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+        
         transition = None
         for i in range(state.out_states):
             stateId = ghmmwrapper.get_arrayint(state.out_id,i)
@@ -1458,15 +1471,19 @@ class HMM:
         if transition:
             return transition
         else:
-            raise KeyError
+            return 0
             
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij. """
-        out_state = self.getStatePtr(self.cmodel.s,i)
-        in_state = self.getStatePtr(self.cmodel.s,j)
-        print "XXX BUG: HMM.setTransition is not doing anything"
+
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+        
+        ghmmwrapper.model_set_transition(self.cmodel, i, j, prob)
         
 
+    
     def getEmission(self, i):
         """ Accessor function for the emission distribution parameters of state 'i'. 
         
@@ -1489,14 +1506,17 @@ class HMM:
                 mixComp.append(ghmmwrapper.get_arrayd(state.c,i) )
                 emParam.append(mixComp)
             return emParam
-             
-        
 
     def setEmission(self, i, distributionParemters):
         """ Set the emission distribution parameters
         
             Defined in derived classes.
          """
+        pass
+
+    def toMatrices(self):
+        "To be defined in derived classes."
+        print "Root class function."
         pass
 
     def normalize(self):
@@ -1524,10 +1544,6 @@ def HMMwriteList(fileName,hmmList):
     for model in hmmList:
         model.write(fileName)
         
-    
-# XXX relative max_eps in reestimate -> comment
-        
-
 class DiscreteEmissionHMM(HMM):
     
     def __init__(self, emissionDomain, distribution, cmodel):
@@ -1550,7 +1566,8 @@ class DiscreteEmissionHMM(HMM):
         
     def __str__(self):
         hmm = self.cmodel
-        strout = "\nOverview of HMM:\n"
+        strout = "\nGHMM Model\n"
+        strout += "Name: " + str(self.cmodel.name)
         strout += "\nNumber of states: "+ str(hmm.N)
         strout += "\nSize of Alphabet: "+ str(hmm.M)
         for k in range(hmm.N):
@@ -1633,7 +1650,9 @@ class DiscreteEmissionHMM(HMM):
             Note that training for models including silent states is not yet supported.
 
             nrSteps is the maximal number of BW-steps
-            loglikelihoodCutoff the least improvement in likelihood to continue
+            loglikelihoodCutoff is the least relative improvement in likelihood with respect to the last iteration 
+            required to continue.
+           
         """
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)        
@@ -1683,7 +1702,22 @@ class DiscreteEmissionHMM(HMM):
                 if pSum >0:  # check for silent state
                     normP = ghmmwrapper.get_arrayd(state.b,j) / pSum
                     ghmmwrapper.set_arrayd(state.b,j,normP)                            
-            
+     
+    def toMatrices(self):
+        "Return the parameters in matrix form."
+        A = []
+        B = []
+        pi = []
+        for i in range(self.cmodel.N):
+            A.append([0.0] * self.N)
+            state = self.getStatePtr(self.cmodel.s,i)
+            pi.append(state.pi)
+            B.append(ghmmhelper.arrayd2list(state.b,self.M))
+            for j in range(state.out_states):
+                state_index = ghmmwrapper.get_arrayint(state.out_id,j)
+                A[i][state_index] = ghmmwrapper.get_arrayd(state.out_a,j)
+                    
+        return [A,B,pi]
 
 class GaussianEmissionHMM(HMM):
     """ GaussianEmissionHMM are HMMs which have a Gaussian distribution
@@ -1715,17 +1749,31 @@ class GaussianEmissionHMM(HMM):
 
             Raises IndexError if the transition is not allowed
         """
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+
         transition = ghmmwrapper.smodel_get_transition(self.cmodel, i, j, 0)
         if transition < 0.0: # Tried to access non-existing edge:
-            raise IndexError
+            transition = 0.0
         return transition
 
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij """
+
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+
         ghmmwrapper.smodel_set_transition(self.cmodel, i, j, 0, float(prob))
-       
+    
+    # XXX overload necessary ?   
     def getEmission(self, i):
         """ Return (mu, sigma^2)  """
+
+        # ensure proper index
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+
         state = ghmmwrapper.get_sstate(self.cmodel, i)
         mu = ghmmwrapper.get_arrayd(state.mue, 0)
         sigma = ghmmwrapper.get_arrayd(state.u,0)
@@ -1733,6 +1781,10 @@ class GaussianEmissionHMM(HMM):
         
     def setEmission(self, i, (mu, sigma)):
         """ Set the emission distributionParameters for state i """
+
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+
         state = ghmmwrapper.get_sstate(self.cmodel, i)
         ghmmwrapper.set_arrayd(state.mue, 0, float(mu))  # GHMM C is german: mue instead of mu 
         sigma = ghmmwrapper.set_arrayd(state.u, 0, float(sigma))       
@@ -1940,16 +1992,42 @@ class GaussianEmissionHMM(HMM):
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-        # XXX BW is leaking XXX
-        pass
+        ghmmwrapper.free_smosqd_t(self.BWcontext)
+        self.BWcontext = None
+        ghmmwrapper.free_arrayd(self.BWcontext.logp)
+        self.BWcontext.logp = None
+    
+        # XXX needs to be freed ?
+        #self.BWcontext.smo  = self.cmodel
+        #self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
         
-        
+    def toMatrices(self):
+        "Return the parameters in matrix form."
+        A = []
+        B = []
+        pi = []
+        for i in range(self.cmodel.N):
+            A.append([0.0] * self.N)
+            B.append([0.0] * 2)
+            state = self.getStatePtr(self.cmodel.s,i)
+            pi.append(state.pi)
+                        
+            B[i][0] = ghmmwrapper.get_arrayd(state.mue,0) 
+            B[i][1] =  ghmmwrapper.get_arrayd(state.u,0)  
+ 
+            for j in range(state.out_states):
+                state_index = ghmmwrapper.get_arrayint(state.out_id,j)
+                A[i][state_index] = ghmmwrapper.get_2d_arrayd(state.out_a,0,j)
+                    
+        return [A,B,pi]
+    
 
 
 class GaussianMixtureHMM(GaussianEmissionHMM):
     def __init__(self, emissionDomain, distribution, cmodel):
         GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
     
+    # XXX overload necessary ?
     def getEmission(self, i, comp):
         """ Return (mu, sigma^2, weight) of component 'comp' in state 'i'  """
         state = ghmmwrapper.get_sstate(self.cmodel, i)
@@ -2004,4 +2082,24 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 
             strout += "\nint fix:" + str(state.fix) + "\n"
         return strout                  
-        
+      
+    def toMatrices(self):
+        "Return the parameters in matrix form."
+        A = []
+        B = []
+        pi = []
+        for i in range(self.cmodel.N):
+            A.append([0.0] * self.N)
+            B.append([])
+            state = self.getStatePtr(self.cmodel.s,i)
+            pi.append(state.pi)
+                        
+            B[i].append( ghmmhelper.arrayd2list(state.mue,self.cmodel.M) )
+            B[i].append( ghmmhelper.arrayd2list(state.u,self.cmodel.M) )
+            B[i].append( ghmmhelper.arrayd2list(state.w,self.cmodel.M) )
+ 
+            for j in range(state.out_states):
+                state_index = ghmmwrapper.get_arrayint(state.out_id,j)
+                A[i][state_index] = ghmmwrapper.get_2d_arrayd(state.out_a,0,j)
+                    
+        return [A,B,pi]
