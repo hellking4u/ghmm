@@ -1114,9 +1114,9 @@ extern int scluster_hmm(char *argv[]);
 
 %inline %{
   void print_sequence_d(char* ch,sequence_d_t* seq, int disc){
-	  FILE* file_name;
-	  file_name = fopen(ch,"at");
-	  sequence_d_print(file_name,seq, disc);
+    FILE* file_name;
+    file_name = fopen(ch,"at");
+    sequence_d_print(stdout,seq, disc);
   }	  
 	  	
 
@@ -1165,16 +1165,14 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 	  cs[index].smo = smo;
   }	  
   
-  smosqd_t get_smosqd_t_ptr(smosqd_t *cs, int i){ return cs[i];}
+  smosqd_t *get_smosqd_t_ptr(smosqd_t *cs, int i){ return &cs[i];}
   
   void free_smosqd_t(smosqd_t *s){
 	  if(s){
 		free(s);
 	 }	
   }	  
-  	
-	
-	
+  		
 %}	
 
 /*=============================================================================================
