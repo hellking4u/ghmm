@@ -503,7 +503,7 @@ class SequenceSet:
             elif isinstance(sequenceSetInput, str): # from file
                 print "fromFile", sequenceSetInput                
                 self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
-                ghmmwrapper.freearray(ptNumber)
+                #ghmmwrapper.freearray(ptNumber) #XXX waht is ptNumber? (only used, defined nowhere)
                 
             elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
                 self.cseq = sequenceSetInput
@@ -561,6 +561,15 @@ class SequenceSet:
     def sequenceLength(self, i):
         """ Return the lenght of sequence 'i' in the SequenceSet """
         return ghmmwrapper.get_arrayint(self.cseq.seq_len,i)
+        
+
+    def weight(self, i):
+        """ Return the weight of sequence i. Weights are used in Baum-Welch"""
+        return ghmmwrapper.get_arrayd(self.cseq.seq_w,i)
+
+    def setWeight(self, i, w):
+        """ Return the weight of sequence i. Weights are used in Baum-Welch"""
+        return ghmmwrapper.set_arrayd(self.cseq.seq_w,i,w)
         
     
     def __setitem__(self, index, value): # Only allow EmissionSequence?
@@ -659,7 +668,7 @@ class HMMOpenFactory(HMMFactory):
         nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
         result = []
         for i in range(nrModels):
-            cmodel = get_smodel_ptr(models, i)
+            cmodel = ghmmwrapper.get_smodel_ptr(models, i)
             m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             result.append(m)
         return result
@@ -866,17 +875,20 @@ class HMM:
         
     def loglikelihood(self, emissionSequences): 
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
+            assuming independence of the sequences in emissionSequences
 
             emission_sequences can either be a SequenceSet or a Sequence
 
-            Result: log( P[emissionSequences| model]) of type float
-                    numarray vector of floats
+            Result: log( P[emissionSequences| model]) of type float which is
+            computed as \sum_{s} log( P[s| model]) when emissionSequences
+            is a SequenceSet
             
-            Note: The implementation will not compute the full forward matrix (ToDo)
-        """
-        
-        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
-            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
+            Note: The implementation will not compute the full forward matrix (XXX ToDo)
+        """        
+        if not isinstance(emissionSequences,EmissionSequence) and not \
+           isinstance(emissionSequences,SequenceSet):
+            raise AttributeError, "EmissionSequence or SequenceSet required, got " + \
+                  str(emissionSequences.__class__.__name__)        
         
         logP = ghmmwrapper.double_array(1) # Pointer to return value of forwardFunction
         
@@ -887,12 +899,35 @@ class HMM:
             
             res = self.forwardFunction(self.cmodel, seq, seq_len, logP)
             if res != 0:
+                # XXX Should be NumericException 
                 print "Forward algorithm reports error for sequence " + str(res) + "."
             logPsum += ghmmwrapper.get_arrayd(logP,0)
                         
         ghmmwrapper.freearray(logP)    
 
         return logPsum
+
+    def loglikelihoods(self, emissionSequences): 
+        """ Compute a vector ( log( P[s| model]) )_{s} of log-likelihoods of the
+            individual emission_sequences using the forward algorithm
+
+            emission_sequences is of type SequenceSet
+
+            Result: log( P[emissionSequences| model]) of type float
+                    (numarray) vector of floats
+            
+            Note: The implementation will not compute the full forward matrix (ToDo)
+
+            XXX: loglikelihood should be sum(loglikelihoods) ... 
+        """
+        if not isinstance(emissionSequences,SequenceSet):
+            raise AttributeError, "SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+
+        print "OOps. Fix me. You called HMM.loglikelihoods"
+       
+       
+
+
 
 
     ## Further Marginals ...
@@ -1276,6 +1311,20 @@ class GaussianEmissionHMM(HMM):
         self.forwardAlphaFunction = ghmmwrapper.sfoba_forward
         self.backwardBetaFunction = ghmmwrapper.sfoba_backward 
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
+
+    def loglikelihoods(self, emissionSequences):
+        
+        likelihoods = ghmmwrapper.double_array(emissionSequences.cseq.seq_number)
+        ret_val = ghmmwrapper.smodel_individual_likelihoods(self.cmodel,
+                                                            emissionSequences.cseq,
+                                                            likelihoods)
+        # XXX check ret_val
+        result = [0.0] * len(emissionSequences)
+        for i in xrange(len(emissionSequences)):
+            val = ghmmwrapper.get_arrayd(likelihoods, i)
+            result[i] = val
+        ghmmwrapper.free_arrayd(likelihoods)  
+        return result
 
     def loglikelihood_sqd(self, sequenceSet):
         # XXX REMOVE soon XXX
