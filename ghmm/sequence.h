@@ -43,6 +43,11 @@ struct sequence_t {
   long seq_number;
   /** sum of sequence weights */
   double total_w;
+  
+  /* matrix of state labels corresponding to seq */
+  int **state_labels; 
+  /* number of labels for each sequence */  
+  int *state_labels_len;        
 };
 typedef struct sequence_t sequence_t;
 
