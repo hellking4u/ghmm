@@ -32,12 +32,22 @@ int main(int argc, char* argv[])
   sequence_t*my_output;
   model     *cmodel;
   state     *state_0_pt;
+
   int       i;
+  int      num_sequences=5;
+
+  if (argc < 2)
+    {
+      fprintf(stderr, "Please input a filename. Usage: read_cxml file.gml\n");
+      exit(-1);
+    }
 
   /* Important! initialise rng  */
   gsl_rng_init();
 
-  mymodel = graphmldoc_cwrapper("simple.xml");
+
+  mymodel = graphmldoc_cwrapper(argv[1]);
+
 
   if (mymodel != NULL)
     {
@@ -54,23 +64,26 @@ int main(int argc, char* argv[])
 
   /* generate sequences */
   printf("generating sequences: ...");
+
   /*
     We do not specify length. A sequence will end when encounter a final state.
    */
+
   my_output=model_generate_sequences((model*)mymodel->model_pt, /* model */
-				     0,   /* random seed */
 				     0, /* length of each sequence */
 				     100); /* number of sequences */
+
   printf("Done\n");
   sequence_print(stdout, my_output);
 
+
   /* reestimation */
   /*fprintf(stdout,"reestimating with Baum-Welch-algorithm...");
-  reestimate_baum_welch((model*)mymodel->model_pt, my_output);
+    reestimate_baum_welch((model*)mymodel->model_pt, my_output);
   */
-  
+
   double log_p;
-  for(i = 0; i < 100; i++)
+  for(i = 0; i < num_sequences; i++)
     {
       viterbi(mymodel->model_pt, my_output->seq[i], my_output->seq_len[i], &log_p);
       printf( " Sequence %2d: viterbi prob = %5.5f\n", i, log_p );
