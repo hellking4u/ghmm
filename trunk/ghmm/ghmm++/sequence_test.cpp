@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "XMLIO_ArrayObject.h"
+#include <xmlio/XMLIO_ArrayObject.h>
 
 #ifdef HAVE_NAMESPACE
 using namespace std;
@@ -26,13 +26,12 @@ int main_ArrayObject()
   return 0;
 }
 
-int main_PairObject()
-{
-  XMLIO_ContentElementPairObject<int,XMLIO_StringObject> pair_vector;
-  return 0;
-}
-
 int main()
 {
-  return main_PairObject();
+  return main_ArrayObject();
 }
+
+
+
+
+
