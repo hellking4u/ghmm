@@ -258,6 +258,20 @@ class hmmer:
         else:
             return null_prob * 2**(float(score)/self.intscale)
 
+    def globalConfig(self):
+        """ Configures HMM for global Needelman-Wunsch alignments. """
+        #build matrix for transition: N B E J C T M1 I1 D1 M2 I2 D2 ... Mn In Dn
+        p1 = self.manull[0]
+
+        print "globalConfig:  self_p = ", p1
+        
+        self.matrans[0][0] = 1.0 - p1  #  N->B
+        self.matrans[0][1] = p1       # N->N
+        self.matrans[2][4] = 1.0      # E->C
+        self.matrans[2][3] = 0        # E->J
+        self.matrans[4][4] = p1        # C->C
+        self.matrans[4][5] = 1- p1        # C->T        
+        
     
     def getGHMMmatrices(self):
         """

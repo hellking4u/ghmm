@@ -787,11 +787,9 @@ int foba_forward_lean(model *mo, const int *O, int len, double *log_p);
 
 
 /* Labeled HMMs */
-//extern int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
-//extern int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
-//extern int foba_label_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
-
-
+extern int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+extern int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
+extern int foba_label_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 
 
 %inline%{
