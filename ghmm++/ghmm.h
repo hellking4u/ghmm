@@ -12,9 +12,9 @@
 #include "config.h"
 #endif
 
-#include <xmlio/XMLIO_Object.h>
+#include <ghmm++/ghmm_graph.h>
+#include <ghmm++/ghmm_alphabet.h>
 #include <ghmm++/sequences.h>
-#include <ghmm++/graph.h>
 #include <ghmm++/InitialStates.h>
 #include <ghmm++/Emissions.h>
 
@@ -25,11 +25,11 @@ namespace std {
   /** 
       @memo class containing hmm
    */
-  class hmm: public XMLIO_Object
+  class ghmm: public XMLIO_Object
     {
     public:
       /** constructor from XMLIO interface */
-      hmm(const string& tag, XMLIO_Attributes &attributes);
+      ghmm(const string& tag, XMLIO_Attributes &attributes);
       /**
 	 expected elements are: Graph, Initial, Emissions and Sequences
        */
@@ -61,7 +61,7 @@ namespace std {
 
       /**
        */
-      ~hmm();
+      ~ghmm();
 
     protected:
       /**
@@ -98,7 +98,10 @@ namespace std {
       smodel* shmm_model;
       /**
        */
-      Graph* ghmm_graph;
+      ghmm_graph* my_graph;
+      /**
+       */
+      ghmm_alphabet* my_alphabet;
     };
 
 #ifdef HAVE_NAMESPACES

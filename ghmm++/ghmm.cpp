@@ -16,14 +16,14 @@
 using namespace std;
 #endif
 
-hmm::hmm(const string& tag, XMLIO_Attributes &attributes)
+ghmm::ghmm(const string& tag, XMLIO_Attributes &attributes)
 {
   /* do some initialisation */ 
   hmm_model=NULL;
   shmm_model=NULL;
   Initial=NULL;
   ghmm_Emissions=NULL;
-  ghmm_graph=NULL;
+  my_graph=NULL;
   type='\0';
 
   /* read attributes */
@@ -77,20 +77,20 @@ hmm::hmm(const string& tag, XMLIO_Attributes &attributes)
     }
 }
 
-XMLIO_Object* hmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Object* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   /* what's next? */
-  if (tag=="Graph")
+  if (tag=="graph")
     {
-      if (ghmm_graph!=NULL)
+      if (my_graph!=NULL)
 	{
 	  cerr<<toString()<<" only one graph expected"<<endl;
-	  return new XMLIO_IgnoreObject();
+	  return NULL;
 	}
       else
 	{
-	  ghmm_graph=new Graph(tag,attributes);
-	  return ghmm_graph;
+	  my_graph=new ghmm_graph(tag,attributes);
+	  return my_graph;
 	}
     }
   else if (tag=="InitialStates")
@@ -107,8 +107,17 @@ XMLIO_Object* hmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribute
     }
   else if (tag=="Alphabet")
     {
-      cerr<<toString()<<": "<<tag<<" not implemented... DoItNOW"<<endl;
-      return new XMLIO_IgnoreObject();      
+      if (my_alphabet==NULL)
+	{
+	  my_alphabet=new ghmm_alphabet(tag,attributes);
+	  return my_alphabet;
+	}
+      else
+	{
+	  cerr<<toString()<<": alphabet allready existing,ignoring"<<endl;
+	  return new XMLIO_IgnoreObject();
+	}
+
     }
   else if (tag=="Emissions")
     {
@@ -130,54 +139,56 @@ XMLIO_Object* hmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribute
     }
 }
 
-void hmm::XMLIO_endTag(const string& tag)
+void ghmm::XMLIO_endTag(const string& tag)
 {
   /* not needed now */
 }
 
-void hmm::XMLIO_getCharacters(const string& characters)
+void ghmm::XMLIO_getCharacters(const string& characters)
 {
   /* do nothing...*/
 }
 
-void hmm::XMLIO_finishedReading()
+void ghmm::XMLIO_finishedReading()
 {
   /* done at graph...*/
   /* more needed here */
 }
 
-
-void hmm::print() const
+void ghmm::print() const
 {
   cout<<toString()<<":"<<endl;
   if (Initial!=NULL)
       Initial->print();
   else
       cout<<"InitialStates empty"<<endl;
-  if (ghmm_graph!=NULL)
-    ghmm_graph->print();
+  if (my_graph!=NULL)
+    my_graph->print();
   else
     cout<<"no graph!"<<endl;
   if (ghmm_Emissions!=NULL)
     ghmm_Emissions->print();
   else
     cout<<"no emissions!"<<endl;
-  cout<<"Alphabet: ToDoNOW"<<endl;
+  if (my_alphabet!=NULL)
+      my_alphabet->print();
+  else
+      cout<<"alphabet not specified"<<endl;
 }
 
-const char* hmm::toString() const
+const char* ghmm::toString() const
 {
-  return "hmm";
+  return "ghmm";
 }
 
-model* hmm::create_model() const
+model* ghmm::create_model() const
 {
   /* model type mismatch */
   if (type!='d')
     return (model*)NULL;
 
   /* are necessary informations available? */
-  if (ghmm_graph==NULL || Initial==NULL)
+  if (my_graph==NULL || Initial==NULL)
     {
       return (model*)NULL;
     }
@@ -192,7 +203,7 @@ model* hmm::create_model() const
       return (model*)NULL;
     }
   
-  return_model->N=ghmm_graph->vector<Node*>::size();   /* number of states */
+  return_model->N=my_graph->vector<gxl_node*>::size();   /* number of states */
   /* number of symbols */
   return_model->M=0; /* ToDo: Alphabet->vector<Emission*>::size() */
   return_model->prior=prior;
@@ -207,10 +218,11 @@ model* hmm::create_model() const
 
   /* initialise states */
   int state_counter=0;
-  vector<Node*>::const_iterator pos=ghmm_graph->vector<Node*>::begin();
-  while (pos!=ghmm_graph->vector<Node*>::end())
+  /* iterates over existing nodes */
+  vector<gxl_node*>::const_iterator node_pos=my_graph->vector<gxl_node*>::begin();
+  while (node_pos!=my_graph->vector<gxl_node*>::end())
     {
-      const string& state_id=(*pos)->get_id();
+      const string& node_id=(*node_pos)->id;
       state* this_state=&(return_model->s[state_counter]);
       /* emission probabilities */
       this_state->b=(double*)malloc(sizeof(double)*return_model->M);
@@ -220,49 +232,77 @@ model* hmm::create_model() const
 	  return NULL;
 	}
 
-      /* Initial State probability */
+      /* search for Initial State probability */
       map<State*,double>* initial_state_map=Initial->get_map();
       map<State*,double>::iterator state_pos=initial_state_map->begin();
-      while(state_pos!=initial_state_map->end() && (state_pos->first)->get_id()!=state_id)
+      while(state_pos!=initial_state_map->end() && (state_pos->first)->get_id()!=node_id)
 	++state_pos;
       if (state_pos!=initial_state_map->end())
 	this_state->pi=state_pos->second;
       else
 	this_state->pi=0;
 
+
+      size_t array_pos; /* position in double array of state */
+      set<int>::const_iterator tranisiton_pos; /* position in set of transitons */
+
       /* transitions to_from */
-      const set<int>& transition_idx=ghmm_graph->get_to_from_transitions(state_id);
-      this_state->in_states=transition_idx.size(); /* number of incoming states */
+      /* the inverse adiascence list */
+      const set<int>& to_from_transition_idx=my_graph->get_to_from_transitions(node_id);
+      this_state->in_states=to_from_transition_idx.size(); /* number of incoming states */
       this_state->in_id=(int*)malloc(sizeof(int)*this_state->in_states); /* id of incoming states */
       this_state->in_a=(double*)malloc(sizeof(double)*this_state->in_states); /* prob of incoming states */
-      size_t array_pos=0;
-      set<int>::const_iterator tranisiton_pos=transition_idx.begin();
-      while (tranisiton_pos!=transition_idx.end())
+      array_pos=0;
+      tranisiton_pos=to_from_transition_idx.begin();
+      while (tranisiton_pos!=to_from_transition_idx.end())
 	{
 	  this_state->in_id[array_pos]=*tranisiton_pos;
-	  Edge* my_edge=((vector<Edge*>)*ghmm_graph)[*tranisiton_pos];
-	  this_state->in_a[array_pos]=my_edge->get_weight();
+	  ghmm_edge* my_edge=dynamic_cast<ghmm_edge*>(((vector<gxl_edge*>)*my_graph)[*tranisiton_pos]);
+	  if (my_edge!=NULL && !my_edge->empty())
+	    {
+	      this_state->in_a[array_pos]=my_edge->front();
+	    }
+	  else
+	    this_state->in_a[array_pos]=0;
 	  ++tranisiton_pos;
 	  array_pos++;
 	}
 
-      this_state->out_states=0; /* number of outgoing states */
-      this_state->out_id=NULL; /* id of outgoing states */
-      this_state->out_a=NULL; /* prob of outgoing states */
+      /* transitions from_to */
+      /* adiascense list */
+      const set<int>& from_to_transition_idx=my_graph->get_from_to_transitions(node_id);
+      this_state->out_states=from_to_transition_idx.size(); /* number of incoming states */
+      this_state->out_id=(int*)malloc(sizeof(int)*this_state->out_states); /* id of incoming states */
+      this_state->out_a=(double*)malloc(sizeof(double)*this_state->out_states); /* prob of incoming states */
+      array_pos=0;
+      tranisiton_pos=from_to_transition_idx.begin();
+      while (tranisiton_pos!=from_to_transition_idx.end())
+	{
+	  this_state->out_id[array_pos]=*tranisiton_pos;
+	  ghmm_edge* my_edge=dynamic_cast<ghmm_edge*>(((vector<gxl_edge*>)*my_graph)[*tranisiton_pos]);
+	  if (my_edge!=NULL && !my_edge->empty())
+	    {
+	      this_state->out_a[array_pos]=my_edge->front();
+	    }
+	  else
+	    this_state->out_a[array_pos]=0;
+	  ++tranisiton_pos;
+	  array_pos++;
+	}
 
-      ++pos;
+      ++node_pos;
       state_counter++;
     }
 
   return return_model;
 }
 
-const string& hmm::get_id() const
+const string& ghmm::get_id() const
 {
   return id;
 }
 
-smodel* hmm::create_smodel() const
+smodel* ghmm::create_smodel() const
 {
   if (type!='c' || type!='s') return (smodel*)NULL;
 
@@ -270,9 +310,12 @@ smodel* hmm::create_smodel() const
 }
 
 
-hmm::~hmm()
+ghmm::~ghmm()
 {
   SAFE_DELETE(ghmm_Emissions);
-  SAFE_DELETE(ghmm_graph);
+  SAFE_DELETE(my_graph);
   SAFE_DELETE(Initial);
 }
+
+
+

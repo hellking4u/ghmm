@@ -10,7 +10,7 @@ DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir)
-LDADD = libghmm++.a $(top_builddir)/ghmm/libghmm.a -lxmlio -lexpat
+LDADD = libghmm++.a $(top_builddir)/ghmm/libghmm.a -lgxl -lxmlio -lexpat
 
 noinst_PROGRAMS = sequences_reader sequence_test DiscretePD_test ghmm_test
 sequences_reader_SOURCES = sequences_reader.cpp
@@ -20,12 +20,29 @@ ghmm_test_SOURCES = ghmm_test.cpp
 
 lib_LIBRARIES = libghmm++.a
 libghmm___a_SOURCES = \
-DiscretePD.cpp DiscretePD.h \
-sequences.cpp sequences.h \
-graph.cpp graph.h \
-InitialStates.cpp InitialStates.h \
-Emissions.cpp Emissions.h \
-ghmm.cpp ghmm.h
+DiscretePD.cpp \
+sequences.cpp \
+InitialStates.cpp \
+Emissions.cpp \
+ghmm.cpp \
+ghmm_graph.cpp \
+ghmm_edge.cpp \
+ghmm_alphabet.cpp \
+ghmm_symbol.cpp
+
+pkginclude_HEADERS= \
+DiscretePD.h \
+sequences.h \
+InitialStates.h \
+Emissions.h \
+ghmm.h \
+ghmm_graph.h \
+ghmm_edge.h \
+ghmm_alphabet.h \
+ghmm_symbol.h
+
+#redirect gxl header to other dir
+pkgincludedir = $(includedir)/ghmm++
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
