@@ -780,8 +780,8 @@ class HMM:
             self.baumWelchSetup(trainingSequences, nrSteps)
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
-
         return 0.0 
+
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
