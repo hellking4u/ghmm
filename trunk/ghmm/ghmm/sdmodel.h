@@ -83,7 +83,8 @@ struct sdmodel {
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
   int* silent; /*AS*/
-
+  int  topo_order_length;
+  int* topo_order;
 };
 typedef struct sdmodel sdmodel;
 
@@ -106,98 +107,111 @@ extern "C" {
 #endif
 
 
-/** Frees the memory of a model.
-    @return 0 for succes; -1 for error
-    @param mo:  pointer to a model */
-int     sdmodel_free(sdmodel **mo);
+  /** Frees the memory of a model.
+      @return 0 for succes; -1 for error
+      @param mo:  pointer to a model */
+  int     sdmodel_free(sdmodel **mo);
 
+  int     sdmodel_initSilentStates(sdmodel *mo);
 
-/** 
-    Produces sequences to a given model. All memory that is needed for the 
-    sequences is allocated inside the function. It is possible to define
-    the length of the sequences global (global_len > 0) or it can be set 
-    inside the function, when a final state in the model is reach (a state
-    with no output). If the model has no final state, the sequences will
-    have length MAX_SEQ_LEN.
-    @return             pointer to an array of sequences
-    @param mo:          model
-    @param seed:        initial parameter for the random value generator
-                        (an integer). If seed == 0, then the random value
-			generator is not initialized.
-    @param global_len:  length of sequences (=0: automatically via final states)
-    @param seq_number:  number of sequences
-*/
-sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
-				     long seq_number, int Tmax);
-
-
-/**
-   Copies a given model. Allocates the necessary memory.
-   @return copy of the model
-   @param mo:  model to copy */
-sdmodel*  sdmodel_copy(const sdmodel *mo);
-
-/**
-   Writes a model in matrix format.
-   @param file: output file
-   @param mo:   model
-*/
-void sdmodel_print(FILE *file, sdmodel *mo); 
-
-
-/**
-   Writes transition matrix of a model.
-   @param file: output file
-   @param mo:   model
-   @param tab:  format: leading tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
-void sdmodel_Ak_print(FILE *file, sdmodel *mo, int k, char *tab, char *separator, 
-		   char *ending);
-/**
-   Writes output matrix of a model.
-   @param file: output file
-   @param mo:   model
-   @param tab:  format: leading tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
-void sdmodel_B_print(FILE *file, sdmodel *mo, char *tab, char *separator, 
-		   char *ending);
-
-/**
-   Writes initial allocation vector of a matrix.
-   @param file: output file
-   @param mo:   model
-   @param tab:  format: leading Tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
-void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator, 
-		    char *ending);
-
-/*============================================================================*/
-/** Viterbi for switching discrete model
-*/
-int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
-
-int *sdviterbi_silent(sdmodel *mo, int *o, int len, double *log_p);
-
-/** Forward-Algorithm.
-  Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
-  a given double sequence and a given model.
-  @param smo      model
-  @param O        sequence
-  @param length: length of sequence
-  @param alpha:  alpha[t][i]
-  @param scale:   a reference for double type, scale factors
-  @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
-  @return 0 for success, -1 for error
+  /** 
+      Produces sequences to a given model. All memory that is needed for the 
+      sequences is allocated inside the function. It is possible to define
+      the length of the sequences global (global_len > 0) or it can be set 
+      inside the function, when a final state in the model is reach (a state
+      with no output). If the model has no final state, the sequences will
+      have length MAX_SEQ_LEN.
+      @return             pointer to an array of sequences
+      @param mo:          model
+      @param seed:        initial parameter for the random value generator
+      (an integer). If seed == 0, then the random value
+      generator is not initialized.
+      @param global_len:  length of sequences (=0: automatically via final states)
+      @param seq_number:  number of sequences
   */
-int sdfoba_forward(sdmodel *mo, const int *O, int length, double **alpha, 
-		   double *scale, double *log_p);
+  sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
+					 long seq_number, int Tmax);
 
+
+  /**
+     Copies a given model. Allocates the necessary memory.
+     @return copy of the model
+     @param mo:  model to copy */
+  sdmodel*  sdmodel_copy(const sdmodel *mo);
+
+  /**
+     Writes a model in matrix format.
+     @param file: output file
+     @param mo:   model
+  */
+  void sdmodel_print(FILE *file, sdmodel *mo); 
+
+
+  /**
+     Writes transition matrix of a model.
+     @param file: output file
+     @param mo:   model
+     @param tab:  format: leading tabs
+     @param separator: format: seperator for columns
+     @param ending:    format: end of a row  
+  */
+  void sdmodel_Ak_print(FILE *file, sdmodel *mo, int k, char *tab, char *separator, 
+			char *ending);
+  /**
+     Writes output matrix of a model.
+     @param file: output file
+     @param mo:   model
+     @param tab:  format: leading tabs
+     @param separator: format: seperator for columns
+     @param ending:    format: end of a row  
+  */
+  void sdmodel_B_print(FILE *file, sdmodel *mo, char *tab, char *separator, 
+		       char *ending);
+
+  /**
+     Writes initial allocation vector of a matrix.
+     @param file: output file
+     @param mo:   model
+     @param tab:  format: leading Tabs
+     @param separator: format: seperator for columns
+     @param ending:    format: end of a row  
+  */
+  void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator, 
+			char *ending);
+
+  /*============================================================================*/
+  /** Viterbi for switching discrete model
+   */
+  void sdmodel_topo_ordering(sdmodel *mo);
+
+  int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
+
+  int *sdviterbi_silent(sdmodel *mo, int *o, int len, double *log_p);
+
+  /** Forward-Algorithm.
+      Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
+      a given double sequence and a given model.
+      @param smo      model
+      @param O        sequence
+      @param length: length of sequence
+      @param alpha:  alpha[t][i]
+      @param scale:   a reference for double type, scale factors
+      @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
+      @return 0 for success, -1 for error
+  */
+  int sdfoba_forward(sdmodel *mo, const int *O, int length, double **alpha, 
+		     double *scale, double *log_p);
+
+  /** Descale
+      descales the alpha matrix from the forward algorithm
+      @param alpha: alpha matrix from forward
+      @param scale: scale vector from forward
+      @param t:     number of timesteps
+      @param n:     number of states
+      @param newalpha: unscaled alpha matrix
+      @return 0 for success, -1 for error
+  */
+  int sdfoba_descale(double **alpha, double *scale, int t, int n, double **newalpha);
 
 /**
    Reads in ASCII data to initialize an array of models. Memory allocation for
@@ -337,7 +351,7 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
     @param file: output file
     @param mo:   model
 */
-void sdmodel_states_print(FILE *file, sdmodel *mo); 
+  void sdmodel_states_print(FILE *file, sdmodel *mo); 
 
 /** 
     Frees all memory from a model, sets the pointers to NULL and 
