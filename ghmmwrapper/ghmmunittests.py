@@ -520,7 +520,22 @@ class BackgroundDistributionTests(unittest.TestCase):
         s = str(bg2)
         self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
-
+    def testapplybackground(self):
+        self.model.setBackground(self.bg,[0,-1,1])
+        self.model.applyBackground([0.1,0.2,0.3])
+        print self.model
+        
+        f = lambda x: round(x,15)
+        e1 = map(f,self.model.getEmission(0))
+        e2 = map(f,self.model.getEmission(1))
+        e3 = map(f,self.model.getEmission(2))
+                
+        self.assertEqual(e1, [0.02, 0.48, 0.46, 0.04])
+        self.assertEqual(e2,[ 0.1, 0.0, 0.8, 0.1])
+        self.assertEqual(e3, [ 0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12, 0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
+        
+        
+        
 
     def testbackgroundtraining(self):
         # XXX test for background distributions
