@@ -57,17 +57,17 @@ The objects one has to deal with in HMM modelling are the following
    finite alphabets and fields such as the real numbers or intervals
    of the reals.
 
-   For technical reasons there can be two representations of an emission
-   symbol: an external and an internal. The external representation
-   is the view of the application using ghmm.py. The internal one
-   is what is used in both ghmm.py and the ghmm C-library. Representations
-   can coincide, but this is not guaranteed. Most prominently discrete
-   alphabets of size k are represented as [0,1,2,...,k-1] internally.
-   It is the domain objects job to provide a mapping between representations
-   in both directions.
+   For technical reasons there can be two representations of an
+   emission symbol: an external and an internal. The external
+   representation is the view of the application using ghmm.py. The
+   internal one is what is used in both ghmm.py and the ghmm
+   C-library. Representations can coincide, but this is not
+   guaranteed. Discrete alphabets of size k are represented as
+   [0,1,2,...,k-1] internally.  It is the domain objects job to
+   provide a mapping between representations in both directions.
 
-   NOTE: Do not make assumptions about the internal representations. It might
-   change.
+   NOTE: Do not make assumptions about the internal
+   representations. It might change.
    
 
 2) Every domain has to afford a distribution, which is usually
@@ -85,8 +85,7 @@ The objects one has to deal with in HMM modelling are the following
    domain and very often sets of such sequences: SequenceSet
 
 
-4)
-   The HMM: The HMM consists of two major components: A Markov chain
+4) The HMM: The HMM consists of two major components: A Markov chain
    over states (implemented as a weighted directed graph with
    adjacency and inverse-adjacency lists) and the emission
    distributions per-state. For reasons of efficiency the HMM itself
@@ -105,8 +104,8 @@ The objects one has to deal with in HMM modelling are the following
    States in HMMs are referred to by their integer index. State sequences
    are simply list of integers.
 
-   If you want to store application specific data for each state you have to
-   do it yourself.
+   If you want to store application specific data for each state you
+   have to do it yourself.
 
    Subclasses of HMM implement specific types of HMM. The type depends
    on the EmissionDomain, the Distribution used, the specific
@@ -268,17 +267,25 @@ class Alphabet(EmissionDomain):
 
     def internalSequence(self, emissionSequence):
         """ Given a emission_sequence return the internal representation
+
+            Raises KeyError
         """
         result = copy.deepcopy(emissionSequence)
-        for i in xrange(len(result)):
-            result[i] = self.index[result[i]]
+        try:
+            result = map(lambda i: self.index[i], result)
+        except IndexError:
+            raise KeyError
         return result
 
 
     def external(self, internal):
         """ Given an internal representation return the
             external representation
+
+            Raises KeyError
         """
+        if internal < 0 or len(self.listOfCharacters) <= internal: 
+            raise KeyError
         return self.listOfCharacters[internal]
 
     def externalSequence(self, internalSequence):
@@ -286,8 +293,10 @@ class Alphabet(EmissionDomain):
             external representation
         """
         result = copy.deepcopy(internalSequence)
-        for i in xrange(len(result)):
-            result[i] = self.listOfCharacters[result[i]]
+        try:
+            result = map(lambda i: self.listOfCharacters[i], result)
+        except IndexError:
+            raise KeyError
         return result
 
     def isAdmissable(self, emission):
@@ -297,6 +306,10 @@ class Alphabet(EmissionDomain):
         return emission in self.listOfCharacters
 
     def size(self):
+        """ depreciate """
+        return len(self.listOfCharacters)
+
+    def __len__(self):
         return len(self.listOfCharacters)
 
 
@@ -872,6 +885,7 @@ class HMMOpenFactory(HMMFactory):
             
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
 HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
+HMMOpenXML = HMMOpenFactory(GHMM_FILETYPE_XML)
 
 
 def readMultipleHMMERModels(fileName):
@@ -1160,9 +1174,9 @@ class HMM:
             if ret_val == -1:
                 # print "Warning: forward returned -1: Sequence", i,"cannot be build."
                 # XXX Eventually this should trickle down to C-level
-                # Returning -DBL_MIN instead of infinity is stupid, since it allows
-                # to continue further computations with that value, which causes
-                # Things to blow up later.
+                # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
+                # to continue further computations with that inf, which causes
+                # things to blow up later.
                 # forwardFunction could do without a return value if -Inf is returned
                 # What should be the semantics in case of computing the likelihood of
                 # a set of sequences
@@ -1633,7 +1647,10 @@ class GaussianEmissionHMM(HMM):
         self.BWcontext = ""
 
     def getTransition(self, i, j):
-        """ Accessor function for the transition a_ij """
+        """ Returns the probability of the transition from state i to state j.
+
+            Raises IndexError if the transition is not allowed
+        """
         transition = ghmmwrapper.smodel_get_transition(self.cmodel, i, j, 0)
         if transition < 0.0: # Tried to access non-existing edge:
             raise IndexError
