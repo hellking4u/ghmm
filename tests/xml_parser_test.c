@@ -15,7 +15,18 @@ __copyright__
 
 int main()
 {
- return ghmm_xml_parse("simple_graph.xml");
+  const char* filename="simple_graph.xml";
+  document_handler* my_dh;
+  int result;
+  my_dh=create_document_handler(filename);
+  if (my_dh==NULL)
+    {
+      fprintf(stderr,"something wrong\n");
+      return 1;
+    }
+  result=parse_document(my_dh);
+  delete_document_handler(my_dh);
+  return 0;
 }
 
 #else
