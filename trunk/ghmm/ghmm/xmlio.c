@@ -15,6 +15,7 @@ __copyright__
 #if defined(__EXPERIMENTAL__) && __EXPERIMENTAL__ == 1
 #if defined(HAVE_EXPAT_H) && defined(HAVE_LIBEXPAT)
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "xmlio.h"
@@ -129,7 +130,11 @@ default_EndElement_handler(void *userData,
   /* evaluate handler specific data */
 
   /* propagate end to parent */
-  if (this_handler->prec->functions.ChildDataReciever!=NULL)
+  if (this_handler->prec==NULL)
+    {
+      fprintf(stderr,"Handler %p has no parent handler\n",this_handler);
+    }
+  else if (this_handler->prec->functions.ChildDataReciever!=NULL)
     (this_handler->prec->functions.ChildDataReciever)(this_handler);
 }
 
@@ -150,6 +155,164 @@ default_ChildData_handler(object_handler* handler)
 }
 
 /***************************************************************/
+
+typedef struct {
+  size_t length;
+  char type;
+  size_t pos;
+  long* seq;
+} sequence_object_data;
+
+void
+sequence_CharacterData_handler(void *userData,
+			       const XML_Char *s,
+			       int len)
+{
+  sequence_object_data* seq_data;
+  long value;
+  const char* end;
+  const char* pos;
+
+  seq_data=(sequence_object_data*)((object_handler*)userData)->handler_data;
+
+#if 0
+  fprintf(stderr,"found sequence data");
+  fwrite(s,len,1,stderr);
+#endif
+
+  /* parse the data and save them */
+  pos=s;
+  end=&s[len];
+  while (pos<end)
+    {
+      /* jump over it */
+      if (isspace(*pos)) pos++;
+      /* try to convert to integer */
+      else
+	{
+	  char* tmp;
+	  errno = 0;
+	  /* Parse it.  */
+	  value = strtol (pos,&tmp, 0);
+	  /* Add it in, if not overflow.  */
+	  if (errno)
+	    fprintf(stderr,"value parsing error\n");
+	  else
+	    {
+#if 0
+	      fprintf(stderr,"value %d found\n",value);
+#endif
+	      /* store value */
+	      if (seq_data->pos<seq_data->length)
+		seq_data->seq[seq_data->pos++]=value;
+	      else
+		fprintf(stderr,"found more sequence data than declared\n");
+	    }
+	  pos=(const char*)tmp;
+	}
+    }
+}
+
+object_handler*
+sequence_create_handler_object(document_handler* dh,
+			       const XML_Char *name,
+			       const XML_Char **atts)
+{
+  object_handler* handler;
+  sequence_object_data* sequence;
+  size_t pos;
+  handler=default_create_handler_object(dh,name,atts);
+  handler->type=sequence_object;
+  handler->functions.CharacterHandler=&sequence_CharacterData_handler;
+  sequence=(sequence_object_data*)malloc(sizeof(sequence_object_data));
+  if (sequence==NULL)
+    {
+      fprintf(stderr,"could not allocate sequence handler data\n");
+      free(handler);
+      return NULL;
+    }
+  handler->handler_data=sequence;
+
+  /* find length information */
+  pos=0;
+  sequence->length=0;
+  while (atts[pos]!=NULL && strcmp("length",atts[pos])!=0)
+    pos+=2;
+  if (atts[pos]!=NULL)
+    {
+      errno=0;
+      sequence->length=strtol(atts[pos+1],NULL,0);
+      if (errno)
+	fprintf(stderr,"length not valid\n");
+    }
+  else
+    {
+      fprintf(stderr,"length not given\n");
+    }
+
+  /* find type */
+  pos=0;
+  sequence->type='i';
+  while (atts[pos]!=NULL && strcmp("type",atts[pos])!=0)
+    pos+=2;
+  if (atts[pos]!=NULL)
+    {
+      switch(atts[pos+1][0])
+	{
+	case 'i':
+	    sequence->type=atts[pos+1][0];
+	  break;
+	default:
+	  fprintf(stderr,"unknown type %c\n",atts[pos+1][0]);
+	}
+    }
+  else
+    {
+      fprintf(stderr,"type not specified\n");
+    }
+  
+  sequence->seq=NULL;
+  if (sequence->length>0)
+    {
+      sequence->seq=malloc(sizeof(long)*sequence->length);
+      if (sequence->seq==NULL)
+	{
+	  fprintf(stderr,"could not allocate sequence data memory\n");
+	  free(sequence);
+	  free(handler);
+	  return NULL;
+	}
+    }
+  return handler;
+}
+
+void
+sequence_EndElement_handler(void *userData,
+			    const XML_Char *name)
+{
+  /* clean up parse data */
+
+  default_EndElement_handler(userData,name);
+}
+
+void
+sequence_delete_handler_object(object_handler* seq)
+{
+
+  /* free sequence data */
+  if (((sequence_object_data*)seq->handler_data)->seq)
+    free(((sequence_object_data*)seq->handler_data)->seq);
+
+  /* free handler specific structure */
+  free(seq->handler_data);
+  /* free this structure */
+  free(seq);
+
+}
+
+
+
+/***************************************************************/
 /* abstract object_handler functions */
 object_handler*
 create_object_handler(document_handler* dh,
@@ -157,14 +320,20 @@ create_object_handler(document_handler* dh,
 		      const XML_Char *name,
 		      const XML_Char **atts)
 {
-  /* nothing other implemented ! */
-  return default_create_handler_object(dh,name,atts);
+  if (strcmp(name,"sequence")==0)
+    return sequence_create_handler_object(dh,name,atts);
+  else
+    /* nothing other implemented ! */
+    return default_create_handler_object(dh,name,atts);
 }
 
 void
 delete_object_handler(object_handler* handler)
 {
-  default_delete_handler_object(handler);
+  if (handler->type==sequence_object)
+    sequence_delete_handler_object(handler);
+  else
+    default_delete_handler_object(handler);
 }
 
 
@@ -201,6 +370,7 @@ document_handler*
 create_document_handler(const char* filename)
 {
   document_handler* my_dh;
+  fprintf(stderr,"creating document handler for file %s\n",filename);
   my_dh=(document_handler*)malloc(sizeof(document_handler));
   if (my_dh==NULL)
     {
@@ -232,10 +402,12 @@ create_document_handler(const char* filename)
   my_dh->root.succ=NULL;
   my_dh->last=&(my_dh->root);
   my_dh->root.type=document_object;
+  my_dh->root.dh=my_dh;
+  my_dh->root.handler_data=NULL;
   my_dh->root.functions.StartHandler=&default_StartElement_handler;
   my_dh->root.functions.EndHandler=&document_EndElement_handler; /* should not be called! */
   my_dh->root.functions.CharacterHandler=&default_CharacterData_handler;
-  my_dh->root.functions.ChildDataReciever=document_ChildData_handler;
+  my_dh->root.functions.ChildDataReciever=&document_ChildData_handler;
 
   document_handler_set_handler(&(my_dh->root));
 
@@ -250,6 +422,9 @@ document_handler_set_handler(object_handler* handler)
 {
   XML_Parser* parser;
   parser=handler->dh->parser;
+#if 0
+  fprintf(stderr,"installing XML handler for object_handler at %p\n",handler);
+#endif
   XML_SetUserData(parser,handler);
   XML_SetElementHandler(parser,
 			handler->functions.StartHandler,
@@ -263,7 +438,7 @@ document_handler_set_handler(object_handler* handler)
  */
 object_handler*
 document_handler_push_object_handler(document_handler* dh,
-		     object_handler* new_handler)
+				     object_handler* new_handler)
 {
   dh->last->succ=new_handler;
   new_handler->prec=dh->last;
@@ -283,8 +458,9 @@ document_handler_pop_object_handler(document_handler* dh)
   object_handler* last;
   last=dh->last;
   dh->last=last->prec;
-  dh->last->prec=NULL;
-  last->prec=last->succ=NULL;
+  dh->last->succ=NULL;
+  last->prec=NULL;
+  last->succ=NULL;
   document_handler_set_handler(dh->last);
   return last;
 }
@@ -293,6 +469,8 @@ int
 parse_document(document_handler* dh)
 {
   const int buffer_length=1000;
+  fprintf(stderr,"Parsing document\n");
+
   while (1)
     {
       int length;
@@ -338,7 +516,7 @@ delete_document_handler(document_handler* dh)
       delete_object_handler(old_object_handler);
     }
 
-  XML_ParserFree(dh->xml_file);
+  XML_ParserFree(dh->parser);
   fclose(dh->xml_file);
   free(dh);
 }

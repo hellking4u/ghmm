@@ -18,13 +18,20 @@ int main()
   const char* filename="simple_graph.xml";
   document_handler* my_dh;
   int result;
+  fprintf(stderr,"test before creating parser\n");
   my_dh=create_document_handler(filename);
   if (my_dh==NULL)
     {
-      fprintf(stderr,"something wrong\n");
+      fprintf(stderr,"something went wrong during parser creation\n");
       return 1;
     }
+  fprintf(stderr,"test before parsing\n");
   result=parse_document(my_dh);
+  if (result==0)
+    {
+      fprintf(stderr,"something went wrong while parsing\n");
+      return 1;
+    }
   delete_document_handler(my_dh);
   return 0;
 }
