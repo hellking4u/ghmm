@@ -154,7 +154,7 @@ from ghmmwrapper import *
 
 import ghmmwrapper
 import ghmmhelper
-
+import re
 
 
 #-------------------------------------------------------------------------------
@@ -505,50 +505,102 @@ class HMMOpenFactory(HMMFactory):
         if defaultFileType:
             self.defaultFileType = defaultFileType
 
-    def __call__(self, fileName, fileType=None):
-        hmmClass = self.determineHMMClass("bla.xml") # Return proper class
-        #m = hmmClass("bla.xml")
-        #return m
+    def __call__(self, fileName, modelIndex = None):
+        # MO & SMO Files
+        (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+        nrModelPtr = ghmmwrapper.int_array(1)
+        models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+        nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
+        if modelIndex == None:
+            cmodel = get_smodel_ptr(models, 0) # XXX Who owns the pointer?
+        else:
+            if modelIndex < nrModels:
+                cmodel = get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
+            else:
+                print "modelIndex too large -- only have ", nrModels
+                return None
+        m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+        return m
 
-    def determineHMMClass(self, fileName, fileType=GHMM_FILETYPE_SMO):
+
+    def all(self, fileName):
+        # MO & SMO Files
+        (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+        nrModelPtr = ghmmwrapper.int_array(1)
+        models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+        nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
+        result = []
+        for i in range(nrModels):
+            cmodel = get_smodel_ptr(models, i)
+            m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+            result.append(m)
+        return result
+        
+
+    def determineHMMClass(self, fileName):
         #
         # smo files 
         #
         #
         file = open(fileName,'r')
-        done = 0
-        while not done:
-            l = file.readline().strip()
-            # We are looking for
-            # SHMM = or HMM =
-            # M = 4
-            # density = 0;
-            # cos = 1;
-            hmm = re.compile("HMM\s*=")
-            shmm = re.compile("SHMM\s*=")
-            mvalue = re.compile("M\s*=\s*([0-9]+)")
-            densityvalue = re.compile("density\s*=\s*([0-9]+)")
-            cosvalue = re.compile("cos\s*=\s*([0-9]+)")
-            
-            emission_domain = None
-            if l[0] != '#': # Not a comment line
-                if hmm.match(l, 1):
-                    if emission_domain != None:
-                        print "HMMOpenFactory:determineHMMClass: both HMM and SHMM?"
+        
+        hmmRe = re.compile("^HMM\s*=")
+        shmmRe = re.compile("^SHMM\s*=")
+        mvalueRe = re.compile("M\s*=\s*([0-9]+)")
+        densityvalueRe = re.compile("density\s*=\s*([0-9]+)")
+        cosvalueRe = re.compile("cos\s*=\s*([0-9]+)")
+        emission_domain = None
+
+        while 1:
+            l = file.readline()
+            if not l:
+                break
+            l = l.strip()
+            if len(l) > 0 and l[0] != '#': # Not a comment line
+                hmm = hmmRe.search(l)
+                shmm = shmmRe.search(l)
+                mvalue = mvalueRe.search(l)
+                densityvalue = densityvalueRe.search(l)
+                cosvalue = cosvalueRe.search(l)
+                
+                if hmm != None:
+                    if emission_domain != None and emission_domain != 'int':
+                        print "HMMOpenFactory:determineHMMClass: both HMM and SHMM?", emission_domain
                     else:
                         emission_domain = 'int'
                     
-                    
-                if shmm.match(l, 1):
-                    if emission_domain != None:
-                        print "HMMOpenFactory:determineHMMClass: both HMM and SHMM?"
+                if shmm != None:
+                    if emission_domain != None and emission_domain != 'double':
+                        print "HMMOpenFactory:determineHMMClass: both HMM and SHMM?", emission_domain
                     else:
                         emission_domain = 'double'
 
-                if mvalue.match(l, 1):
-                    M = 4
+                if mvalue != None:
+                    M = int(mvalue.group(1))
 
-            
+                if densityvalue != None:
+                    density = int(densityvalue.group(1))
+
+                if cosvalue != None:
+                    cos = int(cosvalue.group(1))
+                    
+        file.close()
+        if emission_domain == 'int':
+            emission_domain = IntegerRange(0,M)
+            distribution = DiscreteDistribution
+            hmm_class = DiscreteEmissionHMM
+            return (hmm_class, emission_domain, distribution)
+        elif emission_domain == 'double':
+            # M        number of mixture components
+            # density  component type
+            # cos      number of state transition classes
+            if cos == 1 and M == 1 and density == 0:
+                emission_domain = Float()
+                distribution = GaussianDistribution
+                hmm_class = GaussianEmissionHMM            
+                return (hmm_class, emission_domain, distribution)
+
+        return (None, None, None)
             
 
         
