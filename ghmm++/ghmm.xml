@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 
 <ghmm type="discrete">
-Wunderschönes Hidden Markov Model
 
 <graph id="hmm">
  <node id="A"/>
@@ -32,17 +31,17 @@ Wunderschönes Hidden Markov Model
 </InitialStates>
 
 <Emissions>
- <Emission State="A" fix="yes">1 2 3</Emission>
+ <Emission State="A">1 2 3</Emission>
  <Emission State="B">1 2 4</Emission>
  <Emission State="C">4 5 6</Emission>
 </Emissions>
 
 <Alphabet>
-<Symbol code="1">Langeweile</Symbol>
-<Symbol code="2">Müdigkeit</Symbol>
-<Symbol code="3">Kaffeedurst</Symbol>
-<Symbol code="4">Hunger</Symbol>
-<Symbol code="5">Stress</Symbol>
+ <Symbol code="1">Action A</Symbol>
+ <Symbol code="2">Action B</Symbol>
+ <Symbol code="3">Action C</Symbol>
+ <Symbol code="4">Action D</Symbol>
+ <Symbol code="5">Action E</Symbol>
 </Alphabet>
 
 <sequences type="int">

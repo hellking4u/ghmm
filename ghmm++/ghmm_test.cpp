@@ -17,9 +17,23 @@
 using namespace std;
 #endif
 
-int main()
+XMLIO_ElementReader<ghmm> my_model_reader;
+
+
+int create_test()
 {
-  XMLIO_ElementReader<ghmm> my_model_reader;
+  model* my_model=my_model_reader.get_element()->create_model();
+  model_print(stdout,my_model);
+  model_free(&my_model);
+}
+
+int sequence_generation_test()
+{
+  sequences* generated=my_model_reader.get_element()->generate_sequences(10,10);
+}
+
+int read_test_file()
+{
   my_model_reader.set_doc_name("ghmm");
   my_model_reader.read_file("ghmm.xml");
   if (my_model_reader.get_element()!=NULL)
@@ -27,8 +41,13 @@ int main()
       cout<<my_model_reader.toString()<<" found something: "<<endl;
       my_model_reader.get_element()->print();
     }
-  model* my_model=my_model_reader.get_element()->create_model();
-  model_print(stdout,my_model);
+}
+
+int main()
+{
+  read_test_file();
+  sequence_generation_test();
+  
   return 0;
 }
 
