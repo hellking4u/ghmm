@@ -40,29 +40,13 @@ GHMM_ContinuousModel::GHMM_ContinuousModel(int N, int M, int cos, density_t dens
   c_model->prior   = prior;
   c_model->s       = (sstate*) malloc(sizeof(sstate) * c_model->N);
 
-  /* Create C++ wrapper for all states and fill C states with usefull 
-     information. */
-  int i;
-  for (i = 0; i < c_model->N; ++i) {
-    GHMM_State* state = new GHMM_State(this,i,&c_model->s[i]);
-    states.push_back(state);
-  }
+  /* create C++ data structure. */
+  buildCppData();
 }
 
 
 GHMM_ContinuousModel::~GHMM_ContinuousModel() {
-  /* frees model. */  
-  if (c_model)
-    smodel_free(&c_model);
-
-  unsigned int i;
-  for (i = 0; i < states.size(); ++i)
-    SAFE_DELETE(states[i]);
-  states.clear();
-
-  for (i = 0; i < transitions.size(); ++i)
-    SAFE_DELETE(transitions[i]);
-  transitions.clear();
+  clean();
 }
 
 
@@ -182,4 +166,58 @@ int GHMM_ContinuousModel::check() {
 
 int GHMM_ContinuousModel::getNumberOfTransitionMatrices() const {
   return c_model->cos;
+}
+
+
+void GHMM_ContinuousModel::read(const string& filename) {
+  int smo_number;
+
+  /* first clean up old model. */
+  clean();
+
+  smodel** models = smodel_read(filename.c_str(),&smo_number);
+
+  if (smo_number > 0)
+    copyFromModel(models[0]);
+
+  int i;
+  for (i = 0; i < smo_number; ++i)
+    smodel_free(&models[i]);
+
+  free(models);
+}
+
+
+void GHMM_ContinuousModel::clean() {
+  /* frees model. */  
+  if (c_model)
+    smodel_free(&c_model);
+
+  unsigned int i;
+  for (i = 0; i < states.size(); ++i)
+    SAFE_DELETE(states[i]);
+  states.clear();
+
+  for (i = 0; i < transitions.size(); ++i)
+    SAFE_DELETE(transitions[i]);
+  transitions.clear();
+}
+
+
+void GHMM_ContinuousModel::copyFromModel(smodel* smo) {
+  clean();
+  c_model = smodel_copy(smo);
+
+  buildCppData();
+}
+
+
+void GHMM_ContinuousModel::buildCppData() {
+  /* Create C++ wrapper for all states and fill C states with usefull 
+     information. */
+  int i;
+  for (i = 0; i < c_model->N; ++i) {
+    GHMM_State* state = new GHMM_State(this,i,&c_model->s[i]);
+    states.push_back(state);
+  }
 }

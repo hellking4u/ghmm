@@ -5,6 +5,7 @@
  * $Id$
  */
 
+#include "ghmm/sequence.h"
 #include "ppghmm++/GHMM_Sequences.h"
 #include "ppghmm++/GHMM_Sequence.h"
 #ifdef HAVE_CSTDLIB
@@ -393,4 +394,82 @@ void GHMM_Sequences::clean_cpp() {
   for (i = 0; i < sequences.size(); ++i)
     SAFE_DELETE(sequences[i]);
   sequences.clear();
+}
+
+
+void GHMM_Sequences::read(const string& filename) {
+  int seq_number;
+  int i;
+
+  /* first clean up old data. */
+  clean();
+
+  if (sequence_type == GHMM_DOUBLE) {
+    sequence_d_t** seq = sequence_d_read(filename.c_str(),&seq_number);
+
+    if (seq_number > 0)
+      copyFromSequences(seq[0]);
+
+    for (i = 0; i < seq_number; ++i)
+      sequence_d_free(&seq[i]);
+
+    free(seq);
+  }
+  else {
+    sequence_t** seq = sequence_read(filename.c_str(),&seq_number);
+
+    if (seq_number > 0)
+      copyFromSequences(seq[0]);
+
+    for (i = 0; i < seq_number; ++i)
+      sequence_free(&seq[i]);
+
+    free(seq);
+  }
+}
+
+
+void GHMM_Sequences::copyFromSequences(sequence_d_t* seq) {
+  int i;
+  int j;
+
+  clean();
+
+  c_d_sequences = sequence_d_calloc(seq->seq_number);
+
+  for (i = 0; i < seq->seq_number; ++i) {
+    c_d_sequences->seq[i] = (double*) malloc(sizeof(double) * seq->seq_len[i]);
+    for (j = 0; j < seq->seq_len[i]; ++j)
+      c_d_sequences->seq[i][j] = seq->seq[i][j];
+
+    c_d_sequences->seq_len[i]   = seq->seq_len[i];
+    c_d_sequences->seq_label[i] = seq->seq_label[i];
+    c_d_sequences->seq_id[i]    = seq->seq_id[i];
+    c_d_sequences->seq_w[i]     = seq->seq_w[i];
+  }
+  c_d_sequences->seq_number = seq->seq_number;
+  c_d_sequences->total_w    = seq->total_w;
+}
+
+
+void GHMM_Sequences::copyFromSequences(sequence_t* seq) {
+  int i;
+  int j;
+
+  clean();
+
+  c_i_sequences = sequence_calloc(seq->seq_number);
+
+  for (i = 0; i < seq->seq_number; ++i) {
+    c_i_sequences->seq[i] = (int*) malloc(sizeof(double) * seq->seq_len[i]);
+    for (j = 0; j < seq->seq_len[i]; ++j)
+      c_d_sequences->seq[i][j] = seq->seq[i][j];
+
+    c_i_sequences->seq_len[i]   = seq->seq_len[i];
+    c_i_sequences->seq_label[i] = seq->seq_label[i];
+    c_i_sequences->seq_id[i]    = seq->seq_id[i];
+    c_i_sequences->seq_w[i]     = seq->seq_w[i];
+  }
+  c_i_sequences->seq_number = seq->seq_number;
+  c_i_sequences->total_w    = seq->total_w;
 }

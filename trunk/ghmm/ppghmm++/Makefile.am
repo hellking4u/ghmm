@@ -45,13 +45,14 @@ GHMM_State.h \
 GHMM_Types.h
 
 #noinst_PROGRAMS = coin_toss_test chmm generiere_nvs
-noinst_PROGRAMS = generiere_nvs
+noinst_PROGRAMS = generiere_nvs generiere_nvs_old_files
 
 #coin_toss_test_SOURCES = coin_toss_test.cpp
 
 #chmm_SOURCES = chmm.cpp
 
 generiere_nvs_SOURCES = generiere_nvs.cpp
+generiere_nvs_old_files_SOURCES = generiere_nvs_old_files.cpp
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
