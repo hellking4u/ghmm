@@ -21,16 +21,16 @@ __copyright__
 */
 struct state{
   /** Anfangswahrscheinlichkeit */ 
-  double pi;  
+  double pi;
   /** Ausgabewahrscheinlichkeit */
   double *b;
   /** ID's der Nachfolge States */ 
   int *out_id;  
   /** ID's der Vorgaenger States */    
   int *in_id;
-  /** Nachfolge Uebergangswahrscheinlichkeiten */       
+  /** Nachfolge Uebergangswahrscheinlichkeiten */
   double *out_a; 
-  /** Vorgaenger Uebergangswahrscheinlichkeiten */   
+  /** Vorgaenger Uebergangswahrscheinlichkeiten */
   double *in_a;
   /** Anzahl Nachfolge States */     
   int out_states; 
