@@ -158,6 +158,8 @@ import copy
 from os import path
 from math import log,ceil
 
+print "** I'm the ghmm in ~/hmm/ghmm **"
+
 # Initialize global random number generator by system time
 ghmmwrapper.gsl_rng_init() 
 ghmmwrapper.time_seed()
@@ -342,7 +344,6 @@ class Alphabet(EmissionDomain):
 
     def isAdmissable(self, emission):
         """ Check whether emission is admissable (contained in) the domain
-            raises GHMMOutOfDomain else
         """
         return emission in self.listOfCharacters
 
@@ -1013,8 +1014,7 @@ class HMMOpenFactory(HMMFactory):
     	    hmm_dom = xmlutil.HMM(fileName)
     	    emission_domain = hmm_dom.AlphabetType()
     	    if emission_domain == int:
-
-                [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
+                [alphabets, A, B, pi, state_orders, label_list] = hmm_dom.buildMatrices()
 
     		emission_domain = Alphabet(alphabets)
     		distribution = DiscreteDistribution(emission_domain)
@@ -1352,7 +1352,8 @@ class HMMFromMatricesFactory(HMMFactory):
                 
                 # check for state labels
                 if labelDomain is not None and labelList is not None:
-                    assert isinstance(labelDomain,LabelDomain), "XXX"
+                    if not isinstance(labelDomain,LabelDomain):
+                        raise TypeError, "LabelDomain object required."
                     
                     cmodel.model_type += 64     #kClassLabels
                     m = StateLabelHMM(emissionDomain, distribution, labelDomain, cmodel)
@@ -1415,7 +1416,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.out_a = trans[2] 
 
                     #set "in" probabilities
-                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i) # XXX cos = 1
+                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i) 
                     state.in_states = trans[0]
                     state.in_id = trans[1]
                     state.in_a = trans[2]
@@ -1484,7 +1485,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.out_a = trans[2] 
 
                     #set "in" probabilities
-                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i) # XXX cos = 1
+                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i) 
                     state.in_states = trans[0]
                     state.in_id = trans[1]
                     state.in_a = trans[2]
@@ -1556,7 +1557,6 @@ class BackgroundDistribution:
         self.cbackground = None
     
     def __str__(self):
-        # XXX to be implemented XXX 
         outstr = "BackgroundDistribution instance:\n"
         outstr += "Number of distributions: " + str(self.cbackground.n)+"\n\n"
         outstr += str(self.emissionDomain) + "\n"
@@ -1625,7 +1625,9 @@ class HMM:
             Result: log( P[emissionSequences| model]) of type float which is
             computed as \sum_{s} log( P[s| model]) when emissionSequences
             is a SequenceSet
-        Note: The implementation will not compute the full forward matrix (XXX ToDo)
+
+        Note: The implementation does not compute the full forward matrix since we are only interested
+              in the likelihoods in this case.
         """
         
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
@@ -1667,7 +1669,7 @@ class HMM:
             ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
             if ret_val == -1:
                 
-                #print "Warning: forward returned -1: Sequence", i,"cannot be build."
+                print "Warning: forward returned -1: Sequence", i,"cannot be build."
                 # XXX Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
@@ -2222,7 +2224,7 @@ class DiscreteEmissionHMM(HMM):
         self.cmodel.background_id = ghmmhelper.list2arrayint(stateBackground)
 
         # updating model type
-        self.cmodel.model_type += 64 # XXX Should be kHasBackgroundDistributions from ghmm.h
+        self.cmodel.model_type += 64 
     
     def assignAllBackgrounds(self,stateBackground):
         """ Change all the assignments of background distributions to states.
@@ -2240,9 +2242,10 @@ class DiscreteEmissionHMM(HMM):
     def assignStateBackground(self, state, backgroundID):
 
         assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
-        # XXX check for valid background id        
-    
-        ghmmwrapper.set_arrayint(self.cmodel.background_id, state, backgroundID)
+        if self.labelDomain.isAdmissable(backgroundID):
+            ghmmwrapper.set_arrayint(self.cmodel.background_id, state, backgroundID)
+        else:
+            print str(backgroundID) + " is not contained in labelDomain."    
     
     
     def getBackgroundAssignments(self):
@@ -2253,7 +2256,7 @@ class DiscreteEmissionHMM(HMM):
     def updateTieGroups(self):
         
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
-        
+        print "##### "+ str(self.cmodel.model_type)
         ghmmwrapper.reestimate_update_tie_groups(self.cmodel)
 
     
@@ -2264,6 +2267,7 @@ class DiscreteEmissionHMM(HMM):
         if self.cmodel.tied_to is None:
             print "allocating tied_to"
             self.cmodel.tied_to = ghmmhelper.list2arrayint(tieList)
+            self.cmodel.model_type += 8
         else:
             print "tied_to already there"
             for i in range(self.N):
@@ -2272,15 +2276,15 @@ class DiscreteEmissionHMM(HMM):
     def removeTiegroups(self):
         ghmmwrapper.free_arrayi(self.cmodel.tied_to)
         self.cmodel.tied_to = None
+        self.model.cmodel.model_type -= 8
     
     def getTieGroups(self):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         
         return ghmmhelper.arrayint2list(self.cmodel.tied_to, self.N)
     
-    # XXX to be implemented
     def getSilentFlag(self,state):
-        pass
+        return ghmmwrapper.get_arrayint(self.cmodel.silent,state)
     
 
     def normalize(self):
