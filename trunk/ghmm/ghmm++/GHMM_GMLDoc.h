@@ -9,27 +9,23 @@
  
  */
 
-#ifndef _GHMM_GRAPHMLDOC_H
-#define _GHMM_GRAPHMLDOC_H 1
+#ifndef _GHMM_GMLDOC_H
+#define _GHMM_GMLDOC_H 1
 
 #include <xmlio/XMLIO_Document.h>
 
-#include <ghmm++/GHMM_Alphabet.h>
-#include <ghmm++/GHMM_GMLDiscreteModel.h>
+#include <ghmm++/GHMM_GMLAlphabet.h>
+#include <ghmm++/GHMM_GMLClass.h>
 #include <ghmm++/GHMM_GMLContinuousModel.h>
+#include <ghmm++/GHMM_SWDiscreteModel.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
 
-class GHMM_GraphMLDoc;
-
 
 class GHMM_GraphMLDoc : public XMLIO_Document {
 
- private:
-  
-  GHMM_GMLAlphabet* tmp_alphabets;
 
  public: 
 
@@ -46,7 +42,7 @@ class GHMM_GraphMLDoc : public XMLIO_Document {
   GHMM_GMLContinuousModel* getContinuousModel() const;
   /** Returns discrete model, which has been read from file or NULL
       if no such model exists. */
-  GHMM_GMLDiscreteModel* getDiscreteModel() const;
+  GHMM_SWDiscreteModel* getDiscreteModel() const;
   /** Returns sequences, which has been read from file or NULL
       if no such model exists. */
   GHMM_Sequences* getSequences() const;
@@ -72,18 +68,27 @@ class GHMM_GraphMLDoc : public XMLIO_Document {
   /** Returns name of class. */
   virtual const char* toString() const;
 
+  GHMM_Alphabet *getClass() { return (GHMM_Alphabet*) hmmclass; }
+
  protected:
 
   /** */
-  GHMM_GMLDiscreteModel*   discrete_model;
+  // GHMM_GMLDiscreteModel*   discrete_model;
   /** */
   GHMM_GMLContinuousModel* continuous_model;
+  /** */
+  GHMM_SWDiscreteModel*   sdiscrete_model;
   /** */
   GHMM_Sequences* sequences;
   /** */
   bool reading_ghmm;
   /** */
   enumModelType model_type;
+
+ private:
+  GHMM_GMLClass*    hmmclass;
+  GHMM_GMLAlphabet* tmp_alphabets;
+
 };
 
 

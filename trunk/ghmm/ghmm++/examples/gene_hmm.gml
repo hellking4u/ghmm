@@ -31,13 +31,9 @@
   <line shape="poly" width="1"/>
  </key>
 
- <hmm:class hmm:low="0" hmm:high="4"> 
+ <hmm:class hmm:low="0" hmm:high="0"> 
    <map>
      <symbol code="0" desc="Intergenic">N</symbol>
-     <symbol code="1" desc="Single">S</symbol>
-     <symbol code="2" desc="First">F</symbol>
-     <symbol code="3" desc="Internal">I</symbol>
-     <symbol code="4" desc="Terminal">T</symbol>
    </map>
  </hmm:class>
 

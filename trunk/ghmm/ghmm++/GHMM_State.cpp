@@ -49,6 +49,7 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sstate* my_st
   index             = my_index;
   c_sstate          = my_state;
   c_state           = NULL;
+  c_sdstate           = NULL;
   reading           = GHMM_STATE_NONE;
   emission          = NULL;
   parent_model      = my_model;
@@ -65,6 +66,24 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, state* my_sta
   index             = my_index;
   c_sstate          = NULL;
   c_state           = my_state;
+  c_sdstate         = NULL;
+  reading           = GHMM_STATE_NONE;
+  emission          = NULL;
+  parent_model      = my_model;
+  tag               = "state";
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
+  
+  /* take index as id. */
+  id = GHMM_Toolkit::toString(my_index);
+  my_model->addStateID(id,index);
+}
+
+
+GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sdstate* my_state) {
+  index             = my_index;
+  c_sstate          = NULL;
+  c_state           = NULL;
+  c_sdstate         = my_state;
   reading           = GHMM_STATE_NONE;
   emission          = NULL;
   parent_model      = my_model;
@@ -263,6 +282,10 @@ void GHMM_State::fillState(state* s) {
   s->fix = 0;
 }
 
+void GHMM_State::fillState(sdstate* s) {
+  fprintf(stderr, "GHMM_State::fillState. You should not be here\n");
+  exit(1);
+}
 
 void GHMM_State::XMLIO_finishedReading() {
   if (!emission) {
@@ -464,7 +487,7 @@ const int GHMM_State::XMLIO_writeContent(XMLIO_Document& writer) {
   writer.changeIndent(2);
 
   //  if (initial > 0) {
-  writer.writeEndlIndent();
+  result = writer.writeEndlIndent();
   
   if (result < 0)
     return result;

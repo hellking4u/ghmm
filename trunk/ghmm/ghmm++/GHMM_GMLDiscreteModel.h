@@ -13,12 +13,14 @@
 #ifndef _GHMM_GMLDISCRETEMODEL_H
 #define _GHMM_GMLDISCRETEMODEL_H 1
 
+#include <ghmm/model.h>
 #include <xmlio/XMLIO_Element.h>
 #include "ghmm++/GHMM_GMLAlphabet.h"
 #include "ghmm++/GHMM_GMLState.h"
 #include "ghmm++/GHMM_GMLTransition.h"
-#include "ghmm++/GHMM_DiscreteModel.h"
 
+// Template 
+#include <ghmm++/GHMM_DiscreteModelT.hh>
 
 #include <ghmm++/begin_code.h>
 
@@ -26,12 +28,10 @@
 namespace std {
 #endif
 
-
-class GHMM_GMLDiscreteModel;
 class GHMM_Alphabet;
 
 /** Discrete HMM model (wrapper around model in C data structure). */
-class GHMM_GMLDiscreteModel: public GHMM_DiscreteModel {
+class GHMM_GMLDiscreteModel : public GHMM_DiscreteModelT<model, state, GHMM_GMLState, GHMM_GMLTransition> {
 
  public:
   

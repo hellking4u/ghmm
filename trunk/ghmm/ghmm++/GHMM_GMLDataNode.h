@@ -13,15 +13,13 @@
 #include <xmlio/XMLIO_Element.h>
 #include <xmlio/XMLIO_Document.h>
 #include <ghmm++/GHMM_Types.h>
-
+#include <ghmm++/GHMM_StateT.hh>
 #include <ghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
 
-
-class GHMM_GMLState;
 
 /** */
 class GHMM_GMLDataNode: public XMLIO_Element {

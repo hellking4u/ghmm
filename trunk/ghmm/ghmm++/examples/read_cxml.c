@@ -20,8 +20,8 @@
 
  * Testing if we can call our C++ wrapper from C
  * 1. Read an XML file in GraphML format
- * 2. Check the model
- * 3. Generate 100 sequences of length 100
+ * 2. Check the model (HACK!!! no checking because of silent states)
+ * 3. Generate 100 sequences 
  * 4. Change the B matrix slightly and train with Baum-Welch 
  */
 int main(int argc, char* argv[]) 
@@ -32,11 +32,12 @@ int main(int argc, char* argv[])
   sequence_t*my_output;
   model     *cmodel;
   state     *state_0_pt;
+  int       i;
 
   /* Important! initialise rng  */
   gsl_rng_init();
 
-  mymodel = graphmldoc_cwrapper("gene_hmm.gml");
+  mymodel = graphmldoc_cwrapper("simple.xml");
 
   if (mymodel != NULL)
     {
@@ -53,23 +54,27 @@ int main(int argc, char* argv[])
 
   /* generate sequences */
   printf("generating sequences: ...");
+  /*
+    We do not specify length. A sequence will end when encounter a final state.
+   */
   my_output=model_generate_sequences((model*)mymodel->model_pt, /* model */
 				     0,   /* random seed */
-				     100, /* length of each sequence */
+				     0, /* length of each sequence */
 				     100); /* number of sequences */
   printf("Done\n");
   sequence_print(stdout, my_output);
 
-  /* slight change of emission probabilities in state 0 */
-  state_0_pt->b[0] = 0.2;
-  state_0_pt->b[1] = 0.3;
-  state_0_pt->b[2] = 0.4;
-  state_0_pt->b[3] = 0.1;  
-  state_0_pt->b[4] = 0.0;
-
   /* reestimation */
-  fprintf(stdout,"reestimating with Baum-Welch-algorithm...");
+  /*fprintf(stdout,"reestimating with Baum-Welch-algorithm...");
   reestimate_baum_welch((model*)mymodel->model_pt, my_output);
+  */
+  
+  double log_p;
+  for(i = 0; i < 100; i++)
+    {
+      viterbi(mymodel->model_pt, my_output->seq[i], my_output->seq_len[i], &log_p);
+      printf( " Sequence %2d: viterbi prob = %5.5f\n", i, log_p );
+    }
 
   /* print the result */
   fprintf(stdout,"Done\nthe result is:\n");

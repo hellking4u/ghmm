@@ -10,9 +10,9 @@
  */
 
 #include <iostream>
+#include <assert.h>
 
 #include "ghmm++/GHMM_GMLDoc.h"
-#include "ghmm++/GHMM_GMLDiscreteModel.h"
 #include "ghmm++/GHMM_GMLContinuousModel.h"
 #include "ghmm++/GHMM_Sequences.h"
 #include "ghmm++/GHMM_GMLAlphabet.h"
@@ -24,7 +24,8 @@ using namespace std;
 
 GHMM_GraphMLDoc::GHMM_GraphMLDoc() {
 
-  discrete_model    = NULL;
+  hmmclass          = NULL;
+  sdiscrete_model   = NULL;
   continuous_model  = NULL;
 
   sequences        = NULL;
@@ -43,8 +44,8 @@ const char* GHMM_GraphMLDoc::toString() const {
 }
 
 
-GHMM_GMLDiscreteModel* GHMM_GraphMLDoc::getDiscreteModel() const {
-  return discrete_model;
+GHMM_SWDiscreteModel* GHMM_GraphMLDoc::getDiscreteModel() const {
+  return sdiscrete_model;
 }
 
 
@@ -74,7 +75,13 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
     }
 
     if (my_tag == "hmm:class")
-     { return this; }
+      { 
+printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
+  cout << "\t\t" << my_tag << endl;
+
+	hmmclass = new GHMM_GMLClass();
+	return hmmclass;
+      }
 
     if (my_tag == "paint")
       {return this;
@@ -133,22 +140,37 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
 
 		GHMM_Alphabet *alphas = tmp_alphabets;
 		assert( alphas != NULL );
-		for(int i=0; i < alphas->size(); i++)
+		for(int i=0; i < (int)(alphas->size()); i++)
 		  {
 		    cout << "Symbol " << i << ":";
 		    cout << alphas->getSymbol(i) << endl;
 		  }
 
-		discrete_model = new GHMM_GMLDiscreteModel(tmp_alphabets);
-		return discrete_model;
-	      }
-	    
+		assert( hmmclass != NULL );
+		if ( hmmclass->size() == 1 ) { // a set of transition matrices
+		  cout << "hmmclass size" << (hmmclass->size()) << endl;
+		  sdiscrete_model = new GHMM_SWDiscreteModel(tmp_alphabets, 1); // 1 class
+		  return sdiscrete_model;
+		} 
+		else
+		if ( hmmclass->size() > 1 )  // a set of transition matrices
+		  {
+		    cout << "hmmclass size" << (hmmclass->size()) << endl;
+		    sdiscrete_model = new GHMM_SWDiscreteModel(tmp_alphabets, (int)hmmclass->size()); 
+		    return sdiscrete_model;
+		  } else
+		    { /* error message if no valid hmm type is specified. */
+		      fprintf(stderr, "You need at least one transition class\n");
+		      exit(-1);
+		    }
+	      } // DISCRETE
+
 	    if ( model_type == GHMM_CONTINUOUS )
 	      {
-		printf("Continous model found\n");		
-		continuous_model = new GHMM_GMLContinuousModel();
-		return continuous_model;
-	      }
+			printf("Continous model found\n");		
+			continuous_model = new GHMM_GMLContinuousModel();
+			return continuous_model;
+	      } // CONTINUOUS
 	  }
 	else
 	  {
@@ -199,7 +221,6 @@ int GHMM_GraphMLDoc::XMLIO_writeProlog() {
   changeIndent(2);
 
   XMLIO_Element modeltype;
-  char tmp[15];
   modeltype.tag = "key";
   modeltype.attributes["for"] ="node";
 
@@ -217,6 +238,7 @@ int GHMM_GraphMLDoc::XMLIO_writeProlog() {
   writeEndl();
 
   this_result = writeElement(&modeltype);
+
   writeEndl();
   /* Returns error code if an error occured. */
   if (this_result < 0)

@@ -25,6 +25,7 @@ typedef enum {
 } model_enum;
 
 #include <ghmm/model.h>
+#include <ghmm/sdmodel.h>
 struct model_wrapper {
   model_enum model_id;
   void * model_pt;

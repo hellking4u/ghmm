@@ -8,22 +8,22 @@
  */
 
 #include <xmlio/XMLIO_Document.h>
-#include "ghmm++/GHMM_Emission.h"
-#include "ghmm++/GHMM_State.h"
-#include "ghmm++/GHMM_ContinuousModel.h"
-#include "ghmm++/GHMM_DiscreteModel.h"
-#include "ghmm++/GHMM_Alphabet.h"
 
+#include "ghmm++/GHMM_Emission.h"
+#include "ghmm++/GHMM_Alphabet.h"
+#include "ghmm++/GHMM_ContinuousModel.h"
+#include "ghmm++/GHMM_DiscreteModelT.hh"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
 
 
-GHMM_Emission::~GHMM_Emission() {}
+GHMM_GMLEmission::~GHMM_GMLEmission() {
+}
 
 
-XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
+XMLIO_Element* GHMM_GMLEmission::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
   bool found = false;
 
   switch (getModelType()) {
@@ -75,7 +75,7 @@ XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes
 }
 
 
-void GHMM_Emission::XMLIO_getCharacters(const string& characters) {
+void GHMM_GMLEmission::XMLIO_getCharacters(const string& characters) {
   unsigned int pos;
   for (pos = 0; pos < characters.size(); ++pos) {
     while (pos < characters.size() && isspace(characters[pos]))
@@ -90,7 +90,7 @@ void GHMM_Emission::XMLIO_getCharacters(const string& characters) {
 }
 
 
-void GHMM_Emission::XMLIO_finishedReading() {
+void GHMM_GMLEmission::XMLIO_finishedReading() {
   /* continuous model */
   if (state->c_sstate)
     if (weights.size() != mue.size()) {
@@ -100,7 +100,7 @@ void GHMM_Emission::XMLIO_finishedReading() {
 }
 
 
-const int GHMM_Emission::XMLIO_writeContent(XMLIO_Document& writer) {
+const int GHMM_GMLEmission::XMLIO_writeContent(XMLIO_Document& writer) {
   int result = 0;
   int i;
 
@@ -123,20 +123,22 @@ const int GHMM_Emission::XMLIO_writeContent(XMLIO_Document& writer) {
       break;
     }
     result += writer.writef(" mue=\"%f\" variance=\"%f\">",mue[0],variance[0]);
-  }
-
-  /* discrete model */
-  if (state->c_state) {
-    GHMM_Alphabet* alphabet = state->getModel()->getAlphabet();
-    GHMM_DiscreteModel* model = (GHMM_DiscreteModel*) state->getModel();
+  } else
+  {
+	 /* discrete model */
+    GHMM_Alphabet* alphabet      = state->getModel()->getAlphabet();
+    GHMM_DiscreteModelT*model   = (GHMM_DiscreteModelT*)(state->getModel());
 
     result += writer.writeEndl();
     for (i = 0; i < model->c_model->M; ++i) {
-      result += writer.writef("%s%.2f",writer.indent,state->c_state->b[i]);
-      if (alphabet)
-	result += writer.writef(" <!-- %s -->",alphabet->getSymbol(i).c_str());
+	  if (state->c_state)
+		result += writer.writef("%s%.2f",writer.indent,state->c_state->b[i]);
+      if (state->c_sdstate)
+		result += writer.writef("%s%.2f",writer.indent,state->c_sdstate->b[i]);
+	  if (alphabet)
+		result += writer.writef(" <!-- %s -->",alphabet->getSymbol(i).c_str());
       result += writer.writeEndl();
-    }
+	}
   }
 
   return result;
