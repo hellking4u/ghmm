@@ -438,7 +438,10 @@ class EmissionSequence:
                 
             elif isinstance(sequenceInput, str): # from file
                 # reads in the first sequence struct in the input file
-                self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
+                if  not path.exists(sequenceInput):
+                     raise IOError, 'File ' + str(sequenceInput) + ' not found.'
+                else:
+                    self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
                 
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
                 # XXX Should maintain reference to the parent
@@ -467,7 +470,10 @@ class EmissionSequence:
 
             elif isinstance(sequenceInput, str): # from file
                 # reads in the first sequence struct in the input file
-                self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
+                if  not path.exists(sequenceInput):
+                     raise IOError, 'File ' + str(sequenceInput) + ' not found.'
+                else:
+                    self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
                 
                 
             elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
@@ -485,6 +491,7 @@ class EmissionSequence:
     def __del__(self):
         "Deallocation of C sequence struct."
         self.cleanFunction(self.cseq)
+        self.cseq = None
 
     def __len__(self):
         "Returns the length of the sequence."
@@ -545,7 +552,10 @@ class SequenceSet:
             
             if isinstance(sequenceSetInput, str): # from file
                 # reads in the first sequence struct in the input file
-                self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
+                if  not path.exists(sequenceSetInput):
+                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
+                else:
+                     self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
                 
             elif isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
@@ -595,7 +605,10 @@ class SequenceSet:
 
             elif isinstance(sequenceSetInput, str): # from file
                 print "fromFile", sequenceSetInput                                
-                self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
+                if  not path.exists(sequenceSetInput):
+                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
+                else:
+                    self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
                                 
             elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
 
@@ -616,6 +629,7 @@ class SequenceSet:
     def __del__(self):
         "Deallocation of C sequence struct."
         self.cleanFunction(self.cseq)
+        self.cseq = None
 
     def __str__(self):
         "Defines string representation."
@@ -723,6 +737,10 @@ def SequenceSetOpen(emissionDomain, fileName):
     
     """
     
+    if not path.exists(fileName):
+        raise IOError, 'File ' + str(fileName) + ' not found.'
+
+    
     if emissionDomain.CDataType == "int":
         readFile = ghmmwrapper.sequence_read
         seqPtr = ghmmwrapper.get_seq_ptr
@@ -764,7 +782,10 @@ class HMMOpenFactory(HMMFactory):
             self.defaultFileType = defaultFileType
 
     def __call__(self, fileName, modelIndex = None):
-     
+        
+        if not path.exists(fileName):
+            raise IOError, 'File ' + str(fileName) + ' not found.'
+
     	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
     	    print "File type: XML"
     	    hmm_dom = xmlutil.HMM(fileName)
@@ -826,7 +847,13 @@ class HMMOpenFactory(HMMFactory):
             [A,B,pi,modelName] = h.getGHMMmatrices()
             return  HMMFromMatrices(emission_domain, distribution, A, B, pi, modelName)
 
+    
+    #  XXX model support missing  XXX
     def all(self, fileName):
+        
+        if not path.exists(fileName):
+          raise IOError, 'File ' + str(fileName) + ' not found.'
+
         # MO & SMO Files
         (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
         nrModelPtr = ghmmwrapper.int_array(1)
@@ -919,6 +946,10 @@ def readMultipleHMMERModels(fileName):
         HMM objects.
     
     """
+    
+    if not path.exists(fileName):
+        raise IOError, 'File ' + str(fileName) + ' not found.'
+    
     modelList = []
     string = ""
     f = open(fileName,"r")
@@ -1139,12 +1170,10 @@ class HMM:
         
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-        print "HMM.__del__", self.cmodel, self.castModelPtr(self.cmodel)
-        if self.cmodel is not None:
-            self.freeFunction(self.cmodel)
-            self.cmodel = 0
-        else:
-            print "OOPS. __del__ called twice"
+        print "HMM.__del__", self.cmodel
+
+        self.freeFunction(self.cmodel)
+        self.cmodel = None
     
     def loglikelihood(self, emissionSequences): 
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -1208,7 +1237,8 @@ class HMM:
             else:
                 likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
 
-        ghmmwrapper.free_arrayd(likelihood)  
+        ghmmwrapper.free_arrayd(likelihood)
+        likelihood = None  
         return likelihoodList
 
        
@@ -1273,8 +1303,10 @@ class HMM:
         ghmmwrapper.freearray(unused)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(calpha,t)
+        unused = None
+        csale = None
+        calpha = None
         return (pyalpha,pyscale) 
-        
         
 
     def backward(self, emissionSequence, scalingVector):
@@ -1304,9 +1336,9 @@ class HMM:
         # deallocation
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(cbeta,t)
+        cscale = None
+        cbeta = None
         return pybeta
-        
-        
     
 
     def viterbi(self, emissionSequences):
@@ -1358,7 +1390,11 @@ class HMM:
                         break
                                         
             allPaths.append(onePath)
+        
+        ghmmwrapper.free_arrayd(log_p)
         ghmmwrapper.free_arrayi(viterbiPath)  
+        viterbiPath = None
+        log_p = None
             
         if emissionSequences.cseq.seq_number > 1:
             return allPaths
@@ -1782,6 +1818,9 @@ class GaussianEmissionHMM(HMM):
         ghmmwrapper.freearray(logP)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(calpha,t)
+        logP = None
+        cscale = None
+        calpha = None
         return (pyalpha,pyscale)         
         
     def backward(self, emissionSequence, scalingVector):
@@ -1811,6 +1850,8 @@ class GaussianEmissionHMM(HMM):
         # deallocation
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(cbeta,t)
+        cscale = None
+        cbeta = None
         return pybeta        
 
 
@@ -1852,6 +1893,7 @@ class GaussianEmissionHMM(HMM):
             ghmmwrapper.sreestimate_baum_welch(smosqd_cpt)        
             likelihood = ghmmwrapper.get_arrayd(smosqd_cpt.logp, 0)
             ghmmwrapper.free_smosqd_t(smosqd_cpt)
+            smosqd_cpt = None
             
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
@@ -1898,7 +1940,10 @@ class GaussianEmissionHMM(HMM):
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
+        # XXX BW is leaking XXX
         pass
+        
+        
 
 
 class GaussianMixtureHMM(GaussianEmissionHMM):
