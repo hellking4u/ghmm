@@ -802,12 +802,13 @@ class HMM:
 	return [alphabets, A, B, pi, state_orders]
     
     def getLabels(self):
-        """ returns list of labels """
-        labels = []
+        """ returns list of state labels and unique labels """
+        label_list = []
+        labels = {}
         for s in self.state.values(): # a list of indices
-            labels.append(self.hmmClass.code2name[s.state_class])
-
-        return labels
+           label_list.append(self.hmmClass.code2name[s.state_class])
+           labels[label_list[-1]] = 0
+        return (label_list, labels.keys())
 
     def getTiedStates(self):    
         """ returns list of tied states, entry is None if a state isn't to
