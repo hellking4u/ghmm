@@ -412,13 +412,10 @@ class EmissionSequence:
         a sequence of emissions. It also contains a reference to the
         domain where the emission orginated from.        
     """
-
-    # XXX Who is maintaining a reference to the SequenceSet.cseq?
     
     def __init__(self, emissionDomain, sequenceInput):
 
         self.emissionDomain = emissionDomain 
-        # XXX How do you maintain reference to the SequenceSet.cseq?
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             
@@ -426,7 +423,7 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbol = ghmmwrapper.set_2d_arrayint
-            self.cleanFunction = ghmmwrapper.free_sequence
+            self.cleanFunction = ghmmwrapper.sequence_clean
             
             if isinstance(sequenceInput, list):  # from list
                 internalInput = map( self.emissionDomain.internal, sequenceInput)
@@ -449,7 +446,6 @@ class EmissionSequence:
                     self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
                 
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
-                # XXX Should maintain reference to the parent
                 if sequenceInput.seq_number > 1:
                     raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
@@ -463,7 +459,7 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbol = ghmmwrapper.set_2d_arrayd
-            self.cleanFunction = ghmmwrapper.free_sequence_d
+            self.cleanFunction = ghmmwrapper.sequence_d_clean
                         
             if isinstance(sequenceInput, list): 
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
@@ -482,7 +478,6 @@ class EmissionSequence:
                 
                 
             elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
-                # XXX Should maintain reference to the parent
                 if sequenceInput.seq_number > 1:
                     raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
@@ -525,7 +520,8 @@ class EmissionSequence:
         for j in range(ghmmwrapper.get_arrayint(seq.seq_len,0) ):
             strout += str( self.emissionDomain.external(self[j]) )   
 
-        if self.cseq.state_labels != None:            
+        # checking for labels 
+        if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
             strout += "\nState labels:\n"
             for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,0) ):
                 strout += str( ghmmwrapper.get_2d_arrayint(seq.state_labels,0,j)) + ", "   
@@ -558,8 +554,10 @@ class SequenceSet:
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
             self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within an int**
-            self.cleanFunction = ghmmwrapper.free_sequence
+            self.cleanFunction = ghmmwrapper.sequence_clean
             self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
+            self.getSymbol = ghmmwrapper.get_2d_arrayint
+            self.setSymbolSingle = ghmmwrapper.set_arrayint
             
             if isinstance(sequenceSetInput, str): # from file
                 # reads in the first sequence struct in the input file
@@ -567,7 +565,7 @@ class SequenceSet:
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
                      self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
-                
+               
             elif isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
                 self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
@@ -601,8 +599,11 @@ class SequenceSet:
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
             self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign a double* to a position within a double**
-            self.cleanFunction = ghmmwrapper.free_sequence_d
+            self.cleanFunction = ghmmwrapper.sequence_d_clean
             self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
+            self.getSymbol = ghmmwrapper.get_2d_arrayd
+            self.setSymbolSingle = ghmmwrapper.set_arrayd
+
                         
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
@@ -619,8 +620,12 @@ class SequenceSet:
                 if  not path.exists(sequenceSetInput):
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
-                    self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
-                                
+                    #self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
+                    i = ghmmwrapper.int_array(1)
+                    self.__s = ghmmwrapper.sequence_d_read(sequenceSetInput,i)  
+                    self.cseq = ghmmwrapper.get_seq_d_ptr(self.__s,0)
+                                         
+                                                     
             elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
 
                 self.cseq = sequenceSetInput
@@ -639,6 +644,8 @@ class SequenceSet:
 
     def __del__(self):
         "Deallocation of C sequence struct."
+        
+        print "######################## SequenceSet.__del__"
         self.cleanFunction(self.cseq)
         self.cseq = None
 
@@ -652,8 +659,9 @@ class SequenceSet:
                 strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n"
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
                     strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) )) ) 
-
-                if self.cseq.state_labels != None:            
+                
+                # checking for labels 
+                if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
                     strout += "\nState labels:\n"
                     for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,i) ):
                         strout += str( ghmmwrapper.get_2d_arrayint(seq.state_labels,i,j)) 
@@ -718,9 +726,19 @@ class SequenceSet:
         seqNumber = len(seqIndixes)       
         seq = self.sequenceAllocationFunction(seqNumber)
         seq.seq = self.emptySeq(seqNumber)
+        
+        # checking for state labels in the source C sequence struct
+        if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
+            
+            print "found labels !"
+            seq.state_labels = ghmmwrapper.int_2d_array_nocols(seqNumber)
+            seq.state_labels_len = ghmmwrapper.int_array(seqNumber)
+
         for i in range(seqNumber):
+            
             self.setSeq(seq.seq,i,self.__array[ seqIndixes[i] ]) 
             ghmmwrapper.set_arrayint(seq.seq_len,i,ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i]))
+            
             # Above doesnt copy seq_id or seq_label or seq_w
             seq_id = int(ghmmwrapper.get_arrayd(self.cseq.seq_id, seqIndixes[i]))
             ghmmwrapper.set_arrayd(seq.seq_id, i, seq_id)
@@ -730,7 +748,11 @@ class SequenceSet:
             seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
             ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
              
-            
+            # setting labels if appropriate
+            if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
+                self.setSeq(seq.state_labels,i, ghmmwrapper.get_col_pointer_int( self.cseq.state_labels,seqIndixes[i] ) )
+                ghmmwrapper.set_arrayint(seq.state_labels_len,i,ghmmwrapper.get_arrayint(self.cseq.state_labels_len, seqIndixes[i]) )            
+        
         seq.seq_number = seqNumber
         
         return SequenceSet(self.emissionDomain, seq)
@@ -1266,6 +1288,7 @@ class HMM:
                     (numarray) vector of floats
             
         """
+       
         if isinstance(emissionSequences,EmissionSequence):
             seqNumber = 1 
         elif isinstance(emissionSequences,SequenceSet):
@@ -1281,6 +1304,7 @@ class HMM:
         for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             tmp = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            
             ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
             if ret_val == -1:
                 
@@ -1830,14 +1854,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
     def setLabels(self,labelList):
         
         assert len(labelList) == self.N
-        
         self.listOfLabels = labelList
 
         i = 0
         for l in self.listOfLabels:
             self.index[l] = i
             i += 1
-        
         for i in range(self.N):
             state = self.getStatePtr(self.cmodel.s, i)
             state.label = i

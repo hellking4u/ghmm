@@ -341,20 +341,13 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
   long get_sequence_d_label(sequence_d_t* seq, int seq_num ){
 	  return seq->seq_label[seq_num];
   }	  
-  
- /* to free a sequence* from python use free_sequence_d */
-   void free_sequence_d(sequence_d_t *seq) { 
-	  sequence_d_free(&seq);}
-  
-   void free_sequence(sequence_t *seq) { 
-	  sequence_free(&seq);}
-      
+     
   sequence_d_t *seq_d_read(char* filename ){
 	  int i;
-	  sequence_d_t** s;
+      sequence_d_t** s;
 	  //s = (sequence_d_t **) malloc(1*sizeof(sequence_d_t*));
 	  s = sequence_d_read(filename, &i);
-	  return s[0];
+	  return *s;
   }
 
   void call_sequence_print(char* ch, sequence_t* seq){
@@ -1424,10 +1417,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
   double get_2d_arrayd(double **ary, int index1, int index2) { return ary[index1][index2]; }
 
-  int *get_col_pointer_int(int **ary, int index) {
-	  return ary[index];
-  }
-  
+
   double *get_col_pointer_d(double **ary, int index) {
 	  return ary[index];
   }
@@ -1461,6 +1451,11 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   void set_2d_arrayint_col(int **ary, int index, int *col){
 	  ary[index] = col;
   }	  
+  
+  int *get_col_pointer_int(int **ary, int index) {
+	  return ary[index];
+  }
+  
   
   void set_2d_arrayint(int **ary, int index1,int index2, int value) {
     ary[index1][index2] = value;
