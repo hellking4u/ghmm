@@ -19,17 +19,20 @@
 
 #include <math.h>
 
-#include "stdmacro.h"
-#include "const.h"
-#include "foba.h"
-#include "matrix.h"
-#include "model.h"
-#include "sequence.h"
-#include "viterbi.h"
-#include "rng.h"
-#include "cfoba.h"
-#include "cmodel.h"
-#include "smodel.h"
+#include "ghmm/mes.h"
+#include "ghmm/const.h"
+#include "ghmm/foba.h"
+#include "ghmm/matrix.h"
+#include "ghmm/model.h"
+#include "ghmm/sequence.h"
+#include "ghmm/viterbi.h"
+#include "ghmm/rng.h"
+
+#ifdef CMODEL_INCLUDED
+#include "ghmm/cfoba.h"
+#include "ghmm/cmodel.h"
+#endif
+#include "ghmm/smodel.h"
 
 
 int main(int argc, char* argv[]) {
@@ -39,7 +42,9 @@ int main(int argc, char* argv[]) {
   int discrete = 0, smodelflag = 0;
   int T, i, j;
   model **mo = NULL;
+#ifdef CMODEL_INCLUDED
   cmodel **cmo = NULL;
+#endif
   smodel **smo = NULL;
   double d;
   /*  double dangle, ddiff, s1, s2; */
@@ -106,6 +111,8 @@ int main(int argc, char* argv[]) {
     printf("d=%f\n",d);
     
   }    
+
+#ifdef CMODEL_INCLUDED
   else {
     
     cmo = cmodel_read(argv[1], &cmo_number);
@@ -140,7 +147,6 @@ int main(int argc, char* argv[]) {
     d = cmodel_prob_distance(cmo[0], cmo[1], T, 1, 0);
     printf("d=%f\n",d);
     
-#if 0
     /* coemission likelihood */
     printf("#----- cmo[0]/cmo[1] \n");
     if (cmodel_coemission_likelihood(cmo[0], cmo[1], &d) == -1) d = -1;
@@ -158,9 +164,8 @@ int main(int argc, char* argv[]) {
     printf("D_diff  = %e\n", ddiff); 
     printf("S1      = %e\n", s1);
     printf("S2      = %e\n", s2); 
-#endif
-
   }
+#endif /* CMODEL_INCLUDED*/
   
   return 0;
 }
