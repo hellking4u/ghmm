@@ -12,9 +12,11 @@
 #include "config.h"
 #endif
 
+#include <set>
+#include <map>
+#include <vector>
 #include <xmlio/XMLIO_Object.h>
 #include <ghmm++/sequences.h>
-#include <ghmm++/graph.h>
 #include <ghmm++/DiscretePD.h>
 
 #ifdef HAVE_NAMESPACES
@@ -54,9 +56,18 @@ namespace std {
       /** dumps all content to cout */
       virtual void print() const;
       /**
-	 return id of this model
+	 return id of this edge
        */
       virtual const string& get_id() const;
+      /**
+	 return id of this edges origin
+       */
+      virtual const string& get_from_id() const;
+      /**
+	 return id of this edges destination
+       */
+      virtual const string& get_to_id() const;
+
     private:
       string id;
       string from;
@@ -93,6 +104,25 @@ namespace std {
     private:
       /** id is mandatory for gxl graphs */
       string id;
+
+
+      /** counter for edge id allocation */
+      int edge_id_counter;
+
+      /** map from edge string-id  to its int-id */
+      map<string,int> edge_ids;
+
+      /** counter for node id allocation */
+      int node_id_counter;
+
+      /** map from node string-id to its int-id */
+      map<string,int> node_ids;
+
+      /** adiascense list */
+      map<int,set<int> > from_to_map;
+      /** inverse adiascense list */
+      map<int,set<int> > to_from_map;
+
     };
 
 #ifdef HAVE_NAMESPACES
