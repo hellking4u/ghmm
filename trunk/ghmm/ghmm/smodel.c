@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.c
+  filename     : /amnt/Twister/files/c0t1d0s2/bspk/src/hmm/ghmm/ghmm/smodel.c
   created      : TIME: 21:54:32     DATE: Sun 14. November 1999
   $Id$
 
@@ -263,7 +263,9 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
       /* copy transition matrix to all transition classes */
-      for (i = 0; i < smo->cos; i++) {
+      if (!m_calloc(a_3dmatrix, smo->cos)) {mes_proc(); goto STOP;}
+      a_3dmatrix[0] = a_matrix;
+      for (i = 1; i < smo->cos; i++) {
 	a_3dmatrix[i] = matrix_d_alloc_copy(smo->N, smo->N, a_matrix);
 	if (!a_3dmatrix[i]) {mes_proc(); goto STOP;}
       }
