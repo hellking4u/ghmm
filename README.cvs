@@ -9,7 +9,13 @@ on a local filesystem. That means, they are not recompiled for each program
 they are linked against. This is the main difference to the old hmm/src
 sources.
 
+Required:
 
+automake
+autoconf
+libtool
+GNU make
+GNU m4
 
 =========================
 Some notes for CVS usage:
