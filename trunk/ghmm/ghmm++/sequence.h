@@ -22,12 +22,6 @@
 namespace std {
 #endif
 
-  class sequence_label: public XMLIO_StringElement{
-  public:
-    sequence_label(const string& name, XMLIO_Attributes &attrs) {
-      tag=name;
-    }
-  };
 
   /**
      base class for all sequences
@@ -37,7 +31,7 @@ namespace std {
   public:
     /**
      */
-    sequence_label* label;
+    string label;
 
     /**
      */
@@ -46,7 +40,7 @@ namespace std {
     /**
      */
     sequence<T>() {
-      label = NULL;
+      label = "";
       id    = "";
     }
 
@@ -55,36 +49,13 @@ namespace std {
     sequence<T>(const string& name, XMLIO_Attributes &attrs) {
       tag=name;
       XMLIO_Attributes::iterator id_key=attrs.find("id");
-      if (id_key != attrs.end())
-	{
-	  id=id_key->second;
-	}
-      label=NULL;
-    }
-
-    /**
-     */
-    virtual ~sequence<T>() {
-      SAFE_DELETE(label);
-    }
- 
-    /**
-       gets the label of this sequence
-     */
-    virtual XMLIO_Element* XMLIO_startTag(const string& name, XMLIO_Attributes &attrs) {
-      if (name=="label") {
-	if (label==NULL) {
-	  label=new sequence_label(name, attrs);
-	  return label;
-	}
-	else {
-	  cout<<"Only one label allowed in sequence"<<endl;
-	}
+      XMLIO_Attributes::iterator label_key=attrs.find("label");
+      if (id_key != attrs.end()) {	
+	id=id_key->second;
       }
-      else {
-	cout<<tag<<" not supported in sequence"<<endl;
+      if (label_key != attrs.end()) {
+	label=label_key->second;
       }
-      return NULL;
     }
 
     /**
@@ -92,30 +63,32 @@ namespace std {
     virtual const XMLIO_Attributes& XMLIO_getAttributes () const {
       XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
       attrs.clear();
-      if (!id.empty())
+      if (!id.empty()) 
 	attrs["id"]=id;
+      if (!label.empty()) 
+	attrs["label"]=label;
       return attributes;
     }
 
+    /**
+     */
+    virtual int get_label_as_int() const  {
+      if (label.empty()) {
+	return -1;
+      }
+      else {
+	return strtol(label.c_str(),NULL,0);
+      }      
+    }
 
     /**
      */
-    virtual const int XMLIO_writeContent (XMLIO_Document& doc) const {
-      int result=0;
-      int tmp_result;
-      if (label!=NULL) {
-	tmp_result=doc.writeElement(*label);
-	if (tmp_result<0) return tmp_result;
-      }
-      tmp_result=XMLIO_ArrayElement<T>::XMLIO_writeContent(doc);
-      if (tmp_result<0) return tmp_result;
-      return result+tmp_result;
+    virtual double get_id_as_double() const {
+      if (id.empty())
+	return -1.0;
+      else
+	return strtod(id.c_str(),NULL);
     }
-
-    virtual void print() const {
-      XMLIO_ArrayElement<T>::print();
-    }
-
   };
 
   /**
@@ -133,16 +106,13 @@ namespace std {
     double_sequence(int* seq_data, size_t length);
     /**
      */
+    double_sequence(sequence_d_t* seq, int sequence_pos);
+    /**
+     */
     virtual double* create_double_array() const;
     /**
      */
     virtual int* create_int_array() const;
-    /**
-     */
-    virtual int get_label_as_int() const;
-    /**
-     */
-    virtual double get_id_as_double() const;
   };
 
   /**
@@ -160,16 +130,13 @@ namespace std {
     int_sequence(double* seq_data, size_t length);
     /**
      */
+    int_sequence(sequence_t* seq, int sequence_pos); 
+    /**
+     */
     virtual double* create_double_array() const;
     /**
      */
     virtual int* create_int_array() const;
-    /**
-     */
-    virtual int get_label_as_int() const;
-    /**
-     */
-    virtual double get_id_as_double() const;
   };
 
 

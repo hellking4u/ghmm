@@ -480,3 +480,191 @@ ghmm::XMLIO_getAttributes() const {
 
   return attributes;
 }
+
+#if 0
+// only testing
+
+
+model* ghmm::create_model() const
+{
+  /* model type mismatch */
+  if (type!='d')
+    return (model*)NULL;
+
+  /* are necessary informations available? */
+  if (my_graph==NULL || Initial==NULL)
+    {
+      return (model*)NULL;
+    }
+
+  /* alpahabet and emissions */
+
+  /* allocate model */
+  model* return_model=(model*)malloc(sizeof(model));
+  if (return_model==NULL)
+    {
+      cerr<<"could not allocate model structure"<<endl;
+      return (model*)NULL;
+    }
+  
+  return_model->N=my_graph->vector<gxl_node*>::size();   /* number of states */
+  return_model->prior=prior;
+
+  /* number of symbols */
+  if (my_alphabet!=NULL)
+    {
+      return_model->M=my_alphabet->size();
+    }
+  else
+    {
+      return_model->M=0;
+    }
+
+  /* allocate state array */
+  return_model->s=(state*)calloc(return_model->N,sizeof(state)); /* state pointer array */
+  if (return_model->s==NULL)
+    {
+      cerr<<"could not allocate states array"<<endl;
+      return NULL;
+    }
+
+  /* initialise states */
+  int state_counter=0;
+  /* iterates over existing nodes */
+  vector<gxl_node*>::const_iterator node_pos=my_graph->vector<gxl_node*>::begin();
+  /* for initial state possibilty normalization */
+  double initial_state_prob_sum=0;
+  while (node_pos!=my_graph->vector<gxl_node*>::end())
+    {
+      const string& node_id=(*node_pos)->id;
+      state* this_state=&(return_model->s[state_counter]);
+      /* emission probabilities */
+      this_state->b=(double*)calloc(return_model->M,sizeof(double));
+      if (this_state->b==NULL)
+	{
+	  cerr<<"could not allocate emmision probabilities vector"<<endl;
+	  return NULL;
+	}
+
+      /* search for Initial State probability */
+      map<State*,double>* initial_state_map=Initial->get_map();
+      map<State*,double>::iterator state_pos=initial_state_map->begin();
+      while(state_pos!=initial_state_map->end() && (state_pos->first)->get_id()!=node_id)
+	++state_pos;
+      if (state_pos!=initial_state_map->end())
+	this_state->pi=state_pos->second;
+      else
+	this_state->pi=0;
+
+      //    this_state->pi = 
+      /* for normalization */
+      initial_state_prob_sum+=this_state->pi;
+
+      size_t array_pos; /* position in double array of state */
+      set<int>::const_iterator tranisiton_pos; /* position in set of transitons */
+
+      /* transitions from_to */
+      /* adjacent list */
+      const set<int>& from_to_transition_idx=my_graph->get_from_to_transitions(node_id);
+      this_state->out_states=from_to_transition_idx.size(); /* number of incoming states */
+      this_state->out_id=(int*)calloc(this_state->out_states,sizeof(int)); /* id of incoming states */
+      this_state->out_a=(double*)calloc(this_state->out_states,sizeof(double)); /* prob of incoming states */
+      array_pos=0;
+      tranisiton_pos=from_to_transition_idx.begin();
+      while (tranisiton_pos!=from_to_transition_idx.end())
+	{
+	  ghmm_edge* my_edge=dynamic_cast<ghmm_edge*>(((vector<gxl_edge*>)*my_graph)[*tranisiton_pos]);
+	  if (my_edge!=NULL)
+	    {
+	      /* look for to state index */
+	      this_state->out_id[array_pos]=my_graph->get_node_idx(my_edge->to);
+	      /* look for weight */
+	      if (!my_edge->empty())
+		{
+		  this_state->out_a[array_pos]=my_edge->front();
+		}
+	      else
+		this_state->out_a[array_pos]=0;
+	    }
+	  else
+	    {
+	      cerr<<toString()<<": From State "<<state_counter<<": can't convert to ghmm Edge: Dynamic cast failed!"<<endl;
+	    }
+	  ++tranisiton_pos;
+	  array_pos++;
+	}
+      /* normalize out_states */
+      vector_normalize(this_state->out_a,this_state->out_states);
+
+      /* emission probabilities */
+      this_state->b=(double*)calloc(return_model->M,sizeof(double));
+      if (ghmm_Emissions!=NULL)
+	{
+	  /* find emission information */
+	  Emissions::const_iterator emissions_pos=ghmm_Emissions->begin();
+	  while(emissions_pos!=ghmm_Emissions->end() && (*emissions_pos)->state!=node_id)
+	    ++emissions_pos;
+	  if (emissions_pos!=ghmm_Emissions->end())
+	    {
+	      const Emission& my_emission=**emissions_pos;
+	      /* found it */
+	      /* set fix state */
+	      int emission_prob_idx=0;
+	      this_state->fix=my_emission.fix;
+	      /* iterate over sequence of probabilities */
+	      for (Emission::const_iterator emission_pos=my_emission.begin();
+		   emission_pos!=my_emission.end() && emission_prob_idx<return_model->M;
+		   ++emission_pos)
+		{
+		  if (emission_pos->content!=NULL)
+		      this_state->b[emission_prob_idx++]=*(emission_pos->content);
+		} /* for emission_pos */
+	      /* normalize emission probs */
+	      vector_normalize(this_state->b,return_model->M);
+	    }
+	} /* ghmm_Emissions!=NULL */
+
+      ++node_pos;
+      state_counter++;
+    }
+
+  /* normalize initial State Distribution */
+  if (initial_state_prob_sum!=0)
+    for (int state_idx=0;state_idx<return_model->N;state_idx++)
+      return_model->s[state_idx].pi/=initial_state_prob_sum;
+
+
+  /* transitions to_from */
+  /* the inverse adjacent list, derived from the adjacent list */
+
+  /* collect information into map*/
+  map<int, map<int, double> > inverse_adjacent;
+  for(int state_idx=0; state_idx<return_model->N; state_idx++)
+    {
+      state& this_state=return_model->s[state_idx];
+      for(int transition=0; transition<this_state.out_states; transition++)
+	inverse_adjacent[this_state.out_id[transition]][state_idx]=this_state.out_a[transition];
+    }
+
+  /* put them into the structures */
+  for(map<int, map<int, double> >::iterator state_pos=inverse_adjacent.begin(); state_pos!=inverse_adjacent.end(); ++state_pos)
+    {
+      state this_state=return_model->s[state_pos->first];
+      /* allocate arrays */
+      this_state.in_states=state_pos->second.size();
+      this_state.in_id=(int*)calloc(this_state.in_states,sizeof(int));
+      this_state.in_a=(double*)calloc(this_state.in_states,sizeof(double));
+      /* write infos from map */
+      int array_count=0;
+      for(map<int, double>::iterator transition_pos=state_pos->second.begin(); transition_pos!=state_pos->second.end(); ++transition_pos)
+	{
+	 this_state.in_id[array_count]=transition_pos->first;
+	 this_state.in_a[array_count]=transition_pos->second;
+	 array_count++;
+	}
+    }
+
+  return return_model;
+}
+
+#endif

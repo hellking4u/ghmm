@@ -56,19 +56,19 @@
 
 <sequences type="int" alphabet="">
  <DiscretePD default_weight="1">
-  <sequence id="10"><label>5</label> 1 2 3 4 </sequence>
-  <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
-  <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
-  <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
+  <sequence id="10" label="5"> 1 2 3 4 </sequence>
+  <sequence id="11" label="6"> 1 2 3 4 </sequence>
+  <sequence id="12" label="7"> 1 2 3 4 </sequence>
+  <sequence id="12" label="3"> 1 2 3 4 </sequence>
  </DiscretePD>
 </sequences>
 
 <sequences type="double">
  <DiscretePD default_weight="1">
-  <sequence id="10"><label>5</label> 1.6 2 3 4 </sequence>
-  <sequence id="11"><label>6</label> 1.5 2.6 3.6 4.7 </sequence>
-  <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
-  <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
+  <sequence id="10" label="4"> 1.6 2 3 4 </sequence>
+  <sequence id="11" label="3"> 1.5 2.6 3.6 4.7 </sequence>
+  <sequence id="12" label="8"> 1 2 3 4 </sequence>
+  <sequence id="12" label="9"> 1 2 3 4 </sequence>
  </DiscretePD>
 </sequences>
 

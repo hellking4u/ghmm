@@ -56,6 +56,14 @@ public:
    */
   sequences_document();
 
+  /** initialise with double C-sequences 
+   */
+  sequences_document(sequence_d_t** seq, int seqfield_number);
+
+   /** initialise with int C-sequences 
+   */
+  sequences_document(sequence_t** seq, int seqfield_number);
+
   /**
      delete content of array
    */
@@ -68,7 +76,7 @@ public:
 
 
   /**
-     this is the real read procedure
+     this is the real write procedure
    */
   size_t write_sequences(const string& filename);
 
