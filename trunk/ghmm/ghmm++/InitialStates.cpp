@@ -59,7 +59,6 @@ XMLIO_Object* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes 
       if (state_pd!=NULL)
 	{
 	  cerr<<"Only one DiscretePD section allowed"<<endl;
-	  return new XMLIO_IgnoreObject();
 	}
       else
 	{
@@ -69,6 +68,7 @@ XMLIO_Object* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes 
 	  return state_pd;
 	}
     }
+  return NULL;
 }
 
 

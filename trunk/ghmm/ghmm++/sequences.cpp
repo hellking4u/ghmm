@@ -70,8 +70,8 @@ XMLIO_Object* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attribute
   else
     {
       cout<<tag<<" not supported in sequence"<<endl;
-      return new XMLIO_SkipObject(this);
     }
+  return NULL;
 }
 
 double* double_sequence::create_double_array() const
@@ -135,7 +135,7 @@ int_sequence::int_sequence(int* seq_data, size_t length)
 int_sequence::int_sequence(double* seq_data, size_t length)
 {
   for(size_t count=0; count<length; count++)
-    push_back(floor(seq_data[count]));
+    push_back((int)floor(seq_data[count]));
   label=NULL;
   id="";
 }
@@ -174,6 +174,7 @@ XMLIO_Object* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &
       cout<<tag<<" not supported in sequence"<<endl;
       return new XMLIO_SkipObject(this);
     }
+  return NULL;
 }
 
 int* int_sequence::create_int_array() const
@@ -259,7 +260,7 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_t* seq)
   if (seq==NULL) return;
   type="int";
   default_weight=1.0;
-  for (size_t sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
+  for (int sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
     {
       /* vector of doubles */
       double_sequence_vector.push_back(new double_sequence(seq->seq[sequence_pos],seq->seq_len[sequence_pos]));
@@ -275,7 +276,7 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq)
   if (seq==NULL) return;
   type="double";
   default_weight=1.0;
-  for (size_t sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
+  for (int sequence_pos=0;sequence_pos<seq->seq_number;sequence_pos++)
     {
       /* vector of doubles */
       double_sequence_vector.push_back(new double_sequence(seq->seq[sequence_pos],seq->seq_len[sequence_pos]));
@@ -516,8 +517,8 @@ XMLIO_Object* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &att
   else
     {
       cout<<tag<<" not allowed in sequences"<<endl;
-      return new XMLIO_SkipObject(this);
     }
+  return NULL;
 }
 
 void sequences::XMLIO_endTag(const string& tag)
