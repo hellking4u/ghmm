@@ -17,7 +17,6 @@ using namespace std;
 /***********************************************************************************/
 /* templates are better! */
 
-
 double_sequence::double_sequence(XMLIO_Attributes &attributes)
 {
   XMLIO_Attributes::iterator id_key=attributes.find("id");
@@ -95,7 +94,7 @@ XMLIO_Object* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &
 int* int_sequence::create_array()
 {
   int* array=(int*)malloc(sizeof(int)*size());
-  XMLIO_IntArrayObject::iterator iter=begin();
+  XMLIO_ArrayObject<int>::iterator iter=begin();
   int i=0;
   while (iter!=end())
     {

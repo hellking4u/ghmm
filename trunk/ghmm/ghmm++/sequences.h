@@ -13,7 +13,7 @@
 
 sequence_t* return_sequences(const char* file);
 
-class double_sequence: public XMLIO_DoubleArrayObject
+class double_sequence: public XMLIO_ArrayObject<double>
 {
 public:
   double_sequence(XMLIO_Attributes &attributes);
@@ -24,7 +24,7 @@ private:
   string id;
 };
 
-class int_sequence: public XMLIO_IntArrayObject
+class int_sequence: public XMLIO_ArrayObject<int>
 {
 public:
   int_sequence(XMLIO_Attributes &attributes);

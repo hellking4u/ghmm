@@ -5,16 +5,20 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Object.h>
+#include <xmlio/XMLIO_SkipObject.h>
 
-size_t evaluate_token(const string& characters , const size_t position, const size_t length,int* &return_int);
-size_t evaluate_token(const string& characters , const size_t position, const size_t length, double* &return_double);
+size_t XMLIO_evaluate_token(const string& characters , const size_t position, const size_t length,int* &return_int);
+size_t XMLIO_evaluate_token(const string& characters , const size_t position, const size_t length, double* &return_double);
+size_t XMLIO_evaluate_token(const string& characters , const size_t position, const size_t length, string* &return_string);
+size_t XMLIO_evaluate_token(const string& characters , const size_t position, const size_t length, char* &return_char);
 
 template<class T>
-class XMLIO_Array: public XMLIO_Object, public vector<T> {
+class XMLIO_ArrayObject: public XMLIO_Object, public vector<T> {
  public:
   void print() const{
-    XMLIO_Array<T>::const_iterator pos=begin();
+    XMLIO_ArrayObject<T>::const_iterator pos=begin();
     while (pos!=end()) {cout<<*pos<<endl;pos++;}
   }
 
@@ -23,16 +27,27 @@ class XMLIO_Array: public XMLIO_Object, public vector<T> {
       {
 	/* delete leading spaces */
 	if (isspace(characters[position])) continue;
-	int length=0;
-	while (position+length<characters.size() && !isspace(characters[length])) length++;
+	/* look forward to end of token */
+	int new_position=position+1;
+	while (new_position<characters.size() && !isspace(characters[new_position]))
+	  new_position++;
+	/* evaluate token */
 	T* new_element;
-	(void)evaluate_token(characters, position, length, new_element);
+	(void)XMLIO_evaluate_token(characters, position, new_position-position, new_element);
 	if (new_element!=NULL)
-	  push_back(*new_element);
+	  {
+	    /* copy it to vector */
+	    push_back(*new_element);
+	    SAFE_DELETE(new_element);
+	  }
 	else
-	  cerr<<"can not evaluate "<<characters.substr(position,length)<<endl;
-	SAFE_DELETE(new_element);
-	position+=length;
+	  {
+	    cerr<<"can not evaluate "<<characters.substr(position, new_position-position)
+		<<" between "<<position<<" and "<<new_position<<endl;
+
+	  }
+	/* jump behind it and the next white space (or beyond end) */
+	position=new_position;
       }
   }
 };
@@ -43,17 +58,35 @@ class XMLIO_StringObject: public XMLIO_Object, public string
   void XMLIO_getCharacters(const string& characters);
 };
 
-
-class XMLIO_IntArrayObject: public XMLIO_Object, public vector<int>
+template<class E>
+class XMLIO_ElementArray: public vector<E>, public XMLIO_Object
 {
- public:
-  void XMLIO_getCharacters(const string& characters);
+  /* to do */
 };
 
-class XMLIO_DoubleArrayObject: public XMLIO_Object, public vector<double>
+template<class C, class E>
+class XMLIO_ContentElementPair
 {
  public:
-  void XMLIO_getCharacters(const string& characters);
+  C content;
+  E element;
 };
+
+template<class C, class E>
+class XMLIO_ContentElementPairObject: public vector<XMLIO_ContentElementPair<C,E> >, public XMLIO_Object
+{
+ public:
+  void XMLIO_getCharacters(const string& characters)
+    {
+      return;
+    }
+  XMLIO_Object* XMLIO_startElement()
+    {
+      return new XMLIO_SkipObject(this); 
+    }
+  void XMLIO_endElement()
+    {}
+};
+
 
 #endif /* _XMLIO_ARRAYOBJECT_H */
