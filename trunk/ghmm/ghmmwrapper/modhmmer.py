@@ -7,11 +7,12 @@ def gotoLine(f,res):
     rematch = None
     r = " "
     while (rematch is None) and (r != ""):
+       
         r = f.readline()
         rematch = res.search(r)
     if ( rematch == None ):
-        print "Fehler in gotoLine"
-        # sys.exit(1)
+        # print "Fehler in gotoLine"
+        pass
     else:
         return rematch
 
@@ -139,32 +140,40 @@ class hmmer:
             #     sys.exit(1)
         
         try:
-            #print "00000"
             r = f.readline()
-			#get number of match states
-            self.acc  = gotoLine(f,re.compile("^ACC\s+(\w+)" ) ).group(1)
+            
+            self.acc = gotoLine(f,re.compile("^NAME\s+([\w+\s*]+)" ) ).group(1)  # NAME as unique model identifier
+            # self.acc  = gotoLine(f,re.compile("^ACC\s+(\w+)" ) ).group(1)      # ACC as unique model identifier
+            
+            if self.acc[-1] == '\n':  # remove newline at end of string
+                self.acc = self.acc[:-1]
+                    	
+            #get number of match states
             n = int(gotoLine(f,re.compile("^LENG\s*(\d+)")).group(1))
             self.n = n
             #get type of profile hmm: amino/nucleotide
             m = self.dicType[gotoLine(f,re.compile("^ALPH\s*(\S+)")).group(1)];
             self.m = m
+
             #build matrix for transition: N B E J C T M1 I1 D1 M2 I2 D2 ... Mn In Dn
             self.matrans = build_matrix(3*n+6,3*n+6)
             
 			#emission matrix: match state, insert state, null_model
             self.maems = [build_matrix(n,m),build_matrix(n,m),build_matrix(1,m)]
-            #print "11111"  			
+
 			#get line "XT" transitions
             trans = string.split(gotoLine(f,re.compile("^XT([\s\d\S]*)")).group(1))
             self.set_matrix("XT",trans)
+
             #null model
             trans = string.split(gotoLine(f,re.compile("^NULT([\s\d\S]*)")).group(1))
             self.manull = [self.H2P(trans[0],1.0),self.H2P(trans[1],1.0)] #[G->G,G->F]
             trans = string.split(gotoLine(f,re.compile("^NULE([\s\d\S]*)")).group(1))
-            #print "22222"
             for k in range(len(trans)):
                 self.maems[2][0][k] = self.H2P(trans[k],1/float(m))
-            #main section
+            
+ 
+            # ***  Main section ***
             gotoLine(f,re.compile("^HMM"))
             f.readline()
             #print "33333"
