@@ -73,6 +73,19 @@
 #  include <math.h>
 #endif
 
+#ifdef _MSC_VER 
+// needed to cope with bug in MS library: 
+// it fails to define min/max 
+
+template <class T> inline T max(const T& a, const T& b) { 
+  return (a > b) ? a : b;
+} 
+
+template <class T> inline T min(const T& a, const T& b) { 
+  return (a < b) ? a : b;
+} 
+
+#endif 
 
 #if defined(HAVE_NAMESPACES) && defined(__SUNPRO_CC)
 /* for SC5.0 in /usr/include/floatingpoint.h (SunOs 2.7) */
