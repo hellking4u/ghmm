@@ -1,0 +1,119 @@
+<? xml version="1.0" encoding="iso-8859-1" ?>
+
+<!--
+ here are three examples for ghmm xml files:
+ - discrete type: hmm with discrete output values/symbols
+ - continuous type: hmm with continuous output values according to a probability density function
+ - switched type: continuous hmm with different transition matrices, switched by a special function
+-->
+
+<!-- discrete (simple) hmm -->
+<hmm type="discrete" nodes="3" emissions="3" >
+ <!-- type mandatory, but nodes and emmissions-attribute optional -->
+ <Graph id="hmm graph">
+  <!-- as in gxl.dtd -->
+  <Node id="A"/>
+  <Node id="B"/>
+  <Node id="C"/>
+  <Edge id="a1" from="A" to="C" weight="1"/>
+  <Edge id="c1" from="C" to="A" weight="1"/>
+  <Edge id="a2" from="A" to="B" weight="1"/>
+  <Edge id="c2" from="C" to="B" weight="1"/>
+ </Graph>
+ <!-- all hmm extensions are appended -->
+ <Alphabet low="1" up="3">
+  <!-- Alphabet is a coding map: number to event, observation -->
+  <Symbol code="1">Auszahlung</Symbol>
+  <Symbol code="2">Einzahlung</Symbol>
+  <Symbol code="3">Tilgung</Symbol>
+ </Alphabet>
+
+ <Initial>
+  <!-- probability of initial state -->
+  <!-- default weight 0 -->
+  <Node id="A" weight="1"/>
+  <Node id="B" weight="0"/>
+  <Node id="C" weight="0"/>
+ </Initial>
+
+ <Emissions>
+   <!-- int/float weights from alphabet lower boundary to upper boundary seperated by whitespace characters -->
+   <Emission Node="A">1 3 0</Emission>
+   <Emission Node="B">0 0 1</Emission>
+   <Emission Node="C">1 1 0</Emission>
+ </Emissions>
+</hmm>
+
+<!-- example for continuous hmm -->
+<hmm type="continuous" nodes="2" emissions="2">
+ <!-- type mandatory, but nodes and emmissions-attribute optional -->
+ <Graph id="hmm graph">
+  <!-- as in gxl.dtd -->
+  <Node id="A"/>
+  <Node id="B"/>
+  <Edge id="a1" from="A" to="B" weight="1"/>
+  <Edge id="b1" from="B" to="A" weight="1"/>
+ </Graph>
+ <!-- all hmm extensions are appended -->
+
+ <Initial>
+  <!-- probability of initial state -->
+  <!-- default weight 0 -->
+  <Node id="A" weight="1"/>
+  <Node id="B" weight="0"/>
+ </Initial>
+
+ <Emissions>
+   <!-- int/float weights from alphabet lower boundary to upper boundary seperated by whitespace characters -->
+   <Emission Node="A">
+    <Gauss weight="1" sigma="1.0" mu="4.0"/>
+    <GaussTailLeft weight="1" sigma="1.0" mu="4.0" cut="0.0"/>
+   </Emission>
+   <Emission Node="B">
+    <Box weight="1" start="0" end="1"/>
+    <Box weight="1" start="2" end="3"/>
+   </Emission>
+ </Emissions>
+</hmm>
+
+<!-- example for switched hmm -->
+<hmm type="switched" nodes="2" emissions="2" classes="2">
+ <!-- type mandatory, but nodes, emmissions and classes-attribute optional -->
+
+ <!-- several classes listed -->
+ <Graph id="class1">
+  <!-- as in gxl.dtd -->
+  <Node id="A"/>
+  <Node id="B"/>
+  <Edge id="a1" from="A" to="B" weight="1"/>
+  <Edge id="b1" from="B" to="A" weight="1"/>
+ </Graph>
+ <Graph id="class2">
+  <!-- as in gxl.dtd -->
+  <Node id="A"/>
+  <Node id="B"/>
+  <Edge id="a1" from="A" to="B" weight="0"/>
+  <Edge id="b1" from="B" to="A" weight="1"/>
+ </Graph>
+
+ <!-- all hmm extensions are appended -->
+ <Initial>
+  <!-- probability of initial state -->
+  <!-- default weight 0 -->
+  <Node id="A" weight="1"/>
+  <Node id="B" weight="0"/>
+ </Initial>
+
+ <Emissions>
+   <!-- int/float weights from alphabet lower boundary to upper boundary seperated by whitespace characters -->
+   <Emission Node="A">
+    <Gauss weight="1" sigma="1.0" mu="4.0"/>
+    <GaussTailLeft weight="1" sigma="1.0" mu="4.0" cut="0.0"/>
+   </Emission>
+   <Emission Node="B">
+    <Box weight="1" start="0" end="1"/>
+    <Box weight="1" start="2" end="3"/>
+   </Emission>
+ </Emissions>
+</hmm>
+
