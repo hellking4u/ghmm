@@ -908,15 +908,50 @@ class GaussianMixtureHMMTests(unittest.TestCase):
 
 class XMLIOTests(unittest.TestCase):
 
-    def setUp(self):
-        self.model = None
+    def setUp(self):        
+        self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
+        self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
+        self.pi = [1.0,0,0]
+        self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi)
+
+        # model with labels
+        random.seed(0)
+        slength = 45
+        self.labels = ['One']*slength
+        self.allLabels = ['a','b','c','d','e','f','g']
+        self.l_domain= ghmm.LabelDomain(['One','a','b','c','d','e','f','g'])
+        
+
+        self.A = [[0.0,0.5,0.5],[0.4,0.2,0.4],[0.3,0.3,0.4]]
+        self.B = [[0.2,0.1,0.1,0.6],[0.3,0.1,0.1,0.5],
+                  [0.25,0.25,0.25,0.25,   0.0, 0.0, 1.0, 0.0,   0.25,0.25,0.25,0.25,  0.25,0.25,0.25,0.25]]
+        self.pi = [1.0,0,0.0]
+
+        self.l_domain2 = ghmm.LabelDomain(['fst','scd','thr'])
+        self.label_model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
+        
+        sequence = []
+        for i in range(slength):
+            sequence.append(random.choice(ghmm.DNA.listOfCharacters))
+        self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelDomain=self.l_domain,labelInput=self.labels)
 
     def testReadHMMed(self):
-        self.model = ghmm.HMMOpenXML('multexon-4.xml')
-        del self.model
-        self.model = ghmm.HMMOpenXML('test2.xml')
-        del self.model
-        
+        model = ghmm.HMMOpenXML('multexon-4.xml')
+        del model
+        model = ghmm.HMMOpenXML('test2.xml')
+        del model
+
+    def testWriteReadXML(self):
+        """
+        Test writing from matrices to XML.
+        Ignored attributes: tiedto and background.
+        """
+        self.model.toXML('./discrete.xml')
+        model2 = ghmm.HMMOpenXML('./discrete.xml')
+
+        self.label_model.toXML('./model_label.xml')
+        model3 = ghmm.HMMOpenXML('./model_label.xml')
+
 if __name__ == '__main__':
     unittest.main()
 

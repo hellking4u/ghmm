@@ -136,6 +136,7 @@ The objects one has to deal with in HMM modelling are the following
 
 """
 
+from Graph import Graph, EdgeWeight
 import xmlutil
 import ghmmwrapper
 import ghmmhelper
@@ -1529,8 +1530,19 @@ class BackgroundDistribution:
                      
         return outstr
         
-
-
+    def tolist(self):
+        dim = self.cbackground.m
+        distNum = self.cbackground.n
+        orders = ghmmhelper.arrayint2list(self.cbackground.order, distNum)
+        B = []
+        for i in xrange(distNum):
+             order = orders[i]
+             size = int(pow(m,(order+1)))
+             b = [0.0]*size
+             for j in xrange(size):
+                  b[j] = ghmmwrapper.get_2d_arrayd(self.cbackground.b,i,j)
+             B.append(b)
+        return (distNum,orders,B)
 
 #-------------------------------------------------------------------------------
 #- HMM and derived  
@@ -2299,6 +2311,64 @@ class DiscreteEmissionHMM(HMM):
         return [A,B,pi]
 
 
+    def toXML(self, filename, backgroundobj = None):
+        [A,B,pi] = self.toMatrices()
+        nalpha = self.cmodel.M
+        nstates = self.cmodel.N
+
+        hmm_dom = xmlutil.HMM()
+
+        hmm_dom.hmmClass.addCode(0, "C1", xmlutil.ValidatingString("Switching class"))
+
+        alphabet = self.emissionDomain
+        for c in alphabet.listOfCharacters:
+            hmm_dom.hmmAlphabet.addCode(alphabet.index[c], c)
+
+        if backgroundobj != None:
+             (n,orders,b) = backgroundobj.tolist()
+             background_id = self.getBackgroundAssignments()
+             for i in xrange(n):
+                  hmm_dom.backgroundDistributions.addDistribution(str(i), orders[i], b[i])
+
+        try:
+            tiedlist = self.getTieGroups()
+        except:
+            print "Ignore tied groups\n"
+            print "\"self.cmodel.tiedto\" not defined"
+            
+        for i in xrange(self.cmodel.N):
+            cstate = self.getStatePtr(self.cmodel.s,i)
+            if nalpha > 1:
+                order = int(log(len(B[i]), nalpha)) - 1
+            else:
+                order = len(B[i]) - 1
+
+            have_background = False # XXX
+            tiedto = None           # XXX
+           
+            state_dom = xmlutil.HMMState(-1,hmm_dom)
+            state_dom.fromDiscreteState( i, pi[i], B[i], cstate.label, order, tiedto, have_background)
+            hmm_dom.state[state_dom.index] = state_dom
+            hmm_dom.id2index[i] = state_dom.index
+            
+        nr_classes = 1
+        hmm_dom.G.edgeWeights[0] = EdgeWeight(hmm_dom.G)
+
+        #
+        # Add transition probabilities
+        #
+        for i in xrange(self.cmodel.N):
+            v = hmm_dom.id2index[i]
+            for j in  xrange(self.cmodel.N):
+                if A[i][j] > 0.0:
+                    w = hmm_dom.id2index[j]
+                    hmm_dom.G.edgeWeights[0][(v,w)] = A[i][j]
+
+        hmm_dom.WriteXML(filename)
+        del hmm_dom
+
+######################################################
+        
 class StateLabelHMM(DiscreteEmissionHMM):
     """ Labelled HMMs with discrete emissions. 
         Same feature list as in DiscreteEmission models.    
