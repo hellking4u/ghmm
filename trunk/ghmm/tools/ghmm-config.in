@@ -53,10 +53,10 @@ while test $# -gt 0; do
       echo @VERSION@
       ;;
     --cflags)
-      echo @CFLAGS@
+      echo @CFLAGS@ -I${prefix}/include
       ;;
     --libs)
-      echo @LIBS@
+      echo @LIBS@ -L${prefix}/lib -lghmm
       ;;
     --copyright)
       copyright
