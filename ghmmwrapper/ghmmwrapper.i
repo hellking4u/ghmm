@@ -25,7 +25,7 @@
 #include <ghmm/mes.h>
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
-#include "sdclass_change.h"
+#include "sclass_change.h"
 %}
 
 %include carrays.i
@@ -1052,10 +1052,6 @@ int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
 extern int sdfoba_forward(sdmodel *mo, const int *O, int len, double **alpha, 
 		 double *scale, double *log_p); 
 
-// default class change function (dummy)
-extern int cp_class_change(int *seq, int len);
-
-extern void setSwitchingFunction( sdmodel *smd );		  
 
 %inline%{
   
@@ -1074,6 +1070,13 @@ extern void setSwitchingFunction( sdmodel *smd );
 
 /*=============================================================================================
   =============================== smodel.c  ============================================== */
+
+typedef enum {
+  normal, 
+  normal_pos, 
+  normal_approx,
+  density_number
+} density_t;
 
 /** @name sstate
     Structure for one state.
@@ -1112,6 +1115,21 @@ struct sstate {
 };
 typedef struct sstate sstate;
 
+
+struct class_change_context{
+
+    /* Names of class change module/function (for python callback) */
+    char* python_module;
+    char* python_function;
+       
+    /* index of current sequence */ 
+    int k;
+
+    /** pointer to class function */
+    int (*get_class)(void*,double*,int,int);
+};
+typedef struct class_change_context class_change_context;
+
 /** @name smodel
     continous HMM    
 */
@@ -1132,9 +1150,16 @@ struct smodel{
   double prior;
   /** All states of the model. Transition probs are part of the states. */
   sstate *s; 
-};
+ 
+  /* pointer to a class_change_context struct necessary for multiple transition
+   classes */
+  class_change_context *class_change;  
+  
+ };
 typedef struct smodel smodel;
 
+
+extern int smodel_class_change_alloc(smodel *smo);
 
 /** Free memory smodel 
     @return 0: success, -1: error
@@ -1275,9 +1300,23 @@ extern int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, 
 extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
 
 
+extern int cp_class_change(smodel *smo, int *seq, int k, int t);
+extern void setSwitchingFunction( smodel *smd );		  
+
+extern int python_class_change(smodel *smo, int *seq, int k, int t);
+extern void setPythonSwitching( smodel *smd, char* python_module, char* python_function);
 
 %inline %{
-
+  
+  void set_trunc_density(smodel* smo){
+     smo->density = (density_t) 1 ; 
+  }    
+    
+  int blatestbla(smodel* smo,double *seq ,int k, int t){
+      return smo->class_change->get_class(smo,seq,k,t);
+  }     
+    
+    
   /* allocation of an empty smodel struct */
   smodel *new_smodel() {
      return (struct smodel *)(struct smodel *) calloc(1, sizeof(struct smodel));    
@@ -1306,7 +1345,10 @@ extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
     return &(smo->s[k]);
   }
 
-
+  
+  
+  
+  
   /* creation and assessor functions for an array of smodels */
   smodel **smodel_array(int size){
   	return (smodel**) malloc(size * sizeof(smodel*));
