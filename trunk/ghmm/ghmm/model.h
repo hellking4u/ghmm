@@ -54,9 +54,46 @@ struct model {
   int M;   
   /** Vector of the states */
   state *s; 
-  /** Prior for the a priori probability for the model.
-      A value of -1 indicates that no prior is defined. */
+  /** The a priori probability for the model.
+      A value of -1 indicates that no prior is defined. 
+      Note: this is not to be confused with priors on emission
+      distributions*/
   double prior;
+
+  /** Contains bit flags for varios model extensions such as
+      kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
+  */
+  int model_type;
+
+  /** Flag variables for each state indicating whether it is emitting
+      or not. 
+      Note: silent != NULL iff (model_type & kSilentStates) == 1  */
+  int* silent; /*AS*/
+
+  /** Flag variables for each state indicating whether the states emissions
+      are tied to another state. Groups of tied states are represented
+      by their tie group leader (the lowest numbered member of the group).
+      
+      tied_to[s] == kUntied  : s is not a tied state
+      
+      tied_to[s] == s        : s is a tie group leader
+
+      tied_to[t] == s        : t is tied to state s
+
+      Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
+  int* tied_to; 
+  
+  /** Flag variables for each state giving the order of the emissions
+      Classic HMMS have emission order 0, that is the emission probability
+      is conditioned only on the state emitting the symbol.
+
+      For higher order emissions, the emission are conditioned on the state s
+      as well as the previous emission_order[s] observed symbols.
+
+      Note: emission_order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
+  int* emission_order; 
+
+  /* XXX label HMM */
 };
 typedef struct model model;
 
@@ -81,6 +118,10 @@ struct model_direct {
   /** A vector to know the states where the output should not be trained.
       Default value is 0 for all states. */
   int *fix_state;
+
+  /* XXX additional struct members not addedd here; model_direct is 
+     depreciated anyways. Not used by C++ interface */
+
 };
 typedef struct model_direct model_direct;
 

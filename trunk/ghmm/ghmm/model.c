@@ -45,7 +45,7 @@ STOP:
 
 static int model_copy_vectors(model *mo, int index, double **a_matrix, 
 			      double **b_matrix, double *pi, int *fix) {
-#define CUR_PROC "model_alloc_vectors"
+#define CUR_PROC "model_copy_vectors"
   int i, cnt_out = 0, cnt_in = 0;
   mo->s[index].pi = pi[index];
   mo->s[index].fix = fix[index];
@@ -67,7 +67,7 @@ static int model_copy_vectors(model *mo, int index, double **a_matrix,
   }
   return(0);
 #undef CUR_PROC
-} /* model_alloc_vectors */
+} /* model_copy_vectors */
 
 
 /*============================================================================*/
@@ -305,7 +305,7 @@ model **model_from_sequence(sequence_t *sq, long *mo_number){
   model **mo = NULL;
   if (!m_calloc(mo, sq->seq_number)) { mes_proc(); goto STOP; }
   max_symb = sequence_max_symbol(sq);
-  for (i = 0; i < sq->seq_number; i++)
+  for (i = 0; i < sq->seq_number; i++) 
     mo[i] = model_generate_from_sequence(sq->seq[i], sq->seq_len[i],
 					 max_symb + 1);
   *mo_number = sq->seq_number;
