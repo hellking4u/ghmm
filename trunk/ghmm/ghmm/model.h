@@ -21,7 +21,8 @@ extern "C" {
 
 /** @name background_distributions
     A container for background distributions to be used in the reestimation. Model
-    has an ID (== index) into the arrays.
+    has an ID (== index) to be used for the arrays background_distributions.order
+    and background_distributions.b
 */
 struct background_distributions {
 	int n;		/* Number of distributions */
@@ -111,7 +112,7 @@ struct model {
       Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
   int* tied_to; 
   
-  /** Flag variables for each state giving the order of the emissions
+  /** Note: State store order information of the emissions.
       Classic HMMS have emission order 0, that is the emission probability
       is conditioned only on the state emitting the symbol.
 
@@ -123,7 +124,15 @@ struct model {
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   
-  /** 
+  /** background_distributions is a pointer to a
+      background_distributions structure, which holds (essentially) an
+      array of background distributions (which are just vectors of floating
+      point numbers like state.b).
+
+      For each state the array background_id indicates which of the background
+      distributions to use in parameter estimation. A value of kNoBackgroundDistribution
+      indicates that none should be used.
+
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
   int *background_id;
   background_distributions* bp;
