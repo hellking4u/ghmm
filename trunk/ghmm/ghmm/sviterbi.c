@@ -116,7 +116,21 @@ int *sviterbi(smodel *smo, double *O, int T, double *log_p) {
 
   /* Recursion */
   for (t = 1; t < T; t++) {
-    osc = sequence_d_class(O, t - 1, &osum); /* dummy */
+    //osc = sequence_d_class(O, t - 1, &osum); /* dummy */
+
+    if(smo->cos == 1) {
+      osc = 0;
+    }
+    else {
+      if(!smo->class_change->get_class){
+        printf("ERROR: get_class not initialized\n");
+        goto STOP;
+      }
+      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      osc = smo->class_change->get_class(smo,O,smo->class_change->k,t-1);
+    }    
+    
+    
     for (j = 0; j < smo->N; j++) {
       /* find maximum */
       /* max_phi = phi[i] + log_in_a[j][i] ... */

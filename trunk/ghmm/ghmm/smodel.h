@@ -18,6 +18,7 @@ extern "C" {
 #include <ghmm/const.h>
 #include <ghmm/scanner.h>
 
+
 /**@name SHMM-Modell */
 /*@{ (Doc++-Group: smodel) */
 
@@ -77,6 +78,27 @@ struct sstate {
 };
 typedef struct sstate sstate;
 
+struct smodel;
+
+struct class_change_context{
+
+    /* Names of class change module/function (for python callback) */
+    char* python_module;
+    char* python_function;
+    
+    /* index of current sequence */ 
+    int k;
+
+    /** pointer to class function */
+    int (*get_class)(struct smodel*,double*,int,int);
+    
+    
+    /* space for any data necessary for class switch, USER is RESPONSIBLE */
+    void* user_data;
+    
+};
+typedef struct class_change_context class_change_context;
+
 /** @name smodel
     continous HMM    
 */
@@ -97,11 +119,21 @@ struct smodel{
   double prior;
   /** All states of the model. Transition probs are part of the states. */
   sstate *s; 
-};
+ 
+  /* pointer to a class_change_context struct necessary for multiple transition
+   classes */
+  class_change_context *class_change;  
+  
+ };
 typedef struct smodel smodel;
+
+
 
 /* don't include this earlier: in sequence.h smodel has to be known */
 #include <ghmm/sequence.h>
+
+int smodel_class_change_alloc(smodel *smo);
+
 
 /** Free memory smodel 
     @return 0: success, -1: error
@@ -361,6 +393,8 @@ int smodel_count_free_parameter(smodel **smo, int smo_number);
     @param b      return-value: right side
 */
 void smodel_get_interval_B(smodel *smo, int state, double *a, double *b);
+
+
 
 #ifdef __cplusplus
 }
