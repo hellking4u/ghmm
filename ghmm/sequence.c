@@ -88,6 +88,8 @@ sequence_t* sequence_read_alloc(scanner_t *s){
 	  { mes_proc(); goto STOP; }
 	if (m_realloc(sq->seq_id, sq->seq_number + 1))
 	  { mes_proc(); goto STOP; }
+        if (m_realloc(sq->seq_w, sq->seq_number + 1))
+          { mes_proc(); goto STOP; }
 	/* Label and ID */
 	/* default */
 	sq->seq_label[sq->seq_number] = -1;
