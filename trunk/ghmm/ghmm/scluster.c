@@ -588,7 +588,7 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
       if (cl->seq_counter[i] <= 1) {
 	change = 1;
 	/* Choose a random sequence for an empty model */
-	j = m_int(gsl_rng_uniform(RNG) * (sqd->seq_number - 1));
+	j = m_int(GHMM_RNG_UNIFORM(RNG) * (sqd->seq_number - 1));
 	/* If it's not possible to produce a sequence for an empty model: Quit */
 	if (sfoba_logp(cl->smo[i], sqd->seq[j], sqd->seq_len[j],
 		       &log_p_plus) == -1) 
@@ -709,7 +709,7 @@ int scluster_random_labels(sequence_d_t *sqd, int smo_number) {
 #define CUR_PROC "scluster_random_labels"
   int j, label;
   for (j = 0; j < sqd->seq_number; j++) {
-    label = m_int(gsl_rng_uniform(RNG) * (smo_number - 1));
+    label = m_int(GHMM_RNG_UNIFORM(RNG) * (smo_number - 1));
     sqd->seq_label[j] = label;
   }
   return(0);

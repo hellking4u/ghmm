@@ -9,6 +9,14 @@ __copyright__
 *******************************************************************************/
 
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <float.h>
 #include <math.h>
 #include "model.h"
@@ -691,7 +699,7 @@ inline int get_random_output(model *mo, int i, int position) {
   double p, sum;
 
   
-  p = gsl_rng_uniform(RNG);
+  p = GHMM_RNG_UNIFORM(RNG);
   sum = 0.0;
 
   for (m = 0; m < mo->M; m++) {
@@ -745,7 +753,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
     len = (int)MAX_SEQ_LEN;
   
   if (seed > 0) {
-	gsl_rng_set(RNG,seed);
+	GHMM_RNG_SET(RNG,seed);
   }
    
   while (n < seq_number) {
@@ -758,7 +766,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
     }
    
 	/* Get a random initial state i */
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
 	sum = 0.0;
     for (i = 0; i < mo->N; i++) {
       sum += mo->s[i].pi;
@@ -801,7 +809,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
     }
     while (state < len) {		
 	  /* Get a random state i */
-     p = gsl_rng_uniform(RNG);
+     p = GHMM_RNG_UNIFORM(RNG);
 	  sum = 0.0;   
      for (j = 0; j < mo->s[i].out_states; j++) {
 	    sum += mo->s[i].out_a[j];   
@@ -836,8 +844,8 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 	  }  
 	  else {
 		/* Get a random output m from state i */
-	m = get_random_output(mo, i, state);
-	update_emission_history(mo, m);
+        m = get_random_output(mo, i, state);
+        update_emission_history(mo, m);
         sq->seq[n][state] = m;
         state++;
       }	
@@ -1244,7 +1252,7 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
  
   for (k = 0; k < 2; k++) { /* Two passes for the symmetric case */
     
-    /* seed = 0 -> no reseeding. Call  gsl_rng_timeseed(RNG) externally */
+    /* seed = 0 -> no reseeding. Call  ghmm_rng_timeseed(RNG) externally */
     seq0 = model_generate_sequences(mo1, 0, maxT+1, 1,maxT+1);
     
 	
@@ -1503,7 +1511,7 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
     len = (int)MAX_SEQ_LEN;
   
   if (seed > 0) {
-	gsl_rng_set(RNG,seed);
+	GHMM_RNG_SET(RNG,seed);
   }
   
   
@@ -1527,10 +1535,10 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
       label_index = 0;
       state = 0;
     }
-    
-    /* Get a random initial state i */
-    p = gsl_rng_uniform(RNG);
-    sum = 0.0;
+   
+	/* Get a random initial state i */
+    p = GHMM_RNG_UNIFORM(RNG);
+	sum = 0.0;
     for (i = 0; i < mo->N; i++) {
       sum += mo->s[i].pi;
       if (sum >= p)
@@ -1602,7 +1610,7 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
 	    }
 	    do {
 	      /* Get a random state i */
-	      p = gsl_rng_uniform(RNG);
+	      p = GHMM_RNG_UNIFORM(RNG);
 	      sum = 0.0;   
 	      for (j = 0; j < mo->s[i].out_states; j++) {
 		    j_id=mo->s[i].out_id[j];
@@ -1614,7 +1622,7 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
 	  }
 	  else {
 	    /* Get a random state i */
-	    p = gsl_rng_uniform(RNG);
+	    p = GHMM_RNG_UNIFORM(RNG);
 	    sum = 0.0;   
 	    for (j = 0; j < mo->s[i].out_states; j++) {
 	      sum += mo->s[i].out_a[j];   
@@ -1798,13 +1806,13 @@ int model_add_noise(model* mo, double level, int seed) {
   for (i=0; i < mo->N; i++) {
     for (j=0; j < mo->s[i].out_states; j++)
       /* add noise only to out_a, in_a is updated on normalisation */
-      mo->s[i].out_a[j] *= (1-level) + (gsl_rng_uniform(RNG)*2*level);
+      mo->s[i].out_a[j] *= (1-level) + (GHMM_RNG_UNIFORM(RNG)*2*level);
 
     if (mo->model_type & kHigherOrderEmissions)
       size = pow(mo->M, mo->s[i].order);
     for (hist=0; hist<size; hist++)
       for (h=hist*mo->M; h<hist*mo->M+mo->M; h++)
-	mo->s[i].b[h] *= (1-level) + (gsl_rng_uniform(RNG)*2*level);
+	mo->s[i].b[h] *= (1-level) + (GHMM_RNG_UNIFORM(RNG)*2*level);
   }
   
   return model_normalize(mo);

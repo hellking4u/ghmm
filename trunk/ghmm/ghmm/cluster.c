@@ -8,6 +8,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include "mprintf.h"
 #include "mes.h"
@@ -202,7 +210,7 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number,
       if (counter[i] == 0) {
 	change = 1;
 	/* Choose a random sequence for an empty model */
-	j = m_int(gsl_rng_uniform(RNG) * (seq_number - 1));
+	j = m_int(GHMM_RNG_UNIFORM(RNG) * (seq_number - 1));
 	/* The orginal model loses one sequence */
 	printf("!!\"avoid_empty_model\":Verschiebe Seq. %ld: %ld --> %d !!\n", 
 	       j, seq_label[j], i);

@@ -8,6 +8,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <math.h>
 #include <float.h>
 #include "matrix.h"
@@ -282,7 +290,7 @@ void matrix_d_random_values(double **matrix, int rows, int cols,
   interval = max - min;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
-      matrix[i][j] = min + gsl_rng_uniform(RNG)*interval;
+      matrix[i][j] = min + GHMM_RNG_UNIFORM(RNG)*interval;
 } /* matrix_d_random_values */
 
 /*============================================================================*/
@@ -302,7 +310,7 @@ void matrix_d_random_const_values(double **matrix, int rows, int cols,
   interval = max - min;
   for (i = 0; i < rows - 1; i++)
     for (j = 0; j < cols; j++)
-      matrix[i][j] = min + gsl_rng_uniform(RNG)*interval;
+      matrix[i][j] = min + GHMM_RNG_UNIFORM(RNG)*interval;
   for (j = 0; j < cols; j++)
     matrix[rows - 1][j] = c;
 } /* matrix_d_random_const_values */
@@ -322,7 +330,7 @@ void matrix_d_random_left_right(double **matrix, int rows, int cols) {
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       if (j == i || j == i+1) 
-	matrix[i][j] = gsl_rng_uniform(RNG);
+	matrix[i][j] = GHMM_RNG_UNIFORM(RNG);
       else
 	matrix[i][j] = 0.0;
 } /* matrix_d_random_values */
@@ -350,7 +358,7 @@ int matrix_d_gaussrows_values(double **matrix, int rows, int cols,
     /* for each row, a random mean value mean[i] in (0, cols-1) */
     if (!m_calloc(mean, rows)) {mes_proc(); goto STOP;}
     for (i = 0; i < rows; i++)
-      mean[i] = gsl_rng_uniform(RNG) * (cols-1);
+      mean[i] = GHMM_RNG_UNIFORM(RNG) * (cols-1);
     /* for (i = 0; i < rows; i++) printf("%6.4f ", mean[i]); printf("\n"); */
     *mue = mean;
   }
@@ -390,7 +398,7 @@ void matrix_d_random_preserve_struct(double **matrix, int rows, int cols) {
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++) {
       if (matrix[i][j] != 0)
-	matrix[i][j] = gsl_rng_uniform(RNG);
+	matrix[i][j] = GHMM_RNG_UNIFORM(RNG);
     }
 } /* matrix_d_random_preserve_struct */
 

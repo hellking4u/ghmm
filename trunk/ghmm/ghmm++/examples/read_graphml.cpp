@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
   GHMM_Alphabet*  alphas = NULL;
 
   /* Important! initialise rng  */
-  std::GHMM_Toolkit::gsl_rng_init();
+  std::GHMM_Toolkit::ghmm_rng_init();
 
   if (argc < 2)
     {

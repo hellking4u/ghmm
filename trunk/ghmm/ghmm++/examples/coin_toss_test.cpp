@@ -135,7 +135,7 @@ int two_states_coin_toss() {
 
 int main() {
   /* Important! initialise rng  */
-  GHMM_Toolkit::gsl_rng_init();
+  GHMM_Toolkit::ghmm_rng_init();
 
   int result = (single_state_coin_toss() || two_states_coin_toss());
 

@@ -66,7 +66,6 @@
 #else
 #  include <stdio.h>
 #endif
-/* seems to be handy in connection with gsl_math.h */
 #ifdef HAVE_CMATH
 #  include <cmath>
 #else

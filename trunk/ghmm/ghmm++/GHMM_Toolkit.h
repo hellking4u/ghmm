@@ -27,7 +27,7 @@ class GHMM_Toolkit {
  public:
 
   /** */
-  static void gsl_rng_init();
+  static void ghmm_rng_init();
   /** Converts integer to string. */
   static string toString(int var);
 

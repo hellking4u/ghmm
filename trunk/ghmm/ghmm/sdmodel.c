@@ -7,6 +7,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #undef NDEBUG 
 #include <assert.h>
 #include <float.h>
@@ -263,12 +271,12 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
     len = (int)MAX_SEQ_LEN;
   
   if (seed > 0) {
-    gsl_rng_set(RNG,seed);
+    GHMM_RNG_SET(RNG,seed);
   } else
     {
       tm = rand();
-      gsl_rng_set(RNG, tm);
-      fprintf(stderr, "# using GSL rng '%s' seed=%ld\n", gsl_rng_name(RNG), tm);      
+      GHMM_RNG_SET(RNG, tm);
+      fprintf(stderr, "# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(RNG), tm);      
     }
 
   n = 0;
@@ -277,12 +285,12 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
   while (n < seq_number) 
     {
       /* Test: A new seed for each sequence */
-      /*   gsl_rng_timeseed(RNG); */
+      /*   ghmm_rng_timeseed(RNG); */
       stillbadseq = badseq = 0;
       if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
 
       /* Get a random initial state i */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;
       for (i = 0; i < mo->N; i++) {
 	sum += mo->s[i].pi;
@@ -291,7 +299,7 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
       }
 
       /* Get a random initial output m */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (m = 0; m < mo->M; m++) {
 	sum += mo->s[i].b[m];
@@ -307,7 +315,7 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
       while (state < len) {
       
 	/* Get a new state */
-	p = gsl_rng_uniform(RNG);
+	p = GHMM_RNG_UNIFORM(RNG);
 	sum = 0.0;   
 	for (j = 0; j < mo->s[i].out_states; j++) {
 	  sum += mo->s[i].out_a[class][j];   
@@ -349,7 +357,7 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
 	i = mo->s[i].out_id[j];
 
 	/* Get a random output m from state i */
-	p = gsl_rng_uniform(RNG);
+	p = GHMM_RNG_UNIFORM(RNG);
 	sum = 0.0;   
 	for (m = 0; m < mo->M; m++) {
 	  sum += mo->s[i].b[m];
@@ -446,8 +454,8 @@ STOP:
 
 /*============================================================================*/
 /*
- * Before calling generate sequence, the global GSL random number generator must
- * be initialized by calling gsl_rng_init().
+ * Before calling generate sequence, the global random number generator must
+ * be initialized by calling ghmm_rng_init().
  *
  */
 //returns the extended sequence struct with state matrix
@@ -475,12 +483,12 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, lo
     len = (int)MAX_SEQ_LEN;
   
   if (seed > 0) {
-    gsl_rng_set(RNG,seed);
+    GHMM_RNG_SET(RNG,seed);
   } else
     {
       tm = rand();
-      gsl_rng_set(RNG, tm);
-      fprintf(stderr, "# using GSL rng '%s' seed=%ld\n", gsl_rng_name(RNG), tm);      
+      GHMM_RNG_SET(RNG, tm);
+      fprintf(stderr, "# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(RNG), tm);      
     }
 
   n = 0;
@@ -489,14 +497,14 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, lo
   while (n < seq_number) 
     {
       /* Test: A new seed for each sequence */
-      /*   gsl_rng_timeseed(RNG); */
+      /*   ghmm_rng_timeseed(RNG); */
       stillbadseq = badseq = 0;
       matchcount = 0;
       if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
       if(!m_calloc(sq->states[n], len)) {mes_proc(); goto STOP;}
 
       /* Get a random initial state i */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;
       for (i = 0; i < mo->N; i++) {
 	sum += mo->s[i].pi;
@@ -511,7 +519,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, lo
 	  lastStateSilent = 0;
 	  silent_len      = 0;				 
 	  /* Get a random initial output m */
-	  p = gsl_rng_uniform(RNG);
+	  p = GHMM_RNG_UNIFORM(RNG);
 	  sum = 0.0;   
 	  for (m = 0; m < mo->M; m++) {
 	    sum += mo->s[i].b[m];
@@ -531,7 +539,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, lo
 	}
       } else {
 	/* Get a random initial output m */
-	p = gsl_rng_uniform(RNG);
+	p = GHMM_RNG_UNIFORM(RNG);
 	sum = 0.0;   
 	for (m = 0; m < mo->M; m++) {
 	  sum += mo->s[i].b[m];
@@ -557,7 +565,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, lo
 	  trans_class = mo->get_class(sq->seq[n],state);
 	else
 	  trans_class = 0;
-	p = gsl_rng_uniform(RNG);
+	p = GHMM_RNG_UNIFORM(RNG);
 	sum = 0.0;   
 	for (j = 0; j < mo->s[i].out_states; j++) {
 	  sum += mo->s[i].out_a[trans_class][j];   
@@ -611,7 +619,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, lo
 	  lastStateSilent = 0;
 	  silent_len  = 0;
 	  /* Get a random output m from state i */
-	  p = gsl_rng_uniform(RNG);
+	  p = GHMM_RNG_UNIFORM(RNG);
 	  sum = 0.0;   
 	  for (m = 0; m < mo->M; m++) {
 	    sum += mo->s[i].b[m];

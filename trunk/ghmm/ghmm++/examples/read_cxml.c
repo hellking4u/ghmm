@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     }
 
   /* Important! initialise rng  */
-  gsl_rng_init();
+  ghmm_rng_init();
 
 
   mymodel = graphmldoc_cwrapper(argv[1]);
