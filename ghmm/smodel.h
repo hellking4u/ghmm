@@ -43,7 +43,7 @@ typedef enum {
 /** @name sstate
     Structure for one state.
 */
-struct sstate{
+struct sstate {
   /** initial prob. */ 
   double pi;
   /** IDs of successor states */ 

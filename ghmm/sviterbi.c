@@ -55,7 +55,7 @@ STOP:
 /*----------------------------------------------------------------------------*/
 static int sviterbi_free(local_store_t **v, int n, int T) {
 #define CUR_PROC "sviterbi_free"
-  mes_check_ptr(v, "return(-1)");
+  mes_check_ptr(v, return(-1));
   if( !*v ) return(0);
   matrix_d_free( &((*v)->log_b), n );
   m_free((*v)->phi);

@@ -64,7 +64,7 @@ typedef struct model model;
 /** @name model_direct
     The complete HMM. Keeps the model parameters in a matrix form. 
 */
-struct model_direct{
+struct model_direct {
   /** Number of states */
   int N;
   /** Number of outputs */  
@@ -77,7 +77,7 @@ struct model_direct{
   /** Output matrix */
   double **B;
   /** Initial matrix */
-  double * Pi;
+  double* Pi;
   /** A vector to know the states where the output should not be trained.
       Default value is 0 for all states. */
   int *fix_state;
@@ -87,7 +87,7 @@ typedef struct model_direct model_direct;
 /** @name hmm_check_t
     Checks the consistence of the model
   */
-struct hmm_check_t{
+struct hmm_check_t {
   /** Number of rows in the A matrix */
   int r_a;
   /** Number of columns in the A matrix */
