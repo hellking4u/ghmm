@@ -94,6 +94,7 @@ struct hmm_check_t{
   int c_b;
   /** */
   int len_pi;
+  /** */
   int len_fix;
 };
 typedef struct hmm_check_t hmm_check_t;
@@ -245,6 +246,8 @@ void model_B_print(FILE *file, model *mo, char *tab, char *separator,
 void model_Pi_print(FILE *file, model *mo, char *tab, char *separator, 
 		    char *ending);
 
+/**
+ */
 void model_fix_print(FILE *file, model *mo, char *tab, char *separator, 
 		     char *ending);
 /**
