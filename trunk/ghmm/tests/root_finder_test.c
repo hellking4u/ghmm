@@ -1,3 +1,10 @@
+/*******************************************************************************
+  author       : Achim Gaedke
+  filename     : ghmm/tests/root_finder_test.c
+  created      : DATE: March 2001
+  $Id$
+*******************************************************************************/
+
 #include <stdio.h>
 #include "ghmm/root_finder.h"
 

@@ -1,4 +1,7 @@
-#ghmm/Makefile.am
+#  author       : Achim Gaedke
+#  filename     : ghmm/Makefile.am
+#  created      : DATE: April 2001
+#  $Id$
 
 SUBDIRS = ghmm tools tests doc
 
@@ -20,7 +23,7 @@ COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 dist dist-all: copyright
 
 copyright: distdir
-	cr_files="`(cd $(top_distdir) && find . -name \*.h -o -name \*.c)` tools/ghmm-config.in" ; \
+	cr_files="`(cd $(top_distdir) && find . -name \*.h -o -name \*.c)` tools/ghmm-config.in doc/docu.dxx.in" ; \
 	for f in $$cr_files ;do \
 	  distfile=$(top_distdir)/$$f ; \
 	  srcfile=$(top_srcdir)/$$f ; \
