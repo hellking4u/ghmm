@@ -127,11 +127,11 @@ extern "C" {
 int     model_free(model **mo);
 
 /**
-   Reads in ASCII data to initialize the model. Memory allocation for
-   the model is also done here.
-   @return vector of pointers to the model
+   Reads in ASCII data to initialize an array of models. Memory allocation for
+   the models is done here.
+   @return array of pointers to the models
    @param filename:   the ASCII input file
-   @param mo_number:  number of models to read */
+   @param mo_number:  filled with number of models read */
 model** model_read(char *filename, int *mo_number);
 
 /**
@@ -345,6 +345,28 @@ int model_direct_check_data(model_direct *mo_d, hmm_check_t *check);
 */
 double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
 
+/** 
+    Frees all memory from a state, sets the pointers to NULL and 
+    variables to zero.
+    @author Peter Pipenbacher
+    @param my_state  state to clean (\Ref{struct state})
+*/
+void state_clean(state *my_state); 
+
+/**
+   Copies a given state. Allocates the necessary memory.
+   @author Peter Pipenbacher
+   @return copy of the state
+   @param my_state:  state to copy */
+  //state* state_copy(state *my_state);
+
+/**
+   Copies a given state to a given destination.
+   @author Peter Pipenbacher
+   @param source:  state to copy 
+   @param dest:    destination */
+  //void state_copy_to(state *source, state* dest);
+
 #ifdef __cplusplus
 }
 #endif
@@ -352,13 +374,3 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 #endif
 
 /*@} (Doc++-Group: model) */
-
-
-
-
-
-
-
-
-
-

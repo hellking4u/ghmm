@@ -43,7 +43,7 @@ STOP:
 /*----------------------------------------------------------------------------*/
 
 static int model_copy_vectors(model *mo, int index, double **a_matrix, 
-			 double **b_matrix, double *pi, int *fix) {
+			      double **b_matrix, double *pi, int *fix) {
 #define CUR_PROC "model_alloc_vectors"
   int i, cnt_out = 0, cnt_in = 0;
   mo->s[index].pi = pi[index];
@@ -259,7 +259,25 @@ model *model_direct_read(scanner_t *s, int *multip){
     mo->s[i].in_states = matrix_d_notzero_rows(a_matrix, i, mo->N);
     if (model_state_alloc(mo->s + i, mo->M, mo->s[i].in_states,
 			  mo->s[i].out_states)) { mes_proc(); goto STOP; }
+
     /* Assign the parameters to the model */
+    if (!a_matrix) {
+      fprintf(stderr,"no A matrix specified in file!\n");
+      exit(1);
+    }
+    if (!b_matrix) {
+      fprintf(stderr,"no B matrix specified in file!\n");
+      exit(1);
+    }
+    if (!fix_vector) {
+      fprintf(stderr,"no fix_state vector specified in file!\n");
+      exit(1);
+    }
+    if (!pi_vector) {
+      fprintf(stderr,"no Pi vector specified in file!\n");
+      exit(1);
+    }
+
     if(model_copy_vectors(mo, i, a_matrix, b_matrix, pi_vector, fix_vector)) {
       mes_proc(); goto STOP;
     }
@@ -349,13 +367,8 @@ int model_free(model **mo) {
   int i;
   mes_check_ptr(mo, return(-1));
   if( !*mo ) return(0);
-  for (i = 0; i < (*mo)->N; i++) {
-    m_free((*mo)->s[i].b);
-    m_free((*mo)->s[i].out_id);
-    m_free((*mo)->s[i].in_id);
-    m_free((*mo)->s[i].out_a);
-    m_free((*mo)->s[i].in_a);
-  }
+  for (i = 0; i < (*mo)->N; i++)
+    state_clean(&(*mo)->s[i]);
   m_free((*mo)->s);
   m_free(*mo);
   return(0);
@@ -848,6 +861,7 @@ void model_direct_print(FILE *file, model_direct *mo_d, int multip) {
 /*============================================================================*/
 
 void model_direct_clean(model_direct *mo_d, hmm_check_t *check) {
+#define CUR_PROC "model_direct_clean"
   int i;  
   if (!mo_d) return;
   mo_d->M = mo_d->N = 0;
@@ -870,6 +884,7 @@ void model_direct_clean(model_direct *mo_d, hmm_check_t *check) {
   mo_d->A = mo_d->B = NULL;
   mo_d->Pi = NULL;
   mo_d->fix_state = NULL;
+#undef CUR_PROC
 } /* model_direct_clean */
 
 /*============================================================================*/
@@ -1096,4 +1111,71 @@ STOP:
   return(0.0);
 #undef CUR_PROC
 }
+
+
+/*============================================================================*/
+
+void state_clean(state *my_state) {
+#define CUR_PROC "state_clean"
+  if (!my_state) return;
+
+  if (my_state->b)
+    m_free(my_state->b);
+  if (my_state->out_id)
+    m_free(my_state->out_id);
+  if (my_state->in_id)
+    m_free(my_state->in_id);
+  if (my_state->out_a)
+    m_free(my_state->out_a);
+  if (my_state->in_a)
+    m_free(my_state->in_a);
+
+  my_state->pi         = 0;
+  my_state->b          = NULL;
+  my_state->out_id     = NULL;  
+  my_state->in_id      = NULL;
+  my_state->out_a      = NULL;
+  my_state->in_a       = NULL;
+  my_state->out_states = 0;
+  my_state->in_states  = 0;
+  my_state->fix        = 0;
+
+#undef CUR_PROC
+} /* state_clean */
+
+/*============================================================================*/
+
+/*state* state_copy(state *my_state) {
+  state* new_state = (state*) malloc(sizeof(state));
+
+  state_copy_to(my_state,new_state);
+
+  return new_state;
+
+  }*/ /* state_copy */
+
+/*============================================================================*/
+
+/*void state_copy_to(state *source, state* dest) {
+  dest->pi         = source->pi;
+  dest->out_states = source->out_states;
+  dest->in_states  = source->in_states;
+  dest->fix        = source->fix;
+
+  dest->b          = malloc(xxx);
+  memcpy(dest->b,source->b,xxx);
+
+  dest->out_id     = malloc(xxx);
+  memcpy(dest->out_id,source->out_id,xxx);
+
+  dest->in_id      = malloc(xxx);
+  memcpy(dest->in_id,source->in_id,xxx);
+
+  dest->out_a      = malloc(xxx);
+  memcpy(dest->out_a,source->out_a,xxx);
+
+  dest->in_a       = malloc(xxx);
+  memcpy(dest->in_a,source->in_a,xxx);
+  }*/ /* state_copy_to */
+
 /*===================== E n d   o f  f i l e  "model.c"       ===============*/
