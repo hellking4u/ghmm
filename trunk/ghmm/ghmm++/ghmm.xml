@@ -21,6 +21,16 @@
    <float>3</float>
   </tup></attr> 
  </edge>
+ <edge id="a4" from="B" to="A">
+  <attr name="transitions"><tup>
+   <float>3</float>
+  </tup></attr> 
+ </edge>
+ <edge id="a5" from="C" to="A">
+  <attr name="transitions"><tup>
+   <float>3</float>
+  </tup></attr> 
+ </edge>
 </graph>
 
 <InitialStates>

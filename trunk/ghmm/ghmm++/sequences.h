@@ -27,6 +27,12 @@ namespace std {
     public:
       /**
        */
+      double_sequence(double* seq_data, size_t length);
+      /**
+       */
+      double_sequence(int* seq_data, size_t length);
+      /**
+       */
       double_sequence(){label=NULL; id="";}
       /**
        */
@@ -68,6 +74,12 @@ namespace std {
       int_sequence(){label=NULL; id="";}
       /**
        */
+      int_sequence(int* seq_data, size_t length);
+      /**
+       */
+      int_sequence(double* seq_data, size_t length);
+      /**
+       */
       int_sequence(const string& name, XMLIO_Attributes &attributes);
       /**
        */
@@ -103,6 +115,18 @@ namespace std {
     public:
       /**
        */
+      sequences_DiscretePD(int** data, double* weight_data, size_t length, size_t number);
+      /**
+       */
+      sequences_DiscretePD(double** data, double* weight_data, size_t length, size_t number);
+      /**
+       */
+      sequences_DiscretePD(sequence_t* seq);
+      /**
+       */
+      sequences_DiscretePD(sequence_d_t* seq);
+      /**
+       */
       sequences_DiscretePD(XMLIO_Attributes& attributes, const string& type);
       /**
        */
@@ -122,7 +146,6 @@ namespace std {
       /**
        */
       const string& get_type() const {return type;}
-      
       /**
        */
       sequence_t* create_sequence_t() const;
@@ -136,7 +159,10 @@ namespace std {
       string type;
       /**
        */
-      double actual_weight, default_weight;
+      double actual_weight;
+      /**
+       */
+      double default_weight;
       /**
        */
       vector<int_sequence*> int_sequence_vector;
@@ -158,7 +184,19 @@ namespace std {
       sequences();
       /**
        */
-      sequences(XMLIO_Attributes& attributes);
+      sequences(int** data, double* weight, size_t length, size_t number);
+      /**
+       */
+      sequences(double** data, double* weight, size_t length, size_t number);
+      /**
+       */
+      sequences(sequence_t* seq);
+      /**
+       */
+      sequences(sequence_d_t* seq);
+      /**
+       */
+      sequences(const string& tag, XMLIO_Attributes& attributes);
       /**
        */
       ~sequences();
