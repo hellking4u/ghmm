@@ -1345,3 +1345,20 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
       return NULL;
     }
 }
+
+
+%typemap(check) sequence_d_t *{
+    if ($1 == 0) {
+      PyErr_SetString(PyExc_TypeError,"NULL Pointer not allowed");
+      return NULL;
+    }
+}
+
+
+%typemap(check) sequence_t *{
+    if ($1 == 0) {
+      PyErr_SetString(PyExc_TypeError,"NULL Pointer not allowed");
+      return NULL;
+    }
+}
+
