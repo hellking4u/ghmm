@@ -1094,10 +1094,10 @@ class HMMFromMatricesFactory(HMMFactory):
             if isinstance(distribution,DiscreteDistribution):
                 
                 # checking matrix dimensions and argument validation 
-                assert len(A) == len(A[0]), "ERROR: A is not quadratic."
-                assert len(pi) == len(A),  "ERROR: Length of pi does not match length of A."
-                assert len(A) == len(B), "ERROR: Different number of entries in A and B."
-                assert emissionDomain.size() == len(B[0]) ,"ERROR: EmissionDomain and B do not match."
+                assert len(A) == len(A[0]), "A is not quadratic."
+                assert len(pi) == len(A),  "Length of pi does not match length of A."
+                assert len(A) == len(B), " Different number of entries in A and B."
+                assert emissionDomain.size() == len(B[0]) ,"EmissionDomain and B do not match."
                 
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
                 cmodel = ghmmwrapper.new_model()
@@ -1371,8 +1371,6 @@ class HMM:
         ghmmwrapper.free_arrayd(likelihood)
         likelihood = None  
         return likelihoodList
-
-       
 
     ## Further Marginals ...
 
@@ -1684,7 +1682,7 @@ class DiscreteEmissionHMM(HMM):
         self.freeFunction = ghmmwrapper.call_model_free
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
-        self.forwardFunction = ghmmwrapper.foba_logp
+        self.forwardFunction = ghmmwrapper.foba_forward_lean
         self.forwardAlphaFunction = ghmmwrapper.foba_forward      
         self.backwardBetaFunction = ghmmwrapper.foba_backward 
         self.getStatePtr = ghmmwrapper.get_stateptr 
@@ -2290,8 +2288,6 @@ class GaussianEmissionHMM(HMM):
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-        
-        print "* BaumWelchDelete"
         
         ghmmwrapper.free_arrayd(self.BWcontext.logp)
         self.BWcontext.logp = None
