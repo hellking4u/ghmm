@@ -280,6 +280,18 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 */
 double model_likelihood(model *mo, sequence_t *sq);
 
+
+/**
+    Set transition from state 'i' to state 'j' to value 'prob'.
+    NOTE: No internal checks - model might get broken if used carelessly.
+    @param mo model
+    @param i state index
+    @param j state index
+    @param prob probabilitys
+    
+*/
+void model_set_transition(model *mo, int i, int j, double prob);
+
 /**
    Writes a model in matrix format.
    @param file: output file

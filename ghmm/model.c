@@ -840,6 +840,35 @@ STOP:
 # undef CUR_PROC
 } /* model_likelihood */
 
+
+
+void model_set_transition(model *mo, int i, int j, double prob) {
+  # define CUR_PROC "model_set_transition"
+  int in, out;
+  
+  if (mo->s && mo->s[i].out_a && mo->s[j].in_a) {
+    for(out=0; out < mo->s[i].out_states; out++) {
+      if ( mo->s[i].out_id[out] == j ) {
+	mo->s[i].out_a[out] = prob;
+	fprintf(stderr, "model_set_transition(0):State %d, %d, = %f\n", i, j, prob);
+	break;
+      }
+    }
+
+    for(in=0; in < mo->s[j].in_states; in++) {
+      if ( mo->s[j].in_id[in] == i ) {
+	mo->s[j].in_a[in] = prob;
+	break;
+      }
+    }
+  }
+  # undef CUR_PROC
+}
+/* model_set_transition */
+
+
+
+
 /*============================================================================*/
 /* Some outputs */
 /*============================================================================*/
