@@ -139,6 +139,8 @@ extern "C" {
       generator is not initialized.
       @param global_len:  length of sequences (=0: automatically via final states)
       @param seq_number:  number of sequences
+	  @param T_max:  maximal number of consecutive silent states in model (used to
+	  identify silent circles).
   */
   sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 					 long seq_number, int Tmax);

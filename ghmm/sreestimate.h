@@ -48,6 +48,22 @@ struct smosqd_t {
 }; 
 typedef struct smosqd_t smosqd_t;
 
+typedef struct local_store_t {
+  int cos;
+  double *pi_num;
+  double pi_denom;
+  double ***a_num;
+  double **a_denom;
+  double **c_num; 
+  double *c_denom;
+  double **mue_num;
+  double **u_num;
+  double **mue_u_denom; /* mue-denom. = u-denom. for sym. normal density*/
+  double **sum_gt_otot; /* for truncated normal density */
+  double **sum_gt_logb; /* Control according to Q-function */
+} local_store_t;
+
+
 /**
   Baum-Welch Algorithm for SHMMs.
   Training of model parameter with multiple double sequences (incl. scaling).
@@ -57,6 +73,9 @@ typedef struct smosqd_t smosqd_t;
   @param cs         initial model and train sequences
   */
 int sreestimate_baum_welch(smosqd_t *cs);
+
+
+int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,int *T,  double **O, double *log_p, double *seq_w);
 
 #ifdef __cplusplus
 }

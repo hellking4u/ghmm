@@ -23,15 +23,16 @@ void gsl_rng_init(void)
    RNG = gsl_rng_alloc(gsl_rng_default);
 }
 
-/* No timeseed in GSL */
 void gsl_rng_timeseed(gsl_rng * r)
 {
   unsigned long tm; /* Time seed */
+  unsigned int timeseed;
   
-  /*  tm = time(NULL); */
+  timeseed = time(NULL);
+  srand(timeseed);
   tm = rand();
   gsl_rng_set(r, tm);
-  /* printf("# using GSL rng '%s' seed=%ld\n", gsl_rng_name(r), tm);  */
+  //printf("# using GSL rng '%s' seed=%ld\n", gsl_rng_name(r), tm);  
   fflush(stdout);
 }
 

@@ -27,9 +27,9 @@ struct state {
   double pi;
   /** Output probability */
   double *b;
-  /** ID of the following state */ 
+  /** IDs of the following states */ 
   int *out_id;  
-  /** ID of the previous state */    
+  /** IDs of the previous states */    
   int *in_id;
 
   /** transition probs to successor states. */
@@ -104,7 +104,6 @@ struct model {
       Note: emission_order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   int* emission_order; 
 
-
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
    */
@@ -112,6 +111,7 @@ struct model {
   int  topo_order_length;
 
   /* XXX label HMM */
+
 };
 typedef struct model model;
 

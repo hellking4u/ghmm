@@ -21,6 +21,7 @@ __copyright__
 #include "mprintf.h"
 #include "string.h"
 #include "ghmm.h"
+#include "modelutil.c"
 
 #define  __EPS 10e-6
 
@@ -28,14 +29,14 @@ typedef enum DFSFLAG
   { DONE, NOTVISITED, VISITED } DFSFLAG;
 
 
-typedef struct local_store_t {
+/*typedef struct local_store_t {
   DFSFLAG *colors;
   int    *topo_order;
   int    topo_order_length;
 } local_store_t;
 
 static local_store_t *topo_alloc(model *mo, int len);
-static int topo_free(local_store_t **v, int n, int cos, int len);
+static int topo_free(local_store_t **v, int n, int cos, int len); */
 
 
 /*----------------------------------------------------------------------------*/
@@ -87,7 +88,7 @@ static int model_copy_vectors(model *mo, int index, double **a_matrix,
 } /* model_copy_vectors */
 
 
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------
 static local_store_t *topo_alloc(model *mo, int len) {
 #define CUR_PROC "topo_alloc"
   local_store_t* v = NULL;
@@ -105,7 +106,7 @@ STOP:
 } /* topo_alloc */
 
 
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------
 static int topo_free(local_store_t **v, int n, int cos,int len) {
 #define CUR_PROC "topo_free"
   int j;
@@ -118,7 +119,7 @@ static int topo_free(local_store_t **v, int n, int cos,int len) {
 } /* topo_free */
 
 
-/*----------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------
 static void __VisitNext(model *mo, int j, int *counter, local_store_t *v)
 {
   int i, nextState, ins;
@@ -129,14 +130,14 @@ static void __VisitNext(model *mo, int j, int *counter, local_store_t *v)
   for(i = 0; i < mo->s[j].out_states; i++)	
     {
       if (v->colors[mo->s[j].out_id[i]] == NOTVISITED &&
-	  mo->silent[ mo->s[j].out_id[i] ]) { /* looping back taken care of */
+	  mo->silent[ mo->s[j].out_id[i] ]) { /* looping back taken care of 
 	nextState = mo->s[j].out_id[i];
-	/* Check if all in-coming silent states has been visited */
+	/* Check if all in-coming silent states has been visited 
 	for( ins=0; ins < mo->s[nextState].in_states; ins++) {	
 	  if ( nextState != mo->s[nextState].in_id[ins] &&
 	       mo->silent[ mo->s[nextState].in_id[ins] ] ) {
 	    if ( v->colors[ mo->s[nextState].in_id[ins] ] == NOTVISITED ) {
-	      /* fprintf(stderr, "%d, %d to %d\n",j, ins, nextState); */
+	      /* fprintf(stderr, "%d, %d to %d\n",j, ins, nextState); 
 	      goto find_next_silent;
 	    }
 	  }
@@ -146,7 +147,7 @@ static void __VisitNext(model *mo, int j, int *counter, local_store_t *v)
 	v->topo_order[(*counter)++] = nextState; /* All in-coming silent states
 						  * have been visited,
 						  * and so we have the ordering
-						  */
+						  
 
       }
  find_next_silent:;
@@ -154,12 +155,12 @@ static void __VisitNext(model *mo, int j, int *counter, local_store_t *v)
 }
 
 
-/*----------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------
 static void __model_topo_ordering(model *mo, local_store_t *v) 
 {
   int i,j,k;
 
-  //assert(mo->model_type == kSilentStates); /* otherwise, why are you here? */
+  //assert(mo->model_type == kSilentStates); /* otherwise, why are you here?
 
   v->colors   =   (DFSFLAG*)malloc( sizeof(DFSFLAG)*mo->N );
   v->topo_order = (int*)malloc( sizeof(int)*mo->N );
@@ -188,9 +189,9 @@ static void __model_topo_ordering(model *mo, local_store_t *v)
 	  /*
 	   * If an in-coming transition is from a silent state, 
 	   * it must be visited before.
-	   */
+	   
 	  if ( v->colors[ mo->s[i].in_id[j] ] == NOTVISITED ) {
-	    /* fprintf(stderr, "%d to %d\n", mo->s[i].in_id[j], i); */
+	    /* fprintf(stderr, "%d to %d\n", mo->s[i].in_id[j], i);
 	    goto find_start; 
 	  }
 	}
@@ -202,12 +203,12 @@ find_start:;
 }
 
 
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------
 static void model_topo_ordering(model *mo) 
 {
 #define CUR_PROC "model_topo_ordering"
   int i;
-  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
+  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi 
   local_store_t *v;
 
   v = topo_alloc(mo, 1);
@@ -229,7 +230,6 @@ static void model_topo_ordering(model *mo)
    topo_free(&v, mo->N, 1, 1);	  
 #undef CUR_PROC
 }
-
 
 /*============================================================================*/
 
