@@ -72,16 +72,7 @@ AC_MSG_RESULT(no)
 # substitute default prefix here, because I need it now 
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
 phi_data_file=`eval echo ${datadir}`/${PACKAGE}/PHI_001_20.dat
-AC_DEFINE_UNQUOTED(PHI_DATA_FILE,$phi_data_file)
+AC_DEFINE_UNQUOTED(PHI_DATA_FILE,"${phi_data_file}")
 
 AC_OUTPUT(Makefile doc/Makefile ghmm/Makefile tools/Makefile tests/Makefile tests/data/Makefile doc/docu.dxx tools/ghmm-config)
-
-
-
-
-
-
-
-
-
 
