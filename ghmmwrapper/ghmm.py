@@ -436,7 +436,7 @@ class EmissionSequence:
 
             #create a sequence_t with state_labels, if the appropiate parameters are set
             # XXX str type should be file name XXX
-            if isinstance(sequenceInput, str) and isinstance(labelInput, list) and len(sequenceInput)==len(labelInput) and model != None:
+            if (isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)) and isinstance(labelInput, list) and len(sequenceInput)==len(labelInput) and model != None:
                 internalInput = []
                 for i in range(len(sequenceInput)):
                     internalInput.append(self.emissionDomain.internal(sequenceInput[i]))
@@ -472,7 +472,7 @@ class EmissionSequence:
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0]) 
                 
 
-            elif isinstance(sequenceInput, str) and labelInput != None: # from file
+            elif (isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)) and labelInput != None: # from file
 
                 # reads in the first sequence struct in the input file
                 if  not path.exists(sequenceInput):
@@ -503,7 +503,7 @@ class EmissionSequence:
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
 
-            elif isinstance(sequenceInput, str): # from file
+            elif isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode): # from file
                 # reads in the first sequence struct in the input file
                 if  not path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
@@ -616,7 +616,7 @@ class SequenceSet:
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbolSingle = ghmmwrapper.set_arrayint
             
-            if isinstance(sequenceSetInput, str) and sequenceSetLabels == None: # from file
+            if (isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode)) and sequenceSetLabels == None: # from file
                 # reads in the first sequence struct in the input file
                 if  not path.exists(sequenceSetInput):
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
@@ -709,7 +709,7 @@ class SequenceSet:
                 for i in range(seq_nr):
                     ghmmwrapper.set_arrayint(self.cseq.seq_len, i, lenghts[i])
 
-            elif isinstance(sequenceSetInput, str): # from file
+            elif isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode): # from file
                 print "fromFile", sequenceSetInput                                
                 if  not path.exists(sequenceSetInput):
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
