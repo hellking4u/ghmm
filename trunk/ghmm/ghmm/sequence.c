@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : ghmm/ghmm/sequence.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sequence.c
   created      : TIME: 11:29:02     DATE: Thu 12. February 1998
   $Id$
 
@@ -925,10 +925,12 @@ STOP:
 } /* sequence_d_scatter_matrix */
 
 /*============================================================================*/
+/* dummy function at the moment */
 
 int sequence_d_class(const double *O, int index, double *osum) {
 #define CUR_PROC "sequence_d_class"
-  return 0;
+  
+  return 0; 
 # undef CUR_PROC
 } /* sequence_d_class */
 
