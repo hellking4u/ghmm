@@ -30,7 +30,7 @@ static int foba_initforward(model *mo, double *alpha_1, int symb,
   //iterate over non-silent states
   //printf(" *** iterate over non-silent states \n");
   for (i = 0; i < mo->N; i++) {
-    printf("silent[%d] = %d\n",i,mo->silent[i]); 
+    //printf("silent[%d] = %d\n",i,mo->silent[i]); 
     if (!(mo->silent[i])) {
       alpha_1[i] = mo->s[i].pi * mo->s[i].b[symb];
 	  //printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);
