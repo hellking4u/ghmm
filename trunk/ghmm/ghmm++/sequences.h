@@ -48,6 +48,12 @@ namespace std {
       XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes () const;
+      /**
+       */
+      virtual const int XMLIO_writeContent (XMLIO_Document& doc) const;
+      /**
+       */
       double* create_double_array() const;
       /**
        */
@@ -93,6 +99,12 @@ namespace std {
       /**
        */
       XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      /**
+       */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes () const;
+      /**
+       */
+      virtual const int XMLIO_writeContent (XMLIO_Document& doc) const;
       /**
        */
       double* create_double_array() const;
@@ -152,6 +164,12 @@ namespace std {
       /**
        */
       void XMLIO_getCharacters(const string& characters);
+      /**
+       */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes () const;
+      /**
+       */
+      virtual const int XMLIO_writeContent (XMLIO_Document& doc) const;
       /**
        */
       const string& get_type() const {return type;}
@@ -236,7 +254,16 @@ namespace std {
       /**
        */
       virtual void print() const;
-      
+      /**
+       */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes () const;
+      /**
+       */
+      virtual bool XMLIO_isEmpty () const;
+      /**
+       */
+      virtual const int XMLIO_writeContent (XMLIO_Document& doc) const;
+
     private:
       /**
        */
@@ -247,33 +274,6 @@ namespace std {
       /**
        */
       string coding;
-    };
-
-  /**
-   */
-  class sequenceReader: public XMLIO_Document, public list<sequences*>
-    {
-    public:
-      /**
-       */
-      sequenceReader();
-      /**
-       */
-      ~sequenceReader();
-      /**
-       */
-      size_t read_sequences(const string& filename);
-      /**
-       */
-      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes);
-      /**
-       */
-      void XMLIO_endTag(const string& tag);
-      
-    private:
-      /**
-       */
-      sequences* next_sequence_array;
     };
 
 #ifdef HAVE_NAMESPACES

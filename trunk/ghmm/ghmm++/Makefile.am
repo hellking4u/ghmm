@@ -21,6 +21,7 @@ lib_LIBRARIES = libghmm++.a
 libghmm___a_SOURCES = \
 DiscretePD.cpp \
 sequences.cpp \
+sequences_document.cpp \
 InitialStates.cpp \
 Emissions.cpp \
 ghmm.cpp \
@@ -32,6 +33,7 @@ ghmm_symbol.cpp
 pkginclude_HEADERS= \
 DiscretePD.h \
 sequences.h \
+sequences_document.h \
 InitialStates.h \
 Emissions.h \
 ghmm.h \
