@@ -1,3 +1,11 @@
+<<<<<<< acinclude.m4
+dnl author       : Achim Gaedke
+dnl filename     : ghmm/acinclude.m4
+dnl created      : DATE: 2001-04-04
+dnl $Id$
+
+=======
+>>>>>>> 1.4
 # Configure path for the GNU Scientific Library
 # Christopher R. Gabriel <cgabriel@linux.it>, April 2000
 
@@ -33,6 +41,10 @@ AC_ARG_ENABLE(gsltest, [  --disable-gsltest       Do not try to compile and run 
   else
     GSL_CFLAGS=`$GSL_CONFIG $gslconf_args --cflags`
     GSL_LIBS=`$GSL_CONFIG $gslconf_args --libs`
+    dnl append flags for gsl
+    if test -z "`echo $GSL_LIBS | grep l.*blas`" ; then 
+       GSL_LIBS="$GSL_LIBS -lgslblas"
+    fi
 
     gsl_major_version=`$GSL_CONFIG $gsl_args --version | \
            sed 's/^\([[0-9]]*\).*/\1/'`
