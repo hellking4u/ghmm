@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <ghmm/mes.h>
+#include <ghmm/rng.h>
 #include <ghmm/cluster.h>
 
 int main(int argc, char* argv[]) {
@@ -32,5 +33,3 @@ int main(int argc, char* argv[]) {
   return exitcode;
 # undef CUR_PROC
 } /* main */
-
-

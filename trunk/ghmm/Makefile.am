@@ -2,6 +2,8 @@
 #  filename     : ghmm/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
+#
+# __copyright__
 
 SUBDIRS = ghmm tools tests doc
 
@@ -12,7 +14,8 @@ cvsclean: distclean
 	doc/Makefile.in \
 	ghmm/Makefile.in \
 	tests/Makefile.in \
-	tools/Makefile.in
+	tools/Makefile.in \
+	$(distdir).tar.gz 
 
 .PHONY: cvsclean
 
@@ -23,10 +26,14 @@ COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 dist dist-all: copyright
 
 copyright: distdir
-	cr_files="`(cd $(top_distdir) && find . -name \*.h -o -name \*.c)` tools/ghmm-config.in doc/docu.dxx.in" ; \
-	for f in $$cr_files ;do \
-	  distfile=$(top_distdir)/$$f ; \
+	test -z "$(AWK)" && exit 0 ;\
+	all_files=`cd $(top_distdir) && find . -type f` ; \
+	for f in $$all_files ; do \
 	  srcfile=$(top_srcdir)/$$f ; \
-	  rm $$distfile ; \
-	  awk '/__copyright__/{system("cat $(COPYRIGHT)");next} //' $$srcfile >$$distfile; \
+	  if grep '__copyright__ *$$' $$srcfile >/dev/null ; then \
+	    distfile=$(top_distdir)/$$f ; \
+	    rm $$distfile ; \
+	    $(AWK) 'BEGIN {nr=0;while(getline < "$(COPYRIGHT)" ==1) copyright[nr++]=$$0;} /__copyright__ *$$/{sub("__copyright__.*","");for(i=0;i<nr;i++) print $$0 copyright[i];} //' \
+	    $$srcfile >$$distfile; \
+	  fi; \
 	done

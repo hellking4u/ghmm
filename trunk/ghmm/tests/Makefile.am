@@ -2,6 +2,8 @@
 #  filename     : ghmm/tests/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
+#
+# __copyright__
 
 # tests and examples
 

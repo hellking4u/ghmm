@@ -8,8 +8,11 @@ __copyright__
 
 *******************************************************************************/
 
+#include "config.h"
 #include <stdio.h>
-#include <pthread.h>
+#ifdef HAVE_LIBPTHREAD
+# include <pthread.h>
+#endif /* HAVE_LIBPTHREAD */
 #include <float.h>
 #include <math.h>
 #include "mprintf.h"
@@ -24,46 +27,16 @@ __copyright__
 #include "matrix.h"
 #include "vector.h"
 
+#ifdef HAVE_LIBPTHREAD
+/* switsch for parallel mode: (1) = sequential, (0) = parallel */ 
+# define POUT 1
+/* number of parallel threads */
+# define THREADS 4
+#else
+/* no threads at all */
+# define POUT 0
+#endif /* HAVE_LIBPTHREAD */
 
-#if 0
-/*============================================================================*/
-int main(int argc, char* argv[]) {
-#define CUR_PROC "scluster_main"
-  int exitcode = -1;
-
-  gsl_rng_init();
-
-  if (argc == 5 || argc == 6) {
-    if (argc == 6)
-      gsl_rng_set(RNG,atoi(argv[5]));
-    else {
-      /* random init */
-      gsl_rng_timeseed(RNG); //previously: gsl_rng_set(RNG,0);
-    }
-
-    printf("Clustering Sequences with start partition\n");
-    switch(atoi(argv[4])) {
-    case 0: printf("SP_BEST (best model)\n"); break;
-    case 1: printf("NO_SP (no start partition)\n"); break;
-    case 2: printf("SP_KM (partition from k-means)\n"); break;
-    case 3: printf("SP_ZUF (random start partition)\n"); break;
-    default: printf("argv[4] %d not valid. must be in [0, 3]\n", atoi(argv[4]));
-      return exitcode;
-    }
-    exitcode = scluster_hmm(argv);
-  }
-  else {
-    mes_prot
-      ("Insufficient arguments. Usage: scluster [sequence file][model file][outfile][labels]<seed>\n"); 
-  }
-  /*------------------------------------------------------------------------*/
-  mes(MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode );
-  mes_exit();
-  return(exitcode);
-# undef CUR_PROC
-} /* main */
-
-#endif /* 0 */
 
 /*============================================================================*/
 
@@ -89,7 +62,9 @@ int scluster_hmm(char* argv[]) {
   smosqd_t *cs; 
   double *tilgw, *model_weight;
   int *tid, *return_value;
+#ifdef HAVE_LIBPTHREAD
   pthread_attr_t Attribute;
+#endif /* HAVE_LIBPTHREAD */
   cl.smo = NULL;
   cl.smo_seq = NULL;
   cl.seq_counter = NULL;
@@ -153,8 +128,10 @@ int scluster_hmm(char* argv[]) {
     cs[i].smo = cl.smo[i]; 
   /* returnvalues for each thread */
   if(!m_calloc(return_value, cl.smo_number)) {mes_proc(); goto STOP;} 
+#ifdef HAVE_LIBPTHREAD
   pthread_attr_init(&Attribute);
   pthread_attr_setscope(&Attribute, PTHREAD_SCOPE_SYSTEM);	
+#endif /* HAVE_LIBPTHREAD */
 
   /* eps_bw: stopping criterion in baum-welch
      max_iter_bw: max. number of baum-welch iterations */
@@ -370,8 +347,6 @@ int scluster_hmm(char* argv[]) {
   
 /*------------------- OUTPUT   -----------------------------------------------*/
   
-  scluster_calc_print_indices(outfile, &cl);
-
   if (scluster_out(&cl, sqd, outfile, argv) == -1) 
     { mes_proc(); goto STOP; }
 
@@ -379,12 +354,95 @@ int scluster_hmm(char* argv[]) {
 /*--------------------------------------------------------------------------*/
   res = 0;
 STOP:
+#ifdef HAVE_LIBPTHREAD
   pthread_attr_destroy(&Attribute);
+#endif /* HAVE_LIBPTHREAD */
   /* ...noch div. free! */
   if (outfile) fclose(outfile);
   return(res);
 # undef CUR_PROC
 }/* scluster_hmm */
+
+/*============================================================================*/
+int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
+		 char *argv[]) {
+#define CUR_PROC "scluster_out"
+  int res = -1, i;
+  char filename[128];
+  char *out_filename = argv[3];
+  FILE *out_model = NULL;
+  /*fprintf(outfile, "\nFinal Models:\n");
+    for (i = 0; i < cl->smo_number; i++) {
+    fprintf(outfile, "smodel[%d]:\n", i);
+    smodel_print(outfile, cl->smo[i]);
+    fprintf(outfile, "Sequences of smodel[%d] (# %ld, total weight %.0f)\n",
+    i, cl->smo_seq[i]->seq_number, 
+    cl->smo_seq[i]->total_w);
+    
+    //for (k = 0; k < sqd->seq_number; k++) {
+    //if (sqd->seq_label[k] == i) {
+    // fuer Wetterdaten: Numerierung von 1 - .. 
+    //fprintf(outfile, "\t%4d\t|%.0f|\t", k+1, sqd->seq_w[k]);
+    //vector_d_print(outfile, sqd->seq[k], sqd->seq_len[k]," "," ","");
+    //}     
+    //}
+    
+    fprintf(outfile, "(%ld sequences)\n\n", cl->seq_counter[i]);
+    }
+  */
+
+  sprintf(filename, "%s.smo", out_filename);
+  if(!(out_model = mes_fopen(filename, "wt"))) {mes_proc(); goto STOP;}
+  scluster_print_header(out_model, argv);
+  for (i = 0; i < cl->smo_number; i++) {
+    fprintf(out_model, "#trained smodel[%d]:\n", i);
+    smodel_print(out_model, cl->smo[i]);
+  }  
+  fclose(out_model);
+
+  /* Ausgabe alle Sequenzen im HMM-Format; verschiedene Cluster
+     bilden getrennte Listen */
+  fclose(out_model); 
+  sprintf(filename, "%s.sqd", out_filename);
+  if(!(out_model = mes_fopen(filename, "wt"))) {mes_proc(); goto STOP;}
+  scluster_print_header(out_model, argv);
+  for (i = 0; i < cl->smo_number; i++) {
+    if (cl->smo_seq[i] != NULL) 
+      sequence_d_print(out_model, cl->smo_seq[i], 0);  
+  }
+  /* Ausgabe aller Sequenzen hintereinander mit Clusterlabel */
+  /* sequence_d_print(out_model, sqd, 0); */
+
+  /* Ausgabe der Anzahl der Sequenzen bzw. der Sequenzgewichte pro Cluster
+     (fuer den Generator) */
+  fclose(out_model); 
+  sprintf(filename, "%s.numbers", out_filename);
+  if(!(out_model = mes_fopen(filename, "wt"))) {mes_proc(); goto STOP;}
+  scluster_print_header(out_model, argv);
+  fprintf(out_model, "numbers = {\n");
+  fprintf(out_model, 
+	  "# Clusterung mit Gewichten --> in BS/10, sonst Anzahl Seqs.\n");
+  /* Gewichte */
+  if (cl->smo_seq[0]->total_w > cl->smo_seq[0]->seq_number) {
+    for (i = 0; i < cl->smo_number-1; i++)
+      fprintf(out_model, "%.0f,\n", 0.1 * cl->smo_seq[i]->total_w);
+    fprintf(out_model, "%.0f;\n};", 0.1 * cl->smo_seq[cl->smo_number-1]->total_w);
+  }
+  /* Anzahl */
+  else {        
+    for (i = 0; i < cl->smo_number-1; i++)
+      fprintf(out_model, "%ld,\n", cl->seq_counter[i]);
+    fprintf(out_model, "%ld;\n};", cl->seq_counter[cl->smo_number-1]);
+  }
+    
+
+  res = 0;
+STOP:
+  if (out_model) fclose(out_model);    
+  return(res);
+#undef CUR_PROC
+} /* scluster_out */
+
 
 /*============================================================================*/
 /* Speicher fuer Sequenzen fuer jedes Modell nur einmal allocieren und
@@ -650,5 +708,6 @@ void scluster_print_header(FILE *file, char* argv[]) {
 
 
 #undef POUT
-#undef THREADS
-
+#ifdef HAVE_LIBPTHREAD
+# undef THREADS
+#endif /* HAVE_LIBPTHREAD */

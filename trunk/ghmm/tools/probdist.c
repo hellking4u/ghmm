@@ -1,5 +1,9 @@
-/* 
-   File:        probdist.c
+/*******************************************************************************
+  author       : Alexander Scliep
+  filename     : ghmm/tools/probdist.c
+  created      : 1999-3-18
+  $Id$
+
 
    synopsis:    probdist model1.hmm model2.hmm
 
@@ -12,10 +16,9 @@
                 cf. Juang & Rabiner "A Probabilistic Distance Measure
                 for Hidden Markov Models"
 
-   History:
+__copyright__
 
-   3/18/99 Initial version AS
-*/
+*******************************************************************************/
 
 #include <math.h>
 

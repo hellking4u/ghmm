@@ -9,6 +9,7 @@ copyright()
 cat <<EOF
 __copyright__
 EOF
+exit 0
 }
 
 
@@ -59,6 +60,7 @@ while test $# -gt 0; do
       ;;
     --copyright)
       copyright
+      ;;
     --help)
       usage 0
       ;;
