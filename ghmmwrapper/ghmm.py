@@ -1030,7 +1030,9 @@ class HMMOpenFactory(HMMFactory):
                     order = ghmmwrapper.int_array(num_background)
                     
                     # XXX  allocate each column seperately to save memory XXX
+                    # XXX use BackgroundDistribution object  XXX
                     max_len = max( map(lambda x: len(x), background_dist.values()))
+                    
                     b = ghmmwrapper.double_2d_array(num_background, max_len)
 
                     cpt_background = ghmmwrapper.new_background_distributions(num_background, order, b)
@@ -1291,8 +1293,10 @@ class HMMFromMatricesFactory(HMMFactory):
                     order = ( log(len(B[i]),cmodel.M) -1)
                     #print "order in state ",i," = ", order
                     # check or valid number of emission parameters
-                    if  order % 1 == 0:
-                        state.order = int(order)
+                    order = int(order)
+                    if  cmodel.M**(order+1) == len(B[i]:
+                        state.order = order
+
                     else:
                         raise InvalidModelParameters, "The number of "+str(len(B[i]))+ " emission parameters for state "+str(i)+" is invalid. State order can not be determined."
                     
@@ -2009,6 +2013,7 @@ class DiscreteEmissionHMM(HMM):
 
         self.model_type = self.cmodel.model_type  # model type
         self.maxorder = self.cmodel.maxorder
+        self.background = None
         
         # Assignment of the C function names to be used with this model type
         self.freeFunction = ghmmwrapper.call_model_free
@@ -2198,7 +2203,8 @@ class DiscreteEmissionHMM(HMM):
         # XXX Add more asserts on Python and error handling
         assert len(stateBackground) == self.N, "Argument 'stateBackground' does not match number of states."
         
-        self.cmodel.bp = ghmmwrapper.model_copy_background_distributions(backgroundObject.cbackground)
+        self.cmodel.bp = backgroundObject.cbackground
+        self.background = backgroundObject
         self.cmodel.background_id = ghmmhelper.list2arrayint(stateBackground)
 
         # updating model type
@@ -2230,12 +2236,6 @@ class DiscreteEmissionHMM(HMM):
         pass
         
     
-    
-    def getBackground(self):
-        """ Pointer to background_distributions is deep copied."""
-        return BackgroundDistribution(self.emissionDomain, ghmmwrapper.model_copy_background_distributions(self.cmodel.bp))
-        
-
     def updateTieGroups(self):
         
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
