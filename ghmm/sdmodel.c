@@ -342,6 +342,7 @@ static void __sdmodel_topo_ordering(sdmodel *mo, local_store_t *v)
   int i,j,k;
   int terminal_node=-1;
   int fstState, nextSt;
+  int done = 0;
 
   //assert(mo->model_type == kSilentStates); /* otherwise, why are you here? */
 
@@ -372,7 +373,6 @@ static void __sdmodel_topo_ordering(sdmodel *mo, local_store_t *v)
 
   /** removing a cycle, so that we can sort 
       -- mark all terminal silent states --- **/ 
-  int done = 0;
   nextSt = fstState;
   while ( !done ) {
     if ( mo->s[nextSt].out_states == 1 &&

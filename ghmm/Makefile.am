@@ -15,7 +15,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   matrix.c  matrix.h \
                   model.c model.h \
                   cluster.c cluster.h \
-                  scluster.c scluster.h \
+		  scluster.c scluster.h \
                   root_finder.c root_finder.h \
                   reestimate.c reestimate.h \
                   randvar.c randvar.h \
@@ -26,6 +26,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   sfoba.c sfoba.h \
                   sviterbi.c sviterbi.h \
                   smodel.c smodel.h sdmodel.c sdmodel.h \
+		  sdviterbi.c \
                   ghmm.h \
                   sreestimate.c sreestimate.h \
                   sgenerate.c sgenerate.h \

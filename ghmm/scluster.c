@@ -628,7 +628,8 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
       }
     }
   } /* while */
-  if (!error) return (0);int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]);
+  if (!error) return (0);
+  /*  int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]); */
 STOP: 
   if (result) m_free(result);
   return(-1);
