@@ -661,6 +661,32 @@ void sequence_print(FILE *file, sequence_t *sq) {
 } /* sequence_print */
 
 /*============================================================================*/
+/**/
+void sequence_print_xml(FILE *file, sequence_t *sq) {
+  int i, j;
+  /* coding missing */
+  fprintf(file, "<Sequences type=\"int\" >\n");
+  fprintf(file, " <DiscretePD>\n");
+  for (i = 0; i < sq->seq_number; i++) {
+    fprintf(file, "  %.0f <Sequence", sq->seq_w[i]);
+    if (sq->seq_id[i] != -1.0)
+      fprintf(file, " id=\"seq%f\" ", sq->seq_id[i]);
+    fprintf(file,">");
+    if (sq->seq_label[i] != -1)
+      fprintf(file, "<Label>%ld</Label>", sq->seq_label[i]);
+    if (sq->seq_len[i] > 0) {
+      fprintf(file, "<!-- Length: %d -->", sq->seq_len[i]);
+      for (j = 1; j < sq->seq_len[i]; j++)
+	fprintf(file, " %d", sq->seq[i][j]);
+    }
+    fprintf(file, "  </Sequence>\n");
+  }
+  fprintf(file, " </DiscretePD>\n");
+  fprintf(file, "</Sequences>\n");
+} /* sequence_print_xml */
+
+
+/*============================================================================*/
 
 void sequence_mathematica_print(FILE *file, sequence_t *sq, char *name) {
   int i;
@@ -1045,5 +1071,12 @@ int sequence_d_mix_like(smodel **smo, int  smo_number, sequence_d_t *sqd,
 
 #undef CUR_PROC
 } /* sequence_d_mix_like */
+
+
+
+
+
+
+
 
 
