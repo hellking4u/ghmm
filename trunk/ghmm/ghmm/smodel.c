@@ -201,7 +201,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
     }   
     else if (!strcmp(s->id, "prior")) {/* modelprior */
       if (prior_read) {scanner_error(s,"identifier prior twice");goto STOP;}
-      smo->prior = scanner_get_double(s);
+      smo->prior = scanner_get_edouble(s);
       if ((smo->prior < 0 || smo->prior > 1) && smo->prior != -1)
 	{ scanner_error(s, "invalid model prior"); goto STOP; }
       prior_read = 1;
@@ -219,7 +219,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
       scanner_get_name(s);
       if (!strcmp(s->id, "vector")) {
 	scanner_consume( s, '{' ); if(s->err) goto STOP; 
-	pi_vektor = scanner_get_double_array(s, &len);
+	pi_vektor = scanner_get_double_earray(s, &len);
 	if (len != smo->N) 
 	  {scanner_error(s, "wrong number of elements in PI"); goto STOP;}
 	scanner_consume( s, ';' ); if(s->err) goto STOP;

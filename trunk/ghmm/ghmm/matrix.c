@@ -33,8 +33,8 @@ int matrix_d_read(scanner_t *s, double **matrix, int max_zeile, int max_spalte){
       scanner_error(s, "too many rows in matrix");
       return(-1);
     } 
-    /* Memory allocation takes place in scanner_get_double_array */
-    matrix[zeile] = scanner_get_double_array(s, &len);
+    /* Memory allocation takes place in scanner_get_double_earray */
+    matrix[zeile] = scanner_get_double_earray(s, &len);
     if (len != max_spalte) {
       scanner_error(s, "wrong number of elements in matrix");
       return(-1);
@@ -66,7 +66,7 @@ int matrix_i_read(scanner_t *s, int **matrix, int max_zeile, int max_spalte) {
       scanner_error(s, "too many rows in matrix");
       return(-1);
     } 
-    /* Memory allocation takes place in scanner_get_double_array */
+    /* Memory allocation takes place in scanner_get_int_array */
     matrix[zeile] = scanner_get_int_array(s, &len);
     if (len != max_spalte) {
       scanner_error(s, "wrong number of elements in matrix");
