@@ -686,7 +686,7 @@ class GaussianEmissionHMM(HMM):
         """
 
     def loglikelihood_sqd(self, sequenceSet):
-		# XXX REMOVE soon XXX
+        # XXX REMOVE soon XXX
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
 
             emission_sequences can either be a SequenceSet or a Sequence
@@ -719,7 +719,7 @@ class GaussianEmissionHMM(HMM):
         """ Set the emission distributionParameters for state i """
         state = ghmmwrapper.get_sstate(self.cmodel, i)
         ghmmwrapper.set_arrayd(state.mue, 0, float(mu))  # GHMM C is german: mue instead of mu 
-        sigma = ghmmwrapper.get_arrayd(state.u, 0, float(sigma))       
+        sigma = ghmmwrapper.set_arrayd(state.u, 0, float(sigma))       
    
 
     def __str__(self):
@@ -763,30 +763,31 @@ class GaussianEmissionHMM(HMM):
 
 
 
-m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
-                    [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-                    [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
-                    [1.0,0,0])
+if __name__ == '__main__':
+	m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
+						[[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+						[[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
+						[1.0,0,0])
 
-print m
+	print m
 
-m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
-                    [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-                    [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
-                    [1.0,0,0])
+	m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
+						[[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+						[[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
+						[1.0,0,0])
 
-print m2
+	print m2
 
-seq_c = ghmmwrapper.seq_d_read('test10.sqd')
-l = m2.loglikelihood_sqd(seq_c)
+	seq_c = ghmmwrapper.seq_d_read('test10.sqd')
+	l = m2.loglikelihood_sqd(seq_c)
 
-for i in xrange(seq_c.seq_number):
-	print ghmmwrapper.get_arrayd(l,i), 
+	for i in xrange(seq_c.seq_number):
+		print ghmmwrapper.get_arrayd(l,i), 
 
 
-#m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
-#m = HMMOpen("test.smo")
+	#m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
+	#m = HMMOpen("test.smo")
 
-#seqs = SequenceSetOpen('test.sqd')
-#l = m.baumWelch(seqs, 100, 0.001)
-#print l
+	#seqs = SequenceSetOpen('test.sqd')
+	#l = m.baumWelch(seqs, 100, 0.001)
+	#print l
