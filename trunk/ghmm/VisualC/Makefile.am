@@ -3,7 +3,7 @@
 #  created      : DATE: April 2001
 #  $Id$
 
-SUBDIRS = . coin_toss_test ghmm ghmmpp
+SUBDIRS = . coin_toss_test ghmm
 MAINTAINERCLEANFILES = \
 Makefile.in \
 ghmm.ncb \
