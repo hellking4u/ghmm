@@ -2,7 +2,7 @@
   author       : Bernhard Knab
   filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sviterbi.c
   created      : TIME: 17:08:46     DATE: Mon 22. February 1999
-  last-modified: TIME: 15:50:40     DATE: Tue 05. June 2001
+  last-modified: TIME: 18:24:51     DATE: Tue 11. September 2001
 *******************************************************************************/
 /* $Id$ */
 
@@ -165,6 +165,7 @@ int *sviterbi(smodel *smo, double *O, int T, double *log_p) {
   }
   sviterbi_free(&v, smo->N, T); 
   return(state_seq);
+
 STOP:
   /* Free the memory space... */
   sviterbi_free(&v, smo->N, T);
