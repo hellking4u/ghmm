@@ -111,7 +111,7 @@ void gnuplot_show_distributions(void)
   /* init bin_row */
   bins=gsl_histogram_calloc_uniform(100,-10.0,10.0);
   /* initialise generator */
-  gsl_rng_init();
+  ghmm_rng_init();
 
   /* prepare output for gnuplot */
   fprintf(file,"set terminal postscript eps\n");
