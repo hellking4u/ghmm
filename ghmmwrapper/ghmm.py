@@ -532,8 +532,11 @@ class SequenceSet:
                 seq_nr = len(sequenceSetInput)
                 self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
                 self.cseq.seq_number = seq_nr
-
-                (seq,lenghts) = ghmmhelper.list2matrixint(sequenceSetInput)
+                
+                internalInput = []
+                for i in range(seq_nr):
+                    internalInput.append( map( self.emissionDomain.internal, sequenceSetInput[i]))
+                (seq,lenghts) = ghmmhelper.list2matrixint(internalInput)
 
                 self.cseq.seq = seq
                 for i in range(seq_nr):
