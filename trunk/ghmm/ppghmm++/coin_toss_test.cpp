@@ -86,11 +86,11 @@ int two_states_coin_toss() {
   fprintf(stdout,"observation symbol matrix:\n");
   my_model.B_print(stdout,""," ","\n");
 
-  my_output = my_model.generate_sequences(1,10,10);
+  my_output = my_model.generate_sequences(1,10,100);
   my_output->print(stdout);
 
   /* try viterbi algorithm in a clear situation */
-  viterbi_path = my_model.Viterbi(my_output,0,&log_p_viterbi);
+  viterbi_path = my_model.viterbi(my_output,0,&log_p_viterbi);
   if (!viterbi_path) {
     fprintf(stderr,"viterbi failed!"); 
     return 1;
@@ -119,24 +119,16 @@ int two_states_coin_toss() {
   forward_alpha->print(stdout,""," ","\n");
   fprintf(stdout,"probability of this sequence (forward algorithm): %f\n",log_p_forward);
 
-  my_model.getState(0)->setInitialProbability(0.3);
-  my_model.getState(0)->setOutputProbability(0,1.0);
-
-  /* initialise tail state */
-  my_model.getState(1)->setInitialProbability(0.7);
-  my_model.getState(1)->setOutputProbability(1,1.0);
-
-  //  my_model.setTransition(0,0,0.5);
-  //  my_model.setTransition(0,1,0.5);
-  //  my_model.setTransition(1,0,0.5);
-  //  my_model.setTransition(1,1,0.5);
+  /* change initialise probabilities */
+  my_model.getState(0)->setInitialProbability(0.1);
+  my_model.getState(1)->setInitialProbability(0.9);
 
   if (my_model.check() == -1)
     exit(1);
 
-  fprintf(stderr,"gaga\n");
+  my_model.print(stdout);
+
   my_model.reestimate_baum_welch(my_output);
-  fprintf(stderr,"gaga\n");
 
   if (my_model.check() == -1)
     exit(1);

@@ -81,11 +81,11 @@ const char* GHMM_DiscreteModel::toString() const {
 }
 
 
-GHMM_IntVector* GHMM_DiscreteModel::Viterbi(GHMM_Sequences* sequences, 
+GHMM_IntVector* GHMM_DiscreteModel::viterbi(GHMM_Sequences* sequences, 
 					    int index, double *log_p) const {
   int len = sequences->getLength(index);
 
-  return new GHMM_IntVector(viterbi(c_model,sequences->getIntSequence(index),len,log_p),len);
+  return new GHMM_IntVector(::viterbi(c_model,sequences->getIntSequence(index),len,log_p),len);
 }
 
 
