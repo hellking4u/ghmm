@@ -17,20 +17,39 @@
 using namespace std;
 #endif
 
-XMLIO_ElementReader<ghmm> my_model_reader;
+class ghmm_Document: public XMLIO_Document {
+  
+public:
+  virtual XMLIO_Element*
+  XMLIO_startTag (const string& name, XMLIO_Attributes &attrs) {
+    if (root!=NULL) {
+      root=new ghmm(name,attrs);
+    }
+    return root;
+  }  
 
+  virtual ghmm* get_ghmm() {
+    return root;
+  }
 
-int create_test()
-{
-  model* my_model=my_model_reader.get_element()->create_model();
-  model_print(stdout,my_model);
-  model_free(&my_model);
-  return 0;
-}
+  ~ghmm_Document() {
+    SAFE_DELETE(root);
+  }
+
+  ghmm* root;
+};
+
 
 int sequence_generation_test()
 {
-  sequences* generated=my_model_reader.get_element()->generate_sequences(10,10);
+  ghmm_Document my_model;
+  my_model.open("ghmm.xml","r");
+  my_model.readDocument();
+  my_model.close();
+  ghmm* my_ghmm=my_model.get_ghmm();
+  if (my_ghmm==NULL) return 1;
+
+  sequences* generated=my_ghmm->generate_sequences(10,10);
   if (generated!=NULL)
     generated->print();
   SAFE_DELETE(generated);
@@ -39,20 +58,27 @@ int sequence_generation_test()
 
 int read_test_file()
 {
-  my_model_reader.set_doc_name("ghmm");
-  my_model_reader.read_file("ghmm.xml");
-  if (my_model_reader.get_element()!=NULL)
-    {
-      cout<<my_model_reader.toString()<<" found something: "<<endl;
-      my_model_reader.get_element()->print();
-    }
+  ghmm_Document my_model;
+  my_model.open("ghmm.xml","r");
+  my_model.readDocument();
+  my_model.close();
+  ghmm* my_ghmm=my_model.get_ghmm();
+
+  if (my_ghmm!=NULL) {
+    XMLIO_Document output;
+    output.open("/dev/stdout","w");
+    output.writeElement(*my_ghmm);
+    output.close();
+  }
   return 0;
 }
 
 int main()
 {
   read_test_file();
+  /*
   sequence_generation_test();
+  */
   
   return 0;
 }

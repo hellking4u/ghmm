@@ -1,7 +1,7 @@
 /*
   author: Achim Gaedke
-  created: 9. Juli 2001
-  file: xmlio/examples/ghmm++/ghmm.h
+  created: 2001-07-09
+  file: ghmm/ghmm++/ghmm.h
   $Id$
  */
 
@@ -29,17 +29,22 @@ namespace std {
     {
     public:
       /** constructor from XMLIO interface */
-      ghmm(const string& tag, XMLIO_Attributes &attributes);
+      ghmm(const string& name, XMLIO_Attributes &attrs);
       /**
 	 expected elements are: Graph, Initial, Emissions and Sequences
        */
-      virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      virtual XMLIO_Element* XMLIO_startTag(const string& name, XMLIO_Attributes &attrs);
       /** */
-      virtual void XMLIO_endTag(const string& tag);
+      virtual void XMLIO_endTag(const string& name);
       /** */
       virtual void XMLIO_getCharacters(const string& characters);
       /** */
       virtual void XMLIO_finishedReading();
+      /** */
+      virtual const int XMLIO_writeContent(XMLIO_Document& doc) const;
+      /** */
+      virtual const XMLIO_Attributes& XMLIO_getAttributes() const;
+
       /** Returns name of class. */
       virtual const char* toString() const;
       /** dumps all content to cout */
