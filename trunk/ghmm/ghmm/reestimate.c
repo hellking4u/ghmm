@@ -227,12 +227,7 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
   int res = -1;
   int h, i, j, m, l, j_id, positive, bi_len;
   double factor, p_i;
-  double* background_weight;
   int hist, col;
-  if (mo->model_type & kHasBackgroundDistributions) {
-    if(!m_calloc(background_weight,mo->N)){mes_proc();goto STOP;}
-	  
-  } 
   mes_check_0(r->pi_denom, goto STOP); 
   for (i = 0; i < mo->N; i++) {
     /* Pi */
@@ -297,17 +292,14 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
     /* B */
     for(hist = 0; hist < pow(mo->M, mo->s[i].order); hist++) {
       if (r->b_denom[i][hist] < EPS_PREC) {
-	factor = 0.0;
+	    factor = 0.0;
 	
-    if (mo->model_type & kHasBackgroundDistributions) 
-	  background_weight[i] = 1.0;
-      } else {
-	factor = ( 1.0 / r->b_denom[i][hist] );
-	if (mo->model_type & kHasBackgroundDistributions) 
-	  background_weight[i] = 0.1;
+      }
+      else {
+	    factor = ( 1.0 / r->b_denom[i][hist] );
       }
       positive = 0;
-      /* hier:
+    /* hier:
 	 /* TEST: denom. < numerator */
       col = hist*mo->M;
       for (m = col; m < col + mo->M; m++) {
@@ -332,9 +324,6 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
       }      
     } /* for each history */
   } /* for (i = 0 .. < mo->N)  */
-  
-  if (mo->model_type & kHasBackgroundDistributions)
-    model_apply_background(mo, background_weight);
   
   res = 0;
   if (mo->model_type & kTiedEmissions)
