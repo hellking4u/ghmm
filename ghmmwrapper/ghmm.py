@@ -154,6 +154,7 @@ import ghmmhelper
 import modhmmer
 import re
 import StringIO
+import copy
 
 from os import path
 from math import log
@@ -1295,6 +1296,7 @@ class HMM:
         for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            
             viterbiPath =  self.viterbiFunction(self.cmodel,seq,seq_len,log_p)
 
             #viterbi_prob = get_arrayd( log_p, 0 )
@@ -1549,10 +1551,13 @@ class DiscreteEmissionHMM(HMM):
             pass
         return logP     
     
-    def baumWelch(self, trainingSequences):
+    def baumWelch(self, trainingSequences, nrSteps = None, loglikelihoodCutoff = None):
         """ Reestimates the model with the sequence in 'trainingSequences'.
            
-            Note that training for models including silent states is not yet supported.       
+            Note that training for models including silent states is not yet supported.
+
+            nrSteps is the maximal number of BW-steps
+            loglikelihoodCutoff the least improvement in likelihood to continue
         """
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)        
@@ -1560,8 +1565,13 @@ class DiscreteEmissionHMM(HMM):
         if self.cmodel.model_type == 4:
             print "Sorry, training of models containing silent states not yet supported."
         else:
-            ghmmwrapper.reestimate_baum_welch(self.cmodel, trainingSequences.cseq)
-    
+            if nrSteps == None:
+                ghmmwrapper.reestimate_baum_welch(self.cmodel, trainingSequences.cseq)
+            else:
+                assert loglikelihoodCutoff != None
+                ghmmwrapper.reestimate_baum_welch_nstep(self.cmodel, trainingSequences.cseq,
+                                                        nrSteps, loglikelihoodCutoff)
+                
     
     
     def normalize(self):
