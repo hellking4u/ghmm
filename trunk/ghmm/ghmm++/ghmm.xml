@@ -2,9 +2,28 @@
 <ghmm>
 Wunderschönes Hidden Markov Model
 
+<graph>
+</graph>
+
+<InitialStates>
+<DiscretePD>
+ 1 <State id="A"/>
+ 2 <State id="B"/>
+</DiscretePD>
+</InitialStates>
+
 <sequences type="int">
 <DiscretePD default_weight="1">
  <sequence id="10"><label>5</label> 1 2 3 4 </sequence>
+ <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
+ <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
+ <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
+</DiscretePD>
+</sequences>
+
+<sequences type="double">
+<DiscretePD default_weight="1">
+ <sequence id="10"><label>5</label> 1.6 2 3 4 </sequence>
  <sequence id="11"><label>6</label> 1 2 3 4 </sequence>
  <sequence id="12"><label>7</label> 1 2 3 4 </sequence>
  <sequence id="12"><label>8</label> 1 2 3 4 </sequence>

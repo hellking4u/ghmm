@@ -21,7 +21,7 @@ using namespace std;
 /***********************************************************************************/
 /* templates are better! */
 
-double_sequence::double_sequence(XMLIO_Attributes &attributes)
+double_sequence::double_sequence(const string& tag, XMLIO_Attributes &attributes)
 {
   XMLIO_Attributes::iterator id_key=attributes.find("id");
   if (id_key!=attributes.end())
@@ -107,7 +107,7 @@ double double_sequence::get_id_as_double() const
 
 /***********************************************************************************/
 
-int_sequence::int_sequence(XMLIO_Attributes &attributes)
+int_sequence::int_sequence(const string& tag, XMLIO_Attributes &attributes)
 {
   XMLIO_Attributes::iterator id_key=attributes.find("id");
   if (id_key!=attributes.end())
@@ -234,7 +234,7 @@ XMLIO_Object* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Attr
     {
       if (type=="int")
 	{
-	  int_sequence* new_sequence=new int_sequence(attributes);
+	  int_sequence* new_sequence=new int_sequence(tag,attributes);
 	  int_sequence_vector.push_back(new_sequence);
 	  weight_vector.push_back(actual_weight);
 	  actual_weight=default_weight;
@@ -242,7 +242,7 @@ XMLIO_Object* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Attr
 	}
       else if (type=="double")
 	{
-	  double_sequence* new_sequence=new double_sequence(attributes);
+	  double_sequence* new_sequence=new double_sequence(tag,attributes);
 	  double_sequence_vector.push_back(new_sequence);
 	  weight_vector.push_back(actual_weight);
 	  actual_weight=default_weight;
