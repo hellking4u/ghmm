@@ -651,6 +651,19 @@ extern double model_likelihood(model *mo, sequence_t *sq);
 double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
 
 
+/** 
+   Allocates a new background_distributions struct and assigs the arguments to
+   the respective fields. Note: The arguments need allocation outside of this
+   function.
+   
+   @return     :               0 on success, -1 on error
+   @param mo   :               one model
+   @param cur  :               a id of a state
+   @param times:               number of times the state cur is at least evaluated
+*/
+extern int model_apply_duration(model* mo, int cur, int times);
+
+
 /******** Reestimate Baum-Welch (reestimate.c) *******/
 extern int reestimate_baum_welch(model *mo, sequence_t *sq);
 extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);

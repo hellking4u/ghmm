@@ -627,7 +627,7 @@ class HMMEditor(SAGraphEditor):
                 #XXX if self.HMM.state[v].state_class != -1: # we have attribute state_class
                 #d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
                 #else:
-                d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
+                d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class', 'duration'])
                     
                 # We only show the label out of the editable items
                 self.HMM.G.labeling[v] = ValidatingString("%s" % (self.HMM.state[v].label)) # XXX Hack Aaaargh!

@@ -1042,6 +1042,11 @@ class HMMOpenFactory(HMMFactory):
                 if len(tied) > 0:
                     m.cmodel.model_type += 8  #kTiedEmissions
                     m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
+
+                durations = hmm_dom.getStateDurations()
+                if len(durations) == m.N: 
+                    print "DEBUG durations: ", durations
+                    m.extendDurations(durations)
                         
 	    	return m
 	    
@@ -2055,6 +2060,17 @@ class DiscreteEmissionHMM(HMM):
         strout += "\n"
         return strout
     
+
+    def extendDurations(self, durationlist):
+        """ extend states with durations larger one
+            this done by explicit state copying in C """
+
+        for i in range(len(durationlist)):
+            if durationlist[i] > 1:
+                error = ghmmwrapper.model_apply_duration(self.cmodel, i, durationlist[i])
+                self.N = self.cmodel.N
+                if error:
+                    print "ERROR: durations not applied"
 
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
