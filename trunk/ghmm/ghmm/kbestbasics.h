@@ -77,9 +77,10 @@ inline void hlist_removeElem(hypoList** plist);
    @param h:          pointer to list of hypotheses
    @param hplus:      address of a pointer to store the propagated hypotheses
    @param labels:     number of labels
-   @param nr_s:       number states which have assigned a label 
+   @param nr_s:       number states which have assigned the index aa label
+   @param max_out:    maximum number of out_states over all states with the index aa label
  */
-int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_s);
+int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_s, int* max_out);
 
 
 /**
