@@ -9,7 +9,7 @@ SUBDIRS = ghmm tools tests doc
 
 MAINTAINERCLEANFILES = aclocal.m4 configure \
 	Makefile.in stamp-h.in config.h.in \
-	mkinstalldirs missing install-sh \
+	mkinstalldirs missing install-sh INSTALL COPYING \
 	$(distdir).tar.gz -r $(distdir)
 
 EXTRA_DIST = COPYRIGHT.txt GPL.txt LGPL.txt ToDo
