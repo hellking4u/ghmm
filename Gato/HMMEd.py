@@ -156,13 +156,6 @@ class DiscreteHMMAlphabet( xmlutil.DiscreteHMMAlphabet ):
         
     def size(self):
         return len(self.name.keys())
-
-    def buildAlphabets(self, nrOfSymbols):
-	""" Only fixed to 5 symbols for the moment """ 
-	alphas = range(1, nrOfSymbols+1)
-	alphas = map( lambda x: 'a'+ str(x), alphas)
-	for code in range(1,nrOfSymbols+1):
-	    self.addCode( code, alphas[code-1], desc = None)
  
     def edit(self, master):        
         mapedit = MapEditor(master, [self.name], ['code','name'], [3,5])
@@ -631,10 +624,10 @@ class HMMEditor(SAGraphEditor):
 	    if not "edges" in tags:
 		v = self.FindVertex(event)
                 # print "Found Vertex " + "%s" % v
-                if self.HMM.state[v].state_class != -1: # we have attribute state_class
-                    d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
-                else:
-                    d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr )
+                #XXX if self.HMM.state[v].state_class != -1: # we have attribute state_class
+                #d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
+                #else:
+                d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
                     
                 # We only show the label out of the editable items
                 self.HMM.G.labeling[v] = ValidatingString("%s" % (self.HMM.state[v].label)) # XXX Hack Aaaargh!
