@@ -43,7 +43,7 @@ class GHMM_AbstractModel: public XMLIO_Element {
      Tests if all standardization requirements of model are fulfilled. 
      @return 0 for succes, -1 on error
   */
-  virtual int check();
+  virtual int check() const;
   /** Clean model. */
   virtual void clean();
   /** */
@@ -52,13 +52,15 @@ class GHMM_AbstractModel: public XMLIO_Element {
   GHMM_State* getState(int index) const;
   /* Returns state with given id. */
   GHMM_State* getState(const string& id) const;
-  /** */
-  int getStateID(const string& id);
+  /** Returns index of state with given id.
+      @param id     id of state.
+      @return index of state or -1 if no such state exists. .*/
+  int getStateIndex(const string& id) const;
   /**
      Writes the model in matrix format.
      @param file: output file
   */
-  virtual void print(FILE *file);
+  virtual void print(FILE *file) const;
 
   /** */
   vector<GHMM_Transition*> transitions;

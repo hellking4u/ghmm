@@ -55,7 +55,7 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
      (That is, if the sum of the probabilities is 1).
      @return 0 for succes; -1 for error. 
   */
-  virtual int check();
+  virtual int check() const;
   /* Returns state with given index. */
   sstate* getCState(int index) const;
   /** 
@@ -74,12 +74,12 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
       @param label:       label tag
       @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
   */
-  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number, long label, int Tmax);
+  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number, long label, int Tmax) const;
   /**
      Writes the model in matrix format.
      @param file: output file
   */
-  virtual void print(FILE *file);
+  virtual void print(FILE *file) const;
   /**
      Baum-Welch Algorithm for SHMMs.
      Training of model parameter with multiple double sequences (incl. scaling).
@@ -101,16 +101,17 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   /** */
   void read(const string& filename);
 
-  /** */
-  virtual void XMLIO_finishedReading();
-  /** */
-  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
-
   /** C Model. */
   smodel* c_model;
 
 
  private:
+
+  /** */
+  virtual void XMLIO_finishedReading();
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
+  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
   /** Build c++ data from c_model. */
   void buildCppData();

@@ -28,11 +28,11 @@ const char* GHMM_AbstractModel::toString() const {
 }
 
 
-void GHMM_AbstractModel::print(FILE *file) {
+void GHMM_AbstractModel::print(FILE *file) const {
 }
 
 
-int GHMM_AbstractModel::check() {
+int GHMM_AbstractModel::check() const {
   return 0;
 }
 
@@ -95,6 +95,12 @@ void GHMM_AbstractModel::clean() {
 }
 
 
-int GHMM_AbstractModel::getStateID(const string& id) {
-  return state_by_id[id];
+int GHMM_AbstractModel::getStateIndex(const string& id) const {
+  map<string,int>::const_iterator iter;
+
+  iter = state_by_id.find(id);
+  if (iter == state_by_id.end())
+    return -1;
+
+  return iter->second;
 }

@@ -89,12 +89,12 @@ GHMM_IntVector* GHMM_DiscreteModel::viterbi(GHMM_Sequences* sequences,
 }
 
 
-GHMM_DiscreteModel* GHMM_DiscreteModel::copy() {
+GHMM_DiscreteModel* GHMM_DiscreteModel::copy() const {
   return new GHMM_DiscreteModel(model_copy(c_model));
 }
 
 
-int GHMM_DiscreteModel::check() {
+int GHMM_DiscreteModel::check() const {
   return model_check(c_model);
 }
 
@@ -113,7 +113,7 @@ int GHMM_DiscreteModel::check() {
 //}
 
 
-GHMM_Sequences* GHMM_DiscreteModel::generate_sequences(int seed, int global_len, long seq_number) {
+GHMM_Sequences* GHMM_DiscreteModel::generate_sequences(int seed, int global_len, long seq_number) const {
   return new GHMM_Sequences(model_generate_sequences(c_model,seed,global_len,seq_number));
 }
 
@@ -130,7 +130,7 @@ GHMM_Sequences* GHMM_DiscreteModel::generate_sequences(int seed, int global_len,
 //}
 
 
-void GHMM_DiscreteModel::print(FILE *file) {
+void GHMM_DiscreteModel::print(FILE *file) const {
   model_print(file,c_model);
 }
 
@@ -142,7 +142,7 @@ void GHMM_DiscreteModel::print(FILE *file) {
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void GHMM_DiscreteModel::A_print(FILE *file, char *tab, char *separator, char *ending) {
+void GHMM_DiscreteModel::A_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_A_print(file,c_model,tab,separator,ending);
 }
 
@@ -154,12 +154,12 @@ void GHMM_DiscreteModel::A_print(FILE *file, char *tab, char *separator, char *e
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void GHMM_DiscreteModel::B_print(FILE *file, char *tab, char *separator, char *ending) {
+void GHMM_DiscreteModel::B_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_B_print(file,c_model,tab,separator,ending);
 }
 
 
-void GHMM_DiscreteModel::Pi_print(FILE *file, char *tab, char *separator, char *ending) {
+void GHMM_DiscreteModel::Pi_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_Pi_print(file,c_model,tab,separator,ending);
 }
 
@@ -171,17 +171,17 @@ void GHMM_DiscreteModel::Pi_print(FILE *file, char *tab, char *separator, char *
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void GHMM_DiscreteModel::fix_print(FILE *file, char *tab, char *separator, char *ending) {
+void GHMM_DiscreteModel::fix_print(FILE *file, char *tab, char *separator, char *ending) const {
   model_fix_print(file,c_model,tab,separator,ending);
 }
  
 
-void GHMM_DiscreteModel::A_print_transp(FILE *file, char *tab, char *separator, char *ending) {
+void GHMM_DiscreteModel::A_print_transp(FILE *file, char *tab, char *separator, char *ending) const {
   model_A_print_transp(file,c_model,tab,separator,ending);
 }
 
 
-void GHMM_DiscreteModel::B_print_transp(FILE *file, char *tab, char *separator, char *ending) {
+void GHMM_DiscreteModel::B_print_transp(FILE *file, char *tab, char *separator, char *ending) const {
   model_B_print_transp(file,c_model,tab,separator,ending);
 }
 
@@ -233,7 +233,7 @@ void GHMM_DiscreteModel::B_print_transp(FILE *file, char *tab, char *separator, 
 
 
 GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int index, 
-						   GHMM_DoubleVector *scale, double *log_p) {
+						   GHMM_DoubleVector *scale, double *log_p) const {
   int len = seq->getLength(index);
   GHMM_DoubleMatrix *alpha = new GHMM_DoubleMatrix(len,c_model->N);
 
@@ -258,12 +258,12 @@ GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int inde
 
 
 int GHMM_DiscreteModel::fobaBackward(GHMM_Sequences* seq, int index, double **beta, 
-			      const double *scale) {
+			      const double *scale) const {
   return foba_backward(c_model,seq->getIntSequence(index),seq->getLength(index),beta,scale);
 }
 
 
-int GHMM_DiscreteModel::fobaLogp(GHMM_Sequences* seq, int index, double *log_p) {
+int GHMM_DiscreteModel::fobaLogp(GHMM_Sequences* seq, int index, double *log_p) const {
   return foba_logp(c_model,seq->getIntSequence(index),seq->getLength(index),log_p);
 }
 

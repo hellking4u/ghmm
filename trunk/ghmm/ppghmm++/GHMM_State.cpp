@@ -150,10 +150,10 @@ void GHMM_State::fillState(sstate* s) {
   s->pi = initial;
 
   for (i = 0; i < out_edges.size(); ++i)
-    s->out_id[i] = model->getStateID(out_edges[i]->target);
+    s->out_id[i] = model->getStateIndex(out_edges[i]->target);
 
   for (i = 0; i < in_edges.size(); ++i)
-    s->in_id[i] = model->getStateID(in_edges[i]->source);
+    s->in_id[i] = model->getStateIndex(in_edges[i]->source);
 
   int cos;
   for (cos = 0; cos < c_model->cos; ++cos) {
@@ -215,10 +215,10 @@ void GHMM_State::fillState(state* s) {
   s->pi = initial;
 
   for (i = 0; i < out_edges.size(); ++i)
-    s->out_id[i] = m->getStateID(out_edges[i]->target);
+    s->out_id[i] = m->getStateIndex(out_edges[i]->target);
 
   for (i = 0; i < in_edges.size(); ++i)
-    s->in_id[i] = m->getStateID(in_edges[i]->source);
+    s->in_id[i] = m->getStateIndex(in_edges[i]->source);
 
   for (i = 0; i < out_edges.size(); ++i)
     s->out_a[i] = out_edges[i]->prob;
