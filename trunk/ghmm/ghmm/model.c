@@ -968,9 +968,10 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
   mo1 = m0;
   mo2 = m;
  
-  for (k = 0; k < 2; k++) {
+  for (k = 0; k < 2; k++) { /* Two passes for the symmetric case */
     
-    seq0 = model_generate_sequences(mo1, 1998, maxT+1, 1);
+    /* seed = 0 -> no reseeding. Call  gsl_rng_timeseed(RNG) externally */
+    seq0 = model_generate_sequences(mo1, 0, maxT+1, 1);
     
     if (seq0->seq_len[0] < maxT) { /* There is an absorbing state */
       
