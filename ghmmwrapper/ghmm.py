@@ -156,6 +156,7 @@ import ghmmwrapper
 import ghmmhelper
 import re
 
+ghmmwrapper.gsl_rng_init() #Init random number generator
 
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
@@ -276,7 +277,7 @@ class Alphabet(EmissionDomain):
         return len(self.listOfCharacters)
 
 
-DNA = Alphabet(['A','C','G','T'])
+DNA = Alphabet(['a','c','g','t'])
 AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
                        'M','N','P','Q','R','S','T','V','W','Y'])
 def IntegerRange(a,b):
@@ -449,7 +450,7 @@ class EmissionSequence(list):
         strout = ""
         strout += "\nEmissionSequence Instance:\nlength " + str(get_arrayint(seq.seq_len,0))+ ", weight " + str(get_arrayd(seq.seq_w,0))  + ":\n"
         for j in range(get_arrayint(seq.seq_len,0) ):
-            strout += str(self[j]) + " "    
+            strout += str( self.emissionDomain.external(self[j]) )   
            
     	return strout		
 
@@ -550,13 +551,13 @@ class SequenceSet:
            for i in range(seq.seq_number):
                 strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(get_arrayd(seq.seq_w,i))  + ":\n"
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
-                    strout += str( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) ) + " "
+                    strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) )) ) 
 
         if self.emissionDomain.CDataType == "double":        
             for i in range(seq.seq_number):
                 strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(get_arrayd(seq.seq_w,i))  + ":\n"
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
-                    strout += str( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) ) + " "
+                    strout += sstr( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) )) ) + " "
 
         return strout 
     
@@ -578,7 +579,7 @@ class SequenceSet:
             seq.seq_number = 1
         if self.emissionDomain.CDataType == "double":    
             seq = ghmmwrapper.sequence_d_calloc(1)
-            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # double* -> double** reference
+            seq.seq = ghmmwrapper.cast_ptr_d(self.__array[index]) # double* -> double**
             set_arrayint(seq.seq_len,0,get_arrayint(self.cseq.seq_len,index))
             seq.seq_number = 1
 
@@ -824,6 +825,11 @@ class HMM:
         self.emissionDomain = emissionDomain
         self.distribution = distribution
         self.cmodel = cmodel
+
+        self.silent = 0   # flag for silent states
+        
+        self.samplingFunction = ""
+        self.viterbiFunction = ""
         
     def loglikelihood(self, emissionSequences):
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -907,7 +913,7 @@ class HMM:
         smosqd_ptr.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
         smosqd_ptr.eps  = 10e-6
         smosqd_ptr.max_iter = nrSteps
-            
+           
         return baumWelchCData
     
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
@@ -944,22 +950,68 @@ class HMM:
 
             emission_sequences can either be a SequenceSet or a Sequence
 
-            Result: [q_0, ..., q_T] the viterbi-path if emission_sequences is a Sequence
-                    [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
+            Result: [q_0, ..., q_T] the viterbi-path of emission_sequences is an emmissionSequence
+            object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
                     SequenceSet
         """
-
+        
+        print "1111"
+        if self.emissionDomain.CDataType == "int":
+            getPtr = ghmmwrapper.get_row_pointer_int
+        if self.emissionDomain.CDataType == "double":            
+            getPtr = ghmmwrapper.get_row_pointer_d
+            
+                    
+        log_p = double_array(1)
+        
+        print "2222"
+        allPaths = []
+        for i in range(emissionSequences.cseq.seq_number):
+            seq = getPtr(emissionSequences.cseq.seq,i)
+            l = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            
+            print seq
+            print "33333"
+            viterbiPath =  self.viterbiFunction(self.cmodel,seq,l,log_p)
+            print "44444"                      
+            #viterbi_prob = get_arrayd( log_p, 0 )
+        
+            onePath = []
+            for i in range(mysequence.length * self.model.N): # maximum length of a viterbi path for a silent model
+                d = get_arrayint(viterbiPath,i)
+                if d >= 0:
+                    onePath.append(d)
+                
+                # for non silent model the length of the viterbi path is known
+                if self.silent == 0 and i >= self.cmodel.N:
+                    allPaths.append(onePath)
+                    break
+                # in the silent case we have append as long as the path is positive
+                if self.silent == 1 and d < 0:
+                    allPaths.append(onePath)
+                    break
+        
+        if emissionSequences.cseq.seq_number > 1:
+            return allPaths
+        else:
+            return allPaths[0]    
+                    
     
-    def sample(self, T):
+    def sample(self, seqNr ,T):
         """ Sample emission sequences 
 
 
         """
+        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,self.cmodel.N)
+        return SequenceSet(self.emissionDomain,seqPtr)
+        
 
     def sampleSingle(self, T):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
+        seqPtr = self.samplingFunction(self.cmodel,0,T,1,self.cmodel.N)
+        return EmissionSequence(self.emissionDomain,seqPtr)
 
     def state(self, stateLabel):
         """ Given a stateLabel return the integer index to the state """
@@ -1002,8 +1054,11 @@ class DiscreteEmissionHMM(HMM):
     
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
+        self.silent = 1
 
-
+        self.samplingFunction = ghmmwrapper.model_generate_sequences
+        self.viterbiFunction = ghmmwrapper.viterbi
+      
     def __str__(self):
         hmm = self.cmodel
         strout = "\nOverview of HMM:\n"
