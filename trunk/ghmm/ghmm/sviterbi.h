@@ -1,5 +1,5 @@
-#ifndef CVITERBI_H
-#define CVITERBI_H
+#ifndef SVITERBI_H
+#define SVITERBI_H
 
 #ifdef __cplusplus
 extern "C" {
