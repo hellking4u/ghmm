@@ -201,20 +201,19 @@ void testBaumwelch(){
 			z1++;
 			printf("%d", path1[i]);
 			}
-		else printf("hallo");
+		
  if (path2[i] != -1) {
       real_path2[z2]=path2[i];
 			z2++;
 			printf("%d", path2[i]);
 			}
-		else printf("hallo");
+		
    if (path[i] != -1) {
       real_path[z]=path[i];
 			z++;
 			printf("%d", path[i]);
 			}
-		else printf("hallo");
-  }
+		}
   printf("\n");
   printf("log-prob: %g\n",first_prob);
   my_output->state_labels[0]=real_path;
@@ -230,7 +229,7 @@ void testBaumwelch(){
 	for (i=0; i<tl; i++) {
 
 	  your_output = model_label_generate_sequences(mo, 0, seqlen, 1, seqlen);
-		error = cgradientD(mo, your_output, &log_p, 1);
+		error = cgradientD(mo, your_output, &log_p, tl);
 		path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &proba[i]);
 	  free(path);
 		printf("log-prob after %d training: %g\n", i, proba[i]);
