@@ -313,7 +313,13 @@ class DiscreteDistribution(Distribution):
 
     def __init__(self, alphabet):
         self.alphabet = alphabet
+        self.prob_vector = None
+        
+    def set(self, prob_vector):
+        self.prob_vector = prob_vector
 
+    def get(self):
+        return self.prob_vector
         
 
 class ContinousDistribution(Distribution):
@@ -323,12 +329,12 @@ class GaussianDistribution(ContinousDistribution):
 
     def __init__(self, domain):
         self.emissionDomain = domain
-        #self.mu = mu
-        #self.sigma2 = sigma2
-
-    def set(self, (mu, sigma2)):
+        self.mu = None
+        self.sigma = None
+        
+    def set(self, (mu, sigma)):
         self.mu = mu
-        self.sigma2 = sigma2
+        self.sigma = sigma
 
     def get(self):
         return (self.mu, self.sigma2)
@@ -347,7 +353,7 @@ class EmissionSequence(list):
     """
 
     def __init__(self, emissionDomain, sequenceInput ,inputType = "pylist"):
-        self.emissionDomain = emissionDomain # XXX identical name problematic ?
+        self.emissionDomain = emissionDomain # XXX identical name problematic ? Noe!
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             if inputType == "pylist":
@@ -417,8 +423,48 @@ class HMMOpenFactory(HMMFactory):
         #m = hmmClass("bla.xml")
         #return m
 
-    def determineHMMClass(self, fileName):
-        pass 
+    def determineHMMClass(self, fileName, fileType=GHMM_FILETYPE_SMO):
+        #
+        # smo files 
+        #
+        #
+        file = open(fileName,'r')
+        done = 0
+        while not done:
+            l = file.readline().strip()
+            # We are looking for
+            # SHMM = or HMM =
+            # M = 4
+            # density = 0;
+            # cos = 1;
+            hmm = re.compile("HMM\s*=")
+            shmm = re.compile("SHMM\s*=")
+            mvalue = re.compile("M\s*=\s*([0-9]+)")
+            densityvalue = re.compile("density\s*=\s*([0-9]+)")
+            cosvalue = re.compile("cos\s*=\s*([0-9]+)")
+            
+            emission_domain = None
+            if l[0] != '#': # Not a comment line
+                if hmm.match(l, 1):
+                    if emission_domain != None:
+                        print "HMMOpenFactory:determineHMMClass: both HMM and SHMM?"
+                    else:
+                        emission_domain = 'int'
+                    
+                    
+                if shmm.match(l, 1):
+                    if emission_domain != None:
+                        print "HMMOpenFactory:determineHMMClass: both HMM and SHMM?"
+                    else:
+                        emission_domain = 'double'
+
+                if mvalue.match(l, 1):
+                    M = 4
+
+            
+            
+
+        
 
 HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
 
@@ -824,34 +870,35 @@ class GaussianEmissionHMM(HMM):
 
 
 if __name__ == '__main__':
-	m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
-						[[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-						[[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
-						[1.0,0,0])
+    m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
+                        [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+                        [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,1.0,0.0]],
+                        [1.0,0,0])
 
-
+    
     print m
 
 
-	m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
-						[[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
-						[[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
-						[1.0,0,0])
-
+    m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
+                         [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+                         [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
+                         [1.0,0,0])
+    
 
     print m2
 
 
-	seq_c = ghmmwrapper.seq_d_read('test10.sqd')
-	l = m2.loglikelihood_sqd(seq_c)
+    seq_c = ghmmwrapper.seq_d_read('test10.sqd')
+    l = m2.loglikelihood_sqd(seq_c)
+    
+    for i in xrange(seq_c.seq_number):
+        print ghmmwrapper.get_arrayd(l,i), 
+        
 
-	for i in xrange(seq_c.seq_number):
-		print ghmmwrapper.get_arrayd(l,i), 
+        #m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
+        #m = HMMOpen("test.smo")
 
+        #seqs = SequenceSetOpen('test.sqd')
+        #l = m.baumWelch(seqs, 100, 0.001)
+        #print l
 
-	#m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
-	#m = HMMOpen("test.smo")
-
-	#seqs = SequenceSetOpen('test.sqd')
-	#l = m.baumWelch(seqs, 100, 0.001)
-	#print l
