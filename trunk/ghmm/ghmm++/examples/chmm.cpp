@@ -7,10 +7,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <ghmm/rng.h>
-#include "ghmm++/GHMM_ContinuousModel.h"
-#include "ghmm++/GHMM_Sequences.h"
-#include "ghmm++/GHMM_State.h"
+#include "ghmm++/GHMM.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -37,7 +34,7 @@ int single_state_continuous() {
   my_model.getCState(0)->u[0]   = u; /* variance */
 
   if (my_model.check() == -1)
-    exit(1);
+    return 1;
 
   /* generate sequences */
   my_sequences = my_model.generate_sequences(1,  /* random seed */
@@ -86,10 +83,16 @@ int single_state_continuous() {
   return 0;
 }
 
-int main()
-{
+int main() {
   /* Important! initialise rng  */
-  gsl_rng_init();
+  GHMM_Toolkit::gsl_rng_init();
 
-  return single_state_continuous();
+  int result = single_state_continuous();
+
+#ifdef WIN32
+  printf("\nPress ENTER\n");
+  fgetc(stdin);
+#endif
+
+  return result;
 }

@@ -1,15 +1,14 @@
 #  author       : Peter Pipenbacher
-#  filename     : ghmm/VisualC/Makefile.am
+#  filename     : ghmm/VisualC/coin_toss_test/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
 
-SUBDIRS = . coin_toss_test ghmm ghmmpp coin_toss_test_pp
+SUBDIRS = .
 MAINTAINERCLEANFILES = \
 Makefile.in \
-ghmm.ncb \
-ghmm.opt
+coin_toss_test_pp.plg
 
-EXTRA_DIST = ghmm.dsw
+EXTRA_DIST = coin_toss_test_pp.dsp
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
 dist-hook:

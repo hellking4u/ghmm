@@ -234,4 +234,6 @@ ghmm++/Makefile \
 ghmm++/examples/Makefile \
 VisualC/Makefile \
 VisualC/coin_toss_test/Makefile \
-VisualC/ghmm/Makefile)
+VisualC/coin_toss_test_pp/Makefile \
+VisualC/ghmm/Makefile \
+VisualC/ghmmpp/Makefile)
