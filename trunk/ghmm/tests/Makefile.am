@@ -10,11 +10,9 @@
 INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
-noinst_PROGRAMS = root_finder_test
-root_finder_test_SOURCES = root_finder_test.c
+noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols
 
 LDADD = ../ghmm/libghmm.a
-
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
