@@ -43,6 +43,9 @@ int my_model()
   double trans_prob_1_state_rev[2]={0.1,0.9};
   sequence_t* my_output;
 
+  /* flags indicating whether a state is silent */
+  int silent_array[2] =  {0,0}; 
+  
   /* initialise state 0 */
   /* start probability for this state */
   model_states[0].pi = 0.5;
@@ -80,6 +83,8 @@ int my_model()
   my_model.s=model_states; /* array of states */
   my_model.prior=-1; /* probability of this model, used in a model array */
 
+  my_model.silent = silent_array;
+  
   /* consistency check */
   fprintf(stdout,"checking model:\n");
   if (model_check(&my_model))

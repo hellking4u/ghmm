@@ -529,7 +529,7 @@ void GHMM_Sequences::copyFromSequences(sequence_t* seq) {
   for (i = 0; i < seq->seq_number; ++i) {
     c_i_sequences->seq[i] = (int*) malloc(sizeof(double) * seq->seq_len[i]);
     for (j = 0; j < seq->seq_len[i]; ++j)
-      c_d_sequences->seq[i][j] = seq->seq[i][j];
+      c_i_sequences->seq[i][j] = seq->seq[i][j];
 
     c_i_sequences->seq_len[i]   = seq->seq_len[i];
     c_i_sequences->seq_label[i] = seq->seq_label[i];
@@ -640,7 +640,7 @@ string GHMM_Sequences::getSequence(int index) const {
   if (c_d_sequences) {
     for (i = 0; i < getLength(index); ++i) {
       if (i > 0) seq += " ";
-      seq += GHMM_Toolkit::toString(c_i_sequences->seq[index][i]);
+      seq += GHMM_Toolkit::toString(c_d_sequences->seq[index][i]);
     }
   }
   
