@@ -1,7 +1,8 @@
 #! /bin/sh
-# $Name$
-# $Author$
-# $Date$, $Revision$"
+#  author       : Achim Gaedke
+#  filename     : ghmm/tools/ghmm-config
+#  created      : DATE: April 2001
+#  $Id$
 
 copyright()
 {
