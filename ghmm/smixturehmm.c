@@ -1,8 +1,8 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /homes/hmm/wichern/hmm/src/smixturehmm.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smixturehmm.c
   created      : TIME: 14:35:48     DATE: Thu 20. July 2000
-  last-modified: TIME: 19:25:03     DATE: Tue 06. March 2001
+  last-modified: TIME: 17:08:20     DATE: Mon 09. April 2001
 *******************************************************************************/
 #include <stdio.h>
 #include <float.h>
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   long errors_train= 0, errors_test = 0;
   char  *str;
   double train_likelihood, test_likelihood, train_ratio, bic;
-  double *tilgw = NULL, *avg_comp_like = NULL;
+  double *avg_comp_like = NULL;
   double **cp = NULL; /* component probabilities for all train-seqs. */
   FILE *outfile = NULL, *likefile = NULL, *smofile = NULL;
   char filename[256], likefilename[256];
@@ -104,8 +104,6 @@ int main(int argc, char* argv[]) {
     mes_prot(str); m_free(str); goto STOP;
   }
 
-  printf("MIN_TILG = %d, density = ", (int)MIN_TILG);
-  fprintf(outfile, "MIN_TILG = %d, density = ", (int)MIN_TILG);
   if (smo_initial[0]->density == 0) {
     printf("normal\n");
     fprintf(outfile, "normal\n");
@@ -207,23 +205,14 @@ int main(int argc, char* argv[]) {
 	  smodel_print(smofile, smo[k]);  
       }
     
-      
-
-      tilgw = smixturehmm_tilg_w(cp, sqd_train, smo, smo_number);
-      if (tilgw == NULL) {
-	mes_prot("Error calculating tilgw \n"); goto STOP;
-      }
       avg_comp_like = smixturehmm_avg_like(cp, sqd_train, smo, smo_number);
       if (avg_comp_like == NULL) {
 	mes_prot("Error calculating avg_like \n"); goto STOP;
       }
-      fprintf(outfile, "\nTrain Set:\nModel Priors \t fraction of tilg seqs \t Likel. per Seq\n");
+      fprintf(outfile, "\nTrain Set:\nModel Priors \t  Likel. per Seq\n");
       for (k = 0; k < smo_number; k++)
-	fprintf(outfile, "%.4f\t%.4f\t%.4f\n", smo[k]->prior, 
-		tilgw[k]/(smo[k]->prior * total_train_w), avg_comp_like[k]);
+	fprintf(outfile, "%.4f\t%.4f\t%.4f\n", smo[k]->prior,  avg_comp_like[k]);
 
-      /* errors_train = sequence_d_mix_likeBS
-	 (smo, smo_number, sqd_train, &train_likelihood); */
       errors_train = sequence_d_mix_like
 	(smo, smo_number, sqd_train, &train_likelihood);
 
@@ -236,9 +225,6 @@ int main(int argc, char* argv[]) {
 
       
       if (sqd_test != NULL){
-	/*	errors_test = sequence_d_mix_likeBS
-		(smo, smo_number, sqd_test, &test_likelihood);            
-	*/
 	errors_test = sequence_d_mix_like
 	  (smo, smo_number, sqd_test, &test_likelihood);
 	
@@ -275,7 +261,7 @@ int main(int argc, char* argv[]) {
       matrix_d_free(&cp, sqd_train->seq_number);
       sequence_d_free(&sqd_train);
       sequence_d_free(&sqd_test);
-      m_free(tilgw); m_free(avg_comp_like);
+      m_free(avg_comp_like);
       if (outfile) 
 	fclose(outfile);  /* save results, open to append at the beginning of the loop */ 
       if (likefile)
@@ -569,17 +555,9 @@ int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
       cp[i][bm] = 1.0;
     }    
     m_free(result);
-  }
+  } 
+  /* mode == 4 used to be kmeans labels */
 
-  /* 4. partition from k-means */
-  else if (mode == 4) {  
-    /* reads results from kmeans-clustering into seq_labels */
-    if (sequence_d_labels_from_kmeans(sqd, smo_number) == -1)
-      {mes_proc(); goto STOP;}
-    for (i = 0; i < sqd->seq_number; i++) 
-      cp[i][sqd->seq_label[i]] = 1.0;
-  }
-  
   /* 5. no start partition == equal cp for each model */
   else if (mode == 5) {
     for (i = 0; i < sqd->seq_number; i++) 
@@ -705,32 +683,6 @@ void smixturehmm_print_header(FILE *file, char *argv[], int flag) {
 
 }
 
-/*============================================================================*/
-
-/* calculate for each model the total weight of seqs. that reached the tilg phase */
-double *smixturehmm_tilg_w(double **cp, sequence_d_t *sqd, 
-			   smodel **smo, int smo_number) {
-#define CUR_PROC "smixturehmm_tilg_w"
-  double *tilgw;
-  int i, k;
-
-  if (!m_calloc(tilgw, smo_number)) {mes_proc(); goto STOP;}
-
-  for (i = 0; i < sqd->seq_number; i++) {
-    if (sqd->seq_len[i] > 1) { /* if len <= 1 seq can't be in tilgphase */
-      if ( sequence_d_is_tilg(sqd->seq[i], sqd->seq_len[i] - 1) ||
-           sequence_d_is_tilg(sqd->seq[i], sqd->seq_len[i] - 2)) {
-	for (k = 0; k < smo_number; k++)
-	  tilgw[k] += cp[i] [k] * sqd->seq_w[i];
-      }		
-    }  
-  }
-        
-  return tilgw;
- STOP:
-  return NULL;
-#undef CUR_PROC
-} /* smixturehmm_tilg_w */
 
 
 /*============================================================================*/

@@ -1,8 +1,8 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /homes/hmm/wichern/hmm/src/smixturehmm.h
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smixturehmm.h
   created      : TIME: 18:07:43     DATE: Thu 20. July 2000
-  last-modified: TIME: 11:17:22     DATE: Fri 22. December 2000
+  last-modified: TIME: 17:08:33     DATE: Mon 09. April 2001
 *******************************************************************************/
 
 #ifndef SMIXTUREHMM_H
@@ -43,9 +43,6 @@ void smixture_calc_logp(double **logp, int **error, sequence_d_t *sqd,
 ///
 void smixturehmm_print_header(FILE *file, char *argv[], int flag);
 
-///
-double *smixturehmm_tilg_w(double **cp, sequence_d_t *sqd, 
-			   smodel **smo, int smo_number);
 
 ///
 double *smixturehmm_avg_like(double **cp, sequence_d_t *sqd, 
