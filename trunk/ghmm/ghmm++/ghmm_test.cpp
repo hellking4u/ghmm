@@ -19,8 +19,8 @@ using namespace std;
 
 int main()
 {
-  XMLIO_ElementReader<hmm> my_model_reader;
-  my_model_reader.set_doc_name("hmm");
+  XMLIO_ElementReader<ghmm> my_model_reader;
+  my_model_reader.set_doc_name("ghmm");
   my_model_reader.read_file("ghmm.xml");
   if (my_model_reader.get_element()!=NULL)
     {

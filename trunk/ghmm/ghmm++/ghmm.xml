@@ -1,22 +1,34 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 
-<hmm type="discrete">
+<ghmm type="discrete">
 Wunderschönes Hidden Markov Model
 
-<Graph id="hmm">
- <Node id="A"/>
- <Node id="B"/>
- <Node id="C"/>
- <Edge id="a1" from="A" to="A"><Prob>1</Prob></Edge>
- <Edge id="a2" from="A" to="B"><Prob>1</Prob></Edge>
- <Edge id="a3" from="A" to="C"><Prob>1</Prob></Edge>
-</Graph>
+<graph id="hmm">
+ <node id="A"/>
+ <node id="B"/>
+ <node id="C"/>
+ <edge id="a1" from="A" to="A">
+  <attr name="transitions"><tup>
+   <float>1</float>
+  </tup></attr>
+ </edge>
+ <edge id="a2" from="A" to="B">
+  <attr name="transitions"><tup>
+   <float>2</float>
+  </tup></attr>
+ </edge>
+ <edge id="a3" from="A" to="C">
+  <attr name="transitions"><tup>
+   <float>3</float>
+  </tup></attr> 
+ </edge>
+</graph>
 
 <InitialStates>
-<DiscretePD>
- 1 <State id="A"/>
- 2 <State id="B"/>
-</DiscretePD>
+ <DiscretePD>
+  1 <State id="A"/>
+  2 <State id="B"/>
+ </DiscretePD>
 </InitialStates>
 
 <Emissions>
@@ -24,6 +36,14 @@ Wunderschönes Hidden Markov Model
  <Emission State="B">1 2 4</Emission>
  <Emission State="C">4 5 6</Emission>
 </Emissions>
+
+<Alphabet>
+<Symbol code="1">Langeweile</Symbol>
+<Symbol code="2">Müdigkeit</Symbol>
+<Symbol code="3">Kaffeedurst</Symbol>
+<Symbol code="4">Hunger</Symbol>
+<Symbol code="5">Stress</Symbol>
+</Alphabet>
 
 <sequences type="int">
  <DiscretePD default_weight="1">
@@ -43,4 +63,4 @@ Wunderschönes Hidden Markov Model
  </DiscretePD>
 </sequences>
 
-</hmm>
+</ghmm>
