@@ -36,7 +36,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
 
 /*----------------------------------------------------------------------------*/
 
-  /* Speicher alloc und Daten einlesen: Sequenzen und Initialmodelle */
+  /* Allocate memory and read in data: Sequences and initial model */
   sq_vec = sequence_read(seq_file, &sq_number);
   if (!sq_vec[0]) {mes_proc(); goto STOP;}
   if (sq_number > 1) 
@@ -66,7 +66,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
   while(changes > 0) { 
     iter++;
 
-    /* Sequenzen zuordnen */
+    /* Associate the sequences */
     fprintf(outfile, "\nSequence, Best Model, logP of generating Seq.:\n");
     for (j = 0; j < sq->seq_number; j++) {
       sq->seq_label[j] = 
@@ -75,7 +75,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
       fprintf(outfile, "seq %ld, mo %ld, log p %.4f\n", j, 
 	      sq->seq_label[j], log_p);
       if (sq->seq_label[j] == -1 || sq->seq_label[j] >= cl.mo_number) { 
-	/* kein Modell passt, was tun ? */
+	/* No model fits! */ 
 	char *str =
 	  mprintf(NULL, 0, "Seq. %ld: sequence_best_model liefert %d\n",
 		  j, sq->seq_label[j]); 
@@ -88,7 +88,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
     fprintf(outfile, "%ld changes\n", changes);
     fprintf(stdout, "\n*** %ld changes in iteration %d ***\n\n", changes, iter);
 
-    /* Modelle mit den zugeordneten Sequenzen Reestimieren */
+    /* Reestimate models with the associated sequences */
     if (changes > 0) {
       if (cluster_update(&cl, sq)) {
 	mes_proc(); goto STOP; 
@@ -124,29 +124,27 @@ STOP:
 }/* cluster_hmm */
 
 /*============================================================================*/
-/* NEU: Speicher fuer Sequenzen fuer jedes Modell nur einmal allocieren und
-   nicht wie vorher fuer jede Sequenz mit realloc arbeiten.*/
 int cluster_update(cluster_t *cl, sequence_t *sq) {
 #define CUR_PROC "cluster_update"
   int i, res = -1;
   long *seq_counter;
   sequence_t *seq_t;
   if(!m_calloc(seq_counter, cl->mo_number)) {mes_proc(); goto STOP;}
-  /* Anzahl zugeordneter Sequenzen feststellen */
+  /* Fix the number of associated sequences */
   for (i = 0; i < sq->seq_number; i++) 
     seq_counter[sq->seq_label[i]]++;
-  /* Speicher blockweise allocieren */
+  /* allocate memory block for block */
   for (i = 0; i < cl->mo_number; i++) {
     if (cl->mo_seq[i]) {
-      /* wichtig: hier kein sequence_free, sonst sind auch die Original
-	 Sequenzen futsch */
+      /* Important: No sequence_free here, otherwise are the original 
+	 sequences gone! */
       sequence_clean(cl->mo_seq[i]);
       m_free(cl->mo_seq[i]);
     }
     cl->mo_seq[i] = sequence_calloc(seq_counter[i]);
-    cl->mo_seq[i]->seq_number = 0; /* wird unten hochgezaehlt */
+    cl->mo_seq[i]->seq_number = 0; /* Counted later */
   }
-  /* Eintraege setzen */
+  /* Set entries */
   for (i = 0; i < sq->seq_number; i++) {
     seq_t = cl->mo_seq[sq->seq_label[i]];
     seq_t->seq_len[seq_t->seq_number] = sq->seq_len[i];
@@ -175,11 +173,10 @@ void cluster_print_likelihood(FILE *outfile, cluster_t *cl) {
 } /* cluster_print_likelihood */
 
 /*============================================================================*/
-/* Verhindert, dass Modelle leer ausgehen (keine Sequenz zugeordnet), 
-   indem ihnen eine zufaellige Sequenz zugeordnet wird. Da hierdurch 
-   evt. erneut leere Modelle erzeugt werden, werden Sequenzen getauscht,
-   bis keine leeren Modelle vorliegen. (Gefahr einer Endlosschleife, daher
-   Abbruch nach 100 Interationen) */
+/* Prevents that empty models are sent out (no associated seqences) by 
+   associating a random sequence. Since it's possible to produce an empty model
+   in this way, we swap the sequences until a nonempty model is produced. (This 
+   could be a never-ending process and therefore it's only done 100 times). */
 int cluster_avoid_empty_model(long *seq_label, long seq_number, 
 			       int mo_number) {
 #define CUR_PROC "cluster_avoid_empty_model"
@@ -188,7 +185,7 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number,
   long *counter;
   char error = 1, change = 0;
   int iter = 0;
-  /* Initialisierungen */
+  /* Initialization */
   if(!m_calloc(counter, mo_number)) {
     mes_proc(); return (-1);
   }
@@ -200,13 +197,13 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number,
   while (error && iter < 100) {
     iter++;
     error = 0;
-    /* gibt es leere Modelle ? */
+    /* Do we have empty models ? */
     for (i = 0; i < mo_number; i++) {
       if (counter[i] == 0) {
 	change = 1;
-	/* zuf. Sequenz fuer leeres Modell auswaehlen */
+	/* Choose a random sequence for an empty model */
 	j = m_int(gsl_rng_uniform(RNG) * (seq_number - 1));
-	/* urspruengliches Modell verliert eine Sequenz */
+	/* The orginal model loses one sequence */
 	printf("!!\"avoid_empty_model\":Verschiebe Seq. %ld: %ld --> %d !!\n", 
 	       j, seq_label[j], i);
 	counter[seq_label[j]] --;
@@ -214,7 +211,7 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number,
 	seq_label[j] = i;	
       }  
     }
-    /* jetzt alles ok ? */
+    /* Is now everything OK ? */
     if (change) {
       for (i = 0; i < mo_number; i++) {
 	if (counter[i] <= 0) {
