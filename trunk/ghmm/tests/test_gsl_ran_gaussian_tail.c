@@ -35,4 +35,5 @@ int main(void)
       fprintf(out_file,"e\n");
       cut_off+=4;
     }
+  return 0;
 }

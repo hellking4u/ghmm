@@ -10,6 +10,7 @@
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/model.h>
+#include <ghmm/reestimate.h>
 
 /*
   model with two states and three symbols

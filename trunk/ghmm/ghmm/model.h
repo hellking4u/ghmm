@@ -358,15 +358,19 @@ void state_clean(state *my_state);
    @author Peter Pipenbacher
    @return copy of the state
    @param my_state:  state to copy */
-  //state* state_copy(state *my_state);
+#if 0
+  state* state_copy(state *my_state);
+#endif  
 
 /**
    Copies a given state to a given destination.
    @author Peter Pipenbacher
    @param source:  state to copy 
    @param dest:    destination */
-  //void state_copy_to(state *source, state* dest);
-
+#if 0
+  void state_copy_to(state *source, state* dest);
+#endif
+  
 #ifdef __cplusplus
 }
 #endif

@@ -49,7 +49,7 @@ double_sequence::double_sequence(sequence_d_t* seq, int sequence_pos) {
   tag="sequence";
   int length = seq->seq_len[sequence_pos];
   double* seq_data=seq->seq[sequence_pos];
-  for(size_t count=0; count < length; count++)
+  for(int count=0; count < length; count++)
     push_back(seq_data[count]);
   strstream tmpstr;
   strstream tmpstr2;
@@ -116,7 +116,7 @@ int_sequence::int_sequence(sequence_t* seq, int sequence_pos) {
   tag="sequence";
   int length = seq->seq_len[sequence_pos];
   int* seq_data=seq->seq[sequence_pos];
-  for(size_t count=0; count < length; count++)
+  for(int count=0; count < length; count++)
     push_back(seq_data[count]);
   strstream tmpstr;
   strstream tmpstr2;

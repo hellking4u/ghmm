@@ -73,7 +73,9 @@ static int pdf_stdnormal_exists = 0;
 #define X_STEP_PHI 0.001  /* step size */
 #define X_FAKT_PHI 1000   /* equivalent to step size*/
 static int PHI_len = 0;
+#if 0 /* needed for randvar_get_xPHIxgleichPHIy() */
 static double x_PHI_xy = -1.0;
+#endif
 static double x_PHI_1 = -1.0;
 
 
@@ -182,8 +184,6 @@ double randvar_get_PHI(double x) {
   else
     return(phi_x);
 #endif /* DO_WITH_GSL */
-
-STOP:
   return(-1.0);
 # undef CUR_PROC
 } /* randvar_get_PHI */
@@ -224,7 +224,6 @@ double randvar_get_xPHIless1() {
   }
   return(x_PHI_1);
 #endif
-STOP:
   return(-1.0);
 # undef CUR_PROC
 }

@@ -173,10 +173,10 @@ int scluster_hmm(char* argv[]) {
     while (i < cl.smo_number) {
       for (j = i; j < m_min(cl.smo_number,i+THREADS); j++) {
 	if (!smo_changed[j]) continue;
-	if (perror = pthread_create(&tid[j],
+	if ((perror = pthread_create(&tid[j],
 				    &Attribute,
 				    (void*(*)(void*))scluster_prob,
-				    (void*)&cs[j])){
+				    (void*)&cs[j]))){
 	  str = mprintf(NULL,0,
 		"pthread_create returns false (step %d, smo[%d])\n",iter,j); 
 
@@ -314,10 +314,10 @@ int scluster_hmm(char* argv[]) {
 	  if (!smo_changed[j]) continue;
 	  if (cs[j].sqd == NULL)
 	    mes(MES_WIN, "cluster %d empty, no reestimate!\n", j);
-	  else if (perror = pthread_create(&tid[j],
+	  else if ((perror = pthread_create(&tid[j],
 					   &Attribute,
 					   (void*(*)(void*))sreestimate_baum_welch,
-					   (void*)&cs[j])) {
+					   (void*)&cs[j]))) {
 	    str = mprintf(NULL,0, 
 			  "pthread_create returns false (step %d, smo[%d])\n",
 			  iter, j); 

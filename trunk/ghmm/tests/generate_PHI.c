@@ -91,7 +91,8 @@ int print_PHI_table(void)
       printf("%f,%e,%e\n",a,r.val/2.0+0.5,r.err/2.0);
       i++;
     }
-  printf("Erzeugte %d Werte\n",i);
+  printf("Erzeugte %ld Werte\n",i);
+  return 0;
 }
 
 /* create a gnuplot file with pictures from randomnumbers*/
