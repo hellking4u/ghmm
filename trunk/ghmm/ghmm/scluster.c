@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #endif
 
 #include <stdio.h>
+#undef HAVE_LIBPTHREAD
 #ifdef HAVE_LIBPTHREAD
 # include <pthread.h>
 #endif /* HAVE_LIBPTHREAD */
@@ -59,7 +60,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #else
 # define POUT 1
 #endif /* HAVE_LIBPTHREAD */
-
+#define POUT 1
 
 /*============================================================================*/
 
@@ -502,6 +503,7 @@ int scluster_update(scluster_t *cl, sequence_d_t *sqd) {
   for (i = 0; i < sqd->seq_number; i++) {
     seq_ptr = cl->smo_seq[sqd->seq_label[i]];
     seq_ptr->seq_len[seq_ptr->seq_number] = sqd->seq_len[i];
+    seq_ptr->seq_id[seq_ptr->seq_number] = sqd->seq_id[i];
     seq_ptr->seq[seq_ptr->seq_number] = sqd->seq[i]; /* Pointer!!! */
     seq_ptr->seq_label[seq_ptr->seq_number] = sqd->seq_label[i];
     seq_ptr->seq_w[seq_ptr->seq_number] = sqd->seq_w[i];
