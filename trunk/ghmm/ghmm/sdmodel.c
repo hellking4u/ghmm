@@ -199,7 +199,7 @@ sdmodel *sdmodel_copy(const sdmodel *mo) {
     m2->s[i].pi = mo->s[i].pi;
     m2->s[i].out_states = nachf;
     m2->s[i].in_states = vorg;
-    m2->s[i].label = (char*)malloc(sizeof( mo->s[i].label));
+    m2->s[i].label = (char*) malloc(strlen( mo->s[i].label) + 1);
     strcpy( m2->s[i].label, mo->s[i].label);
     m2->s[i].countme = mo->s[i].countme;
   }
