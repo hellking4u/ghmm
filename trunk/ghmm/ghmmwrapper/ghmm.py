@@ -955,8 +955,9 @@ class HMMOpenFactory(HMMFactory):
 
     def __call__(self, fileName, modelIndex = None):
         
-        if not path.exists(fileName):
-            raise IOError, 'File ' + str(fileName) + ' not found.'
+        if not isinstance(fileName,StringIO.StringIO):
+            if not path.exists(fileName):
+                raise IOError, 'File ' + str(fileName) + ' not found.'
 
     	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
     	    hmm_dom = xmlutil.HMM(fileName)
@@ -1396,7 +1397,19 @@ HMMFromMatrices = HMMFromMatricesFactory()
 #-------------------------------------------------------------------------------
 #- HMM and derived  
 class HMM:
-
+    """ The HMM base class. 
+        All functions where the C signatures allows it will 
+        be  defined in here. Unfortunately there stil is a lot of overloading going on in 
+        derived classes.
+        
+        Generic features (these apply to all derived classes):
+            - Forward algorithm
+            - Viterbi algorithm
+            - Baum-Welch training
+            - HMM distance metric
+            - ... (XXX)
+    
+    """
     def __init__(self, emissionDomain, distribution, cmodel):
         self.emissionDomain = emissionDomain
         self.distribution = distribution
@@ -1421,9 +1434,7 @@ class HMM:
 
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-
         print "HMM.__del__", self.cmodel
-
         self.freeFunction(self.cmodel)
         self.cmodel = None
 
@@ -1436,8 +1447,7 @@ class HMM:
             Result: log( P[emissionSequences| model]) of type float which is
             computed as \sum_{s} log( P[s| model]) when emissionSequences
             is a SequenceSet
-
-            Note: The implementation will not compute the full forward matrix (XXX ToDo)
+        Note: The implementation will not compute the full forward matrix (XXX ToDo)
         """
         
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
@@ -1479,7 +1489,7 @@ class HMM:
             ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
             if ret_val == -1:
                 
-                print "Warning: forward returned -1: Sequence", i,"cannot be build."
+                #print "Warning: forward returned -1: Sequence", i,"cannot be build."
                 # XXX Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
@@ -1775,8 +1785,8 @@ class HMM:
 
     def toMatrices(self):
         "To be defined in derived classes."
-        print "Root class function."
-        pass
+        pass        
+
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable)
@@ -1823,7 +1833,15 @@ def HMMwriteList(fileName,hmmList):
         model.write(fileName)
 
 class DiscreteEmissionHMM(HMM):
+    """ HMMs with discrete emissions.
+        Optional features:
+         - silent states
+         - higher order states
+         - parameter tying in training
+         - background probabilities in training
     
+    
+    """
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
         self.silent = 1  # flag indicating whether the model type does include silent states
@@ -1835,7 +1853,7 @@ class DiscreteEmissionHMM(HMM):
         self.freeFunction = ghmmwrapper.call_model_free
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
-        self.forwardFunction = ghmmwrapper.foba_logp
+        self.forwardFunction = ghmmwrapper.foba_forward_lean
         self.forwardAlphaFunction = ghmmwrapper.foba_forward      
         self.backwardBetaFunction = ghmmwrapper.foba_backward
         self.getStatePtr = ghmmwrapper.get_stateptr 
@@ -2002,8 +2020,8 @@ class DiscreteEmissionHMM(HMM):
             if not isinstance(emissionSequences,SequenceSet):
                 raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
 
-        # XXX return type is C Pointer -> bad
-        result   = ghmmwrapper.get_background(self.cmodel,emissionSequences.cseq)
+        # XXX return type is C Pointer -> bad, bad, BAD
+        result = ghmmwrapper.get_background(self.cmodel,emissionSequences.cseq)
         return result
    
 
@@ -2097,6 +2115,10 @@ class DiscreteEmissionHMM(HMM):
 
 
 class StateLabelHMM(DiscreteEmissionHMM):
+    """ Labelled HMMs with discrete emissions. 
+        Same feature list as in DiscreteEmission models.    
+    
+    """
     def __init__(self, emissionDomain, distribution, cmodel):
         DiscreteEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
 
@@ -2177,7 +2199,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             self.index[label], self.r_index[i] = i, label
             i += 1
 
-        #set state label to to the appropiate index
+        # set state label to to the appropiate index
         for i in range(self.N):
             state = self.getStatePtr(self.cmodel.s, i)
             state.label = self.index[labelList[i]]
@@ -2504,8 +2526,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
 
 class GaussianEmissionHMM(HMM):
-    """ GaussianEmissionHMM are HMMs which have a Gaussian distribution
-        per state determining the emission probababilities
+    """ HMMs with Gaussian distribution as emissions.
+        
     """
 
     def __init__(self, emissionDomain, distribution, cmodel):
@@ -2805,6 +2827,13 @@ class GaussianEmissionHMM(HMM):
 
 
 class GaussianMixtureHMM(GaussianEmissionHMM):
+    """ HMMs with mixtures of Gaussians as emissions.
+        Optional features:
+            - fixing mixture components in training
+        
+    
+    """
+    
     def __init__(self, emissionDomain, distribution, cmodel):
         GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
 
