@@ -31,6 +31,7 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(model* my_model) {
 
 GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my_prior) {
   int i;
+  int j;
 
   c_model = (model*) calloc(1,sizeof(model));
   if (!c_model) {
@@ -46,6 +47,9 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my
   for (i = 0; i < number_of_states; ++i) {
     c_model->s[i].pi         = 0;
     c_model->s[i].b          = (double*) malloc(sizeof(double) * my_M);
+    /* output probabilities are initialized with 0. */
+    for (j = 0; j < my_M; ++j)
+      c_model->s[i].b[j] = 0;
     c_model->s[i].out_id     = NULL;
     c_model->s[i].in_id      = NULL;
     c_model->s[i].out_a      = NULL;
