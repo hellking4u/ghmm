@@ -139,9 +139,9 @@ smodel **smodel_read(const char *filename, int *smo_number) {
     }
     scanner_consume(s, ';'); if(s->err) goto STOP; 
   } /* while(!s->err && !s->eof) */
-  if (smodel_check_compatibility(smo, *smo_number) == -1) {
-    mes_proc(); goto STOP; 
-  }
+  /*if (smodel_check_compatibility(smo, *smo_number) == -1) {
+    mes_proc(); goto STOP;
+  }*/
   return smo;
 STOP:
   return NULL;
