@@ -704,6 +704,7 @@ int foba_forward_lean(model *mo, const int *O, int len, double *log_p);
 /* Labeled HMMs */
 extern int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 extern int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
+extern int foba_label_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 
 
 
@@ -932,6 +933,10 @@ struct sstate {
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
   int fix;
+  
+  /**  array of flags for fixing mixture components in the reestimation
+        fix[i] = 1 means mu and sigma of component i are fixed.  **/
+  int *mixture_fix;
 };
 typedef struct sstate sstate;
 
