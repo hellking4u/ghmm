@@ -1,5 +1,5 @@
 /*******************************************************************************
-  author       : Wasinee Rungsarityotin
+  author       : Wasinee Rungsarityotin, Benjamin Georgi
   filename     : ghmm/ghmm/sdmodel.h
   created      : DATE: 2. April 2003
   $Id$
@@ -72,6 +72,11 @@ struct sdmodel {
   /** Prior for the a priori probability for the model.
       A value of -1 indicates that no prior is defined. */
   double prior;
+
+  /** Contains bit flags for various model extensions such as
+      kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
+  */
+
   /** pointer to class function   */
   int (*get_class)(int*,int);
       

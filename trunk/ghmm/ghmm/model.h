@@ -103,10 +103,14 @@ struct model {
 
       Note: emission_order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   int* emission_order; 
-  
-  int  topo_order_length; /*WR*/
-  int* topo_order;        /*WR*/
-  
+
+
+  /** (WR) added these variables for topological ordering of silent states 
+      Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
+   */
+  int* topo_order; 
+  int  topo_order_length;
+
   /* XXX label HMM */
 };
 typedef struct model model;
