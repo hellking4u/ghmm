@@ -364,6 +364,7 @@ STOP:
 sequence_d_t *sequence_d_calloc(long seq_number) {
 #define CUR_PROC "sequence_dcalloc"
   int i;
+  //printf("*** sequence_d_t *sequence_d_calloc, nr: %d\n",seq_number);
   sequence_d_t *sqd = NULL;
   if (seq_number > MAX_SEQ_NUMBER) {
     char *str = mprintf(NULL, 0,
@@ -380,6 +381,8 @@ sequence_d_t *sequence_d_calloc(long seq_number) {
   if(!m_calloc(sqd->seq_id, seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(sqd->seq_w, seq_number)) {mes_proc(); goto STOP;}
   sqd->seq_number = seq_number;
+  
+  sqd-> total_w = 0.0;
   for (i = 0; i < seq_number; i++) {
     sqd->seq_label[i] = -1;
     sqd->seq_id[i] = -1.0;
@@ -854,14 +857,8 @@ int sequence_free(sequence_t **sq) {
 int sequence_d_free(sequence_d_t **sqd) {
 # define CUR_PROC "sequence_d_free"
   mes_check_ptr(sqd, return(-1));
-
-  printf("1111\n");
-  
-  if( !*sqd ) return(0);
-  printf("2222\n");
+ if( !*sqd ) return(0);
   matrix_d_free(&(*sqd)->seq);
-  printf("33333\n");
-  m_free((*sqd)->seq);
   m_free((*sqd)->seq_len);
   m_free((*sqd)->seq_label);
   m_free((*sqd)->seq_id);
