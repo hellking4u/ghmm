@@ -81,6 +81,9 @@ XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes
       found    = true;
     }
     break;
+
+  case GHMM_DISCRETE:
+    break;
   }
 
   if (! found) {
@@ -148,6 +151,8 @@ const int GHMM_Emission::XMLIO_writeContent(XMLIO_Document& writer) {
       break;
     case normal_approx:
       result += writer.write("gauss-approximated");
+      break;
+    default:
       break;
     }
     result += writer.writef(" mue=\"%f\" variance=\"%f\">",mue[0],variance[0]);

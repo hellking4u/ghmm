@@ -8,6 +8,7 @@
 #ifndef _GHMM_EMISSION_H
 #define _GHMM_EMISSION_H 1
 
+#include <vector>
 #include <xmlio/XMLIO_Element.h>
 #include <ghmm/smodel.h>
 #include <ghmm++/GHMM_Types.h>
