@@ -2144,13 +2144,12 @@ class DiscreteEmissionHMM(HMM):
            the background, where the backgroundWeight parameter (within [0,1]) controls
            the background's contribution for each state.
         """
-        # XXX in reestimate.c the weights are hard coded to 0.1 (?!) 
         assert len(backgroundWeight) == self.N, "Argument 'backgroundWeight' does not match number of states."
         
         cweights = ghmmhelper.list2arrayd(backgroundWeight)
         result = ghmmwrapper.model_apply_background(self.cmodel, cweights)
         
-        ghmmwrapper.free_arrayd(cweigths)
+        ghmmwrapper.free_arrayd(cweights)
         if result is not 0:
             print "Doh"
 						
@@ -2492,7 +2491,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         """
         
         # check for labels 
-        assert model_type & 64, "Error: Model is not labelled. "
+        assert self.cmodel.model_type & 64, "Error: Model is not labelled. "
         
         
         if isinstance(emissionsequences, EmissionSequence):
