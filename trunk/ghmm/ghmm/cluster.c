@@ -77,7 +77,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
       if (sq->seq_label[j] == -1 || sq->seq_label[j] >= cl.mo_number) { 
 	/* No model fits! */ 
 	char *str =
-	  mprintf(NULL, 0, "Seq. %ld: sequence_best_model liefert %d\n",
+	  mprintf(NULL, 0, "Seq. %ld: sequence_best_model gives %d\n",
 		  j, sq->seq_label[j]); 
 	mes_prot(str); m_free(str); goto STOP;
       }
