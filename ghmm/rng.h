@@ -36,7 +36,33 @@
 #ifndef RNG_H
 #define RNG_H
 
-#include "ghmmutil.h"
+#ifndef DO_WITH_GSL
+
+#include <stdlib.h>
+
+typedef char ghmm_rng_state[8];
+typedef ghmm_rng_state GHMM_RNG;
+
+/* Functions */
+#define GHMM_RNG_SET ghmm_rng_set
+#define GHMM_RNG_UNIFORM ghmm_rng_uniform
+#define GHMM_RNG_NAME ghmm_rng_name
+
+#else
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+/* Types defined in GSL */
+typedef gsl_rng GHMM_RNG;
+
+/* Functions defined in GSL */
+#define GHMM_RNG_SET gsl_rng_set
+#define GHMM_RNG_UNIFORM gsl_rng_uniform
+#define GHMM_RNG_NAME gsl_rng_name
+
+#endif
+
 
 /** @name rng Initialization for the random number generator */
 
@@ -56,6 +82,13 @@ void ghmm_rng_init(void);
 /**
  */
 void ghmm_rng_timeseed(GHMM_RNG * r);
+
+
+#ifndef DO_WITH_GSL
+void  ghmm_rng_set(GHMM_RNG * aState, unsigned long int seed);
+double ghmm_rng_uniform (GHMM_RNG * r);
+const char *ghmm_rng_name (GHMM_RNG * r);
+#endif
 
 #ifdef __cplusplus
 }

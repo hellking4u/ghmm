@@ -205,6 +205,7 @@ double randvar_get_PHI(double x) {
     return(phi_x);
  STOP:
 #endif /* DO_WITH_GSL */
+STOP:
   return(-1.0);
 # undef CUR_PROC
 } /* randvar_get_PHI */
@@ -246,6 +247,7 @@ double randvar_get_xPHIless1() {
   return(x_PHI_1);
  STOP:
 #endif
+STOP:
   return(-1.0);
 # undef CUR_PROC
 }
@@ -482,11 +484,34 @@ STOP:
 double randvar_std_normal(int seed) {
 # define CUR_PROC "randvar_std_normal"
   if (seed != 0) {
-    gsl_rng_set(RNG,seed);    
+    GHMM_RNG_SET(RNG,seed);    
     return(1.0);
   }
   else
+  {
+#ifdef DO_WITH_GSL
     return(gsl_ran_gaussian(RNG, 1.0));
+#else
+    /* Use the polar Box-Mueller transform */
+    /*
+    double x, y, r2;
+
+    do {
+      x = 2.0 * GHMM_RNG_UNIFORM(RNG) - 1.0;
+      y = 2.0 * GHMM_RNG_UNIFORM(RNG) - 1.0;
+      r2 = (x * x) + (y * y);
+    } while (r2 >= 1.0);
+
+    return x * sqrt((-2.0 * log(r2)) / r2);
+    */
+
+    double r2, theta;
+
+    r2 = -2.0 * log(GHMM_RNG_UNIFORM(RNG));           /* r2 ~ chi-square(2) */
+    theta = 2.0 * PI * GHMM_RNG_UNIFORM(RNG);         /* theta ~ uniform(0, 2 \pi) */
+    return sqrt(r2) * cos(theta);
+#endif
+  }
 # undef CUR_PROC
 } /* randvar_std_normal */
 
@@ -494,18 +519,20 @@ double randvar_std_normal(int seed) {
 /*============================================================================*/
 double randvar_normal(double mue, double u, int seed) {
 # define CUR_PROC "randvar_normal"
-#ifdef DO_WITH_GSL
   if (seed != 0) {
-    gsl_rng_set(RNG,seed);    
+    GHMM_RNG_SET(RNG,seed);    
     return(1.0*sqrt(u)+mue);
   }
   else
+  {
+#ifdef DO_WITH_GSL
     return(gsl_ran_gaussian(RNG,sqrt(u))+mue);
 #else
   double x;
   x = sqrt(u) * randvar_std_normal(seed) + mue;
   return(x);
 #endif
+  }
 # undef CUR_PROC
 } /* randvar_normal */
 
@@ -536,7 +563,7 @@ double randvar_normal_pos(double mue, double u, int seed) {
   sigma=sqrt(u);
 
   if (seed != 0) {
-    gsl_rng_set(RNG,seed);
+    GHMM_RNG_SET(RNG,seed);
     return(1.0);
   }
 
@@ -568,7 +595,7 @@ double randvar_normal_pos(double mue, double u, int seed) {
   } */
   
   /* Inverse transformation with restricted sampling by Fishman */
-  U = gsl_rng_uniform(RNG);               /*gsl_ran_flat(RNG,0,1) ??? */
+  U = GHMM_RNG_UNIFORM(RNG);
   Feps = randvar_get_PHI(-(EPS_NDT+mue)/sigma);
   Us = Feps + (1-Feps)*U;
   /* Numerically better: 1-Us = 1-Feps - (1-Feps)*U, therefore: 
@@ -595,7 +622,7 @@ STOP:
 double randvar_uniform_int(int seed, int K) {
 # define CUR_PROC "randvar_uniform_int"
   if (seed != 0) {
-    gsl_rng_set(RNG,seed);
+    GHMM_RNG_SET(RNG,seed);
     return(1.0);
   }
   else {
@@ -603,10 +630,7 @@ double randvar_uniform_int(int seed, int K) {
     /* more direct solution than old version ! */
     return (double)gsl_rng_uniform_int(RNG,K);
 #else
-    /* why do this ? */
-    double x = gsl_ran_flat(RNG, -0.5, K-0.5);
-    x = m_int(x); /* m_int rundet auf Integer */
-    return(x);
+    return (double) ((int) (((double) K) * GHMM_RNG_UNIFORM(RNG)));
 #endif
   }
 # undef CUR_PROC

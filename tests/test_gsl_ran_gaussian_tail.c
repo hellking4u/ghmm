@@ -1,3 +1,13 @@
+#ifndef DO_WITH_GSL
+
+/* This test is not performed */
+int main()
+{
+    return 0;
+}
+
+#else
+
 #include <stdio.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -37,3 +47,5 @@ int main(void)
     }
   return 0;
 }
+
+#endif

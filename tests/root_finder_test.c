@@ -5,6 +5,16 @@
   $Id$
 *******************************************************************************/
 
+#ifndef DO_WITH_GSL
+
+/* This test is not performed */
+int main()
+{
+    return 0;
+}
+
+#else
+
 #include <stdio.h>
 #include "ghmm/root_finder.h"
 
@@ -57,4 +67,5 @@ int main()
 
   return 0;
 }
+#endif
 

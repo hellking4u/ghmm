@@ -41,8 +41,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   kbestbasics.c kbestbasics.h \
                   kbest.c kbest.h \
                   gradescent.c gradescent.h \
-                  discrime.c discrime.h \
-                  ghmmutil.h
+                  discrime.c discrime.h
                                  
 
 pkginclude_HEADERS = ghmm.h \
@@ -73,8 +72,7 @@ pkginclude_HEADERS = ghmm.h \
                   smap_classify.h \
                   kbest.h \
                   gradescent.h \
-                  discrime.h \
-                  ghmmutil.h
+                  discrime.h
                   
 # must be eleminated...
 pkgdata_DATA = PHI_001_20.dat
