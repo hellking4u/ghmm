@@ -8,8 +8,12 @@ __copyright__
 
 *******************************************************************************/
 
+
+#include "config.h"
 #include <math.h>
-#include <pthread.h>
+#ifdef HAVE_LIBPTHREAD
+# include <pthread.h>
+#endif /* HAVE_LIBPTHREAD */
 #include "mes.h"
 #include "mprintf.h"
 #include "randvar.h"
@@ -77,12 +81,18 @@ STOP:
 /*----------------------------------------------------------------------------*/
 static int randvar_init_PHI() {
 # define CUR_PROC "randvar_init_PHI"
+#ifdef HAVE_LIBPTHREAD
   static pthread_mutex_t lock;
+#endif /* HAVE_LIBPTHREAD */
   /* PHI einlesen */
   if (!PHI_len) {
+#ifdef HAVE_LIBPTHREAD
     pthread_mutex_lock(&lock); /* Setzen eines Locks, da Clustern parallel */
+#endif /* HAVE_LIBPTHREAD */
     if (randvar_read_PHI() == -1) {mes_proc(); goto STOP;};
+#ifdef HAVE_LIBPTHREAD
     pthread_mutex_unlock(&lock); /* Freigabe des Locks */
+#endif /* HAVE_LIBPTHREAD */
   }
   return 0;
 STOP:
@@ -300,16 +310,22 @@ STOP:
 /*============================================================================*/
 double randvar_normal_density_approx(double x, double mean, double u) { 
 # define CUR_PROC "randvar_normal_density_approx"
+#ifdef HAVE_LIBPTHREAD
   static pthread_mutex_t lock;
+#endif /* HAVE_LIBPTHREAD */
   int i;
   double y, z, pdf_x;
   if (u <= 0.0) {
     mes_prot("u <= 0.0 not allowed\n"); goto STOP;
   }
   if (!pdf_stdnormal_exists) {
+#ifdef HAVE_LIBPTHREAD
     pthread_mutex_lock(&lock); /* Setzen eines Locks, da Clustern parallel */
+#endif /* HAVE_LIBPTHREAD */
     randvar_init_pdf_stdnormal();
+#ifdef HAVE_LIBPTHREAD
     pthread_mutex_unlock(&lock); /* Freigabe des Locks */
+#endif /* HAVE_LIBPTHREAD */
   }
   y = 1/sqrt(u);
   z = fabs((x - mean)*y);

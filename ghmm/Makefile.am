@@ -26,7 +26,8 @@ libghmm_a_SOURCES= foba.c foba.h \
                   mes.c mes.h \
                   mprintf.c mprintf.h \
                   scanner.c scanner.h \
-                  gauss_tail.c gauss_tail.h
+                  gauss_tail.c gauss_tail.h \
+                  smap_classify.c smap_classify.h
 
 
 pkginclude_HEADERS = foba.h \
@@ -50,5 +51,6 @@ pkginclude_HEADERS = foba.h \
                   mes.h \
                   mprintf.h \
                   scanner.h \
-                  gauss_tail.h
+                  gauss_tail.h \
+                  smap_classify.h
 

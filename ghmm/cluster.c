@@ -230,6 +230,26 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number,
 } /* cluster_avoid_empty_model */
 
 /*============================================================================*/
+int cluster_ausgabe(cluster_t *cl, sequence_t *sq, FILE *outfile,
+		     char *out_filename) {
+#define CUR_PROC "cluster_ausgabe"
+  int res = -1;
+  int i;
+  sequence_d_t *sqd = NULL;
+
+  fprintf(outfile, "\nFinal Models:\n");
+  for (i = 0; i < cl->mo_number; i++)
+    model_print(outfile, cl->mo[i]);
+
+  res = 0;
+STOP:
+  sequence_d_free(&sqd);
+  return(res);
+#undef CUR_PROC
+} /* cluster_ausgabe */
+
+
+/*============================================================================*/
 long cluster_update_label(long *oldlabel, long *seq_label, 
 			  long seq_number) {
   long i, changes = 0; 

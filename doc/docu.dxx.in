@@ -11,30 +11,31 @@ Diese Dokumentation wurde mit Hilfe des Programms Doc++
   @author	Bernd Wichern, Berhard Knab, Barthel Steckemetz, Alexander Schliep, Sebastian Meller, Achim G\"adke
 */
 
-//@{ // alles
+//@{ // all
 
-/**@name Die Programm-Module
+/**@name The program modules
    @memo
 */
-//@{ // Module
+//@{ // modules
 
-/**@name Datenstrukturen und assoziierte Funktionen
+/**@name Data struktures and associated functions
    @memo
 */
-//@{ // Datenstrukturen
+//@{ // data structures
 //@Include: @top_srcdir@/ghmm/matrix.h
 //@Include: @top_srcdir@/ghmm/vector.h
 //@Include: @top_srcdir@/ghmm/sequence.h
 //@Include: @top_srcdir@/ghmm/model.h
 //@Include: @top_srcdir@/ghmm/cluster.h
 //@Include: @top_srcdir@/ghmm/smodel.h
+//@Include: @top_srcdir@/ghmm/smap_classify.h
 //@Include: @top_srcdir@/ghmm/scluster.h
-//@} // Datenstrukturen
+//@} // data structures
 
-/**@name Algorithmen
+/**@name Algorithms
    @memo
 */
-//@{ // Algorithmen
+//@{ // algorithms
 //@Include: @top_srcdir@/ghmm/foba.h
 //@Include: @top_srcdir@/ghmm/sfoba.h
 //@Include: @top_srcdir@/ghmm/reestimate.h
@@ -44,15 +45,15 @@ Diese Dokumentation wurde mit Hilfe des Programms Doc++
 //@Include: @top_srcdir@/ghmm/smixturehmm.h
 //@} // Algorithmen
 
-/**@name Werkzeuge
+/**@name Function toolkit
    @memo
 */
-//@{ // Werkzeuge
+//@{ // function toolkit
 //@Include: @top_srcdir@/ghmm/root_finder.h
 //@Include: @top_srcdir@/ghmm/randvar.h
 //@Include: @top_srcdir@/ghmm/gauss_tail.h
 //@Include: @top_srcdir@/ghmm/scanner.h
-//@} // Werkzeuge
+//@} // function toolkit
 
 /**@name Framework
 */
@@ -72,7 +73,7 @@ Documentation not implemented.
 //@}
 //@} // Framework
 
-//@} // Module
+//@} // modules
 
 /**
 __copyright__
@@ -81,7 +82,7 @@ __copyright__
 //@}
 
 
-//@} // alles
+//@} // all
 
 
 
