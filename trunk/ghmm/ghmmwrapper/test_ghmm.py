@@ -24,30 +24,36 @@ m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
                        [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,0.0,0.0]],
                        [1.0,0,0])
 
+trans = m.getTransition(0,1)
+print "a[0,1] = " + str(trans)
+
+emission = m.getEmission(1)
+print emission
+
 
 #print m
 
-print "Sample:"					   
+#print "Sample:"					   
 s4 = m.sample(4,15)
-print str(s4) + "\n"
+#print str(s4) + "\n"
 
 s5 = m.sampleSingle(10)
-print str(s5) + "\n"
+#print str(s5) + "\n"
 
-print "Viterbi:"
+#print "Viterbi:"
 path = m.viterbi(s5)
-print str(path) + "\n"
+#print str(path) + "\n"
 
-print "forward"
+#print "forward"
 logp1 = m.loglikelihood(s5)
-print "logp = " + str(logp1) + "\n"
+#print "logp = " + str(logp1) + "\n"
 
 (alpha,scale) = m.forward(s5)
-print "alpha:\n" + str(alpha) + "\n"
-print "scale = " + str(scale) + "\n"	
+#print "alpha:\n" + str(alpha) + "\n"
+#print "scale = " + str(scale) + "\n"	
 
 beta = m.backward(s5,scale)
-print "beta = \n " + str(beta) + "\n"
+#print "beta = \n " + str(beta) + "\n"
 
 
 print "\n\n\n *** Gaussian Model ***"
@@ -56,27 +62,47 @@ m2 = HMMFromMatrices(F,GaussianDistribution(F),
                          [[0.0,1.0,0],[0.5,0.0,0.5],[0.3,0.3,0.0]],
                          [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
                          [1.0,0,0])
+
+#print m2
+trans = m2.getTransition(2,0)
+print "a[2,2] = " + str(trans)
                          
-print "Sample:"
+#print "Sample:"
 cs1 = m2.sample(4,15)                         
-print str(cs1) + "\n"
+#print str(cs1) + "\n"
 
-print "SampleSingle:"
+#print "SampleSingle:"
 cs2 = m2.sampleSingle(10)                         
-print str(cs2) + "\n"
+#print str(cs2) + "\n"
 
-print "Viterbi"
+#print "Viterbi"
 spath = m2.viterbi(cs1)
-print str(spath) + "\n"
+#print str(spath) + "\n"
 
 
-print "forward"
+#print "forward"
 logp = m2.loglikelihood(cs1)    
-print "logp = " + str(logp) + "\n"
+#print "logp = " + str(logp) + "\n"
 
 (salpha,sscale) = m2.forward(cs2)
-print "alpha:\n" + str(salpha) + "\n"
-print "scale = " + str(sscale) + "\n"	
+#print "alpha:\n" + str(salpha) + "\n"
+#print "scale = " + str(sscale) + "\n"	
 
 beta = m2.backward(cs2,sscale)
-print "beta = \n " + str(beta) + "\n"
+#print "beta = \n " + str(beta) + "\n"
+
+
+l = SequenceSetOpen(F,"seq_test.sqd")
+#print l
+
+print "*** Normalizing ***"
+m3 = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
+                       [[10.0,10.0,10.0],[0.0,0.0,100.0],[25.0,25.0,50.0]],
+                       [[10.0,0.0,010.0,0.0],[0.0,3.5,3.5,0.0], [5.0,5.0,5.0,5.0]],
+                       [1.0,0,0])
+
+print m3
+
+m3.normalize()
+
+print m3
