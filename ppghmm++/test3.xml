@@ -1,0 +1,29 @@
+<ghmm version="1.0">
+  <hmm type="discrete">
+
+    <alphabet>
+       <symbol id="A">Auszahlung</symbol>
+       <symbol id="E">Einzahlung</symbol>
+       <symbol id="T">Tilgung</symbol>
+    </alphabet>
+
+    <state id="s1">
+      <initial>0.3</initial>
+      <emissions>0.2 0.2 0.6</emissions>
+    </state>
+
+    <state id="s2">
+      <initial>0.2</initial> 
+      <emissions>0.9 0.1 0.0</emissions>
+    </state>
+
+    <state id="s3">
+      <initial>0.5</initial> 
+      <emissions>0.4 0.1 0.5</emissions>
+    </state> 
+
+    <transitions source="s1">0.0 0.4 0.6</transitions>
+    <transitions source="s2">0.0 0.0 1.0</transitions>
+    <transitions source="s3">0.5 0.5 0.0</transitions>
+  </hmm>
+</ghmm>

@@ -1,0 +1,35 @@
+<ghmm version="1.0">
+  <hmm type="continuous" density="normal">
+  
+  <state id="state1">
+      <initial>0.2</initial>
+      <emission>
+        1 <gauss mue="0" variance="2"/>
+      </emission>
+  </state>
+
+  <state id="state2">
+      <initial>0.8</initial>
+      <emission>
+        1 <gauss mue="0.2" variance="2"/>
+      </emission>
+  </state>
+
+  <transition source="state1" target="state1">
+      <prob>0.2</prob>
+  </transition>
+
+  <transition source="state1" target="state2">
+      <prob>0.8</prob>
+  </transition>
+
+  <transition source="state2" target="state1">
+      <prob>0.2</prob>
+  </transition>
+
+  <transition source="state2" target="state2">
+      <prob>0.8</prob>
+  </transition>
+
+  </hmm>
+</ghmm>
