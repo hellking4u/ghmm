@@ -205,31 +205,47 @@ model* hmm::create_model() const
       return NULL;
     }
 
+  /* initialise states */
   int state_counter=0;
   vector<Node*>::const_iterator pos=ghmm_graph->vector<Node*>::begin();
   while (pos!=ghmm_graph->vector<Node*>::end())
     {
+      const string& state_id=(*pos)->get_id();
       state* this_state=&(return_model->s[state_counter]);
-      /* emission prob */
+      /* emission probabilities */
       this_state->b=(double*)malloc(sizeof(double)*return_model->M);
       if (this_state->b==NULL)
 	{
-	  cerr<<"could not allocate emmision prob vector"<<endl;
+	  cerr<<"could not allocate emmision probabilities vector"<<endl;
 	  return NULL;
 	}
-      /* Initial State prob */
+
+      /* Initial State probability */
       map<State*,double>* initial_state_map=Initial->get_map();
       map<State*,double>::iterator state_pos=initial_state_map->begin();
-      while(state_pos!=initial_state_map->end() && (state_pos->first)->get_id()!=(*pos)->get_id())
+      while(state_pos!=initial_state_map->end() && (state_pos->first)->get_id()!=state_id)
 	++state_pos;
       if (state_pos!=initial_state_map->end())
 	this_state->pi=state_pos->second;
       else
 	this_state->pi=0;
-      /* transitions */
-      this_state->in_states=0; /* number of incoming states */
-      this_state->in_id=NULL; /* id of incoming states */
-      this_state->in_a=NULL; /* prob of incoming states */
+
+      /* transitions to_from */
+      const set<int>& transition_idx=ghmm_graph->get_to_from_transitions(state_id);
+      this_state->in_states=transition_idx.size(); /* number of incoming states */
+      this_state->in_id=(int*)malloc(sizeof(int)*this_state->in_states); /* id of incoming states */
+      this_state->in_a=(double*)malloc(sizeof(double)*this_state->in_states); /* prob of incoming states */
+      size_t array_pos=0;
+      set<int>::const_iterator tranisiton_pos=transition_idx.begin();
+      while (tranisiton_pos!=transition_idx.end())
+	{
+	  this_state->in_id[array_pos]=*tranisiton_pos;
+	  Edge* my_edge=((vector<Edge*>)*ghmm_graph)[*tranisiton_pos];
+	  this_state->in_a[array_pos]=my_edge->get_weight();
+	  ++tranisiton_pos;
+	  array_pos++;
+	}
+
       this_state->out_states=0; /* number of outgoing states */
       this_state->out_id=NULL; /* id of outgoing states */
       this_state->out_a=NULL; /* prob of outgoing states */

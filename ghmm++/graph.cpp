@@ -101,6 +101,12 @@ const string& Edge::get_id() const
   return id;
 }
 
+double Edge::get_weight() const
+{
+  /* todo */
+  return 0;
+}
+
 const string& Edge::get_to_id() const
 {
   return to;
@@ -110,7 +116,6 @@ const string& Edge::get_from_id() const
 {
   return from;
 }
-
 
 Graph::Graph(const string& tag, XMLIO_Attributes &attributes)
 {
@@ -197,8 +202,15 @@ void Graph::XMLIO_finishedReading()
   /* collect transitions, indexed by order in vector */
   for(int edge_idx=0; edge_idx<vector<Edge*>::size();edge_idx++)
     {
-      const string& from=vector<Edge*>::at(edge_idx)->get_from_id();
-      const string& to=vector<Edge*>::at(edge_idx)->get_to_id();
+      /* gcc 2.95.3 does not like this.. gcc 3.0 does
+	const string& from=vector<Edge*>::at(edge_idx)->get_from_id();
+	const string& to=vector<Edge*>::at(edge_idx)->get_to_id();
+      */
+      vector<Edge*>* edge_vector=(vector<Edge*>*)this;
+      const string& from=(*edge_vector)[edge_idx]->get_from_id();
+      const string& to=(*edge_vector)[edge_idx]->get_to_id();
+      
+
       /* exist nodes in map ? what is the id? */
       int from_idx;
       map<string,int>::iterator from_node_pos=node_idx.find(from);
@@ -302,8 +314,24 @@ const string& Graph::get_id() const
   return id;
 }
 
+const set<int>& Graph::get_to_from_transitions(const string& state_id)
+{
+  return get_to_from_transitions(node_idx[(string&)state_id]);
+}
 
+const set<int>& Graph::get_from_to_transitions(const string& state_id)
+{
+  return get_from_to_transitions(node_idx[(string&)state_id]);
+}
 
+const set<int>& Graph::get_to_from_transitions(const int state_id)
+{
+  return to_from_map[state_id];
+}
 
+const set<int>& Graph::get_from_to_transitions(const int state_id)
+{
+  return from_to_map[state_id];
+}
 
 

@@ -66,6 +66,10 @@ namespace std {
 	 return id of this edges destination
        */
       virtual const string& get_to_id() const;
+      /**
+	 what to do with different classes of edges ?
+       */
+      virtual double get_weight() const;
 
     private:
       string id;
@@ -106,6 +110,22 @@ namespace std {
 	 return id of this model
        */
       virtual const string& get_id() const;
+      /**
+	 
+       */
+      virtual const set<int>& get_to_from_transitions(int state_id);
+      /**
+	 
+       */
+      virtual const set<int>& get_from_to_transitions(int state_id);
+      /**
+	 
+       */
+      virtual const set<int>& get_to_from_transitions(const string& state_id);
+      /**
+	 
+       */
+      virtual const set<int>& get_from_to_transitions(const string& state_id);
     private:
       /** id is mandatory for gxl graphs */
       string id;
@@ -116,9 +136,13 @@ namespace std {
       /** map from node string-id to its index */
       map<string,int> node_idx;
 
-      /** adiascence list */
+      /**
+	 adiascence list, state_id -> edge_1_id, edge_2_id, edge_3_id, ...
+      */
       map<int,set<int> > from_to_map;
-      /** inverse adiascence list */
+      /**
+	 inverse adiascence list, state_id -> edge_1_id, edge_2_id, edge_3_id, ...
+      */
       map<int,set<int> > to_from_map;
 
     };
