@@ -101,7 +101,7 @@ void vector_i_print(FILE *file, int *vector, int len,
   @param x       vector to calculate
   @param n       number of rows
   @param m       number of columns
-  @param v       calculted vector (returning value)
+  @param v       calculated vector (return value)
   */
 int vector_mat_times_vec(double ** A, double *x, int n, int m, double *v);
 

@@ -425,12 +425,15 @@ int model_check(const model* mo) {
   double sum;
   int i,j;
   /* The sum of the Pi[i]'s is 1 */
+
   sum = 0.0;
   for (i = 0; i < mo->N; i++) {
     sum += mo->s[i].pi;
   }
+
   if ( fabs(sum - 1.0) >= EPS_PREC )
     { mes_prot("sum Pi[i] != 1.0\n"); goto STOP; }
+
   /* check each state */
   for (i = 0; i < mo->N; i++) {
     sum = 0.0;
