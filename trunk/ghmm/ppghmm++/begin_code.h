@@ -46,6 +46,30 @@
 # endif
 #endif
 
+/* some standard includes */
+#ifdef HAVE_CSTRING
+#  include <cstring>
+#else
+#  include <string.h>
+#endif
+#ifdef HAVE_CSTDLIB
+#  include <cstdlib>
+#else
+#  include <stdlib.h>
+#endif
+#ifdef HAVE_CSTDIO
+#  include <cstdio>
+#else
+#  include <stdio.h>
+#endif
+/* seems to be handy in connection with gsl_math.h */
+#ifdef HAVE_CMATH
+#  include <cmath>
+#else
+#  include <math.h>
+#endif
+
+
 #if defined(HAVE_NAMESPACES) && defined(__SUNPRO_CC)
 /* for SC5.0 in /usr/include/floatingpoint.h (SunOs 2.7) */
 using std::FILE;
