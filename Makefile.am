@@ -18,7 +18,7 @@ COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
 dist-hook:
 	test -z "$(AWK)" && exit 0 ;\
-	TMPFILE=`mktemp $(distdir)/dist-hook.XXXXXX`; \
+	TMPFILE="$(distdir)/tmp" ; \
 	for f in $(DISTFILES) ; do \
 	  distfile=$(distdir)/$$f ; \
 	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
