@@ -12,7 +12,7 @@ __copyright__
 #ifndef FOBA_H
 #define FOBA_H
 
-#include "model.h"
+#include <ghmm/model.h>
 
 /**@name Forward-Backward-Algorithm 
    

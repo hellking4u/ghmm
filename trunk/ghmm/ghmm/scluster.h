@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/scluster.h
+  filename     : ghmm/ghmm/scluster.h
   created      : TIME: 15:53:53     DATE: Tue 16. November 1999
   $Id$
 
@@ -11,19 +11,15 @@ __copyright__
 
 #ifndef SCLUSTER_H
 #define SCLUSTER_H
-#include "sequence.h"
-#include "sreestimate.h"
+#include <ghmm/sequence.h>
+#include <ghmm/smodel.h>
+#include <ghmm/sreestimate.h>
 
 /**
    @name scluster
  */
 
 //@{
-
-/* switsch for parallel mode: (1) = sequential, (0) = parallel */ 
-#define POUT 1
-/* number of parallel threads */
-#define THREADS 4
 
 #define CLASSIFY 0 /* Switch for Classificator: 0 == MD, 1 == MAW */
 

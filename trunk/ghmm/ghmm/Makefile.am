@@ -2,7 +2,10 @@
 #  filename     : ghmm/ghmm/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
+#
+# __copyright__
 
+INCLUDES = -I$(top_srcdir)
 lib_LIBRARIES = libghmm.a
 
 libghmm_a_SOURCES= foba.c foba.h \

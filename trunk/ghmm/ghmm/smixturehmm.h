@@ -10,8 +10,8 @@ __copyright__
 
 #ifndef SMIXTUREHMM_H
 #define SMIXTUREHMM_H
-#include "sequence.h"
-#include "smodel.h"
+#include <ghmm/sequence.h>
+#include <ghmm/smodel.h>
 
 /**
    @name mixture-shmm methods

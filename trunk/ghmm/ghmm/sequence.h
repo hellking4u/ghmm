@@ -67,8 +67,8 @@ typedef struct sequence_d_t sequence_d_t;
 /* don't include model.h at the beginning of this file. struct sequence_t has
    to be known in model.h */
 
-#include "model.h"
-#include "smodel.h"
+#include <ghmm/model.h>
+#include <ghmm/smodel.h>
 
 /**
    Reads one or several arrays of integer sequences. 

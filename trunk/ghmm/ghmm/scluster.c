@@ -29,12 +29,11 @@ __copyright__
 
 #ifdef HAVE_LIBPTHREAD
 /* switsch for parallel mode: (1) = sequential, (0) = parallel */ 
-# define POUT 1
+#define POUT 1
 /* number of parallel threads */
-# define THREADS 4
+#define THREADS 4
 #else
-/* no threads at all */
-# define POUT 0
+#define POUT 0
 #endif /* HAVE_LIBPTHREAD */
 
 
@@ -59,10 +58,12 @@ int scluster_hmm(char* argv[]) {
   double eps_bw, q;
   int max_iter_bw;
   /* sreestimate_baum_welch needs this structure (introduced for parallel mode) */
-  smosqd_t *cs; 
+  smosqd_t *cs;
   double *tilgw, *model_weight;
-  int *tid, *return_value;
 #ifdef HAVE_LIBPTHREAD
+  int *return_value;
+  pthread_t *tid;
+  int perror;
   pthread_attr_t Attribute;
 #endif /* HAVE_LIBPTHREAD */
   cl.smo = NULL;
@@ -120,14 +121,18 @@ int scluster_hmm(char* argv[]) {
     for (i = 0; i < cl.smo_number; i++) 
       cl.smo[i]->prior = 1/(double) cl.smo_number;
   /*--------for parallel mode  --------------------*/
+#if POUT != 0
   /* id for threads */
   if(!m_calloc(tid, cl.smo_number)) {mes_proc(); goto STOP;} 
+#endif /* POUT != 0 */
   /* data structure for  threads */
   if(!m_calloc(cs, cl.smo_number)) {mes_proc(); goto STOP;} 
   for (i = 0; i < cl.smo_number; i++)
     cs[i].smo = cl.smo[i]; 
   /* returnvalues for each thread */
+#if POUT != 0
   if(!m_calloc(return_value, cl.smo_number)) {mes_proc(); goto STOP;} 
+#endif /* POUT != 0 */
 #ifdef HAVE_LIBPTHREAD
   pthread_attr_init(&Attribute);
   pthread_attr_setscope(&Attribute, PTHREAD_SCOPE_SYSTEM);	
@@ -157,19 +162,22 @@ int scluster_hmm(char* argv[]) {
       cs[i].logp = all_log_p[i];
     }
     /* ------------calculate logp for all seqs. and all models --------------*/
-#if POUT
+#if POUT == 0
     /* sequential version */
     for (i = 0; i < cl.smo_number; i++) {
       if (!smo_changed[i]) continue;
       scluster_prob(&cs[i]);
     }
-#else 
+#else
     /* parallel version */
     i = 0;
     while (i < cl.smo_number) {
       for (j = i; j < m_min(cl.smo_number,i+THREADS); j++) {
 	if (!smo_changed[j]) continue;
-	if (perror = pthread_create(&tid[j],&Attribute,scluster_prob,&cs[j])){
+	if (perror = pthread_create(&tid[j],
+				    &Attribute,
+				    (void*(*)(void*))scluster_prob,
+				    (void*)&cs[j])){
 	  str = mprintf(NULL,0,
 		"pthread_create returns false (step %d, smo[%d])\n",iter,j); 
 
@@ -285,7 +293,7 @@ int scluster_hmm(char* argv[]) {
       }
 
 
-#if POUT
+#if POUT == 0
       /* sequential version */
       for (i = 0; i < cl.smo_number; i++) {	
 	printf("SMO %d\n", i);
@@ -307,8 +315,10 @@ int scluster_hmm(char* argv[]) {
 	  if (!smo_changed[j]) continue;
 	  if (cs[j].sqd == NULL)
 	    mes(MES_WIN, "cluster %d empty, no reestimate!\n", j);
-	  else if (perror = pthread_create(&tid[j], &Attribute, 
-					   sreestimate_baum_welch, &cs[j])) {
+	  else if (perror = pthread_create(&tid[j],
+					   &Attribute,
+					   (void*(*)(void*))sreestimate_baum_welch,
+					   (void*)&cs[j])) {
 	    str = mprintf(NULL,0, 
 			  "pthread_create returns false (step %d, smo[%d])\n",
 			  iter, j); 
@@ -319,7 +329,7 @@ int scluster_hmm(char* argv[]) {
 	for (j = i; j < m_min(cl.smo_number, i+THREADS); j++) {
 	  if (!smo_changed[j]) continue;
 	  if (cs[j].sqd != NULL) {
-	    pthread_join(tid[j], &return_value[j]);
+	    pthread_join(tid[j], (void**) &return_value[j]);
 	    if (return_value[j] == -1) {
 	      str = mprintf(NULL,0,"%d.reestimate false, smo[%d]\n", iter, j); 
 	      mes_prot(str); m_free(str);
@@ -707,7 +717,7 @@ void scluster_print_header(FILE *file, char* argv[]) {
 }
 
 
-#undef POUT
 #ifdef HAVE_LIBPTHREAD
-# undef THREADS
+#undef POUT
+#undef THREADS
 #endif /* HAVE_LIBPTHREAD */

@@ -8,13 +8,10 @@ __copyright__
 
 *********************************************************************************/
 
-
-
-
 #ifndef CLUSTER_H
 #define CLUSTER_H
-#include "sequence.h"
-#include "model.h"
+#include <ghmm/sequence.h>
+#include <ghmm/model.h>
 
 /**
  @name cluster

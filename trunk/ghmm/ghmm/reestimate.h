@@ -11,7 +11,8 @@ __copyright__
 
 #ifndef REESTIMATE_H
 #define REESTIMATE_H
-#include "model.h"
+#include <ghmm/sequence.h>
+#include <ghmm/model.h>
 
 /**@name Baum-Welch-Algorithmus */
 /*@{ (Doc++-Group: reestimate) */
@@ -26,9 +27,9 @@ __copyright__
 	77, no 2, 1989, pp 257--285    
   @return            0/-1 success/error
   @param mo          initial model
-  @param sq           training sequences
+  @param sq          training sequences
   */
- 
+
 int reestimate_baum_welch(model *mo, sequence_t *sq);
 
 #endif /* REESTIMATE_H */

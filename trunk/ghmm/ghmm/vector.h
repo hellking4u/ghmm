@@ -10,6 +10,9 @@ __copyright__
 
 #ifndef VECTOR_H
 #define VECTOR_H
+
+#include <stdio.h>
+
 /**@name Vektor-Funktionen */
 /*@{ (Doc++-Group: vector) */
 
