@@ -15,7 +15,7 @@
 
 # Make sure these locate your installation of SWIG
 TOP        = /project/algorithmics/Sopra/SWIG-1.3.17
-SWIG       = $(TOP)/swig
+SWIG       = swig
 TARGET     = ghmmwrapper
 INTERFACE  = ghmmwrapper.i
 SWIGOPT    = 

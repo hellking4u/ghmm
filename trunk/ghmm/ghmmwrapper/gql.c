@@ -16,7 +16,7 @@
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
-#include <ghmm++/GHMM_convertXMLtoC.h>
+/*#include <ghmm++/GHMM_convertXMLtoC.h>*/
 #include <float.h>
 #include <assert.h>
 
