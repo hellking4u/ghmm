@@ -1323,7 +1323,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 	  cs[index].smo = smo;
   }	  
   
-  smosqd_t *get_smosqd_t_ptr(smosqd_t *cs, int i){ return &cs[i];}
+  smosqd_t get_smosqd_t_ptr(smosqd_t *cs, int i){  return cs[i];}
   
   void free_smosqd_t(smosqd_t *s){
 	  if(s){
