@@ -31,7 +31,7 @@ double pmue(double mue, double A, double B, double eps);
 double pmue_umin(double mue, double A, double B, double eps);
 
 /** 
-    @name Funktion zum Loesen der Nullstellengleichungen fuer abgeschnittenen Normaldichte 
+    @name Function to find the roots of the truncated normal density function.
 */
 double pmue_interpol(double mue, double A, double B, double eps);
 
