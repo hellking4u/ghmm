@@ -50,14 +50,14 @@ AUTOCONF = ${SHELL} /amd/bernoulli/1/home/abt_vin/rungsari/ghmm/missing --run au
 AUTOHEADER = ${SHELL} /amd/bernoulli/1/home/abt_vin/rungsari/ghmm/missing --run autoheader
 AUTOMAKE = ${SHELL} /amd/bernoulli/1/home/abt_vin/rungsari/ghmm/missing --run automake-1.7
 AWK = gawk
-CC = gcc
-CCDEPMODE = depmode=gcc
+CC = /package/gcc-3.2/linux/bin/gcc
+CCDEPMODE = depmode=gcc3
 CFLAGS = -g -I/usr/local/include
-CPP = gcc -E
+CPP = /package/gcc-3.2/linux/bin/gcc -E
 CPPFLAGS = 
-CXX = g++
-CXXCPP = g++ -E
-CXXDEPMODE = depmode=gcc
+CXX = /package/gcc-3.2/linux/bin/g++
+CXXCPP = /package/gcc-3.2/linux/bin/g++ -E
+CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -I/usr/local/include -I/usr/local/include
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
@@ -110,14 +110,14 @@ XMLIO_CONFIG = /home/rungsari/bin/xmlio-config
 XMLIO_INCLUDES = -I/home/rungsari//include
 XMLIO_LIBS = -L/home/rungsari//lib -lxmlio -lexpat
 XMLIO_PREFIX = /home/rungsari/
-ac_ct_CC = gcc
+ac_ct_CC = /package/gcc-3.2/linux/bin/gcc
 ac_ct_CXX = 
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
-am__fastdepCC_FALSE = 
-am__fastdepCC_TRUE = #
-am__fastdepCXX_FALSE = 
-am__fastdepCXX_TRUE = #
+am__fastdepCC_FALSE = #
+am__fastdepCC_TRUE = 
+am__fastdepCXX_FALSE = #
+am__fastdepCXX_TRUE = 
 am__include = include
 am__quote = 
 bindir = ${exec_prefix}/bin

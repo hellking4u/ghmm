@@ -834,7 +834,7 @@ class HMMOpenFactory(HMMFactory):
     	    hmm_dom = xmlutil.HMM(fileName)
     	    emission_domain = hmm_dom.AlphabetType()
     	    if emission_domain == int:
-                [alphabets, A, B, pi] = hmm_dom.buildMatrices()
+                [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
     		emission_domain = Alphabet(alphabets)
     		distribution = DiscreteDistribution(emission_domain)
     		# build adjacency list
@@ -862,7 +862,9 @@ class HMMOpenFactory(HMMFactory):
                         ghmmwrapper.set_arrayint(cpt_background.oder, i,orders[name])
                         for j in range(len(background_dist[name])):
                             ghmmwrapper.set_2d_arrayd(cpt_background.b,i,j, background_dist[j])
-                            
+
+                    # XXX add background distribution to the model, how?
+                    
 	    	return HMMFromMatrices(emission_domain, distribution, A, B, pi)
 	    
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
