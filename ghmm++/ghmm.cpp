@@ -132,15 +132,8 @@ void hmm::XMLIO_getCharacters(const string& characters)
 
 void hmm::XMLIO_finishedReading()
 {
-  /* sanity check */
-  cerr<<"sanity check ToDoNOW"<<endl;
-
-  /* test node ids */
-
-  /* collect transitions */
-
-  /* */
-
+  /* done at graph...*/
+  /* more needed here */
 }
 
 

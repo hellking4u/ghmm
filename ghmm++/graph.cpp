@@ -10,6 +10,7 @@
 #endif
 
 #include <iostream>
+#include <iterator>
 #include "graph.h"
 #include "xmlio/XMLIO_IgnoreObject.h"
 
@@ -100,9 +101,21 @@ const string& Edge::get_id() const
   return id;
 }
 
+const string& Edge::get_to_id() const
+{
+  return to;
+}
+
+const string& Edge::get_from_id() const
+{
+  return from;
+}
+
 
 Graph::Graph(const string& tag, XMLIO_Attributes &attributes)
 {
+  edge_id_counter=0;
+  node_id_counter=0;
   XMLIO_Attributes::const_iterator pos=attributes.find("id");
   if (pos!=attributes.end())
     {
@@ -137,7 +150,38 @@ XMLIO_Object* Graph::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribu
 
 void Graph::XMLIO_endTag(const string& tag)
 {
-  /* not needed */
+  /* should add element to several internal structures... */
+  /* add nodes to node_id map */
+  if (tag=="Node")
+    {
+      Node* last_node=vector<Node*>::back();
+      /* test whether node id is unique */
+      if (node_ids.find(last_node->get_id())==node_ids.end())
+	{
+	  cerr<<toString()<<"double node id "<<last_node->get_id()<<" found"<<endl;
+	}
+      else
+	{
+	  node_ids.insert(pair<const string,int>(last_node->get_id(),node_id_counter));
+	  node_id_counter++;
+	}
+      
+    }
+  /* add edges to edge_id map */
+  else if (tag=="Edge")
+    {
+      Edge* last_edge=vector<Edge*>::back();
+      /* test whether node id is unique */
+      if (edge_ids.find(last_edge->get_id())==edge_ids.end())
+	{
+	  cerr<<toString()<<"double edge id "<<last_edge->get_id()<<" found"<<endl;
+	}
+      else
+	{
+	  edge_ids.insert(pair<const string,int>(last_edge->get_id(),edge_id_counter));
+	  edge_id_counter++;
+	}
+    }
 }
 
 void Graph::XMLIO_getCharacters(const string& characters)
@@ -147,7 +191,65 @@ void Graph::XMLIO_getCharacters(const string& characters)
 
 void Graph::XMLIO_finishedReading()
 {
-  /* not needed now */
+  /* sanity check */
+
+  /* collect transitions, indexed by order in vector */
+  vector<Edge*>::iterator edge_pos=vector<Edge*>::begin();
+  while (edge_pos!=vector<Edge*>::end())
+    {
+      const string& from=(*edge_pos)->get_from_id();
+      const string& to=(*edge_pos)->get_to_id();
+      /* exist nodes in map ? what is the id? */
+      int from_id;
+      map<string,int>::iterator from_node_pos=node_ids.find(from);
+      if (from_node_pos==node_ids.end())
+	{
+	  cerr<<"found unknown from-node id during transition collection"<<endl;
+	  node_ids.insert(pair<const string,int>(from,node_id_counter));
+	  from_id=node_id_counter;
+	  node_id_counter++;
+	}
+      else
+	{
+	  from_id=from_node_pos->second;
+	}
+      int to_id;
+      map<string,int>::iterator to_node_pos=node_ids.find(to);
+      if (to_node_pos==node_ids.end())
+	{
+	  cerr<<"found unknown from-node id during transition collection"<<endl;
+	  node_ids.insert(pair<const string,int>(to,node_id_counter));
+	  to_id=node_id_counter;
+	  node_id_counter++;
+	}
+      else
+	{
+	  to_id=to_node_pos->second;
+	}
+
+      /* more than one edge between two points allowed ! */
+
+      /* adiascence list */
+      map<int,set<int> >::iterator from_to_map_pos=from_to_map.find(from_id);
+      if (from_to_map_pos==from_to_map.end())
+	{
+	  from_to_map.insert(pair<const int,set<int> >(from_id,set<int>()));
+	  from_to_map_pos=from_to_map.find(from_id);
+	}
+      /* overkill ... need index of vector<Edge*> */
+      from_to_map_pos->second.insert(distance(vector<Edge*>::begin(),edge_pos));
+
+      /* inverse adiascence list */
+      map<int,set<int> >::iterator to_from_map_pos=to_from_map.find(to_id);
+      if (to_from_map_pos==to_from_map.end())
+	{
+	  to_from_map.insert(pair<const int,set<int> >(to_id,set<int>()));
+	  to_from_map_pos=to_from_map.find(to_id);
+	}
+      /* overkill ... need index of vector<Edge*> */
+      to_from_map_pos->second.insert(distance(vector<Edge*>::begin(),edge_pos));
+      ++edge_pos;
+    }
 }
 
 const char* Graph::toString() const
