@@ -7,7 +7,7 @@
   __copyright__
 
 */
-
+#include "ghmm/ghmm.h"
 #include "ghmm/viterbi.h"
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
@@ -26,7 +26,9 @@
 
 #include <ghmm++/GHMM_AbstractModelT.hh> // Template
 #include "ghmm++/GHMM_SWDiscreteModel.h"
-
+#include <iostream>
+#include <queue>
+#include <vector>
 // #include "ghmm/reestimate.h"
 
 
@@ -226,10 +228,14 @@ void GHMM_SWDiscreteModel::cleanCPP()
 {
   unsigned int i;
 
-  for (i = 0; i < states.size(); ++i)
+  for (i = 0; i < states.size(); ++i) {
     SAFE_DELETE(states[i]);
+    if (edge_classes) delete edge_classes[i];
+  }
+  if (edge_classes) delete edge_classes;
   states.clear();
 }
+
 
 void GHMM_SWDiscreteModel::init() {
   attributes.clear();
@@ -241,6 +247,7 @@ void GHMM_SWDiscreteModel::init() {
   own_alphabet       = false;
   no_classes         = 1;
 }
+
 
 void GHMM_SWDiscreteModel::init(GHMM_Alphabet *my_alphabet) {
   attributes.clear();
@@ -263,7 +270,9 @@ void GHMM_SWDiscreteModel::init(GHMM_Alphabet *my_alphabet) {
   c_model->cos     = no_classes;
   c_model->prior   = -1;
   c_model->s       = NULL;
+  c_model->model_type = 0;
 }
+
 
 void GHMM_SWDiscreteModel::init(int number_of_states, int my_M, double my_prior) {
   init();
@@ -276,7 +285,7 @@ void GHMM_SWDiscreteModel::init(int number_of_states, int my_M, double my_prior)
     fprintf(stderr,"GHMM_SWDiscreteModel::GHMM_SWDiscreteModel() could not allocate c_model\n");
     exit(1);
   }
-
+  c_model->model_type = 0;
   c_model->N       = number_of_states;
   c_model->M       = my_M;
   c_model->prior   = my_prior;
@@ -302,6 +311,152 @@ void GHMM_SWDiscreteModel::init(int number_of_states, int my_M, double my_prior)
   buildCppData();
 }
 
+
+void GHMM_SWDiscreteModel::DFSVisit(int nodev, int &timevisit, int *parents, DFSCOLORS *colors)
+{
+  int i,w;
+  colors[nodev]=GRAY;
+  ++timevisit;
+  for(i=0; i < c_model->s[nodev].out_states; i++) { 
+    w=c_model->s[nodev].out_id[i]; // Explore edge (v,w)
+    if ( edge_classes[nodev][w] == NONE ) { // First exploration
+      edge_classes[nodev][w] = colors[w];
+      //fprintf(stderr, " %d edge (%s, %s)\n", (int) colors[w], c_model->s[nodev].label, 
+      //	      c_model->s[w].label);
+      fflush(stderr);
+    }
+    if ( colors[w] == WHITE ) {
+      parents[w]=nodev;
+      DFSVisit(w, timevisit, parents, colors);
+    } 
+  }
+  colors[nodev]=BLACK; // finished  
+  ++timevisit;
+}
+
+void GHMM_SWDiscreteModel::DFS()
+{
+  int i,j;
+  DFSCOLORS *colors= new DFSCOLORS[c_model->N];
+  int *parents = new int[c_model->N];
+  edge_classes = new DFSCOLORS*[c_model->N];
+
+  for(i=0; i < c_model->N; i++) {
+    colors[i]=WHITE;
+    parents[i]=-1;
+    edge_classes[i]= new DFSCOLORS[c_model->N];
+    for(j=0; j < c_model->N; j++) {
+      edge_classes[i][j] = NONE;
+    }
+  }
+
+  int timevisit=0;
+  for(i=0; i < c_model->N; i++) {
+    if ( colors[i] == WHITE ) {
+      DFSVisit(i,timevisit,parents, colors);
+    }
+  }
+
+  delete colors;
+  delete parents;
+}
+
+void GHMM_SWDiscreteModel::topological_sort()
+{
+  /*
+   * Topological sort with cycle detection (WR)
+   *
+   * Calculate indegrees for nodes (using Map from node-key to int in-degree).
+   * Create a queue q and enqueue all nodes of indegree 0.
+   * Create an empty list t for top-sorted nodes
+   * Set loopcount to 0                           
+   * Loop while queue is not empty
+   *     Increment loopcount 
+   *     Dequeue from q a node v and append it to list t
+   *     Loop over nodes w adjacent to v
+   *         Decrement w's indegree (i.e. decrement value in Map)
+   *         If w's indegree is 0, enqueue w in q
+   * If loopcount < number of nodes in graph, return cycle-in-graph  
+   * Return top-sorted list t
+   *
+   */
+
+  std::queue< int > toporder_queue;
+  std::vector< int > toporder;
+
+  if (c_model->model_type == kSilentStates) {
+    cerr << "GHMM_SWDiscreteModel: GHMM will order silent states" << endl;
+  } else
+    return;
+
+  int i,j,v,w;
+  int loopcount  = 0;
+  int *indegrees = new int[c_model->N];
+
+  DFS(); // Classify edges as tree or back-edges
+  for(i=0; i < c_model->N; i++) {
+    indegrees[i]=c_model->s[i].in_states;
+  }
+  for(i=0; i < c_model->N; i++) { // don't consider back edges in top sort 
+    for(j=0; j < c_model->N; j++) {
+      if (edge_classes[i][j] == GRAY) {
+	indegrees[j]--;
+	fprintf(stderr, "BACK edge (%s, %s)\n", c_model->s[i].label, c_model->s[j].label);
+      }
+    }
+  }
+  // Create a queue q and enqueue all nodes of indegree 0.
+  for(i=0; i < c_model->N; i++) {
+    if ( indegrees[i] == 0 ) toporder_queue.push(i);
+  }
+
+  loopcount = 0;
+  while( !toporder_queue.empty() ) {
+    loopcount++;
+    v=toporder_queue.front(); 
+    toporder_queue.pop();  // dequeue a node v
+    toporder.push_back(v);     // append it to the list
+    for(i=0; i < c_model->s[v].out_states; i++) {
+      w=c_model->s[v].out_id[i];
+      if ( edge_classes[v][w] != GRAY ) {
+	indegrees[w]--;
+	if (w != v && indegrees[w]==0) {
+	  toporder_queue.push(w);
+	}
+      }
+    }
+  }
+
+  if ( c_model->topo_order != NULL ) {
+    free(c_model->topo_order);
+    c_model->topo_order=NULL;
+    c_model->topo_order_length=0;
+  }
+  vector< int > dels_order;
+  cout << "Topological ordering of DELs:";
+  for(i=0; i < toporder.size(); i++) {
+    if ( c_model->silent[toporder[i]] ) {
+      cout << c_model->s[toporder[i]].label << " ,";
+      dels_order.push_back(toporder[i]);
+    }
+  }
+  // copying ordering of silent states into struct sdmodel
+  c_model->topo_order_length=dels_order.size();
+  if (!(c_model->topo_order=(int*)malloc(dels_order.size()*sizeof(int)))) {
+    fprintf(stderr, "GHMM_SWDiscreteModel: Cannot allocate memory in heap\n");
+    return;
+  }
+  for(i=0; i < c_model->topo_order_length; i++) {
+    c_model->topo_order[i]=dels_order[i];
+  }
+  cout << endl;
+  if ( loopcount < c_model->N ) {
+    cerr << "!!! Cycle detection !!!!" << endl;
+  }
+  delete indegrees;
+}
+
+
 /* Returns state with given index. */
 sdstate* GHMM_SWDiscreteModel::getCState(int index) const
 {
@@ -309,8 +464,7 @@ sdstate* GHMM_SWDiscreteModel::getCState(int index) const
     fprintf(stderr,"GHMM_SWDiscreteModel::getCState(int):\n");
     fprintf(stderr,"State no. %d does not exist. Model has %d states.\n",index,c_model->N);
     exit(1);
-  }
-  
+  }  
   return &c_model->s[index]; 
 }
 

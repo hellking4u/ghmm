@@ -69,7 +69,7 @@ void create_model(sdmodel* sdm,double*** matrans,double** maems,double* vecpi,in
 
   assert(sdm);
 
-  sdm->get_class = seq_d_class;
+  // XXXXXX sdm->get_class = seq_d_class;
   sdm->N = n; //number of states
   sdm->M = m; //length of alphabet
   sdm->cos = cos; //number of classes
@@ -206,6 +206,7 @@ int main(int argc,char* argv)
   sdmodel_Ak_print( stdout, sdm ,1,"\t"," ","\n");
   sdmodel_B_print(stdout,sdm,"\t"," ","\n");
 
+  /*****
   seqs = sdmodel_generate_sequences(sdm,1,10,10,10);  
   sequence_print(stdout,seqs);
 
@@ -214,11 +215,10 @@ int main(int argc,char* argv)
 
   printf("\n\n Viterbi path %f", logp );
   vbiobj->print_path(10, "\t");
+  ********/
 
   mat3_free(&matrans,cos,n);
-  matrix_d_free(&maems);
+  matrix_d_free(&maems, cos);
   sdmodel_free(&sdm);
-
-  delete vbiobj;
 
 }

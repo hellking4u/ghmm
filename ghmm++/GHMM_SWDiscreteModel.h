@@ -16,7 +16,6 @@
 #include <ghmm++/GHMM_StateT.hh>
 #include <ghmm++/GHMM_GMLTransition.h>
 #include <ghmm++/GHMM_Alphabet.h>
-
 #include <ghmm++/GHMM_AbstractModelT.hh> // Template
 
 #include <ghmm++/begin_code.h>
@@ -32,6 +31,7 @@ class GHMM_DoubleMatrix;
 class GHMM_Alphabet;
 class GHMM_GMLState;
 class GHMM_GMLTransition;
+
 
 /** Discrete HMM model (wrapper around model in C data structure). */
 class GHMM_SWDiscreteModel : public GHMM_AbstractModelT<GHMM_GMLState, GHMM_GMLTransition> {
@@ -142,6 +142,8 @@ public:
   */
   GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double* log_p = NULL) const;
 
+  /** topological ordering with cycle detection (using in-degrees) */
+  void topological_sort(void);
 
   /** C Model. */
   sdmodel* c_model;
@@ -153,9 +155,11 @@ public:
 
 protected:
 
+  typedef enum eDFSCOLORS {GRAY=0, BLACK=1, WHITE=2, NONE=-1} DFSCOLORS;
+
   /** */
   bool own_alphabet;
-
+  DFSCOLORS** edge_classes;
   void init();
 
   void init(GHMM_Alphabet *alphabet);
@@ -168,6 +172,9 @@ protected:
   void buildCppData();
 
   void cleanCPP(); 
+  void DFS();
+  void DFSVisit(int nodev, int &timevisit, int *parents, DFSCOLORS *colors);
+
 };
 
 #ifdef HAVE_NAMESPACES
