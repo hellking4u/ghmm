@@ -1014,7 +1014,7 @@ class HMMOpenFactory(HMMFactory):
     	    hmm_dom = xmlutil.HMM(fileName)
     	    emission_domain = hmm_dom.AlphabetType()
     	    if emission_domain == int:
-                [alphabets, A, B, pi, state_orders, label_list] = hmm_dom.buildMatrices()
+                [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
 
     		emission_domain = Alphabet(alphabets)
     		distribution = DiscreteDistribution(emission_domain)
