@@ -522,7 +522,7 @@ double randvar_normal_pos(double mue, double u, int seed) {
   /* move boundary to lower values in order to achieve maximum at mue
      gsl_ran_gaussian_tail(generator, lower_boundary, sigma)
   */
-  x=gsl_ran_gaussian_tail(RNG, -mue, sqrt(u))+mue;
+  return gsl_ran_gaussian_tail(RNG, -mue, sqrt(u))+mue;
 #else
   /* Methode: solange Gauss-verteilte Zuf.Zahl erzeugen (mit GSL-Lib.), 
      bis sie im pos. Bereich liegt -> nicht effektiv, wenn mue << 0 
