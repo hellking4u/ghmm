@@ -21,91 +21,87 @@ extern "C" {
 /*@{ (Doc++-Group: vector) */
 
 /**
-  Normierung der Summe der Elemente eines Vektors auf Eins..
-  @return 0/-1
-  @param v    Vektor
-  @param len  Laenge des Vektors       
+  Scales the sum of elements in a vector to one.
+  @return 0 for success; -1 for error
+  @param v    vector
+  @param len  length of the vector       
 */
 int vector_normalize(double *v, int len);
 
 /**
-  Elemente eines Vektors mit einer Konstanten belegen
-  @return -
-  @param v    Vektor
-  @param len  Laenge des Vektors
-  @param c    konstanter Vorgabewert
+  Gives all elements in a vector a constant value
+  @param v    vector
+  @param len  length of the vector
+  @param c    given value for the elements
 */
 void vector_const_values(double *v, int len, double c);
 
 /**
-  Nicht-Null-Elemente eines Vektors mit einer Konstanten belegen
-  @return -
-  @param v    Vektor
-  @param len  Laenge des Vektors       
-  @param c    konstanter Vorgabewert
+  Gives all elements, not equal zero, in a vector a constant value
+  @param v    vector
+  @param len  length of the vector
+  @param c    given value for the elements
 */
 void vector_const_preserve_struct(double *v, int len, double c);
 
 /**
-  Elemente eines Vektors zufällig (0..1) belegen
-  @return -
-  @param v    Vektor
-  @param len  Laenge des Vektors       
+  Gives all elements in a vector random values between 0 and 1
+  @param v    vector
+  @param len  length of the vector       
 */
 void vector_random_values(double *v, int len);
 
 /**
-  Nicht-Null-Elemente eines Vektors zufällig (0..1) belegen
-  @return -
-  @param v    Vektor
-  @param len  Laenge des Vektors       
+  Gives all elements, not equal zero, in a vector random values between 0 and 1
+  @param v    vector
+  @param len  length of the vector   
 */
 void vector_random_preserve_struct(double *v, int len);
 
 /**
-  Schreiben eines double-Vektors (ohne Klammerung!)..
-  @param file       Ausgabedatei
-  @param vector     zu schreibender Vektor
-  @param len        Dimension
-  @param tab        Formatierung: fuehrende Tabs
-  @param separator  Formatierung: Trennzeichen der Spalten
-  @param ending     Formatierung: Endzeichen der Zeile  
+  Writes a double vector (without parenthesis)
+  @param file       output file
+  @param vector     vector to write
+  @param len        dimension
+  @param tab        format: leading tabs
+  @param separator  format: separator for columns
+  @param ending     format: end of a row  
   */
 void vector_d_print(FILE *file, double *vector, int len, 
 		    char *tab, char *separator, char *ending);
 
 /**
-  Schreiben eines double-Vektors (ohne Klammerung!) mit angegebenen Nachkommast.
-  @param file       Ausgabedatei
-  @param vector     zu schreibender Vektor
-  @param len        Dimension
-  @param width      Formatierung: Stellen insgesamt
-  @param prec       Formatierung: Anzahl der Nachkommastellen
-  @param tab        Formatierung: fuehrende Tabs
-  @param separator  Formatierung: Trennzeichen der Spalten
-  @param ending     Formatierung: Endzeichen der Zeile  
+  Writes a double vector (without parenthesis) with given number of decimal places
+  @param file       output file
+  @param vector     vector to write
+  @param len        dimension
+  @param width      format: total number of decimal places
+  @param prec       format: number of decimal places after the comma
+  @param tab        format: leading tabs
+  @param separator  format: separator for columns
+  @param ending     format: end of a row 
   */
 void vector_d_print_prec(FILE *file, double *vector, int len, int width,
 			 int prec, char *tab, char *separator, char *ending);
 
 /**
-  Schreiben eines int-Vektors (ohne Klammerung!)..
-  @param file       Ausgabedatei
-  @param vector     zu schreibender Vektor
-  @param len        Dimension
-  @param tab        Formatierung: fuehrende Tabs
-  @param separator  Formatierung: Trennzeichen der Spalten
-  @param ending     Formatierung: Endzeichen der Zeile  
+  Writes a integer vector (without parenthesis)
+  @param file       output file
+  @param vector     vector to write
+  @param len        dimension
+  @param tab        format: leading tabs
+  @param separator  format: separator for columns
+  @param ending     format: end of a row  
   */
 void vector_i_print(FILE *file, int *vector, int len,
 		    char *tab, char *separator, char *ending);
 /**
-  Berechnen eines double-Vektors aus Matrix * Vektor
-  @param A       Matrix n x m
-  @param x       Vektor zur Berechnung
-  @param n       Anzahl Zeilen
-  @param m       Anzahl Spalten
-  @param v       berechneter Vektor (Rueckgabe)
+  Calculates Ax, where A is a double matrix and x a double vector
+  @param A       n x m matrix
+  @param x       vector to calculate
+  @param n       number of rows
+  @param m       number of columns
+  @param v       calculted vector (returning value)
   */
 int vector_mat_times_vec(double ** A, double *x, int n, int m, double *v);
 
