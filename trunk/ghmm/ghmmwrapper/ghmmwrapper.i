@@ -268,10 +268,10 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 	  sequence_d_free(&seq);}
   
   sequence_d_t *seq_d_read(char* filename ){
-	  int *i;
+	  int i;
 	  sequence_d_t** s;
 	  //s = (sequence_d_t **) malloc(1*sizeof(sequence_d_t*));
-	  s = sequence_d_read(filename, i);
+	  s = sequence_d_read(filename, &i);
 	  return s[0];
   }
   
