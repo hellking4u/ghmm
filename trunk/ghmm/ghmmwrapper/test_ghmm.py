@@ -5,12 +5,28 @@ print "*** EmissionSequence / SequenceSet ***"
 alph = IntegerRange(0,7)
 
 print "list input EmssionSequence:"
-s = EmissionSequence(alph,[1,2,3,4])
+s = EmissionSequence(alph,[1,2,0,0,0,3,4])
 print s
 
-print "list input SequenceSet:"
-s2 = SequenceSet(alph,[ [1,2,3,4,5],[0,3,0],[4,3,2,2,1,1,1,1] ])
+
+
+print "list(EmissionSequence)"
+l = list(s)
+print l
+
+
+
+print "\nlist input SequenceSet:"
+s2 = SequenceSet(alph,[ [1,2,3,4,5],[0,3,0],[4,3,2,2,1,1,1,1], [0,0,0,2,1],[1,1,1,1,1,1] ])
 print s2
+
+print "writing SequenceSet to file."
+s2.write("blablatest.seq")
+
+print "\nSequenceSet.getSubset"
+s4 = s2.getSubset([0,2,4])
+print s4
+
 
 print "pointer input EmissionSequence"
 s3 = s2[1] # call to SequenceSet.__getitem__
@@ -20,8 +36,8 @@ print s3
 print "*** Discrete Emission Model ***"
 
 m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
-                       [[0.0,1.0,0],[0.0,0.0,1.0],[1.0,0.0,0.0]],
-                       [[1.0,0.0,0.0,0.0],[0.0,0.5,0.5,0.0], [0.0,0.0,0.0,0.0]],
+                       [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]],
+                       [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]],
                        [1.0,0,0])
 
 trans = m.getTransition(0,1)
@@ -35,18 +51,30 @@ print emission
 
 #print "Sample:"					   
 s4 = m.sample(4,15)
-#print str(s4) + "\n"
+print str(s4) + "\n"
 
 s5 = m.sampleSingle(10)
-#print str(s5) + "\n"
+print str(s5) + "\n"
 
-#print "Viterbi:"
+print "merging two sequences:"
+s4.merge(s5)
+print s4
+
+print "training model"
+m.baumWelch(s5)
+#print m
+
+print "Viterbi:"
 path = m.viterbi(s5)
-#print str(path) + "\n"
+print str(path) + "\n"
 
-#print "forward"
+print "forward"
 logp1 = m.loglikelihood(s5)
-#print "logp = " + str(logp1) + "\n"
+print "logp = " + str(logp1) + "\n"
+
+#print "logprob:"
+#logp2 = m.logprob(s5,[0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1])
+#print logp2, " -> " + str(2.71**logp2)
 
 (alpha,scale) = m.forward(s5)
 #print "alpha:\n" + str(alpha) + "\n"
@@ -101,8 +129,21 @@ m3 = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
                        [[10.0,0.0,010.0,0.0],[0.0,3.5,3.5,0.0], [5.0,5.0,5.0,5.0]],
                        [1.0,0,0])
 
-print m3
+#print m3
 
-m3.normalize()
+#m3.normalize()
 
-print m3
+#print m3
+
+print "Writing to file:"
+#m.write("er.log")
+#m3.write("er.log")
+#m2.write("er2.log")
+
+#mList = [m,m2,m3]
+#HMMwriteList("er.log",mList)
+
+
+
+
+

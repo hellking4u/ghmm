@@ -89,6 +89,7 @@ static int sdviterbi_free(local_store_t **v, int n, int cos, int len) {
 #undef CUR_PROC
 } /* viterbi_free */
 
+/*----------------------------------------------------------------------------*/
 
 static void Viterbi_precompute( sdmodel *mo, int *o, int len, local_store_t *v)
 {

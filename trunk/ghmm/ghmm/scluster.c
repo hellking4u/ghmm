@@ -1,5 +1,5 @@
 /*******************************************************************************
-  author       : Bernhard Knab, Benjamin Georgi
+  author       : Bernhard Knab
   filename     : ghmm/ghmm/scluster.c
   created      : TIME: 15:47:54     DATE: Tue 16. November 1999
   $Id$
@@ -629,7 +629,7 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
     }
   } /* while */
   if (!error) return (0);
-  /*  int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]); */
+
 STOP: 
   if (result) m_free(result);
   return(-1);

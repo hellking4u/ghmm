@@ -126,8 +126,6 @@ The objects one has to deal with in HMM modelling are the following
    HMMOpen(fileName, type=HMM.FILE_XML)
    HMMFromMatrix(emission_domain, distribution, A, B, pi) # B is a list of distribution parameters
 
-   # XXX do we need distribution here? I think we need it to interpret the parameters in B.
-
    Dynamic construction: Providing a context for dynamically
    editing existing HMMs or creating them from scratch
 
@@ -154,6 +152,7 @@ import ghmmwrapper
 import ghmmhelper
 import re
 from os import path
+from math import log
 
 ghmmwrapper.gsl_rng_init() #Init random number generator
 
@@ -176,6 +175,11 @@ class NoValidCDataType(GHMMError):
 class badCPointer(GHMMError):
     def __init__(self,message):   
         print "\n\nbadCPointer Exception: " + str(message) + "\n"
+        
+class SequenceCannotBeBuild(GHMMError):
+    def __init__(self,message):   
+        print "\n\nSequenceCannotBeBuild: " + str(message) + "\n"        
+        #self.message = message
                 
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
@@ -295,8 +299,7 @@ class Float(EmissionDomain):
         """ Check whether emission is admissable (contained in) the domain
             raises GHMMOutOfDomain else
         """
-        pass
-        #return isinstance(emission,Float)
+        return isinstance(emission,float)
    
 
     
@@ -364,6 +367,8 @@ class EmissionSequence:
         # XXX How do you maintain reference to the SequenceSet.cseq?
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
+            
+            # necessary C functions for accessing the sequence_t struct
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbol = ghmmwrapper.set_2d_arrayint
@@ -377,9 +382,9 @@ class EmissionSequence:
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0]) 
                 
             elif isinstance(sequenceInput, str): # from file
-                # Does it make sense to read only one sequence from file?? 
-                # sequence_t **sequence_read(const char *filename, int *seq_arrays)
-                pass
+                # reads in the first sequence struct in the input file
+                self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
+                
             elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
                 # XXX Should maintain reference to the parent
                 if sequenceInput.seq_number > 1:
@@ -390,6 +395,8 @@ class EmissionSequence:
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
+            
+            # necessary C functions for accessing the sequence_d_t struct
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbol = ghmmwrapper.set_2d_arrayd
@@ -404,7 +411,10 @@ class EmissionSequence:
 				
 
             elif isinstance(sequenceInput, str): # from file
-                pass
+                # reads in the first sequence struct in the input file
+                self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
+                
+                
             elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
                 # XXX Should maintain reference to the parent
                 if sequenceInput.seq_number > 1:
@@ -417,13 +427,12 @@ class EmissionSequence:
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
-        
-    def __del__(self):        
+    def __del__(self):
+        "Deallocation of C sequence struct."
         self.cleanFunction(self.cseq)
 
-        
     def __len__(self):
-        "In order to be consistent with SequenceSet len(self) returns the number of sequences."
+        "Returns the length of the sequence."
         return ghmmwrapper.get_arrayint(self.cseq.seq_len,0)	
 
 
@@ -449,8 +458,18 @@ class EmissionSequence:
            
     	return strout		
 
-#    def sequenceSet(self):
-#        """ Make a one-element SequenceSet out of me """
+    def sequenceSet(self):
+        """ Return a one-element SequenceSet with this sequence."""
+        return SequenceSet(self.emissionDomain, self.cseq)
+        
+    def write(self,fileName):
+        "Writes the EmissionSequence into file 'fileName'." 
+        
+        # different function signatures require explicit check for C data type
+        if self.emissionDomain.CDataType == "int":
+            ghmmwrapper.call_sequence_print(fileName, self.cseq)
+        if self.emissionDomain.CDataType == "double":    
+            ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)         
 
 
 class SequenceSet:
@@ -464,8 +483,9 @@ class SequenceSet:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
-            self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within a int**
+            self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign a int* to a position within a int**
             self.cleanFunction = ghmmwrapper.sequence_clean
+            self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
             
             if isinstance(sequenceSetInput, str): # from file
                 # reads in the first sequence struct in the input file
@@ -502,6 +522,7 @@ class SequenceSet:
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
             self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign an double* to a position within a double**
             self.cleanFunction = ghmmwrapper.sequence_d_clean
+            self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
                         
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
@@ -574,23 +595,30 @@ class SequenceSet:
         """ Return the weight of sequence i. Weights are used in Baum-Welch"""
         return ghmmwrapper.set_arrayd(self.cseq.seq_w,i,w)
         
-    
-    def __setitem__(self, index, value): # Only allow EmissionSequence?
-        pass
-        
     def __getitem__(self, index):
-        """ Return an EmissionSequence object initialized with sequence 'index'.
+        """ Return an EmissionSequence object initialized with a reference to 
+        sequence 'index'.
         
         """
-        
-        # Right now only the pointer is passed. Do we want to have a real copy of the sequence instead ?
-        
         seq = self.calloc(1)
         seq.seq = self.castPtr(self.__array[index]) # int* -> int** reference
         ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
         seq.seq_number = 1
+        return EmissionSequence(self.emissionDomain, seq)        
+
+    def merge(self, emissionSequences): # Only allow EmissionSequence?
+        """ 
+             Merge 'emisisonSequences' with 'self'.
+             'emisisonSequences' can either be an EmissionSequence or SequenceSet object.
+        """
+
+        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)                            
         
-        return EmissionSequence(self.emissionDomain, seq)
+        self.addSeqFunction(self.cseq,emissionSequences.cseq)
+        
+        # XXX delete merged source sequences ?
+        # emissionSequences.cleanFunction(emissionSequences.cseq) 
 
     def getSubset(self, seqIndixes):
         """ Returns a SequenceSet containing (references to) the sequences with the indixes in
@@ -606,6 +634,15 @@ class SequenceSet:
         seq.seq_number = seqNumber
         
         return SequenceSet(self.emissionDomain, seq)
+        
+    def write(self,fileName):
+        "Writes (appends) the SequenceSet into file 'fileName'." 
+        
+        # different function signatures require explicit check for C data type
+        if self.emissionDomain.CDataType == "int":
+            ghmmwrapper.call_sequence_print(fileName, self.cseq)
+        if self.emissionDomain.CDataType == "double":    
+            ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)        
 
         
 def SequenceSetOpen(emissionDomain, fileName):
@@ -661,7 +698,7 @@ class HMMOpenFactory(HMMFactory):
         models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
         nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
         if modelIndex == None:
-            cmodel = get_smodel_ptr(models, 0) # XXX Who owns the pointer?
+            cmodel = ghmmwrapper.get_smodel_ptr(models, 0) # XXX Who owns the pointer?
         else:
             if modelIndex < nrModels:
                 cmodel = get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
@@ -913,7 +950,7 @@ class HMM:
         """
         
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
-            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
         
 
         
@@ -936,7 +973,7 @@ class HMM:
         elif isinstance(emissionSequences,SequenceSet):
             seqNumber = len(emissionSequences)        
         else:    
-            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
               
         likelihood = ghmmwrapper.double_array(1)
         likelihoodList = []
@@ -956,70 +993,24 @@ class HMM:
 
     ## Further Marginals ...
 
-
-
     def logprob(self, emissionSequence, stateSequence):
-        """ log P[ emissionSequence, stateSequence| m] """
-        pass
+        """ log P[ emissionSequence, stateSequence| m] 
         
-
-    def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
-        """ Reestimate the model parameters given the training_sequences.
-            Perform at most nr_steps until the improvement in likelihood
-            is below likelihood_cutoff
-        
-            training_sequences can either be a SequenceSet or a Sequence
-  
-            Result: Final loglikelihood
+            Defined in derived classes.
         """
+        pass
 
-        if not isinstance(trainingSequences, SequenceSet):
-            raise TypeError
-            
-        if (self.emissionDomain.CDataType == "double"):
-            smosqd_cpt = self.baumWelchSetup(trainingSequences, nrSteps)
-            ghmmwrapper.sreestimate_baum_welch(smosqd_cpt)        
-            likelihood = ghmmwrapper.get_arrayd(smosqd_cpt.logp, 0)
-            ghmmwrapper.free_smosqd_t(smosqd_cpt)
-            
-        #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
-        #                                                                    loglikelihoodCutoff)
-
-        self.baumWelchDelete()
-
-        return likelihood
+    # The functions for model training are defined in the derived classes.
+    def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
+        pass
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
-        """ Setup necessary temporary variables for Baum-Welch-reestimation.
-            Use baum_welch_setup and baum_welch_step if you want more control
-            over the training, compute diagnostics or do noise-insertion
-
-            training_sequences can either be a SequenceSet or a Sequence
-
-            Return: a C-array of type smosqd_t
-        """
-        baumWelchCData = ghmmwrapper.smosqd_t_array(1)
-
-        smosqd_ptr = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, 0)
-        smosqd_ptr.smo  = self.cmodel
-        smosqd_ptr.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
-        smosqd_ptr.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
-        smosqd_ptr.eps  = 10e-6
-        smosqd_ptr.max_iter = nrSteps
-           
-        return baumWelchCData
+        pass
     
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
-        """ Compute one iteration of Baum Welch estimation.
-            Use baum_welch_setup and baum_welch_step if you want more control
-            over the training, compute diagnostics or do noise-insertion
-
-            training_sequences can either be a SequenceSet or a Sequence
-        """
         pass
     
     def baumWelchDelete(self):
-        """ Delete the necessary temporary variables for Baum-Welch-reestimation """
         pass
         
     def forward(self, emissionSequence):
@@ -1030,7 +1021,7 @@ class HMM:
         """
                       
         if not isinstance(emissionSequence,EmissionSequence):
-            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         unused = ghmmwrapper.double_array(1) # Dummy return value for forwardAlphaFunction    	
      
@@ -1063,7 +1054,7 @@ class HMM:
             Result: the (N x T)-matrix containing the backward-variables
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
         
@@ -1104,7 +1095,7 @@ class HMM:
         elif isinstance(emissionSequences,SequenceSet):
             seqNumber = len(emissionSequences)        
         else:    
-            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)                            
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)                            
 
 
         log_p = ghmmwrapper.double_array(1)
@@ -1160,7 +1151,10 @@ class HMM:
         return EmissionSequence(self.emissionDomain,seqPtr)
 
     def state(self, stateLabel):
-        """ Given a stateLabel return the integer index to the state """
+        """ Given a stateLabel return the integer index to the state 
+        
+            (state labels not yet implemented)
+        """
         pass
 
     def getInitial(self, i):
@@ -1195,8 +1189,10 @@ class HMM:
         return transition    
             
     def setTransition(self, i, j, prob):
-        """ Accessor function for the transition a_ij """
-        pass
+        """ Accessor function for the transition a_ij. """
+        out_state = self.getStatePtr(self.cmodel.s,i)
+        in_state = self.getStatePtr(self.cmodel.s,j)
+        
 
     def getEmission(self, i):
         """ Accessor function for the emission distribution parameters of state 'i'. 
@@ -1310,7 +1306,67 @@ class DiscreteEmissionHMM(HMM):
         state = self.getStatePtr(self.cmodel.s,i)
         for i in range(M):
             ghmmwrapper.set_arrayd(state.b,i,distributionParameters[i])
+    
+    
+    def logprob(self, emissionSequence, stateSequence):
+        """ log P[ emissionSequence, stateSequence| m] """
+        
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
+        state = self.getStatePtr( self.cmodel.s, stateSequence[0] )
+        emissionProb = ghmmwrapper.get_arrayd(state.b, emissionSequence[0])
+        if emissionProb == 0:
+            silent = ghmmwrapper.get_arrayint(self.cmodel.silent, 0)
+            if silent == 1:
+                emissionProb = 1
+            else:
+                raise SequenceCannotBeBuild, "first symbol " + str(emissionSequence[i+1]) + " not emitted by state " + str(stateSequence[0])
+                        
+        logP = log(state.pi * emissionProb )
+        
+        symbolIndex = 1
+        
+        try:
+        
+            for i in range(len(emissionSequence)-1):
+                cur_state = self.getStatePtr( self.cmodel.s, stateSequence[i] )
+                next_state = self.getStatePtr( self.cmodel.s, stateSequence[i+1] )
+                for j in range(cur_state.out_states):
+                    out_id = ghmmwrapper.get_arrayint(cur_state.out_id,j)
+                    if out_id == stateSequence[i+1]:
+                        emissionProb = ghmmwrapper.get_arrayd(next_state.b, emissionSequence[symbolIndex])
+                        # print "b["+str(emissionSequence[symbolIndex])+"] in state " + str(stateSequence[i+1]) + " = ",emissionProb
+                        symbolIndex += 1
+                        if emissionProb == 0:
+                            silent = ghmmwrapper.get_arrayint(self.cmodel.silent, stateSequence[i+1] )
+                            if silent == 1:
+                                emissionProb = 1
+                                symbolIndex -= 1
+                            else:
+                                raise SequenceCannotBeBuild, "symbol " + str(emissionSequence[i+1]) + " not emitted by state "+ str(stateSequence[i+1])
+
+                        logP += log( ghmmwrapper.get_arrayd(state.out_a,j) * emissionProb)
+                        break
+        except IndexError:
+            pass
+        return logP     
+    
+    def baumWelch(self, trainingSequences):
+        """ Reestimates the model with the sequence in 'trainingSequences'.
+           
+            Note that training for models including silent states is not yet supported.       
+        """
+        if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)        
+        
+        if self.cmodel.model_type == 4:
+            print "Sorry, training of models containing silent states not yet supported."
+        else:
+            ghmmwrapper.reestimate_baum_welch(self.cmodel, trainingSequences.cseq)
+    
+    
+    
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
         
@@ -1365,6 +1421,9 @@ class GaussianEmissionHMM(HMM):
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
         self.fileWriteFunction = ghmmwrapper.call_smodel_print
         self.getModelPtr = ghmmwrapper.cast_smodel_ptr
+        
+        # Baum Welch context, call baumWelchSetup to initalize
+        self.BWcontext = ""
 
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
@@ -1426,7 +1485,7 @@ class GaussianEmissionHMM(HMM):
 
 
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) # XXX label assignment
+        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) 
         return SequenceSet(self.emissionDomain,seqPtr)
         
 
@@ -1434,7 +1493,7 @@ class GaussianEmissionHMM(HMM):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,1,0,-1) # XXX label assignment
+        seqPtr = self.samplingFunction(self.cmodel,0,T,1,0,-1) 
         return EmissionSequence(self.emissionDomain,seqPtr)
         
     def forward(self, emissionSequence):
@@ -1444,7 +1503,7 @@ class GaussianEmissionHMM(HMM):
                     and the scaling vector
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         logP = ghmmwrapper.double_array(1)		
         i = self.cmodel.N
@@ -1476,7 +1535,7 @@ class GaussianEmissionHMM(HMM):
             Result: the (N x T)-matrix containing the backward-variables
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
         
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
         
@@ -1521,5 +1580,69 @@ class GaussianEmissionHMM(HMM):
                     if inId == i:
                         ghmmwrapper.set_arrayd(inState.in_a,k,normP) # updating in probabilities
 
+    def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
+        """ Reestimate the model parameters given the training_sequences.
+            Perform at most nr_steps until the improvement in likelihood
+            is below likelihood_cutoff
+        
+            training_sequences can either be a SequenceSet or a Sequence
+  
+            Result: Final loglikelihood
+        """
+        
+        if not isinstance(trainingSequences, SequenceSet):
+            raise TypeError
+        
+        if self.emissionDomain.CDataType == "double":
+            smosqd_cpt = self.baumWelchSetup(trainingSequences, nrSteps)
+            ghmmwrapper.sreestimate_baum_welch(smosqd_cpt)        
+            likelihood = ghmmwrapper.get_arrayd(smosqd_cpt.logp, 0)
+            ghmmwrapper.free_smosqd_t(smosqd_cpt)
+            
+        #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
+        #                                                                    loglikelihoodCutoff)
 
+        self.baumWelchDelete()
+
+        return likelihood
+
+    def baumWelchSetup(self, trainingSequences, nrSteps):
+        """ Setup necessary temporary variables for Baum-Welch-reestimation.
+            Use baum_welch_setup and baum_welch_step if you want more control
+            over the training, compute diagnostics or do noise-insertion
+
+            training_sequences can either be a SequenceSet or a Sequence
+
+            Return: a C-array of type smosqd_t
+        """
+        baumWelchCData = ghmmwrapper.smosqd_t_array(1)
+
+        #smosqd_ptr = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, 0)
+        #smosqd_ptr.smo  = self.cmodel
+        #smosqd_ptr.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
+        #smosqd_ptr.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
+        #smosqd_ptr.eps  = 10e-6
+        #smosqd_ptr.max_iter = nrSteps
+        #return baumWelchCData
+        
+        self.BWcontext = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, 0)
+        self.BWcontext.smo  = self.cmodel
+        self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
+        self.BWcontext.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
+        self.BWcontext.eps  = 10e-6
+        self.BWcontext.max_iter = nrSteps
+        
+    
+    def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
+        """ Compute one iteration of Baum Welch estimation.
+            Use baum_welch_setup and baum_welch_step if you want more control
+            over the training, compute diagnostics or do noise-insertion
+
+            training_sequences can either be a SequenceSet or a Sequence
+        """
+        res = ghmmwrapper.sreestimate_one_step()
+    
+    def baumWelchDelete(self):
+        """ Delete the necessary temporary variables for Baum-Welch-reestimation """
+        pass
 

@@ -223,6 +223,15 @@ void sequence_copy(int *target, int *source, int len);
 sequence_d_t **sequence_d_read(const char *filename, int *sqd_number);
 
 /**
+  Adds all integer sequences, sequence lengths etc 
+  from source to target. Memory allocation is done here.
+  @param target target sequence structure
+  @param source  source sequence structure
+  @return -1 for error, 0 for success
+  */
+int sequence_add(sequence_t *target, sequence_t *source);
+
+/**
   Adds all double sequences, sequence lengths etc 
   from source to target. Memory allocation is done here.
   @param target target sequence structure
@@ -307,7 +316,21 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 	  s = sequence_d_read(filename, &i);
 	  return s[0];
   }
-  
+
+  void call_sequence_print(char* ch, sequence_t* seq){
+    FILE* file_name;
+    file_name = fopen(ch,"at");
+    sequence_print(file_name,seq);
+    fclose(file_name);
+  }	  
+
+  void call_sequence_d_print(char* ch,sequence_d_t* seq, int disc){
+    FILE* file_name;
+    file_name = fopen(ch,"at");
+    sequence_d_print(file_name,seq, disc);
+    fclose(file_name);
+  }	  
+
    
 %}
 
@@ -1174,15 +1197,6 @@ extern int scluster_hmm(char *argv[]);
 %}
 
 
-%inline %{
-  void print_sequence_d(char* ch,sequence_d_t* seq, int disc){
-    FILE* file_name;
-    file_name = fopen(ch,"at");
-    sequence_d_print(stdout,seq, disc);
-  }	  
-	  	
-
-%}	
 /*=============================================================================================
   =============================== sreestimate.c  ============================================== */
 
@@ -1215,6 +1229,8 @@ typedef struct smosqd_t smosqd_t;
   @param cs         initial model and train sequences
   */
 extern int sreestimate_baum_welch(smosqd_t *cs);
+
+extern int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,int *T, double **O, double *log_p, double *seq_w);
 
 %inline%{
   

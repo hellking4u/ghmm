@@ -35,7 +35,6 @@ extern "C" {
   @param smo      model
   @param O        sequence
   @param T        length of sequence
-  @param b        matrix with precalculated output probabilities. May be NULL
   @param alpha    alpha[t][i]
   @param scale    scale factors
   @param log_p    log likelihood log( P(O|lambda) )

@@ -53,7 +53,7 @@ int foba_forward(model *mo, const int *O, int length, double **alpha,
   @param  mo      model
   @param O          sequence
   @param length   length of sequence
-  @param beta     beta[t][i]
+  @param beta     beta[t][i]emissionSequences
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
