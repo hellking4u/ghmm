@@ -154,11 +154,8 @@ The objects one has to deal with in HMM modelling are the following
 import ghmmwrapper
 import ghmmhelper
 
-
 #-------------------------------------------------------------------------------
-# Exceptions
-#
-#
+#- Exceptions ------------------------------------------------------------------
 
 class GHMMError(Exception):
     """Base class for exceptions in this module."""
@@ -170,6 +167,8 @@ class GHMMError(Exception):
 
     
 
+#-------------------------------------------------------------------------------
+#- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain:
     """ Abstract base class for emissions produced by a HMM.
 
@@ -270,7 +269,8 @@ class Alphabet(EmissionDomain):
 
 
 DNA = Alphabet(['A','C','G','T'])
-AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'])
+AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
+                       'M','N','P','Q','R','S','T','V','W','Y'])
 def IntegerRange(a,b):
     return Alphabet(range(a,b))
 
@@ -285,6 +285,8 @@ class Float(EmissionDomain):
    
 
     
+#-------------------------------------------------------------------------------
+#- Distribution and derived  ---------------------------------------------------
 class Distribution:
     """ Abstract base class for distribution over EmissionDomains
     """
@@ -313,8 +315,8 @@ class GaussianDistribution(ContinousDistribution):
 
     def __init__(self, domain):
         self.emissionDomain = domain
-        self.mu = mu
-        self.sigma2 = sigma2
+        #self.mu = mu
+        #self.sigma2 = sigma2
 
     def set(self, (mu, sigma2)):
         self.mu = mu
@@ -328,6 +330,8 @@ class MixtureContinousDistribution(Distribution):
     pass
 
 
+#-------------------------------------------------------------------------------
+#- Sequence, SequenceSet and derived  ------------------------------------------
 class EmissionSequence(list):
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
@@ -348,6 +352,10 @@ class SequenceSet:
 def SequenceSetOpen(fileName):
     pass
 
+
+
+#-------------------------------------------------------------------------------
+#- HMMFactory and derived  -----------------------------------------------------
 class HMMFactory:
     """ A HMMFactory is the base class of HMM factories.
         A HMMFactory has just a constructor and a () method
@@ -408,10 +416,10 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.out_id = trans[1]
                     state.out_a = trans[2]
                     #set "in" probabilities
-                    # XXX Check whether B is numarray or Python
-                    B_col_i = map( lambda x, col=i: x[col], B)
-                    # Numarray use B[,:i]
-                    trans = ghmmhelper.extract_out(B_col_i)
+                    # XXX Check whether A is numarray or Python
+                    A_col_i = map( lambda x: x[i], A)
+                    # Numarray use A[,:i]
+                    trans = ghmmhelper.extract_out(A_col_i)
                     state.in_states = trans[0]
                     state.in_id = trans[1]
                     state.in_a = trans[2]
@@ -424,55 +432,64 @@ class HMMFromMatricesFactory(HMMFactory):
                 #plist2intarray(model.silent, silent_states, model.N)
                 return DiscreteEmissionHMM(emissionDomain, distribution, cmodel)
 
-            
             else:
-                # HMM with continous emissions
-                N = len(A)
-                cmodel = ghmmwrapper.smodel_alloc_fill(N, 1, 1, -1, 0)
-                # What do the arguments mean?
+                raise GHMMError(type(distribution), "Not a valid distribution for Alphabet") 
+        else:
+			
+            if isinstance(distribution,GaussianDistribution):
+				
+				cmodel = ghmmwrapper.smodel()
+				cmodel.N = len(A)
+				cmodel.M = 1 # Number of mixture componenent for emission distribution
+				cmodel.prior = -1 # Unused
+				cmodel.cos = 1  # number of transition classes in GHMM
+				states = ghmmwrapper.arraysstate(cmodel.N)
 
+				# XXX ? switching function ? XXX
+				# Switching functions and transition classes are handled
+				# elswhere
 
-                
-                states = ghmmwrapper.arraystate(model.N)
-                
-                #initialize states
-                for i in range(model.N):
-                    state = ghmmwrapper.get_stateptr(states,i)
-                    state.b = ghmmhelper.emslist2array(B[i])
-                    state.pi = pi[i]
-                    
-                    #if (sum(B[i]) <= epsilon):
-                    #        silent_states.append(1)
-                    #        silent_flag = 4
-                    #else:
-                    #        silent_states.append(0)
+				#initialize states
+				for i in range(cmodel.N):
+					state = ghmmwrapper.get_sstate_ptr(states,i)
+					state.pi = pi[i]
 
-                    #set out probabilities
-                    
-                    trans = ghmmhelper.extract_out(A[i])
-                    state.out_states = trans[0]
-                    state.out_id = trans[1]
-                    state.out_a = trans[2]
-                    #set "in" probabilities
-                    # XXX Check whether B is numarray or Python
-                    B_col_i = map( lambda x, col=i: x[col], B)
-                    # Numarray use B[,:i]
-                    trans = ghmmhelper.extract_out(B_col_i)
-                    state.in_states = trans[0]
-                    state.in_id = trans[1]
-                    state.in_a = trans[2]
-                    #fix probabilities by reestimation, else 0
-                    state.fix = 0
-                    
-                model.s = states
-                #model.silent = int_array(model.N)
-                #model.model_type = silent_flag
-                #plist2intarray(model.silent, silent_states, model.N)
-                return GaussianEmissionHMM(emissionDomain, distribution, model)
+					# allocate arrays of emmission parameters
+					state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weights. Unused
+					(mu, sigma) = B[i]
+					state.mue = ghmmhelper.list2arrayd([mu]) #mu = mue in GHMM C-lib.
+					state.u = ghmmhelper.list2arrayd([sigma])
+
+					#set out probabilities
+					trans = ghmmhelper.extract_out_probs([A[i]], cmodel.cos) # cos = 1
+					state.out_states = trans[0]
+					state.out_id = trans[1]
+					state.out_a = trans[2].array 
+
+					#set "in" probabilities
+					A_col_i = map( lambda x: x[i], A)
+					trans = ghmmhelper.extract_out_probs([A_col_i],cmodel.cos) # cos = 1
+					state.in_states = trans[0]
+					state.in_id = trans[1]
+					state.in_a = trans[2].array
+				
+					state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
+
+				#append states to model
+				cmodel.s = states
+				return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
+
+            else:
+                raise GHMMError(type(distribution),
+								"Cannot construct model for this domain/distribution combination") 
 
 
 HMMFromMatrices = HMMFromMatricesFactory()
 
+
+
+#-------------------------------------------------------------------------------
+#- HMM and derived  ------------------------------------------------------------
 class HMM:
 
     def __init__(self, emissionDomain, distribution, cmodel):
@@ -491,16 +508,6 @@ class HMM:
             
             Note: The implementation will not compute the full forward matrix 
         """
-
-    def rankLoglikelihood(self, emission_sequences):
-        """
-
-
-           XXX Should that be here?
-        """
-        pass
-        
-
 
     ## Further Marginals ...
 
@@ -659,11 +666,40 @@ class DiscreteEmissionHMM(HMM):
 
 
 class GaussianEmissionHMM(HMM):
-    
+    """ GaussianEmissionHMM are HMMs which have a Gaussian distribution
+        per state determining the emission probababilities
+    """
+  
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
     
 
+    def loglikelihood(self, emissionSequences):
+        """ Compute log( P[emissionSequences| model]) using the forward algorithm
+
+            emission_sequences can either be a SequenceSet or a Sequence
+
+            Result: log( P[emissionSequences| model]) of type float
+                    numarray vector of floats
+            
+            Note: The implementation will not compute the full forward matrix 
+        """
+
+    def loglikelihood_sqd(self, sequenceSet):
+		# XXX REMOVE soon XXX
+        """ Compute log( P[emissionSequences| model]) using the forward algorithm
+
+            emission_sequences can either be a SequenceSet or a Sequence
+
+            Result: log( P[emissionSequences| model]) of type float
+                    numarray vector of floats
+            
+            Note: The implementation will not compute the full forward matrix 
+        """
+        likelihood = ghmmwrapper.double_array(sequenceSet.seq_number)
+        result = ghmmwrapper.smodel_individual_likelihoods(self.cmodel, sequenceSet, likelihood)
+        return likelihood # Caller owns it 
+	
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
         return ghmmwrapper.smodel_get_transition(self.cmodel, i, j, 0)
@@ -674,13 +710,56 @@ class GaussianEmissionHMM(HMM):
        
     def getEmission(self, i):
         """ Return (mu, sigma^2)  """
-        return ()
+        state = ghmmwrapper.get_sstate(self.cmodel, i)
+        mu = ghmmwrapper.get_arrayd(state.mue, 0)
+        sigma = ghmmwrapper.get_arrayd(state.u,0)
+        return (mu, sigma)
         
-
-    def setEmission(self, i, distributionParameters):
+    def setEmission(self, i, (mu, sigma)):
         """ Set the emission distributionParameters for state i """
-        pass
+        state = ghmmwrapper.get_sstate(self.cmodel, i)
+        ghmmwrapper.set_arrayd(state.mue, 0, float(mu))  # GHMM C is german: mue instead of mu 
+        sigma = ghmmwrapper.get_arrayd(state.u, 0, float(sigma))       
    
+
+    def __str__(self):
+        # XXX This currently works also for emission classes and mixtures: specialize
+        hmm = self.cmodel
+        strout = "\nOverview of HMM:"
+        strout += "\nNumber of states: " + str(hmm.N)
+        strout += "\nNumber of mixture components: " + str(hmm.M)
+        strout += "\nNumber of Output-Classes: " + str(hmm.cos)
+        
+        for k in range(hmm.N):
+            print k
+            state = ghmmwrapper.get_sstate(hmm, k)
+            strout += "\n\nState number "+ str(k) + ":"
+            strout += "\nInitial probability: " + str(state.pi)
+            strout += "\n"+ str(hmm.M) + " density function(s):\n"
+            weight = ""
+            mue = ""
+            u =  ""
+            for outp in range(hmm.M):
+                weight += str(ghmmwrapper.get_arrayd(state.c,outp)) + ", "
+                mue += str(ghmmwrapper.get_arrayd(state.mue,outp)) + ", "
+                u += str(ghmmwrapper.get_arrayd(state.u,outp)) + ", "
+                strout += "  pdf component weights : " + str(weight) + "\n"
+                strout += "  mean vector: " + str(mue) + "\n"
+                strout += "  variance vector: " + str(u) + "\n"
+                strout += "\nOutgoing transitions:"
+
+                for i in range( state.out_states):
+                    strout += "\ntransition to node " + str(ghmmwrapper.get_arrayint(state.out_id,i) )
+                    for j in range(hmm.cos):
+                        strout += "\n\tin class " + str(j) + " with probablity = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,j,i))
+                strout +=  "\nIngoing transitions:"
+                for i in range(state.in_states):
+                    strout += "\ntransition from node " + str(ghmmwrapper.get_arrayint(state.in_id,i) )
+                    for j in range(hmm.cos):
+                        strout += "\n\tin class "+str(j)+" with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,j,i))
+            strout += "\nint fix:" + str(state.fix) + "\n"
+        return strout
+
 
 
 
@@ -690,6 +769,19 @@ m = HMMFromMatrices(DNA,DiscreteDistribution(DNA),
                     [1.0,0,0])
 
 print m
+
+m2 = HMMFromMatrices(Float,GaussianDistribution(Float),
+                    [[0.0,1.0,0],[0.5,0.0,0.5],[1.0,0.0,0.0]],
+                    [[0.0,1.0],[-1.0,0.5], [1.0,0.2]],
+                    [1.0,0,0])
+
+print m2
+
+seq_c = ghmmwrapper.seq_d_read('test10.sqd')
+l = m2.loglikelihood_sqd(seq_c)
+
+for i in xrange(seq_c.seq_number):
+	print ghmmwrapper.get_arrayd(l,i), 
 
 
 #m = HMMOpen("test.smo", modelIndex = 3) # Pick 3-rd model out of the smo fiel
