@@ -35,16 +35,18 @@
 *******************************************************************************/
 
 
-#include "kbestbasics.h"
-#include <math.h>
 #include <stdlib.h>
+#include <math.h>
+#include "mes.h"
+#include "model.h"
+#include "kbestbasics.h"
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
 inline void hlist_insertElem(hypoList** plist, int newhyp, hypoList* parlist) {
-
+#define CUR_PROC "hlist_insertElem"
     hypoList* newlist;
 
-    newlist = (hypoList*)calloc(1, sizeof(hypoList));
+    if (!m_calloc(newlist, 1)) {mes_proc(); goto STOP;}
     newlist->hyp_c = newhyp;
     if (parlist)
       parlist->refcount += 1;
@@ -52,15 +54,21 @@ inline void hlist_insertElem(hypoList** plist, int newhyp, hypoList* parlist) {
     newlist->next = *plist;
 
     *plist = newlist;
+    return;
+STOP:
+    mes_prot("hlist_insertElem failed\n");
+    exit(1);
+#undef CUR_PROC
 }
 
 /* removes hypothesis at position indicated by pointer plist from the list
    removes recursively parent hypothesis with refcount==0 */
 inline void hlist_removeElem(hypoList** plist) {
-
+#define CUR_PROC "hlist_removeElem"
     hypoList* tempPtr = (*plist)->next;
 
-    if ((*plist)->gamma) free((*plist)->gamma);
+    free((*plist)->gamma_a);
+    free((*plist)->gamma_id);
     if ((*plist)->parent) {
       (*plist)->parent->refcount -= 1;
       if (0==(*plist)->parent->refcount)
@@ -69,38 +77,87 @@ inline void hlist_removeElem(hypoList** plist) {
     free(*plist);
 
     *plist = tempPtr;
+#undef CUR_PROC
 }
 
 /**
    Propagates list of hypotheses forward by extending each old hypothesis to
-   #labels new hypotheses
+   the possible new hypotheses depending on the states in which the old
+   hypothesis could end and the reachable labels
    @return number of old hypotheses
+   @param mo:         pointer to the model
    @param h:          pointer to list of hypotheses
+   @param hplus:      address of a pointer to store the propagated hypotheses
    @param labels:     number of labels
-   @param seq_len:    total sequence length
  */
-int propFwd(hypoList* h, hypoList** hplus, int labels, int seq_len) {
-  int c;
-  int no_oldHyps = 1;
-  hypoList* list = h;
-  hypoList* end;
+int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels) {
+#define CUR_PROC "hlist_propFwd"
+  int i, j, c, k;
+  int i_id, j_id, g_nr;
+  int no_oldHyps=0;
+  hypoList* hP=h;
+  hypoList** created;
 
-  hlist_insertElem(hplus, 0, list);
-  end = *hplus;
-  list = list->next;
+  if (!m_malloc(created, labels)) {mes_proc(); goto STOP;}
 
-  /* extend original hypotheses */
-  for (c=0; c<labels; c++) {
-    while (list != NULL) {
-      no_oldHyps++;
-      hlist_insertElem(&(end->next), c, list);
-      list = list->next;
-      end = end->next;
+  /* extend the all hypotheses with the labels of out_states of all states in the hypotesis */
+  while (hP != NULL) {
+
+    /* lookup table for labels, created[i]!=0 iff the current hypotheses was propagated forward with label i */
+    for (c=0; c<labels; c++) created[c] = NULL;
+
+    /* extend the current hypothesis and add all states which may have probability greater null */
+    for (i=0; i<hP->gamma_states; i++) {
+      i_id = hP->gamma_id[i];
+      for (j=0; j<mo->s[i_id].out_states; j++) {
+	j_id = mo->s[i_id].out_id[j];
+	c = mo->s[j_id].label;
+
+	/* create a new hypothesis with label c */
+	if (!created[c]) {
+	  hlist_insertElem(hplus, c, hP);
+	  created[c] = *hplus;
+	  /* initiallize gamma-array with safe size (number of states */
+	  if (!m_malloc((*hplus)->gamma_a,  mo->N)) {mes_proc(); goto STOP;}
+	  if (!m_malloc((*hplus)->gamma_id, mo->N)) {mes_proc(); goto STOP;}
+	  (*hplus)->gamma_id[0]  = j_id;
+	  (*hplus)->gamma_a[0]   = 1.0;
+	  (*hplus)->gamma_states = 1; 
+	}
+	/* add a new gamma state to the existing hypothesis with c */
+	else {
+	  g_nr = created[c]->gamma_states;
+	  /* search for state j_id in the gamma list */
+	  for (k=0; k<g_nr; k++) 
+	    if (j_id == created[c]->gamma_id[k])
+	      break;
+	  /* add the state to the gamma list */
+	  if (k==g_nr) {
+	    created[c]->gamma_id[g_nr] = j_id;
+	    created[c]->gamma_a[g_nr]  = 1.0;
+	    created[c]->gamma_states   = g_nr+1;
+	  }
+	}
+      }
     }
-    list = h;
+    hP = hP->next;
+    no_oldHyps++;
   }
-  
-  return (no_oldHyps/labels);
+
+  /* reallocating gamma-array to the correct size */
+  for (c=0; c<labels; c++) {
+    if (created[c]) {
+      if (m_realloc(created[c]->gamma_a,  created[c]->gamma_states)) {mes_proc(); goto STOP;}
+      if (m_realloc(created[c]->gamma_id, created[c]->gamma_states)) {mes_proc(); goto STOP;}
+    }
+  }
+
+  free(created);
+  return (no_oldHyps);
+STOP:
+  mes_prot("hlist_propFwd failed\n");
+  exit(1);
+#undef CUR_PROC
 }
 
 
@@ -108,41 +165,58 @@ int propFwd(hypoList* h, hypoList** hplus, int labels, int seq_len) {
    Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
    which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
    @return logSum for products of a row from gamma and a row from matrix A
-   @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
-   @param a_pos:      number of row from log_a
-   @param N:          width of matrix log_a
-   @param gamma:      a row of matrix gamma with logarithmic values (1.0 for log(0))
+   @param log_a:      row of the transition matrix with logarithmic values (1.0 for log(0))
+   @param s:          state whose gamma-value is calculated
+   @param parent:     a pointer to the parent hypothesis
 */
-inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma) {
+inline double logGammaSum(double* log_a, state* s, hypoList* parent) {
+#define CUR_PROC "logGammaSum"
   double result;
-  int j;
+  int j, j_id, k;
   double max=1.0;
   int argmax=0;
+  double* logP;
 
-  double* logP = (double*)malloc(sizeof(double)*N);
+  /* shortcut for the trivial case */
+  if (parent->gamma_states==1)
+    for (j=0; j<s->in_states; j++)
+      if (parent->gamma_id[0]==s->in_id[j])
+	return parent->gamma_a[0] + log_a[j];
+
+  if (!m_malloc(logP, s->in_states)) {mes_proc(); goto STOP;}
 
   /* calculate logs of a[k,l]*gamma[k,hi] as sums of logs and find maximum: */
-  for (j=0; j<N; j++) {
-    if (log_a[j*N+a_pos]<KBEST_EPS && gamma[j]<KBEST_EPS) {
-      logP[j] = log_a[j*N+a_pos] + gamma[j];
-      if (logP[j]<KBEST_EPS && (max==1.0 || logP[j]>max)) {
+  for (j=0; j<s->in_states; j++) {
+    j_id = s->in_id[j];
+    /* search for state j_id in the gamma list */
+    for (k=0; k<parent->gamma_states; k++)
+      if (parent->gamma_id[k] == j_id)
+	break;
+    if (k==parent->gamma_states)
+      logP[j] = 1.0;
+    else {
+      logP[j] = log_a[j] + parent->gamma_a[k];
+      if (max==1.0 || logP[j]>max) {
 	max = logP[j];
 	argmax=j;
       }
     }
-    else logP[j] = 1.0;
   }
 
   /* calculate max+log(1+sum[j!=argmax; exp(logP[j]-max)])  */
   result = 1.0;
-  for (j=0; j<N; j++) {
-    if (logP[j]<KBEST_EPS && j!=argmax) result+= exp(logP[j]-max);
-  }
-  result=log(result);
-  result+=max;
+  for (j=0; j<s->in_states; j++)
+    if (j!=argmax && logP[j]!=1.0) result+= exp(logP[j]-max);
+  
+  result  = log(result);
+  result += max;
 
   free(logP);
   return result;
+STOP:
+  mes_prot("logGammaSum failed\n");
+  exit(1);
+#undef CUR_PROC
 }
 
 
@@ -154,6 +228,7 @@ inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma) {
    @param N:          length of a
 */
 inline double logSum(double* a, int N) {
+#define CUR_PROC "logSum"
   int i;
   double max=1.0;
   int argmax=0;
@@ -174,4 +249,5 @@ inline double logSum(double* a, int N) {
   result=log(result);
   result+=max;
   return result;
+#undef CUR_PROC
 }
