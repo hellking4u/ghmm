@@ -80,9 +80,9 @@ int scluster_hmm(char* argv[]) {
   sprintf(filename, "%s%s", out_filename, ".cl");
   if(!(outfile = mes_fopen(filename, "wt"))) {mes_proc(); goto STOP;}
 
-/*--------------Speicher alloc und Daten einlesen----------------------------*/
+/*--------------Memory allocation and data reading----------------------------*/
 
-  /* 1 Sequenzfeld und Initialmodelle */
+  /* 1 sequence array and initial models */
   scluster_print_header(outfile, argv);
   /*--- memory alloc and read data ----------------------------*/
   sqd_vec = sequence_d_read(seq_file, &sqd_number);
@@ -90,7 +90,7 @@ int scluster_hmm(char* argv[]) {
   sqd = sqd_vec[0];
   cl.smo = smodel_read(smo_file, &cl.smo_number);
   if (!cl.smo) {mes_proc(); goto STOP;}
-  /* if labels == 0 || labels == 1: keine Startlabels benoetigt. */
+  /* if labels == 0 || labels == 1: no startlabels needed. */
   /* if `labels` =  3: random start labels */
   if (labels == 3) {
     fprintf(outfile, "(random start partition)n");
@@ -128,7 +128,7 @@ int scluster_hmm(char* argv[]) {
   if(!m_calloc(cs, cl.smo_number)) {mes_proc(); goto STOP;} 
   for (i = 0; i < cl.smo_number; i++)
     cs[i].smo = cl.smo[i]; 
-  /* returnvalues for each thread */
+  /* return values for each thread */
 #if POUT == 0
   if(!m_calloc(return_value, cl.smo_number)) {mes_proc(); goto STOP;} 
 #endif /* POUT */
@@ -249,11 +249,11 @@ int scluster_hmm(char* argv[]) {
     fprintf(outfile, "%ld changes in iteration %d \n", changes, iter);
     fprintf(stdout, "\n*** %ld changes in iteration %d ***\n", changes, iter);
 
-    /* NEU: Falls keine Wechsel mehr: max_iter erhoehen 
-       (Alternative: eps veraendern */
+    /* NEW: If no changes anymore: increase max_iter
+       ( Alternative: change eps ) */
     if (changes == 0 && max_iter_bw < MAX_ITER_BW) {
       max_iter_bw = MAX_ITER_BW;
-      changes = 1; /* damit wieder reestimiert und zugeordnet wird  */
+      changes = 1; /* so that reestimated and assigned again  */
       for (i = 0; i < cl.smo_number; i++) smo_changed[i] = 1;
       fprintf(outfile, "max_iter_bw := %d\n", max_iter_bw);
       fprintf(stdout, "*** max_iter_bw := %d ***\n", max_iter_bw);
@@ -264,7 +264,7 @@ int scluster_hmm(char* argv[]) {
       if (!(iter == 1 && labels == 1))
 	if (scluster_update(&cl, sqd)) { mes_proc(); goto STOP; }
       
-      /* TEST: k-Means-Start-Clusterung rausschreiben */
+      /* TEST: Write out k-Means-Start-Clusterung */
       if (iter == 1 && labels == 2) {
 	for (i = 0; i < cl.smo_number; i++) {
 	  if (cl.smo_seq[i] != NULL)
@@ -366,7 +366,7 @@ STOP:
 #if POUT == 0
   pthread_attr_destroy(&Attribute);
 #endif /* POUT */
-  /* ...noch div. free! */
+  /* ...still div. free! */
   if (outfile) fclose(outfile);
   return(res);
 # undef CUR_PROC
@@ -409,8 +409,8 @@ int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
   }  
   fclose(out_model);
 
-  /* Ausgabe alle Sequenzen im HMM-Format; verschiedene Cluster
-     bilden getrennte Listen */
+  /* Output from all sequences in HMM-format; different clusters
+     make seperate lists */
   fclose(out_model); 
   sprintf(filename, "%s.sqd", out_filename);
   if(!(out_model = mes_fopen(filename, "wt"))) {mes_proc(); goto STOP;}
@@ -419,11 +419,11 @@ int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
     if (cl->smo_seq[i] != NULL) 
       sequence_d_print(out_model, cl->smo_seq[i], 0);  
   }
-  /* Ausgabe aller Sequenzen hintereinander mit Clusterlabel */
+  /* Output from all sequences in one row with clusterlabel */
   /* sequence_d_print(out_model, sqd, 0); */
 
-  /* Ausgabe der Anzahl der Sequenzen bzw. der Sequenzgewichte pro Cluster
-     (fuer den Generator) */
+  /* Output: The number of sequences and sequence weights pro cluster,
+     respektively (for the generator) */
   fclose(out_model); 
   sprintf(filename, "%s.numbers", out_filename);
   if(!(out_model = mes_fopen(filename, "wt"))) {mes_proc(); goto STOP;}
@@ -431,13 +431,13 @@ int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
   fprintf(out_model, "numbers = {\n");
   fprintf(out_model, 
 	  "# Clusterung mit Gewichten --> in BS/10, sonst Anzahl Seqs.\n");
-  /* Gewichte */
+  /* Weights */
   if (cl->smo_seq[0]->total_w > cl->smo_seq[0]->seq_number) {
     for (i = 0; i < cl->smo_number-1; i++)
       fprintf(out_model, "%.0f,\n", 0.1 * cl->smo_seq[i]->total_w);
     fprintf(out_model, "%.0f;\n};", 0.1 * cl->smo_seq[cl->smo_number-1]->total_w);
   }
-  /* Anzahl */
+  /* Number */
   else {        
     for (i = 0; i < cl->smo_number-1; i++)
       fprintf(out_model, "%ld,\n", cl->seq_counter[i]);
@@ -454,28 +454,28 @@ STOP:
 
 
 /*============================================================================*/
-/* Speicher fuer Sequenzen fuer jedes Modell nur einmal allocieren und
-   nicht wie vorher fuer jede Sequenz mit realloc arbeiten. */
+/* Memory for sequences for each model is allocated only once and not done with
+   realloc for each sequence as before. */
 int scluster_update(scluster_t *cl, sequence_d_t *sqd) {
 #define CUR_PROC "scluster_update"
   int i;
   sequence_d_t *seq_ptr;
-  /* Speicher blockweise allocieren */
+  /* Allocate memoery block by block */
   for (i = 0; i < cl->smo_number; i++) {
     if (cl->smo_seq[i]) {
-      /* wichtig: hier kein sequence_free, sonst sind auch die Original
-	 Sequenzen futsch */
+      /* Important: No sequence_free here, because then the originals 
+	 will be lost. */
       sequence_d_clean(cl->smo_seq[i]);
       m_free(cl->smo_seq[i]);
     }
     if (cl->seq_counter[i] != 0) {
       cl->smo_seq[i] = sequence_d_calloc(cl->seq_counter[i]);
-      cl->smo_seq[i]->seq_number = 0; /* wird unten hochgezaehlt */
+      cl->smo_seq[i]->seq_number = 0; /* counted below */
     }
     else
       cl->smo_seq[i] = NULL;
   }
-  /* Eintraege setzen */
+  /* Set entries */
   for (i = 0; i < sqd->seq_number; i++) {
     seq_ptr = cl->smo_seq[sqd->seq_label[i]];
     seq_ptr->seq_len[seq_ptr->seq_number] = sqd->seq_len[i];
@@ -516,12 +516,10 @@ void scluster_print_likelihood(FILE *outfile, scluster_t *cl) {
 } /* scluster_print_likelihood */
 
 /*============================================================================*/
-/* Verhindert, dass Modelle leer ausgehen, bzw nur eine
-   Sequenz zugeordnet haben, 
-   indem ihnen eine zufaellige Sequenz zugeordnet wird. Da hierdurch 
-   evt. erneut leere Modelle erzeugt werden, werden Sequenzen getauscht,
-   bis keine leeren Modelle vorliegen. (Gefahr einer Endlosschleife, daher
-   Abbruch nach 100 Interationen) */
+/* Avoids empty models going out as outputs by assigning them a random 
+   sequence. This may lead to a produce of a new empty model - therefore
+   change out sequences until a non empty model is found. (Quit after 100 
+   iterations to avoid a infinite loop). */
 int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
 #define CUR_PROC "scluster_avoid_empty_smodel"
   int i, best_smo;
@@ -531,7 +529,7 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
   double log_p_minus, log_p_plus;
   double *result = NULL;
 
-  /* falls es nur ein Modell oder eine Sequenz gibt: nix zu tun */
+  /* If only one Model or one sequencet: Nothing to be done */
   if (sqd->seq_number < 2 || cl->smo_number < 2)
     return(0);
   if (CLASSIFY == 1)
@@ -543,9 +541,9 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
     for (i = 0; i < cl->smo_number; i++) {
       if (cl->seq_counter[i] <= 1) {
 	change = 1;
-	/* zuf. Sequenz fuer leeres Modell auswaehlen */
+	/* Choose a random sequence for an empty model */
 	j = m_int(gsl_rng_uniform(RNG) * (sqd->seq_number - 1));
-	/* falls Seq. von leerem Modell nicht erzeugt werden kann: abbrechen*/
+	/* If it's not possible to produce a sequence for an empty model: Quit */
 	if (sfoba_logp(cl->smo[i], sqd->seq[j], sqd->seq_len[j],
 		       &log_p_plus) == -1) 
 	  continue;
@@ -574,7 +572,7 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
 	}
       }
     }
-    /* jetzt alles ok ? */
+    /* Is now everything OK ? */
     if (change) {
       for (i = 0; i < cl->smo_number; i++) {
 	if (cl->seq_counter[i] <= 1) {
@@ -606,9 +604,8 @@ long scluster_update_label(long *oldlabel, long *seq_label, long seq_number,
 
 /*============================================================================*/
 
-/* scluster_best_model ermittelt aus einer vorher berechneten
-   Wahrscheinlichkeitsmatrix, welches Modell am besten zur Sequenz mit der 
-   ID seq_id passt. */
+/* Determines form an already calculated probability matrix, which model 
+   fits best to the sequence with the ID seq_id. */
 int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p, double *log_p) {
 #define CUR_PROC "scluster_best_model"
   int i, smo_id;
@@ -655,7 +652,7 @@ void scluster_prob(smosqd_t *cs) {
   for (i = 0; i < cs->sqd->seq_number; i++)
     if (sfoba_logp(cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i], 
 		   &(cs->logp[i])) == -1)
-      cs->logp[i] = (double) PENALTY_LOGP;  /*  Strafkosten */
+      cs->logp[i] = (double) PENALTY_LOGP;  /*  Penalty costs */
 } /* scluster_prob */
 
 /*============================================================================*/

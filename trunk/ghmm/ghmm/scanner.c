@@ -318,8 +318,8 @@ int scanner_consume( scanner_t* s, char ch ){
 } /* scanner_consume */
 
 /*============================================================================*/
-/* Ueberliest einen Block, der von '{' und '}' eingeschlossen wird. Falls im
-   Block weitere Bloecke liegen, werden sie auch uebersprungen */
+/* Reads over a block, that's enclosed in '{' and '}'. Other blocks, lying within
+   this one will be skipped */
 int scanner_consume_block(scanner_t *s) {
   int open_brackets = 0;
   if( s->err ) return(0);
@@ -571,7 +571,6 @@ double scanner_get_edouble(scanner_t* s) {
     }
     val /= factor;
   }
-  /* Neu */
   if( s->c == 'e' || s->c == 'E' ) {
     int i;
     double eval;
@@ -590,7 +589,6 @@ double scanner_get_edouble(scanner_t* s) {
     if (esign) val /= efactor;
     else val *= efactor;
   }
-  /* Ende Neu */
 
   if( scanner_skipspace( s ) ) return(0);
   return( sign ? -val : val );
@@ -629,9 +627,9 @@ void* scanner_get_array( scanner_t* s, int* len, char* type ) {
   }
   
   while( s->c - ';' ) {
-    /* original:
+    /* Originally:
        if( i && scanner_consume( s, ',' ) )  goto STOP; */
-    /* changed: read array without seperator now possible */
+    /* Changed: read array without seperator now possible */
     if ( s->c == ',') scanner_consume( s, ',' );
     switch( typ ) {
     case SCANNER_TYPE_CHAR :
