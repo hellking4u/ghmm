@@ -25,8 +25,9 @@ INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
 LDADD    = $(top_builddir)/ghmm++/libghmm++.la $(top_builddir)/ghmm/libghmm.la
 EXTRA_DIST = nvs.xml nvs.mod nvs.sqd gene_hmm.gml
 
-noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence read_graphml
- 
+noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence read_graphml testviterbi
+# noinst_PROGRAMS = read_cxml
+
 coin_toss_test_SOURCES = coin_toss_test.cpp
 chmm_SOURCES = chmm.cpp
 generiere_nvs_SOURCES = generiere_nvs.cpp
@@ -35,8 +36,7 @@ dna_SOURCES = dna.cpp
 vector_test_SOURCES = vector_test.cpp
 create_sequence_SOURCES = create_sequence.cpp
 read_graphml_SOURCES = read_graphml.cpp
-# read_cxml_SOURCES = read_cxml.c
-
+testviterbi_SOURCES = testviterbi.cpp
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

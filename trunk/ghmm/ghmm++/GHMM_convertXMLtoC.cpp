@@ -10,7 +10,7 @@
  */
 
 #include <stdio.h>
-
+#include "ghmm/ghmm.h"
 #include "ghmm++/GHMM.h"
 #include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_GMLDoc.h"
@@ -21,8 +21,6 @@
 using namespace std;
 #endif
 
-
-//myvector<double> Vecdouble;
 
 /** This function is compiled as a C-function ( no C++ "name-mangled" )
     so that we can read data from an XML-file into a C "struct",
@@ -61,21 +59,20 @@ model_t *graphmldoc_cwrapper(char *filename)
     {
       model_pt->model_id = DISCRETE;
       dmo = doc.getDiscreteModel();
-      //
-      // Make a new copy so that we can free the pointer to a C++ object. 
-      //
       model_pt->model_pt = (void*) sdmodel_copy((const sdmodel*) dmo->c_model);
       delete dmo;
     }
   else
-    {
-      model_pt->model_id = CONTINUOUS;
-      cmo = doc.getContinuousModel();
+    {      
+      fprintf(stderr, "XML format for continuous model not supported\n");
+      model_pt = NULL;
+      //model_pt->model_id = CONTINUOUS;
+      //cmo = doc.getContinuousModel();
       //
       // Make a new copy so that we can free the pointer to a C++ object. 
       //
-      model_pt->model_pt = (void*) smodel_copy((const smodel*) cmo->c_model);
-      delete dmo;
+      //model_pt->model_pt = (void*) smodel_copy((const smodel*) cmo->c_model);
+      //delete dmo;
     }
 
   return model_pt;

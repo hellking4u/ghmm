@@ -72,7 +72,7 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
   found = 0;
   log_p = 0.0;
   for (i = 0; i < sq->seq_number; i++) {
-    sdfoba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i);
+    // XXXXX FIX sdfoba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i);
 
     if (log_p_i != +1) {
       log_p += log_p_i;

@@ -10,16 +10,11 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
+// #include <unistd.h>
 #include <assert.h>
 #include <ghmm/rng.h>
+#include <ghmm/ghmm.h>
 #include "ghmm++/GHMM.h"
-#include "ghmm++/GHMM_StateT.hh"
-#include "ghmm++/GHMM_Emission.h"
-#include "ghmm++/GHMM_Transition.h"
-#include "ghmm++/GHMM_AbstractModelT.hh"
-#include "ghmm++/GHMM_SWDiscreteModel.h"
-#include "ghmm++/GHMM_GMLClass.h"
 #include "ghmm++/GHMM_GMLDoc.h"
 #include <iostream>
 
@@ -27,17 +22,24 @@
 using namespace std;
 #endif
 
+int seq_d_class(int index, int t) {
+  printf(" c:%i ",index);
+  if (index>5)
+    return 1;
+  else
+    return 0; 
+}
+
 int main(int argc, char* argv[]) {
   //GHMM_Document      doc;
-  GHMM_GraphMLDoc    doc;
-  // GHMM_GMLDiscreteModel *dmo;
-  GHMM_SWDiscreteModel *dmo;
-  GHMM_Sequences* training_seq = NULL;
-  GHMM_Sequences* my_output = NULL;
-  GHMM_Alphabet*  alphas = NULL;
+  std::GHMM_GraphMLDoc    doc;
+  std::GHMM_SWDiscreteModel *dmo;
+  std::GHMM_Sequences* training_seq = NULL;
+  std::GHMM_Sequences* my_output = NULL;
+  std::GHMM_Alphabet*  alphas = NULL;
 
   /* Important! initialise rng  */
-  GHMM_Toolkit::gsl_rng_init();
+  std::GHMM_Toolkit::gsl_rng_init();
 
   if (argc < 2)
     {
@@ -71,7 +73,6 @@ int main(int argc, char* argv[]) {
       cout << alphas->getSymbol(i) << endl;
     }
 
-  /***
   if ( ( training_seq = doc.getSequences() ) != NULL )
     {
       training_seq->print(stdout);
@@ -79,48 +80,49 @@ int main(int argc, char* argv[]) {
       printf("reestimating with Baum-Welch-algorithm...");
       // dmo->reestimate_baum_welch( training_seq );
 
+      /* print the result */
       printf("Done\nthe result is:\n");  
       dmo->A_print(stdout,""," ","\n");
       fprintf(stdout,"observation symbol matrix:\n");
       dmo->B_print(stdout,""," ","\n");
-
     }
-  ****/
 
-// my_output = dmo->generate_sequences(1,10,10);
-  // my_output->print(stdout);
+	sequence_t* seqs;
 
+	dmo->c_model->model_type = kSilentStates;
+	//dmo->c_model->get_class  = seq_d_class;
 
-  GHMM_GMLClass *dco = new GHMM_GMLClass( doc.getClass() );
+	//my_output = dmo->generate_sequences(1,10,10,10);
+	seqs = sdmodel_generate_sequences(dmo->c_model,1,10,10,20);  	
+	sequence_print(stdout,seqs);
 
-
-  doc.open("gml2.xml","w"); // Try writing to a new format!!!!
-  doc.writeElement(dco);
-  doc.writeEndl();
-
-  doc.writeElement(dmo->getAlphabet());
-  doc.writeEndl();
-  doc.writeElement(dmo);
-  doc.writeEndl();
-
-  doc.close();
-  SAFE_DELETE( dco );
-
-  doc.open(stdout, "w");
-  doc.writeEndl();
-  // doc.writeElement(my_output);
-  doc.writeEndl();
-  doc.close();
+	printf("Pause....\nPlease check your sequences before continuing:\n");
 
 
-  cout << "Wrote to gml2.xml" << endl;
-  
-  delete my_output;
-  delete alphas;
+	std::GHMM_GMLClass *dco = new std::GHMM_GMLClass( doc.getClass() );
 
-  // memory leak, check the destructor of GHMM_SWDiscreteModel
-  // SAFE_DELETE(dmo); 
+	doc.open("gml2.xml","w"); // Try writing to a new format!!!!
+	doc.writeElement(dco); 
+	doc.writeEndl();
+	doc.writeElement(dmo->getAlphabet());
+	doc.writeEndl();
+	doc.writeElement(dmo);
+	doc.writeEndl();
+	doc.close();
+	SAFE_DELETE( dco );
 
-  return 0;
+	doc.open(stdout, "w");
+	doc.writeEndl();
+	// doc.writeElement(my_output);
+	doc.writeEndl();
+	doc.close();
+	  
+	cout << "Wrote to gml2.xml" << endl;
+
+	delete my_output;
+	delete alphas;
+
+	// SAFE_DELETE(dmo);
+
+	return 0;
 }
-

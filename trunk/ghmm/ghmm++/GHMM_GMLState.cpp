@@ -14,6 +14,7 @@
 
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Document.h>
+#include "ghmm/ghmm.h"
 #include "ghmm/matrix.h"
 #include <ghmm++/GHMM_GMLTransition.h>
 #include "ghmm++/GHMM_GMLEmission.h"
@@ -32,7 +33,7 @@ GHMM_GMLState::GHMM_GMLState(GHMM_SWDiscreteModel* my_model, int my_index, XMLIO
   emission          = NULL;
   tag               = "node"; // state
   hasData["ngeom"]  = 0;
-
+  m_countme         = 0;
 }
 
 /************
@@ -57,7 +58,7 @@ GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDiscreteModel>(my_model, my_inde
   emission          = NULL;
   tag               = "node"; // state
   hasData["ngeom"]  = 0;
-  // m_countme         = 0;
+  m_countme         = 0;
 }
 
 const char* GHMM_GMLState::toString() const {
@@ -123,10 +124,16 @@ void GHMM_GMLState::fillState(sdstate* s) {
     exit(1);
   }
 
+  int silent_flag=0;
   for (i = 0; (int) i < c_model->M; ++i)
-    s->b[i] = emission->weights[i];
-
+    {
+      s->b[i]=emission->weights[i];
+      silent_flag= silent_flag || (s->b[i] == 0.0);
+    }
+  if (silent_flag) c_model->model_type=kSilentStates;
+  s->countme = m_countme;
   s->fix = 0;
+
   s->label = (char *)malloc(sizeof(label.c_str()));
   strcpy(s->label, label.c_str());
 }
@@ -199,6 +206,12 @@ XMLIO_Element* GHMM_GMLState::XMLIO_startTag(const string& tag, XMLIO_Attributes
 	return this;
       }
 
+      if (attrs["key"] == "countme") {
+	reading = GHMM_STATE_COUNTME;
+	hasData["countme"] = 1;
+	return this;
+      }
+
       if (attrs["key"] == "emissions") {
 		hasData["emissions"] = 1;
 		attributes["key"] = "emissions";
@@ -248,6 +261,10 @@ void GHMM_GMLState::XMLIO_getCharacters(const string& characters) {
 
   case GHMM_STATE_LABEL:
     label = characters.c_str();
+    break;
+
+  case GHMM_STATE_COUNTME:
+    m_countme = atoi(characters.c_str());
     break;
 
   case GHMM_STATE_NONE:
