@@ -293,7 +293,8 @@ class Float(EmissionDomain):
         """ Check whether emission is admissable (contained in) the domain
             raises GHMMOutOfDomain else
         """
-        return isinstance(a,float)
+        pass
+        #return isinstance(emission,Float)
    
 
     
@@ -407,15 +408,6 @@ class EmissionSequence(list):
 
         self.cseq_number = self.cseq.seq_number
         
-        # Not sure where this was going, so I commented it out for now.
-		# internal only
-        #if self.emissionDomain.CDataType == "int": 
-        #    pass
-        
-        #elif self.emissionDomain.CDataType == "double":
-        #    cols = ghmmwrapper.get_arrayint(self.cseq.seq_len,0) # assume equal length
-        #    self.__array = ghmmhelper.twodim_double_array(self.cseq.seq, self.cseq.seq_number, cols)
-            
     def __del__(self):        
         if self.emissionDomain.CDataType == "int": # delete the C ptr to sequence_t
             ghmmwrapper.sequence_clean(self.cseq)
@@ -521,8 +513,6 @@ class SequenceSet:
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
-        # XXX I'm not quite sure what you wanted to do here. The code below stores a row pointer for each sequence
-        # in __array so that __getitem__ can return an EmissionSequence object (s.b)   XXX
         self.__array = []
         if self.emissionDomain.CDataType == "int": 
             for index in range(self.cseq_number):
@@ -557,7 +547,7 @@ class SequenceSet:
             for i in range(seq.seq_number):
                 strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(get_arrayd(seq.seq_w,i))  + ":\n"
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
-                    strout += sstr( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) )) ) + " "
+                    strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) )) ) + " "
 
         return strout 
     
@@ -725,21 +715,23 @@ class HMMFromMatricesFactory(HMMFactory):
                 cmodel.name = 'Unused'
                 
                 states = ghmmwrapper.arraystate(cmodel.N)
-                
+
+                silent_flag = 0
+                silent_states = []
+
                 #initialize states
                 for i in range(cmodel.N):
                     state = ghmmwrapper.get_stateptr(states,i)
                     state.b = ghmmhelper.list2arrayd(B[i])
                     state.pi = pi[i]
                     
-                    #if (sum(B[i]) <= epsilon):
-                    #        silent_states.append(1)
-                    #        silent_flag = 4
-                    #else:
-                    #        silent_states.append(0)
+                    if (sum(B[i]) == 0 ): 
+                        silent_states.append(1)
+                        silent_flag = 4
+                    else:
+                        silent_states.append(0)
 
                     #set out probabilities
-                    
                     trans = ghmmhelper.extract_out(A[i])
                     state.out_states = trans[0]
                     state.out_id = trans[1]
@@ -756,9 +748,8 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.fix = 0
                     
                 cmodel.s = states
-                #model.silent = int_array(model.N)
-                #model.model_type = silent_flag
-                #plist2intarray(model.silent, silent_states, model.N)
+                cmodel.model_type = silent_flag
+                cmodel.silent = ghmmhelper.list2arrayint(silent_states)
                 return DiscreteEmissionHMM(emissionDomain, distribution, cmodel)
 
             else:
@@ -830,8 +821,10 @@ class HMM:
         
         self.samplingFunction = ""
         self.viterbiFunction = ""
+        self.forwardFunction = ""
+        self.forwardAlphaFunction = ""
         
-    def loglikelihood(self, emissionSequences):
+    def loglikelihood(self, emissionSequences): 
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
 
             emission_sequences can either be a SequenceSet or a Sequence
@@ -839,26 +832,28 @@ class HMM:
             Result: log( P[emissionSequences| model]) of type float
                     numarray vector of floats
             
-            Note: The implementation will not compute the full forward matrix 
+            Note: The implementation will not compute the full forward matrix (ToDo)
         """
-        log_p = double_array(1)		
-        i = self.cmodel.N
-        logp_sum = 0
-        for seq_nr in range(mysequence.seq_c.seq_number):
-            t = get_arrayint(mysequence.seq_c.seq_len,seq_nr)
-            alpha = matrix_d_alloc(t,i)
-            scale = double_array(t)
+        if self.emissionDomain.CDataType == "int":
+            getPtr = ghmmwrapper.get_row_pointer_int
+        if self.emissionDomain.CDataType == "double":            
+            getPtr = ghmmwrapper.get_row_pointer_d
             
-            seq = mysequence[seq_nr]
-            error = func(self.model, seq.seq,seq.length, alpha, scale, log_p)
-            if error == -1:
-                print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
-                exit
-            logp_sum  += get_arrayd(log_p,0)
-            print "Seq " + str(seq_nr) + ": " + str(get_arrayd(log_p,0))
+        logP = double_array(1)
+        
+        logPsum = 0
+        for i in range(emissionSequences.cseq.seq_number):
+            seq = getPtr(emissionSequences.cseq.seq,i)
+            seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
             
-        return (logp_sum,scale) # XXX TEST
+            res = self.forwardFunction(self.cmodel, seq, seq_len,logP)
+            if res != 0:
+                print "Forward algorithm reports error for sequence " + str(res) + "."
+            logPsum += ghmmwrapper.get_arrayd(logP,0)
+                        
+        ghmmwrapper.freearray(logP)    
 
+        return logPsum
 
 
     ## Further Marginals ...
@@ -935,7 +930,41 @@ class HMM:
             Result: the (N x T)-matrix containing the forward-variables
                     and the scaling vector
         """
-        pass
+                      
+        if not isinstance(emissionSequence,EmissionSequence):
+            print "EmissionSequence required." # XXX plug in exception somtimes XXX
+            exit
+
+        if self.emissionDomain.CDataType == "int":
+            getPtr = ghmmwrapper.get_row_pointer_int
+        if self.emissionDomain.CDataType == "double":            
+            getPtr = ghmmwrapper.get_row_pointer_d
+            
+        logP = double_array(1)		
+        i = self.cmodel.N
+
+
+        t = get_arrayint(emissionSequence.cseq.seq_len,0)
+        calpha = matrix_d_alloc(t,i)
+        cscale = double_array(t)
+
+        seq = getPtr(emissionSequence.cseq.seq,0)	
+		
+        error = self.forwardAlphaFunction(self.cmodel, seq,t, calpha, cscale, logP)
+        if error == -1:
+            print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
+            exit
+        
+        # translate alpha / scale to python lists 
+        pyscale = ghmmhelper.arrayd2list(cscale, t)
+        pyalpha = ghmmhelper.matrixd2list(calpha,t,i)
+        
+        ghmmwrapper.freearray(logP)
+        ghmmwrapper.freearray(cscale)
+        ghmmwrapper.free_2darrayd(calpha,t)
+        return (pyalpha,pyscale) 
+        
+        
 
     def backward(self, emissionSequence, scalingVector):
         """
@@ -955,7 +984,6 @@ class HMM:
                     SequenceSet
         """
         
-        print "1111"
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
         if self.emissionDomain.CDataType == "double":            
@@ -964,33 +992,34 @@ class HMM:
                     
         log_p = double_array(1)
         
-        print "2222"
         allPaths = []
         for i in range(emissionSequences.cseq.seq_number):
             seq = getPtr(emissionSequences.cseq.seq,i)
-            l = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
-            
-            print seq
-            print "33333"
-            viterbiPath =  self.viterbiFunction(self.cmodel,seq,l,log_p)
-            print "44444"                      
+            seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            viterbiPath =  self.viterbiFunction(self.cmodel,seq,seq_len,log_p)
+
             #viterbi_prob = get_arrayd( log_p, 0 )
         
             onePath = []
-            for i in range(mysequence.length * self.model.N): # maximum length of a viterbi path for a silent model
-                d = get_arrayint(viterbiPath,i)
-                if d >= 0:
-                    onePath.append(d)
+            
+            # for model types without possible silent states the length of the viterbi path is known
+            if self.silent == 0:            
+                for i in range(seq_len):                
+                    onePath.append(get_arrayint(viterbiPath,i))
+            
+            # in the silent case we have to reversely append as long as the path is positive because unused positions
+            # are initialised with -1 on the C level.
+            elif self.silent == 1:   
                 
-                # for non silent model the length of the viterbi path is known
-                if self.silent == 0 and i >= self.cmodel.N:
-                    allPaths.append(onePath)
-                    break
-                # in the silent case we have append as long as the path is positive
-                if self.silent == 1 and d < 0:
-                    allPaths.append(onePath)
-                    break
-        
+                for i in range( ( seq_len * self.cmodel.N )-1,-1,-1): # maximum length of a viterbi path for a silent model
+                    d = get_arrayint(viterbiPath,i)
+                                   
+                    if d >= 0:
+                        onePath.insert(0,d)
+                    else:
+                        break
+                                        
+            allPaths.append(onePath)
         if emissionSequences.cseq.seq_number > 1:
             return allPaths
         else:
@@ -1019,11 +1048,18 @@ class HMM:
 
     def getInitial(self, i):
         """ Accessor function for the initial probability \pi_i """
-        pass
+        return ghmmwrapper.get_arrayd(self.cmodel.pi,i)
 
-    def setInitial(self, i, j, prob):
+    def setInitial(self, i, prob):
         """ Accessor function for the initial probability \pi_i """
-        pass
+        ghmmwrapper.set_array_d(self.cmodel.pi,i,j)
+        # renormalizing pi, pi(i) is fixed on value 'prob'
+        coeff = 1 - i
+        for j in range(self.cmodel.N):
+            if i != j:
+                pi_j = ghmmwrapper.get_arrayd(self.cmodel.pi,j)    
+                pi_j = pi_j * i / coeff
+                ghmmwrapper.set_array_d(self.cmodel.pi,j,pi_j)
 
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
@@ -1054,10 +1090,11 @@ class DiscreteEmissionHMM(HMM):
     
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
-        self.silent = 1
-
+        self.silent = 1  # flag indicating whether the model type does include silent states
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
+        self.forwardFunction = ghmmwrapper.foba_logp
+        self.forwardAlphaFunction = ghmmwrapper.foba_forward        
       
     def __str__(self):
         hmm = self.cmodel
@@ -1095,18 +1132,12 @@ class GaussianEmissionHMM(HMM):
   
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
-    
-
-    def loglikelihood(self, emissionSequences):
-        """ Compute log( P[emissionSequences| model]) using the forward algorithm
-
-            emission_sequences can either be a SequenceSet or a Sequence
-
-            Result: log( P[emissionSequences| model]) of type float
-                    numarray vector of floats
-            
-            Note: The implementation will not compute the full forward matrix 
-        """
+        self.silent = 0  # flag indicating whether the model type does include silent states
+        
+        self.samplingFunction = ghmmwrapper.smodel_generate_sequences
+        self.viterbiFunction = ghmmwrapper.sviterbi
+        self.forwardFunction = ghmmwrapper.sfoba_logp
+        self.forwardAlphaFunction = ghmmwrapper.sfoba_forward
 
     def loglikelihood_sqd(self, sequenceSet):
         # XXX REMOVE soon XXX
@@ -1183,6 +1214,23 @@ class GaussianEmissionHMM(HMM):
             strout += "\nint fix:" + str(state.fix) + "\n"
         return strout
 
+    
+    # different function signatures require overloading of parent class methods    
+    def sample(self, seqNr ,T):
+        """ Sample emission sequences 
+
+
+        """
+        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) # XXX label assignment
+        return SequenceSet(self.emissionDomain,seqPtr)
+        
+
+    def sampleSingle(self, T):
+        """ Sample a single emission sequence of length at most T.
+            Returns a Sequence object.
+        """
+        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) # XXX label assignment
+        return EmissionSequence(self.emissionDomain,seqPtr)
 
 
 
