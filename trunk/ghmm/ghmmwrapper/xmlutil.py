@@ -779,10 +779,8 @@ class HMM:
 	    orders[s.index] = k
 	    k = k + 1
 
-        label_list = []
         state_orders = []
 	for s in self.state.values(): # a list of indices
-            label_list.append(s.label)
 	    pi.append(s.initial)
 	    state_orders.append(s.order) # state order
 
@@ -801,7 +799,7 @@ class HMM:
 	    A.append(outprobs)
 
         alphabets = self.hmmAlphabet.name.values() # list of alphabets
-	return [alphabets, A, B, pi, state_orders, label_list]
+	return [alphabets, A, B, pi, state_orders]
     
     def getLabels(self):
         """ returns list of state labels and unique labels """
