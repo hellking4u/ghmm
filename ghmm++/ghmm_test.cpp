@@ -30,6 +30,9 @@ int create_test()
 int sequence_generation_test()
 {
   sequences* generated=my_model_reader.get_element()->generate_sequences(10,10);
+  if (generated!=NULL)
+    generated->print();
+  SAFE_DELETE(generated);
 }
 
 int read_test_file()

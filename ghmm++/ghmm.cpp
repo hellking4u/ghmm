@@ -218,7 +218,7 @@ model* ghmm::create_model() const
     }
 
   /* allocate state array */
-  return_model->s=(state*)malloc(sizeof(state)*return_model->N); /* state pointer array */
+  return_model->s=(state*)calloc(return_model->N,sizeof(state)); /* state pointer array */
   if (return_model->s==NULL)
     {
       cerr<<"could not allocate states array"<<endl;
@@ -236,7 +236,7 @@ model* ghmm::create_model() const
       const string& node_id=(*node_pos)->id;
       state* this_state=&(return_model->s[state_counter]);
       /* emission probabilities */
-      this_state->b=(double*)malloc(sizeof(double)*return_model->M);
+      this_state->b=(double*)calloc(return_model->M,sizeof(double));
       if (this_state->b==NULL)
 	{
 	  cerr<<"could not allocate emmision probabilities vector"<<endl;
@@ -252,59 +252,47 @@ model* ghmm::create_model() const
 	this_state->pi=state_pos->second;
       else
 	this_state->pi=0;
-
+      /* for normalization */
       initial_state_prob_sum+=this_state->pi;
 
       size_t array_pos; /* position in double array of state */
       set<int>::const_iterator tranisiton_pos; /* position in set of transitons */
 
-      /* transitions to_from */
-      /* the inverse adiascence list */
-      const set<int>& to_from_transition_idx=my_graph->get_to_from_transitions(node_id);
-      this_state->in_states=to_from_transition_idx.size(); /* number of incoming states */
-      this_state->in_id=(int*)malloc(sizeof(int)*this_state->in_states); /* id of incoming states */
-      this_state->in_a=(double*)malloc(sizeof(double)*this_state->in_states); /* prob of incoming states */
-      array_pos=0;
-      tranisiton_pos=to_from_transition_idx.begin();
-      while (tranisiton_pos!=to_from_transition_idx.end())
-	{
-	  this_state->in_id[array_pos]=*tranisiton_pos;
-	  ghmm_edge* my_edge=dynamic_cast<ghmm_edge*>(((vector<gxl_edge*>)*my_graph)[*tranisiton_pos]);
-	  if (my_edge!=NULL && !my_edge->empty())
-	    {
-	      this_state->in_a[array_pos]=my_edge->front();
-	    }
-	  else
-	    this_state->in_a[array_pos]=0;
-	  ++tranisiton_pos;
-	  array_pos++;
-	}
-
       /* transitions from_to */
       /* adjacent list */
       const set<int>& from_to_transition_idx=my_graph->get_from_to_transitions(node_id);
       this_state->out_states=from_to_transition_idx.size(); /* number of incoming states */
-      this_state->out_id=(int*)malloc(sizeof(int)*this_state->out_states); /* id of incoming states */
-      this_state->out_a=(double*)malloc(sizeof(double)*this_state->out_states); /* prob of incoming states */
+      this_state->out_id=(int*)calloc(this_state->out_states,sizeof(int)); /* id of incoming states */
+      this_state->out_a=(double*)calloc(this_state->out_states,sizeof(double)); /* prob of incoming states */
       array_pos=0;
       tranisiton_pos=from_to_transition_idx.begin();
       while (tranisiton_pos!=from_to_transition_idx.end())
 	{
-	  this_state->out_id[array_pos]=*tranisiton_pos;
 	  ghmm_edge* my_edge=dynamic_cast<ghmm_edge*>(((vector<gxl_edge*>)*my_graph)[*tranisiton_pos]);
-	  if (my_edge!=NULL && !my_edge->empty())
+	  if (my_edge!=NULL)
 	    {
-	      this_state->out_a[array_pos]=my_edge->front();
+	      /* look for to state index */
+	      this_state->out_id[array_pos]=my_graph->get_node_idx(my_edge->to);
+	      /* look for weight */
+	      if (!my_edge->empty())
+		{
+		  this_state->out_a[array_pos]=my_edge->front();
+		}
+	      else
+		this_state->out_a[array_pos]=0;
 	    }
 	  else
-	    this_state->out_a[array_pos]=0;
+	    {
+	      cerr<<toString()<<": From State "<<state_counter<<": can't convert to ghmm Edge: Dynamic cast failed!"<<endl;
+	    }
 	  ++tranisiton_pos;
 	  array_pos++;
 	}
+      /* normalize out_states */
       vector_normalize(this_state->out_a,this_state->out_states);
 
       /* emission probabilities */
-      this_state->b=(double*)calloc(sizeof(double),return_model->M);
+      this_state->b=(double*)calloc(return_model->M,sizeof(double));
       if (ghmm_Emissions!=NULL)
 	{
 	  /* find emission information */
@@ -326,6 +314,7 @@ model* ghmm::create_model() const
 		  if (emission_pos->content!=NULL)
 		      this_state->b[emission_prob_idx++]=*(emission_pos->content);
 		} /* for emission_pos */
+	      /* normalize emission probs */
 	      vector_normalize(this_state->b,return_model->M);
 	    }
 	} /* ghmm_Emissions!=NULL */
@@ -334,15 +323,48 @@ model* ghmm::create_model() const
       state_counter++;
     }
 
+  /* normalize initial State Distribution */
   if (initial_state_prob_sum!=0)
     for (int state_idx=0;state_idx<return_model->N;state_idx++)
       return_model->s[state_idx].pi/=initial_state_prob_sum;
+
+
+  /* transitions to_from */
+  /* the inverse adjacent list, derived from the adjacent list */
+
+  /* collect information into map*/
+  map<int, map<int, double> > inverse_adjacent;
+  for(int state_idx=0; state_idx<return_model->N; state_idx++)
+    {
+      state& this_state=return_model->s[state_idx];
+      for(int transition=0; transition<this_state.out_states; transition++)
+	inverse_adjacent[this_state.out_id[transition]][state_idx]=this_state.out_a[transition];
+    }
+
+  /* put them into the structures */
+  for(map<int, map<int, double> >::iterator state_pos=inverse_adjacent.begin(); state_pos!=inverse_adjacent.end(); ++state_pos)
+    {
+      state this_state=return_model->s[state_pos->first];
+      /* allocate arrays */
+      this_state.in_states=state_pos->second.size();
+      this_state.in_id=(int*)calloc(this_state.in_states,sizeof(int));
+      this_state.in_a=(double*)calloc(this_state.in_states,sizeof(double));
+      /* write infos from map */
+      int array_count=0;
+      for(map<int, double>::iterator transition_pos=state_pos->second.begin(); transition_pos!=state_pos->second.end(); ++transition_pos)
+	{
+	 this_state.in_id[array_count]=transition_pos->first;
+	 this_state.in_a[array_count]=transition_pos->second;
+	 array_count++;
+	}
+    }
 
   return return_model;
 }
 
 sequences* ghmm::generate_sequences(int number, int length)
 {
+  /* create the model struct */
   model* my_model=create_model();
   if (my_model==NULL)
     return NULL;
@@ -350,17 +372,18 @@ sequences* ghmm::generate_sequences(int number, int length)
   model_print(stdout,my_model);
   /* is it initialised before ? */
   gsl_rng_init();
+  /* create some sequences */
   sequence_t* my_sequences=model_generate_sequences(my_model,0,length,number);
-  if (my_sequences==NULL)
-    {
-      model_free(&my_model);
-      return NULL;
-    }
-
-  sequence_print(stdout,my_sequences);
-  sequence_free(&my_sequences);
+  /* and delete the model */
   model_free(&my_model);
-  return NULL;
+  if (my_sequences==NULL)
+      return NULL;
+
+  /* make ghmm++ objects */
+  sequences* return_seq=new sequences(my_sequences);
+
+  sequence_free(&my_sequences);
+  return return_seq;
 }
 
 
