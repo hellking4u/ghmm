@@ -163,13 +163,40 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
 	while (m > 0 && smo->s[i].c[m] == 0.0) m--;
       }
       sq->seq[n][t] = smodel_get_random_var(smo, i, m);
-      class = sequence_d_class(sq->seq[n], t, &osum); 
+
+      
+      //class = sequence_d_class(sq->seq[n], t, &osum); 
+      if(smo->cos == 1) {
+        class = 0;
+      }
+      else {
+        if(!smo->class_change->get_class){
+          printf("ERROR: get_class not initialized\n");
+          goto STOP;
+        }
+        printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+        class = smo->class_change->get_class(smo,sq->seq[n],n,t);
+      } 
+            
+            
       t++;
     }
     /* generate completion for sequence */   
     else {
       for (t = 0; t < short_len; t++)
-	class = sequence_d_class(sq->seq[n], t, &osum); 
+       if(smo->cos == 1) {
+         class = 0;
+       }
+       else {
+         if(!smo->class_change->get_class){
+           printf("ERROR: get_class not initialized\n");
+           goto STOP;
+         }
+         printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+         class = smo->class_change->get_class(smo,sq->seq[n],n,t);
+       } 
+         
+      //class = sequence_d_class(sq->seq[n], t, &osum); 
       t = short_len;
     }
     while (t < len) {      
@@ -222,7 +249,22 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
       }
       /* random variable from density function */
       sq->seq[n][t] = smodel_get_random_var(smo, i, m);
-      class = sequence_d_class(sq->seq[n], t, &osum); 
+
+      if(smo->cos == 1) {
+        class = 0;
+      }
+      else {
+        if(!smo->class_change->get_class){
+          printf("ERROR: get_class not initialized\n");
+          goto STOP;
+        }
+        printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+        class = smo->class_change->get_class(smo,sq->seq[n],n,t);
+      } 
+      
+      
+      //class = sequence_d_class(sq->seq[n], t, &osum); 
+      
       up = 0;
       t++;
     }  /* while (t < len) */    
@@ -312,7 +354,20 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
   /* End Test */
 
   for (t = 0; t < len; t++)
-    class = sequence_d_class(O, t, &osum); 
+    if(smo->cos == 1) {
+      class = 0;
+    }
+    else {
+      if(!smo->class_change->get_class){
+        printf("ERROR: get_class not initialized\n");
+        goto STOP;
+      }
+      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      class = smo->class_change->get_class(smo,O,0,t); /*XXX No sequence number */
+    } 
+      
+    //class = sequence_d_class(O, t, &osum); 
+  
   t = len;
   while (t < (int)MAX_SEQ_LEN) {  
     if (smo->s[i].out_states == 0) 
@@ -372,7 +427,20 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     /* Output in state i, komp. m */
     /* random variable from density function */
     new_O[t] = smodel_get_random_var(smo, i, m);
-    class = sequence_d_class(new_O, t, &osum); 
+
+    if(smo->cos == 1) {
+      class = 0;
+    }
+    else {
+      if(!smo->class_change->get_class){
+        printf("ERROR: get_class not initialized\n");
+        goto STOP;
+      }
+      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      class = smo->class_change->get_class(smo,new_O,0,t); /* XXX sequence number ? */
+    } 
+    
+    //class = sequence_d_class(new_O, t, &osum); 
     t++;
     up = 0;
   }  /* while (t < MAX_SEQ_LEN) */ 

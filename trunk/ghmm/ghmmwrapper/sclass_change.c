@@ -8,8 +8,7 @@
 
 int cp_class_change( smodel *smo, double* seq, int k, int t) {
   int res;
-  smodel *smd = smo;
-
+  
   if((t%2) == 0){
   //if(t < 500){
       res= 0;
@@ -29,9 +28,8 @@ void setSwitchingFunction( smodel *smd ) {
 
 
 int python_class_change( smodel* smo, double *seq, int k, int t ){
-   smodel *smd = smo;
-   char* ModuleName = smd->class_change->python_module;
-   char* FunctionName = smd->class_change->python_function;
+   char* ModuleName = smo->class_change->python_module;
+   char* FunctionName = smo->class_change->python_function;
    int class,i;
 
    PyObject *pName,  *pDict, *pArgs, *pValue, *pList;

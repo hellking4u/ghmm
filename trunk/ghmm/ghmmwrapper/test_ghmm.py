@@ -237,7 +237,7 @@ print "beta = \n " + str(beta) + "\n"
 
 
 
-print "*** Reading XML-HMM from file."
-HMMOpen = HMMOpenFactory(GHMM_FILETYPE_XML)
-m4 = HMMOpen('/project/algorithmics/Sopra/python/simple2.xml')
-print m4
+#print "*** Reading XML-HMM from file."
+#HMMOpen = HMMOpenFactory(GHMM_FILETYPE_XML)
+#m4 = HMMOpen('/project/algorithmics/Sopra/python/simple2.xml')
+#print m4

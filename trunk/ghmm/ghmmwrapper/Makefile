@@ -42,23 +42,23 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_triplet = i686-pc-linux-gnu
-ACLOCAL = ${SHELL} /home/filho/bioinfo/project/ghmm/missing --run aclocal-1.7
+ACLOCAL = ${SHELL} /home/georgi/hmm/ghmm/missing --run aclocal-1.7
 AMDEP_FALSE = #
 AMDEP_TRUE = 
-AMTAR = ${SHELL} /home/filho/bioinfo/project/ghmm/missing --run tar
-AUTOCONF = ${SHELL} /home/filho/bioinfo/project/ghmm/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/filho/bioinfo/project/ghmm/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/filho/bioinfo/project/ghmm/missing --run automake-1.7
+AMTAR = ${SHELL} /home/georgi/hmm/ghmm/missing --run tar
+AUTOCONF = ${SHELL} /home/georgi/hmm/ghmm/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/georgi/hmm/ghmm/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/georgi/hmm/ghmm/missing --run automake-1.7
 AWK = gawk
-CC = gcc
-CCDEPMODE = depmode=gcc
-CFLAGS = -O2 -I/project/algorithmics//include
-CPP = gcc -E
+CC = /package/gcc-3.2/linux/bin/gcc
+CCDEPMODE = depmode=gcc3
+CFLAGS = -O2 -I/usr/local/include
+CPP = /package/gcc-3.2/linux/bin/gcc -E
 CPPFLAGS = 
-CXX = g++
-CXXCPP = g++ -E
-CXXDEPMODE = depmode=gcc
-CXXFLAGS = -O2 -I/project/algorithmics//include
+CXX = /package/gcc-3.2/linux/bin/g++
+CXXCPP = /package/gcc-3.2/linux/bin/g++ -E
+CXXDEPMODE = depmode=gcc3
+CXXFLAGS = -O2 -I/usr/local/include
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -74,9 +74,9 @@ EXPECT_FOR_DEJAGNU =
 GHMM_VERSION_AGE = 0
 GHMM_VERSION_CURRENT = 0
 GHMM_VERSION_REVISION = 5
-GSL_CFLAGS = -I/project/algorithmics//include
-GSL_CONFIG = /project/algorithmics/bin/gsl-config
-GSL_LIBS = -L/project/algorithmics//lib -lgsl -lgslcblas -lm
+GSL_CFLAGS = -I/usr/local/include
+GSL_CONFIG = /usr/local/bin/gsl-config
+GSL_LIBS = -L/usr/local/lib -lgsl -lgslcblas -lm
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
@@ -84,11 +84,11 @@ INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
 LATEX = /usr/local/package/bin/latex
 LDFLAGS = 
 LIBOBJS = 
-LIBS = -lpthread  -L/project/algorithmics//lib -lgsl -lgslcblas -lm
+LIBS = -lpthread  -L/usr/local/lib -lgsl -lgslcblas -lm
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/filho/bioinfo/project/ghmm/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/georgi/hmm/ghmm/missing --run makeinfo
 OBJEXT = o
 PACKAGE = ghmm
 PACKAGE_BUGREPORT = 
@@ -106,18 +106,18 @@ STRIP = strip
 
 SUBDIRS = .
 VERSION = 0.5.0
-XMLIO_CONFIG = /project/algorithmics/bin/xmlio-config
-XMLIO_INCLUDES = -I/project/algorithmics/include
-XMLIO_LIBS = -L/project/algorithmics/lib -lxmlio -lexpat
-XMLIO_PREFIX = /project/algorithmics
-ac_ct_CC = gcc
-ac_ct_CXX = g++
+XMLIO_CONFIG = /project/algorithmics/lib/bin/xmlio-config
+XMLIO_INCLUDES = -I/project/algorithmics/packages/xmlio-1.0.0/include
+XMLIO_LIBS = -L/project/algorithmics/lib/lib -lxmlio -lexpat
+XMLIO_PREFIX = /project/algorithmics/packages/xmlio-1.0.0
+ac_ct_CC = /package/gcc-3.2/linux/bin/gcc
+ac_ct_CXX = 
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
-am__fastdepCC_FALSE = 
-am__fastdepCC_TRUE = #
-am__fastdepCXX_FALSE = 
-am__fastdepCXX_TRUE = #
+am__fastdepCC_FALSE = #
+am__fastdepCC_TRUE = 
+am__fastdepCXX_FALSE = #
+am__fastdepCXX_TRUE = 
 am__include = include
 am__quote = 
 bindir = ${exec_prefix}/bin
@@ -135,31 +135,18 @@ host_os = linux-gnu
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
-install_sh = /home/filho/bioinfo/project/ghmm/install-sh
+install_sh = /home/georgi/hmm/ghmm/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localstatedir = ${prefix}/var
 mandir = ${prefix}/man
 oldincludedir = /usr/include
-prefix = /home/filho
+prefix = /amd/bernoulli/1/home/abt_vin/georgi/hmm/ghmm
 program_transform_name = s,x,x,
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 sysconfdir = ${prefix}/etc
 target_alias = 
-#MAINTAINERCLEANFILES = Makefile.in
-
-#NOTE: C-Files will be seperatly compiled by Python setup
-DISTFILES = ghmm.py ghmmhelper.py xmlutil.py \
-            ghmmwrapper.i \
-            setup.py \
-            sdclass_change.c sdclass_change.h read_cxml.c read_cxml.h gql.c \
-            mixture.py \
-            test100.sqd test2.smo \
-            Makefile.am
-
-
-COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 subdir = ghmmwrapper
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -309,6 +296,7 @@ GTAGS:
 
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
 top_distdir = ..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
@@ -353,16 +341,11 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 check-am: all-am
 check: check-recursive
 all-am: Makefile
 installdirs: installdirs-recursive
 installdirs-am:
-
-install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -451,19 +434,19 @@ uninstall-info: uninstall-info-recursive
 	uninstall-info-recursive uninstall-recursive
 
 
-dist-hook:
-	test -z "$(AWK)" && exit 0 ;\
-	TMPFILE="$(distdir)/tmp"; \
-	for f in $(DISTFILES) ; do \
-	  distfile=$(distdir)/$$f ; \
-	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
-	    mv $$distfile $$TMPFILE; \
-	    $(AWK) 'BEGIN {nr=0;while(getline < "$(COPYRIGHT)" ==1) copyright[nr++]=$$0;} /__copyright__ *$$/{sub("__copyright__.*","");for(i=0;i<nr;i++) print $$0 copyright[i];} //' \
-	    $$TMPFILE >$$distfile; \
-	    touch -m -a -r $$TMPFILE $$distfile; \
-	  fi; \
-	done ; \
-	rm -f $$TMPFILE
+all: setup.py
+	swig -noruntime -python -nodefault ghmmwrapper.i
+	python setup.py build
+
+clean: setup.py
+	python setup.py clean
+
+install: setup.py
+	swig -noruntime -python -nodefault ghmmwrapper.i
+	python setup.py build
+	python setup.py install --prefix=${prefix}
+
+.PHONY: all clean install 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

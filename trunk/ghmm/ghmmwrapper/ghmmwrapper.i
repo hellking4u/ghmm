@@ -1115,6 +1115,7 @@ struct sstate {
 };
 typedef struct sstate sstate;
 
+struct smodel;
 
 struct class_change_context{
 
@@ -1126,7 +1127,10 @@ struct class_change_context{
     int k;
 
     /** pointer to class function */
-    int (*get_class)(void*,double*,int,int);
+    int (*get_class)(struct smodel*,double*,int,int);
+    
+    /* space for any data necessary for class switch, USER is RESPONSIBLE */
+ //   void* user_data;
 };
 typedef struct class_change_context class_change_context;
 
@@ -1220,7 +1224,7 @@ extern double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmet
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int sfoba_forward(smodel *smo, const double *O, int T, double ***b, 
+extern int sfoba_forward(smodel *smo, double *O, int T, double ***b, 
 		  double **alpha, double *scale, double *log_p);
 
 /** 
@@ -1235,7 +1239,7 @@ extern int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-extern int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
+extern int sfoba_backward(smodel *smo, double *O, int T, double ***b,
 		   double **beta, const double *scale);
 
 /**
@@ -1249,7 +1253,7 @@ extern int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int sfoba_logp(smodel *smo, const double *O, int T, double *log_p);
+extern int sfoba_logp(smodel *smo, double *O, int T, double *log_p);
 
 
 
