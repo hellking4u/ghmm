@@ -1091,14 +1091,13 @@ class HMMEditor(SAGraphEditor):
                         label = self.HMM.hmmAlphabet.name[code]
                         weight = state.emissions[code]
                         emission_probabilities.update({label:weight})
-                        
+
                     # Normalize ... should be member function
-                    if emission_probabilities.sum != 1.0:
+                    if abs(emission_probabilities.sum - 1.0) > 0.01:
                         key_list = emission_probabilities.keys()
                         for key in key_list:
                             emission_probabilities[key] = 1.0 / len(key_list)
 
-                            
                     e = ProbEditorBasics.emission_data(emission_probabilities)
                     d = ProbEditorDialogs.emission_dialog(self, e,
                                                           "emission probs of state %s" % state.id)
