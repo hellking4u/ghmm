@@ -396,7 +396,7 @@ class HMMState:
         # XXX self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
 
 	self.order = DefaultedInt()
-        self.order.setDefault(1, 0)
+        self.order.setDefault(1, 0) # the default state order is 0
 
         self.emissions = []
 
@@ -761,7 +761,7 @@ class HMM:
         return (self.backgroundDistributions.dist, self.backgroundDistributions.order)
          
     def buildMatrices(self):    
-	""" return A, B, pi """
+	""" return [alphabets_code, A, B, pi, state_orders] """
 	pi = []
 	B  = []
 	A  = []
@@ -771,12 +771,14 @@ class HMM:
 	for s in self.state.values(): # ordering from XML
 	    orders[s.index] = k
 	    k = k + 1
-	    
+
+        state_orders = []
 	for s in self.state.values(): # a list of indices
 	    pi.append(s.initial)
-	    
+	    state_orders.append(s.order) # state order
+
 	    size = self.hmmAlphabet.size() # XXX first order only
-	    if size != len(s.emissions):
+	    if s.order != 1 and size == len(s.emissions):
 		raise ValueError
 	    else:
 		B.append(s.emissions) # emission
@@ -789,8 +791,8 @@ class HMM:
 		outprobs[myorder] = self.G.edgeWeights[0][(v,outid)]
 	    A.append(outprobs)
 
-        alphabets = self.hmmAlphabet.names.values() # list of alphabets
-	return [alphabets, A, B, pi]
+        alphabets = self.hmmAlphabet.name.values() # list of alphabets
+	return [alphabets, A, B, pi, state_orders]
     
     
     def OpenXML(self, fileName):
