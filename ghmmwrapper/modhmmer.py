@@ -1,6 +1,6 @@
 #module that reads HMMER file and converts it to XML 
 
-import sys,re,string,StringIO
+import sys,re,string
 from xml.dom import minidom
 
 def gotoLine(f,res):
@@ -126,16 +126,20 @@ class hmmer:
     off_disty = 75
 
     def __init__(self,strf):
-        #print "start __init__"
+        "Argument must be either an open file handel or a fileLikeObject."
         try:
-		    f = StringIO.StringIO(strf)
+            if isinstance(strf,str):   # file name as argument
+                f = open(fileName,'r') 
+            else:
+                f = strf  # fileLikeObject as argument
+        
         except IOError,info:
-                 sys.stderr.write(str(info) + "\n")
-            #     sys.exit(1)
+            sys.stderr.write(str(info) + "\n")
+            #     sys.exit(1) 
+        
         try:
-            #print "00000"
             r = f.readline()
-			#get number of match states
+            #get number of match states
             self.acc  = gotoLine(f,re.compile("^ACC\s+(\w+)" ) ).group(1)
             n = int(gotoLine(f,re.compile("^LENG\s*(\d+)")).group(1))
             self.n = n
@@ -145,10 +149,10 @@ class hmmer:
             #build matrix for transition: N B E J C T M1 I1 D1 M2 I2 D2 ... Mn In Dn
             self.matrans = build_matrix(3*n+6,3*n+6)
             
-			#emission matrix: match state, insert state, null_model
+            #emission matrix: match state, insert state, null_model
             self.maems = [build_matrix(n,m),build_matrix(n,m),build_matrix(1,m)]
-            #print "11111"  			
-			#get line "XT" transitions
+            #print "11111"              
+            #get line "XT" transitions
             trans = string.split(gotoLine(f,re.compile("^XT([\s\d\S]*)")).group(1))
             self.set_matrix("XT",trans)
             #null model
@@ -175,7 +179,7 @@ class hmmer:
                     else:
                         #emmission probs: [match=0/insert=1][state][emission-letter]
                         for k in range(self.m):
-                            #print "state: "+ str(i) +" symbol: " +str(k) +" - score = " + str(lis[k]) + ", NP = " + str(self.maems[2][0][k]) +" -> " + str(self.H2P(lis[k],self.maems[2][0][k]))							
+                            #print "state: "+ str(i) +" symbol: " +str(k) +" - score = " + str(lis[k]) + ", NP = " + str(self.maems[2][0][k]) +" -> " + str(self.H2P(lis[k],self.maems[2][0][k]))                            
                             self.maems[j][i][k] = self.H2P(lis[k],self.maems[2][0][k])
                             #print "null prob: " + str(self.maems[2][0][k])
             #print "44444"
@@ -184,10 +188,10 @@ class hmmer:
             del_mat(self.matrans,-2)
             self.matrans[-1][self.lisHead.index("E")] = 1.0 # set last D->E=1
         finally:
-            #pass
-            f.close()
-		
-        #print "55555"	
+            pass
+            
+        
+        #print "55555"    
         #normalize matrices:
         for i in range(len(self.maems)):
             #print "index1: " +str(i)
@@ -195,22 +199,22 @@ class hmmer:
             norm_mat(self.maems[i])
         #print "trans:"
         norm_mat(self.matrans)
-		
+        
         #print "66666"
         
         self.matrans[self.lisHead.index("T")][self.lisHead.index("T")] = 0.0
         #print "parsen fertig"
-		
+        
     def __str__(self):
         print "oben"
         hmm_str = "N= " + str(self.n)  +", M= " + str(self.m) + "\n"
         hmm_str += "Transitions: \n"
         for row in self.matrans:
             hmm_str += str(row) + "\n" 
-        hmm_str += "Emissions: \n"		
+        hmm_str += "Emissions: \n"        
         for row in self.maems:
             hmm_str += str(row) + "\n" 
-        print hmm_str	
+        print hmm_str    
         return hmm_str
 
 
@@ -235,7 +239,39 @@ class hmmer:
             return 0
         else:
             return null_prob * 2**(float(score)/self.intscale)
+    
+    def ghmmMatrices(self):
+        "Converts the matrices in a modhmmer object into ghmm.HMMFromMatrices format."
+        
+        emiss_mat = []
+        
+        # intitializing pi vector
+        pi = [1] + [0] * ((3 * self.n)+4 ) # always starting in B state
+        
+        # silent emissions and uniform distribution over the number of symbols
+        silent = [0] * (self.m ) 
+        equal = [1.0/self.m] * self.m
+        
+    
+        # conversion of the HMMER emission matrices into ghmm.py Format
+        # emmission probs in HMMER: [match=0/insert=1][state][emission-letter]
+        # order of states in HMMER transition matrix: N B E J C T M1 I1 D1 M2 I2 D2 ... Mn In Dn
+        emiss_mat.append(equal)          # N state 
+        emiss_mat.append(silent)         # B state (silent)
+        emiss_mat.append(silent)         # E state (silent)
+        emiss_mat.append(equal)          # J state 
+        emiss_mat.append(equal)          # C state 
+        emiss_mat.append(silent)         # T (silent)
+        
+        for ind1 in range(self.n):
+            emiss_mat.append(self.maems[0][ind1])  # M state
+            if (ind1 != self.n-1):
+                emiss_mat.append(self.maems[1][ind1]) # I state
+            emiss_mat.append(silent) #(silent)     # D state (silent)
 
+
+        return [self.matrans,emiss_mat,pi,self.acc]
+    
     def get_dom(self):
         "returns DOM object"
         doc = minidom.Document()
