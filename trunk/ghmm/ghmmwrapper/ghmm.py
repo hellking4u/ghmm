@@ -281,6 +281,24 @@ class Alphabet(EmissionDomain):
             i += 1
         self.CDataType = "int" # flag indicating which C data type should be used
 
+    def __str__(self):
+        strout = "GHMM Alphabet:\n"
+        strout += "Number of symbols: " + str(len(self)) + "\n"
+        strout += "External: " + str(self.listOfCharacters) + "\n"
+        strout += "Internal: " + str(range(len(self))) + "\n"
+        return strout
+    
+
+    def __len__(self):
+        return len(self.listOfCharacters)
+        
+
+    def size(self):
+        """ Deprecated """
+        print "Warning: The use of .size() is deprecated. Use len() instead."
+        return len(self.listOfCharacters)
+
+        
     def internal(self, emission):
         """ Given a emission return the internal representation
         """
@@ -328,13 +346,6 @@ class Alphabet(EmissionDomain):
         """
         return emission in self.listOfCharacters
 
-    def size(self):
-        """ Deprecated """
-        print "Warning: The use of .size() is deprecated. Use len() instead."
-        return len(self.listOfCharacters)
-
-    def __len__(self):
-        return len(self.listOfCharacters)
 
 
 DNA = Alphabet(['a','c','g','t'])
@@ -1017,6 +1028,8 @@ class HMMOpenFactory(HMMFactory):
 
                     num_background = len(background_dist.keys())
                     order = ghmmwrapper.int_array(num_background)
+                    
+                    # XXX  allocate each column seperately to save memory XXX
                     max_len = max( map(lambda x: len(x), background_dist.values()))
                     b = ghmmwrapper.double_2d_array(num_background, max_len)
 
@@ -1471,6 +1484,74 @@ class HMMFromMatricesFactory(HMMFactory):
 
 
 HMMFromMatrices = HMMFromMatricesFactory()
+
+#-------------------------------------------------------------------------------
+#- Background distribution
+
+
+# struct background_distributions {
+#   /** Number of distributions */
+#   int n;
+#   /** Order of the respective distribution */
+#   int* order;
+#   /** The probabilities */ 
+#   double **b;
+# };
+# typedef struct background_distributions background_distributions;
+
+# num_background = len(background_dist.keys())
+# order = ghmmwrapper.int_array(num_background)
+# max_len = max( map(lambda x: len(x), background_dist.values()))
+# b = ghmmwrapper.double_2d_array(num_background, max_len)
+# cpt_background = ghmmwrapper.new_background_distributions(num_background, order, b)
+
+class BackgroundDistribution:
+    def __init__(self,emissionDomain, bgInput):
+        
+        if type(bgInput) == list:
+            self.emissionDomain = emissionDomain
+            distNum = len(bgInput)
+        
+            order = ghmmwrapper.int_array(distNum)
+            b = ghmmwrapper.double_2d_array_nocols(distNum)
+            for i in range(distNum):
+                o = log(len(bgInput[i]),len(emissionDomain)) -1
+                assert (o % 1) == 0, "Ivalid order of distribution " + str(i) + ": " + str(o)
+
+                ghmmwrapper.set_arrayint(order,i, int(o))
+                # dynamic allocation, rows have different lenghts
+                b_i = ghmmhelper.list2arrayd(bgInput[i])
+                ghmmwrapper.set_2d_arrayd_col(b,i,b_i)
+    
+            self.cbackground = ghmmwrapper.model_alloc_background_distributions(distNum,len(emissionDomain) ,order, b)
+
+        elif isinstance(bgInput,ghmmwrapper.background_distributions ):
+            self.cbackground = bgInput
+            self.emissionDomain = emissionDomain
+            
+        else:
+            raise TypeError, "Input type "+str(type(bgInput)) +" not recognized."    
+
+    def __del__(self):
+        print "** Freeing ", self.cbackground
+        ghmmwrapper.model_free_background_distributions(self.cbackground)
+        self.cbackground = None
+    
+    def __str__(self):
+        # XXX to be implemented XXX 
+        outstr = "BackgroundDistribution instance:\n"
+        outstr += "Number of distributions: " + str(self.cbackground.n)+"\n\n"
+        outstr += str(self.emissionDomain) + "\n"
+        d = ghmmhelper.matrixd2list(self.cbackground.b,self.cbackground.n,len(self.emissionDomain))
+        outstr += "Distributions:\n"   
+        for i in range(self.cbackground.n):
+            outstr += "  Order: " + str(ghmmwrapper.get_arrayint(self.cbackground.order,i))+"\n"
+            outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
+            
+                     
+        return outstr
+        
+
 
 
 #-------------------------------------------------------------------------------
@@ -2087,26 +2168,72 @@ class DiscreteEmissionHMM(HMM):
            have been assigned one (usually in the editor and coded in the XML).
            applyBackground computes a convex combination of the emission probability and
            the background, where the backgroundWeight parameter (within [0,1]) controls
-           the background's contribution
+           the background's contribution for each state.
         """
-        # XXX Fix model_apply_background signature (second parameter superflous)
-        # Add more asserts on Python and error handling
-        result = ghmmwrapper.model_apply_background(self.cmodel, backgroundWeight)
+        # XXX Add more asserts on Python and error handling
+        # XXX in reestimate.c the weights are hard coded to 0.1 (?!) XXX
+        assert len(backgroundWeight) == self.N, "Argument 'backgroundWeight' does not match number of states."
+        
+        cweights = ghmmhelper.list2arrayd(backgroundWeight)
+        result = ghmmwrapper.model_apply_background(self.cmodel, cweights)
         if result is not 0:
             print "XXX Doh"
 						
-    def getBackground(self,emissionSequences):
-		    
-        if not isinstance(emissionSequences,EmissionSequence):
-            if not isinstance(emissionSequences,SequenceSet):
-                raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+    
+    def setBackground(self, backgroundObject, stateBackground):
+        """ Configure model to use the background distributions in 'backgroundObject'. 
+            'stateBackground' is a list of indixes (one for each state) refering to distributions
+            in 'backgroundObject'.
+            
+            Note: values in backgroundObject are deepcopied into model
+        """
+        
+        if not isinstance(backgroundObject,BackgroundDistribution):
+            raise TypeError, "BackgroundDistribution required, got " + str(emissionSequences.__class__.__name__)        
 
-        # XXX return type is C Pointer -> bad, bad, BAD
-        result = ghmmwrapper.get_background(self.cmodel,emissionSequences.cseq)
-        return result
-   
+        if not type(stateBackground) == list:
+            raise TypeError, "list required got "+ str(type(stateBackground))
+            
+        # XXX Add more asserts on Python and error handling
+        assert len(stateBackground) == self.N, "Argument 'stateBackground' does not match number of states."
+        
+        self.cmodel.bp = ghmmwrapper.model_copy_background_distributions(backgroundObject.cbackground)
+        self.cmodel.background_id = ghmmhelper.list2arrayint(stateBackground)
 
+        # updating model type
+        self.cmodel.model_type += 64 # XXX Should be kHasBackgroundDistributions from ghmm.h
+    
+    def assignAllBackgrounds(self,stateBackground):
+        """ Change all the assignments of background distributions to states.
+        """
+ 
+        if not type(stateBackground) == list:
+           raise TypeError, "list required got "+ str(type(stateBackground))
+        
+        assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
+        
+        # XXX check for valid background id
+        for i in range(self.N):
+            ghmmwrapper.set_arrayint(self.cmodel.background_id,i,stateBackground[i])
+        
+    def assignStateBackground(self, state, backgroundID):
 
+        assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
+        # XXX check for valid background id        
+    
+        ghmmwrapper.set_arrayint(self.cmodel.background_id, state, backgroundID)
+    
+    
+    def getBackgroundAssignments(self):
+        # XXX to be implemented
+        pass
+        
+    
+    
+    def getBackground(self):
+        """ Pointer to background_distributions is deep copied."""
+        return BackgroundDistribution(self.emissionDomain, ghmmwrapper.model_copy_background_distributions(self.cmodel.bp))
+        
 
     def updateTieGroups(self):
         
@@ -2138,9 +2265,6 @@ class DiscreteEmissionHMM(HMM):
     
     # XXX to be implemented
     def getSilentFlag(self,state):
-        pass
-    
-    def setSilentFlag(self,state,value):
         pass
     
 

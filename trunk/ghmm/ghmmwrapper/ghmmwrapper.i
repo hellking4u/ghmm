@@ -57,7 +57,7 @@
 
 
 /*=============================================================================================
-  =============================== Random Number Generator (RNG ================================= */
+  =============================== Random Number Generator (RNG) ================================= */
 
 /* The global RNG */
 extern gsl_rng * RNG; 
@@ -374,14 +374,21 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 
 /** @name background_distributions
     A container for background distributions to be used in the reestimation. Model
-    has an ID (== index) into the arrays.
+    has an ID (== index) to be used for the arrays background_distributions.order
+    and background_distributions.b
 */
 struct background_distributions {
-  int n;		/* Number of distributions */
-  int* order;	/* Order of the respective distribution */	
-  double **b;  	/* The probabilities */ 
+  /** Number of distributions */
+  int n;
+  /** Number of symbols in alphabet */
+  int m;
+  /** Order of the respective distribution */
+  int* order;
+  /** The probabilities */ 
+  double **b;
 };
 typedef struct background_distributions background_distributions;
+
 
 /** @name state
     The basic structure, keeps all parameters that belong to a state. 
@@ -792,14 +799,96 @@ extern int foba_label_logp(model *mo, const int *O, const int *label, int len, d
 extern int foba_label_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 
 
+/** 
+   Allocates a new background_distributions struct and assigs the arguments to
+   the respective fields. Note: The arguments need allocation outside of this
+   function.
+   
+   @return    :               new pointer to a background_distributions struct
+   @param n   :               number of distributions
+   @param order:              orders of the distribtions
+   @param B:                  matrix of distribution parameters
+*/
+background_distributions *model_alloc_background_distributions(int n,int m, int *orders, double **B);
+
+extern background_distributions *model_copy_background_distributions(background_distributions *bg);
+extern int model_free_background_distributions(background_distributions *bg);
+
+/** 
+	Calculates the right index for emission array b of state j in model mo
+	given an observation obs and taking the state order into account,
+	returns -1 if state order exceeds number of so far emitted characters
+    @param  mo:  model
+	@param   j:  state id 
+	@param obs:  integer observation to be updated with
+    @param   t:  position of obs in sequence (time)
+*/ 
+extern int get_emission_index (model* mo, int j , int obs, int t );
+
+
+/**
+	Updates emission history of model mo, discarding the oldest and 'adding' the
+	new observation by using modulo and multiplication	
+    @param  mo:  model to be updated
+	@param obs:  integer observation to be updated with
+*/
+extern void update_emission_history(model* mo, int obs);
+
+
+/**
+	Updates emission history of model mo for backward algorithm by 'adding'
+	observation obs to the left,
+	(example: obs = 3
+	          2 0 0 1 --> 3 2 0 0 )
+	@param  mo:  model to be updated
+	@param obs:  integer observation to be updated with
+*/
+extern void update_emission_history_front(model* mo, int obs);
+
+
+/**
+    Uses vector_normalize in vector.h
+    Normalizes the transition and output probs for each state
+    in the given model
+    @author Heval Benav
+    @return 0 if normalization went through
+	@param mo: model to be normalized
+
+*/
+extern int model_normalize(model* mo);
+
+/**
+   Add a specific level of noise to the model parameters
+   @return     :        -1 on error, 0 else
+   @param mo   :        a pointer to the model
+   @param level:        amount of noise to use,
+                        a noise level of 0.0 doesn't change the model
+   @param seed :        seed for ramdom number generator
+*/
+extern int model_add_noise(model* mo, double level, int seed);
+
+/**
+   Apply the background distributions to the emission probabilities of states of
+   the model which have one specified (background_id[state_id] != kNoBackgroundDistribution).
+
+   @return    :                -1 on error, 0 else
+   @param mo  :                a pointer to the model
+   @param background_weight:   a parameter controlling the weight given to the
+                               background. Note, should be between 0 and 1.
+*/
+extern int model_apply_background(model *mo, double* background_weight);
+
+
+
+
 %inline%{
 	
   /* allocation of an empty model struct */
   model *new_model() {
      return (struct model *)(struct model *) calloc(1, sizeof(struct model));    
   }
-    
-    
+
+   
   /* allocation of an array of state structs*/
   state *arraystate(int size) {
     return (state *) malloc(size*sizeof(state));
