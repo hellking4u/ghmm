@@ -239,7 +239,6 @@ int cluster_out(cluster_t *cl, sequence_t *sq, FILE *outfile,
     model_print(outfile, cl->mo[i]);
 
   res = 0;
-STOP:
   sequence_d_free(&sqd);
   return(res);
 #undef CUR_PROC
