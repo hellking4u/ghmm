@@ -523,7 +523,7 @@ class HMMEditor(SAGraphEditor):
                         # write back normalized probabilities
                         for key in emission_probabilities.keys():
                             code = self.HMM.hmmAlphabet.name2code[key]
-                            state.emissions[code] = emission_probabilities[key] / emission_probabilities.sum	
+                            state.emissions[code-1] = emission_probabilities[key] / emission_probabilities.sum	
 
     def EditStateUp(self,event):
         print 'Calling EditObj'
