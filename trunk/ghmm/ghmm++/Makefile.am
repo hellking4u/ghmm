@@ -37,11 +37,13 @@ GHMM_DoubleMatrix.cpp \
 GHMM_IntMatrix.cpp \
 GHMM_Alphabet.cpp \
 GHMM_Toolkit.cpp \
+GHMM_GMLDataNode.cpp \
 GHMM_GMLDiscreteModel.cpp \
 GHMM_GMLContinuousModel.cpp \
 GHMM_GMLState.cpp \
 GHMM_GMLTransition.cpp \
 GHMM_GMLAlphabet.cpp \
+GHMM_GMLClassWriter.cpp \
 GHMM_GMLDoc.cpp \
 GHMM_convertXMLtoC.cpp 
 
@@ -66,7 +68,9 @@ GHMM_IntMatrix.h \
 GHMM_Toolkit.h \
 GHMM_Alphabet.h \
 GHMM.h \
+GHMM_GMLDoc.h \
 GHMM_convertXMLtoC.h \
+GHMM_GMLDataNode.h \
 GHMM_GMLDiscreteModel.h \
 GHMM_GMLContinuousModel.h \
 GHMM_GMLState.h \

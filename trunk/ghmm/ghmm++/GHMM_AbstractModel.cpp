@@ -231,38 +231,43 @@ GHMM_Alphabet* GHMM_AbstractModel::getAlphabet() const {
 
 XMLIO_Element* GHMM_AbstractModel::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
   
-  if ( (tag == node_tag) && (node_tag == "state")) {
-    GHMM_State* ghmm_state = new GHMM_State(this,states.size(),attrs);
-    states.push_back(ghmm_state);
+  if ( node_tag == "state" && edge_tag == "transition" )
+    {
+      if (tag == node_tag) {
+	GHMM_State* ghmm_state = new GHMM_State(this,states.size(),attrs);
+	states.push_back(ghmm_state);
+	
+	state_by_id[ghmm_state->id] = states.size() - 1;
+	
+	/* Pass all nested elements to this state. */
+	return ghmm_state;
+      }
 
-    state_by_id[ghmm_state->id] = states.size() - 1;
+      if  (tag == edge_tag ) {
+	GHMM_Transition* transition = new GHMM_Transition(attrs);
+	transitions.push_back(transition);
+	
+	return transition;
+      }
+    }
 
-    /* Pass all nested elements to this state. */
-    return ghmm_state;
-  }
+  if ( node_tag == "node" && edge_tag == "edge" ) {
+    if (tag == node_tag) {
+      GHMM_State* ghmm_state = new GHMM_GMLState(this,states.size(),attrs);
+      states.push_back(ghmm_state);
+    
+      state_by_id[ghmm_state->id] = states.size() - 1;
+      
+      /* Pass all nested elements to this state. */
+      return ghmm_state;
+    }
 
-  if ( (tag == edge_tag ) && (edge_tag == "transition")) {
-    GHMM_Transition* transition = new GHMM_Transition(attrs);
-    transitions.push_back(transition);
-
-    return transition;
-  }
-
-  if ( (tag == node_tag) && (node_tag == "node")) {
-    GHMM_State* ghmm_state = new GHMM_GMLState(this,states.size(),attrs);
-    states.push_back(ghmm_state);
-
-    state_by_id[ghmm_state->id] = states.size() - 1;
-
-    /* Pass all nested elements to this state. */
-    return ghmm_state;
-  }
-
-  if ( (tag == edge_tag ) && (edge_tag == "edge")) {
-    GHMM_Transition* transition = new GHMM_GMLTransition(attrs);
-    transitions.push_back(transition);
-
-    return transition;
+    if (tag == edge_tag ) {
+      GHMM_Transition* transition = new GHMM_GMLTransition(attrs);
+      transitions.push_back(transition);
+    
+      return transition;
+    }
   }
 
   fprintf(stderr,"\t\ttag '%s' not recognized in hmm element\n",tag.c_str());

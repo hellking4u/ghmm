@@ -13,7 +13,7 @@
 #ifndef _GHMM_GMLALPHABET_H
 #define _GHMM_GMLALPHABET_H 1
 
-
+#include <xmlio/XMLIO_Element.h>
 #include <ghmm++/GHMM_Alphabet.h>
 #include <ghmm++/begin_code.h>
 
@@ -29,23 +29,44 @@ class GHMM_GMLAlphabet: public GHMM_Alphabet {
 
  public:
 
+  enum READ_CHAR_TYPE { READ_SINGLE_CHAR, READ_NONE };
+
   /** Constructor. */
   GHMM_GMLAlphabet();
   /** Destructor. */
   ~GHMM_GMLAlphabet();
 
+
   
+  const int XMLIO_writeContent(XMLIO_Document& writer);
+
  protected:
 
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
   XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
-  /** Writes the content (XML Spec[43]) of this element.
-      You should use the public XMLIO_Document::write* functions.
-      @return Returns the number of bytes written,
-      but is negative when an error occured and 0 by default. */
-  // const int XMLIO_writeContent(XMLIO_Document& doc);
+  void XMLIO_endTag(const string& tag);
+
+  void XMLIO_getCharacters(const string& characters);
+
+ private:
+  READ_CHAR_TYPE reading;
+
+};
+
+
+/** */
+class GHMM_GMLClassWriter: public GHMM_Alphabet {
+
+ public:
+
+  enum READ_CHAR_TYPE { READ_SINGLE_CHAR, READ_NONE };
+
+  /** Constructor. */
+  GHMM_GMLClassWriter(GHMM_Alphabet *alphabet);
+  
+  const int XMLIO_writeContent(XMLIO_Document& writer);
 };
 
 

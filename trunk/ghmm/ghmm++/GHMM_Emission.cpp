@@ -3,6 +3,8 @@
  * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
  * file   : $Source$
  * $Id$
+ *
+ * __copyright__
  */
 
 #include <xmlio/XMLIO_Document.h>

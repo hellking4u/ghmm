@@ -14,8 +14,9 @@
 
 #include <xmlio/XMLIO_Document.h>
 
-#include <ghmm++/GHMM_Document.h>
 #include <ghmm++/GHMM_Alphabet.h>
+#include <ghmm++/GHMM_GMLDiscreteModel.h>
+#include <ghmm++/GHMM_GMLContinuousModel.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -24,38 +25,65 @@ namespace std {
 class GHMM_GraphMLDoc;
 
 
-class GHMM_GraphMLDoc : public GHMM_Document {
+class GHMM_GraphMLDoc : public XMLIO_Document {
 
  private:
   
-  GHMM_Alphabet* tmp_alphabets;
+  GHMM_GMLAlphabet* tmp_alphabets;
 
- public:
+ public: 
+
+  enum enumModelType { NONE, GHMM_DISCRETE, GHMM_CONTINUOUS };
+
 
   /** Constructor. */
   GHMM_GraphMLDoc();
   /** Destructor. */
   ~GHMM_GraphMLDoc();
 
+  /** Returns continuous model, which has been read from file or NULL
+      if no such model exists. */
+  GHMM_GMLContinuousModel* getContinuousModel() const;
+  /** Returns discrete model, which has been read from file or NULL
+      if no such model exists. */
+  GHMM_GMLDiscreteModel* getDiscreteModel() const;
+  /** Returns sequences, which has been read from file or NULL
+      if no such model exists. */
+  GHMM_Sequences* getSequences() const;
+
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
-  XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
   /** Called by XMLIO_Document when a end tag is found. 
       This happens when a sub element has finished reading its
       content. By default this function does nothing. */
-  void XMLIO_endTag(const string& tag);
+  virtual void XMLIO_endTag(const string& tag);
   /** Writes the XML prolog (XML spec [22]).
       Only XMLDecl (XML specs [23]-[26]) is supported by calling XMLIO_writeXMLDeclaration()
       @return Returns nr of bytes written or an negative error code. */ 
-  int XMLIO_writeProlog();
+  virtual int XMLIO_writeProlog();
   /** Is called when a document is closed and writes an optional trailer,
       which must be of Misc-type (XML specs [27]) after the main element 
       (XML specs [1]).
       By default this writes a newline character.
       @return Returns nr of bytes written or an negative error code. */ 
-  int XMLIO_writeTrailer();
+  virtual int XMLIO_writeTrailer();
 
+  /** Returns name of class. */
+  virtual const char* toString() const;
 
+ protected:
+
+  /** */
+  GHMM_GMLDiscreteModel*   discrete_model;
+  /** */
+  GHMM_GMLContinuousModel* continuous_model;
+  /** */
+  GHMM_Sequences* sequences;
+  /** */
+  bool reading_ghmm;
+  /** */
+  enumModelType model_type;
 };
 
 

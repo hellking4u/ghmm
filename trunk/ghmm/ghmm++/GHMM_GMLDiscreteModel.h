@@ -13,6 +13,10 @@
 #ifndef _GHMM_GMLDISCRETEMODEL_H
 #define _GHMM_GMLDISCRETEMODEL_H 1
 
+#include <xmlio/XMLIO_Element.h>
+#include "ghmm++/GHMM_GMLAlphabet.h"
+#include "ghmm++/GHMM_GMLState.h"
+#include "ghmm++/GHMM_GMLTransition.h"
 #include "ghmm++/GHMM_DiscreteModel.h"
 
 
@@ -43,8 +47,27 @@ class GHMM_GMLDiscreteModel: public GHMM_DiscreteModel {
       @param my_model model as C data structure. */
   GHMM_GMLDiscreteModel(model* my_model);
   /** Constructor. */
-  GHMM_GMLDiscreteModel(GHMM_Alphabet* alphabet);
+  GHMM_GMLDiscreteModel(GHMM_GMLAlphabet* alphabet);
 
+ /** Returns alphabet of model or NULL, if no such alphabet exists. */
+  GHMM_GMLAlphabet* getAlphabet() const;
+
+
+  /** */
+  const int XMLIO_writeContent(XMLIO_Document& writer);
+
+  /** Alphabet of model. */
+  GHMM_GMLAlphabet* gmlalphabet;
+ 
+ protected:
+  
+  /** */
+  void createTransitions();
+
+  /** */
+  vector<GHMM_GMLTransition*> transitions;
+
+  void init();
 };
 
 
