@@ -185,6 +185,10 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
       mes_prot(str);
       m_free(str);
     }
+
+    /* if fix, continue to next state */
+    if (mo->s[i].fix)
+      continue;
     
     /* B */
     if (r->b_denom[i] < EPS_PREC)
@@ -277,6 +281,9 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 		* (1.0 / scale[t+1]) );  /* c[t] = 1/scale[t] */
 	  }
 	}
+	/* ========= if state fix, continue;====================== */
+	if (mo->s[i].fix)
+	  continue;
 	/* B */
 	for (t = 0; t < T_k; t++) {
 	  gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
