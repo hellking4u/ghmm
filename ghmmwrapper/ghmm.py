@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.3
+#!/usr/bin/env python2.3F
 ################################################################################
 #
 #       This file is part of GHMM (General Hidden Markov Model library)
@@ -569,7 +569,7 @@ class EmissionSequence:
             if self.emissionDomain.CDataType == "double":
                 strout += " "
             
-        # checking for labels 
+        # checking for labels
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
             strout += "\nState labels:\n"
             for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,0) ):
@@ -685,7 +685,7 @@ class SequenceSet:
                 oneseq = self.getPtr(self.cseq.seq,index)
                 self.__array.append(oneseq)
 
-                    
+
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             # necessary C functions for accessing the sequence_d_t struct
             self.sequenceAllocationFunction =  ghmmwrapper.sequence_d_calloc
@@ -801,13 +801,13 @@ class SequenceSet:
 
         return EmissionSequence(self.emissionDomain, seq)        
 
-    def getLabel(self,index):
+    def getSeqLabel(self,index):
         if (self.emissionDomain.CDataType != "double"):
             print "WARNING: Discrete sequences do not support sequence labels."
         else:
             return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
             
-    def setLabel(self,index,value):
+    def setSeqLabel(self,index,value):
         if (self.emissionDomain.CDataType != "double"):
             print "WARNING: Discrete sequences do not support sequence labels."
         else:     
@@ -823,7 +823,7 @@ class SequenceSet:
         else:
             raise IndexOutOfBounds(str(index) + " is out of bounds, only " + str(self.cseq.seq_number) + "sequences")
     
-    def getLabel(self, index):
+    def getStateLabel(self, index):
         """ Returns the labeling of the index-th sequence in internal representation"""
         label = []
         if self.cseq.seq_number > index and self.cseq.state_labels != None:
@@ -1360,7 +1360,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.mue = ghmmhelper.list2arrayd(mu_list) #mu = mue in GHMM C-lib.
                     state.u = ghmmhelper.list2arrayd(sigma_list)
                     state.c = ghmmhelper.list2arrayd(weight_list)
-                    
+
                     # mixture fixing deactivated by default
                     state.mixture_fix = ghmmhelper.list2arrayint([0] * cmodel.M)
                     
@@ -1418,16 +1418,16 @@ class HMM:
         self.getModelPtr = ""            # C function to get a pointer to the model struct
         self.castModelPtr = ""           # C function to cast a *model to **model
         self.distanceFunction = ""       # C function to compute a probabilistic distance between models
-        
+
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-        
+
         print "HMM.__del__", self.cmodel
-        
+
         self.freeFunction(self.cmodel)
         self.cmodel = None
-    
-    def loglikelihood(self, emissionSequences): 
+
+    def loglikelihood(self, emissionSequences):
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
             assuming independence of the sequences in emissionSequences
 
@@ -1591,7 +1591,7 @@ class HMM:
         cscale = None
         cbeta = None
         return pybeta
-    
+
 
     def viterbi(self, emissionSequences):
         """ Compute the Viterbi-path for each sequence in emissionSequences
@@ -1743,17 +1743,17 @@ class HMM:
 
     
     def getEmission(self, i):
-        """ Accessor function for the emission distribution parameters of state 'i'. 
+        """ Accessor function for the emission distribution parameters of state 'i'.
         
             For discrete models the distribution over the symbols is returned,
             for continous models a matrix of the form 
             [ [mu_1, sigma_1, weight_1] ... [mu_M, sigma_M, weight_M]  ] is returned.
-                    
+
         """
         if self.emissionDomain.CDataType == "int": # discrete emissions.
             state = self.getStatePtr(self.cmodel.s,i)
             emissions = ghmmhelper.arrayd2list(state.b,self.M)
-            return emissions    
+            return emissions
         elif self.emissionDomain.CDataType == "double": # continous emissions
             state = self.getStatePtr(self.cmodel.s,i)
             emParam = []
@@ -1771,8 +1771,8 @@ class HMM:
             Defined in derived classes.
          """
         pass
-    
-    
+
+
     def toMatrices(self):
         "To be defined in derived classes."
         print "Root class function."
@@ -1780,7 +1780,7 @@ class HMM:
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable)
-        
+
             Defined in derived classes.
         """
         pass
@@ -2014,7 +2014,7 @@ class DiscreteEmissionHMM(HMM):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         
         ghmmwrapper.reestimate_update_tie_groups(self.cmodel)
-    
+
     
     def setTieGroups(self, tieList):
         
@@ -2772,7 +2772,7 @@ class GaussianEmissionHMM(HMM):
 
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-        
+
         ghmmwrapper.free_arrayd(self.BWcontext.logp)
         self.BWcontext.logp = None
         ghmmwrapper.free_smosqd_t(self.BWcontext)
@@ -2815,14 +2815,14 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         mu = ghmmwrapper.get_arrayd(state.mue, comp)
         sigma = ghmmwrapper.get_arrayd(state.u,comp)
         weigth = ghmmwrapper.get_arrayd(state.c,comp)
-        return (mu, sigma, weight)
+        return (mu, sigma, weigth)
 
     def setEmission(self, i, comp,(mu, sigma, weight)):
         """ Set the emission distributionParameters for component 'comp' in state 'i'. """
-        
+
         # ensure proper indices
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
-        
+
         state = ghmmwrapper.get_sstate(self.cmodel, i)
         ghmmwrapper.set_arrayd(state.mue, comp, float(mu))  # GHMM C is german: mue instead of mu
         ghmmwrapper.set_arrayd(state.u, comp, float(sigma))
