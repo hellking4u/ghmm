@@ -1047,10 +1047,15 @@ class HMMOpenFactory(HMMFactory):
                             ghmmwrapper.set_2d_arrayd(cpt_background.b,i,j, background_dist[name][j])
 
                 # check for state labels
-                label_list = hmm_dom.getLabels()
+                (label_list, labels) = hmm_dom.getLabels()
+                if labels == ['None']:
+                    labeldom   = None
+                    label_list = None
+                else:
+                    labeldom = LabelDomain(labels)
                 
-                m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, LabelDomain(label_list), label_list)
-
+                m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
+                
                 if background_dist != {}:
                      m.cmodel.bp = cpt_background
                      ids = [-1]*m.N
@@ -1067,7 +1072,7 @@ class HMMOpenFactory(HMMFactory):
 
                 # check for tied states
                 tied = hmm_dom.getTiedStates()
-                if tied is not []:
+                if len(tied) > 0:
                     m.cmodel.model_type += 8 # XXX should be kTiedEmissions from ghmm.h
                     m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
                         
