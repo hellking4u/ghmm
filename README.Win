@@ -8,14 +8,14 @@ Visual C++
 
 a) Preparing gsl
 
-   The Windows version of gsl 1.0, that compiles with
+   The Windows version of gsl 1.0, that can be adapted for
    Visual C++ can be downloaded from 
-
-   http://www.network-theory.co.uk/gsl/freedownloads.html
+    
+   http://gnuwin32.sourceforge.net/packages/gsl.htm
 
    Download the Source code package and compile it.
-   Don't forget to run COPY_GSL_HEADERS.bat afterwards, 
-   which copies all header files to the gsl/ subdirectory.
+   Don't forget to copy all header files to the gsl/
+   subdirectory.
 
    In the following documentation we assume that the gsl 
    directory is c:\prefix\gsl-1.0\ while prefix depends
