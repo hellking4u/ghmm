@@ -163,6 +163,10 @@ extern "C" {
 #define m_gauss( a, n ) ( ((n)&&((a)%(n))) ? ((a)-((a)%(n))) : (a) )
 #endif
 
+#ifndef m_approx
+#define m_approx( a, b, eps ) ( ( (a) - (eps) <=  (b) && (a) + (eps) >= (b) ) ? 1 : 0)
+#endif
+
 #ifndef m_ptr
 #define m_ptr( p, offs ) ( (void*)((char*)(p)+(offs)) )
 #endif

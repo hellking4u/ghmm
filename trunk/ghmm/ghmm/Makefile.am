@@ -24,7 +24,6 @@ libghmm_a_SOURCES= foba.c foba.h \
                   vector.c vector.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
-                  sgenerate.c sgenerate.h \
                   smodel.c smodel.h \
                   sreestimate.c sreestimate.h \
                   smixturehmm.c smixturehmm.h \
@@ -34,6 +33,10 @@ libghmm_a_SOURCES= foba.c foba.h \
                   scanner.c scanner.h \
                   gauss_tail.c gauss_tail.h \
                   smap_classify.c smap_classify.h
+
+# excluded sgenerate, generation of sequences now in smodel
+#                  sgenerate.c sgenerate.h \
+
 
 
 pkginclude_HEADERS = foba.h \
@@ -49,7 +52,6 @@ pkginclude_HEADERS = foba.h \
                   vector.h \
                   viterbi.h \
                   sfoba.h \
-                  sgenerate.h \
                   smodel.h \
                   sreestimate.h \
                   smixturehmm.h \

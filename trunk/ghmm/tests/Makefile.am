@@ -18,7 +18,7 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
-noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols
+noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm
 
 LDADD = ../ghmm/libghmm.a
 

@@ -60,9 +60,9 @@ __copyright__
    Anzahl von O-Sum-Klassen.
 */
 
-#define COS 6
+/* #define COS 6 */
 
-/* #define COS 1 */
+#define COS 1
 
 /** Wert der fuer log_p zur Berechnung von Zielfunktionen
     eingesetzt wird, wenn sfoba_logp den Wert -1
@@ -81,14 +81,6 @@ typedef enum {
   density_number
 } density_t;
 
-/* besondere Ausgabesymbole (Sonderstates)
-   (wait und zut jetzt gleiches Symbol!) */
-typedef enum {
-  symbol_zut = 1000, symbol_kuend = 2000, symbol_fort = 3000, 
-  symbol_dverz = 4000, symbol_wait = 1000, symbol_tilgende = 5000
-} symbol_t;
-
-
 /* linke Grenze der Tilgungssymbole */
 /* #define MIN_TILG 5000 */
 #define MIN_TILG 0
@@ -97,13 +89,6 @@ typedef enum {
   Linke Grenze fuer gestutzte NormalDichte
   */
 #define EPS_NDT  0.1
-
-
-/* gehoert in ~/lib/stdmacro.h: dort aber keine Schreibrechte! --> DISA */
-#ifndef m_approx
-#define m_approx( a, b, eps ) ( ( (a) - (eps) <=  (b) && (a) + (eps) >= (b) ) ? 1 : 0)
-#endif
-
 
 /*@} (Doc++-Group: Konstanten) */
 

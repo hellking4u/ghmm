@@ -10,3 +10,21 @@ build from cvs:
    )
 
 2. continue with normal build instructions as written in INSTALL
+
+3. tests require DejaGNU (and this requires expect, a tcl based language)
+
+
+Contents of this package:
+
+ghmm
+The hidden markov model library
+
+doc
+Documentation generated with doc++
+
+tools
+executables that provide usefull functions
+
+tests
+testsuite driven by DejaGNU, some tests are programming examples
+

@@ -1,0 +1,92 @@
+/*******************************************************************************
+  author       : Achim Gaedke
+  filename     : ghmm/tests/coin_toss_test.c
+  created      : DATE: 2001-04-25
+  $Id$
+*******************************************************************************/
+
+#include <stdio.h>
+#include <ghmm/matrix.h>
+#include <ghmm/rng.h>
+#include <ghmm/smodel.h>
+#include <ghmm/sgenerate.h>
+
+/*
+  Simple model with one state and 2 symbols, like a coin toss
+*/
+
+int single_state_continuous()
+{
+  sstate single_state;
+  smodel my_model;
+
+  double trans_prob_single_state[]={1.0};
+  double trans_prob_single_state_rev[]={1.0};
+  double *trans_prob_single_state_array;
+  double *trans_prob_single_state_rev_array;
+  int trans_id_single_state[]={0};
+  double c[]={1.0};
+  double mue[]={0.0};
+  double u[]={1.0};
+  sequence_d_t* my_output;
+
+  /* initialise transition array */
+  trans_prob_single_state_array=trans_prob_single_state;
+  trans_prob_single_state_rev_array=trans_prob_single_state_rev;
+
+  /* initialise this state */
+  single_state.pi = 1.0;
+  single_state.out_states=1;
+  single_state.out_a=&trans_prob_single_state_array;
+  single_state.out_id=trans_id_single_state;
+  single_state.in_states=1;
+  single_state.in_id=trans_id_single_state;
+  single_state.in_a=&trans_prob_single_state_rev_array;
+  single_state.c=c;  /* weight of distribution */
+  single_state.mue=mue; /* mean */
+  single_state.u=u; /* variance */
+  single_state.fix=0; /* training of output functions */
+
+  /* initialise model */
+  my_model.N=1; /* states */
+  my_model.M=1; /* density functions per state */
+  my_model.density=0; /* normal distributions */
+  my_model.prior=-1; /* a priori probability */
+  my_model.s=&single_state; /* states array*/
+
+#if 0
+  /* print model */
+  smodel_print(stdout,&my_model);
+#endif
+
+  /* generate sequences */
+  my_output=smodel_generate_sequences(&my_model,
+				      1,  /* random seed */
+				      20, /* length of sequences */
+				      1000, /* sequences */
+				      0,  /* label */
+				      0  /* maximal sequence length 0: no limit*/
+				      );
+#if 0
+  /* print out sequences */
+  sequence_d_print(stdout,    /* output file */
+		   my_output, /* sequence */
+		   0          /* do not truncate to integer*/
+		   );
+#endif
+
+  sequence_d_gnu_print(stdout,
+		       my_output
+		       );
+
+  return 0;
+}
+
+
+int main()
+{
+  /* Important! initialise rng  */
+  gsl_rng_init();
+
+  return single_state_continuous();
+}

@@ -23,191 +23,6 @@ __copyright__
 
 
 /*============================================================================*/
-sequence_d_t *sgenerate_sequences(smodel* smo, int seed, int global_len,
-				  long seq_number, long label, int Tmax) {
-# define CUR_PROC "sgenerate_sequences"
-
-  /* Endzustand dadurch charakterisiert, dass es keine Ausgangswahrsch. gibt */
-
-  sequence_d_t *sq = NULL;
-  int state, n, i, j, m, reject_os, reject_tmax, badseq, class, tilgphase = 0;
-  double p, sum, osum = 0.0;
-  int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
-
-  sq = sequence_d_calloc(seq_number);
-  if (!sq) { mes_proc(); goto STOP; }
-  if (len <= 0)
-    /* Keine spezielle Vorgabe der Sequenzlaenge, Modell sollte 
-       Endzustand haben, Verwendung der Konstanten MAX_SEQ_LEN: */
-    len = (int)MAX_SEQ_LEN;
-  if (Tmax <= 0)
-    /* Keine spezielle Vorgabe einer MAX. Sequenzlaenge */
-    Tmax = (int)MAX_SEQ_LEN;
-  
-  /* gsl wird auch von randvar_std_normal "benutzt" 
-     seed == -1: Initialisierung fand schon von aussen statt */
-  if (seed >= 0) {
-    gsl_rng_init();
-    if (seed > 0)
-      gsl_rng_set(RNG,seed);
-    else /* Zufallsinitialisierung! */
-      gsl_rng_timeseed(RNG);
-  }
-
-  n = 0;
-  reject_os = reject_tmax = 0;
-
-  while (n < seq_number) {
-    /* Test : fuer jede Seq einen neuen Seed */
-    /*   gsl_rng_timeseed(RNG); */
-    stillbadseq = badseq = 0;
-    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
-
-    /* Startzustand i wuerfeln */
-    p = gsl_rng_uniform(RNG);
-    sum = 0.0;
-    for (i = 0; i < smo->N; i++) {
-      sum += smo->s[i].pi;
-      if (sum >= p)
-	break;
-    }
-    if (i == smo->N) { /* kann durch Rundungsfehler in der Eingabe passieren */
-      i--;
-      while (i > 0 && smo->s[i].pi == 0.0) i--;
-    }
-
-    /* Startausgabe erzeugen
-       -> m "auswuerfeln", dann nach entspr. pdf omega "auswuerfeln" */
-    p = gsl_rng_uniform(RNG);
-    sum = 0.0;   
-    for (m = 0; m < smo->M; m++) {
-      sum += smo->s[i].c[m];
-      if (sum >= p)
-	break;
-    }
-    if (m == smo->M) m--;
-    /* Zufallszahl nach entsprechender Dichtefunktion */
-    sq->seq[n][0] = smodel_get_random_var(smo, i, m);
-    state = 1;
-
-    /* Anfangsklasse nach erstem Symbol */
-    class = sequence_d_class(sq->seq[n], 0, &osum, &tilgphase);
-    while (state < len) {
-      /* neuen Zustand i wuerfeln: */
-      p = gsl_rng_uniform(RNG);
-      sum = 0.0;   
-      for (j = 0; j < smo->s[i].out_states; j++) {
-	sum += smo->s[i].out_a[class][j];   
-	if (sum >= p)
-	  break;
-      }
-      if (j == smo->s[i].out_states) {/* kann durch Rundungsfehler passieren */
-	j--;
-	while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
-      }
-      if (sum == 0.0) {
-	if (smo->s[i].out_states > 0) {
-	  /* Sequenz verwerfen, falls alle smo->s[i].out_a[class][.] == 0, 
-	     d.h. Klasse class ist in Orginaldaten nicht belegt:
-	     aus while-Schleife raus, n soll nicht hochgezaehlt werden */
-	  /* printf("Zustand %d, class %d, len %d out_states %d \n", i, class,
-	     state, smo->s[i].out_states); */
-	  badseq = 1;
-	  /* break; */
-	  
-	  /* Versuch: bei "leerer" class die Nachbarklassen probieren; 
-	     erst sweep down bis null; falls immer noch ohne Erfolg sweep 
-	     up bis COS - 1. Falls immer noch kein Erfolg --> Sequenz
-	     verwerfen.
-	  */
-	  if (class > 0 && up == 0) {
-	    class--;
-	    continue;
-	  }
-	  else if (class < COS - 1) {
-	    class++;
-	    up = 1;
-	    continue;
-	  }
-	  else {
-	    stillbadseq = 1;
-	    break;
-	  }
-	}
-	else
-	  /* Finalzustand erreicht, aus while-Schleife raus: */
-	  break;
-      }
-      i = smo->s[i].out_id[j];
-
-      /* Printing commented out 04.02.01 by Disa */
-      /* fprintf(stderr, "%d\n", i); */
-      /*      fprintf(stderr, "%d\n", i); */
-
-      /* Ausgabe von Zustand i erzeugen */
-      p = gsl_rng_uniform(RNG);
-      sum = 0.0;   
-      for (m = 0; m < smo->M; m++) {
-	sum += smo->s[i].c[m];
-	if (sum >= p)
-	  break;
-      }
-      if (m == smo->M) {
-	m--;
-	while (m > 0 && smo->s[i].c[m] == 0.0) m--;
-      }
-      /* Zufallszahl nach entsprechender Dichtefunktion */
-      sq->seq[n][state] = smodel_get_random_var(smo, i, m);
-
-      /* class fuer naechsten Schritt bestimmen */
-      class = sequence_d_class(sq->seq[n], state, &osum, &tilgphase);
-      up = 0;
-      state++;
-
-    }  /* while (state < len) */
-    if (badseq) {
-      reject_os_tmp++;
-    }
-        
-    if (stillbadseq) {
-      reject_os++;
-      m_free(sq->seq[n]);
-      /*      printf("cl %d, s %d, %d\n", class, i, n); */
-    }
-    else if (state > Tmax) {
-      reject_tmax++;
-      m_free(sq->seq[n]);
-    }
-    else {
-      if (state < len)
-	if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
-      sq->seq_len[n] = state;
-      sq->seq_label[n] = label;
-      /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
-      n++;
-    }
-    /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
-    if (reject_os > 10000) {
-      mes_prot("Reached max. no. of rejections\n");
-      break;
-    }
-    if (!(n%1000)) printf("%d Seqs. generated\n", n);
-  } /* n-loop */
-
-  if (reject_os > 0) printf("%d sequences rejected (os)!\n", reject_os);
-  if (reject_os_tmp > 0) printf("%d sequences changed class\n", 
-				reject_os_tmp - reject_os);	
-  if (reject_tmax > 0) printf("%d sequences rejected (Tmax, %d)!\n", 
-			      reject_tmax, Tmax);
-
-  return(sq);
-STOP:
-  sequence_d_free(&sq);
-  return(NULL);
-# undef CUR_PROC
-} /* sgenerate_sequences */
-
-/*============================================================================*/
 
 /* Extend given sequences on the basis of the model.
    Following modes are possible:
@@ -444,11 +259,13 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
   sequence_d_copy(new_O, O, len);
   *new_len = len;
   /* no further extension possible */
+#ifdef bausparkasse
   if (O[len - 1] == symbol_kuend || O[len - 1] == symbol_dverz ||
       O[len - 1] == symbol_tilgende) {
     if(m_realloc(new_O, *new_len)) {mes_proc(); goto STOP;}
     return new_O;
   }
+#endif
     /* Initial Distribution ???
        Pi(i) = alpha_t(i)/P(O|lambda) */
   if (mode == all_all || mode == all_viterbi) {
