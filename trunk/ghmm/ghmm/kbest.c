@@ -88,6 +88,7 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
   int b_index, i_id;            /* index for addressing states' b arrays */
   int no_labels=0;
   int exists, g_nr;
+  int* labelcount;
 
   /* logarithmized transition matrix A, log(a(i,j)) => log_a[i*N+j],
        1.0 for zero probability */
@@ -118,12 +119,15 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
   /** 1. Initialization (extend empty hypothesis to #labels hypotheses of
          length 1): */
 
-  /* get number of labels (= maximum label + 1): */
+  /* get number of labels (= maximum label + 1)
+     and number of states with those labels */
+  if (!m_calloc(labelcount, mo->N)) {mes_proc(); goto STOP;}
   for (i=0; i < mo->N; i++) {
+    labelcount[mo->s[i].label]++;
     if (mo->s[i].label > no_labels)
       no_labels = mo->s[i].label;
   }
-  no_labels++;
+  if (m_realloc(labelcount, ++no_labels)) {mes_proc(); goto STOP;}
 
   /* initialize h: */
   hP = h[0];
@@ -180,7 +184,7 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
     update_emission_history(mo,o_seq[t-1]);
     
     /** 2. Propagate hypotheses forward and update gamma: */
-    no_oldHyps = hlist_propFwd(mo, h[t-1], &(h[t]), no_labels);
+    no_oldHyps = hlist_propFwd(mo, h[t-1], &(h[t]), no_labels, labelcount);
     /*printf("t = %d (%d), no of old hypotheses = %d\n", t, seq_len, no_oldHyps);*/
     
     /*-- calculate new gamma: --*/

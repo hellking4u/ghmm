@@ -89,8 +89,9 @@ inline void hlist_removeElem(hypoList** plist) {
    @param h:          pointer to list of hypotheses
    @param hplus:      address of a pointer to store the propagated hypotheses
    @param labels:     number of labels
+   @param nr_s:       number states which have assigned a label 
  */
-int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels) {
+int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_s) {
 #define CUR_PROC "hlist_propFwd"
   int i, j, c, k;
   int i_id, j_id, g_nr;
@@ -118,8 +119,8 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels) {
 	  hlist_insertElem(hplus, c, hP);
 	  created[c] = *hplus;
 	  /* initiallize gamma-array with safe size (number of states */
-	  if (!m_malloc((*hplus)->gamma_a,  mo->N)) {mes_proc(); goto STOP;}
-	  if (!m_malloc((*hplus)->gamma_id, mo->N)) {mes_proc(); goto STOP;}
+	  if (!m_malloc((*hplus)->gamma_a,  nr_s[c])) {mes_proc(); goto STOP;}
+	  if (!m_malloc((*hplus)->gamma_id, nr_s[c])) {mes_proc(); goto STOP;}
 	  (*hplus)->gamma_id[0]  = j_id;
 	  (*hplus)->gamma_a[0]   = 1.0;
 	  (*hplus)->gamma_states = 1; 
