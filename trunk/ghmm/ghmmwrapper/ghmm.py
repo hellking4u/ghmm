@@ -156,7 +156,7 @@ import StringIO
 import copy
 
 from os import path
-from math import log
+from math import log,ceil
 
 ghmmwrapper.gsl_rng_init() # Initialize random number generator
 
@@ -1494,23 +1494,23 @@ class HMM:
             return allPaths[0]    
                     
     
-    def sample(self, seqNr ,T):
+    def sample(self, seqNr ,T, seed = 0):
         """ Sample emission sequences 
 
 
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,self.N)
+        seqPtr = self.samplingFunction(self.cmodel,seed,T,seqNr,self.N)
         seqPtr.state_labels = None
         seqPtr.state_labels_len = None
 
         return SequenceSet(self.emissionDomain,seqPtr)
         
 
-    def sampleSingle(self, T):
+    def sampleSingle(self, T, seed = 0):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,1,self.N)
+        seqPtr = self.samplingFunction(self.cmodel,seed,T,1,self.N)
         seqPtr.state_labels = None
         seqPtr.state_labels_len = None
 
@@ -1692,6 +1692,26 @@ class DiscreteEmissionHMM(HMM):
         """ Set the emission distribution parameters for a discrete model."""
         assert len(distributionParameters) == self.M
         state = self.getStatePtr(self.cmodel.s,i)
+
+        # updating silent flag if necessary        
+        if sum(distributionParameters) > 0:
+            silentFlag =  1 
+        else:
+            silentFlag =  0 
+        oldFlag = ghmmwrapper.get_arrayint(self.cmodel.silent,i)
+
+        if silentFlag != oldFlag:
+            ghmmwrapper.set_arrayint(self.cmodel.silent,i,silentFlag)            
+            # checking if model type changes
+            if silentFlag == 0 and self.cmodel.model_type == 4:
+                s = sum(ghmmhelper.arrayint2list(self.cmodel.silent) )
+                if s == 0:
+                    # model contains no more silent states
+                    self.cmodel.model_type = 0
+            if silentFlag == 1 and  self.cmodel.model_type == 0:                  
+                # model contains one silent state
+                self.cmodel.model_type = 4
+        
         for i in range(self.M):
             ghmmwrapper.set_arrayd(state.b,i,distributionParameters[i])
     
@@ -2236,10 +2256,12 @@ class GaussianEmissionHMM(HMM):
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-        ghmmwrapper.free_smosqd_t(self.BWcontext)
-        self.BWcontext = None
+
         ghmmwrapper.free_arrayd(self.BWcontext.logp)
         self.BWcontext.logp = None
+        ghmmwrapper.free_smosqd_t(self.BWcontext)
+        self.BWcontext = None
+        
     
         # XXX needs to be freed ?
         #self.BWcontext.smo  = self.cmodel
