@@ -364,7 +364,7 @@ class EmissionSequence(list):
         # XXX How do you maintain reference to the SequenceSet.cseq?
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-            self.getPtr = ghmmwrapper.get_row_pointer_int # defines C function to be used to access a single sequence
+            self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             if isinstance(sequenceInput, list):  
                 (seq,l) = ghmmhelper.list2matrixint([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_calloc(1)
@@ -386,7 +386,7 @@ class EmissionSequence(list):
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
-            self.getPtr = ghmmwrapper.get_row_pointer_d # defines C function to be used to access a single sequence
+            self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             if isinstance(sequenceInput, list): 
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_d_calloc(1)
@@ -465,7 +465,13 @@ class SequenceSet:
         self.cseq = None
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-            self.getPtr = ghmmwrapper.get_row_pointer_int # defines C function to be used to access a single sequence
+            # necessary C functions for accessing the sequence_t struct
+            self.calloc = ghmmwrapper.sequence_calloc
+            self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
+            self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
+            self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
+            self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within a int**
+            
             if isinstance(sequenceSetInput, str): # from file
                 # reads in the first sequence struct in the input file
                 self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
@@ -488,9 +494,20 @@ class SequenceSet:
                 
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
+    
+            self.__array = []    
+            for index in range(len(self)):
+                oneseq = self.getPtr(self.cseq.seq,index)
+                self.__array.append(oneseq)    
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
-            self.getPtr = ghmmwrapper.get_row_pointer_d # defines C function to be used to access a single sequence
+            # necessary C functions for accessing the sequence_d_t struct
+            self.calloc =  ghmmwrapper.sequence_d_calloc
+            self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
+            self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
+            self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
+            self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign an double* to a position within a double**
+                        
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
                 self.cseq = ghmmwrapper.sequence_d_calloc(seq_nr)
@@ -510,22 +527,16 @@ class SequenceSet:
                 self.cseq = sequenceSetInput
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
+
+            self.__array = []
+            for index in range(len(self)):
+                oneset = self.getPtr(self.cseq.seq, index) 
+                self.__array.append(oneset)                
         
         
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
-        self.__array = []
-        if self.emissionDomain.CDataType == "int": 
-            for index in range(len(self)):
-                oneseq = ghmmwrapper.get_row_pointer_int(self.cseq.seq,index)
-                self.__array.append(oneseq)
-                
-        elif self.emissionDomain.CDataType == "double":
-            self.__array = []
-            for index in range(len(self)):
-                oneset = ghmmwrapper.get_row_pointer_d(self.cseq.seq, index) 
-                self.__array.append(oneset)
 
     def __del__(self):
         if self.emissionDomain.CDataType == "int":
@@ -583,18 +594,27 @@ class SequenceSet:
         
         # Right now only the pointer is passed. Do we want to have a real copy of the sequence instead ?
         
-        if self.emissionDomain.CDataType == "int":
-            seq = ghmmwrapper.sequence_calloc(1)
-            seq.seq = ghmmwrapper.cast_ptr_int(self.__array[index]) # int* -> int** reference
-            ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
-            seq.seq_number = 1
-        if self.emissionDomain.CDataType == "double":    
-            seq = ghmmwrapper.sequence_d_calloc(1)
-            seq.seq = ghmmwrapper.cast_ptr_d(self.__array[index]) # double* -> double**
-            ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
-            seq.seq_number = 1
-
+        seq = self.calloc(1)
+        seq.seq = self.castPtr(self.__array[index]) # int* -> int** reference
+        ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
+        seq.seq_number = 1
+        
         return EmissionSequence(self.emissionDomain, seq)
+
+    def getSubset(self, seqIndixes):
+        """ Returns a SequenceSet containing (references to) the sequences with the indixes in
+            'seqIndixes'.
+       
+        """
+        seqNumber = len(seqIndixes)       
+        seq = ghmmwrapper.sequence_calloc(seqNumber)
+        seq.seq = self.emptySeq(seqNumber)
+        for i in range(seqNumber):
+            self.setSeq(seq.seq,i,self.__array[ seqIndixes[i] ]) 
+            ghmmwrapper.set_arrayint(seq.seq_len,i,ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i]))
+        seq.seq_number = seqNumber
+        
+        return SequenceSet(self.emissionDomain, seq)
 
         
 def SequenceSetOpen(emissionDomain, fileName):
