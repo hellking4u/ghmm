@@ -353,7 +353,7 @@ class MixtureContinousDistribution(Distribution):
 
 #-------------------------------------------------------------------------------
 #- Sequence, SequenceSet and derived  ------------------------------------------
-class EmissionSequence(list):
+class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
         domain where the emission orginated from.
@@ -365,6 +365,9 @@ class EmissionSequence(list):
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
+            self.getSymbol = ghmmwrapper.get_2d_arrayint
+            self.setSymbol = ghmmwrapper.set_2d_arrayint
+            
             if isinstance(sequenceInput, list):  
                 (seq,l) = ghmmhelper.list2matrixint([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_calloc(1)
@@ -387,6 +390,9 @@ class EmissionSequence(list):
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
+            self.getSymbol = ghmmwrapper.get_2d_arrayd
+            self.setSymbol = ghmmwrapper.set_2d_arrayd
+                        
             if isinstance(sequenceInput, list): 
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
                 self.cseq = ghmmwrapper.sequence_d_calloc(1)
@@ -418,35 +424,25 @@ class EmissionSequence(list):
             ghmmwrapper.sequence_d_clean(self.cseq)
 
         
-    def __setitem__(self, index, value):
+    def __len__(self):
+        "In order to be consistent with SequenceSet len(self) returns the number of sequences."
+        return ghmmwrapper.get_arrayint(self.cseq.seq_len,0)	
 
-        if self.emissionDomain.CDataType == "int":
-            set_2d_arrayint(self.seq_c.seq,0,index,value)
-        elif self.emissionDomain.CDataType == "double":
-            set_2d_arrayd(self.seq_c.seq,0,index,value)
+
+    def __setitem__(self, index, value):
+        self.setSymbol(self.seq_c.seq,0,index,value)
 		
 
     def __getitem__(self, index):
-        """ Return a single sequence of integer or double """
-        # For a single Sequence seq[i] should return the ith symbol
-		
-        if self.emissionDomain.CDataType == "double":
-            symbol = ghmmwrapper.get_2d_arrayd(self.cseq.seq,0 ,index)
-        elif self.emissionDomain.CDataType == "int":
-            symbol = ghmmwrapper.get_2d_arrayint(self.cseq.seq,0 ,index)
-        return  symbol    
-	
-    def __len__(self):
-        "In order to be consistent with SequenceSet len(self) returns the number of sequences."
-        return 1	
-	
-    def sequenceLength(self, i=0):
-        """ Return the lenght of sequence 'i' in the SequenceSet """
-        return ghmmwrapper.get_arrayint(self.cseq.seq_len,i)
-    	
+        """ Return the symbol at position 'index'. """
+        if index < len(self):
+            return self.getSymbol(self.cseq.seq, 0, index)
+        
+        else:
+            raise IndexError    
+    
     def __str__(self):
         "Defines string representation."
-        
         seq = self.cseq
         strout = ""
         strout += "\nEmissionSequence Instance:\nlength " + str(ghmmwrapper.get_arrayint(seq.seq_len,0))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,0))  + ":\n"
@@ -474,9 +470,8 @@ class SequenceSet:
             
             if isinstance(sequenceSetInput, str): # from file
                 # reads in the first sequence struct in the input file
-                self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
-                ghmmwrapper.freearray(ptNumber)
-
+                self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
+                
             elif isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
                 self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
@@ -521,8 +516,7 @@ class SequenceSet:
             elif isinstance(sequenceSetInput, str): # from file
                 print "fromFile", sequenceSetInput                
                 self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
-                #ghmmwrapper.freearray(ptNumber) #XXX waht is ptNumber? (only used, defined nowhere)
-                
+                                
             elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
                 self.cseq = sequenceSetInput
             else:    
@@ -890,13 +884,24 @@ class HMM:
         
         self.silent = 0   # flag for silent states
         
-        self.samplingFunction = ""
-        self.viterbiFunction = ""
-        self.forwardFunction = ""
-        self.forwardAlphaFunction = ""
-        self.backwardBetaFunction = ""
-        self.getStatePtr = ""
+        # Function pointer to the C level (defined in derived classes)
+        self.freeFunction = ""           # C function for deallocation
+        self.samplingFunction = ""       # C function for sequence generation
+        self.viterbiFunction = ""        # C function viterbi algorithm
+        self.forwardFunction = ""        # C function forward algortihm (likelihood only)
+        self.forwardAlphaFunction = ""   # C function forward algorithm (alpha matrix,scale)
+        self.backwardBetaFunction = ""   # C function backkward algorithm (beta matrix)
+        self.getStatePtr = ""            # C function to get a pointer to a state struct
+        self.getModelPtr = ""            # C function to get a pointer to the model struct
         
+        
+    def __del__(self):
+        """ Deallocation routine for the underlying C data structures. """
+        modelPtr = getModelPtr(self.cmodel)
+        self.freeFunction(modelPtr)
+        
+    
+    
     def loglikelihood(self, emissionSequences): 
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
             assuming independence of the sequences in emissionSequences
@@ -929,14 +934,20 @@ class HMM:
                     (numarray) vector of floats
             
         """
-        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
+        if isinstance(emissionSequences,EmissionSequence):
+            seqNumber = 1 
+        elif isinstance(emissionSequences,SequenceSet):
+            seqNumber = len(emissionSequences)        
+        else:    
             raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
               
         likelihood = ghmmwrapper.double_array(1)
         likelihoodList = []
-        for i in range(len(emissionSequences)):
+        
+        
+        for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
-            ret_val = self.forwardFunction(self.cmodel, seq,len(emissionSequences), likelihood)
+            ret_val = self.forwardFunction(self.cmodel, seq,ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i), likelihood)
             likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,1))
             # XXX check ret_val
 
@@ -1025,7 +1036,7 @@ class HMM:
 
         unused = ghmmwrapper.double_array(1) # Dummy return value for forwardAlphaFunction    	
      
-        t = ghmmwrapper.get_arrayint(emissionSequence.cseq.seq_len,0)
+        t = len(emissionSequence)
         calpha = ghmmwrapper.matrix_d_alloc(t,self.N)
         cscale = ghmmwrapper.double_array(t)
 
@@ -1062,7 +1073,7 @@ class HMM:
         cscale = ghmmhelper.list2arrayd(scalingVector)
         
         # alllocating beta matrix
-        t = ghmmwrapper.get_arrayint(emissionSequence.cseq.seq_len,0)
+        t = len(emissionSequence)
         cbeta = ghmmwrapper.double_2d_array(t, self.N)
         
         error = self.backwardBetaFunction(self.cmodel,seq,t,cbeta,cscale)
@@ -1090,13 +1101,18 @@ class HMM:
                     SequenceSet
         """
 
-        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
-            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
-                    
+        if isinstance(emissionSequences,EmissionSequence):
+            seqNumber = 1 
+        elif isinstance(emissionSequences,SequenceSet):
+            seqNumber = len(emissionSequences)        
+        else:    
+            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)                            
+
+
         log_p = ghmmwrapper.double_array(1)
         
         allPaths = []
-        for i in range(emissionSequences.cseq.seq_number):
+        for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
             viterbiPath =  self.viterbiFunction(self.cmodel,seq,seq_len,log_p)
@@ -1257,6 +1273,7 @@ class DiscreteEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.foba_backward 
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
+        self.getModelPtr = ghmmwrapper.get_model_ptr
       
     def __str__(self):
         hmm = self.cmodel
@@ -1344,6 +1361,7 @@ class GaussianEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.sfoba_backward 
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
         self.fileWriteFunction = ghmmwrapper.call_smodel_print
+        #  self.getModelPtr = ghmmwrapper.get_model_ptr
 
     def loglikelihood_sqd(self, sequenceSet):
         # XXX REMOVE soon XXX
