@@ -150,12 +150,21 @@ class NamedDistributions(xmlutil.NamedDistributions ):
 
 
 class DiscreteHMMAlphabet( xmlutil.DiscreteHMMAlphabet ):
-    def __init__(self):
+    def __init__(self, nrOfSymbols=0):
         xmlutil.DiscreteHMMAlphabet.__init__(self)
+        if nrOfSymbols > 0:
+            self.buildAlphabets(nrOfSymbols)
         
     def size(self):
         return len(self.name.keys())
 
+    def buildAlphabets(self, nrOfSymbols):
+	""" Only fixed to 5 symbols for the moment """ 
+	alphas = range(1, nrOfSymbols+1)
+	alphas = map( lambda x: 'a'+ str(x), alphas)
+	for code in range(1,nrOfSymbols+1):
+	    self.addCode( code, alphas[code-1], desc = None)
+ 
     def edit(self, master):        
         mapedit = MapEditor(master, [self.name], ['code','name'], [3,5])
         print mapedit.result
@@ -178,7 +187,9 @@ class DiscreteHMMAlphabet( xmlutil.DiscreteHMMAlphabet ):
 class HMMState( xmlutil.HMMState ):
     def __init__(self):
         xmlutil.HMMState.__init__(self)
-  
+        self.background = PopupableInt(-1)
+        self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
+
     
 class HMMClass( xmlutil.HMMClass ):
     def __init__(self):
@@ -207,15 +218,39 @@ class HMMClass( xmlutil.HMMClass ):
 
 class HMM (xmlutil.HMM):
 
-    def __init__(self, itsEditor, XMLFileName = None):
+    def __init__(self, itsEditor, graph, XMLFileName = None):
         self.itsEditor = itsEditor
-        xmlutil.HMM.__init__(self, XMLFileName)
+ 	self.G = graph
+	self.G.directed = 1
+	self.G.euclidian = 0
+        self.G.simple = 0
+	self.Pi = {}
+        self.id2index = {}
+
+        self.hmmAlphabet = DiscreteHMMAlphabet()
+        self.hmmClass    = HMMClass()
+        
+        self.editableAttr = {}
+        self.editableAttr['HMM'] = ['desc']
+        self.desc = ValidatingString()       
+
+        self.state = {}
+
+        self.backgroundDistributions = NamedDistributions(self)
+
+        self.DocumentName = "graphml"
+        if XMLFileName != None:
+            self.OpenXML(XMLFileName)
         
 class HMMEditor(SAGraphEditor):
 
     def __init__(self, master=None):
-	SAGraphEditor.__init__(self, master)	
-	self.HMM = None
+	SAGraphEditor.__init__(self, master)
+        self.G = Graph()
+        self.G.directed = 1
+	self.G.euclidian = 0
+        self.G.simple = 0
+        self.HMM = HMM(self, self.G)
 
     def CreateWidgets(self):
 
@@ -346,8 +381,7 @@ class HMMEditor(SAGraphEditor):
 	self.graphMenu.add_command(label='Edit HMM', command=self.EditHMM)
 	self.graphMenu.add_command(label='Edit Class label', command=self.EditClassLabel)
         # XXX Note if we change alphabet, we have to change all emissions 
-	#self.graphMenu.add_command(label='Edit Alphabet', command=self.EditAlphabet)
-	#self.graphMenu.add_command(label='Edit Emissions', command=self.EditEmissions)
+	self.graphMenu.add_command(label='Edit Alphabet', command=self.EditAlphabet)
 	self.graphMenu.add_command(label='Edit Prior', command=self.EditPrior)
 	self.graphMenu.add_command(label='Edit Background Distributions', command=self.EditBackgroundDistributions)
 	self.graphMenu.add_separator()
@@ -371,11 +405,15 @@ class HMMEditor(SAGraphEditor):
     # the menu items.
     #
     def NewGraph(self, nrOfSymbols=0, newInput=1):
-	self.HMM = HMM(self)
 
-	self.HMM.G.euclidian = 0
-	self.HMM.G.directed = 1
-	self.HMM.G.simple = 0
+        self.DeleteDrawItems() # clear screen
+	if self.hasGraph == 1:
+            self.G.Clear()
+	    self.HMM.G.Clear()
+	    self.hasGraph = 0
+            
+	self.HMM = HMM(self, self.G)
+
 	self.graphName = "New"
 	self.ShowGraph(self.HMM.G,self.graphName)
 	self.RegisterGraphInformer(HMMInformer(self.HMM))
@@ -384,12 +422,11 @@ class HMMEditor(SAGraphEditor):
 	self.SetGraphMenuOptions()
         if newInput:
             if nrOfSymbols == 0:
-                nrOfSymbols  = tkSimpleDialog.askinteger("New HMM",
-                                                         "Enter the number of output symbols")
+                nrOfSymbols  = tkSimpleDialog.askinteger("New HMM","Enter the number of output symbols")
                 for i in xrange(nrOfSymbols):
                     self.HMM.G.vertexWeights[i] = VertexWeight(0.0)
-		
-		self.HMM.hmmAlphabet.buildAlphabets(nrOfSymbols)
+
+                self.HMM.hmmAlphabet = DiscreteHMMAlphabet(nrOfSymbols)
 		
     def OpenGraph(self):
 
@@ -417,13 +454,16 @@ class HMMEditor(SAGraphEditor):
 		print "Unknown extension"
 		return
 
+            #self.HMM.hmmAlphabet ?
+            #self.HMM.hmmClass    ?
+            
 	    self.ShowGraph(self.HMM.G, self.graphName)
 	    self.RegisterGraphInformer(HMMInformer(self.HMM))
 	    self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
 
 	    if not self.gridding:
 		self.graphMenu.invoke(self.graphMenu.index('Grid'))	
-
+                
 
     def SaveGraph(self):
 	if self.fileName != None:
@@ -499,7 +539,7 @@ class HMMEditor(SAGraphEditor):
                         if not askokcancel("Edit Tied State", msg + "Edit those of state %s instead?" % state.tiedto):
                             return
                         else:
-                            state = self.HMM.state[self.HMM.id2index[state.tiedto]]
+                            state = self.HMM.state[state.tiedto]
 
                     if state.emissions == []:
                         state.emissions = [1.0 / self.HMM.hmmAlphabet.size()] * self.HMM.hmmAlphabet.size()
@@ -568,10 +608,9 @@ class HMMEditor(SAGraphEditor):
                 # We only show the label out of the editable items
                 self.HMM.G.labeling[v] = ValidatingString("%s" % (self.HMM.state[v].label)) # XXX Hack Aaaargh!
                 self.UpdateVertexLabel(v, 0)
-                self.HMM.id2index[self.HMM.state[v].id] = v
-
+                # self.HMM.id2index[self.HMM.state[v].id] = v
                 
-
+                
     def EditHMM(self):
         d = EditObjectAttributesDialog(self, self.HMM, self.HMM.editableAttr['HMM'])
 
@@ -584,21 +623,43 @@ class HMMEditor(SAGraphEditor):
     def EditPrior(self):
 	if self.HMM.G.Order() == 0:
 	    return
-        
+
+        key2id = {}
         emission_probabilities = ProbEditorBasics.ProbDict({})
         for state in self.HMM.state.values():
-            label = state.id
+            label  = state.id
             weight = state.initial
-            emission_probabilities.update({label:weight})
-
-        e = ProbEditorBasics.emission_data(emission_probabilities)
-        d = ProbEditorDialogs.emission_dialog(self, e, "initial probabilities")
+            emission_probabilities.update({str(label):weight})
+            key2id[str(label)] = state.id
+            
         u = 1.0 / len(emission_probabilities.keys())
+        if emission_probabilities.sum == 0.0:
+            for key in emission_probabilities.keys():
+                id = key2id[key]
+                state = self.HMM.state[self.HMM.id2index[id]]
+                state.initial = typed_assign(state.initial, u)
+                emission_probabilities[key] = u
+
+        if len(emission_probabilities.keys()) > 15:
+            color_list=['red','green','yellow','blue','black',
+                        'grey','orange','pink','gold','brown',
+                        'tan','purple','magenta','firebrick','deeppink',
+                        'lavender','NavajoWhite','seagreen','violet','LightGreen']
+            colors = color_list
+            repeats = len(emission_probabilities.keys()) / 15
+            for i in range(repeats-1):
+                color_list += colors
+
+            e = ProbEditorBasics.emission_data(emission_probabilities, color_list)
+        else:
+            e = ProbEditorBasics.emission_data(emission_probabilities)        
+        d = ProbEditorDialogs.emission_dialog(self, e, "initial probabilities")
         
         if d.success():
             # write back normalized probabilities
             for key in emission_probabilities.keys():
-                state = self.HMM.state[self.HMM.id2index[key]]
+                id = key2id[key]
+                state = self.HMM.state[self.HMM.id2index[id]]
                 if emission_probabilities.sum == 0.0:
                     state.initial = typed_assign(state.initial, u)
                 else:
@@ -609,8 +670,8 @@ class HMMEditor(SAGraphEditor):
     
     def AddVertexCanvas(self,x,y):
 	v = GraphDisplay.AddVertexCanvas(self, x, y)
-        print "AddVertex ", v, "at ",x,y
-        self.HMM.AddState(v)
+        print "AddVertex ", v, "at ", x, y
+        index = self.HMM.AddState(v)
 	state = self.HMM.state[v]
 	self.HMM.G.embedding[state.index] = self.G.embedding[v]
 	
@@ -637,7 +698,9 @@ class HMMInformer(GraphInformer):
         self.itsHMM = itsHMM
 
     def VertexInfo(self,v):
-	""" v is the vertex id on the canvas, mapping to internal representation must be done from v->index """
+	""" v is the vertex id on the canvas,
+            mapping to internal representation must be done from v->index
+        """
 	state = self.itsHMM.state[v]
 	try:
 	    self.itsHMM.hmmClass.name[state.state_class]
@@ -661,7 +724,7 @@ class HMMInformer(GraphInformer):
             (We only draw the edge once, not as many as a number of classes)
         """
 	
-        tail_state = self.itsHMM.state[tail]        
+        tail_state = self.itsHMM.state[tail]
         head_state = self.itsHMM.state[head]
         # p = self.itsHMM.G.edgeWeights[0][(tail, head)]
         transitions  = []
