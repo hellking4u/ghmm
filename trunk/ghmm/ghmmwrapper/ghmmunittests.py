@@ -498,19 +498,19 @@ class BackgroundDistributionTests(unittest.TestCase):
     def setUp(self):
         self.sigma = ghmm.Alphabet(['rot','blau','gruen','gelb'])
 
-        self.model = ghmm.HMMFromMatrices(sigma,ghmm.DiscreteDistribution(sigma),
+        self.model = ghmm.HMMFromMatrices(self.sigma,ghmm.DiscreteDistribution(self.sigma),
                        [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]],
                        [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1],
                        [0.25,0.25,0.25,0.25, 0.0,0.5,0.5,0.0, 0.1,0.0,0.8,0.1, 0.1,0.35,0.3,0.25 ]],
                        [1.0,0,0])
 
-        self.bg = ghmm.BackgroundDistribution(sigma,[[0.2,0.3,0.1,0.4],
+        self.bg = ghmm.BackgroundDistribution(self.sigma,[[0.2,0.3,0.1,0.4],
                        [0.1,0.2,0.4,0.3, 0.2,0.3,0.1,0.4, 0.25,0.25,0.25,0.25,0.0,0.5,0.5,0.0 ]]
                   )
 
     def testprint(self):
         s = str(self.bg)
-        self.assertEqual(s," ")
+        self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
     def testmodelbackgroundaccessfunctions(self):
         self.model.setBackground(self.bg,[0,-1,1])
@@ -518,7 +518,7 @@ class BackgroundDistributionTests(unittest.TestCase):
         del(self.bg)
         bg2 = self.model.getBackground()
         s = str(bg2)
-        self.assertEqual(s," ")
+        self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
 
 
