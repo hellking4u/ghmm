@@ -507,7 +507,7 @@ class HMMEditor(SAGraphEditor):
 
                     for code in self.HMM.hmmAlphabet.name.keys():
                         label = self.HMM.hmmAlphabet.name[code]
-                        weight = state.emissions[code]
+                        weight = state.emissions[code-1]
                         emission_probabilities.update({label:weight})
                         
                     # Normalize ... should be member function
