@@ -1,3 +1,14 @@
+/*******************************************************************************
+  author       : Bernhard Knab
+  filename     : ghmm/ghmm/viterbi.h
+  created      : TIME: 09:07:57     DATE: Fri 19. December 1997
+  $Id$
+
+__copyright__
+
+*******************************************************************************/
+
+
 #ifndef VITERBI_H
 #define VITERBI_H
 

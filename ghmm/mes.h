@@ -1,8 +1,11 @@
 /*********************************************************************
   author       : Frank Nübel
-  filename     : /vol/bspk/src/hmm/lib/mes.h
+  filename     : ghmm/ghmm/mes.h
   created      : TIME: 17:33:09     DATE: Thu 25. January 1996
-  last-modified: TIME: 15:05:26     DATE: Thu 29. January 1998
+  $Id$
+
+__copyright__
+
 *********************************************************************/
 
 #ifndef MES_H

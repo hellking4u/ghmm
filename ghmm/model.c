@@ -1,10 +1,13 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /homes/hmm/wichern/hmm/src/model.c
+  filename     : ghmm/ghmm/model.c
   created      : TIME: 10:47:27     DATE: Fri 19. December 1997
-  last-modified: TIME: 16:33:36     DATE: Sat 27. May 2000
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
-/* $Id$ */
+
 
 #include <float.h>
 #include <math.h>

@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Frank Nübel
-  filename     : /homes/hmm/lib/scanner.c
+  filename     : ghmm/ghmm/scanner.c
   created      : TIME: 11:40:33     DATE: Tue 27. August 1996
-  last-modified: TIME: 15:43:23     DATE: Wed 30. August 2000
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <string.h>

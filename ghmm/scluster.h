@@ -2,7 +2,10 @@
   author       : Bernhard Knab
   filename     : /homes/hmm/wichern/hmm/src/scluster.h
   created      : TIME: 15:53:53     DATE: Tue 16. November 1999
-  last-modified: TIME: 11:25:33     DATE: Tue 09. January 2001
+  $Id$
+
+__copyright__
+
 ------------------------------------------------------------------------------*/
 
 

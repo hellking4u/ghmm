@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/randvar.c
+  filename     : ghmm/ghmm/randvar.c
   created      : TIME: 16:40:03     DATE: Wed 17. February 1999
-  last-modified: TIME: 17:39:37     DATE: Tue 23. January 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <math.h>

@@ -1,8 +1,11 @@
 /*-----------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /homes/hmm/bknab/src/randvar.h
+  filename     : ghmm/ghmm/randvar.h
   created      : TIME: 16:43:38     DATE: Wed 17. February 1999
-  last-modified: TIME: 13:05:55     DATE: Wed 19. April 2000
+  $Id$
+
+__copyright__
+
 ------------------------------------------------------------------------------*/
 
 #ifndef RANDVAR_H

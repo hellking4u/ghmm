@@ -1,7 +1,13 @@
 /*******************************************************************************
   author       : Alexander Schliep
-  filename     : /homes/hmm/wichern/hmm/src/rng.c
+  filename     : ghmm/ghmm/rng.c
+  created      : ?
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
+
 #include <stdio.h>
 #include <gsl/gsl_rng.h>
 #include "rng.h"

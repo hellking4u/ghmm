@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smixturehmm.c
+  filename     : ghmm/ghmm/smixturehmm.c
   created      : TIME: 14:35:48     DATE: Thu 20. July 2000
-  last-modified: TIME: 17:08:20     DATE: Mon 09. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 #include <stdio.h>
 #include <float.h>

@@ -1,3 +1,14 @@
+/*******************************************************************************
+  author       : Bernhard Knab
+  filename     : ghmm/ghmm/gauss_tail.h
+  created      : March 2001 by Achim Gaedke from hmm/src/creestimate.h
+  $Id$
+
+__copyright__
+
+*******************************************************************************/
+
+
 #ifndef GAUSS_TAIL_H
 #define GAUSS_TAIL_H
 

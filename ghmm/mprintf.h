@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Frank Nübel
-  filename     : /homes/fn/c/lib/y/mprintf.h
+  filename     : ghmm/ghmm/mprintf.h
   created      : TIME: 11:27:32     DATE: Wed 14. May 1997
-  last-modified: TIME: 14:53:15     DATE: Thu 15. May 1997
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #ifndef MPRINTF_H

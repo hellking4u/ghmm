@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/bknab/src/vector.c
+  filename     : ghmm/ghmm/vector.c
   created      : TIME: 17:48:29     DATE: Thu 18. February 1999
-  last-modified: TIME: 10:23:07     DATE: Thu 02. December 1999
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <float.h>

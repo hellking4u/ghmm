@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smixturehmm.h
+  filename     : ghmm/ghmm/smixturehmm.h
   created      : TIME: 18:07:43     DATE: Thu 20. July 2000
-  last-modified: TIME: 17:08:33     DATE: Mon 09. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #ifndef SMIXTUREHMM_H

@@ -1,3 +1,13 @@
+/*******************************************************************************
+  author       : Bernd Wichern
+  filename     : ghmm/ghmm/model.h
+  created      : TIME: 10:47:27     DATE: Fri 19. December 1997
+  $Id$
+
+__copyright__
+
+*******************************************************************************/
+
 
 #ifndef MODEL_H
 #define MODEL_H

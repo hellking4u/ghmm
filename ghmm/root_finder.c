@@ -1,3 +1,13 @@
+/*******************************************************************************
+  author       : Achim Gaedke
+  filename     : ghmm/ghmm/root_finder.c
+  created      : DATE: March 2001
+  $Id$
+
+__copyright__
+
+*******************************************************************************/
+
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_roots.h>
 

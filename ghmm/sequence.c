@@ -1,10 +1,12 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sequence.c
+  filename     : ghmm/ghmm/sequence.c
   created      : TIME: 11:29:02     DATE: Thu 12. February 1998
-  last-modified: TIME: 16:28:10     DATE: Wed 11. April 2001
+  $Id$
+
+__copyright__
+
 *****************************************************************************/
-/* $Id$ */
 
 #include "mprintf.h"
 #include "mes.h"

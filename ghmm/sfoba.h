@@ -1,8 +1,11 @@
 /*------------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sfoba.h
+  filename     : ghmm/ghmm/sfoba.h
   created      : TIME: 16:47:16     DATE: Mon 15. November 1999
-  last-modified: TIME: 20:06:23     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 ------------------------------------------------------------------------------*/
 
 #ifndef SFOBA_H

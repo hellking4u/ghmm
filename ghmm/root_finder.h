@@ -1,6 +1,12 @@
-/*
+/*******************************************************************************
+  author       : Achim Gaedke
+  filename     : ghmm/ghmm/root_finder.h
+  created      : DATE: March 2001
+  $Id$
+
 __copyright__
-*/
+
+*******************************************************************************/
 
 #ifndef ROOT_FINDER_H
 #define ROOT_FINDER_H

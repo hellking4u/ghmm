@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Frank Nübel
-  filename     : /vol/cumulus/lib/libglob/src/mes.c
+  filename     : ghmm/ghmm/mes.c
   created      : TIME: 17:28:12     DATE: Thu 25. January 1996
-  last-modified: TIME: 15:17:22     DATE: Tue 18. November 1997
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <errno.h>

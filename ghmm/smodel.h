@@ -1,8 +1,11 @@
 /*-----------------------------------------------------------------------------
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/smodel.h
+  filename     : ghmm/ghmm/smodel.h
   created      : TIME: 21:44:45     DATE: Sun 14. November 1999
-  last-modified: TIME: 19:30:15     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 ------------------------------------------------------------------------------*/
 
 #ifndef SMODEL_H

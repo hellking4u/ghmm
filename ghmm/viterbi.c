@@ -1,10 +1,13 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/bknab/src/viterbi.c
+  filename     : ghmm/ghmm/viterbi.c
   created      : TIME: 09:07:57     DATE: Fri 19. December 1997
-  last-modified: TIME: 19:18:50     DATE: Sat 13. November 1999
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
-/* $Id$ */
+
 
 #include "mprintf.h"
 #include "mes.h"

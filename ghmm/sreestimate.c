@@ -1,8 +1,11 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sreestimate.c
+  filename     : ghmm/ghmm/sreestimate.c
   created      : TIME: 17:11:14     DATE: Mon 15. November 1999
-  last-modified: TIME: 12:47:59     DATE: Tue 10. April 2001
+  $Id$
+
+__copyright__
+
 *******************************************************************************/
 
 #include <math.h>

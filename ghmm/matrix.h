@@ -1,3 +1,13 @@
+/*******************************************************************************
+  author       : Bernhard Knab
+  filename     : ghmm/ghmm/matrix.h
+  created      : TIME: ?            DATE: ?
+  $Id$
+
+__copyright__
+
+*******************************************************************************/
+
 #ifndef MATRICE_H
 #define MATRICE_H
 #include "model.h"
