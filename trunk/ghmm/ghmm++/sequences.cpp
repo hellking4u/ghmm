@@ -618,10 +618,10 @@ void sequenceReader::XMLIO_endTag(const string& tag)
 
 size_t sequenceReader::read_sequences(const string& filename)
 {
-  open(filename);
-  read();
+  open(filename,"r");
+  readDocument();
   close();
-  return size();
+  return 0;
 }
 
 

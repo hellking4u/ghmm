@@ -2,7 +2,7 @@
 #include <config.h>
 #endif
 
-#include <xmlio/XMLIO_ArrayReader.h>
+#include <xmlio/XMLIO_Document.h>
 #include <ghmm++/InitialStates.h>
 
 #ifdef HAVE_NAMESPACES
@@ -11,18 +11,9 @@ using namespace std;
 
 int main()
 {
-  XMLIO_ElementArrayReader<InitialStates> ghmm_doc;
+  XMLIO_ElementReader<InitialStates> ghmm_doc;
   ghmm_doc.set_doc_name("ghmm");
-  ghmm_doc.set_element_name("InitialStates");
   (void)ghmm_doc.read_file("ghmm.xml");
-
-  XMLIO_ElementArrayReader<InitialStates>::const_iterator pos=ghmm_doc.begin();
-  while(pos!=ghmm_doc.end())
-    {
-      cout<<"element"<<endl;
-      (*pos)->print();
-      ++pos;
-    }
 
   return 0;
 }

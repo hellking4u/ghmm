@@ -11,7 +11,6 @@
 #include <iostream>
 #include <vector>
 #include <xmlio/XMLIO_Element.h>
-#include <xmlio/XMLIO_ObjectReader.h>
 #include <xmlio/XMLIO_ArrayElement.h>
 
 #ifdef HAVE_NAMESPACES
