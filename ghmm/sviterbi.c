@@ -166,7 +166,7 @@ int *sviterbi(smodel *smo, double *O, int T, double *log_p) {
   sviterbi_free(&v, smo->N, T); 
   return(state_seq);
 STOP:
-  /* Freiraeumen der Speicherplaetze ... */
+  /* Free the memory space... */
   sviterbi_free(&v, smo->N, T);
   m_free(state_seq);
   return NULL;

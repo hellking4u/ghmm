@@ -16,9 +16,8 @@ __copyright__
 
 
 /*============================================================================*/
-/* Normiert die Elemente eines Vektors auf eins */
-/* PROBLEM: Eintraege koennen dadurch sehr klein werden, also
-   == 0 fuer die Ausgabe; u.U. nicht erwuenscht... */
+/* Scales the elements of a vector to have the sum 1 */
+/* PROBLEM: Entries can get very small and be rounded to 0 */
 int vector_normalize(double *v, int len) {
 #define CUR_PROC "vector_normalize"
   int i;
