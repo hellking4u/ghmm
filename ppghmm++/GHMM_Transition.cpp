@@ -14,7 +14,7 @@ using namespace std;
 
 
 GHMM_Transition::GHMM_Transition(XMLIO_Attributes &attrs) {
-  reading = GHMM_TRANSITION_NONE;
+  reading = GHMM_TRANSITION_READING_NONE;
   source = attrs["source"];
   target = attrs["target"];
 }
@@ -31,7 +31,7 @@ const char* GHMM_Transition::toString() const {
 
 XMLIO_Element* GHMM_Transition::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
   if (tag == "prob") {
-    reading = GHMM_TRANSITION_PROB;
+    reading = GHMM_TRANSITION_READING_PROB;
 
     return this;
   }
@@ -44,18 +44,18 @@ XMLIO_Element* GHMM_Transition::XMLIO_startTag(const string& tag, XMLIO_Attribut
 
 
 void GHMM_Transition::XMLIO_endTag(const string& tag) {
-  reading = GHMM_TRANSITION_NONE;
+  reading = GHMM_TRANSITION_READING_NONE;
 }
 
 
 void GHMM_Transition::XMLIO_getCharacters(const string& characters) {
   switch (reading) {
 
-  case GHMM_TRANSITION_PROB:
+  case GHMM_TRANSITION_READING_PROB:
     prob = atof(characters.c_str());
     break;
     
-  case GHMM_TRANSITION_NONE:
+  case GHMM_TRANSITION_READING_NONE:
     break;
   }
 }

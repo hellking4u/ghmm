@@ -102,7 +102,8 @@ class GHMM_Sequences: public XMLIO_Element {
 
   /** */
   virtual void XMLIO_finishedReading();
-  /** */
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
   virtual XMLIO_Element* XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes);
 
   /** Type of current sequence. */

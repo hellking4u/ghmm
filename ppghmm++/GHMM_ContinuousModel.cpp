@@ -67,12 +67,12 @@ sstate* GHMM_ContinuousModel::getCState(int index) const {
 
 
 GHMM_Sequences* GHMM_ContinuousModel::generate_sequences(int seed, int global_len, long seq_number, 
-							 long label, int Tmax) {
+							 long label, int Tmax) const {
   return new GHMM_Sequences(smodel_generate_sequences(c_model,seed,global_len,seq_number,label,Tmax));
 }
 
 
-void GHMM_ContinuousModel::print(FILE *file) {
+void GHMM_ContinuousModel::print(FILE *file) const {
   smodel_print(file,c_model);
 }
 
@@ -154,7 +154,7 @@ void GHMM_ContinuousModel::XMLIO_finishedReading() {
 }
 
 
-int GHMM_ContinuousModel::check() {
+int GHMM_ContinuousModel::check() const {
   return smodel_check(c_model);
 }
 

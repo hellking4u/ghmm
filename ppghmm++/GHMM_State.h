@@ -63,11 +63,14 @@ class GHMM_State: public XMLIO_Element {
 
   /** */
   virtual void XMLIO_finishedReading();
-  /** */
+  /** Collects all character data. */
   virtual void XMLIO_getCharacters(const string& characters);
-  /** */
+  /** Called by XMLIO_Document when a end tag is found. 
+      This happens when a sub element has finished reading its
+      content. By default this function does nothing. */
   virtual void XMLIO_endTag(const string& tag);
-  /** */
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
   /** C type sstate. Object is not owner of this state. */
