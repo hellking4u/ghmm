@@ -18,7 +18,9 @@ extern "C" {
 #endif
 
 /**
-   @name scanner structure and methods
+   @name scanner Structure and methods; the functions handle memory and 
+                 read in the input file, which contains the structure
+		 and the methods. 
 */
 
 /*@{ */
@@ -26,24 +28,38 @@ extern "C" {
 /*
  */
 typedef struct scanner_t {
-  FILE* fp;              /* Parameter-File, das eingelesen wird        */
-  char* filename;        /* Name dieses Files                          */
-  int   line;            /* current line                               */
-  int   pos;             /* position in the current text line          */
-  int   idlen;           /* maximal length of the identifier           */
-  char* id;              /* identifier                                 */
-  int   txtlen;          /* maximal length of the text line            */
-  char* txt;             /* contains the current line text  
-			    (used for error message )                  */
-  char  c;               /* current char                               */
-  char  esc;             /* current char is escaped by '\'             */
-  char  err;             /* err == 0 : OK                              */
-  char  eof;             /* eof == 1 : end of file reached             */
+  /** Input file with parameters */
+  FILE* fp;              
+  /** Name of the input file */
+  char* filename;        
+  /** Current line */
+  int   line;            
+  /** Position in the current text line          */
+  int   pos;             
+  /** Maximal length of the identifier           */
+  int   idlen;           
+  /** Identifier                                 */
+  char* id;              
+  /** Maximal length of the text line            */
+  int   txtlen;          
+  /** Contains the current line text (used for error message) */
+  char* txt;             
+  /** Current char                               */
+  char  c;               
+  /** Current char is escaped by '\'             */
+  char  esc;             
+  /** err == 0 : OK                              */
+  char  err;             
+  /** eof == 1 : end of file reached             */
+  char  eof;             
   
-  /*******************/
-  int   resolution_used; /* is set after the first use of length units */
-  float x_resolution;    /* x-size of one dot in inch;                 */
-  float y_resolution;    /* y-size of one dot in inch;                 */
+  /** Is set after the first use of length units */
+  int   resolution_used; 
+  /** x-size of one dot in inch;                 */
+  float x_resolution;    
+  /** y-size of one dot in inch;                 */
+  float y_resolution;    
+
   float x_scale;
   float y_scale;
 } scanner_t;
