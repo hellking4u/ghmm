@@ -1922,8 +1922,9 @@ class HMM:
         """
         if self.emissionDomain.CDataType == "int": # discrete emissions.
             state = self.getStatePtr(self.cmodel.s,i)
-            emissions = ghmmhelper.arrayd2list(state.b,self.M)
+            emissions = ghmmhelper.arrayd2list(state.b,self.M**(state.order+1))
             return emissions
+
         elif self.emissionDomain.CDataType == "double": # continous emissions
             state = self.getStatePtr(self.cmodel.s,i)
             emParam = []
