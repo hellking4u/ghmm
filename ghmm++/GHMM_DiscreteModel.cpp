@@ -17,6 +17,7 @@
 #include "ghmm++/GHMM_Alphabet.h"
 #include "ghmm++/GHMM_Emission.h"
 
+#include "ghmm/ghmm.h"
 #include "ghmm/viterbi.h"
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
@@ -55,11 +56,12 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(GHMM_Alphabet* my_alphabet)
 
 GHMM_DiscreteModel::~GHMM_DiscreteModel() 
 {
-  cerr << " Delete " << toString() << endl;
   /* frees model. */  
   model_free(&c_model);
-  if (own_alphabet)
-    SAFE_DELETE(alphabet);
+  if (own_alphabet) { 
+    // SAFE_DELETE(alphabet);
+    delete alphabet;
+  }
   cleanCPP();
 }
 
@@ -326,6 +328,9 @@ void GHMM_DiscreteModel::init(int number_of_states, int my_M, double my_prior) {
   c_model->prior   = my_prior;
   c_model->s       = (state*) malloc(sizeof(state) * max(c_model->N,1));
   /* initialize all states. */
+  c_model->silent  = NULL; /* No silent states */
+  c_model->model_type = kNotSpecified; /* (0) */
+  c_model->topo_order = NULL;
 
   for (i = 0; i < number_of_states; ++i) {
     c_model->s[i].pi         = 0;

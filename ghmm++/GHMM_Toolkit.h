@@ -30,6 +30,11 @@ class GHMM_Toolkit {
   static void gsl_rng_init();
   /** Converts integer to string. */
   static string toString(int var);
+
+  /** Converts integer to string. */
+  static string toString(double var);
+
+
 };
 
 #ifdef HAVE_NAMESPACES
