@@ -40,6 +40,8 @@ class GHMM_Sequences: public XMLIO_Element {
   GHMM_Sequences(sequence_d_t* seq);
   /** Constructor. */
   GHMM_Sequences(GHMM_Alphabet* my_alphabet);
+  /** Constructor. Creates data structure from GHMM_Sequence object. */
+  GHMM_Sequences(GHMM_Sequence* sequence);
   /** Destructor. */
   virtual ~GHMM_Sequences();
   
