@@ -68,7 +68,7 @@ struct sstate{
   /** variance vector for output functions */
   double *u;
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
-   output functions, if fix = 0 do normal training. Default is 0. */
+      output functions, if fix = 0 do normal training. Default is 0. */
   int fix;
 };
 typedef struct sstate sstate;
@@ -82,11 +82,11 @@ struct smodel{
   /** Number of output densities per state */
   int M;
   /** smodel includes continuous model with one transition matrix 
-    (cos  is set to 1) and an extension for models with several matrices
-    (cos is set to a positive integer value > 1).*/
+      (cos  is set to 1) and an extension for models with several matrices
+      (cos is set to a positive integer value > 1).*/
   int cos;
   /** Flag for density function. 0: normal density, 1: truncated normal 
-   density, 2: approximated normal density */
+      density, 2: approximated normal density */
   density_t density;
   /** prior for a priori prob. of the model. -1 means no prior specified (all
       models have equal prob. a priori. */
