@@ -98,7 +98,7 @@ AC_MSG_RESULT(no)
 
 dnl checking for gsl_histogram_set_ranges_uniform
 AC_MSG_CHECKING([for gsl_histogram_set_ranges_uniform])
-AC_TRY_COMPILE([#include <gsl/gsl_histogram.h>],
+AC_TRY_LINK([#include <gsl/gsl_histogram.h>],
 [
  gsl_histogram* h;
  (void)gsl_histogram_set_ranges_uniform(h,-10.0,10.0);
