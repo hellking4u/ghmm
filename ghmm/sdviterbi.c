@@ -382,13 +382,18 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
      
   }
 
-  /* PRINT PATH */
-  /*
-  fprintf(stderr, "Viterbi path: " );
-  for(t=0; t < len_path; t++)
-    if (state_seq[t] >= 0) fprintf(stderr, " %d ",  state_seq[t]);
-  fprintf(stderr, "\n");
-  */
+  /* COPY PATH */
+  int *tmp_path = state_seq;
+  if ( mo->model_type != kSilentStates ) {
+    state_seq = (int *) malloc( sizeof(int) * len );
+    for(i=0, t=0; t < len_path && i < len; t++) {
+      if (tmp_path[t] >= 0) {
+	state_seq[i++] = tmp_path[t];
+      }
+    }
+    m_free(tmp_path); /* free the old state sequence */
+  }
+
 
   /* Free the memory space */
   m_free(former_matchcount);

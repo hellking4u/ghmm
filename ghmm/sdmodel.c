@@ -131,9 +131,9 @@ int sdmodel_free(sdmodel **mo) {
     my_state = &((*mo)->s[i]);
     if (my_state->b)
       m_free(my_state->b);
-    if (my_state->out_id)
+    if (my_state->out_id != NULL)
       m_free(my_state->out_id);
-    if (my_state->in_id)
+    if (my_state->in_id != NULL)
       m_free(my_state->in_id);
     /*
       if (my_state->out_a)
@@ -153,6 +153,7 @@ int sdmodel_free(sdmodel **mo) {
     my_state->out_states = 0;
     my_state->in_states  = 0;
     my_state->fix        = 0;
+    m_free(my_state->label);
   }
   m_free((*mo)->s);
   m_free(*mo);
