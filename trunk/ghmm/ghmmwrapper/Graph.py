@@ -60,10 +60,10 @@ class Graph:
 
 	Vertices are specified via id (integer number) and edges via
 	(tail,head)-tuples 
-
 	NOTE: ids are supposed to be consecutive and ranging from 0
 	to G.Order() - 1 !!! Use the labeling to *display* other numbers
 	for vertices.
+        NOTE [Utz]: I guess, ids start with 1...
 
 	At least one set of edge weights is assumed to exist and accessible
 	as self.edgeWeights[0]; self.euclidian and Euclidify refer to this
@@ -98,10 +98,24 @@ class Graph:
 	self.invAdjLists[id] = []
 	return id
 
+    def Clear(self):
+	""" Delete all vertices and edges from the subgraph. """
+	self.vertices         = [] 
+	self.adjLists         = {}
+	self.invAdjLists      = {}   # Inverse Adjazenzlisten
+	self.size          = 0
+	self.totalWeight   = 0
+	self.edgeWeights      = {}   # Dictionary of edge labellings
+	self.edgeWeights[0]   = EdgeWeight(self)
+	self.vertexWeights.clear()   # None by default
+	self.highVertexID     = 0    # INTERNAL
+        
     def DeleteVertex(self,v):
-	""" *Internal* Delete vertex v """ 
-	del(self.labeling.label[v]) # XXX
-	del(self.embedding.label[v]) # XXX
+	""" *Internal* Delete vertex v """
+        #changes by Utz: only delete if used!
+        if (len(self.labeling.label)>0):
+            del(self.labeling.label[v]) # XXX
+            del(self.embedding.label[v]) # XXX
 	# delete incident edges
 	outVertices = self.OutNeighbors(v)[:] # Need a copy here
 	inVertices = self.InNeighbors(v)[:]
@@ -442,16 +456,15 @@ class SubGraph(Graph):
 	    self.size = self.size - 1
 	else:
 	    raise NoSuchEdgeError
-
-    def Clear(self):
-	""" Delete all vertices and edges from the subgraph. """
-	self.vertices         = [] 
-	self.adjLists         = {}
-	self.invAdjLists      = {}   # Inverse Adjazenzlisten
-	self.size = 0
-	self.totalWeight   = 0
 	
-
+    def Clear(self):
+	 """ Delete all vertices and edges from the subgraph. """
+	 self.vertices         = [] 
+	 self.adjLists         = {}
+	 self.invAdjLists      = {}   # Inverse Adjazenzlisten
+	 self.size          = 0
+	 self.totalWeight   = 0
+	
     def GetNextVertexID(self):
 	""" *Internal* safeguard """
         log.error("Induced Subgraph -> GetNextVertexID should never have been called")
