@@ -11,3 +11,4 @@ cvsclean: distclean
 	tests/Makefile.in \
 	tools/Makefile.in
 
+.PHONY: cvsclean
