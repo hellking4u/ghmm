@@ -8,7 +8,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 
 #FIXME: expat config
-INCLUDES = -I$(top_srcdir) -I/zpr/local/include
+INCLUDES = -I$(top_srcdir)
 lib_LIBRARIES = libghmm.a
 
 libghmm_a_SOURCES= foba.c foba.h \
@@ -16,7 +16,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   model.c model.h \
                   cluster.c cluster.h \
                   scluster.c scluster.h \
-	  root_finder.c root_finder.h \
+                  root_finder.c root_finder.h \
                   reestimate.c reestimate.h \
                   randvar.c randvar.h \
                   rng.c rng.h \
@@ -24,7 +24,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   vector.c vector.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
-	  sviterbi.c sviterbi.h \
+                  sviterbi.c sviterbi.h \
                   smodel.c smodel.h \
                   sreestimate.c sreestimate.h \
                   smixturehmm.c smixturehmm.h \
@@ -36,17 +36,13 @@ libghmm_a_SOURCES= foba.c foba.h \
                   smap_classify.c smap_classify.h \
                   xmlio.c xmlio.h 
 
-# excluded sgenerate, generation of sequences now in smodel
-#                  sgenerate.c sgenerate.h \
-
-
 
 pkginclude_HEADERS = foba.h \
                   matrix.h \
                   model.h \
                   cluster.h \
                   scluster.h \
-	  root_finder.h \
+                  root_finder.h \
                   reestimate.h \
                   randvar.h \
                   rng.h \
@@ -54,7 +50,7 @@ pkginclude_HEADERS = foba.h \
                   vector.h \
                   viterbi.h \
                   sfoba.h \
-	  sviterbi.h \
+                  sviterbi.h \
                   smodel.h \
                   sreestimate.h \
                   smixturehmm.h \
