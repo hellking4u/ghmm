@@ -1,3 +1,60 @@
+#!/usr/bin/env python2.3
+################################################################################
+#
+#       This file is part of GHMM (General Hidden Markov Model library) 
+#
+#       file:    ghmmunittests.py
+#       authors: Benjamin Georgi, Wasinee Rungsarityotin, Alexander Schliep
+#
+#       Copyright (C) 2003-2004, Alexander Schliep and MPI Molekulare Genetik, Berlin
+#                                   
+#       Contact: schliep@molgen.mpg.de         
+#
+#       Information: http://ghmm.org
+#
+#       This library is free software; you can redistribute it and/or
+#       modify it under the terms of the GNU Library General Public
+#       License as published by the Free Software Foundation; either
+#       version 2 of the License, or (at your option) any later version.
+#
+#       This library is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#       Library General Public License for more details.
+#
+#       You should have received a copy of the GNU Library General Public
+#       License along with this library; if not, write to the Free
+#       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#
+#
+#
+#       This file is version $Revision$ 
+#                       from $Date$
+#             last change by $Author$.
+#
+################################################################################
+
+"""
+Testing GHMM
+
+- EmissionDomainTests
+- AlphabetTests
+- FloatTestsTests
+
+- AbstractDistributionTests
+- DiscreteDistributionTests
+- GaussianDistributionTests
+- GaussianMixtureDistributionTests
+
+- EmissionSequenceTests
+- SequenceSet
+
+...
+
+"""
+
+
 import unittest
 import ghmm
 import random
@@ -52,7 +109,20 @@ class AlphabetTests(unittest.TestCase):
         self.assertEqual(self.dnaAlphabet.size(),len(self.dna))
     
     
-        
+class GaussianEmissionHMMTests(unittest.TestCase):
+
+    def setUp(self):
+        self.oneState = self.oneStateModel(0.0, 0.2)
+
+    def oneStateModel(self, mean, var):
+        # one state model with N(mean, var)
+        return ghmm.HMMFromMatrices(ghmm.Float(),
+                                    ghmm.GaussianDistribution(ghmm.Float),
+                                    [[1.0]],[[mean, var]], [1.0])
+
+    def testdel(self):
+        del(self.oneState)
+
 
 
 if __name__ == '__main__':

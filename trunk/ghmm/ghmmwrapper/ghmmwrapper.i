@@ -650,6 +650,11 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
   /* extract pointer to a state */
   state *get_stateptr(state *ary, int index) { return ary + index; }
   
+
+  void call_model_free(model *mo) {
+    model_free(&mo);
+  }
+
   void call_model_print(char *filename, model *mo) {
     FILE *fp=fopen(filename, "a");
     if (fp == NULL) {
