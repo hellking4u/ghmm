@@ -27,7 +27,7 @@ int single_state_coin_toss()
   double trans_prob_single_state_rev[1]={1.0};
   int trans_id_single_state[1]={0};
   sequence_t* my_output;
-
+  int silent_array[2] =  {0}; 
   /* initialise this state */
   single_state.pi = 1.0;
   single_state.b=symbols_single_state;
@@ -44,6 +44,7 @@ int single_state_coin_toss()
   my_model.M=2;
   my_model.s=&single_state;
   my_model.prior=-1;
+  my_model.silent = silent_array;
 
   fprintf(stdout,"transition matrix:\n");
   model_A_print(stdout,&my_model,""," ","\n");
@@ -80,6 +81,8 @@ int two_states_coin_toss()
   double forward_scale[10];
   int *viterbi_path;
 
+  /* flags indicating whether a state is silent */
+  int silent_array[2] =  {0,0}; 
 
   /* initialise head state */
   model_states[0].pi = 0.5;
@@ -108,7 +111,8 @@ int two_states_coin_toss()
   my_model.M=2;
   my_model.s=model_states;
   my_model.prior=-1;
-
+  my_model.silent = silent_array;
+  
   fprintf(stdout,"transition matrix:\n");
   model_A_print(stdout,&my_model,""," ","\n");
   fprintf(stdout,"observation symbol matrix:\n");
