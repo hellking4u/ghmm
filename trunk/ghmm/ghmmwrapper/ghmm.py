@@ -2537,7 +2537,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             log_p = None
 
             if emissionSequences.cseq.seq_number > 1:
-                return (self.externalLabel(allLabels), allLogs)
+                return (map(self.externalLabel, allLabels), allLogs)
             else:
                 return (self.externalLabel(allLabels[0]), allLogs[0])
 
