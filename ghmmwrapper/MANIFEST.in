@@ -1,5 +1,5 @@
 include read_cxml.*
-include sdclass_change.*
+include sclass_change.*
 include gql.c
 include modhmmer.py
 include xmlutil.py

@@ -117,7 +117,7 @@ The objects one has to deal with in HMM modelling are the following
    from, for a discrete alphabet, transition matrix, emission matrix and prior
    or serve as the basis for GUI-based model building.
 
-   There are two ways of using the HMMFactory.
+   There are several ways of using the HMMFactory.
 
    Static construction:
 
@@ -125,21 +125,10 @@ The objects one has to deal with in HMM modelling are the following
    HMMOpen(fileName, type=HMM.FILE_XML)
    HMMFromMatrices(emission_domain, distribution, A, B, pi) # B is a list of distribution parameters
 
-   Dynamic construction: Providing a context for dynamically
-   editing existing HMMs or creating them from scratch
-
-   HMMEditingContext() # Create an object
-   HMMEditingContext(hmm) # Create an object from existing HMM
-
    Examples:
 
    hmm = HMMOpen('some-hmm.xml')
 
-   hmm_context = HMMEditingContext(hmm) # just reads hmm
-   hmm_context.addTransition(4,5, 0.3) # normalization will occurr
-   hmm_context.addTransition(5,6, 0.1)
-
-   hmm = hmm_context() # Creates a new hmm
 
    hmm.bla ....
 
@@ -355,7 +344,7 @@ AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
 def IntegerRange(a,b):
     return Alphabet(range(a,b))
 
-# XXX
+
 # To be used for labelled HMMs. We could use an Alphabet directly but this way it is more explicit.
 class LabelDomain(Alphabet):    
     def __init__(self, listOfLabels):
@@ -407,7 +396,7 @@ class ContinousDistribution(Distribution):
     pass
 
 class GaussianDistribution(ContinousDistribution):
-    # XXX attributes unused
+    # XXX attributes unused at this point
     def __init__(self, domain):
         self.emissionDomain = domain
         self.mu = None
@@ -444,8 +433,6 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
 
 #-------------------------------------------------------------------------------
 #Sequence, SequenceSet and derived  ------------------------------------------
-
-# XXX write to FASTA function
 
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
@@ -639,6 +626,7 @@ class EmissionSequence:
         if self.emissionDomain.CDataType == "double":
             ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)
 
+    
     def setWeight(self, value):
         ghmmwrapper.set_arrayd(self.cseq.seq_w,0,value)
         self.cseq.total_w = value
@@ -997,7 +985,6 @@ GHMM_FILETYPE_XML = 'xml'
 GHMM_FILETYPE_HMMER = 'hmm'
 
 
-# XXX modelName support for all file formats
 class HMMOpenFactory(HMMFactory):
 
     def __init__(self, defaultFileType=None):
@@ -1024,28 +1011,9 @@ class HMMOpenFactory(HMMFactory):
                 (background_dist, orders) = hmm_dom.getBackgroundDist()
                 if background_dist != {}:
                     # if background distribution exists, set background distribution here
-
-                    num_background = len(background_dist.keys())
-                    order = ghmmwrapper.int_array(num_background)
+                    bg_list = list(background_dist.values()) # transformation to list for input into BackgroundDistribution, kind of ugly
+                    bg = BackgroundDistribution(emission_domain, bg_list)
                     
-                    # XXX  allocate each column seperately to save memory XXX
-                    # XXX use BackgroundDistribution object  XXX
-                    max_len = max( map(lambda x: len(x), background_dist.values()))
-                    
-                    b = ghmmwrapper.double_2d_array(num_background, max_len)
-
-                    cpt_background = ghmmwrapper.new_background_distributions(num_background, order, b)
-                    name2code = {}
-                    code = 0
-                    for name in background_dist.keys():
-                        name2code[name] = code
-                        code += 1
-                    for name in background_dist.keys():
-                        i = name2code[name]
-                        ghmmwrapper.set_arrayint(cpt_background.order, i,orders[name])
-                        for j in range(len(background_dist[name])):
-                            ghmmwrapper.set_2d_arrayd(cpt_background.b,i,j, background_dist[name][j])
-
                 # check for state labels
                 (label_list, labels) = hmm_dom.getLabels()
                 if labels == ['None']:
@@ -1057,13 +1025,11 @@ class HMMOpenFactory(HMMFactory):
                 m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
                 
                 if background_dist != {}:
-                     m.cmodel.bp = cpt_background
                      ids = [-1]*m.N
                      for s in hmm_dom.state.values():
                           ids[s.index-1] = s.background # s.index ranges from [1, m.N]  
-                     m.cmodel.background_id = ghmmhelper.list2arrayint(ids)
-                     #m.backgroundnames = background_dist.keys() # XXX
-                     m.cmodel.model_type += 64 # XXX Should be kHasBackgroundDistributions from ghmm.h
+                     
+                     m.setBackground(bg, ids)
                      print "DEBUG model_type %x" % m.cmodel.model_type
                      print "DEBUG background_id", ghmmhelper.arrayint2list(m.cmodel.background_id, m.N)
                 else:
@@ -1073,20 +1039,20 @@ class HMMOpenFactory(HMMFactory):
                 # check for tied states
                 tied = hmm_dom.getTiedStates()
                 if len(tied) > 0:
-                    m.cmodel.model_type += 8 # XXX should be kTiedEmissions from ghmm.h
+                    m.cmodel.model_type += 8 
                     m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
                         
 	    	return m
 	    
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
-	        # MO & SMO Files
+	        # MO & SMO Files, format is deprecated
     	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
 
             #print "determineHMMClass = ",  (hmmClass, emission_domain, distribution)
 
             nrModelPtr = ghmmwrapper.int_array(1)
     	    
-            # XXX broken since silent states are not supported by .smo file format XXX
+            # XXX broken since silent states are not supported by .smo file format 
             if hmmClass == DiscreteEmissionHMM:
                 print nrModelPtr
                 models = ghmmwrapper.model_read(fileName, nrModelPtr)
@@ -1263,7 +1229,7 @@ class HMMFromMatricesFactory(HMMFactory):
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None):
         if isinstance(emissionDomain,Alphabet):
             
-            # checking matrix dimensions and argument validation, only some obvious errors are checked (XXX)
+            # checking matrix dimensions and argument validation, only some obvious errors are checked
             if not len(A) == len(A[0]):
                 raise InvalidModelParameters, "A is not quadratic."
             if not len(pi) == len(A):
@@ -1275,9 +1241,6 @@ class HMMFromMatricesFactory(HMMFactory):
                 raise InvalidModelParameters, "Either labelDomain and labelInput are both given or neither of the two."
             
             if isinstance(distribution,DiscreteDistribution):
-                
-                if not len(emissionDomain) == len(B[0]):
-                    raise InvalidModelParameters, "EmissionDomain and B do not match."
                 
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
                 cmodel = ghmmwrapper.new_model()
@@ -1334,7 +1297,6 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
 
                     #set "in" probabilities
-                    # XXX Check whether A is numarray or Python
                     A_col_i = map( lambda x: x[i], A)
                     # Numarray use A[,:i]
                     state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
@@ -1372,7 +1334,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 
                 # def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None):                
 
-                cmodel.N = len(A)
+
                 cmodel.M = 1 # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
 
@@ -1380,15 +1342,21 @@ class HMMFromMatricesFactory(HMMFactory):
                 cos = 0
                 if type(A[0][0]) == list:
                     cos = len(A)
+                    cmodel.N = len(A[0])
+                    
+                    # allocating class switching context
+                    ghmmwrapper.smodel_class_change_alloc(cmodel)
                 else: 
                     cos = 1
+                    cmodel.N = len(A)
                     A = [A]
+                
                 cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
 
+                print "cmodel.cos = ",cmodel.cos
 
                 states = ghmmwrapper.arraysstate(cmodel.N)
 
-                # XXX ? switching function ? XXX
                 # Switching functions and transition classes are handled
                 # elswhere
 
@@ -1425,7 +1393,9 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #append states to model
                 cmodel.s = states
-                return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
+                m = GaussianEmissionHMM(emissionDomain, distribution, cmodel)
+                m.cmodel.class_change = None
+                return m
             
             if isinstance(distribution, GaussianMixtureDistribution):
                 print " ** mixture model"
@@ -1453,7 +1423,6 @@ class HMMFromMatricesFactory(HMMFactory):
                 
                 states = ghmmwrapper.arraysstate(cmodel.N)
 
-                # XXX ? switching function ? XXX
                 # Switching functions and transition classes are handled
                 # elswhere
 
@@ -1506,23 +1475,6 @@ HMMFromMatrices = HMMFromMatricesFactory()
 
 #-------------------------------------------------------------------------------
 #- Background distribution
-
-
-# struct background_distributions {
-#   /** Number of distributions */
-#   int n;
-#   /** Order of the respective distribution */
-#   int* order;
-#   /** The probabilities */ 
-#   double **b;
-# };
-# typedef struct background_distributions background_distributions;
-
-# num_background = len(background_dist.keys())
-# order = ghmmwrapper.int_array(num_background)
-# max_len = max( map(lambda x: len(x), background_dist.values()))
-# b = ghmmwrapper.double_2d_array(num_background, max_len)
-# cpt_background = ghmmwrapper.new_background_distributions(num_background, order, b)
 
 class BackgroundDistribution:
     def __init__(self,emissionDomain, bgInput):
@@ -1585,7 +1537,7 @@ class HMM:
             - Viterbi algorithm
             - Baum-Welch training
             - HMM distance metric
-            - ... (XXX)
+            - ... 
     
     """
     def __init__(self, emissionDomain, distribution, cmodel):
@@ -1658,10 +1610,10 @@ class HMM:
             raise TypeError, "EmissionSequence or SequenceSet required, got " + \
                   str(emissionSequences.__class__.__name__)        
               
+
         likelihood = ghmmwrapper.double_array(1)
         likelihoodList = []
-        
-        
+
         for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             tmp = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
@@ -2192,14 +2144,15 @@ class DiscreteEmissionHMM(HMM):
            the background, where the backgroundWeight parameter (within [0,1]) controls
            the background's contribution for each state.
         """
-        # XXX Add more asserts on Python and error handling
-        # XXX in reestimate.c the weights are hard coded to 0.1 (?!) XXX
+        # XXX in reestimate.c the weights are hard coded to 0.1 (?!) 
         assert len(backgroundWeight) == self.N, "Argument 'backgroundWeight' does not match number of states."
         
         cweights = ghmmhelper.list2arrayd(backgroundWeight)
         result = ghmmwrapper.model_apply_background(self.cmodel, cweights)
+        
+        ghmmwrapper.free_arrayd(cweigths)
         if result is not 0:
-            print "XXX Doh"
+            print "Doh"
 						
     
     def setBackground(self, backgroundObject, stateBackground):
@@ -2216,7 +2169,6 @@ class DiscreteEmissionHMM(HMM):
         if not type(stateBackground) == list:
             raise TypeError, "list required got "+ str(type(stateBackground))
             
-        # XXX Add more asserts on Python and error handling
         assert len(stateBackground) == self.N, "Argument 'stateBackground' does not match number of states."
         
         self.cmodel.bp = backgroundObject.cbackground
@@ -2234,8 +2186,11 @@ class DiscreteEmissionHMM(HMM):
            raise TypeError, "list required got "+ str(type(stateBackground))
         
         assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
-        
-        # XXX check for valid background id
+        assert len(stateBackground) == self.N, "Error: Number of weigths does not match number of states."
+        # check for valid background id
+        for d in stateBackground:
+            assert d in range(self.cbackground.n), "Error: Invalid background distribution id."  
+
         for i in range(self.N):
             ghmmwrapper.set_arrayint(self.cmodel.background_id,i,stateBackground[i])
         
@@ -2249,8 +2204,7 @@ class DiscreteEmissionHMM(HMM):
     
     
     def getBackgroundAssignments(self):
-        # XXX to be implemented
-        pass
+        return ghmmhelper.arrayint2list(self.cmodel.background_id, self.N)
         
     
     def updateTieGroups(self):
@@ -2349,19 +2303,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         self.labelDomain = labelDomain
         
         # Assignment of the C function names to be used with this model type
-        # XXX redundancy from parent class XXX
-        #self.freeFunction = ghmmwrapper.call_model_free
-        #self.samplingFunction = ghmmwrapper.model_generate_sequences
-        #self.viterbiFunction = ghmmwrapper.viterbi
-
-        #self.forwardAlphaFunction = ghmmwrapper.foba_forward
-        #self.backwardBetaFunction = ghmmwrapper.foba_backward
-        #self.getStatePtr = ghmmwrapper.get_stateptr
-        #self.fileWriteFunction = ghmmwrapper.call_model_print
-        #self.getModelPtr = ghmmwrapper.get_model_ptr
-        #self.castModelPtr = ghmmwrapper.cast_model_ptr
-        #self.distanceFunction = ghmmwrapper.model_prob_distance
-
         self.forwardFunction = ghmmwrapper.foba_logp
         self.forwardAlphaLabelFunction = ghmmwrapper.foba_label_forward
         self.backwardBetaLabelFunction = ghmmwrapper.foba_label_backward
@@ -2436,9 +2377,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         state = self.getStatePtr(self.cmodel.s, stateIndex)
         return state.label
          
-    def setLabel(self,state,label):
-        pass
-
     def externalLabel(self, internal):
         """ Returns label representation of an int or list of int
         """
@@ -2553,7 +2491,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         """
         
-        # XXX check for labels  XXX
+        # check for labels 
+        assert model_type & 64, "Error: Model is not labelled. "
+        
+        
         if isinstance(emissionsequences, EmissionSequence):
             seqNumber = 1
         elif isinstance(emissionsequences, SequenceSet):
@@ -2562,15 +2503,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
             raise TypeError, "LabeledEmissionSequence or LabeledSequenceSet required, got "\
                   + str(emissionsequences.__class__.__name__)
 
-        #ghmmwrapper.sdreestimate_baum_welch_nstep_label(self.cmodel, emissionsequences.cseq,3,0)
 
         cmodelPTR = ghmmwrapper.discrime_modelarray_alloc(1)
         ghmmwrapper.discrime_modelarray_setptr(cmodelPTR, self.cmodel, 0)
-
-        # XXX ghmmwrapper.cast_model_ptr does not work ? XXX
-        #cmodelPTR = ghmmwrapper.cast_model_ptr(self.cmodel)
         error = self.gradientDescentFunction(cmodelPTR, emissionsequences.cseq)
-        #self.cmodel = self.getModelPtr(cmodelPTR, 0)
 
         self.cmodel = ghmmwrapper.discrime_modelarray_getptr(cmodelPTR, 0)
         ghmmwrapper.discrime_modelarray_dealloc(cmodelPTR)
@@ -2581,7 +2517,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         return error
         
     def modelNormalize(self):
-       # XXX needs testing XXX
        i_error = ghmmwrapper.model_normalize(self.cmodel)
        if i_error == -1:
             print "ERROR: normalize finished with -1"
@@ -2737,10 +2672,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 assert loglikelihoodCutoff != None
                 ghmmwrapper.reestimate_baum_welch_nstep_label(self.cmodel, trainingSequences.cseq,
                                                         nrSteps, loglikelihoodCutoff)
-    def toMatrices(self):
-        pass
-        # XXX needs to be implemented
-        #[A,B,pi] = Discrete
 
 
 class GaussianEmissionHMM(HMM):
@@ -2791,7 +2722,6 @@ class GaussianEmissionHMM(HMM):
 
         ghmmwrapper.smodel_set_transition(self.cmodel, i, j, 0, float(prob))
 
-    # XXX overload necessary ?
     def getEmission(self, i):
         """ Return (mu, sigma^2)  """
 
@@ -2823,10 +2753,9 @@ class GaussianEmissionHMM(HMM):
         s = self.getStatePtr(self.cmodel.s,state)        
         s.mixture_fix = ghmmhelper.list2arrayint(flags)
     
-    
     def __str__(self):
         hmm = self.cmodel
-        strout = "\nOverview of HMM:"
+        strout = "\nHMM Overview:"
         strout += "\nNumber of states: " + str(hmm.N)
         strout += "\nNumber of mixture components: " + str(hmm.M)
 
@@ -2845,14 +2774,18 @@ class GaussianEmissionHMM(HMM):
 
             strout += "  mean: " + str(mue) + "\n"
             strout += "  variance: " + str(u) + "\n"
-            strout += "\nOutgoing transitions:"
+            strout += "  fix: " + str(state.fix) + "\n"
+            
+            for c in range(self.cmodel.cos):
+                strout += "\n  Class : " + str(c)                
+                strout += "\n    Outgoing transitions:"
+                for i in range( state.out_states):
+                    strout += "\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i))
+                strout +=  "\n    Ingoing transitions:"
+                for i in range(state.in_states):
+                    strout += "\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i))
 
-            for i in range( state.out_states):
-                strout += "\ntransition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,0,i))
-            strout +=  "\nIngoing transitions:"
-            for i in range(state.in_states):
-                strout += "\ntransition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,0,i))
-            strout += "\nint fix:" + str(state.fix) + "\n"
+
         return strout
 
     # different function signatures require overloading of parent class methods    
@@ -2940,6 +2873,139 @@ class GaussianEmissionHMM(HMM):
         cbeta = None
         return pybeta
 
+    def loglikelihoods(self, emissionSequences): 
+        """ Compute a vector ( log( P[s| model]) )_{s} of log-likelihoods of the
+            individual emission_sequences using the forward algorithm
+
+            emission_sequences is of type SequenceSet
+
+            Result: log( P[emissionSequences| model]) of type float
+                    (numarray) vector of floats
+
+        """
+
+        if isinstance(emissionSequences,EmissionSequence):
+            seqNumber = 1 
+        elif isinstance(emissionSequences,SequenceSet):
+            seqNumber = len(emissionSequences)        
+        else:    
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + \
+                  str(emissionSequences.__class__.__name__)        
+
+        if self.cmodel.cos > 1:
+            print "self.cmodel.cos = ", self.cmodel.cos
+            assert self.cmodel.class_change is not None, "Error: class_change not initialized."
+
+        likelihood = ghmmwrapper.double_array(1)
+        likelihoodList = []
+
+        for i in range(seqNumber):
+            seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
+            tmp = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            
+            if self.cmodel.cos > 1:
+                self.cmodel.class_change.k = i
+            
+            ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
+            if ret_val == -1:
+                
+                print "Warning: forward returned -1: Sequence", i,"cannot be build."
+                # XXX Eventually this should trickle down to C-level
+                # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
+                # to continue further computations with that inf, which causes
+                # things to blow up later.
+                # forwardFunction could do without a return value if -Inf is returned
+                # What should be the semantics in case of computing the likelihood of
+                # a set of sequences
+                likelihoodList.append(-float('Inf'))
+            else:
+                likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
+
+        ghmmwrapper.free_arrayd(likelihood)
+        likelihood = None
+
+        # resetting class_change->k to default
+        if self.cmodel.cos > 1:
+           self.cmodel.class_change.k = -1
+
+        return likelihoodList
+
+
+    def viterbi(self, emissionSequences):
+        """ Compute the Viterbi-path for each sequence in emissionSequences
+
+            emission_sequences can either be a SequenceSet or an EmissionSequence
+
+            Result: [q_0, ..., q_T] the viterbi-path of emission_sequences is an emmissionSequence
+            object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
+                    SequenceSet
+        """
+        
+        if isinstance(emissionSequences,EmissionSequence):
+            seqNumber = 1
+        elif isinstance(emissionSequences,SequenceSet):
+            seqNumber = len(emissionSequences)        
+        else:    
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+
+        if self.cmodel.cos > 1:
+            print "self.cmodel.cos = ", self.cmodel.cos
+            assert self.cmodel.class_change is not None, "Error: class_change not initialized."
+
+
+        log_p = ghmmwrapper.double_array(1)
+
+        allLogs = []
+        allPaths = []
+        for i in range(seqNumber):
+            if self.cmodel.cos > 1:
+                self.cmodel.class_change.k = i
+
+            seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
+            seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+
+            if seq_len != 0:
+                viterbiPath = self.viterbiFunction(self.cmodel,seq,seq_len,log_p)
+            else:
+                viterbiPath = None
+
+            onePath = []
+            
+            # for model types without possible silent states the length of the viterbi path is known
+            if self.silent == 0:            
+                for j in range(seq_len):                
+                    onePath.append(ghmmwrapper.get_arrayint(viterbiPath,j))
+            
+            # in the silent case we have to reversely append as long as the path is positive because unused positions
+            # are initialised with -1 on the C level.
+            elif self.silent == 1:
+                
+                for j in range( ( seq_len * self.N )-1,-1,-1): # maximum length of a viterbi path for a silent model
+                    d = ghmmwrapper.get_arrayint(viterbiPath,j)
+                                   
+                    if d >= 0:
+                        onePath.insert(0,d)
+                    else:
+                        break
+
+            allPaths.append(onePath)
+            allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
+        
+        ghmmwrapper.free_arrayd(log_p)
+        ghmmwrapper.free_arrayi(viterbiPath)  
+        viterbiPath = None
+        log_p = None
+
+        # resetting class_change->k to default
+        if self.cmodel.cos > 1:
+           self.cmodel.class_change.k = -1
+            
+        if emissionSequences.cseq.seq_number > 1:
+            return (allPaths, allLogs)
+        else:
+            return (allPaths[0], allLogs[0])
+
+
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
@@ -3018,9 +3084,6 @@ class GaussianEmissionHMM(HMM):
         ghmmwrapper.free_smosqd_t(self.BWcontext)
         self.BWcontext = None
 
-        # XXX needs to be freed ?
-        #self.BWcontext.smo  = self.cmodel
-        #self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
 
     def toMatrices(self):
         "Return the parameters in matrix form."
@@ -3055,7 +3118,6 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
     def __init__(self, emissionDomain, distribution, cmodel):
         GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
 
-    # XXX overload necessary ?
     def getEmission(self, i, comp):
         """ Return (mu, sigma^2, weight) of component 'comp' in state 'i'  """
         state = ghmmwrapper.get_sstate(self.cmodel, i)
@@ -3140,7 +3202,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 def HMMDiscriminativeTraining(HMMList, SeqList, gradient = 0):
     """ """
     
-    # XXX working ? XXX
+    # XXX working ? 
     
     if len(HMMList) != len(SeqList):
         raise TypeError, 'Inputs not equally long'

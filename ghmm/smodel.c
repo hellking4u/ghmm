@@ -31,8 +31,11 @@ __copyright__
 #include "randvar.h"
 #include "string.h"
 
+/*############## TEST ################*/
+#include "/package/python/2.3.0/linux/include/python2.3/Python.h"
+
 /*----------------------------------------------------------------------------*/
-static int smodel_state_alloc(sstate *state,
+int smodel_state_alloc(sstate *state,
 			      int M,
 			      int in_states,
 			      int out_states,
@@ -66,6 +69,22 @@ STOP:
   return(res);
 # undef CUR_PROC
 } /* smodel_state_alloc */
+
+
+int smodel_class_change_alloc(smodel *smo){
+#define CUR_PROC "smodel_class_change_alloc"
+  class_change_context *c = NULL;
+  if(!m_calloc(c, 1)) {mes_proc(); goto STOP;} 
+  
+  c->k = -1;
+  c->get_class = NULL;
+  
+  smo->class_change = c;
+  return(0);
+  STOP:
+  return(-1);                
+# undef CUR_PROC
+}    
 
 
 /*----------------------------------------------------------------------------*/
@@ -454,6 +473,13 @@ int smodel_free(smodel **smo) {
     
   }
   m_free((*smo)->s);
+  
+  if((*smo)->class_change){
+      if((*smo)->class_change->user_data){
+          m_free((*smo)->class_change->user_data);
+      }    
+      m_free((*smo)->class_change);
+  }    
   m_free(*smo);
   return(0);
 #undef CUR_PROC
@@ -666,7 +692,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     for (i = 0; i < smo->N; i++) {
       sum += smo->s[i].pi;
       if (sum >= p)
-	break;
+	  break;
     }
     if (i == smo->N) { /* Can happen by a rounding error in the input */
       i--;
@@ -680,7 +706,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     for (m = 0; m < smo->M; m++) {
       sum += smo->s[i].c[m];
       if (sum >= p)
-	break;
+	  break;
     }
     if (m == smo->M) m--;
     /* Get random numbers according to the density function */
@@ -688,52 +714,66 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     state = 1;
 
     /* The first symbol chooses the start class */
-    class = sequence_d_class(sq->seq[n], 0, &osum);
+    if(smo->cos == 1) {
+      class = 0;
+    }
+    else {
+      //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,n,state);
+      
+      if(!smo->class_change->get_class){
+        printf("ERROR: get_class not initialized\n");
+        return(NULL);
+      }
+      class = smo->class_change->get_class(smo,sq->seq[n],n,0);
+
+    }
     while (state < len) {
       /* Get a new state */
       p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (j = 0; j < smo->s[i].out_states; j++) {
-	sum += smo->s[i].out_a[class][j];   
-	if (sum >= p)
-	  break;
+	    sum += smo->s[i].out_a[class][j];   
+	    if (sum >= p)
+	      break;
       }
+
       if (j == smo->s[i].out_states) {/* Can happen by a rounding error */
-	j--;
-	while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
+	    j--;
+	    while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
       }
       if (sum == 0.0) {
-	if (smo->s[i].out_states > 0) {
-	  /* Repudiate the sequence, if all smo->s[i].out_a[class][.] == 0,
-	     that is, class "class" isn't used in the original data:
-	     go out of the while-loop, n should not be counted. */
-	  /* printf("Zustand %d, class %d, len %d out_states %d \n", i, class,
-	     state, smo->s[i].out_states); */
-	  badseq = 1;
-	  /* break; */
-	  
-	  /* Try: If the class is "empty", try the neighbour class;
-	     first, sweep down to zero; if still no success, sweep up to
-	     COS - 1. If still no success --> Repudiate the sequence. */
-	  if (class > 0 && up == 0) {
-	    class--;
-	    continue;
-	  }
-	  else if (class < smo->cos - 1) {
-	    class++;
-	    up = 1;
-	    continue;
-	  }
-	  else {
-	    stillbadseq = 1;
-	    break;
-	  }
-	}
-	else
+	    if (smo->s[i].out_states > 0) {
+	      /* Repudiate the sequence, if all smo->s[i].out_a[class][.] == 0,
+	         that is, class "class" isn't used in the original data:
+	         go out of the while-loop, n should not be counted. */
+	      /* printf("Zustand %d, class %d, len %d out_states %d \n", i, class,
+	         state, smo->s[i].out_states); */
+	      badseq = 1;
+	      /* break; */
 
-	  /* Final state reached, out of while-loop */
-	  break;
+	      /* Try: If the class is "empty", try the neighbour class;
+	         first, sweep down to zero; if still no success, sweep up to
+	         COS - 1. If still no success --> Repudiate the sequence. */
+	      if (class > 0 && up == 0) {
+	        class--;
+	        continue;
+	      }
+	      else if (class < smo->cos - 1) {
+	        class++;
+	        up = 1;
+	        continue;
+	      }
+	      else {
+	        stillbadseq = 1;
+	        break;
+	      }
+	    }
+	    else {
+	      /* Final state reached, out of while-loop */
+	      break;
+        }  
       }
+
       i = smo->s[i].out_id[j];
 
       /* fprintf(stderr, "%d\n", i); */
@@ -743,19 +783,31 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
       p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (m = 0; m < smo->M; m++) {
-	sum += smo->s[i].c[m];
-	if (sum >= p)
-	  break;
+        sum += smo->s[i].c[m];
+	    if (sum >= p)
+	      break;
       }
+
       if (m == smo->M) {
-	m--;
-	while (m > 0 && smo->s[i].c[m] == 0.0) m--;
+	    m--;
+	    while (m > 0 && smo->s[i].c[m] == 0.0) m--;
       }
       /* Get a random number from the corresponding density function */
       sq->seq[n][state] = smodel_get_random_var(smo, i, m);
 
       /* Decide the class for the next step */
-      class = sequence_d_class(sq->seq[n], state, &osum);
+      if(smo->cos == 1) {
+        class = 0;
+      }
+      else {
+        //printf("2: cos = %d, k = %d, t = %d\n",smo->cos,n,state);
+        if(!smo->class_change->get_class){
+          printf("ERROR: get_class not initialized\n");
+          return(NULL);
+        }
+        class = smo->class_change->get_class(smo,sq->seq[n],n,state);
+        printf("class = %d\n",class);
+      }
       up = 0;
       state++;
 
@@ -775,6 +827,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     }
     else {
       if (state < len)
+
 	if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
       sq->seq_len[n] = state;
       sq->seq_label[n] = label;
@@ -782,6 +835,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
       n++;
     }
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
+
     if (reject_os > 10000) {
       mes_prot("Reached max. no. of rejections\n");
       break;
@@ -794,6 +848,8 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 				reject_os_tmp - reject_os);	
   if (reject_tmax > 0) printf("%d sequences rejected (Tmax, %d)!\n", 
 			      reject_tmax, Tmax);
+
+  printf("End of smodel_generate_sequences.\n");
 
   return(sq);
 STOP:
@@ -813,6 +869,16 @@ int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p) {
   matched = 0;
   *log_p = 0.0;
   for (i = 0; i < sqd->seq_number; i++) {
+    
+    /* setting sequence number in class_change struct if necessary */
+    if(smo->cos > 1){
+        if(!smo->class_change){
+           printf("cos = %d but class_change not initialized !\n",smo->cos);
+           goto STOP ;
+        }  
+        smo->class_change->k = i;
+    }    
+      
     if (sfoba_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
       *log_p += log_p_i * sqd->seq_w[i];
       matched++;
@@ -828,6 +894,11 @@ int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p) {
     { mes_prot("NO sequence can be build.\n"); goto STOP; }
   /* return number of "matched" sequences */
   res = matched;
+  
+  /* resetting sequence number to default value */
+  if(smo->cos > 1){
+    smo->class_change->k = -1;  
+  }
 STOP:
   return(res);
 # undef CUR_PROC
@@ -841,6 +912,15 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
   matched=0;
   
   for ( i = 0; i < sqd->seq_number; i++) {
+
+    /* setting sequence number in class_change struct if necessary */
+    if(smo->cos > 1){
+        if(!smo->class_change){
+           printf("cos = %d but class_change not initialized !\n",smo->cos);
+           goto STOP ;
+        }  
+        smo->class_change->k = i;
+    }          
     if (sfoba_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
       log_ps[i] = log_p_i;
       matched++;
@@ -857,8 +937,15 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
     fprintf(stderr, "smodel_likelihood: NO sequence can be build.\n"); 
   }
 
+  /* resetting sequence number to default value */
+  if(smo->cos > 1){
+    smo->class_change->k = -1;  
+  }
+  
   /* return number of "matched" sequences */
   return res;
+STOP:
+  return -1;      
 }
 
 /*============================================================================*/
@@ -1335,3 +1422,42 @@ double smodel_ifunc(smodel *smo, int state, double c, double x) {
   return( fabs( smodel_calc_B(smo, state, x) - c));
 }
 
+/*============================ TEST =========================================
+int smodel_test_callback(int pos){
+   char* ModuleName = "class_change";
+   char* FunctionName = "getClass";
+   int class;
+   PyObject *pName, *pModule, *pDict, *pFunc, *pArgs, *pValue;
+    
+   //Py_Initialize();      // Init Python Interpreter
+   
+   //PyRun_SimpleString("import sys\n");
+   //PyRun_SimpleString("sys.stdout.write('Hello from an embedded Python Script\\n')\n"); 
+
+   
+   printf("C: Importing Python module ... ");
+   pName = PyString_FromString(ModuleName);
+   pModule = PyImport_Import(pName);       // Import module
+   pDict = PyModule_GetDict(pModule);
+   printf("done.\n");    
+    
+   printf("C: Calling Python with value %d\n",pos);
+   pFunc = PyDict_GetItemString(pDict, FunctionName);
+
+   pArgs = PyTuple_New(1);
+   pValue = PyInt_FromLong(pos);
+
+   PyTuple_SetItem(pArgs, 0, pValue); 
+   pValue = PyObject_CallObject(pFunc, pArgs); // Calling Python 
+
+   /* parsing the result from Python to C data type
+   class = PyInt_AsLong(pValue);
+   printf("C: The returned class is %d\n",class);
+     
+   //Py_Finalize();         
+   
+   return class; 
+ 
+}
+ */
+ 
