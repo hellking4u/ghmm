@@ -34,11 +34,26 @@ fi
 )
 
 dnl these macros are from acinclude.m4! (modified gsl.m4)
+AC_LANG_CPLUSPLUS
 AC_CXX_HAVE_STL
 AC_CXX_NAMESPACES
 
-dnl following tests with C
+AC_ARG_WITH(expat,
+[  --with-expat=DIR        with expat available at the given prefix],
+[CPPFLAGS="$CPPFLAGS -I$with_expat/include"
+LIBS="$LIBS -L$with_expat/lib"]
+)
+AC_CHECK_HEADERS(expat.h)
 
+AC_CHECK_LIB(expat,XML_ParserCreate)
+
+AC_ARG_WITH(xmlio,
+[  --with-xmlio=DIR        with xmlio library available at the given prefix],
+[CXXFLAGS="$CXXFLAGS -I$with_xmlio/include"
+LIBS="$LIBS -L$with_xmlio/lib"]
+)
+
+dnl following tests with C
 AC_LANG_C
 dnl aborts on failure
 AM_PATH_GSL(0.7,,AC_MSG_ERROR("GSL Version 0.7 or higher required."))
@@ -47,15 +62,14 @@ CFLAGS="$CFLAGS $GSL_CFLAGS"
 
 dnl Checks for libraries.
 AC_CHECK_LIB(pthread, pthread_join)
-if test "x$enable_experimental" = "x1" || test "x$enable_experimental" = "xyes" ; then
-  AC_CHECK_LIB(expat, XML_ParserCreate)
-fi
+
+dnl something experimental
+dnl if test "x$enable_experimental" = "x1" || test "x$enable_experimental" = "xyes" ; then
+dnl evaluate experimental flags
+dnl fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
-if test "x$enable_experimental" = "x1" || test "x$enable_experimental" = "xyes" ; then
-  AC_CHECK_HEADERS(expat.h)
-fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -117,16 +131,11 @@ AC_MSG_RESULT(no)
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
 phi_data_file=`eval echo ${datadir}`/${PACKAGE}/PHI_001_20.dat
 AC_DEFINE_UNQUOTED(PHI_DATA_FILE,"${phi_data_file}")
+AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm interpolation algorithms])
 
 SUBDIRS="ghmm tools tests doc"
 if test "$ac_cv_cxx_have_stl" = yes; then
-AC_LANG_CPLUSPLUS
  SUBDIRS="$SUBDIRS ghmm++"
- AC_ARG_WITH(xmlio,
-[  --with-xmlio=DIR        with xmlio library available at the given prefix],
-[CXXFLAGS="$CXXFLAGS -I$with_xmlio/include"
-LIBS="$LIBS -L$with_xmlio/lib"]
-)
 fi
 AC_SUBST(SUBDIRS)
 
