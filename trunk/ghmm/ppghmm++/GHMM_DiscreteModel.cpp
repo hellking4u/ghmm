@@ -15,6 +15,7 @@
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
 #include "ghmm/matrix.h"
+#include "ghmm/reestimate.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -291,4 +292,9 @@ void GHMM_DiscreteModel::buildCppData() {
     GHMM_State* state = new GHMM_State(this,i,&c_model->s[i]);
     states.push_back(state);
   }
+}
+
+
+int GHMM_DiscreteModel::reestimate_baum_welch(GHMM_Sequences* seq) {
+  return ::reestimate_baum_welch(c_model,seq->c_i_sequences);
 }

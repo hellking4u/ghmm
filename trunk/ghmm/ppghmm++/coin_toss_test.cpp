@@ -21,7 +21,11 @@ using namespace std;
 int single_state_coin_toss() {
   GHMM_Sequences* my_output = NULL;
 
-  /* initialise model */
+  /* initialise model with 1 state and 2 symbols */
+  //  GHMM_Alphabet alphabet();
+  //  alphabet.addSymbol("head");
+  //  alphabet.addSymbol("tail");
+
   GHMM_DiscreteModel my_model(1,2);
 
   /* initialise this state */
@@ -30,7 +34,9 @@ int single_state_coin_toss() {
   my_model.getState(0)->setOutputProbability(1,0.5);
 
   my_model.setTransition(0,0,1.0);
-  my_model.check();
+
+  if (my_model.check() == -1)
+    exit(1);
 
   fprintf(stdout,"transition matrix:\n");
   my_model.A_print(stdout,""," ","\n");
@@ -57,7 +63,7 @@ int two_states_coin_toss() {
   GHMM_DoubleMatrix* forward_alpha = NULL;
 
   /* initialise model */
-  GHMM_DiscreteModel my_model(2,2,-1);
+  GHMM_DiscreteModel my_model(2,2);
 
   /* initialise head state */
   my_model.getState(0)->setInitialProbability(0.5);
@@ -71,7 +77,9 @@ int two_states_coin_toss() {
   my_model.setTransition(0,1,0.5);
   my_model.setTransition(1,0,0.5);
   my_model.setTransition(1,1,0.5);
-  my_model.check();
+
+  if (my_model.check() == -1)
+    exit(1);
 
   fprintf(stdout,"transition matrix:\n");
   my_model.A_print(stdout,""," ","\n");
@@ -110,6 +118,30 @@ int two_states_coin_toss() {
   fprintf(stdout,"Done.\nalpha matrix from forward algorithm:\n");
   forward_alpha->print(stdout,""," ","\n");
   fprintf(stdout,"probability of this sequence (forward algorithm): %f\n",log_p_forward);
+
+  my_model.getState(0)->setInitialProbability(0.3);
+  my_model.getState(0)->setOutputProbability(0,1.0);
+
+  /* initialise tail state */
+  my_model.getState(1)->setInitialProbability(0.7);
+  my_model.getState(1)->setOutputProbability(1,1.0);
+
+  //  my_model.setTransition(0,0,0.5);
+  //  my_model.setTransition(0,1,0.5);
+  //  my_model.setTransition(1,0,0.5);
+  //  my_model.setTransition(1,1,0.5);
+
+  if (my_model.check() == -1)
+    exit(1);
+
+  fprintf(stderr,"gaga\n");
+  my_model.reestimate_baum_welch(my_output);
+  fprintf(stderr,"gaga\n");
+
+  if (my_model.check() == -1)
+    exit(1);
+
+  my_model.print(stdout);
   
   /* clean up */
   delete my_output;

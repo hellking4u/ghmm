@@ -169,6 +169,14 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param log_p      probability of the sequence in the Viterbi path (return value)
   */
   GHMM_IntVector* Viterbi(GHMM_Sequences* sequences, int index, double *log_p) const;
+  /**
+     Baum-Welch Algorithm for HMMs.
+     Training of model parameter with multiple integer sequences (incl. scaling).
+     New parameters set directly in hmm (no storage of previous values!).
+     @return           0/-1 success/error
+     @param seq        sequences used for training.
+  */
+  int reestimate_baum_welch(GHMM_Sequences* seq);
 
   /** C Model. */
   model* c_model;
