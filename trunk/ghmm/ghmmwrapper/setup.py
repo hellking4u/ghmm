@@ -33,7 +33,9 @@
 #                       from $Date$
 #             last change by $Author$.
 #
-################################################################################from distutils.core import setup, Extension,DistutilsExecError
+################################################################################
+
+from distutils.core import setup, Extension,DistutilsExecError
 import os
 
 # Adapted from Achim Gaedke's pygsl
