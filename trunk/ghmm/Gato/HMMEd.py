@@ -518,8 +518,7 @@ class HMMEditor(SAGraphEditor):
 
                             
                     e = ProbEditorBasics.emission_data(emission_probabilities)
-                    d = ProbEditorDialogs.emission_dialog(self, e,
-                                                          "emission probs of state %s" % state.id)
+                    d = ProbEditorDialogs.emission_dialog(self, e, "emission probs of state %s" % state.id)
                     if d.success():
                         # write back normalized probabilities
                         for key in emission_probabilities.keys():
@@ -612,6 +611,8 @@ class HMMEditor(SAGraphEditor):
 	v = GraphDisplay.AddVertexCanvas(self, x, y)
         print "AddVertex ", v, "at ",x,y
         self.HMM.AddState(v)
+	state = self.HMM.state[v]
+	self.HMM.G.embedding[state.index] = self.G.embedding[v]
 	
     def MoveVertex(self,v,x,y,doUpdate=None):
 	GraphDisplay.MoveVertex(self, v,x,y,doUpdate)
