@@ -74,7 +74,6 @@ class GHMM_AbstractModel: public XMLIO_Element {
   void setTransition(const string& start, const string& end, double prob);
   /** */
   void stateIDChanged(const string& old_id, const string& new_id);
-
   /** */
   vector<GHMM_Transition*> transitions;
 
@@ -101,6 +100,8 @@ class GHMM_AbstractModel: public XMLIO_Element {
 
   /** */
   vector<GHMM_State*> states;
+
+
   /** */
   map<string,int> state_by_id;
 };

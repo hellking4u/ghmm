@@ -45,6 +45,8 @@ class GHMM_State: public XMLIO_Element {
   /** Destructor. */
   virtual ~GHMM_State();
 
+  GHMM_State* getMySelf() { return this; }
+
   /** */
   void changeOutEdge(int target, double prob);
   /** */
@@ -122,8 +124,7 @@ class GHMM_State: public XMLIO_Element {
   GHMM_StateReadingType reading;
   /** */
   double initial;
-  /** */
-  string label;
+
   /** */
   GHMM_AbstractModel* parent_model;
 };

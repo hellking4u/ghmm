@@ -12,17 +12,16 @@
 #ifndef _GHMM_GMLSTATE_H
 #define _GHMM_GMLSTATE_H 1
 
-
+#include <map>
 #include <ghmm++/GHMM_Types.h>
 #include <ghmm++/GHMM_State.h>
-
+#include <ghmm++/GHMM_GMLTransition.h>
 #include <ghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
 
-class GHMM_GMLState;
 
 /** */
 class GHMM_GMLState: public GHMM_State {
@@ -35,8 +34,18 @@ class GHMM_GMLState: public GHMM_State {
   /** */
   GHMM_GMLState(GHMM_AbstractModel* my_model, int index, state* my_state);
 
+  
   /** Returns name of class. */
   const char* toString() const;
+
+  GHMM_GMLTransition *createTransition(int edge_index);
+
+  GHMM_GMLState* getMySelf() { return this; }
+
+  float get2DPosition(int index);
+
+  /** */
+  string label;
 
  protected:
 
@@ -57,6 +66,12 @@ class GHMM_GMLState: public GHMM_State {
       @return Returns the number of bytes written,
       but is negative when an error occured and 0 by default. */
   const int XMLIO_writeContent(XMLIO_Document& doc);
+
+  /** Position attributes */
+  float vPosition[3];
+
+ private:
+  map<const string, bool> hasData;
 };
 
 
