@@ -10,7 +10,7 @@ DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/libghmm.a -lgxl $(XMLIO_LIBS)
+LDADD = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a -lgxl $(XMLIO_LIBS)
 EXTRADIST = ghmm.xml
 
 noinst_PROGRAMS = sequence_test DiscretePD_test ghmm_test ghmm_convert

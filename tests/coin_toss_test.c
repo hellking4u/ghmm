@@ -164,13 +164,21 @@ int two_states_coin_toss()
   return 0;
 }
 
-int main()
-{
+int main() {
+  int result;
+
   /* Important! initialise rng  */
   gsl_rng_init();
 
   if (single_state_coin_toss() || two_states_coin_toss())
-    return 1;
+    result = 1;
   else
-    return 0;
+    result = 0;
+  
+#ifdef WIN32
+  printf("\nPress ENTER\n");
+  fgetc(stdin);
+#endif
+
+  return result;
 }

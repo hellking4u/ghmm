@@ -4,7 +4,22 @@
   created      : March 2001 by Achim Gaedke from hmm/src/creestimate.c
   $Id$
 
-__copyright__
+Copyright (C) 1998-2001, ZAIK/ZPR, Universität zu Köln
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Library General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
+
+You should have received a copy of the GNU Library General Public
+License along with this library; if not, write to the Free
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 
 *******************************************************************************/
 
@@ -49,10 +64,12 @@ double pmue_interpol(double mue, double A, double B, double eps) {
   z = (eps + mue)/sqrt(u);
     
   i1 = (int)(fabs(z) * randvar_get_xfaktphi());
-  if (i1 >= randvar_get_philen()-1)
-    i1 = i2 = randvar_get_philen()-1;
+  if (i1 >= randvar_get_philen()-1) {
+    i1 = (int) randvar_get_philen()-1;
+    i2 = i1;
+  }
   else
-    i2 = i1+1;
+    i2 = i1 + 1;
   z1 = i1/randvar_get_xfaktphi();
   z2 = i2/randvar_get_xfaktphi();
 

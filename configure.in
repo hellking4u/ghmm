@@ -7,7 +7,44 @@ dnl __copyright__
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(ghmm/smodel.c)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(ghmm,0.3)
+
+# info from http://www.cl.cam.ac.uk/texinfodoc/libtool_6.html#SEC33
+#
+#current 
+#    The most recent interface number that this library implements. 
+#revision 
+#    The implementation number of the current interface. 
+#age The difference between the newest and oldest interfaces that this 
+#    library implements. In other words, the library implements all the 
+#    interface numbers in the range from number current - age to current. 
+#
+#If two libraries have identical current and age numbers, then the dynamic 
+#linker chooses the library with the greater revision number. 
+#
+#Here are a set of rules to help you update your library version information: 
+#
+#  1. Start with version information of `0:0:0' for each libtool library. 
+#  2. Update the version information only immediately before a public release 
+#     of your software. More frequent updates are unnecessary, and only
+#     guarantee that the current interface number gets larger faster. 
+#  3. If the library source code has changed at all since the last update, 
+#     then increment revision (`c:r:a' becomes `c:r+1:a'). 
+#  4. If any interfaces have been added, removed, or changed since the last 
+#     update, increment current, and set revision to 0. 
+#  5. If any interfaces have been added since the last public release, then 
+#     increment age. 
+#  6. If any interfaces have been removed since the last public release, then 
+#     set age to 0. 
+
+GHMM_VERSION_CURRENT=0
+GHMM_VERSION_REVISION=3
+GHMM_VERSION_AGE=0
+GHMM_VERSION=$GHMM_VERSION_CURRENT.$GHMM_VERSION_REVISION.$GHMM_VERSION_AGE
+AC_SUBST(GHMM_VERSION_CURRENT)
+AC_SUBST(GHMM_VERSION_REVISION)
+AC_SUBST(GHMM_VERSION_AGE)
+
+AM_INIT_AUTOMAKE(ghmm,$GHMM_VERSION)
 dnl implicit in AM_INIT_AUTOMAKE...
 dnl AC_PROG_MAKE_SET
 
@@ -33,6 +70,7 @@ AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_PROG_RANLIB
+AM_PROG_LIBTOOL
 AC_PROG_AWK
 AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(DOCXX,doc++)
@@ -178,7 +216,7 @@ phi_data_file=`eval echo ${datadir}`/${PACKAGE}/PHI_001_20.dat
 AC_DEFINE_UNQUOTED(PHI_DATA_FILE,"${phi_data_file}")
 AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm interpolation algorithms])
 
-SUBDIRS="ghmm tools tests doc"
+SUBDIRS="ghmm tools tests doc VisualC"
 if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
  SUBDIRS="$SUBDIRS ghmm++ ppghmm++"
 fi
@@ -194,5 +232,8 @@ doc/docu.dxx \
 tools/ghmm-config \
 ppghmm++/Makefile \
 ghmm++/Makefile \
-ghmm++/examples/Makefile)
-
+ghmm++/examples/Makefile \
+VisualC/Makefile \
+VisualC/coin_toss_test/Makefile \
+VisualC/ghmm/Makefile \
+VisualC/ghmmpp/Makefile)
