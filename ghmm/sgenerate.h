@@ -1,0 +1,82 @@
+/*------------------------------------------------------------------------------
+  author       : Bernhard Knab
+  filename     : /homes/hmm/wichern/hmm/src/sgenerate.h
+  created      : TIME: 09:33:23     DATE: Tue 16. November 1999
+  last-modified: TIME: 18:31:55     DATE: Tue 05. September 2000
+------------------------------------------------------------------------------*/
+#ifndef SGENERATE_H
+#define SGENERATE_H
+
+/**
+   @name generation and extention of sequences from shmm
+*/
+
+//@{
+
+/**
+ Kopiert von cgenerate.h
+*/
+
+typedef enum {
+  viterbi_viterbi,
+  viterbi_all,
+  all_viterbi,
+  all_all
+} sgeneration_mode_t;
+
+/** 
+    Erzeugt zu einem gegebenen Modell zufaellige Sequenzen. Speicher fuer die 
+    Sequenzen und den Laengenvektor wird in der Fkt. selbst bereitgestellt.
+    Die Laenge der Sequenzen kann global vorgegeben werden (global_len > 0)
+    oder in der Funktion dadurch bestimmt werden, dass ein "final state"
+    erreicht wird (ein state, dessen Ausgangswahrscheinlichkeiten = 0 sind).
+    @return            Pointer auf ein Feld von Sequenzen (Allozierung)
+    @param smo         vorgegebenes Modell
+    @param seed        Initialisierungsvariable des Zufallsgenerators (int)
+    @param global_len  gewuenschte Sequenzlaenge (=0: autom. ueber final state)
+    @param seq_number  gewuenschte Anzahl von Sequenzen
+    
+*/
+sequence_d_t *sgenerate_sequences(smodel* smo, int seed, int global_len,
+				  long seq_number, long label, int Tmax);
+
+/**
+   Verlaengert Teilsequenzen bei gegebenem Modell. Verschiedene Moeglichkeiten
+   sind vorgesehen (nur Viterbi oder alle Pfade beruecksichtigen kombiniert
+   mit Sequenzanfang und Sequenzende)
+   Steuerung ueber mode:
+   0 = viterbi\_viterbi, 
+   1 = viterbi\_all, 
+   2 = all\_viterbi, 
+   3 = all\_all
+   (zunaechst nur all\_all moeglich)
+   Die generierten Sequenzen werden zurueckgegeben.
+   @return Pointer auf ein Feld von Gesamtsequenzen (vorgegebene 
+   Anfangssequenz und generierte Endsequenz)
+   @param smo         vorgegebenes Modell
+   @param sqd_short   Feld von Anfangssequenzen
+   @param seed        Initialisierungsvariable des Zufallsgenerators (int)
+   @param global_len  gewuenschte Sequenzlaenge (=0: autom. ueber final state)
+   @param mode        Steuerung der Generierung
+ */
+sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short, 
+				   int seed, int global_len,
+				   sgeneration_mode_t mode);
+
+
+/** Verlaengern einer einzelnen Anfangsequenz. Sonst gleiche Funktionalitaet
+    wie sgenerate_extensions
+*/
+double *sgenerate_single_ext(smodel *smo, double *O, const int len, 
+			     int *new_len, double **alpha,
+			     sgeneration_mode_t mode);
+
+
+/** generate a single next value bases on a trained model and on a seq und
+   to length "len"
+*/
+double sgenerate_next_value(smodel *smo, double *O, const int len);
+
+//@} sgenerate section
+
+#endif /* SGENERATE_H */
