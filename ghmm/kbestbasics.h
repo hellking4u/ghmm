@@ -49,12 +49,14 @@ extern "C" {
 
 /** Data type for linked list of hypotheses
     Stores the actual label, a link to the parent hypothesis, a counter of the
-    links to this hypothesis, a the gamm values */
+    links to this hypothesis and the gamma values */
 typedef struct hypo_List {
   int hyp_c;
   int refcount;
   int chosen;
-  double* gamma;
+  int gamma_states;
+  double* gamma_a;
+  int* gamma_id;
   struct hypo_List* next;
   struct hypo_List* parent;
 } hypoList;
@@ -65,27 +67,29 @@ inline void hlist_insertElem(hypoList** plist, int newhyp, hypoList* parlist);
 /* removes hypothesis at position indicated by pointer plist from the list */
 inline void hlist_removeElem(hypoList** plist);
 
+
 /**
    Propagates list of hypotheses forward by extending each old hypothesis to
-   #labels new hypotheses
+   the possible new hypotheses depending on the states in which the old
+   hypothesis could end and the reachable labels
    @return number of old hypotheses
+   @param mo:         pointer to the model
    @param h:          pointer to list of hypotheses
+   @param hplus:      address of a pointer to store the propagated hypotheses
    @param labels:     number of labels
-   @param seq_len:    total sequence length
  */
-int propFwd(hypoList* h, hypoList** hplus, int labels, int seq_len);
+int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels);
 
 
 /**
-   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j]))
-   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j]
+   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
+   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
    @return logSum for products of a row from gamma and a row from matrix A
    @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
-   @param a_pos:      number of row from log_a
-   @param N:          width of matrix log_a
-   @param gamma:      a row of matrix gamma with logarithmic values (1.0 for log(0))
+   @param s:          state whose gamma-value is calculated
+   @param parent:     a pointer to the parent hypothesis
 */
-inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma);
+inline double logGammaSum(double* log_a, state* s, hypoList* parent);
 
 
 /**
