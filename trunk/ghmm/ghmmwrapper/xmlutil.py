@@ -857,6 +857,24 @@ class HMM:
         if not isTied:
             tiedstates = []
         return tiedstates
+
+    def getStateDurations(self):
+        """ returns a list of the minimal number of times a state is evaluated
+            before the HMM changes to another state."""
+
+        durations = []
+        hasduration = 0
+        
+        for s in self.state.values(): # a list of indices
+            if s.duration==0:
+                durations.append(1)
+            else:
+                durations.append(s.duration)
+                hasduration = 1
+
+        if not hasduration:
+            durations = []
+        return durations
     
     def OpenXML(self, fileName):
         dom = xml.dom.minidom.parse(fileName)
