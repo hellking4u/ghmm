@@ -19,6 +19,7 @@ __copyright__
 #include "foba.h"
 #include "mes.h"
 #include "mprintf.h"
+#include "string.h"
 
 /*----------------------------------------------------------------------------*/
 static int model_state_alloc(state *state, int M, int in_states,

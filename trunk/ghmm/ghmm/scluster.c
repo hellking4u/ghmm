@@ -26,6 +26,7 @@ __copyright__
 #include "const.h"
 #include "matrix.h"
 #include "vector.h"
+#include "smap_classify.h"
 
 #ifdef HAVE_LIBPTHREAD
 /* switsch for parallel mode: (1) = sequential, (0) = parallel */ 
@@ -43,7 +44,7 @@ int scluster_hmm(char* argv[]) {
 # define CUR_PROC "scluster_hmm"
   char *seq_file = argv[1],  *smo_file = argv[2], *out_filename = argv[3];
   int labels = atoi(argv[4]);
-  int res = -1, i, k, iter = 0, sqd_number, idummy;
+  int res = -1, i, iter = 0, sqd_number, idummy;
   sequence_d_t *sqd = NULL;
   sequence_d_t **sqd_vec = NULL; /* only temp. pointer */
   long j, changes = 1; 
@@ -58,7 +59,6 @@ int scluster_hmm(char* argv[]) {
   int max_iter_bw;
   /* sreestimate_baum_welch needs this structure (introduced for parallel mode) */
   smosqd_t *cs;
-  double *tilgw, *model_weight;
 #if POUT == 0
   int *return_value;
   pthread_t *tid;

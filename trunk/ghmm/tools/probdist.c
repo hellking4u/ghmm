@@ -41,7 +41,10 @@ __copyright__
 int main(int argc, char* argv[]) {
 # define CUR_PROC "main"
 
-  int mo_number, cmo_number, smo_number;
+  int mo_number, smo_number;
+#ifdef CMODEL_INCLUDED
+  int cmo_number;
+#endif
   int discrete = 0, smodelflag = 0;
   int T, i, j;
   model **mo = NULL;

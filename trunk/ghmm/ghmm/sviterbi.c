@@ -31,7 +31,6 @@ static int sviterbi_free(local_store_t **v, int n, int T);
 static local_store_t *sviterbi_alloc(smodel *smo, int T) {
 #define CUR_PROC "sviterbi_alloc"
   local_store_t* v = NULL;
-  int j;
   if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
   v->log_b = matrix_d_alloc(smo->N, T);
   if (!(v->log_b)) {mes_proc(); goto STOP;}
@@ -50,7 +49,6 @@ STOP:
 /*----------------------------------------------------------------------------*/
 static int sviterbi_free(local_store_t **v, int n, int T) {
 #define CUR_PROC "sviterbi_free"
-  int j;
   mes_check_ptr(v, "return(-1)");
   if( !*v ) return(0);
   matrix_d_free( &((*v)->log_b), n );
@@ -68,7 +66,7 @@ static int sviterbi_free(local_store_t **v, int n, int T) {
 static void sviterbi_precompute(smodel *smo, double *O, int T, 
 				local_store_t *v) {
 #define CUR_PROC "sviterbi_precompute"
-  int i, j, t, m;
+  int j, t, m;
   double cb;
 
   /* Precomputing of log(b_j(O_t)) */

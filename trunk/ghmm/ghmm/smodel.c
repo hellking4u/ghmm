@@ -21,6 +21,7 @@ __copyright__
 #include "const.h"
 #include "rng.h"
 #include "randvar.h"
+#include "string.h"
 
 /*----------------------------------------------------------------------------*/
 static int smodel_state_alloc(sstate *state,
@@ -809,7 +810,7 @@ STOP:
 
 
 /*============================================================================*/
-/* various print functions
+/* various print functions                                                    */
 /*============================================================================*/
 
 

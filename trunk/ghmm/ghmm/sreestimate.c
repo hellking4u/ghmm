@@ -432,7 +432,7 @@ static int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
   double **beta = NULL;
   double *scale = NULL;
   double ***b = NULL;
-  int T_k = 0, T_k_max = 0, tilgphase = 0;
+  int T_k = 0, T_k_max = 0;
   double c_t, sum_alpha_a_ji, gamma, gamma_ct, f_im, quot;
   double log_p_k, osum = 0.0;
   
