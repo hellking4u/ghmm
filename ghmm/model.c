@@ -203,7 +203,7 @@ find_start:;
 
 
 /*----------------------------------------------------------------------------*/
-void model_topo_ordering(model *mo) 
+static void model_topo_ordering(model *mo) 
 {
 #define CUR_PROC "model_topo_ordering"
   int i;
