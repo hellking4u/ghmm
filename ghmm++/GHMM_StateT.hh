@@ -138,16 +138,14 @@ public:
   virtual void XMLIO_endTag(const string& tag) {}
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
-  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {}
-  /** Returns the attributes of this element (XML Spec [40], [41]). 
-      By default returns content of variable 'attributes'.*/
-  virtual XMLIO_Attributes& XMLIO_getAttributes() {}
+  XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) { return NULL; }
+
   /** Writes the content (XML Spec[43]) of this element.
       You should use the public XMLIO_Document::write* functions.
       @return Returns the number of bytes written,
       but is negative when an error occured and 0 by default. */
-  virtual const int XMLIO_writeContent(XMLIO_Document& doc) {}
-
+  const int XMLIO_writeContent(XMLIO_Document& doc) { return 0; }
+ 
   /** */
   GHMM_StateReadingType reading;
   /** */

@@ -47,7 +47,7 @@ template<class StateType, class TransitionType> class GHMM_AbstractModelT: publi
   int check() { return -1; }
   
   /** Returns alphabet of model or NULL, if no such alphabet exists. */
-  virtual GHMM_Alphabet* getAlphabet() {}
+  GHMM_Alphabet* getAlphabet() { return NULL; }
 
   StateType* getState(const string& id) const {
     map<string,int>::const_iterator iter;
