@@ -1,10 +1,10 @@
 /*********************************************************************
-  author       : Frank Nübel
+  author       : Frank N’bel
   filename     : ghmm/ghmm/mes.h
   created      : TIME: 17:33:09     DATE: Thu 25. January 1996
   $Id$
 
-Copyright (C) 1998-2001, ZAIK/ZPR, Universität zu Köln
+Copyright (C) 1998-2001, ZAIK/ZPR, Universit„t zu K÷ln
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
@@ -67,15 +67,12 @@ extern "C" {
 /* stuff from sys.h */
 
 #if defined(_WIN32)
-#define sleep( x )     Sleep(1000*x)
-#define getthreadid()  GetCurrentThreadId()
-#define getprocessid() GetCurrentProcessId()
+#  define getthreadid()  GetCurrentThreadId()
+#  define getprocessid() GetCurrentProcessId()
 #else 
-#include <unistd.h>
-#define Sleep( x ) \
-  if(1){ int t=clock()+(x/1000.0)*CLOCKS_PER_SEC; while(clock() < t);} else
-#define getthreadid()  1
-#define getprocessid() 1
+#  include <unistd.h>
+#  define getthreadid()  1
+#  define getprocessid() 1
 #endif /* defined(WIN32) */
 
 

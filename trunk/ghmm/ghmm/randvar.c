@@ -4,7 +4,7 @@
   created      : TIME: 16:40:03     DATE: Wed 17. February 1999
   $Id$
 
-Copyright (C) 1998-2001, ZAIK/ZPR, Universität zu Köln
+Copyright (C) 1998-2001, ZAIK/ZPR, Universit„t zu K÷ln
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public
