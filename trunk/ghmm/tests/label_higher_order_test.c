@@ -25,10 +25,10 @@
 #include <ghmm/sequence.h>
 
 void generateModel(model *mo, int noStates) {
-  
+
   state *states;
   int i, j;
-  
+
   /* flags indicating whether a state is silent */
   int *silent_array;
   
@@ -78,7 +78,7 @@ void generateModel(model *mo, int noStates) {
       states[i].out_id[0] = i;
       states[i].out_id[1] = i+1;
     }
-    
+
     if (0==i) {
       states[i].in_id[0]  = i;
       states[i].in_id[1]  = mo->N-1;
@@ -155,20 +155,28 @@ void freeModel(model *mo) {
 
 void testBaumwelch(){
 
-  int i, error, tl,z;
-  double log_p, first_prob;
+  int i, error, tl,z,z1,z2;
+  double log_p,first_prob1,first_prob2, first_prob;
 	double *proba;
   int *path;
 	int* real_path;
+  int *path1;
+	int* real_path1;
+  int *path2;
+	int* real_path2;
   model *mo = NULL;
-  sequence_t *my_output;
-  int seqlen = 50;
-	tl = 7;
+  sequence_t *my_output, *your_output;
+  int seqlen = 1000;
+	tl = 100;
 
   mo = malloc(sizeof(model));
   if (mo==NULL) {fprintf(stderr,"Null Pointer in malloc(model).\n");}
   real_path = malloc(seqlen*sizeof(double));
 	if(!real_path){ printf("real_path hat kein platz gekriegt\n");}
+  real_path1 = malloc(seqlen*sizeof(double));
+	if(!real_path1){ printf("real_path hat kein platz gekriegt\n");}
+  real_path2 = malloc(seqlen*sizeof(double));
+	if(!real_path2){ printf("real_path hat kein platz gekriegt\n");}
   /* generate a model with variable number of states*/
   generateModel(mo, 5);
 
@@ -181,10 +189,26 @@ void testBaumwelch(){
 
   /*viterbi*/
   path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &first_prob);
+	path1 = viterbi(mo, my_output->seq[1], my_output->seq_len[1], &first_prob1);
+	path2 = viterbi(mo, my_output->seq[2], my_output->seq_len[2], &first_prob2);
 	printf("\n viterbi-path\n");
 	z=0;
+	z1=0;
+	z2=0;
   for (i=0; i<(my_output->seq_len[0]*mo->N); i++){
-    if (path[i] != -1) {
+  if (path1[i] != -1) {
+      real_path1[z1]=path1[i];
+			z1++;
+			printf("%d", path1[i]);
+			}
+		else printf("hallo");
+ if (path2[i] != -1) {
+      real_path2[z2]=path2[i];
+			z2++;
+			printf("%d", path2[i]);
+			}
+		else printf("hallo");
+   if (path[i] != -1) {
       real_path[z]=path[i];
 			z++;
 			printf("%d", path[i]);
@@ -194,18 +218,23 @@ void testBaumwelch(){
   printf("\n");
   printf("log-prob: %g\n",first_prob);
   my_output->state_labels[0]=real_path;
-  my_output->state_labels[1]=real_path;
-  my_output->state_labels[2]=real_path;
+  my_output->state_labels[1]=real_path1;
+  my_output->state_labels[2]=real_path2;
 
 	for (i=0;i<seqlen;i++)
 	  printf("realpath[%i]=%i",i,real_path[i]);
 	proba = malloc(sizeof(double)*tl);
+
+  printf("No of Sequences = %d",my_output->seq_number);
+
 	for (i=0; i<tl; i++) {
-		error = cgradientD(mo, my_output, &log_p, 1);
+
+	  your_output = model_label_generate_sequences(mo, 0, seqlen, 1, seqlen);
+		error = cgradientD(mo, your_output, &log_p, 1);
 		path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &proba[i]);
-		free(path);
+	  free(path);
 		printf("log-prob after %d training: %g\n", i, proba[i]);
-	}
+  }
 
 	printf("log-prob before training: %g\n", first_prob);
   for (i=0; i<tl; i++) {
