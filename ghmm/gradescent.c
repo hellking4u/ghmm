@@ -339,11 +339,13 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
     /*  update */
     for (i=0; i < mo->N; i++) {
 
-      gradient = eta * (m_pi[i] - n_pi[i]);
-      if (mo->s[i].pi + gradient > EPS_PREC)
-	mo->s[i].pi += gradient;
-      else
-	mo->s[i].pi = EPS_PREC;
+      if (mo->s[i].pi > 0.0) {
+	gradient = eta * (m_pi[i] - n_pi[i]);
+	if (mo->s[i].pi + gradient > EPS_PREC)
+	  mo->s[i].pi += gradient;
+	else
+	  mo->s[i].pi = EPS_PREC;
+      }
 
       /* sum over new PI vector */
       pi_sum += mo->s[i].pi;
