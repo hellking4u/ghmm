@@ -777,9 +777,9 @@ class HMM:
 	    pi.append(s.initial)
 	    state_orders.append(s.order) # state order
 
-	    size = self.hmmAlphabet.size() # XXX first order only
-	    if s.order != 1 and size == len(s.emissions):
-		raise ValueError
+	    size = self.hmmAlphabet.size() 
+	    if s.order != 1 and size == len(s.emissions): 
+		raise ValueError # exception: inconsistency between ordering and emission
 	    else:
 		B.append(s.emissions) # emission
 	    
