@@ -57,6 +57,54 @@ XMLIO_Object* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attribute
     }
 }
 
+double* double_sequence::create_double_array() const
+{
+  double* array=(double*)malloc(sizeof(double)*size());
+  XMLIO_ArrayObject<double>::const_iterator iter=begin();
+  int i=0;
+  while (iter!=end())
+    {
+      array[i]=*iter;
+      i++;iter++;
+    }
+  return array;
+}
+
+int* double_sequence::create_int_array() const
+{
+  int* array=(int*)malloc(sizeof(int)*size());
+  XMLIO_ArrayObject<double>::const_iterator iter=begin();
+  int i=0;
+  while (iter!=end())
+    {
+      array[i]=(int)*iter;
+      i++;iter++;
+    }
+  return array;
+}
+
+int double_sequence::get_label_as_int() const
+{
+  if (label!=NULL)
+    {
+      return strtol(label->c_str(),NULL,0);
+    }
+  else
+    {
+      return -1;
+    }
+      
+}
+
+double double_sequence::get_id_as_double() const
+{
+  if (id.empty())
+    return -1.0;
+  else
+    return strtod(id.c_str(),NULL);
+}
+
+
 /***********************************************************************************/
 
 int_sequence::int_sequence(XMLIO_Attributes &attributes)
@@ -95,10 +143,10 @@ XMLIO_Object* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &
     }
 }
 
-int* int_sequence::create_array()
+int* int_sequence::create_int_array() const
 {
   int* array=(int*)malloc(sizeof(int)*size());
-  XMLIO_ArrayObject<int>::iterator iter=begin();
+  XMLIO_ArrayObject<int>::const_iterator iter=begin();
   int i=0;
   while (iter!=end())
     {
@@ -108,7 +156,21 @@ int* int_sequence::create_array()
   return array;
 }
 
-int int_sequence::get_label()
+double* int_sequence::create_double_array() const
+{
+  double* array=(double*)malloc(sizeof(double)*size());
+  XMLIO_ArrayObject<int>::const_iterator iter=begin();
+  int i=0;
+  while (iter!=end())
+    {
+      array[i]=(double)*iter;
+      i++;iter++;
+    }
+  return array;
+}
+
+
+int int_sequence::get_label_as_int() const
 {
   if (label!=NULL)
     {
@@ -118,10 +180,9 @@ int int_sequence::get_label()
     {
       return -1;
     }
-      
 }
 
-double int_sequence::get_id()
+double int_sequence::get_id_as_double() const
 {
   if (id.empty())
     return -1.0;
@@ -154,8 +215,8 @@ sequences_DiscretePD::~sequences_DiscretePD()
 {
   while (!int_sequence_vector.empty())
     {
-      SAFE_DELETE(double_sequence_vector.back());
-      double_sequence_vector.pop_back();
+      SAFE_DELETE(int_sequence_vector.back());
+      int_sequence_vector.pop_back();
     }
   while (!double_sequence_vector.empty())
     {
@@ -205,29 +266,38 @@ void sequences_DiscretePD::XMLIO_endTag(const string& tag)
 
 void sequences_DiscretePD::XMLIO_getCharacters(const string& characters)
 {
-  /* find floats */
+  /* find weight floats */
   errno=0;
-  actual_weight=strtod(characters.c_str(),NULL);
-  if (errno)
+  const char* old_pos=characters.c_str();
+  while (*old_pos!=0 && isspace(*old_pos)) old_pos++;
+  if (*old_pos==0) 
+    {
+      actual_weight=default_weight;
+      return;
+    }
+
+  char* new_pos=(char*)old_pos;
+  actual_weight=strtod(old_pos,&new_pos);
+  if (errno || new_pos==old_pos)
     {
       cout<<"weight is not a float: "<<characters<<endl;
       actual_weight=default_weight;
     }
 }
 
-sequence_t* sequences_DiscretePD::create_sequence_t()
+sequence_t* sequences_DiscretePD::create_sequence_t() const
 {
   sequence_t* seq=sequence_calloc(weight_vector.size());
-  vector<double>::iterator weight_iter=weight_vector.begin();
-  vector<int_sequence*>::iterator seq_iter=int_sequence_vector.begin();
+  vector<double>::const_iterator weight_iter=weight_vector.begin();
+  vector<int_sequence*>::const_iterator seq_iter=int_sequence_vector.begin();
   int i=0;
 
   while (weight_iter!=weight_vector.end() && seq_iter!=int_sequence_vector.end())
     {
       seq->seq_len[i]=(*seq_iter)->size();
-      seq->seq[i]=(*seq_iter)->create_array();
-      seq->seq_label[i]=(*seq_iter)->get_label();
-      seq->seq_id[i]=(*seq_iter)->get_id();
+      seq->seq[i]=(*seq_iter)->create_int_array();
+      seq->seq_label[i]=(*seq_iter)->get_label_as_int();
+      seq->seq_id[i]=(*seq_iter)->get_id_as_double();
       seq->seq_w[i]=*weight_iter;
       weight_iter++; seq_iter++; i++;
     }
@@ -235,10 +305,24 @@ sequence_t* sequences_DiscretePD::create_sequence_t()
   return seq;
 }
 
-sequence_d_t* sequences_DiscretePD::create_sequence_d_t()
+sequence_d_t* sequences_DiscretePD::create_sequence_d_t() const
 {
-  /* todo */
-  return NULL;
+  sequence_d_t* seq=sequence_d_calloc(weight_vector.size());
+  vector<double>::const_iterator weight_iter=weight_vector.begin();
+  vector<double_sequence*>::const_iterator seq_iter=double_sequence_vector.begin();
+  int i=0;
+
+  while (weight_iter!=weight_vector.end() && seq_iter!=double_sequence_vector.end())
+    {
+      seq->seq_len[i]=(*seq_iter)->size();
+      seq->seq[i]=(*seq_iter)->create_double_array();
+      seq->seq_label[i]=(*seq_iter)->get_label_as_int();
+      seq->seq_id[i]=(*seq_iter)->get_id_as_double();
+      seq->seq_w[i]=*weight_iter;
+      weight_iter++; seq_iter++; i++;
+    }
+  seq->seq_number=i;
+  return seq;
 }
 
 /***********************************************************************************/
@@ -272,10 +356,7 @@ sequences::~sequences()
 void sequences::XMLIO_finishedReading()
 {
   /* prepare structures for return */
-  cout<<"Done "<<toString()<<": "
-      <<"Coding: "<<coding<<", "
-      <<"Type: "<<type
-      <<endl;
+  return;
 }
 
 sequence_t* sequences::create_sequence_t() const
