@@ -22,7 +22,7 @@ INCLUDES=-I$(top_srcdir)
 #these tests will not be installed
 noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm shmm_viterbi_test generate_PHI test_gsl_ran_gaussian_tail sequences_test sequences_old_format
 
-LDADD = ../ghmm/libghmm.a
+LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

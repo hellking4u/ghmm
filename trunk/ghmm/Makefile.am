@@ -7,12 +7,30 @@
 
 SUBDIRS = @SUBDIRS@
 
-MAINTAINERCLEANFILES = aclocal.m4 configure \
-	Makefile.in stamp-h.in config.h.in \
-	mkinstalldirs missing install-sh INSTALL COPYING \
-	$(distdir).tar.gz -r $(distdir)
+MAINTAINERCLEANFILES = \
+aclocal.m4 \
+configure \
+Makefile.in \
+stamp-h.in \
+config.h.in \
+mkinstalldirs \
+missing \
+install-sh \
+INSTALL \
+COPYING \
+$(distdir).tar.gz -r $(distdir) \
+ltmain.sh \
+config.guess \
+config.sub \
+$(distdir).tar.gz \
+-r $(distdir)
 
-EXTRA_DIST = COPYRIGHT.txt GPL.txt LGPL.txt ToDo
+EXTRA_DIST = \
+COPYRIGHT.txt \
+GPL.txt \
+LGPL.txt \
+ToDo \
+win_config.h
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

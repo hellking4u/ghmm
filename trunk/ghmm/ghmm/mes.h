@@ -4,7 +4,22 @@
   created      : TIME: 17:33:09     DATE: Thu 25. January 1996
   $Id$
 
-__copyright__
+Copyright (C) 1998-2001, ZAIK/ZPR, Universität zu Köln
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Library General Public
+License as published by the Free Software Foundation; either
+version 2 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License for more details.
+
+You should have received a copy of the GNU Library General Public
+License along with this library; if not, write to the Free
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 
 *********************************************************************/
 
@@ -218,8 +233,8 @@ extern "C" {
 
   /**
    */  
-#define mes_check_ptr( arg, call) \
-  if(!(arg)) { mes_err( #arg, MES_0_PTR, MES_PROC_INFO ); call; } else
+#define mes_check_ptr(arg, call) \
+  if (!(arg)) { mes_err( #arg, MES_0_PTR, MES_PROC_INFO ); call; }
   /**
    */  
 #define mes_check_bnd( arg, bnd, call ) \
@@ -294,7 +309,7 @@ void  mes_init_args( int argc, char*argv[]);
 void  mes_init_logfile( char*file_name );
   /**
    */
-void  mes_init_winfct( void(win_fct)(const char*) );
+void  mes_init_winfct( void(*win_fct)(const char*) );
   /**
    */
 int   mes_insert( FILE* fp, char src, int cnt );

@@ -1,31 +1,19 @@
-#  author       : Achim Gaedke
-#  filename     : /zpr/bspk/src/hmm/ghmm/tools/Makefile.am
+#  author       : Peter Pipenbacher
+#  filename     : ghmm/VisualC/coin_toss_test/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
-#
-# __copyright__
 
 SUBDIRS = .
-DISTCLEANFILES = *~
-MAINTAINERCLEANFILES = Makefile.in
+MAINTAINERCLEANFILES = \
+Makefile.in \
+coin_toss_test.plg
 
-BUILT_SOURCES = 
-INCLUDES = -I$(top_srcdir)
-bin_PROGRAMS = probdist cluster scluster smix_hmm
-
-probdist_SORUCES = probdist.c
-cluster_SOURCES  = cluster.c
-scluster_SOURCES = scluster.c
-smix_hmm_SOURCES = smix_hmm.c
-
-LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
-bin_SCRIPTS = ghmm-config
-
+EXTRA_DIST = coin_toss_test.dsp
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
 dist-hook:
 	test -z "$(AWK)" && exit 0 ;\
-	TMPFILE="$(distdir)/tmp"; \
+	TMPFILE="$(distdir)/tmp" ; \
 	for f in $(DISTFILES) ; do \
 	  distfile=$(distdir)/$$f ; \
 	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
@@ -36,11 +24,3 @@ dist-hook:
 	  fi; \
 	done ; \
 	rm -f $$TMPFILE
-
-
-
-
-
-
-
-

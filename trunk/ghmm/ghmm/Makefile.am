@@ -9,9 +9,10 @@ SUBDIRS = .
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir)
-lib_LIBRARIES = libghmm.a
+lib_LTLIBRARIES = libghmm.la
 
-libghmm_a_SOURCES= foba.c foba.h \
+libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
+libghmm_la_SOURCES= foba.c foba.h \
                   matrix.c  matrix.h \
                   model.c model.h \
                   cluster.c cluster.h \

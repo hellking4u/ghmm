@@ -19,6 +19,9 @@ autoheader
 #creates Makefile.in from Makefile.am
 automake --add-missing
 
+#creates ltmain.sh
+libtoolize --automake
+
 #creates configure from configure.in
 autoconf
 
