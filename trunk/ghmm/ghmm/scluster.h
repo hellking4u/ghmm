@@ -15,6 +15,11 @@ __copyright__
 #include <ghmm/smodel.h>
 #include <ghmm/sreestimate.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
    @name scluster
  */
@@ -100,6 +105,11 @@ int  scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int seq_id,
 /**
  */
 void scluster_print_header(FILE *file, char* argv[]);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 /*@} */
 

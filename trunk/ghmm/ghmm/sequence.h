@@ -12,6 +12,10 @@ __copyright__
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name sequences  (double and int) */
 /*@{ (Doc++-Group: sequence) */
 /** @name struct sequence_t
@@ -65,11 +69,20 @@ struct sequence_d_t {
 };
 typedef struct sequence_d_t sequence_d_t;
 
+
+#ifdef __cplusplus
+}
+#endif
+
 /* don't include model.h at the beginning of this file. struct sequence_t has
    to be known in model.h */
 
 #include <ghmm/model.h>
 #include <ghmm/smodel.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
    Reads one or several arrays of integer sequences. 
@@ -370,6 +383,11 @@ void sequence_d_copy_all(sequence_d_t *target, long t_num,
     @param like log likelihood
 */
 int sequence_d_mix_like(smodel **smo, int  smo_number, sequence_d_t *sqd, double *like);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 /*@} (Doc++-Group: sequence) */

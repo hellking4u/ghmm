@@ -14,6 +14,10 @@ __copyright__
 #include <ghmm/smodel.h>
 #include <ghmm/sequence.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
    @name generation and extention of sequences from shmm
 */
@@ -70,5 +74,10 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
 double sgenerate_next_value(smodel *smo, double *O, const int len);
 
 /*@} sgenerate section */
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* SGENERATE_H */

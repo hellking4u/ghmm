@@ -10,6 +10,10 @@ __copyright__
 #ifndef SREESTIMATE_H
 #define SREESTIMATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <ghmm/smodel.h>
 
 /**@name SHMM-Baum-Welch-Algorithm */
@@ -52,6 +56,11 @@ typedef struct smosqd_t smosqd_t;
   @param cs         initial model and train sequences
   */
 int sreestimate_baum_welch(smosqd_t *cs);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* SREESTIMATE_H */
 

@@ -14,6 +14,10 @@ __copyright__
 #include <stdio.h>
 #include <ghmm/scanner.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name Matrix */
 /*@{ (Doc++-Group: matrix) */
 
@@ -238,6 +242,11 @@ int matrix_det_symposdef(double **a, int dim, double *det);
 
 /** copy a matrix. alloc needs to be done outside ! */
 void matrix_d_copy(double **src, double **target, int rows, int cols);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 

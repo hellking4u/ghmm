@@ -13,6 +13,10 @@ __copyright__
 
 #include <ghmm/smodel.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name SHMM Forward-Backward-Algorithm */
 /*@{ (Doc++-Group: sfoba) */
 
@@ -66,6 +70,11 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
   @return 0 for success, -1 for error
   */
 int sfoba_logp(smodel *smo, const double *O, int T, double *log_p);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 /*@} (Doc++-Group: sfoba) */

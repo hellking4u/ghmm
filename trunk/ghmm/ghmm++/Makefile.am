@@ -1,24 +1,25 @@
 #  author       : Achim Gaedke
-#  filename     : ghmm/tools/Makefile.am
-#  created      : DATE: April 2001
+#  filename     : ghmm/ghmm++/Makefile.am
+#  created      : DATE: 28 June 2001
 #  $Id$
 #
 # __copyright__
 
-SUBDIRS = 
+SUBDIRS=
 DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
-BUILT_SOURCES = 
 INCLUDES = -I$(top_srcdir)
-bin_PROGRAMS = probdist cluster scluster
+LDADD = libghmm++.a $(top_builddir)/ghmm/libghmm.a -lxmlio -lexpat
 
-probdist_SORUCES = probdist.c
-cluster_SOURCES  = cluster.c
-scluster_SOURCES = scluster.c
+bin_PROGRAMS = sequences_reader sequence_test
+sequences_reader_SOURCES = sequences_reader.cpp
+sequence_test_SOURCES = sequence_test.cpp
 
-LDADD = $(top_builddir)/ghmm/libghmm.a
-bin_SCRIPTS = ghmm-config
+lib_LIBRARIES = libghmm++.a
+libghmm___a_SOURCES = \
+sequences.cpp sequences.h \
+XMLIO_ArrayObject.cpp XMLIO_ArrayObject.h
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
@@ -35,9 +36,6 @@ dist-hook:
 	  fi; \
 	done ; \
 	rm -f $$TMPFILE
-
-
-
 
 
 

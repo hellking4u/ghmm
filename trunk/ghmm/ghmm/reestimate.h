@@ -14,6 +14,10 @@ __copyright__
 #include <ghmm/sequence.h>
 #include <ghmm/model.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name Baum-Welch-Algorithmus */
 /*@{ (Doc++-Group: reestimate) */
 
@@ -31,6 +35,11 @@ __copyright__
   */
 
 int reestimate_baum_welch(model *mo, sequence_t *sq);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* REESTIMATE_H */
 

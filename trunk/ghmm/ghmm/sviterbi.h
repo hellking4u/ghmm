@@ -1,6 +1,11 @@
 #ifndef CVITERBI_H
 #define CVITERBI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -25,6 +30,11 @@
 int *sviterbi(smodel *smo, double *o, int T, double *log_p);
 
 /* #endif */ /* __EXPERIMENTAL__ == 3 */
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 

@@ -17,6 +17,10 @@ __copyright__
 
 #define PI 3.141592653589793116
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
    Berechnen der eindimensionalen Dichtefkt(mean, u) an der Stelle x..
    @return       Funktionswert
@@ -146,6 +150,11 @@ double randvar_get_xfaktphi();
 double randvar_get_xstepphi();
 
 double randvar_get_philen();
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* RANDVAR_H */
 
