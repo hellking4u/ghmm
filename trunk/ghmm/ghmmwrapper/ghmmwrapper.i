@@ -674,8 +674,6 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
   }
   
 
-  void call_model_free(model * mo)	{ model_free(&mo); }
-  
   model *get_model_ptr(model **mo, int index) { return mo[index]; }
     
   model **cast_model_ptr(model *mo){
