@@ -417,7 +417,7 @@ class HMMState:
         self.editableAttr = ['label', 'initial', 'order', 'background']
         self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
         
-    editableAttr = ['label', 'initial', 'state_class', 'order', 'background']
+    editableAttr = ['label', 'initial', 'order', 'background']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
     # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
