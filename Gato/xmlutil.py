@@ -394,7 +394,7 @@ class HMMState:
 	print type(self.label)
 	
         self.index = nodeIndex # The node index in the underlying graph
-        self.id    = ValidatingString("None") # identification by the canvas, not always the same
+        self.id    = DefaultedInt() # identification by the canvas, not always the same
 	
 	self.state_class = PopupableInt(-1)
         self.state_class.setPopup(itsHMM.hmmClass.code2name, itsHMM.hmmClass.name2code, 10)
@@ -447,7 +447,7 @@ class HMMState:
 
     def fromDOM(self, XMLNode):
 
-        self.id = ValidatingString(XMLNode.attributes['id'].nodeValue.encode('ascii', 'replace'))
+        self.id = typed_assign(self.id, int(XMLNode.attributes['id'].nodeValue)) # state's id
         
         self.index = self.itsHMM.G.AddVertex()
         
@@ -545,8 +545,7 @@ class HMMState:
 
         if not self.tiedto == '': # XXX tied emission
             writeData(XMLDoc, node, 'tiedto', self.tiedto)
-            self.emissions = self.itsHMM.state[int(self.tiedto)].emissions # XXX
-            # XXX should be a map: string -> state index
+            self.emissions = self.itsHMM.state[self.itsHMM.id2index[int(self.tiedto)]].emissions # XXX
             
         if self.order.useDefault:
             order = 0
@@ -612,8 +611,7 @@ class HMM:
 
 
     def Clear(self):
-        #self.G = None
-
+        self.G.Clear()
         self.Pi = {}
         self.id2index = {}
             
@@ -628,13 +626,13 @@ class HMM:
         self.DocumentName = "graphml"        
 
 
-    def AddState(self, id, label='None'):
+    def AddState(self, index, label='None'):
         state = HMMState(-1, self)
-        state.id = id
-        state.index = state.id
+        state.id = max(self.id2index.keys()) + 1
+        state.index = index
         self.id2index[state.id] = state.index
         self.state[state.index] = state # XXX Use canvas id
-        state.label = typed_assign(state.label, label)
+        state.label = typed_assign(state.label, state.id)
         self.G.labeling[state.index] = "%s" % (state.label)
         return state.index
         
@@ -671,8 +669,8 @@ class HMM:
             self.G.edgeWeights[i] = EdgeWeight(self.G)
 
         for edge in edges:
-            i = self.id2index[edge.attributes['source'].nodeValue]
-            j = self.id2index[edge.attributes['target'].nodeValue]
+            i = self.id2index[int(edge.attributes['source'].nodeValue)]
+            j = self.id2index[int(edge.attributes['target'].nodeValue)]
 
             datas = edge.getElementsByTagName("data")
             for data in datas:

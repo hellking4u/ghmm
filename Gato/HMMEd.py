@@ -438,8 +438,7 @@ class HMMEditor(SAGraphEditor):
 	    self.HMM.G.Clear()
             self.HMM.Clear()
 	    self.hasGraph = 0
-	    
-	  
+	            
 	file = askopenfilename(title="Open HMM",
 			       defaultextension=".xml",
 			       filetypes = (("XML", ".xml"),)
@@ -624,6 +623,7 @@ class HMMEditor(SAGraphEditor):
 	    if not "edges" in tags:
 		v = self.FindVertex(event)
                 # print "Found Vertex " + "%s" % v
+
                 #XXX if self.HMM.state[v].state_class != -1: # we have attribute state_class
                 #d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
                 #else:
@@ -695,10 +695,10 @@ class HMMEditor(SAGraphEditor):
     def AddVertexCanvas(self,x,y):
 	v = GraphDisplay.AddVertexCanvas(self, x, y)
         print "AddVertex ", v, "at ", x, y
-        index = self.HMM.AddState(v)
-	state = self.HMM.state[v]
+        index = self.HMM.AddState(v) # return index to this state
+	state = self.HMM.state[index]
 	self.HMM.G.embedding[state.index] = self.G.embedding[v]
-	
+        
     def MoveVertex(self,v,x,y,doUpdate=None):
 	GraphDisplay.MoveVertex(self, v,x,y,doUpdate)
 	state = self.HMM.state[v] # transfer the coordinate

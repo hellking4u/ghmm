@@ -108,7 +108,8 @@ class Graph:
 	self.edgeWeights      = {}   # Dictionary of edge labellings
 	self.edgeWeights[0]   = EdgeWeight(self)
 	self.vertexWeights.clear()   # None by default
-
+	self.highVertexID     = 0    # INTERNAL
+        
     def DeleteVertex(self,v):
 	""" *Internal* Delete vertex v """
         #changes by Utz: only delete if used!
