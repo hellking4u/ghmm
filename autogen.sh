@@ -5,8 +5,9 @@
 #  $Id$
 
 #move GNU m4 to head of PATH
-for f in `type -ap m4` ; do
-  echo `eval $f --version`|grep GNU >/dev/null && PATH=`dirname $f`:$PATH ;
+sep_path=`echo $PATH|sed -n 's/:/ /gp'`
+for f in $sep_path ; do
+  test -f $f/m4 && echo `eval $f/m4 --version 2>/dev/null` |grep GNU >/dev/null && PATH=$f:$PATH ;
 done
 
 #makes aclocal.m4 from acinclude.m4 and other files
