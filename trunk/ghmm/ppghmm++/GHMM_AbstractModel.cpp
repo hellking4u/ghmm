@@ -37,12 +37,21 @@ int GHMM_AbstractModel::check() {
 }
 
 
-void GHMM_AbstractModel::addTransition(GHMM_Transition* transition) {
+void GHMM_AbstractModel::setTransition(GHMM_Transition* transition) {
   GHMM_State* source = getState(transition->source);
   GHMM_State* target = getState(transition->target);
 
   source->changeOutEdge(target->index,transition->prob);
   target->changeInEdge(source->index,transition->prob);
+}
+
+
+void GHMM_AbstractModel::setTransition(int start, int end, double prob) {
+  GHMM_State* source = getState(start);
+  GHMM_State* target = getState(end);
+
+  source->changeOutEdge(target->index,prob);
+  target->changeInEdge(source->index,prob);
 }
 
 
@@ -71,4 +80,21 @@ GHMM_State* GHMM_AbstractModel::getState(int index) const {
 
 int GHMM_AbstractModel::getNumberOfTransitionMatrices() const {
   return 0;
+}
+
+
+void GHMM_AbstractModel::clean() {
+  unsigned int i;
+  for (i = 0; i < states.size(); ++i)
+    SAFE_DELETE(states[i]);
+  states.clear();
+
+  for (i = 0; i < transitions.size(); ++i)
+    SAFE_DELETE(transitions[i]);
+  transitions.clear();
+}
+
+
+int GHMM_AbstractModel::getStateID(const string& id) {
+  return state_by_id[id];
 }

@@ -36,6 +36,8 @@ class GHMM_State: public XMLIO_Element {
   GHMM_State(GHMM_AbstractModel* my_model, int index, XMLIO_Attributes& attrs);
   /** */
   GHMM_State(GHMM_AbstractModel* my_model, int index, sstate* my_state);
+  /** */
+  GHMM_State(GHMM_AbstractModel* my_model, int index, state* my_state);
   /** Destructor. */
   virtual ~GHMM_State();
 
@@ -49,6 +51,12 @@ class GHMM_State: public XMLIO_Element {
   void changeInEdge(int matrix_index, int source, double prob);
   /** Fills given state. */
   void fillState(sstate* s);
+  /** Fills given state. */
+  void fillState(state* s);
+  /** Sets initial probability of this state to 'prob'. */
+  void setInitialProbability(double prob);
+  /** Sets output probability of symbol 'index' to 'prob'.*/
+  void setOutputProbability(int index, double prob);
 
   /** Returns name of class. */
   virtual const char* toString() const;
@@ -62,8 +70,10 @@ class GHMM_State: public XMLIO_Element {
   /** */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
-  /** C type state. Object is not owner of this state. */
+  /** C type sstate. Object is not owner of this state. */
   sstate* c_sstate;
+  /** C type state. Object is not owner of this state. */
+  state* c_state;
   /** */
   string id;
   /** */
