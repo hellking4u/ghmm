@@ -18,7 +18,7 @@ double pmue(double mue, double A, double B, double eps) {
   Atil = A + eps;
   Btil = B + eps*A;
   u = Btil - mue*Atil;
-  /* if (u < EPS_U) u = (double)EPS_U; ACHTUNG: wuerde Fkt.wert verfaelschen! */
+  /* if (u < EPS_U) u = (double)EPS_U; DANGEROUS: would fudge the function value! */
   if (u <= DBL_MIN)
     return(mue - A);
   feps = randvar_normal_density_trunc(-eps, mue, u, -eps);
@@ -26,10 +26,9 @@ double pmue(double mue, double A, double B, double eps) {
 }
 
 /*============================================================================*/
-/* pmue zur Vermeidung von numerischen Oszillationen:
-   Interpolation von p(\mu) selbst zwischen 2 St""utzstellen fuer PHI
-   BEACHTE: 1.Version, sehr aufwendig und um die Ecke
-            -> spaeter vereinfachen! 
+/* To avoid numerical ocillation:
+   Interpolate p(\mu) between 2 sampling points for PHI
+   NOTA BENE: This Version is very expensive and exact. 
 */
 double pmue_interpol(double mue, double A, double B, double eps) {
   double u, Atil, Btil, z,z1,z2,m1,m2,u1,u2,p1,p2,pz;
@@ -37,15 +36,15 @@ double pmue_interpol(double mue, double A, double B, double eps) {
   Atil = A + eps;
   Btil = B + eps*A;
   u = Btil - mue*Atil;
-  /*if (u < EPS_U) u = (double)EPS_U; ACHTUNG: wuerde Fkt.wert verfaelschen!*/
+  /*if (u < EPS_U) u = (double)EPS_U; DANGEROUS: would fudge the function value! */
   if (u <= DBL_MIN)
     return(mue - A);
 
-  /* im positiven Bereich von mue Berechnung wie gehabt */
+  /* Compute like normally where mue positiv. */
   if (mue >= 0.0)
     return(A - mue - u*randvar_normal_density_trunc(-eps, mue, u, -eps));
 
-  /* sonst: Interpolation der Funktion selbst zwischen 2 Stuetzstellen */
+  /* Otherwise: Interpolate the function itself between 2 sampling points. */
   z = (eps + mue)/sqrt(u);
     
   i1 = (int)(fabs(z) * randvar_get_xfaktphi());
