@@ -455,7 +455,7 @@ const int GHMM_State::XMLIO_writeContent(XMLIO_Document& writer) {
   writer.changeIndent(2);
 
   //  if (initial > 0) {
-  writer.writeEndlIndent();
+  result = writer.writeEndlIndent();
   
   if (result < 0)
     return result;
