@@ -10,15 +10,16 @@ __copyright__
 
 #ifndef XMLIO_H
 #define XMLIO_H
+#include <stdio.h>
 #include <expat.h>
 
 /*
   identify different handler_types
  */
 typedef enum {
-  document_handler,
-  vertex_handler,
-  default_handler
+  document_object,
+  vertex_object,
+  default_object
 } object_handler_type;
 
 
@@ -32,6 +33,7 @@ typedef enum {
 
 */
 typedef struct object_handler object_handler;
+typedef struct document_handler document_handler;
 
 /*
   evaluates contents of parsed elements
@@ -57,8 +59,8 @@ struct object_handler
   /* type of this handler */
   object_handler_type type;
   
-  /* parser */
-  XML_Parser parser;
+  /* document information */
+  document_handler* dh;
 
   /* its data */
   void* handler_data;
@@ -68,22 +70,12 @@ struct object_handler
 };
 
 object_handler*
-default_create_handler_object(XML_Parser parser,
+default_create_handler_object(document_handler* dh,
 			      const XML_Char *name,
 			      const XML_Char **atts);
 
 void
 default_delete_handler_object(object_handler* handler);
-
-void
-default_set_handler(object_handler* handler);
-
-object_handler*
-default_push_handler(object_handler* old_handler,
-		     object_handler* new_handler);
-
-object_handler*
-default_pop_handler(object_handler* handler);
 
 void
 default_StartElement_handler(void *userData,
@@ -102,10 +94,54 @@ default_EndElement_handler(void *userData,
 void
 default_ChildData_handler(object_handler* handler);
 
+/*
+  more abstract
+*/
+
+object_handler*
+create_object_handler(document_handler* dh,
+		      const object_handler_type type,
+		      const XML_Char *name,
+		      const XML_Char **atts);
+
+void
+delete_object_handler(object_handler* handler);
+
+struct  document_handler{
+  FILE* xml_file;
+  XML_Parser* parser;
+  object_handler root;
+  object_handler* last;
+};
+
+
+object_handler*
+document_handler_push_object_handler(document_handler* dh,
+				     object_handler* new_handler);
+
+
+object_handler*
+document_handler_pop_object_handler(document_handler* dh);
+
+document_handler*
+create_document_handler(const char* filename);
+
+void
+document_handler_set_handler(object_handler* handler);
+
+int
+parse_document(document_handler* dh);
+
 int
 ghmm_xml_parse(const char* filename);
 
 #endif /* XMLIO_H */
+
+
+
+
+
+
 
 
 
