@@ -24,12 +24,6 @@
 #include <ghmm/scluster.h>
 #include <ghmm/mes.h>
 #include "sdclass_change.h"
-//#include "tmtest.h"
-
-// #include "read_cxml.h"
-
-// #include "tmtest.h"
-
 %}
 
 %include carrays.i
@@ -41,66 +35,6 @@
 %include constraints.i
 %include exception.i    
 %include typemaps.i
-
-// %apply Pointer NONNULL { int * };
-
-
-
-
-/*
-%exception test_free {
-  printf("Testing for NULL:\n");
-  printf("pointer : %p \n", (void *)args );
-
-  printf("value: %d \n", arg[0] );
-  
-  if (arg == NULL) {
-     PyErr_SetString(PyExc_TypeError,"No NULL pointers !");
-     return NULL;
-  } 
-  printf("Argument not NULL\n");
-  $action
-  
-}
-
-*/
-
-%apply Pointer NONNULL { int *test_pt }
-void test_free(int *test_pt );  
-
-
-%exception malloc {
-  $action
-  if (!result) {
-     PyErr_SetString(PyExc_MemoryError,"Not enough memory");
-     return NULL;
-  }
-}
-void *malloc(size_t nbytes);
-
-/* %exception free {
-  printf("Testing for NULL:\n");
-  
-  if (!args) {
-     PyErr_SetString(PyExc_TypeError,"No NULL pointers !");
-     return NULL;
-  } 
-  printf("Argument not NULL\n");
-  $action
-  
-} */ 
-
-%inline %{         
-    void *get_null(){
-        void *p = NULL;
-        return p;
-    }              
-
-%}                   
-
-%apply Pointer NONNULL { void *ptr }
-void free(void *ptr); 
-
 
 // Constraints on GHMM date types - no NULL pointers as function arguments
 %apply Pointer NONNULL { model * };
@@ -694,6 +628,18 @@ extern int foba_backward(model *mo, const int *O, int length, double **beta,
   */
 extern int foba_logp(model *mo, const int *O, int len, double *log_p);
 
+/**
+    Set transition from state 'i' to state 'j' to value 'prob'.
+    NOTE: No internal checks - model might get broken if used carelessly.
+    @param mo model
+    @param i state index
+    @param j state index
+    @param prob probabilitys
+    
+*/
+extern void model_set_transition(model *mo, int i, int j, double prob);
+
+
 
 %inline%{
 	
@@ -723,6 +669,7 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
     }
   }
   
+  void call_model_free(model *mo ) {model_free(&mo);}
 
   model *get_model_ptr(model **mo, int index) { return mo[index]; }
     
@@ -1101,7 +1048,7 @@ extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
 		  	
   void call_smodel_free(smodel *smo ) {smodel_free(&smo);}
 
-  void free_smodel_array(smodel **smo) { if (smo){ free(smo);} }
+  void free_smodel_array(smodel **smo) { if (smo){ m_free(smo);} }
   		
   void smodel_print_stdout(smodel *smo) {
     smodel_print(stdout, smo);
@@ -1362,7 +1309,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 
   double get_arrayd(double *ary, int index) { return ary[index]; }
   
-  void free_arrayd(double *pt) { free(pt); }
+  void free_arrayd(double *pt) { m_free(pt); }
   
   /************  Create and access sort of long[size] arrays **************/
     
@@ -1376,7 +1323,7 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
   double get_arrayl(long *ary, int index) { return ary[index]; }
   
-  void free_arrayl(long *ary) {free(ary);}
+  void free_arrayl(long *ary) {m_free(ary);}
   
   /*********** Create and access char** arrays ***********/
   char **char_array(int size) {
