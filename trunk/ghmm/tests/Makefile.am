@@ -22,10 +22,10 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
-# in progress: test_sdfoba
-noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm shmm_viterbi_test generate_PHI test_gsl_ran_gaussian_tail sequences_test sequences_old_format nullmodel ciscreen test_sdmodel 
+# in progress: test_sdfoba nullmodel ciscreen test_sdmodel 
+noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm shmm_viterbi_test generate_PHI test_gsl_ran_gaussian_tail sequences_test sequences_old_format 
 
-LDADD = $(top_builddir)/ghmm++/libghmm++.la $(top_builddir)/ghmm/.libs/libghmm.a
+LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
