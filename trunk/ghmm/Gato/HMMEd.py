@@ -251,7 +251,7 @@ class HMM (xmlutil.HMM):
         xmlutil.HMM.Clear(self)                  # base class clear!
         self.hmmAlphabet = DiscreteHMMAlphabet() # My alphabet class (not base class) with editor widget
         self.hmmClass    = HMMClass()            # My HMMclass (not base class) with editor widget
-        
+        self.backgroundDistributions = NamedDistributions(self) # same reasons
 
         
 class HMMEditor(SAGraphEditor):

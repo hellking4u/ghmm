@@ -423,7 +423,7 @@ class HMMState:
         self.editableAttr = ['label', 'state_class', 'initial', 'order', 'background']
         self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
         
-    editableAttr = ['label', 'state_class', 'initial', 'order', 'background']
+    editableAttr = ['label', 'state_class', 'initial', 'order', 'background', 'tiedto', 'reading_frame']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
     # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
@@ -613,7 +613,6 @@ class HMM:
             self.OpenXML(XMLFileName)
 
 
-
     def Clear(self):
         #self.G = None
 
@@ -622,15 +621,12 @@ class HMM:
             
         self.hmmAlphabet = DiscreteHMMAlphabet()
         self.hmmClass    = HMMClass()
+        self.backgroundDistributions = NamedDistributions(self)
         
         self.editableAttr = {}
         self.editableAttr['HMM'] = ['desc']
         self.desc = ValidatingString()       
-
         self.state = {}
-
-        self.backgroundDistributions = NamedDistributions(self)
-
         self.DocumentName = "graphml"        
 
 
