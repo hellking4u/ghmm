@@ -12,16 +12,20 @@ dnl implicit in AM_INIT_AUTOMAKE...
 dnl AC_PROG_MAKE_SET
 
 dnl load CXXFLAGS from cache
-AC_CACHE_CHECK(for CXXFLAGS, ac_cv_cxxflags, 
-[if test -z "$CXXFLAGS"; then ac_cv_cxxflags="-O2"; else ac_cv_cxxflags="$CXXFLAGS"; fi
-])
-CXXFLAGS="$ac_cv_cxxflags"
+if test -z "$CXXFLAGS"; then
+  AC_CACHE_CHECK(for CXXFLAGS, ac_cv_cxxflags,[ac_cv_cxxflags="-O2"]);
+  CXXFLAGS="$ac_cv_cxxflags"
+else
+  ac_cv_cxxflags="$CXXFLAGS"; 
+fi
 
 dnl load CFLAGS from cache
-AC_CACHE_CHECK(for CFLAGS, ac_cv_cflags, 
-[if test -z "$CFLAGS"; then ac_cv_cflags="-O2"; else ac_cv_cflags="$CFLAGS"; fi
-])
-CFLAGS="$ac_cv_cflags"
+if test -z "$CFLAGS"; then
+  AC_CACHE_CHECK(for CFLAGS, ac_cv_cflags,[ac_cv_cflags="-O2"]);
+  CFLAGS="$ac_cv_cflags"
+else
+  ac_cv_cflags="$CFLAGS"; 
+fi
 
 dnl Checks for programs.
 AC_PROG_CC
