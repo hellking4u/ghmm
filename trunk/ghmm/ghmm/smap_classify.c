@@ -121,7 +121,7 @@ int smap_classify(smodel **smo, double *result, int smo_number,
     /* forward alg.                                     (24) */
     if (sfoba_forward(smo[m], O, T, NULL, map->alpha[m], map->scale[m],
 		      &log_p) == -1) {
-      /* Sequenz kann nicht von dem Modell nicht generiert werden */
+      /* The sequence can't be generated from this model. */
       map->error[m] = 1;
       continue;
     }
@@ -130,7 +130,7 @@ int smap_classify(smodel **smo, double *result, int smo_number,
       for (n = 0; n < smo[0]->N; n++)
 	map->sum_alpha[m][t] += map->alpha[m][t][n]; /* Sums (25) */
       if (map->sum_alpha[m][t] == 0)
-	{mes_prot("sum_alpha = 0\n"); goto STOP;} /* andere Loesung ??? */
+	{mes_prot("sum_alpha = 0\n"); goto STOP;} /* Another solution ??? */
     }
   }
   if (!build) {
@@ -175,11 +175,10 @@ int smap_classify(smodel **smo, double *result, int smo_number,
 #undef CUR_PROC
 }
 
-/* Alternative zu MAPCA (smap_classify) direkte Berechnung von p[m] ueber 
-   Bayes Formel  anstatt Rekursion ueber t. 
+/* Alternative to MAPCA (smap_classify); calculate p[m] directly using 
+   Bayes' theorem, instead of recursive over t.
    p(m | O) = p(O | m) * p(m) / (sum_i p(O | i) * p(i))
-   Gleiches Resultat?
-   
+   Same result?
 */
 
 int smap_bayes(smodel **smo, double *result, int smo_number, double *O, int T) {
@@ -223,8 +222,8 @@ int smap_bayes(smodel **smo, double *result, int smo_number, double *O, int T) {
    goto STOP;
  }
  
- /* log_p berechnen, jedes Modell; verknuepft mit prior ergibt
-  die Likelihood von O, gegeben alle Modelle */
+ /* Calculate log_p for every model; combined with prior gives 
+  the likelihood for O, given all models */
  for (m = 0; m < smo_number; m++)
    if (sfoba_logp(smo[m], O, T, &log_p[m]) == -1) {
      error[m] = 1;
@@ -245,7 +244,7 @@ int smap_bayes(smodel **smo, double *result, int smo_number, double *O, int T) {
  }
  if (err)  goto STOP;
  
- /* Likelihood der Modelle, gegeben O */
+ /* Likelihood for the models, given O */
  for (m = 0; m < smo_number; m++) {
    if (!error[m]) {
      result[m] = exp(log_p[m]) * prior[m] / p_von_O;
