@@ -80,22 +80,13 @@ inline void hlist_removeElem(hypoList** plist) {
 #undef CUR_PROC
 }
 
-/**
-   Propagates list of hypotheses forward by extending each old hypothesis to
-   the possible new hypotheses depending on the states in which the old
-   hypothesis could end and the reachable labels
-   @return number of old hypotheses
-   @param mo:         pointer to the model
-   @param h:          pointer to list of hypotheses
-   @param hplus:      address of a pointer to store the propagated hypotheses
-   @param labels:     number of labels
-   @param nr_s:       number states which have assigned a label 
- */
-int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_s) {
+/******************************************************************************/
+int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels,
+		  int* nr_s, int* max_out) {
 #define CUR_PROC "hlist_propFwd"
   int i, j, c, k;
   int i_id, j_id, g_nr;
-  int no_oldHyps=0;
+  int no_oldHyps=0, newHyps=0;
   hypoList* hP=h;
   hypoList** created;
 
@@ -119,9 +110,10 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_
 	  hlist_insertElem(hplus, c, hP);
 	  created[c] = *hplus;
 	  /* initiallize gamma-array with safe size (number of states */
-	  if (!m_malloc((*hplus)->gamma_id, nr_s[c])) {mes_proc(); goto STOP;}
+	  if ( !m_malloc( (*hplus)->gamma_id, m_min(nr_s[c], hP->gamma_states*max_out[hP->hyp_c]) ) ) {mes_proc(); goto STOP;}
 	  (*hplus)->gamma_id[0]  = j_id;
 	  (*hplus)->gamma_states = 1; 
+	  newHyps++;
 	}
 	/* add a new gamma state to the existing hypothesis with c */
 	else {
@@ -138,18 +130,19 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_
 	}
       }
     }
+    /* reallocating gamma-array to the correct size */
+    for (c=0; c<labels; c++) {
+      if (created[c]) {
+	if (!m_calloc(created[c]->gamma_a,  created[c]->gamma_states)) {mes_proc(); goto STOP;}
+	if (m_realloc(created[c]->gamma_id, created[c]->gamma_states)) {mes_proc(); goto STOP;}
+	created[c] = NULL;
+      }
+    }
     hP = hP->next;
     no_oldHyps++;
   }
 
-  /* reallocating gamma-array to the correct size */
-  for (c=0; c<labels; c++) {
-    if (created[c]) {
-      if (!m_malloc(created[c]->gamma_a,  created[c]->gamma_states)) {mes_proc(); goto STOP;}
-      if (m_realloc(created[c]->gamma_id, created[c]->gamma_states)) {mes_proc(); goto STOP;}
-    }
-  }
-
+  /* printf("Created %d new Hypotheses.\n", newHyps); */
   free(created);
   return (no_oldHyps);
 STOP:

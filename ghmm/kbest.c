@@ -88,7 +88,8 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
   int b_index, i_id;            /* index for addressing states' b arrays */
   int no_labels=0;
   int exists, g_nr;
-  int* labelcount;
+  int* states_wlabel;
+  int* label_max_out;
 
   /* logarithmized transition matrix A, log(a(i,j)) => log_a[i*N+j],
        1.0 for zero probability */
@@ -121,13 +122,20 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
 
   /* get number of labels (= maximum label + 1)
      and number of states with those labels */
-  if (!m_calloc(labelcount, mo->N)) {mes_proc(); goto STOP;}
+  if (!m_calloc(states_wlabel, mo->N)) {mes_proc(); goto STOP;}
+  if (!m_calloc(label_max_out, mo->N)) {mes_proc(); goto STOP;}
   for (i=0; i < mo->N; i++) {
-    labelcount[mo->s[i].label]++;
-    if (mo->s[i].label > no_labels)
-      no_labels = mo->s[i].label;
+    c = mo->s[i].label;
+    states_wlabel[c]++;
+    if (c > no_labels)
+      no_labels = c;
+    if (mo->s[i].out_states > label_max_out[c])
+      label_max_out[c] = mo->s[i].out_states;
   }
-  if (m_realloc(labelcount, ++no_labels)) {mes_proc(); goto STOP;}
+  /* add one to the maximum label to get the number of labels */
+  no_labels++;
+  if (m_realloc(states_wlabel, no_labels)) {mes_proc(); goto STOP;}
+  if (m_realloc(label_max_out, no_labels)) {mes_proc(); goto STOP;}
 
   /* initialize h: */
   hP = h[0];
@@ -150,8 +158,8 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
       if (!exists) {
 	hlist_insertElem(&(h[0]), mo->s[i].label, NULL);
 	/* initiallize gamma-array with safe size (number of states) and add the first entry */
-	if (!m_malloc(h[0]->gamma_a,  mo->N)) {mes_proc(); goto STOP;}
-	if (!m_malloc(h[0]->gamma_id, mo->N)) {mes_proc(); goto STOP;}
+	if (!m_malloc(h[0]->gamma_a,  states_wlabel[mo->s[i].label])) {mes_proc(); goto STOP;}
+	if (!m_malloc(h[0]->gamma_id, states_wlabel[mo->s[i].label])) {mes_proc(); goto STOP;}
 	h[0]->gamma_id[0]  = i;
 	h[0]->gamma_a[0]   = log(mo->s[i].pi) + log(mo->s[i].b[get_emission_index(mo,i,o_seq[0],0)]);
 	h[0]->gamma_states = 1; 
@@ -184,8 +192,8 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
     update_emission_history(mo,o_seq[t-1]);
     
     /** 2. Propagate hypotheses forward and update gamma: */
-    no_oldHyps = hlist_propFwd(mo, h[t-1], &(h[t]), no_labels, labelcount);
-    /*printf("t = %d (%d), no of old hypotheses = %d\n", t, seq_len, no_oldHyps);*/
+    no_oldHyps = hlist_propFwd(mo, h[t-1], &(h[t]), no_labels, states_wlabel, label_max_out);
+    /* printf("t = %d (%d), no of old hypotheses = %d\n", t, seq_len, no_oldHyps); */
     
     /*-- calculate new gamma: --*/
     hP = h[t];
@@ -265,6 +273,8 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
     }
   }
   /* dispose of temporary arrays: */
+  free(states_wlabel);
+  free(label_max_out);
   free(argmaxs);
   free(maxima);
   /* transition matrix is no longer needed from here on */
