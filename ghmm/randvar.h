@@ -107,7 +107,7 @@ double randvar_get_PHI(double x);
    @param mean      Mittelwert der Normaldichte
    @param u         Varianz der Normaldichte
    */
-double randvar_get_1durcha(double x, double mean, double u);
+double randvar_get_1overa(double x, double mean, double u);
 
 /**
    Bestimmen derjenigen Stuetzstelle x, fuer die PHI(x) das erste Mal 1 wird..
@@ -115,13 +115,14 @@ double randvar_get_1durcha(double x, double mean, double u);
    */
 double randvar_get_xPHIless1();
 
-/**
+#if 0
+/* *
    Bestimmen derjenigen Stuetzstelle x, fuer die PHI(x) 
    das erste Mal gleich PHI(y) wird, wenn x und y aufeinander folgen.
    @return          x mit PHI(x)==PHI(y) mit PHI(x')<PHI(y') f.a.x',y'<x,y
    */
 double randvar_get_xPHIxgleichPHIy();
-
+#endif
 
 /**                                 
    cumalative distribution function F(x;mean,u) der NV(mean, u)..
