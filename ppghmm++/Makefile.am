@@ -20,10 +20,12 @@ GHMM_DiscreteModel.cpp \
 GHMM_ContinuousModel.cpp \
 GHMM_AbstractModel.cpp \
 GHMM_State.cpp \
+GHMM_Sequence.cpp \
 GHMM_Sequences.cpp \
 GHMM_ModelFactory.cpp \
 GHMM_Document.cpp \
 GHMM_Transition.cpp \
+GHMM_Emission.cpp \
 GHMM_State.cpp
 
 pkginclude_HEADERS = \
@@ -31,20 +33,20 @@ GHMM_DiscreteModel.h \
 GHMM_ContinuousModel.h \
 GHMM_AbstractModel.h \
 GHMM_State.h \
+GHMM_Sequence.h \
 GHMM_Sequences.h \
 GHMM_ModelFactory.h \
 GHMM_Document.h \
 GHMM_Transition.h \
+GHMM_Emission.h \
 GHMM_State.h
 
+#noinst_PROGRAMS = coin_toss_test chmm generiere_nvs
+noinst_PROGRAMS = generiere_nvs
 
-noinst_PROGRAMS = coin_toss_test chmm train_model generiere_nvs
+#coin_toss_test_SOURCES = coin_toss_test.cpp
 
-coin_toss_test_SOURCES = coin_toss_test.cpp
-
-chmm_SOURCES = chmm.cpp
-
-train_model_SOURCES = train_model.cpp
+#chmm_SOURCES = chmm.cpp
 
 generiere_nvs_SOURCES = generiere_nvs.cpp
 

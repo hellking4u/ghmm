@@ -29,7 +29,7 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
  public:
 
   /** Just for reading from xml file. c_data is left uninitialized. */
-  GHMM_ContinuousModel(XMLIO_Attributes& attrs);
+  GHMM_ContinuousModel();
   /** 
       Constructor.
       @param N       Number of states
@@ -103,8 +103,6 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
 
   /** */
   vector<GHMM_State*> states;
-  /** */
-  density_t density;
   /** */
   map<string,int> state_by_id;
 };

@@ -5,7 +5,8 @@
  * $Id$
  */
 
-#include "GHMM_Sequences.h"
+#include "ppghmm++/GHMM_Sequences.h"
+#include "ppghmm++/GHMM_Sequence.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -13,11 +14,36 @@ using namespace std;
 #endif
 
 
+GHMM_Sequences::GHMM_Sequences(XMLIO_Attributes& attrs) {
+  bool found = false;
+
+  if (attrs["type"] == "continuous") {
+    found = true;
+    sequence_type = GHMM_DOUBLE;
+  }
+
+  if (attrs["type"] == "discrete") {
+    found = true;
+    sequence_type = GHMM_INT;
+  }
+
+  if (! found) {
+    fprintf(stderr,"unrecognized sequences type: type=\"%s\"\nchoose out of: continuous, discrete\n",attrs["type"].c_str());
+    exit(1);
+  }
+
+  c_i_sequences = NULL;
+  c_d_sequences = NULL;
+  last_weight   = 1;
+}
+
+
 GHMM_Sequences::GHMM_Sequences(GHMM_SequenceType my_sequence_type) {
   sequence_type = my_sequence_type;
 
   c_i_sequences = NULL;
   c_d_sequences = NULL;
+  last_weight   = 1;
 }
 
 
@@ -26,6 +52,7 @@ GHMM_Sequences::GHMM_Sequences(sequence_t* seq) {
 
   c_i_sequences = seq;
   c_d_sequences = NULL;
+  last_weight   = 1;
 }
 
 
@@ -34,6 +61,7 @@ GHMM_Sequences::GHMM_Sequences(sequence_d_t* seq) {
 
   c_i_sequences = NULL;
   c_d_sequences = seq;
+  last_weight   = 1;
 }
 
 
@@ -86,6 +114,18 @@ const char* GHMM_Sequences::toString() const {
 
 
 int GHMM_Sequences::add(GHMM_Sequences* source) {
+  /* sequences should contain same type of data. */
+  if (source->sequence_type != sequence_type)
+    return -1;
+
+  if (sequence_type == GHMM_INT)
+    return sequence_add(c_i_sequences,source->c_i_sequences);
+
+  return sequence_d_add(c_d_sequences,source->c_d_sequences);
+}
+
+
+int GHMM_Sequences::add(GHMM_Sequence* source) {
   /* sequences should contain same type of data. */
   if (source->sequence_type != sequence_type)
     return -1;
@@ -273,6 +313,8 @@ void GHMM_Sequences::clean() {
 
   c_i_sequences = NULL;
   c_d_sequences = NULL;
+
+  clean_cpp();
 }
 
 
@@ -307,4 +349,47 @@ unsigned int GHMM_Sequences::getLength(int index) const {
   exit(1);
 
   return 0;
+}
+
+
+XMLIO_Element* GHMM_Sequences::XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes) {
+  if (my_tag == "sequence") {
+    GHMM_Sequence* sequence = new GHMM_Sequence(sequence_type,last_weight);
+    fprintf(stderr,"<sequence id=\"%s\">\n",my_attributes["id"].c_str());
+    sequences.push_back(sequence);
+
+    last_weight = 1;
+
+    return sequence;
+  }
+
+  fprintf(stderr,"unexpected tag: %s in <sequences>\n",my_tag.c_str());
+  exit(1);
+
+  return NULL;
+}
+
+
+void GHMM_Sequences::XMLIO_finishedReading() {
+  fprintf(stderr,"</sequences>\n");
+
+  if (sequence_type == GHMM_INT)
+    c_i_sequences = sequence_calloc(0);
+
+  if (sequence_type == GHMM_DOUBLE)
+    c_d_sequences = sequence_d_calloc(0);
+
+  unsigned int i;
+  for (i = 0; i < sequences.size(); ++i)
+    add(sequences[i]);
+
+  clean_cpp();
+}
+
+
+void GHMM_Sequences::clean_cpp() {
+  unsigned int i;
+  for (i = 0; i < sequences.size(); ++i)
+    SAFE_DELETE(sequences[i]);
+  sequences.clear();
 }

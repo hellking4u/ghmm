@@ -45,8 +45,6 @@ class GHMM_Document: public XMLIO_Document {
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
   /** */
   virtual void XMLIO_endTag(const string& tag);
-  /** */
-  virtual void XMLIO_getCharacters(const string& characters);
 
   /** Returns name of class. */
   virtual const char* toString() const;
