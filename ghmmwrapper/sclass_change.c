@@ -4,7 +4,7 @@
 #include <ghmm/sequence.h>
 #include <ghmm/sdmodel.h>
 #include <ghmm/mes.h>
-#include "/package/python/2.3.0/linux/include/python2.3/Python.h"
+#include <Python.h>
 
 int cp_class_change( smodel *smo, double* seq, int k, int t) {
   int res;
