@@ -22,6 +22,7 @@ namespace std {
 class GHMM_State;
 class GHMM_ContinuousModel;
 class GHMM_Emission;
+class GHMM_AbstractModel;
 
 /** */
 class GHMM_State: public XMLIO_Element {
@@ -32,16 +33,28 @@ class GHMM_State: public XMLIO_Element {
   enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL};
 
   /** */
-  GHMM_State(XMLIO_Attributes& attrs);
+  GHMM_State(GHMM_AbstractModel* my_model, int index, XMLIO_Attributes& attrs);
+  /** */
+  GHMM_State(GHMM_AbstractModel* my_model, int index, sstate* my_state);
   /** Destructor. */
   virtual ~GHMM_State();
 
   /** */
-  void fillState(GHMM_ContinuousModel* model, sstate* s);
+  void changeOutEdge(int target, double prob);
+  /** */
+  void changeOutEdge(int matrix_index, int target, double prob);
+  /** */
+  void changeInEdge(int source, double prob);
+  /** */
+  void changeInEdge(int matrix_index, int source, double prob);
+  /** Fills given state. */
+  void fillState(sstate* s);
 
   /** Returns name of class. */
   virtual const char* toString() const;
 
+  /** */
+  virtual void XMLIO_finishedReading();
   /** */
   virtual void XMLIO_getCharacters(const string& characters);
   /** */
@@ -49,16 +62,25 @@ class GHMM_State: public XMLIO_Element {
   /** */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
-  /** C type state. */
-  state* c_state;
+  /** C type state. Object is not owner of this state. */
+  sstate* c_sstate;
   /** */
   string id;
   /** */
   GHMM_Emission* emission;
+  /** */
+  int index;
 
 
  private:
 
+  /** */
+  void removeInEdge(int source);
+  /** */
+  void removeOutEdge(int target);
+
+  /** */
+  GHMM_AbstractModel* parent_model;
   /** */
   GHMM_StateReadingType reading;
   /** */

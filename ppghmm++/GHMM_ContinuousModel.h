@@ -50,8 +50,14 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   /** Returns name of class. */
   virtual const char* toString() const;
 
+  /**
+     Tests if all standardization requirements of model are fulfilled. 
+     (That is, if the sum of the probabilities is 1).
+     @return 0 for succes; -1 for error. 
+  */
+  virtual int check();
   /* Returns state with given index. */
-  sstate* getState(int index) const;
+  sstate* getCState(int index) const;
   /** 
       Produces sequences to a given model. All memory that is needed for the 
       sequences is allocated inside the function. It is possible to define
@@ -87,6 +93,8 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   */
   int reestimate_baum_welch(GHMM_Sequences* seq, double* logp, double eps, int max_iter);
   /** */
+  virtual int getNumberOfTransitionMatrices() const;
+  /** */
   int getStateID(const string& id);
 
   /** */
@@ -98,14 +106,6 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   smodel* c_model;
   /** */
   vector<GHMM_Transition*> transitions;
-
-
- private:
-
-  /** */
-  vector<GHMM_State*> states;
-  /** */
-  map<string,int> state_by_id;
 };
 
 #ifdef HAVE_NAMESPACES

@@ -242,3 +242,8 @@ state* GHMM_DiscreteModel::getState(int index) const {
 
   return &c_model->s[index];
 }
+
+
+int GHMM_DiscreteModel::getNumberOfTransitionMatrices() const {
+  return 1;
+}
