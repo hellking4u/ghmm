@@ -5,8 +5,12 @@
  * $Id$
  */
 
+#include <xmlio/XMLIO_Document.h>
 #include "ghmm++/GHMM_Emission.h"
 #include "ghmm++/GHMM_State.h"
+#include "ghmm++/GHMM_ContinuousModel.h"
+#include "ghmm++/GHMM_DiscreteModel.h"
+#include "ghmm++/GHMM_Alphabet.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -15,11 +19,31 @@ using namespace std;
 
 
 GHMM_Emission::GHMM_Emission(GHMM_State* my_state) {
-  mue             = 0;
-  variance        = 0;
-  weight          = -1;
-  function_loaded = false;
-  state           = my_state;
+  int i;
+
+  state             = my_state;
+  tag               = "emission";
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
+
+  switch (getModelType()) {
+
+  case GHMM_CONTINOUS:
+    /* only read data if state has been initialized */
+    if (my_state->c_sstate) {
+      mue.push_back(my_state->c_sstate->mue[0]);
+      variance.push_back(my_state->c_sstate->u[0]);
+      weights.push_back(my_state->c_sstate->c[0]);
+      density  = ((GHMM_ContinuousModel*)(my_state->getModel()))->c_model->density;
+    }
+    break;
+
+  case GHMM_DISCRETE:
+    /* only read data if state has been initialized */
+    if (my_state->c_state)
+      for (i = 0; i < ((GHMM_DiscreteModel*)(my_state->getModel()))->c_model->M; ++i)
+	weights.push_back(my_state->c_state->b[i]);
+    break;
+  }
 }
 
 
@@ -35,23 +59,28 @@ const char* GHMM_Emission::toString() const {
 XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
   bool found = false;
 
-  if (tag == "gauss") {
-    mue      = atof(attrs["mue"].c_str());
-    variance = atof(attrs["variance"].c_str());
-    density  = normal;
-    found    = true;
-  }
-  if (tag == "gauss-positive") {
-    mue      = atof(attrs["mue"].c_str());
-    variance = atof(attrs["variance"].c_str());
-    density  = normal_pos;
-    found    = true;
-  }
-  if (tag == "gauss-approximated") {
-    mue      = atof(attrs["mue"].c_str());
-    variance = atof(attrs["variance"].c_str());
-    density  = normal_approx;
-    found    = true;
+  switch (getModelType()) {
+
+  case GHMM_CONTINOUS:
+    if (tag == "gauss") {
+      mue.push_back(atof(attrs["mue"].c_str()));
+      variance.push_back(atof(attrs["variance"].c_str()));
+      density  = normal;
+      found    = true;
+    }
+    if (tag == "gauss-positive") {
+      mue.push_back(atof(attrs["mue"].c_str()));
+      variance.push_back(atof(attrs["variance"].c_str()));
+      density  = normal_pos;
+      found    = true;
+    }
+    if (tag == "gauss-approximated") {
+      mue.push_back(atof(attrs["mue"].c_str()));
+      variance.push_back(atof(attrs["variance"].c_str()));
+      density  = normal_approx;
+      found    = true;
+    }
+    break;
   }
 
   if (! found) {
@@ -72,32 +101,76 @@ XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes
     exit(1);
   }
 
-  function_loaded = true;
-
   return NULL;
 }
 
 
 void GHMM_Emission::XMLIO_getCharacters(const string& characters) {
-  if (weight != -1) {
-    fprintf(stderr,"Emission of state '%s' has multiple weights.\n",state->id.c_str());
-    exit(1);
+  unsigned int pos;
+  for (pos = 0; pos < characters.size(); ++pos) {
+    while (pos < characters.size() && isspace(characters[pos]))
+      ++pos;
+
+    if (pos < characters.size())
+      weights.push_back(atof(characters.substr(pos).c_str()));
+
+    while (pos < characters.size() && !isspace(characters[pos]))
+      ++pos;
   }
-  if (function_loaded) {
-    fprintf(stderr,"Emission of state '%s' has character data behind density function.\n",state->id.c_str());
-    exit(1);
-  }
-  weight = atof(characters.c_str());
 }
 
 
 void GHMM_Emission::XMLIO_finishedReading() {
-  /* weight 1 is default value. */
-  if (weight == -1)
-    weight = 1;
+  /* continuous model */
+  if (state->c_sstate)
+    if (weights.size() != mue.size()) {
+      fprintf(stderr,"Different number of weights and density functions in state '%s'.\n",state->id.c_str());
+      exit(1);
+    }
+}
 
-  if (!function_loaded) {
-    fprintf(stderr,"Emission of state '%s' lacks density function.\n",state->id.c_str());
-    exit(1);
+
+const int GHMM_Emission::XMLIO_writeContent(XMLIO_Document& writer) {
+  int result = 0;
+  int i;
+
+  writer.changeIndent(2);
+
+  /* continuous model */
+  if (state->c_sstate) {
+    result = writer.writef("1 <");
+    switch (density) {
+    case normal:
+      result += writer.write("gauss");
+      break;
+    case normal_pos:
+      result += writer.write("gauss-positive");
+      break;
+    case normal_approx:
+      result += writer.write("gauss-approximated");
+      break;
+    }
+    result += writer.writef(" mue=\"%f\" variance=\"%f\">",mue[0],variance[0]);
   }
+
+  /* discrete model */
+  if (state->c_state) {
+    GHMM_Alphabet* alphabet = state->getModel()->getAlphabet();
+    GHMM_DiscreteModel* model = (GHMM_DiscreteModel*) state->getModel();
+
+    result += writer.writeEndl();
+    for (i = 0; i < model->c_model->M; ++i) {
+      result += writer.writef("%s%.2f",writer.indent,state->c_state->b[i]);
+      if (alphabet)
+	result += writer.writef(" <!-- %s -->",alphabet->getSymbol(i).c_str());
+      result += writer.writeEndl();
+    }
+  }
+
+  return result;
+}
+
+
+GHMM_ModelType GHMM_Emission::getModelType() const {
+  return state->getModelType();
 }

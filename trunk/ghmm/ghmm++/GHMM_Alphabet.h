@@ -1,16 +1,16 @@
-/*
- * created: 21 Feb 2002 by Peter Pipenbacher
- * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
- * file   : $Source$
- * $Id$
+/* @(#)GHMM_Alphabet.h created by Peter Pipenbacher at 19 Mar 2002
+ *
+ * Authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
+ *
  */
 
-#ifndef _GHMM_EMISSION_H
-#define _GHMM_EMISSION_H 1
+#ifndef _GHMM_ALPHABET_H
+#define _GHMM_ALPHABET_H 1
 
+#include <string>
+#include <vector>
+#include <map>
 #include <xmlio/XMLIO_Element.h>
-#include <ghmm/smodel.h>
-#include <ghmm++/GHMM_Types.h>
 
 #include <ghmm++/begin_code.h>
 
@@ -18,29 +18,40 @@
 namespace std {
 #endif
 
-class GHMM_Emission;
-class GHMM_State;
+class GHMM_Alphabet;
+class GHMM_Sequence;
+
 
 /** */
-class GHMM_Emission: public XMLIO_Element {
+class GHMM_Alphabet: public XMLIO_Element {
 
  public:
 
+  /** */
+  enum GHMM_AlphabetType {GHMM_SINGLE_CHAR_ALPHABET};
+
   /** Constructor. */
-  GHMM_Emission(GHMM_State* my_state);
+  GHMM_Alphabet();
   /** Destructor. */
-  virtual ~GHMM_Emission();
+  virtual ~GHMM_Alphabet();
 
   /** Returns name of class. */
   virtual const char* toString() const;
 
-  /** Returns model type. */
-  GHMM_ModelType getModelType() const;
-
   /** */
-  virtual void XMLIO_finishedReading();
-  /** Collects all character data. */
-  virtual void XMLIO_getCharacters(const string& characters);
+  void addSymbol(const string& symbol);
+  /** */
+  int getIndex(const string& symbol) const;
+  /** */
+  GHMM_Sequence* getSequence(const string& sequence) const;
+  /** */
+  string getSymbol(int index) const;
+  /** */
+  unsigned int size() const;
+
+  
+ private:
+
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
@@ -51,19 +62,11 @@ class GHMM_Emission: public XMLIO_Element {
   virtual const int XMLIO_writeContent(XMLIO_Document& doc);
 
   /** */
-  vector<double> mue;
+  vector<string> symbols;
   /** */
-  vector<double> variance;
+  map<string,int> symbol_map;
   /** */
-  vector<double> weights;
-  /** */
-  density_t density;
-
-
- private:
-
-  /** Parent state. */
-  GHMM_State* state;
+  GHMM_AlphabetType alphabet_type;
 };
 
 #ifdef HAVE_NAMESPACES
@@ -72,4 +75,4 @@ class GHMM_Emission: public XMLIO_Element {
 
 #include <ghmm++/close_code.h>
 
-#endif /* _GHMM_EMISSION_H */
+#endif /* _GHMM_ALPHABET_H */

@@ -12,7 +12,7 @@
       <emission>1 <gauss mue="0.2" variance="2"/></emission>
   </state>
 
-  <transition source="state3" target="state1">
+  <transition source="state1" target="state1">
       <prob>0.2</prob>
   </transition>
 

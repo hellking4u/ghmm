@@ -30,6 +30,7 @@ GHMM_Emission.cpp \
 GHMM_IntVector.cpp \
 GHMM_DoubleVector.cpp \
 GHMM_DoubleMatrix.cpp \
+GHMM_Alphabet.cpp \
 GHMM_Toolkit.cpp
 
 pkginclude_HEADERS = \
@@ -50,6 +51,7 @@ GHMM_IntVector.h \
 GHMM_DoubleVector.h \
 GHMM_DoubleMatrix.h \
 GHMM_Toolkit.h \
+GHMM_Alphabet.h \
 GHMM.h
 
 

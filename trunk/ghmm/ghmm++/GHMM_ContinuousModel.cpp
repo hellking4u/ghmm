@@ -1,17 +1,21 @@
 /*
- * created: 05 Feb 2002 by Peter Pipenbacher
- * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
- * file   : $Source$
- * $Id$
+  created: 05 Feb 2002 by Peter Pipenbacher
+  authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
+  file   : $Source$
+  $Id$
+
+  __copyright__
  */
 
-#include "ghmm/mes.h"
 #include "ghmm/sreestimate.h"
+#include "ghmm/sviterbi.h"
+#include <xmlio/XMLIO_Document.h>
 #include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_Sequences.h"
 #include "ghmm++/GHMM_State.h"
 #include "ghmm++/GHMM_Transition.h"
 #include "ghmm++/GHMM_Emission.h"
+#include "ghmm++/GHMM_IntVector.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -21,7 +25,8 @@ using namespace std;
 
 GHMM_ContinuousModel::GHMM_ContinuousModel() {
   /* Do not initialize anything. It will be read from xml file. */
-  c_model = NULL;
+  c_model            = NULL;
+  attributes["type"] = "continuous";
 }
 
 
@@ -29,6 +34,8 @@ GHMM_ContinuousModel::GHMM_ContinuousModel(int N, int M, int cos, density_t dens
 					   double prior) {
   int i;
   int j;
+
+  attributes["type"] = "continuous";
 
   c_model = (smodel*) calloc(1,sizeof(smodel));
   if (!c_model) {
@@ -117,31 +124,6 @@ int GHMM_ContinuousModel::reestimate_baum_welch(GHMM_Sequences* seq, double* log
 }
 
 
-XMLIO_Element* GHMM_ContinuousModel::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
-  if (tag == "state") {
-    GHMM_State* ghmm_state = new GHMM_State(this,states.size(),attrs);
-    states.push_back(ghmm_state);
-
-    state_by_id[ghmm_state->id] = states.size() - 1;
-
-    /* Pass all nested elements to this state. */
-    return ghmm_state;
-  }
-
-  if (tag == "transition") {
-    GHMM_Transition* transition = new GHMM_Transition(attrs);
-    transitions.push_back(transition);
-
-    return transition;
-  }
-
-  fprintf(stderr,"tag '%s' not recognized in hmm element\n",tag.c_str());
-  exit(1);
-  
-  return NULL;
-}
-
-
 void GHMM_ContinuousModel::XMLIO_finishedReading() {
   unsigned int i;
 
@@ -175,9 +157,7 @@ void GHMM_ContinuousModel::XMLIO_finishedReading() {
     exit(1);
 
   /* we dont need the transitions any more. */
-  for (i = 0; i < transitions.size(); ++i)
-    SAFE_DELETE(transitions[i]);
-  transitions.clear();
+  cleanTransitions();
 }
 
 
@@ -235,4 +215,21 @@ void GHMM_ContinuousModel::buildCppData() {
     GHMM_State* state = new GHMM_State(this,i,&c_model->s[i]);
     states.push_back(state);
   }
+}
+
+
+GHMM_ModelType GHMM_ContinuousModel::getModelType() const {
+  return GHMM_CONTINOUS;
+}
+
+
+GHMM_IntVector* GHMM_ContinuousModel::viterbi(GHMM_Sequences* seq, int index, double *log_p) {
+  double my_logp;
+
+  if (!log_p)
+    log_p = &my_logp;
+
+  int len = seq->getLength(index);
+
+  return new GHMM_IntVector(sviterbi(c_model,seq->getDoubleSequence(index),len,log_p),len);
 }

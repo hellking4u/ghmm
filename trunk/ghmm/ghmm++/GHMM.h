@@ -15,6 +15,8 @@
 #include "ghmm++/GHMM_DiscreteModel.h"
 #include "ghmm++/GHMM_IntVector.h"
 #include "ghmm++/GHMM_DoubleMatrix.h"
+#include "ghmm++/GHMM_DoubleVector.h"
 #include "ghmm++/GHMM_Document.h"
+#include "ghmm++/GHMM_Alphabet.h"
 
 #endif /* _GHMM_H */

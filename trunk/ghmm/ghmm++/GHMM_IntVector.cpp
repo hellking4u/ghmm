@@ -49,3 +49,5 @@ void GHMM_IntVector::resize(int new_len, int default_value) {
 
   len = new_len;
 }
+
+

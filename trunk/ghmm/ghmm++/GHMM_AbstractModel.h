@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <vector>
 #include <xmlio/XMLIO_Element.h>
+#include <ghmm++/GHMM_Types.h>
 
 #include <ghmm++/begin_code.h>
 
@@ -21,6 +22,7 @@ namespace std {
 class GHMM_AbstractModel;
 class GHMM_State;
 class GHMM_Transition;
+class GHMM_Alphabet;
 
 /** */
 class GHMM_AbstractModel: public XMLIO_Element {
@@ -36,9 +38,7 @@ class GHMM_AbstractModel: public XMLIO_Element {
   virtual const char* toString() const;
 
   /** */
-  void setTransition(GHMM_Transition* transition);
-  /** */
-  void setTransition(int start, int end, double prob);
+  void addStateID(const string& id, int index);
   /**
      Tests if all standardization requirements of model are fulfilled. 
      @return 0 for succes, -1 on error
@@ -46,6 +46,10 @@ class GHMM_AbstractModel: public XMLIO_Element {
   virtual int check() const;
   /** Clean model. */
   virtual void clean();
+  /** Returns alphabet of model or NULL, if no such alphabet exists. */
+  virtual GHMM_Alphabet* getAlphabet() const;
+  /** Returns model type. */
+  virtual GHMM_ModelType getModelType() const;
   /** */
   virtual int getNumberOfTransitionMatrices() const;
   /* Returns state with given index. */
@@ -61,12 +65,33 @@ class GHMM_AbstractModel: public XMLIO_Element {
      @param file: output file
   */
   virtual void print(FILE *file) const;
+  /** */
+  void setTransition(GHMM_Transition* transition);
+  /** */
+  void setTransition(int start, int end, double prob);
+  /** */
+  void setTransition(const string& start, const string& end, double prob);
+  /** */
+  void stateIDChanged(const string& old_id, const string& new_id);
 
   /** */
   vector<GHMM_Transition*> transitions;
 
 
  protected:
+
+  /** Clean up c++ data structure for transitions. */
+  void cleanTransitions();
+  /** Build up c++ data structure for transitions. */
+  void createTransitions();
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
+  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+  /** Writes the content (XML Spec[43]) of this element.
+      You should use the public XMLIO_Document::write* functions.
+      @return Returns the number of bytes written,
+      but is negative when an error occured and 0 by default. */
+  virtual const int XMLIO_writeContent(XMLIO_Document& doc);
 
   /** */
   vector<GHMM_State*> states;

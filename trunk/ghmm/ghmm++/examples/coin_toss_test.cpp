@@ -1,8 +1,10 @@
 /*******************************************************************************
   authors      : Achim Gaedke, Peter Pipenbacher
-  filename     : ppghmm++/coin_toss_test.cpp
-  created      : DATE: 2001-04-25
+  filename     : ghmm++/examples/coin_toss_test.cpp
+  created      : DATE: 2002-03-08
   $Id$
+
+  __copyright__
 *******************************************************************************/
 
 #include "ghmm++/GHMM.h"
@@ -16,10 +18,6 @@ int single_state_coin_toss() {
   GHMM_Sequences* my_output = NULL;
 
   /* initialise model with 1 state and 2 symbols */
-  //  GHMM_Alphabet alphabet();
-  //  alphabet.addSymbol("head");
-  //  alphabet.addSymbol("tail");
-
   GHMM_DiscreteModel my_model(1,2);
 
   /* initialise this state */

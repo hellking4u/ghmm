@@ -12,6 +12,7 @@
 
 #include <ghmm/model.h>
 #include <xmlio/XMLIO_Element.h>
+#include <ghmm++/GHMM_Types.h>
 
 #include <ghmm++/begin_code.h>
 
@@ -23,6 +24,8 @@ class GHMM_State;
 class GHMM_ContinuousModel;
 class GHMM_Emission;
 class GHMM_AbstractModel;
+class GHMM_Transition;
+class GHMM_Alphabet;
 
 /** */
 class GHMM_State: public XMLIO_Element {
@@ -49,29 +52,31 @@ class GHMM_State: public XMLIO_Element {
   void changeInEdge(int source, double prob);
   /** */
   void changeInEdge(int matrix_index, int source, double prob);
+  /** Creates GHMM_Transition object of outgoing edge with given index. */
+  GHMM_Transition* createTransition(int edge_index);
   /** Fills given state. */
   void fillState(sstate* s);
   /** Fills given state. */
   void fillState(state* s);
+  /** */
+  void setID(const string& my_id);
+  /** */
+  GHMM_AbstractModel* getModel() const;
+  /** Returns model type. */
+  GHMM_ModelType getModelType() const;
+  /** */
+  int getOutEdges() const;
+  /** Returns initial probability of state. */
+  double getInitial() const;
   /** Sets initial probability of this state to 'prob'. */
   void setInitialProbability(double prob);
-  /** Sets output probability of symbol 'index' to 'prob'.*/
+  /** Sets output probability of symbol 'index' to 'prob'. */
   void setOutputProbability(int index, double prob);
+  /** Sets output probability of symbol to 'prob'. */
+  void setOutputProbability(const string& symbol, double prob);
 
   /** Returns name of class. */
   virtual const char* toString() const;
-
-  /** */
-  virtual void XMLIO_finishedReading();
-  /** Collects all character data. */
-  virtual void XMLIO_getCharacters(const string& characters);
-  /** Called by XMLIO_Document when a end tag is found. 
-      This happens when a sub element has finished reading its
-      content. By default this function does nothing. */
-  virtual void XMLIO_endTag(const string& tag);
-  /** Called by GHMM_Document when a start tag is received. Tag and 
-      attributes are passed to this function. */
-  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
   /** C type sstate. Object is not owner of this state. */
   sstate* c_sstate;
@@ -93,11 +98,31 @@ class GHMM_State: public XMLIO_Element {
   void removeOutEdge(int target);
 
   /** */
-  GHMM_AbstractModel* parent_model;
+  virtual void XMLIO_finishedReading();
+  /** Collects all character data. */
+  virtual void XMLIO_getCharacters(const string& characters);
+  /** Called by XMLIO_Document when a end tag is found. 
+      This happens when a sub element has finished reading its
+      content. By default this function does nothing. */
+  virtual void XMLIO_endTag(const string& tag);
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
+  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+  /** Returns the attributes of this element (XML Spec [40], [41]). 
+      By default returns content of variable 'attributes'.*/
+  virtual XMLIO_Attributes& XMLIO_getAttributes();
+  /** Writes the content (XML Spec[43]) of this element.
+      You should use the public XMLIO_Document::write* functions.
+      @return Returns the number of bytes written,
+      but is negative when an error occured and 0 by default. */
+  virtual const int XMLIO_writeContent(XMLIO_Document& doc);
+
   /** */
   GHMM_StateReadingType reading;
   /** */
   double initial;
+  /** */
+  GHMM_AbstractModel* parent_model;
 };
 
 #ifdef HAVE_NAMESPACES

@@ -4,7 +4,7 @@
   file   : $Source$
   $Id$
   
-__copyright__
+  __copyright__
 
 */
 
@@ -20,6 +20,7 @@ namespace std {
 #endif
 
 class GHMM_Transition;
+class GHMM_State;
 
 /** Represents transition between two states. Only needed while model is constructed from
     xml file. */
@@ -32,6 +33,8 @@ class GHMM_Transition: public XMLIO_Element {
 
   /** Constructor. */
   GHMM_Transition(XMLIO_Attributes &attrs);
+  /** Constructor. */
+  GHMM_Transition(GHMM_State* my_source, GHMM_State* my_target, double my_prob);
   /** Destructor. */
   virtual ~GHMM_Transition();
 
@@ -57,6 +60,11 @@ class GHMM_Transition: public XMLIO_Element {
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+  /** Writes the content (XML Spec[43]) of this element.
+      You should use the public XMLIO_Document::write* functions.
+      @return Returns the number of bytes written,
+      but is negative when an error occured and 0 by default. */
+  virtual const int XMLIO_writeContent(XMLIO_Document& doc);
 
   /** Current reading state. */
   GHMM_TransitionReadingType reading;

@@ -27,12 +27,15 @@ class GHMM_Sequences;
 class GHMM_IntVector;
 class GHMM_DoubleVector;
 class GHMM_DoubleMatrix;
+class GHMM_Alphabet;
 
 /** Discrete HMM model (wrapper around model in C data structure). */
 class GHMM_DiscreteModel: public GHMM_AbstractModel {
 
  public:
   
+  /** Constructor. */
+  GHMM_DiscreteModel();
   /** Constructor. 
       @param number_of_states Number of the states.
       @param alphabet_size Size of the alphabet. 
@@ -42,12 +45,16 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   /** Constructor. Construct from c model. Object now is owner of this model. 
       @param my_model model as C data structure. */
   GHMM_DiscreteModel(model* my_model);
+  /** Constructor. */
+  GHMM_DiscreteModel(GHMM_Alphabet* alphabet);
   /** Destructor. */
   virtual ~GHMM_DiscreteModel();
 
   /** Returns name of class. */
   virtual const char* toString() const;
 
+  /** Adds state with given id to model. */
+  void addState(const string& id);
   /** 
       Writes transition matrix of a model.
       @param file: output file
@@ -147,6 +154,10 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param seq_number:  number of sequences
   */
   GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number) const;
+  /** Returns alphabet of model or NULL, if no such alphabet exists. */
+  virtual GHMM_Alphabet* getAlphabet() const;
+  /** Returns model type. */
+  virtual GHMM_ModelType getModelType() const;
   /** */
   virtual int getNumberOfTransitionMatrices() const;
   /* Returns state with given index. */
@@ -201,7 +212,17 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param log_p      probability of the sequence in the Viterbi path 
                        (return value).
   */
-  GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double *log_p) const;
+  GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double* log_p = NULL) const;
+  /**
+     Calculates the logarithmic probability to a given path through the 
+     states (does not have to be the Viterbi path), given sequence and
+     a model.
+     @param seq:       sequence
+     @param index:     index of sequence to take
+     @param state_seq: path through the states
+     @return log P
+  */
+  double viterbi_logp(GHMM_Sequences* seq, int index, int* state_seq);
   /**
      Baum-Welch Algorithm for HMMs.
      Training of model parameter with multiple integer sequences (incl. scaling).
@@ -213,12 +234,32 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
 
   /** C Model. */
   model* c_model;
+  /** Alphabet of model. */
+  GHMM_Alphabet* alphabet;
 
 
  private:
 
   /** Build c++ data from c_model. */
   void buildCppData();
+  /** */
+  void cleanCPP();
+  /** Init function. */
+  void init();
+  /** Init function.
+      @param number_of_states Number of the states.
+      @param alphabet_size Size of the alphabet. 
+      @param prior Prior for the a priori probability for the model 
+                   (-1 for none). */
+  void init(int number_of_states, int alphabet_size, double prior=-1);
+  /** */
+  virtual void XMLIO_finishedReading();
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
+  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+
+  /** */
+  bool own_alphabet;
 };
 
 #ifdef HAVE_NAMESPACES
