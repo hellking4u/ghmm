@@ -57,3 +57,18 @@ pkginclude_HEADERS = foba.h \
                   gauss_tail.h \
                   smap_classify.h
 
+COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
+
+dist-hook:
+	test -z "$(AWK)" && exit 0 ;\
+	for f in $(DISTFILES) ; do \
+	  distfile=$(distdir)/$$f ; \
+	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
+	    mv $$distfile tmp; \
+	    $(AWK) 'BEGIN {nr=0;while(getline < "$(COPYRIGHT)" ==1) copyright[nr++]=$$0;} /__copyright__ *$$/{sub("__copyright__.*","");for(i=0;i<nr;i++) print $$0 copyright[i];} //' \
+	    tmp >$$distfile; \
+	    touch -m -a -r tmp $$distfile; \
+	  fi; \
+	done ; \
+	rm -f tmp
+
