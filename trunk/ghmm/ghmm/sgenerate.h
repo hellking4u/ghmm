@@ -18,7 +18,7 @@ __copyright__
    @name generation and extention of sequences from shmm
 */
 
-/**@{
+/*@{
  */
 
 /**

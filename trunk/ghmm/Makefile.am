@@ -19,7 +19,7 @@ cvsclean: distclean
 
 .PHONY: cvsclean
 
-EXTRA_DIST = COPYRIGHT.txt GPL.txt LGPL.txt
+EXTRA_DIST = COPYRIGHT.txt GPL.txt LGPL.txt ToDo
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

@@ -13,76 +13,105 @@
 
 /*
   model with two states and three symbols
-  state 0 has symbol 0 and 1
+  transition probability: 0->0: 0.9, 0->1: 0.1, 1->0: 0.1 and 1->1:0.9
+  state 0 has symbol 0 (probability 0.5) and 1 (probability 0.5)
   state 1 has symbol 2
 */
+
 int my_model()
 {
+  /* model structure, that contains states */
   model my_model;
+  /* array of states */
   state model_states[2];
+
+  /* first state */
+  /*  probability of emmission of 0,1 or 2 */
   double symbols_0_state[3]={0.5,0.5,0.0};
-  double trans_prob_0_state[2]={0.5,0.5};
+  /* transition to which state is given in the following arrays */
   int trans_id_0_state[2]={0,1};
+  /* transition probability from here to 0-state (self) and 1-state */
+  double trans_prob_0_state[2]={0.9,0.1};
+  /* transition probability from 0-state (self) and 1-state to this state */
+  double trans_prob_0_state_rev[2]={0.9,0.1};
+
+  /* second state , comments see above */
   double symbols_1_state[3]={0.0,0.0,1.0};
-  double trans_prob_1_state[2]={0.5,0.5};
   int trans_id_1_state[2]={0,1};
+  double trans_prob_1_state[2]={0.1,0.9};
+  double trans_prob_1_state_rev[2]={0.1,0.9};
   sequence_t* my_output;
 
   /* initialise state 0 */
+  /* start probability for this state */
   model_states[0].pi = 0.5;
+  /* array with emission probabilities */
   model_states[0].b=symbols_0_state;
+  /* number of fields in out_a and out_id */
   model_states[0].out_states=2;
+  /* transition probability from this state */
   model_states[0].out_a=trans_prob_0_state;
+  /* state ids belonging to the probability */
   model_states[0].out_id=trans_id_0_state;
-  model_states[0].in_states=0;
-  model_states[0].in_a=NULL;
+  /* transition probability to this state */
+  /* in_states,in_id and in_a have the same function as above*/
+  model_states[0].in_states=2;
+  model_states[0].in_id=trans_id_0_state;
+  model_states[0].in_a=trans_prob_0_state_rev;
+  /* should emission probabilities be changed during reestimation? 1: no, else: yes*/
   model_states[0].fix=0;
 
   /* initialise state 1 */
+  /* same meaning as above */
   model_states[1].pi = 0.5;
   model_states[1].b=symbols_1_state;
   model_states[1].out_states=2;
   model_states[1].out_a=trans_prob_1_state;
   model_states[1].out_id=trans_id_1_state;
-  model_states[1].in_states=0;
-  model_states[1].in_a=NULL;
+  model_states[1].in_states=2;
+  model_states[1].in_id=trans_id_0_state;
+  model_states[1].in_a=trans_prob_1_state_rev;
   model_states[1].fix=0;
 
   /* initialise model */
-  my_model.N=2; /* number of states */
-  my_model.M=3; /* number of symbols */
-  my_model.s=model_states;
-  my_model.prior=-1;
+  my_model.N=2; /* number of states, dimension of model.s */
+  my_model.M=3; /* number of symbols, dimension of states.b */
+  my_model.s=model_states; /* array of states */
+  my_model.prior=-1; /* probability of this model, used in a model array */
 
-  /* print out model parameters */
-  fprintf(stdout,"two states and three symbols:\n");
+  /* consistency check */
+  fprintf(stdout,"checking model:\n");
+  if (model_check(&my_model))
+    {
+      fprintf(stderr,"model_check failed!\n");
+      return 1;
+    }
+  fprintf(stdout,"model is ok\n");
+
+  /* print model parameters */
+  fprintf(stdout,"two_states_three_symbols model:\n");
   model_print(stdout,&my_model);
 
   /* generate sequences */
-  fprintf(stdout,"generated sequence:\n");
-  my_output=model_generate_sequences(&my_model,1,10,10);
+  fprintf(stdout,"generating sequences:...");
+  my_output=model_generate_sequences(&my_model, /* model */
+				     1,   /* random seed */
+				     100, /* length of each sequence */
+				     100); /* no of sequences */
+  fprintf(stdout,"Done\n");
   sequence_print(stdout,my_output);
 
-#if 0
-  /* randomize  transition vector */
-  vector_random_values(trans_prob_0_state,2);
-  vector_normalize(trans_prob_0_state,2);
-
-  /* print again */
-  fprintf(stdout,"randomized transition matrix:\n");
-  model_A_print(stdout,&my_model,""," ","\n");
-#else
-  /* slight change of probabilities in state 0 */
-  symbols_0_state[0] = 0.4;
-  symbols_0_state[1] = 0.6;
+  /* slight change of emission probabilities in state 0 */
+  symbols_0_state[0] = 0.6;
+  symbols_0_state[1] = 0.4;
   symbols_0_state[2] = 0.0;
-#endif
 
-  if (model_check(&my_model))
-    fprintf(stderr,"model_check failed!\n");
-  else
-    reestimate_baum_welch(&my_model,my_output);
+  /* reestimation */
+  fprintf(stdout,"reestimating with Baum-Welch-algorithm...");
+  reestimate_baum_welch(&my_model,my_output);
 
+  /* print the result */
+  fprintf(stdout,"Done\nthe result is:\n");
   model_print(stdout,&my_model);
 
   return 0;
@@ -90,7 +119,6 @@ int my_model()
 
 int main()
 {
-
   /* Important! initialise rng  */
   gsl_rng_init();
 
