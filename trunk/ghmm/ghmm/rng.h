@@ -14,6 +14,8 @@ __copyright__
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+/** @name rng Initialization for the random number generator */
+
 /**
  */
 extern gsl_rng * RNG;
