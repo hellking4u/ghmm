@@ -550,6 +550,8 @@ model *model_copy(const model *mo) {
     m2->bp = mo->bp;
   } else m2->background_id = NULL;
 
+  if (!m_malloc(m2->pow_lookup, mo->maxorder+2)) {mes_proc(); goto STOP;} 
+
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
@@ -595,6 +597,8 @@ model *model_copy(const model *mo) {
   m2->M = mo->M;
   m2->prior = mo->prior;
   m2->maxorder = mo->maxorder;
+  for (i=0; i<mo->maxorder+2; i++)
+    m2->pow_lookup[i] = mo->pow_lookup[i];
   m2->model_type = mo->model_type;
   /* not necessary but the history is at least initialised */
   m2->emission_history = mo->emission_history;
