@@ -140,8 +140,7 @@ class NamedDistributions(xmlutil.NamedDistributions ):
                 emission_probabilities.update({label:weight})
                 
             e = ProbEditorBasics.emission_data(emission_probabilities)
-            d = ProbEditorDialogs.emission_dialog(master, e,
-                                                  "background emission probs %s" % name)
+            d = ProbEditorDialogs.emission_dialog(master, e, "background emission probs %s" % name)
             if d.success():
                 # write back normalized probabilities
                 for key in emission_probabilities.keys():
@@ -632,8 +631,11 @@ class HMMEditor(SAGraphEditor):
 	    if not "edges" in tags:
 		v = self.FindVertex(event)
                 # print "Found Vertex " + "%s" % v
-                d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr)
-
+                if self.HMM.state[v].state_class != -1: # we have attribute state_class
+                    d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr + ['state_class'])
+                else:
+                    d = EditObjectAttributesDialog(self, self.HMM.state[v], HMMState.editableAttr )
+                    
                 # We only show the label out of the editable items
                 self.HMM.G.labeling[v] = ValidatingString("%s" % (self.HMM.state[v].label)) # XXX Hack Aaaargh!
                 self.UpdateVertexLabel(v, 0)
