@@ -38,7 +38,7 @@
 ################################################################################
 
 from DataStructures import Point2D,EdgeWeight
-from Graph import Graph
+from Graph import Graph, SubGraph
 
 from xml.dom.minidom import *
 import EditObjectAttributesDialog
@@ -569,9 +569,10 @@ class HMM:
         return state.index
         
     def DeleteState(self, index):
-        del self.id2index[self.state[index].id]
-        del self.state[index]
-        self.G.DeleteVertex(index)
+	""" The method only deletes a map between index and its state object.
+	    The caller must delete the corresponding vertex in the owner Graph self.G. """
+	del self.id2index[self.state[index].id]
+	del self.state[index]
 
     def fromDOM(self, XMLNode):
         
