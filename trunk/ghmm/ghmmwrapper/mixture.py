@@ -74,13 +74,13 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
                    math.log(1.0/len(models))
     else:
         logalpha = numarray.log(alpha)
-    #print logalpha, numarray.exp(logalpha)
+    print logalpha, numarray.exp(logalpha)
     log_nrseqs = math.log(len(seqs))
 
     while 1:
         # Score all sequences with all models
         for i, m in enumerate(models):
-            loglikelihood = m.loglikelihoods(seqs) 
+            loglikelihood = m.loglikelihoods(seqs)
             # numarray slices: l[:,i] is the i-th column of l
             l[:,i] = numarray.array(loglikelihood)
 
@@ -102,7 +102,7 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
 
         #print l
         l_exp = numarray.exp(l) # XXX Use approx with table lookup
-        #print l_exp
+        #print "exp(l)", l_exp
         #print numarray.sum(numarray.transpose(l_exp)) # Print row sums
 
         # Compute priors alpha
