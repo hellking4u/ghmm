@@ -3,7 +3,7 @@
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/sdmodel.h>
-#include <ghmm/GHMM_convertXMLtoC.h>
+#include <ghmm++/GHMM_convertXMLtoC.h>
 #include "sdclass_change.h"
 
 /*int cp_class_change(int *seq, int len) {

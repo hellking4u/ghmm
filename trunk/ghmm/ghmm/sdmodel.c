@@ -26,24 +26,10 @@ __copyright__
 
 #define  __EPS 10e-6
 
-typedef enum DFSFLAG
-  { GRAY, NOTVISITED, VISITED } DFSFLAG;
-
-
-typedef struct local_store_t {
-  DFSFLAG *colors; 
-  int     *topo_order;
-  int     topo_order_length;
-} local_store_t;
-
-static local_store_t *sdtopo_alloc(sdmodel *mo, int len);
-static int sdtopo_free(local_store_t **v, int n, int cos, int len);
-
-
 /*----------------------------------------------------------------------------*/
 static int sdmodel_state_alloc(sdstate *state, int M, int in_states,
 			       int out_states, int cos) {
-# define CUR_PROC "sdmodel_state_alloc"
+#define CUR_PROC "sdmodel_state_alloc"
   int res = -1;
   if(!m_calloc(state->b, M)) {mes_proc(); goto STOP;}
 
@@ -61,8 +47,10 @@ static int sdmodel_state_alloc(sdstate *state, int M, int in_states,
   res = 0;
 STOP:
   return(res);
-# undef CUR_PROC
+#undef CUR_PROC
 } /* model_state_alloc */
+
+
 /*----------------------------------------------------------------------------*/
 double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
 # define CUR_PROC "sdmodel_likelihood"
@@ -87,9 +75,20 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
   if (!found)
     log_p = +1.0;
   return(log_p);
-# undef CUR_PROC
-} /* model_likelihood */
-                                                         
+#undef CUR_PROC
+} /*sdmodel_likelihood */
+
+int sdfoba_forward(sdmodel *mo, const int *O, int length, double **alpha, 
+		   double *scale, double *log_p)
+{
+#define CUR_PROC "sdfoba_forward"
+
+  fprintf(stderr, "sdfoba_forward: this function is not yet fully implemented\n");
+  return -1;
+
+#undef CUR_PROC
+} /* sdfoba_forward */
+                                                   
 /*----------------------------------------------------------------------------*/
 
 static int sdmodel_copy_vectors(sdmodel *mo, int index, double ***a_matrix, 
@@ -243,219 +242,11 @@ STOP:
 } /* model_copy */
 
 
-
-/*----------------------------------------------------------------------------*/
-static local_store_t *sdtopo_alloc(sdmodel *mo, int len) {
-#define CUR_PROC "sdtopo_alloc"
-  local_store_t* v = NULL;
-  int j;
-  if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
-
-  v->topo_order_length = 0;
-  if (!m_calloc(v->topo_order, mo->N)) {mes_proc(); goto STOP;}
-
-  return(v);
-STOP:
-  sdtopo_free(&v, mo->N, mo->cos, len);
-  return(NULL);
-#undef CUR_PROC
-} /* viterbi_alloc */
-
-
-/*----------------------------------------------------------------------------*/
-static int sdtopo_free(local_store_t **v, int n, int cos,int len) {
-#define CUR_PROC "sdviterbi_free"
-  int j;
-  mes_check_ptr(v, return(-1));
-  if( !*v ) return(0);
-  m_free((*v)->colors);
-  m_free((*v)->topo_order);
-  m_free(*v);
-  return(0);
-#undef CUR_PROC
-} /* viterbi_free */
-
-
-/*----------------------------------------------------------------------------*/
-static void __VisitNext(sdmodel *mo, int j, int *counter, local_store_t *v)
-{
-  int i, nextState, ins;
-
-  v->colors[j] = VISITED; 
-  v->topo_order[(*counter)++] = j;
-
-  for(i = 0; i < mo->s[j].out_states; i++)	
-    {
-      if (v->colors[mo->s[j].out_id[i]] == NOTVISITED && 
-	        j != mo->s[j].out_id[i]) { 
-	if (mo->silent[ mo->s[j].out_id[i] ]) { /* looping back taken care of */
-	  nextState = mo->s[j].out_id[i];
-	  /* Check if all in-coming silent states has been visited */
-	  for( ins=0; ins < mo->s[nextState].in_states; ins++) {	
-	    if ( nextState != mo->s[nextState].in_id[ins] &&
-		 mo->silent[ mo->s[nextState].in_id[ins] ] ) {
-	      if ( v->colors[ mo->s[nextState].in_id[ins] ] == NOTVISITED ) {
-		/* fprintf(stderr, "%d, %d to %d\n",j, ins, nextState); */
-		goto find_next_silent;
-	      }
-	    }
-	  }
-	  
-	  v->colors[nextState] = VISITED; 
-	  v->topo_order[(*counter)++] = nextState; /* All in-coming silent states
-						    * has been visited,
-						  * and so we have the ordering
-						  */
-	}
-      }   
-find_next_silent:;
-    }
-}
-
-static int __nextSilentState(sdmodel *mo, int st, int *counter, local_store_t *v)
-{
-  int j;
-  int nextst=-1;
-
-  for(j=0; j < mo->s[ st ].out_states; j++) {
-    if ( v->colors[mo->s[ st ].out_id[j]] == NOTVISITED &&
-	 mo->silent[mo->s[ st ].out_id[j]] ) {
-      v->topo_order[v->topo_order_length++] = mo->s[ st ].out_id[j];
-      nextst = mo->s[ st ].out_id[j];
-      break; 
-    }
-  }
-
-  return nextst;
-}
-
-/*----------------------------------------------------------------------------*/
-/* WS 05.30.2003 :
- * Description: Produce a topological ordering of all silent states 
- * in the strictly Left-Right HMMEr Plan 7.
- * Stupid algorithm: O(N*N) and only work on DAG graph with 
- * Profile HMM topology
- *
- *--------------------------------------------------------------------------*/
-static void __sdmodel_topo_ordering(sdmodel *mo, local_store_t *v) 
-{
-  int i,j,k;
-  int terminal_node=-1;
-  int fstState, nextSt;
-  int done = 0;
-
-  //assert(mo->model_type == kSilentStates); /* otherwise, why are you here? */
-
-  v->colors   =   (DFSFLAG*)malloc( sizeof(DFSFLAG)*mo->N );
-  v->topo_order = (int*)malloc( sizeof(int)*mo->N );
-  v->topo_order_length = 0;
-
-  for(i=0; i < mo->N; i++) 
-    {
-      v->topo_order[i] = -1;
-      v->colors[i]     = NOTVISITED;
-    }
-
-  for(i=0; i < mo->N; i++) {  
-    if ( mo->s[i].pi >  0.0 ) { 
-      v->colors[ i ] = VISITED;
-      fstState = i;
-      fprintf(stderr, "First state is %d\n", fstState);
-      if ( mo->silent[i] ) {
-	v->topo_order[v->topo_order_length++] = i;
-      }
-      break; /** pick only one starting state **/
-    }
-  }
-
-  /* WS, HACK!! to prevent a cycle of silent states in the model !!!, 
-     not pretty */
-
-  /** removing a cycle, so that we can sort 
-      -- mark all terminal silent states --- **/ 
-  nextSt = fstState;
-  while ( !done ) {
-    if ( mo->s[nextSt].out_states == 1 &&
-	 mo->s[nextSt].out_id[0] == nextSt) {
-      done = 1;
-    } else 
-      if ( mo->silent[ nextSt ] &&
-	   mo->s[nextSt].in_states == 2 ) {
-	for(j=0; j < mo->s[ nextSt ].in_states; j++) {
-	  if ( v->colors[mo->s[nextSt].in_id[j]] == NOTVISITED &&
-	       mo->silent[mo->s[nextSt].in_id[j]] ) {
-	    v->colors[ mo->s[nextSt].in_id[j] ] = GRAY;
-	    fprintf(stderr, " GRAY .... %d \n", mo->s[nextSt].in_id[j]);
-	    done = 1;
-	  }	  
-	} 
-      } else {
-	nextSt = __nextSilentState( mo, nextSt, 0,v);
-	v->colors[ nextSt ] = VISITED; 
-	fprintf(stderr, " Next state .... %d \n", nextSt);
-      }
-  }
-
-  done = 0;
-  nextSt = v->topo_order[v->topo_order_length-1];
-  fprintf(stderr, " Next search: state at %d .... \n", nextSt);
-  while ( !done ) {
-    for(j=0; j < mo->s[ nextSt ].out_states; j++) {
-      if ( v->colors[mo->s[nextSt].out_id[j]] == NOTVISITED &&
-	   mo->silent[mo->s[nextSt].out_id[j]] ) {
-	v->topo_order[v->topo_order_length++] = mo->s[nextSt].out_id[j];
-	nextSt = mo->s[nextSt].out_id[j];
-	v->colors[nextSt] = VISITED;
-	fprintf(stderr, " Next search: state at %d .... \n", nextSt);
-	break;
-      }
-      if ( v->colors[mo->s[nextSt].out_id[j]] == GRAY ) {
-	v->topo_order[v->topo_order_length++] = mo->s[nextSt].out_id[j];
-	nextSt = mo->s[nextSt].out_id[j];
-	v->colors[nextSt] = VISITED;
-	fprintf(stderr, " Next search: state at %d .... \n", nextSt);
-	done = 1;
-	break;
-      }
-    }
-  }
-
-  /* 
-   * To finish the ordering of Profile HMM, Add E and T to mark the cycle 
-   */
-  for(i=0; i < mo->N; i++) {
-    if ( mo->silent[i] && v->colors[i] == NOTVISITED ) {
-      v->topo_order[v->topo_order_length++] = i;
-    }
-  }      
-}
-
 /*----------------------------------------------------------------------------*/
 void sdmodel_topo_ordering(sdmodel *mo) 
 {
 #define CUR_PROC "sdmodel_topo_ordering"
-  int i;
-  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
-  local_store_t *v;
-
-  v = sdtopo_alloc(mo, 1);
-  if (!v) { mes_proc(); goto STOP; }
-
-  __sdmodel_topo_ordering( mo, v);
-  
-  mo->topo_order_length = v->topo_order_length;
-  if (!m_calloc(mo->topo_order, mo->topo_order_length)) {mes_proc(); goto STOP;}
-
-  for(i=0; i < v->topo_order_length; i++) {
-    mo->topo_order[i] = v->topo_order[i];
-  }
-  fprintf(stderr,"Ordering silent states....\n\t");
-  for(i=0; i < mo->topo_order_length; i++) {
-    fprintf(stderr, "%d, ", mo->topo_order[i]);
-  }
-  fprintf(stderr,"\n\n");
-  sdtopo_free(&v, mo->N, mo->cos, 1);
-STOP:
+  fprintf(stderr, "sdmodel_topo_ordering will be implemented using DFS.\n");
 #undef CUR_PROC
 }
 
