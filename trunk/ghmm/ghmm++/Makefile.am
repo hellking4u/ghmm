@@ -1,43 +1,68 @@
-#  author       : Achim Gaedke
-#  filename     : /zpr/bspk/src/hmm/ghmm/ghmm++/Makefile.am
-#  created      : DATE: 28 June 2001
+#  author       : Peter Pipenbacher
+#  filename     : $Source$
+#  created      : 21.01.2002
 #  $Id$
 #
 # __copyright__
 
-SUBDIRS= . examples
-DISTCLEANFILES = *~
+# tests and examples
+
+SUBDIRS = .
+CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
+LDADD    = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
 
 pkgincludedir = $(includedir)/ghmm++
 
 lib_LIBRARIES = libghmm++.a
+#libghmm___la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
 libghmm___a_SOURCES = \
-sequence.cpp \
-sequences.cpp \
-sequences_document.cpp \
-InitialStates.cpp \
-Emissions.cpp \
-ghmm.cpp \
-ghmm_graph.cpp \
-ghmm_edge.cpp \
-ghmm_alphabet.cpp \
-ghmm_symbol.cpp
+GHMM_DiscreteModel.cpp \
+GHMM_ContinuousModel.cpp \
+GHMM_AbstractModel.cpp \
+GHMM_State.cpp \
+GHMM_Sequence.cpp \
+GHMM_Sequences.cpp \
+GHMM_ModelFactory.cpp \
+GHMM_Document.cpp \
+GHMM_Transition.cpp \
+GHMM_Emission.cpp \
+GHMM_State.cpp \
+GHMM_IntVector.cpp \
+GHMM_DoubleVector.cpp \
+GHMM_DoubleMatrix.cpp
 
-pkginclude_HEADERS= \
-DiscretePD.h \
-sequence.h \
-sequences.h \
-sequences_document.h \
-InitialStates.h \
-Emissions.h \
-ghmm.h \
-ghmm_graph.h \
-ghmm_edge.h \
-ghmm_alphabet.h \
-ghmm_symbol.h
+pkginclude_HEADERS = \
+begin_code.h \
+close_code.h \
+GHMM_DiscreteModel.h \
+GHMM_ContinuousModel.h \
+GHMM_AbstractModel.h \
+GHMM_State.h \
+GHMM_Sequence.h \
+GHMM_Sequences.h \
+GHMM_ModelFactory.h \
+GHMM_Document.h \
+GHMM_Transition.h \
+GHMM_Emission.h \
+GHMM_State.h \
+GHMM_Types.h \
+GHMM_IntVector.h \
+GHMM_DoubleVector.h \
+GHMM_DoubleMatrix.h
+
+#noinst_PROGRAMS =  chmm generiere_nvs
+noinst_PROGRAMS = generiere_nvs generiere_nvs_old_files coin_toss_test
+
+coin_toss_test_SOURCES = coin_toss_test.cpp
+
+#chmm_SOURCES = chmm.cpp
+
+generiere_nvs_SOURCES = generiere_nvs.cpp
+generiere_nvs_old_files_SOURCES = generiere_nvs_old_files.cpp
+
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
@@ -54,8 +79,3 @@ dist-hook:
 	  fi; \
 	done ; \
 	rm -f $$TMPFILE
-
-
-
-
-
