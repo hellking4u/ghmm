@@ -6,6 +6,7 @@ gsl_rng_init() #Init random number generator
 
 # initializing clustering environment
 res = scluster_env("test2.smo","test10.sqd")
+#res = scluster_env("5StateModels.smo","spellman-test.txt.sqd")
 
 change = 1
 
@@ -49,23 +50,23 @@ for i in range(2):
 
 # distance between models
 # extracting pointers to smodels out of scluster_t struct
-m0 = get_smodel_ptr(res.sclustering.scluster_t.smo,0) 
-m1 = get_smodel_ptr(res.sclustering.scluster_t.smo,1)
+#m0 = get_smodel_ptr(res.sclustering.scluster_t.smo,0) 
+#m1 = get_smodel_ptr(res.sclustering.scluster_t.smo,1)
 
 #s1 = SHMM("blae",0,m0,1)  # initializing Python SHMM object from smodel pointers
 #s2 = SHMM("blae",0,m1,1)  #  m0 and m1
 #print s1  # printing out these models for testing purposes
 #print s2
 
-print "***** calculating model distance"
-d = prob_distance_smodel(m0,m1,2000) # (third argument is sequence lenght)
-print "distance(m0,m1) = " + str(d)
+#print "***** calculating model distance"
+#d = prob_distance_smodel(m0,m1,2000) # (third argument is sequence lenght)
+#print "distance(m0,m1) = " + str(d)
 
-d2 = prob_distance_smodel(m1,m0,2000) # (third argument is sequence lenght)
-print "distance(m1,m0) = " + str(d2)
+#d2 = prob_distance_smodel(m1,m0,2000) # (third argument is sequence lenght)
+#print "distance(m1,m0) = " + str(d2)
 
-d3 = smodel_prob_distance(m1,m0,2000,1,0) # (third argument is sequence lenght, optional fourth argument is flag for symmetric distance)
-print "symmetric distance(m1,m0) = " + str(d3)
+#d3 = smodel_prob_distance(m1,m0,2000,1,0) # (third argument is sequence lenght, optional fourth argument is flag for symmetric distance)
+#print "symmetric distance(m1,m0) = " + str(d3)
 
 # merging two models
 print "\n\n*** adding yet another model"
@@ -84,7 +85,8 @@ for i in range(2):
 	change = res.cluster_onestep(1)
 
 # deviating models
-res.deviate_model(0, 0.001, 0.001, 0.001,  0.001)
+print "***** deviating model"
+res.deviate_model(3, 0.001, 0.001, 0.001,  0.001,0.2)
 # arguments are: (	  model ID, 
 #	 				  deviation of transitions,
 #					  deviation of means,
@@ -93,7 +95,19 @@ res.deviate_model(0, 0.001, 0.001, 0.001,  0.001)
 #				 )
 # deviation d means new_value = old_value + x, where x is randomly from [-d,d]
 
+# two iterations of clustering
+for i in range(2):
+	change = res.cluster_onestep(1)
 
+m0 = res.get_model(2) 
+m1 = res.get_model(0) 
+#s1 = SHMM("blae",0,m0,1)  # initializing Python SHMM object from smodel pointers
+#s2 = SHMM("blae",0,m1,1)  #  m0 and m1
+print "***** calculating model distance"
+d = prob_distance_smodel(m0,m1,2000) # (third argument is sequence lenght)
+print "distance(m0,m1) = " + str(d)
+d2 = prob_distance_smodel(m1,m0,2000) # (third argument is sequence lenght)
+print "distance(m1,m0) = " + str(d2)
 
 # freeing memory  
 #print "freeing ..."
