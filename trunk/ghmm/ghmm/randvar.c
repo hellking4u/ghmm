@@ -8,8 +8,9 @@ __copyright__
 
 *******************************************************************************/
 
-
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 #include <math.h>
 #ifdef HAVE_LIBPTHREAD
 # include <pthread.h>
@@ -34,19 +35,18 @@ static int pdf_stdnormal_exists = 0;
    Wertebereich x = -9,999 - 0 */
 #define X_STEP_PHI 0.001  /* Schrittweite */
 #define X_FAKT_PHI 1000   /* aequivalent zur Schrittweite */
-#define PHI_DATEI_NAME "/usr/users/disa/lib/PHI_001_20.dat"
-#warning "PHI_DATE_NAME depreciated!"
+
 static double* PHI = NULL;
 static int PHI_len = 0;
 static double x_PHI_1 = -1.0;
 static double x_PHI_xy = -1.0;
 
-
 /*----------------------------------------------------------------------------*/
 static int randvar_read_PHI() {
 # define CUR_PROC "randvar_read_PHI"
   int res = -1;
-  char filename[] = PHI_DATEI_NAME;
+  char filename[] = PHI_DATA_FILE;
+  #warning "PHI_DATA_FILE depreciated!"
   scanner_t *s = NULL;
   s = scanner_alloc(filename); if(!s) {mes_proc(); goto STOP;}
   scanner_get_name(s);
