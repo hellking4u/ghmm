@@ -189,6 +189,9 @@ class HMMState( xmlutil.HMMState ):
         xmlutil.HMMState.__init__(self)
         self.background = PopupableInt(-1)
         self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
+	
+	self.state_class = PopupableInt(-1)
+        self.state_class.setPopup(self.itsHMM.hmmClass.code2name, self.itsHMM.hmmClass.name2code, 10)
 
     
 class HMMClass( xmlutil.HMMClass ):
@@ -210,10 +213,12 @@ class HMMClass( xmlutil.HMMClass ):
             
             for key in self.name.keys():
                 if key not in new_keys:
+                    del self.code2name[key]
                     del self.name2code[self.name[key]]
                     del self.name[key] 
                     del self.desc[key]
                 else:
+                    self.code2name[key] = self.name[key]  
                     self.name2code[self.name[key]] = key
 
 class HMM (xmlutil.HMM):
