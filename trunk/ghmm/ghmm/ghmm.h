@@ -34,11 +34,14 @@ extern "C" {
 #define kUntied -1 
 
 /** Model has states emission probabilities conditioned on previous orders */
-#define kHigherOrderEmissions (1 << 4);
+#define kHigherOrderEmissions (1 << 4)
 
-#define kHasBackgroundDistributions (1 << 5);
+#define kHasBackgroundDistributions (1 << 5)
 
 #define kNoBackgroundDistribution -1
+
+/** Model is a class HMM with labeled states */
+#define kLabeledStates (1 << 6)
 
 
 #endif
