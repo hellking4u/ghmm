@@ -1653,7 +1653,7 @@ class GaussianEmissionHMM(HMM):
         self.BWcontext.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
         self.BWcontext.eps  = 10e-6
         self.BWcontext.max_iter = nrSteps
-        
+        return baumWelchCData
     
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
         """ Compute one iteration of Baum Welch estimation.
