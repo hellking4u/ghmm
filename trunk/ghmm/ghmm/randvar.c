@@ -19,9 +19,21 @@ __copyright__
 #include "mprintf.h"
 #include "randvar.h"
 #include "rng.h"
-#include "scanner.h"
 #include "float.h"
 #include "const.h"
+
+#ifdef DO_WITH_GSL
+
+# include <gsl/gsl_math.h>
+# include <gsl/gsl_sf_erf.h>
+# include <gsl/gsl_randist.h>
+
+#else
+
+#include "scanner.h"
+
+#endif /* DO_WITH_GSL */
+
 
 /* Liste fuer vorberechnete Werte der Dichtefkt. einer N(0,1)-Verteilung 
    Wertebereich x=0,00 - 19.99 */
@@ -35,11 +47,13 @@ static int pdf_stdnormal_exists = 0;
    Wertebereich x = -9,999 - 0 */
 #define X_STEP_PHI 0.001  /* Schrittweite */
 #define X_FAKT_PHI 1000   /* aequivalent zur Schrittweite */
-
-static double* PHI = NULL;
 static int PHI_len = 0;
-static double x_PHI_1 = -1.0;
 static double x_PHI_xy = -1.0;
+static double x_PHI_1 = -1.0;
+
+
+#ifndef DO_WITH_GSL
+static double* PHI = NULL;
 
 /*----------------------------------------------------------------------------*/
 static int randvar_read_PHI() {
@@ -94,24 +108,36 @@ STOP:
 } /* randvar_init_PHI */
 
 
+#endif /* DO_WITH_GSL */
+
+
 /*============================================================================*/
+/* needed by pmue_interpol */
+
 double randvar_get_xfaktphi() {
   return X_FAKT_PHI;
 }
 
-/*============================================================================*/
 double randvar_get_xstepphi() {
   return X_STEP_PHI;
 }
 
-/*============================================================================*/
 double randvar_get_philen() {
+#ifdef DO_WITH_GSL
   return PHI_len;
+#else
+  return randvar_get_xPHIless1()/X_STEP_PHI;
+#endif
 }
+
 
 /*============================================================================*/
 double randvar_get_PHI(double x) {
 # define CUR_PROC "randvar_get_PHI"
+
+#ifdef DO_WITH_GSL
+  return (gsl_sf_erf(x*M_SQRT1_2)+1.0)/2.0;
+#else
   int i;
   double phi_x;
 
@@ -130,6 +156,7 @@ double randvar_get_PHI(double x) {
     return(1.0 - phi_x);
   else
     return(phi_x);
+#endif /* DO_WITH_GSL */
 
 STOP:
   return(-1.0);
@@ -138,9 +165,29 @@ STOP:
 
 
 /*============================================================================*/
-/* Wann wird PHI[x,0,1] == 1? */
+/* Wann wird PHI[x,0,1] == 1?
+   when equals PHI to 1 due to precision?
+ */
 double randvar_get_xPHIless1() {
 # define CUR_PROC "randvar_get_xPHIless1"
+#ifdef DO_WITH_GSL
+  if (x_PHI_1 == -1)
+    {
+      double low,up,half;
+      low=0;
+      up=100;
+      while (up-low>0.001)
+	{
+	  half=(low+up)/2.0;
+	  if (randvar_get_PHI(half)<1.0)
+	    low=half;
+	  else
+	    up=half;
+	}
+      x_PHI_1=low;
+    }
+  return(x_PHI_1);
+#else
   double x;
   int i;
   if (x_PHI_1 == -1) {
@@ -153,11 +200,13 @@ double randvar_get_xPHIless1() {
     x_PHI_1 = x - (double)X_STEP_PHI/2.0;
   }
   return(x_PHI_1);
+#endif
 STOP:
   return(-1.0);
 # undef CUR_PROC
 }
 
+#if 0 /* is not in use */
 /*============================================================================*/
 /* Wann wird PHI[x,0,1] ==  PHI[y,0,1] fuer hintereinanderliegende x,y ?*/
 double randvar_get_xPHIxgleichPHIy() {
@@ -179,14 +228,40 @@ STOP:
   return(-1.0);
 # undef CUR_PROC
 }
+#endif /* 0 */
 
 /*============================================================================*/
-double randvar_get_1durcha(double x, double mean, double u) {
+double randvar_get_1overa(double x, double mean, double u) {
   /* Berechnung von 1/a(x, mean, u) 
      mit a: Integral von x bis \infty ueber die Gaussdichte */
-# define CUR_PROC "randvar_get_1durcha"
+# define CUR_PROC "randvar_get_1overa"
+
+#ifdef DO_WITH_GSL
+  double erfc_value;
+#else
   int i;
   double y, z, phi_z, a;
+#endif
+
+  if (u <= 0.0) {
+    mes_prot("u <= 0.0 not allowed\n"); goto STOP;
+  }
+
+#ifdef DO_WITH_GSL
+  /* int gsl_sf_erfc (double x) 
+     erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2)
+  */
+  erfc_value=gsl_sf_erfc((x-mean)/sqrt(u*2));
+  if (erfc_value <= DBL_MIN)
+    {
+      mes(MES_WIN,
+	  "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n",
+	  mean, u);
+      return(erfc_value);
+    }
+  else
+    return(2.0/erfc_value);
+#else
 
   if (randvar_init_PHI() == -1) {mes_proc(); goto STOP;};
 
@@ -221,10 +296,12 @@ double randvar_get_1durcha(double x, double mean, double u) {
     }
   }
   return a;
+#endif
+
 STOP:
   return(-1.0);
 # undef CUR_PROC
-} /* randvar_get_1durcha */
+} /* randvar_get_1overa */
 
 
 /*============================================================================*/
@@ -250,24 +327,60 @@ double randvar_normal_density_pos(double x, double mean, double u) {
 double randvar_normal_density_trunc(double x, double mean, double u,
 				    double a) {
 # define CUR_PROC "randvar_normal_density_trunc"
+#ifndef DO_WITH_GSL
 double c;
+#endif /* DO_WITH_GSL */
 
   if (u <= 0.0) {
     mes_prot("u <= 0.0 not allowed\n"); goto STOP;
   }
   if (x < a) return(0.0);
   
-  if ((c = randvar_get_1durcha(a, mean, u)) == -1) 
-    {mes_proc(); goto STOP;};
-  
+#ifdef DO_WITH_GSL
+  /* move mean to the right position */
+  /* double gsl_ran_gaussian_tail_pdf (double x, double a, double sigma) */
+  return gsl_ran_gaussian_tail_pdf(x-mean,a-mean,sqrt(u));
+#else
+  if ((c = randvar_get_1overa(a, mean, u)) == -1) 
+    {mes_proc(); goto STOP;};  
   return(c * randvar_normal_density(x, mean, u));
+#endif /* DO_WITH_GSL */
+
 STOP:
   return(-1.0);
 # undef CUR_PROC
 } /* double randvar_normal_density_trunc */
 
 
-/*----------------------------------------------------------------------------*/
+/*============================================================================*/
+double randvar_normal_density(double x, double mean, double u) { 
+# define CUR_PROC "randvar_normal_density"
+#ifndef DO_WITH_GSL
+  double expo;
+#endif
+  if (u <= 0.0) {
+    mes_prot("u <= 0.0 not allowed\n");
+    goto STOP;
+  }
+  /* evtl Nenner < EPS??? abfangen ? */
+#ifdef DO_WITH_GSL
+  /* double gsl_ran_gaussian_pdf (double x, double sigma) */
+  return gsl_ran_gaussian_pdf(x-mean,sqrt(u));
+#else
+  expo = exp( -1 * m_sqr(mean - x) / (2 * u));
+  return( 1/(sqrt(2*PI*u)) * expo );
+#endif
+
+STOP:
+  return(-1.0);
+# undef CUR_PROC
+} /* double randvar_normal_density */
+
+
+/*============================================================================*/
+/* special smodel pdf need it: smo->density==normal_approx: */
+/* generates a table of of aequidistant samples of gaussian pdf */
+
 static int randvar_init_pdf_stdnormal() {
 # define CUR_PROC "randvar_init_pdf_stdnormal"
   int i;
@@ -283,23 +396,6 @@ static int randvar_init_pdf_stdnormal() {
 } /* randvar_init_pdf_stdnormal */
 
 
-/*============================================================================*/
-double randvar_normal_density(double x, double mean, double u) { 
-# define CUR_PROC "randvar_normal_density"
-  double expo;
-  if (u <= 0.0) {
-    mes_prot("u <= 0.0 not allowed\n"); goto STOP;
-  }
-  /* evtl Nenner < EPS??? abfangen ? */
-  expo = exp( -1 * m_sqr(mean - x) / (2 * u));
-  return( 1/(sqrt(2*PI*u)) * expo );
-STOP:
-  return(-1.0);
-# undef CUR_PROC
-} /* double randvar_normal_density */
-
-
-/*============================================================================*/
 double randvar_normal_density_approx(double x, double mean, double u) { 
 # define CUR_PROC "randvar_normal_density_approx"
 #ifdef HAVE_LIBPTHREAD
@@ -341,17 +437,12 @@ STOP:
 /*============================================================================*/
 double randvar_std_normal(int seed) {
 # define CUR_PROC "randvar_std_normal"
-  static int first = 0;
-  static double h1;
-  static double h2;
-  double U, V;
   if (seed != 0) {
     gsl_rng_set(RNG,seed);    
     return(1.0);
   }
-
-  return( gsl_ran_gaussian(RNG, 1.0) );
-
+  else
+    return(gsl_ran_gaussian(RNG, 1.0));
 # undef CUR_PROC
 } /* randvar_std_normal */
 
@@ -359,35 +450,54 @@ double randvar_std_normal(int seed) {
 /*============================================================================*/
 double randvar_normal(double mue, double u, int seed) {
 # define CUR_PROC "randvar_normal"
+#ifdef DO_WITH_GSL
+  if (seed != 0) {
+    gsl_rng_set(RNG,seed);    
+    return(1.0*sqrt(u)+mue);
+  }
+  else
+    return(gsl_ran_gaussian(RNG,sqrt(u))+mue);
+#else
   double x;
   x = sqrt(u) * randvar_std_normal(seed) + mue;
   return(x);
+#endif
 # undef CUR_PROC
 } /* randvar_normal */
 
 
 /*============================================================================*/
-#define C0 2.515517
-#define C1 0.802853
-#define C2 0.010328
-#define D1 1.432788
-#define D2 0.189269
-#define D3 0.001308
+#ifndef DO_WITH_GSL
+# define C0 2.515517
+# define C1 0.802853
+# define C2 0.010328
+# define D1 1.432788
+# define D2 0.189269
+# define D3 0.001308
+#endif
 
 double randvar_normal_pos(double mue, double u, int seed) {
 # define CUR_PROC "randvar_normal_pos"
   double x = -1;
+#ifndef DO_WITH_GSL
   double sigma, U, Us, Us1, Feps, Feps1, t, T;
+#endif
 
   if (u <= 0.0) {
     mes_prot("u <= 0.0 not allowed\n"); goto STOP;
   }
 
   if (seed != 0) {
-    gsl_rng_set(RNG,seed);    
+    gsl_rng_set(RNG,seed);
     return(1.0);
   }
 
+#if DO_WITH_GSL
+  /* move boundary to lower values in order to achieve maximum at mue
+     gsl_ran_gaussian_tail(generator, lower_boundary, sigma)
+  */
+  x=gsl_ran_gaussian_tail(RNG, -mue, sqrt(u))+mue;
+#else
   /* Methode: solange Gauss-verteilte Zuf.Zahl erzeugen (mit GSL-Lib.), 
      bis sie im pos. Bereich liegt -> nicht effektiv, wenn mue << 0 
   while (x < 0.0) {
@@ -409,7 +519,9 @@ double randvar_normal_pos(double mue, double u, int seed) {
   if (Us-0.5 < 0) 
     x = mue - T;
   else
-    x = mue + T;
+    x = mue + T;  
+#endif /* DO_WITH_GSL */
+
 
 STOP:
   return(x);
@@ -425,9 +537,15 @@ double randvar_uniform_int(int seed, int K) {
     return(1.0);
   }
   else {
+#ifdef DO_WITH_GSL
+    /* more direct solution than old version ! */
+    return (double)gsl_rng_uniform_int(RNG,K);
+#else
+    /* why do this ? */
     double x = gsl_ran_flat(RNG, -0.5, K-0.5);
     x = m_int(x); /* m_int rundet auf Integer */
     return(x);
+#endif
   }
 # undef CUR_PROC
 } /* randvar_uniform_int */
@@ -440,8 +558,13 @@ double randvar_normal_cdf(double x, double mean, double u) {
   if (u <= 0.0) {
     mes_prot("u <= 0.0 not allowed\n"); goto STOP;
   }
+#ifdef DO_WITH_GSL
+  /* PHI(x)=erf(x/sqrt(2))/2+0.5 */
+  return (gsl_sf_erf((x-mean)/sqrt(u*2.0))+1.0)/2.0;
+#else
   /* evtl Nenner < EPS abfangen ? */
   return(randvar_get_PHI((x - mean)/sqrt(u)));
+#endif /* DO_WITH_GSL */
 STOP:
   return(-1.0);
 # undef CUR_PROC
@@ -449,15 +572,24 @@ STOP:
 
 /*============================================================================*/
 /* cumalative distribution function of -EPS_NDT-truncated N(mean, u) */
-double randvar_normal_pos_cdf(double x, double mean, double u) { 
+double randvar_normal_pos_cdf(double x, double mean, double u) {
 # define CUR_PROC "randvar_normal_pos_cdf"
   double Fx, c;
   if (x <= 0.0) return(0.0);
   if (u <= 0.0) { mes_prot("u <= 0.0 not allowed\n"); goto STOP; }
+#if DO_WITH_GSL
+  /*
+    Function: int gsl_sf_erfc_e (double x, gsl_sf_result * result) 
+    These routines compute the complementary error function
+    erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2). 
+   */
+  return 1.0+(gsl_sf_erf((x-mean)/sqrt(u*2))-1.0)/gsl_sf_erfc((-mean)/sqrt(u*2));
+#else
   /* evtl Nenner < EPS abfangen ? */
   Fx = randvar_get_PHI((x - mean)/sqrt(u));
-  c = randvar_get_1durcha(-EPS_NDT, mean, u);
+  c = randvar_get_1overa(-EPS_NDT, mean, u);
   return(c*(Fx-1)+1);
+#endif /* DO_WITH_GSL */
  STOP:
   return(-1.0);
 # undef CUR_PROC
