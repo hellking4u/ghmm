@@ -21,10 +21,10 @@ using namespace std;
 */
 
 int single_state_continuous() {
-  double c[] = {1.0};
-  double mue[] = {0.0};
-  double u[] = {1.0};
-  GHMM_Sequences* my_output;
+  double c   = 1.0;
+  double mue = 0.0;
+  double u   = 1.0;
+  GHMM_Sequences* my_sequences;
 
   /* initialise model */
   GHMM_ContinuousModel my_model(1,1,1,normal);
@@ -32,70 +32,56 @@ int single_state_continuous() {
   /* initialise this state */
   my_model.getState(0)->setInitialProbability(1.0);
   my_model.setTransition(0,0,1.0);
-  my_model.getCState(0)->c   = c;  /* weight of distribution */
-  my_model.getCState(0)->mue = mue; /* mean */
-  my_model.getCState(0)->u   = u; /* variance */
+  my_model.getCState(0)->c[0]   = c;  /* weight of distribution */
+  my_model.getCState(0)->mue[0] = mue; /* mean */
+  my_model.getCState(0)->u[0]   = u; /* variance */
+
+  if (my_model.check() == -1)
+    exit(1);
 
   /* generate sequences */
-  my_output = my_model.generate_sequences(1,  /* random seed */
-					  10, /* length of sequences */
-					  10, /* sequences */
-					  0,  /* label */
-					  0  /* maximal sequence length 0: no limit*/
-					  );
+  my_sequences = my_model.generate_sequences(1,  /* random seed */
+					     10, /* length of sequences */
+					     10, /* sequences */
+					     0   /* label */
+					     );
   /* print out sequences */
-  my_output->print(stdout,    /* output file */
-		   0          /* do not truncate to integer*/
-		   );
+  my_sequences->print(stdout,    /* output file */
+		      0          /* do not truncate to integer*/
+		      );
 
 
   /* reproduce the sequence by saving and rereading the model */
-  {  
-    FILE *my_file;
-    sequence_d_t* new_output;
-    char filename_buffer[]="/tmp/chmm_test.XXXXXX";
-    int descriptor;
-    int model_counter;
-    smodel **model_array;
+  FILE *my_file;
+  GHMM_Sequences* new_sequences = NULL;
+  char* filename="chmm.tmp";
+  GHMM_ContinuousModel new_model;
 
-    descriptor=mkstemp(filename_buffer);
-    /* write this model */
-    my_file=fdopen(descriptor,"w+");
-    fprintf(stdout,"printing model to file %s\n",filename_buffer);
-    my_model.print(my_file);
-    (void)fseek(my_file, 0L, SEEK_SET);
-    fclose(my_file);
+  /* write this model */
+  fprintf(stdout,"printing model to file %s\n",filename);
+  my_file = fopen(filename,"w");
+  my_model.print(my_file);
+  fclose(my_file);
 
-    /* read this model */
-    fprintf(stdout,"rereading model from file %s\n",filename_buffer);
-    model_array=smodel_read(filename_buffer,&model_counter);
+  /* read this model */
+  fprintf(stdout,"rereading model from file %s\n",filename);
+  new_model.read(filename);
 
-    /* generate sequences */
-    fprintf(stdout,"generating sequences again\n");
-    new_output=smodel_generate_sequences(model_array[0],
-					 1,  /* random seed */
-					 10, /* length of sequences */
-					 10, /* sequences */
-					 0,  /* label */
-					 0   /* maximal sequence length 0: no limit*/
-					 );
+  /* generate sequences */
+  fprintf(stdout,"generating sequences again\n");
+  new_sequences = new_model.generate_sequences(1,  /* random seed */
+					       10, /* length of sequences */
+					       10, /* sequences */
+					       0   /* label */
+					       );
 
-    sequence_d_print(stdout,     /* output file */
-		     new_output, /* sequence */
-		     0           /* do not truncate to integer*/
-		     );
-    /* free everything */
-    close(descriptor);
-    unlink(filename_buffer);
-    sequence_d_free(&new_output);
-    while(model_counter>0)
-      {
-	smodel_free(&(model_array[model_counter-1]));
-	model_counter-=1;
-      }
-  }
-
-  delete my_output;
+  new_sequences->print(stdout,     /* output file */
+		       0           /* do not truncate to integer*/
+		       );
+  /* free everything */
+  
+  delete new_sequences;
+  delete my_sequences;
 
   return 0;
 }

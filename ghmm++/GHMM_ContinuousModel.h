@@ -74,7 +74,7 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
       @param label:       label tag
       @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
   */
-  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number, long label, int Tmax) const;
+  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number, long label, int Tmax=-1) const;
   /**
      Writes the model in matrix format.
      @param file: output file

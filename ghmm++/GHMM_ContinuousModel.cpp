@@ -27,6 +27,9 @@ GHMM_ContinuousModel::GHMM_ContinuousModel() {
 
 GHMM_ContinuousModel::GHMM_ContinuousModel(int N, int M, int cos, density_t density,
 					   double prior) {
+  int i;
+  int j;
+
   c_model = (smodel*) calloc(1,sizeof(smodel));
   if (!c_model) {
     fprintf(stderr,"GHMM_ContinuousModel::GHMM_ContinuousModel() could not allocate c_model.\n");
@@ -39,6 +42,30 @@ GHMM_ContinuousModel::GHMM_ContinuousModel(int N, int M, int cos, density_t dens
   c_model->density = density;
   c_model->prior   = prior;
   c_model->s       = (sstate*) malloc(sizeof(sstate) * c_model->N);
+  /* initialize all states. */
+  for (i = 0; i < N; ++i) {
+    c_model->s[i].pi         = 0;
+    c_model->s[i].c          = (double*) malloc(sizeof(double) * M);
+    c_model->s[i].mue        = (double*) malloc(sizeof(double) * M);
+    c_model->s[i].u          = (double*) malloc(sizeof(double) * M);
+    /* output probabilities are initialized with 0. */
+    for (j = 0; j < M; ++j) {
+      c_model->s[i].c[j]   = 0;
+      c_model->s[i].mue[j] = 0;
+      c_model->s[i].u[j]   = 0;
+    }
+    c_model->s[i].out_id     = NULL;
+    c_model->s[i].in_id      = NULL;
+    c_model->s[i].out_a      = (double**) malloc(sizeof(double) * cos);
+    c_model->s[i].in_a       = (double**) malloc(sizeof(double) * cos);
+    for (j = 0; j < cos; ++j) {
+      c_model->s[i].out_a[j] = NULL;
+      c_model->s[i].in_a[j]  = NULL;
+    }
+    c_model->s[i].out_states = 0;
+    c_model->s[i].in_states  = 0;
+    c_model->s[i].fix        = 0;
+  }
 
   /* create C++ data structure. */
   buildCppData();

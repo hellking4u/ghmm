@@ -608,12 +608,14 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 
   sq = sequence_d_calloc(seq_number);
   if (!sq) { mes_proc(); goto STOP; }
+
+  /* A specific length of the sequences isn't given. As a model should have
+     an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
-    /* A specific length of the sequences isn't given. As a model should have
-       an end state, the konstant MAX_SEQ_LEN is used. */
     len = (int)MAX_SEQ_LEN;
+
+  /* Maximum length of a sequence not given */
   if (Tmax <= 0)
-    /* Maximum length of a sequence not given */
     Tmax = (int)MAX_SEQ_LEN;
   
   /* gsl is also used by randvar_std_normal 
