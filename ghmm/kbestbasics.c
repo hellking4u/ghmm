@@ -119,10 +119,8 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_
 	  hlist_insertElem(hplus, c, hP);
 	  created[c] = *hplus;
 	  /* initiallize gamma-array with safe size (number of states */
-	  if (!m_malloc((*hplus)->gamma_a,  nr_s[c])) {mes_proc(); goto STOP;}
 	  if (!m_malloc((*hplus)->gamma_id, nr_s[c])) {mes_proc(); goto STOP;}
 	  (*hplus)->gamma_id[0]  = j_id;
-	  (*hplus)->gamma_a[0]   = 1.0;
 	  (*hplus)->gamma_states = 1; 
 	}
 	/* add a new gamma state to the existing hypothesis with c */
@@ -135,7 +133,6 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_
 	  /* add the state to the gamma list */
 	  if (k==g_nr) {
 	    created[c]->gamma_id[g_nr] = j_id;
-	    created[c]->gamma_a[g_nr]  = 1.0;
 	    created[c]->gamma_states   = g_nr+1;
 	  }
 	}
@@ -148,7 +145,7 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_
   /* reallocating gamma-array to the correct size */
   for (c=0; c<labels; c++) {
     if (created[c]) {
-      if (m_realloc(created[c]->gamma_a,  created[c]->gamma_states)) {mes_proc(); goto STOP;}
+      if (!m_malloc(created[c]->gamma_a,  created[c]->gamma_states)) {mes_proc(); goto STOP;}
       if (m_realloc(created[c]->gamma_id, created[c]->gamma_states)) {mes_proc(); goto STOP;}
     }
   }

@@ -173,8 +173,8 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
   log_a = kbest_buildLogMatrix(mo->s, mo->N);
 
   /* initialize temporary arrays: */
-  maxima=(double*)malloc(sizeof(double)*mo->N*k);     /* for each state save k */
-  argmaxs=(hypoList**)malloc(mo->N*k*sizeof(hypoList*));
+  if (!m_malloc(maxima,  mo->N*k))  {mes_proc(); goto STOP;} /* for each state save k */
+  if (!m_malloc(argmaxs, mo->N*k))  {mes_proc(); goto STOP;}
 
 
   /*------ Main loop: Cycle through the sequence: ------*/
