@@ -103,7 +103,7 @@ static int smodel_copy_vectors(smodel *smo, int index, double *pi, int *fix,
 
 
 /*============================================================================*/
-smodel **smodel_read(char *filename, int *smo_number) {
+smodel **smodel_read(const char *filename, int *smo_number) {
 #define CUR_PROC "smodel_read"
   int j;
   long new_models = 0;

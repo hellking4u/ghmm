@@ -655,7 +655,7 @@ int sreestimate_baum_welch(smosqd_t *cs) {
     }
     
   } /* while (n <= MAX_ITER_BW) */ 
-  
+
 #if MCI
   mes(MESINFO, "%8.5f (-log_p optimized smodel)\n", -log_p);
 #endif

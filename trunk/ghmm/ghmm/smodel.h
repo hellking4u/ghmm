@@ -112,7 +112,7 @@ int     smodel_free(smodel **smo);
    @return vector of read smodels
    @param filename   input ascii file
    @param smo_number  number of read smodels */
-smodel** smodel_read(char *filename, int *smo_number);
+smodel** smodel_read(const char *filename, int *smo_number);
 
 /** Reads one smodel block. It is possible to generate multiple
     identical copies of the model read. Memory allocation is here.

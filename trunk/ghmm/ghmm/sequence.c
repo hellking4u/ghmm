@@ -26,7 +26,7 @@ __copyright__
 #include "string.h"
 
 /*============================================================================*/
-sequence_t** sequence_read(char *filename, int *sq_number) {
+sequence_t** sequence_read(const char *filename, int *sq_number) {
 #define CUR_PROC "sequence_read"
   int i;
   sequence_t **sequence = NULL;
@@ -187,7 +187,7 @@ STOP:
 
 /*============================================================================*/
 
-sequence_d_t** sequence_d_read(char *filename, int *sqd_number) {
+sequence_d_t** sequence_d_read(const char *filename, int *sqd_number) {
 #define CUR_PROC "sequence_d_read"
   int i;
   scanner_t *s = NULL;

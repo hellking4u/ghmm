@@ -92,7 +92,7 @@ extern "C" {
    @param filename    input filename
    @param seq\_arrays number of sequence arrays read
 */
-sequence_t **sequence_read(char *filename, int *seq_arrays);
+sequence_t **sequence_read(const char *filename, int *seq_arrays);
 
 /**
    Reading of one integer sequence field. Memory alloc here.
@@ -108,7 +108,7 @@ sequence_t *sequence_read_alloc(scanner_t *s);
    @return pointer to sequence array
    @param filename    input filename
 */
-sequence_d_t **sequence_d_read(char *filename, int *sqd_number);
+sequence_d_t **sequence_d_read(const char *filename, int *sqd_number);
 
 /**
    Reading of one double sequence field. Memory alloc here.
