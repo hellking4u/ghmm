@@ -11,6 +11,7 @@ __copyright__
 #include <float.h>
 #include <math.h>
 #include "const.h"
+#include "randvar.h"
 
 /*============================================================================*/
 double pmue(double mue, double A, double B, double eps) {

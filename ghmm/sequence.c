@@ -23,6 +23,7 @@ __copyright__
 #include "sfoba.h"
 #include "vector.h"
 #include "rng.h"
+#include "string.h"
 
 /*============================================================================*/
 sequence_t** sequence_read(char *filename, int *sq_number) {

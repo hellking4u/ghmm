@@ -615,7 +615,10 @@ STOP:
 /* cumalative distribution function of -EPS_NDT-truncated N(mean, u) */
 double randvar_normal_pos_cdf(double x, double mean, double u) {
 # define CUR_PROC "randvar_normal_pos_cdf"
+#ifndef DO_WITH_GSL
   double Fx, c;
+#endif
+
   if (x <= 0.0) return(0.0);
   if (u <= 0.0) { mes_prot("u <= 0.0 not allowed\n"); goto STOP; }
 #if DO_WITH_GSL

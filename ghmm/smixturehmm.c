@@ -22,6 +22,7 @@ __copyright__
 #include "rng.h"
 #include "sequence.h"
 #include "const.h"
+#include "smap_classify.h"
 
 //double total_train_w = 0.0;
 //double total_test_w = 0.0;
