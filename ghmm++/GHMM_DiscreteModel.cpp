@@ -161,51 +161,20 @@ void GHMM_DiscreteModel::B_print_transp(FILE *file, char *tab, char *separator, 
   model_B_print_transp(file,c_model,tab,separator,ending);
 }
 
-/**
-   Writes transposed initial allocation vector of a matrix.
-   @param file: output file
-   @param mo:   model
-   @param tab:  format: leading Tabs
-   @param separator: format: seperator for columns
-   @param ending:    format: end of a row  
-*/
-//void GHMM_DiscreteModel::model_Pi_print_transp(FILE *file, model *mo, char *tab, char *ending) {
-//}
+
+void GHMM_DiscreteModel::Pi_print_transp(FILE *file, char *tab, char *ending) {
+  model_Pi_print_transp(file,c_model,tab,ending);
+}
 
 
-/** 
-    Writes the parameters of a model sorted by states. 
-    Is not very concise.   
-    @param file: output file
-    @param mo:   model
-*/
-//void GHMM_DiscreteModel::model_states_print(FILE *file, model *mo) {
-//}
+void GHMM_DiscreteModel::states_print(FILE *file) {
+  model_states_print(file,c_model);
+}
 
 
-/** Computes probabilistic distance of two models
-    @return the distance
-    @param m0  model used for generating random output
-    @param m  model to compare with
-    @param maxT  maximum output length (for HMMs with absorbing states multiple
-                 sequences with a toal langth of at least maxT will be 
-		 generated)
-    @param symmetric  flag, whether to symmetrize distance (not implemented yet)
-    @param verbose  flag, whether to monitor distance in 40 steps. 
-                    Prints to stdout (yuk!)
-*/
-//double GHMM_DiscreteModel::model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose) {
-//}
-
-
-/** Generates all possible integer sequence of lenght n from an alphabet with
-    M letters. Use lexicographical ordering. Memory allocation here.
-    @param n      length of sequences
-    @param M     size of alphabet
-    @return array of generated integer sequences
-*/
-//sequence_t *GHMM_DiscreteModel::sequence_lexWords(int n, int M) {
-//}
+double GHMM_DiscreteModel::prob_distance(GHMM_DiscreteModel* m, int maxT, int symmetric, int verbose) {
+  return model_prob_distance(c_model,m->c_model,maxT,symmetric,verbose);
+}
 
 
 GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int index, 

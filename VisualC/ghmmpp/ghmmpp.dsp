@@ -86,10 +86,6 @@ SOURCE="..\..\ghmm++\GHMM_IntVector.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ghmm++\GHMM_ModelFactory.cpp"
-# End Source File
-# Begin Source File
-
 SOURCE="..\..\ghmm++\GHMM_Sequence.cpp"
 # End Source File
 # Begin Source File
@@ -151,10 +147,6 @@ SOURCE="..\..\ghmm++\GHMM_Emission.h"
 # Begin Source File
 
 SOURCE="..\..\ghmm++\GHMM_IntVector.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\ghmm++\GHMM_ModelFactory.h"
 # End Source File
 # Begin Source File
 

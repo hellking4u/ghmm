@@ -473,3 +473,15 @@ void GHMM_Sequences::copyFromSequences(sequence_t* seq) {
   c_i_sequences->seq_number = seq->seq_number;
   c_i_sequences->total_w    = seq->total_w;
 }
+
+
+/** Generates all possible integer sequence of lenght n from an alphabet with
+    M letters. Use lexicographical ordering. Memory allocation here.
+    @param n     length of sequences
+    @param M     size of alphabet
+*/
+void GHMM_Sequences::lexWords(int n, int M) {
+  clean();
+
+  c_i_sequences = sequence_lexWords(n,M);
+}
