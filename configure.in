@@ -138,7 +138,7 @@ AC_DEFINE_UNQUOTED(PHI_DATA_FILE,"${phi_data_file}")
 AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm interpolation algorithms])
 
 SUBDIRS="ghmm tools tests doc"
-if test "$ac_cv_cxx_have_stl" = yes; then
+if test "$ac_cv_cxx_have_stl" = yes && ! test -z "$with_xmlio" ; then
  SUBDIRS="$SUBDIRS ghmm++"
 fi
 AC_SUBST(SUBDIRS)

@@ -25,6 +25,7 @@ int create_test()
   model* my_model=my_model_reader.get_element()->create_model();
   model_print(stdout,my_model);
   model_free(&my_model);
+  return 0;
 }
 
 int sequence_generation_test()
@@ -33,6 +34,7 @@ int sequence_generation_test()
   if (generated!=NULL)
     generated->print();
   SAFE_DELETE(generated);
+  return 0;
 }
 
 int read_test_file()
@@ -44,6 +46,7 @@ int read_test_file()
       cout<<my_model_reader.toString()<<" found something: "<<endl;
       my_model_reader.get_element()->print();
     }
+  return 0;
 }
 
 int main()
