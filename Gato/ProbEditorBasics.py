@@ -68,8 +68,10 @@ class ProbDict(UserDict.UserDict):
     Dictionary with a cached sum
     """
     def __init__(self,data=None):
-        self.sum=0
+        self.sum=0.0
         UserDict.UserDict.__init__(self,data)
+        #if data is not None:
+        #    self.__calc_sum__()
 
     def cmp_prob_val(self,a,b):
         if self[a]==self[b]:
