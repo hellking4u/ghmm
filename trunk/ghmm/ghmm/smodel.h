@@ -306,63 +306,8 @@ int smodel_count_free_parameter(smodel **smo, int smo_number);
 */
 void smodel_get_interval_B(smodel *smo, int state, double *a, double *b);
 
-
-/** Verteilung der Daten und pro Zustand als Vektor von Daten und Gewichtungen..
-    @return         0/-1
-    @param smo      continous HMM
-    @param sqd      sequence-field
-    @param data     return: adress of the sorted data field
-    @param weights  return: adress of the corresponding weight field
-    @param len      return: vector-adress of the data lengths  
-    @param wi       return: vector-adress of the state weights  
-*/
-int smodel_statedatacdf(smodel *smo, sequence_d_t *sqd, double ***data,
-			double ***weights, int **len, double **wi);
-
-/** Integraldifferenzen zwischen den Verteilungen der Daten und den theor.
-    Verteilungsfunktionen pro Zustand.
-    @return         0/-1
-    @param smo      continous HMM
-    @param sqd      sequence-field
-    @param data     sorted data field          )
-    @param weights  corresponding weight field ) = NULL -> internal calculation
-    @param len      data lengths               )
-    @param idiff    return: vector-adress of the distribution integral diffs 
-*/
-int smodel_idiff_index(smodel *smo, sequence_d_t *sqd, double **x, double **w,
-		       int *len, double *wi, double **idiff);
-
-/** Kolmogorov-Smirnov-Test ueber die Verteilungen der Daten und die 
-    theor.Verteilungsfunktionen pro state.
-    @return         0/-1
-    @param smo      continous HMM
-    @param sqd      sequence-field
-    @param data     sorted data field            )
-    @param weights  corresponding weight field   ) = NULL -> internal calcul.
-    @param len      data lengths                 )
-    @param wi       state weights                )
-    @param prob     return: vector-adress of the KS-Test significance prob.
-*/
-int smodel_kstest_index(smodel *smo, sequence_d_t *sqd, double **x, double **w,
-			int *len, double *wi, double **probks);
-
-/** Chi-Square Test ueber die Verteilungen der Daten und die 
-    theor.Verteilungsfunktionen pro state.
-    @return         0/-1
-    @param smo      continous HMM
-    @param sqd      sequence-field
-    @param data     sorted data field            )
-    @param weights  corresponding weight field   ) = NULL -> internal calcul.
-    @param len      data lengths                 )
-    @param wi       state weights                )
-    @param prob     return: vector-adress of the chi-square significance prob.s 
-*/
-int smodel_chisquare_index(smodel *smo, sequence_d_t *sqd, double **x, 
-			   double **w, int *len, double *wi, double **prob);
-
-int smodel_idiffsum_lowerbound(smodel *smo,sequence_d_t *sqd,double *idiffsum);
-
-
 #endif
 
 /*@} (Doc++-Group: smodel) */
+
+

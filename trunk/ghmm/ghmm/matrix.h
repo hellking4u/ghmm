@@ -227,11 +227,6 @@ int matrix_det_symposdef(double **a, int dim, double *det);
 /** copy a matrix. alloc needs to be done outside ! */
 void matrix_d_copy(double **src, double **target, int rows, int cols);
 
-/** calculate "target" as neighbour matrix from "src", preserve strucure and row
-    norm */
-void matrix_d_neighbour(double **src, double **target, int rows, int cols, double eps);
-
-
 #endif
 
 /*@} (Doc++-Group: matrix) */
