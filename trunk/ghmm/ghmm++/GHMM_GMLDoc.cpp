@@ -33,11 +33,19 @@ GHMM_GraphMLDoc::GHMM_GraphMLDoc(enumModelType model_type) {
   this->model_type = model_type;
 }
 
-GHMM_GraphMLDoc::~GHMM_GraphMLDoc() {
-  //  SAFE_DELETE(discrete_model);
-  //  SAFE_DELETE(continuous_model);
-}
+GHMM_GraphMLDoc::~GHMM_GraphMLDoc() {  
+  if (sdiscrete_model != NULL ) {
+    delete sdiscrete_model;
+  }
+		       
+  if (continuous_model != NULL ) {
+    delete continuous_model;
+  }
 
+  if (hmmclass != NULL) {
+    delete hmmclass;
+  }
+}
 
 const char* GHMM_GraphMLDoc::toString() const {
   return "GHMM_GraphMLDoc";
