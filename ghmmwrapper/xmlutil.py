@@ -467,7 +467,7 @@ class HMMState:
             #      self.state_class = typed_assign(self.state_class, int(dataValue))
 
             if dataKey == 'class':
-                self.state_class = typed_assign(self.state_class, int(0))
+                self.state_class = typed_assign(self.state_class, int(dataValue))
                     
             elif  dataKey == 'label':
                 self.label = type(self.label)(dataValue.encode('ascii', 'replace'))
