@@ -466,7 +466,7 @@ class EmissionSequence:
                 self.cseq = ghmmwrapper.sequence_d_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
-                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,1)
+                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
 				
 
             elif isinstance(sequenceInput, str): # from file
@@ -501,7 +501,7 @@ class EmissionSequence:
 
     def __setitem__(self, index, value):
         internalValue = self.emissionDomain.internal(value)
-        self.setSymbol(self.seq_c.seq,0,index,internalValue)
+        self.setSymbol(self.cseq.seq,0,index,internalValue)
 		
 
     def __getitem__(self, index):
@@ -519,7 +519,9 @@ class EmissionSequence:
         strout += "\nEmissionSequence Instance:\nlength " + str(ghmmwrapper.get_arrayint(seq.seq_len,0))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,0))  + ":\n"
         for j in range(ghmmwrapper.get_arrayint(seq.seq_len,0) ):
             strout += str( self.emissionDomain.external(self[j]) )   
-
+            if self.emissionDomain.CDataType == "double":
+                strout += " "
+            
         # checking for labels 
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
             strout += "\nState labels:\n"
@@ -540,6 +542,13 @@ class EmissionSequence:
             ghmmwrapper.call_sequence_print(fileName, self.cseq)
         if self.emissionDomain.CDataType == "double":    
             ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)         
+
+    def setWeight(self, value):
+        ghmmwrapper.set_arrayd(self.cseq.seq_w,0,value)
+        self.cseq.total_w = value
+        
+    def getWeight(self):
+        return ghmmwrapper.get_arrayd(self.cseq.seq_w,0)
 
 
 class SequenceSet:
@@ -645,7 +654,7 @@ class SequenceSet:
     def __del__(self):
         "Deallocation of C sequence struct."
         
-        print "######################## SequenceSet.__del__"
+        # print "** SequenceSet.__del__ " + str(self.cseq)
         self.cleanFunction(self.cseq)
         self.cseq = None
 
@@ -659,7 +668,9 @@ class SequenceSet:
                 strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n"
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
                     strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) )) ) 
-                
+                    if self.emissionDomain.CDataType == "double":
+                       strout += " "
+
                 # checking for labels 
                 if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
                     strout += "\nState labels:\n"
@@ -685,7 +696,7 @@ class SequenceSet:
         return ghmmwrapper.get_arrayint(self.cseq.seq_len,i)
         
 
-    def weight(self, i):
+    def getWeight(self, i):
         """ Return the weight of sequence i. Weights are used in Baum-Welch"""
         return ghmmwrapper.get_arrayd(self.cseq.seq_w,i)
 
@@ -715,8 +726,7 @@ class SequenceSet:
         
         self.addSeqFunction(self.cseq, emissionSequences.cseq)
         
-        emissionSequences.cleanFunction(emissionSequences.cseq) 
-        emissionSequences.cseq = None
+        del(emissionSequences) # removing merged sequences
 
     def getSubset(self, seqIndixes):
         """ Returns a SequenceSet containing (references to) the sequences with the indixes in
@@ -1524,15 +1534,19 @@ class HMM:
             arguement value of 'prob'.
            
          """
-        ghmmwrapper.set_array_d(self.cmodel.pi,i,j)
+
+        state = self.getStatePtr(self.cmodel.s,i)
+        old_pi = state.pi
+        state.pi = prob
+
         # renormalizing pi, pi(i) is fixed on value 'prob'
         if fixProb == 1:
-            coeff = 1 - i
+            coeff = (1.0 - old_pi) / prob
             for j in range(self.N):
                 if i != j:
-                    pi_j = ghmmwrapper.get_arrayd(self.cmodel.pi,j)    
-                    pi_j = pi_j * i / coeff
-                    ghmmwrapper.set_array_d(self.cmodel.pi,j,pi_j)
+                    state = self.getStatePtr(self.cmodel.s,j)
+                    p = state.pi
+                    state.pi = p / coeff
 
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
@@ -1644,7 +1658,7 @@ class DiscreteEmissionHMM(HMM):
     
     def __del__(self):
         self.removeTiegroups()
-        DiscreteEmissionHMM.__del__(self)
+        HMM.__del__(self)
         
     def __str__(self):
         hmm = self.cmodel
@@ -1674,11 +1688,11 @@ class DiscreteEmissionHMM(HMM):
         return strout
     
 
-    def setEmission(self, i, distributionParemters):
+    def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
-        assert len(distributionParemters) == self.N
+        assert len(distributionParameters) == self.M
         state = self.getStatePtr(self.cmodel.s,i)
-        for i in range(M):
+        for i in range(self.M):
             ghmmwrapper.set_arrayd(state.b,i,distributionParameters[i])
     
     
@@ -1770,8 +1784,10 @@ class DiscreteEmissionHMM(HMM):
                 ghmmwrapper.set_arrayint(self.cmodel.tied_to,i,tieList[i])    
     
     def removeTiegroups(self):
-        ghmmwrapper.mfree(self.cmodel.tied_to)
-        self.cmodel.tied_to = None
+        pass
+        # XXX proper wrapper function for freeing
+        #ghmmwrapper.mfree(self.cmodel.tied_to)
+        #self.cmodel.tied_to = None
     
     def getTieGroups(self):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
