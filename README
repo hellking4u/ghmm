@@ -1,3 +1,23 @@
+normal build instructions:
+==========================
+
+The generic build instructions can be found at INSTALL.
+
+Some mathematic features are included from gsl, the GNU scientific library,
+it is available at sources.redhat.com/gsl . All versions until gsl-0.7 are
+supported now.
+
+The c++ part of this library needs xmlio, that can be found at
+xmlio.sourceforge.net. xmlio depends on expat, that is also available
+at sourceforge.
+
+gsl and expat are distributed with Redhat 7.1 Linux.
+
+so, configure is called with:
+
+./configure --prefix=/as/you/like/it --with-xmlio=/where/xmlio/is/installed \
+--with-gsl=/alternative/gsl/installation
+
 build from cvs:
 ===============
 
@@ -59,4 +79,8 @@ executables that provide usefull functions
 
 tests
 testsuite driven by DejaGNU, some tests are programming examples
+
+ghmm++
+a c++ extension to ghmm with xml read and write support
+ghmm++ depends on xmlio form xmlio.sourceforge.net
 

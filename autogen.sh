@@ -7,7 +7,7 @@
 #move GNU m4 to head of PATH
 sep_path=`echo $PATH|sed -n 's/:/ /gp'`
 for f in $sep_path ; do
-  test -f $f/m4 && echo `eval $f/m4 --version 2>/dev/null` |grep GNU >/dev/null && PATH=$f:$PATH ;
+  test -f $f/m4 && echo `eval $f/m4 --version 2>/dev/null` |grep GNU >/dev/null && PATH=$f:$PATH
 done
 
 #makes aclocal.m4 from acinclude.m4 and other files
