@@ -36,6 +36,7 @@ extern "C" {
 /** Model has states emission probabilities conditioned on previous orders */
 #define kHigherOrderEmissions (1 << 4);
 
+#define kHasBackgroundDistributions (1 << 5);
 
 
 #endif

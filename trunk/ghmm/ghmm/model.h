@@ -19,6 +19,18 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
+/** @name background_distributions
+    A container for background distributions to be used in the reestimation. Model
+    has an ID (== index) into the arrays.
+*/
+struct background_distributions {
+	int n;		/* Number of distributions */
+	int* order;	/* Order of the respective distribution */	
+	double **b;  	/* The probabilities */ 
+};
+typedef struct background_distributions background_distributions;
+
+
 /** @name state
     The basic structure, keeps all parameters that belong to a state. 
 */
@@ -27,6 +39,8 @@ struct state {
   double pi;
   /** Output probability */
   double *b;
+  int order;
+  
   /** IDs of the following states */ 
   int *out_id;  
   /** IDs of the previous states */    
@@ -101,8 +115,15 @@ struct model {
       For higher order emissions, the emission are conditioned on the state s
       as well as the previous emission_order[s] observed symbols.
 
-      Note: emission_order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
-  int* emission_order; 
+      The emissions are stored in the state's usual double* b. The order is
+      set state.order.
+
+      Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
+  
+  /** 
+      Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
+  int *background_id;
+  background_distributions* bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
@@ -110,7 +131,6 @@ struct model {
   int* topo_order; 
   int  topo_order_length;
 
-  /* XXX label HMM */
 
 };
 typedef struct model model;
