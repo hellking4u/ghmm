@@ -49,7 +49,7 @@ STOP:
 
 static int sdmodel_copy_vectors(sdmodel *mo, int index, double ***a_matrix, 
 			      double **b_matrix, double *pi, int *fix) {
-#define CUR_PROC "sdmodel_alloc_vectors"
+#define CUR_PROC "sdmodel_copy_vectors"
   int i, j, c, cnt_out = 0, cnt_in = 0;
 
   mo->s[index].pi = pi[index];
@@ -111,6 +111,8 @@ int sdmodel_free(sdmodel **mo) {
     if (my_state->in_a)
       matrix_d_free(&((*mo)->s[i].in_a), (*mo)->cos);
     
+    printf("Free every thing set it to NULL\n");
+
     my_state->pi         = 0;
     my_state->b          = NULL;
     my_state->out_id     = NULL;  
@@ -230,7 +232,8 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
       state = 1;
 
       /* The first symbol chooses the start class */
-      class = sequence_d_class(&dummy, 0, &osum); /*  dummy function */
+      class = mo->get_class(&dummy,0,&osum);
+      //class = sequence_d_class(&dummy, 0, &osum); /*  dummy function */
       while (state < len) {
       
 	/* Get a new state */
@@ -287,7 +290,8 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 	sq->seq[n][state] = m;
 
 	/* Decide the class for the next step */
-	class = sequence_d_class(&dummy, state, &osum); /* dummy */
+	class = mo->get_class(&dummy,state,&osum);
+	//class = sequence_d_class(&dummy, state, &osum); /* dummy */
 	up = 0;
 	state++;
       } /* while (state < len) , global_len depends on the data */  
