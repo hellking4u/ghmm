@@ -462,7 +462,12 @@ int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
     T_k = T[k]; 
     /* precompute output densities */    
     sreestimate_precompute_b(smo, O[k], T_k, b);
- 
+    
+    if(smo->cos > 1 ){
+       smo->class_change->k = k;
+   }    
+    
+    
     if ((sfoba_forward(smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
 	(sfoba_backward(smo, O[k], T_k, b, beta, scale) == -1)) {
 #if MCI
@@ -488,10 +493,24 @@ int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
       
       /* loop over t (time steps of seq.)  */
       for (t = 0; t < T_k; t++) {
-	c_t = 1/scale[t];
-	if (t > 0) {
-	  osc = sequence_d_class(O[k], t - 1, &osum); /* dummy */
-	  /* A: starts at t=1 !!! */
+    	c_t = 1/scale[t];
+	    if (t > 0) {
+	  
+        //osc = sequence_d_class(O[k], t - 1, &osum); /* dummy */
+	    if(smo->cos == 1) {
+          osc = 0;
+        }
+        else {
+          if(!smo->class_change->get_class){
+            printf("ERROR: get_class not initialized\n");
+            goto STOP;
+          }
+          printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+          osc = smo->class_change->get_class(smo,O[k],k,t-1);
+        }
+      
+      
+      /* A: starts at t=1 !!! */
 	  r->a_denom[i][osc] += seq_w[k] * alpha[t-1][i] * beta[t-1][i];
 	  for (j = 0; j < smo->s[i].out_states; j++) {
 	    j_id = smo->s[i].out_id[j];
@@ -556,6 +575,11 @@ int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
     } /* for (i=0, i<smo->N) */
           
   } /* for (k = 0; k < seq_number; k++) */
+  
+  /* reset class_change->k to default value*/
+  if(smo->cos > 1 ){
+     smo->class_change->k = -1;
+  }    
   
   sreestimate_free_matvec(alpha, beta, scale, b, T_k_max, smo->N); 
 

@@ -40,7 +40,7 @@ extern "C" {
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int sfoba_forward(smodel *smo, const double *O, int T, double ***b, 
+int sfoba_forward(smodel *smo, double *O, int T, double ***b, 
 		  double **alpha, double *scale, double *log_p);
 
 /** 
@@ -55,7 +55,7 @@ int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
+int sfoba_backward(smodel *smo, double *O, int T, double ***b,
 		   double **beta, const double *scale);
 
 /**
@@ -69,7 +69,7 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int sfoba_logp(smodel *smo, const double *O, int T, double *log_p);
+int sfoba_logp(smodel *smo, double *O, int T, double *log_p);
 
 
 #ifdef __cplusplus

@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 /**
-   @name generation and extention of sequences from shmm
+   @name generation and extension of sequences from shmm
 */
 
 /*@{
