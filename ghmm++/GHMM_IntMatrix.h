@@ -1,8 +1,11 @@
 /* @(#)GHMM_IntMatrix.h created by Peter Pipenbacher at 04 Mar 2002
  *
  * Authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
+ * file : $Source$
+ * $Id$
  *
  * __copyright__
+ * 
  */
 
 #ifndef _GHMM_INTMATRIX_H

@@ -5,6 +5,7 @@
  * $Id$
  *
  * __copyright__
+ * 
  */
 
 #ifndef _GHMM_DOCUMENT_H
@@ -23,10 +24,13 @@ class GHMM_DiscreteModel;
 class GHMM_ContinuousModel;
 class GHMM_Sequences;
 
+
 /** */
 class GHMM_Document: public XMLIO_Document {
 
  public:
+
+  enum enumModelType { NONE, GHMM_DISCRETE, GHMM_CONTINUOUS };
 
   /** Constructor. */
   GHMM_Document();
@@ -65,7 +69,7 @@ class GHMM_Document: public XMLIO_Document {
   virtual const char* toString() const;
 
 
- private:
+ protected:
 
   /** */
   GHMM_DiscreteModel* discrete_model;
@@ -75,7 +79,11 @@ class GHMM_Document: public XMLIO_Document {
   GHMM_Sequences* sequences;
   /** */
   bool reading_ghmm;
+  /** */
+  enumModelType model_type;
+
 };
+
 
 #ifdef HAVE_NAMESPACES
 }

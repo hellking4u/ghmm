@@ -3,6 +3,9 @@
  * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
  * file   : $Source$
  * $Id$
+ *
+ * __copyright__
+ *
  */
 
 #ifndef _GHMM_TOOLKIT_H

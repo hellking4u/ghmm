@@ -5,6 +5,7 @@
  * $Id$
  *
  * __copyright__
+ * 
  */
 
 #ifndef _GHMM_STATE_H
@@ -33,7 +34,7 @@ class GHMM_State: public XMLIO_Element {
  public:
 
   /** */
-  enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL};
+  enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL, GHMM_STATE_LABEL};
 
   /** */
   GHMM_State(GHMM_AbstractModel* my_model, int index, XMLIO_Attributes& attrs);
@@ -90,7 +91,7 @@ class GHMM_State: public XMLIO_Element {
   int index;
 
 
- private:
+ protected:
 
   /** */
   void removeInEdge(int source);
@@ -121,6 +122,8 @@ class GHMM_State: public XMLIO_Element {
   GHMM_StateReadingType reading;
   /** */
   double initial;
+  /** */
+  string label;
   /** */
   GHMM_AbstractModel* parent_model;
 };

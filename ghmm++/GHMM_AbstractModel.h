@@ -24,6 +24,7 @@ class GHMM_State;
 class GHMM_Transition;
 class GHMM_Alphabet;
 
+
 /** */
 class GHMM_AbstractModel: public XMLIO_Element {
 
@@ -79,6 +80,11 @@ class GHMM_AbstractModel: public XMLIO_Element {
 
 
  protected:
+  string node_tag; /* XML element-tag for a state*/
+  string edge_tag; /* XML element-tag for a transition */
+
+  void  setNodeTag( const string &tag );
+  void  setTransitionTag( const string &tag );
 
   /** Clean up c++ data structure for transitions. */
   void cleanTransitions();
@@ -98,6 +104,8 @@ class GHMM_AbstractModel: public XMLIO_Element {
   /** */
   map<string,int> state_by_id;
 };
+
+
 
 #ifdef HAVE_NAMESPACES
 }
