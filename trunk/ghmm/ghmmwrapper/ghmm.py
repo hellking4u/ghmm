@@ -395,6 +395,8 @@ class EmissionSequence(list):
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
+        self.cseq_number = self.cseq.seq_number
+        
         # internal only
         if self.emissionDomain.CDataType == "int": 
             self.__array = ghmmhelper.int_array(self.cseq.seq)
@@ -481,6 +483,7 @@ class SequenceSet:
     def __getitem__(self, index):
         # Get the sequent_d_t or sequence_t from the set
         return EmissionSequence(self.emissionDomain, self.__array[index])
+
 
         
 def SequenceSetOpen(emissionDomain, fileName):
@@ -723,7 +726,8 @@ class HMM:
         self.distribution = distribution
         self.cmodel = cmodel
         self.baumWelchCData = None
-
+        self.one_model_sqd = None
+        
     def loglikelihood(self, emissionSequences):
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
 
@@ -772,19 +776,12 @@ class HMM:
   
             Result: Final loglikelihood
         """
-        self.baumWelchSetup(trainingSequences, nrSteps)
+        if (self.emissionDomain.CDataType == "double"):
+            self.baumWelchSetup(trainingSequences, nrSteps)
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
-        if (self.emissionDomain.CDataType = "double"):
-            ghmmwrapper.sreestimate_baum_welch(self.baumWelchCData)
-            sumlog = 0.0
-            seqset_number = trainingSequences.cseq_number        
-            for i in range(seqset_number):
-                one_model_sqd = ghmmwrapper.get_smosqd_t_ptr(self.baumWelchCData, i)
-                seqnumber = trainingSequences(i).cseq_number
-                for j in range(seqnumber):
-                    sumlog += ghmmwrapper.get_arrayd(one_model_sqd.logp, j)
-        return sumlog # return the sum of log-likelihoods
+
+        return 0.0 
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
@@ -794,17 +791,24 @@ class HMM:
             training_sequences can either be a SequenceSet or a Sequence
         """
         seqset_number = trainingSequences.cseq_number
-        self.baumWelchCData = ghmmwrapper.smosqd_t_array(seqset_number)
+        self.baumWelchCData = ghmmwrapper.smosqd_t_array(seqset_number) # an array of smosqd_t
 
-        for i in range(seqset_number):
-            ghmmwrapper.set_smosq_t_smo(self.baumWelchCData, self.cmodel, i)
-            one_model_sequenceSet = ghmmwrapper.get_smosqd_t_ptr(self.baumWelchCData, i)
-            oneEmissionSeq = trainingSequences(i)
-            one_model_sequenceSet.sqd  =  oneEmissionSeq.cseq
-            one_model_sequenceSet.logp =  ghmmwrapper.double_array(oneEmissionSeq.cseq_number)
-            one_model_sequenceSet.eps  = 10e-6
-            one_model_sequenceSet.max_iter = nrSteps
-            
+        one_model_sequenceSet = ghmmwrapper.get_smosqd_t_ptr(self.baumWelchCData, 0)
+        seqd = trainingSequences[0] # type = EmissionSequence
+        one_model_sequenceSet.smo =  self.cmodel
+        one_model_sequenceSet.sqd  = seqd.cseq # type is ghmmwrapper.sequence_d_tPtr
+        one_model_sequenceSet.logp = ghmmwrapper.double_array(seqd.cseq.seq_number)
+        one_model_sequenceSet.eps  = 10e-6
+        one_model_sequenceSet.max_iter = nrSteps
+        ghmmwrapper.sreestimate_baum_welch(one_model_sequenceSet)
+        seqnumber = trainingSequences[0].cseq_number
+        sumlog = 0.0
+        for j in range(seqnumber):
+            logp = ghmmwrapper.get_arrayd(one_model_sequenceSet.logp, j)
+            print logp
+            sumlog += logp
+
+    
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
             Use baum_welch_setup and baum_welch_step if you want more control
