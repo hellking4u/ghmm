@@ -47,10 +47,7 @@ dnl AC_CHECK_FUNCS(gettimeofday)
 dnl append flags for gsl
 CFLAGS="$CFLAGS $GSL_CFLAGS"
 LIBS="$LIBS $GSL_LIBS"
-if ! echo $LIBS | grep "l.*blas" >/dev/null ; then
-  LIBS="$LIBS -lgslblas" ;
-  AC_MSG_RESULT([appended -lgslblas to linker options])
-fi
+echo $LIBS | grep "l.*blas" >/dev/null || LIBS="$LIBS -lgslblas" && AC_MSG_RESULT([appended -lgslblas to linker options])
 dnl CPPFLAGS="$CPPFLAGS -I`$GSL_CONFIG --prefix`/include"
 
 dnl checking which root solver alloc function is used
