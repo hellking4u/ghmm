@@ -1,362 +1,356 @@
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 
-/**@name Sequenzen (double und int) */
+/**@name sequences  (double and int) */
 /*@{ (Doc++-Group: sequence) */
 /** @name struct sequence_t
-    Struktur zur Speicherung von Sequenzen. Eine Sequenz besteht aus
-    einem int-Vektor und einem Sequenz Label. Sequenzen k\"onnen 
-    unterschiedliche L\"ange haben.
+    Sequence structure for integer sequences. 
+    Contains an array of sequences and corresponding
+    data like sequence label, sequence weight, etc. Sequences may have different
+    length.    
  */
 struct sequence_t {
-  /** 
-      Sequenzmatrix bestehend aus seq_number Zeilen. Die i-te Zeile
-      hat die L\"ange seq_len[i].      
+  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
    */
   int **seq;
-  /** Vektor der Sequenzl\"angen */
+  /** array of sequence length */
   int *seq_len;
-  /** Vektor der Sequenzlabel */
+  /**  array of sequence labels */
   long *seq_label;
-  /** Vektor der Sequenzid, double, da long evtl. nicht ausreichend */
+  /**  array of sequence IDs*/
   double *seq_id;
-  /** Gewichtung der Squenzen; default 1 */
+  /** positiv! sequence weights.  default is 1 = no weight */
   double *seq_w;
-  /** Anzahl der Sequenzen */
+  /** total number of sequences */
   long seq_number;
-  /** Summe aller Sequenzgewichte, zur Sicherheit double */
+  /** sum of sequence weights */
   double total_w;
 };
 typedef struct sequence_t sequence_t;
 
 /** @name struct sequence_d_t
-    Struktur zur Speicherung von Sequenzen. Eine Sequenz besteht aus
-    einem double Vektor und einem Sequenz Label. Sequenzen k\"onnen 
-    unterschiedliche L\"ange haben
+    Sequence structure for double sequences. 
+    Contains an array of sequences and corresponding
+    data like sequnce label, sequence weight, etc. Sequences may have different
+    length.    
  */
 struct sequence_d_t {
-  /** 
-      Sequenzmatrix bestehend aus seq_number Zeilen. Die i-te Zeile
-      hat die L\"ange seq_len[i].      
+    /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
    */
-  double **seq;
-  /** Vektor der Sequenzl\"angen */
+  int **seq;
+  /** array of sequence length */
   int *seq_len;
-  /** Vektor der Sequenzlabel */
+  /**  array of sequence labels */
   long *seq_label;
-  /** Vektor der Sequenzid, double, da long evtl. nicht ausreichend */
+  /**  array of sequence IDs*/
   double *seq_id;
-  /** Gewichtung der Squenzen; default 1 */
+  /** positiv! sequence weights.  default is 1 = no weight */
   double *seq_w;
-  /** Anzahl der Sequenzen */
+  /** total number of sequences */
   long seq_number;
-  /** Summe aller Sequenzgewichte, zur Sicherheit double */
-  double total_w;
+  /** sum of sequence weights */
+  double total_w;  
 };
 typedef struct sequence_d_t sequence_d_t;
 
-/*
-  Wichtig: Include von (c)model.h zur Vermeidung von Fehlern beim Uebersetzen
-  erst an dieser Stelle. (sequence.h und model.h includen sich gegenseitig)
-*/
+/* don't include model.h at the beginning of this file. struct sequence_t has
+   to be known in model.h */
 
 #include "model.h"
 #include "smodel.h"
 
 /**
-   Einlesen von Sequenzen durch Aufruf von sequence\_read\_alloc..  
-   @return pointer auf sequence_t
-   @param filename    Filename
+   Reads one or several arrays of integer sequences. 
+   Calls sequence\_read\_alloc, where reading
+   and memory allocation is done. 
+   @return pointer to sequence array
+   @param filename    input filename
 */
-sequence_t *sequence_read(char *filename);
+sequence_t **sequence_read(char *filename, int *seq_number);
 
 /**
-   Einlesen von und Speicheralloc fuer Sequenzen. Gibt verschiedene 
-   Moeglichkeiten Sequenzen zu spezifizieren: direkte, explizite Angabe 
-   (Keyword O) oder alle Sequenzen in lexikographischer Reihenfolge (Keyword L).
-   @param p_seq_len  gefundene und dort allozierte Sequenzlaengen
-   @param seq_number gefundene Sequenzanzahl
-   @return ??
+   Reading of one integer sequence field. Memory alloc here.
+   @param s scanner
+   @return array of sequences
 */  
 sequence_t *sequence_read_alloc(scanner_t *s);
 
-/*
-  Einlesen eines Sequenzfelds durch Aufruf von sequence\_d\_read\_alloc..  
-  @return:           pointer auf sequence\_d\_t
-  @param filename:   Filename
-sequence_d_t *sequence_d_read_one(char *filename);
-*/
-
 /**
-   Einlesen mehrerer Sequenzfelder durch wiederholten
-   Aufruf von sequence\_d\_read\_alloc..  
-   @return:           pointer auf Vektor von sequence\_d\_t
-   @param filename:   Filename
-   @param sqd_number: Anzahl der gelesenen Sequenzfelder
+   Reads one or several arrays of double sequences. 
+   Calls sequence\_read\_alloc, where reading
+   and memory allocation is done. 
+   @return pointer to sequence array
+   @param filename    input filename
 */
 sequence_d_t **sequence_d_read(char *filename, int *sqd_number);
 
 /**
-   Einlesen von und Speicheralloc fuer Double-Sequenzen. 
-   Zur Zeit nur Explizite Angabe (Keyword O) realisiert.
-   @return       eingelesene Sequenz (pointer auf sequence\_d\_t)
-   @param s      Scanner-Struktur
-*/  
+   Reading of one double sequence field. Memory alloc here.
+   @param s scanner
+   @return array of sequences
+*/ 
 sequence_d_t *sequence_d_read_alloc(scanner_t *s);
 
-/** Truncate Sequences in a given sqd_field. useful for Testing;
-   returns truncated sqd_field; 
-   trunc_ratio 0: no truncation
-   trunc_ratio 1: max. truncation
+/** Truncate double sequences in a given sequence array. 
+    Useful for Testing;
+   @return truncated sqd_field; 
+   @param sqd\_in sequence arrays for truncation
+   @param sqd\_arrays number of sequence arrays
+   @param  trunc\_ratio 0 means  no truncation, 1 max. truncation
+   @param seed rng seed
 */
 
-sequence_d_t **sequence_d_truncate(sequence_d_t **sqd_in, int sqd_fields, 
+sequence_d_t **sequence_d_truncate(sequence_d_t **sqd_in, int sqd_arrays, 
 				   double trunc_ratio, int seed);
 
 
-/**
-   Liefert lexikographisch geordnete Liste von Woertern der Laenge n
-   aus einem Alphabet mit M Symbolen. In dieser Funktion ebenfalls alloc
-   von sequence_t.
-   @param n      Wortlaenge
-   @param M      Alphabetgroesse
-   @return Sequenz Struktur
+/** Generates all possible integer sequence of lenght n from an alphabet with
+    M letters. Use lexicographical ordering. Memory allocation here.
+    @param n      length of sequences
+    @param M     size of alphabet
+    @return array of generated integer sequences
 */
 sequence_t *sequence_lexWords(int n, int M);
 
 /**
-   Bestimmt welches von vorgegebenen Modellen am besten zu einer vorgebenen
-   Sequenz passt (hoechste Wahrscheinlichkeit). Liefert Index des 
-   Modells zurueck und belegt log\_p mit der entsprechenden Wahrscheinlichkeit..
-   @param mo            Vektor von Modellen
-   @param model_number  Anzahl der Modelle in mo
-   @param sequence      Sequenz
-   @param seq_len       Sequenzlaenge
-   @param log_p         log(Wahrscheinlichkeit, dass sequence von 
-                        mo[model\_number] generiert wird)
-   @return ??
+   Determine best model for a given integer sequence. 
+   Choose from the set of models the 
+   one with the highest likelihood for the given sequence.
+   @param mo            array of models
+   @param model\_number  number of models
+   @param sequence      sequence
+   @param seq\_len      length of sequence
+   @param log\_p         log likelihood of the sequence given the best model
+   @return index of best\_model (between 0 and model\_number - 1)
 */
 int sequence_best_model(model **mo, int model_number, int *sequence, 
 			int seq_len, double *log_p);
 
 /**
-   Check, ob alle Symbole der Sequenzen erlaubt sind; d.h. aus [0 .. max\_symb - 1]..
-   @param sq          zu pruefende Sequenzen
-   @param max_symb    Anzahl der erlaubten Symbole; 
-   @return            -1 (Fehler) / 0
+   Make sure that the sequences only contain allowed symbols. 
+   (between 0 and max\_symbol - 1)
+   @param sq          sequences
+   @param max_symb    number of different symbols
+   @return            -1 for error, 0 for no errors
 */
 int sequence_check(sequence_t *sq, int max_symb);
 
 /**
-  Kopiert Symbole einer Sequenz; Speicher muss ausserhalb allokiert werden..
-  @param target  Zielsequenz
-  @param source  Quellsequenz
-  @param len     Sequenzlaenge
+  copy one integer sequence. Memory for target has to be allocated outside.
+  @param target  target sequence
+  @param source source sequence
+  @param len     length of source sequence
   */
 void sequence_copy(int *target, int *source, int len);
 
 /**
-  Kopiert Symbole einer Sequenz; Speicher muss ausserhalb allokiert werden..
-  @param target  Zielsequenz
-  @param source  Quellsequenz
-  @param len     Sequenzlaenge
+  copy one double sequence. Memory for target has to be allocated outside.
+  @param target  target sequence
+  @param source source sequence
+  @param len     length of source sequence
   */
 void sequence_d_copy(double *target, double *source, int len);
 
 /**
-  Addiert alle Sequenzen aus source zu target hinzu. Allokiert Speicher 
-  @param target  Zielsequenzen
-  @param source  Quellsequenzen
+  Adds all integer sequences, sequence lengths etc 
+  from source to target. Memory allocation is done here.
+  @param target target sequence structure
+  @param source  source sequence structure
+  @return -1 for error, 0 for success
   */
 int sequence_add(sequence_t *target, sequence_t *source);
 
+
 /**
-  Addiert alle Sequenzen aus source zu target hinzu. Allokiert Speicher 
-  @param target  Zielsequenzen
-  @param source  Quellsequenzen
+  Adds all double sequences, sequence lengths etc 
+  from source to target. Memory allocation is done here.
+  @param target target sequence structure
+  @param source  source sequence structure
+  @return -1 for error, 0 for success
   */
 int sequence_d_add(sequence_d_t *target, sequence_d_t *source);
 
 /**
-  Schreiben von Sequenzen..
-  @param file        Ausgabedatei
-  @param sequence    zu schreibende Sequenzen
+  Prints one array of integer sequences in a file.
+  @param file       output file
+  @param sequence    array of sequences
   */
 void sequence_print(FILE *file, sequence_t *sequence);
 
-/** Schreiben von int Sequenzen in Mathematica Format (Liste von Listen).
+/**
+   Prints one array of integer sequences in Mathematica format.
+   (List of lists)
+   @param file       output file
+   @param sq    array of sequences
+   @param name arbitrary sequence name for usage in Mathematica.
  */
 void sequence_mathematica_print(FILE *file, sequence_t *sq, char *name);
 
 /**
-  Schreiben von double-Sequenzen..
-  @param file        Ausgabedatei
-  @param seq_struct  Sequenzfeld
-  @param discrete    0/1-Variable: 1 fuer int-Ausgabe
+  Prints one array of double sequences in a file.
+  @param file       output file
+  @param sqd    array of sequences
+  @param discrete   switch: 0 means double output for symbols,  
+     1 means truncate symbols to integer
   */
 void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 
-/** Schreiben von double Sequenzen in Mathematica Format (Liste von Listen).
+/**
+   Prints one array of double sequences in Mathematica format.
+   (List of lists)
+   @param file       output file
+   @param sqd    array of sequences
+   @param name arbitrary sequence name for usage in Mathematica.
  */
 void sequence_d_mathematica_print(FILE *file, sequence_d_t *sqd, char *name);
 
-/** GNUPLOT Format: ein Symbol pro Zeile, Seqs. durch Doppelleerzeile getrennt */
+/** Output of double sequences suitable for gnuplot. One symbol per line,
+    sequences seperated by double newline.
+    @param file output file
+    @param sqd array of double sequences
+*/
 void sequence_d_gnu_print(FILE *file, sequence_d_t *sqd);
+
 /**
-  Nur free von Pointern innerhalb einer sequence_t struct,
-  seq_number wird auf 0 gesetzt. Die Daten selbst bleiben erhalten!  
-  @param seq_struct  structure, in der die Pointer freigegeben werden
+   Cleans integer sequence pointers in sequence struct. sets 
+   seq\_number to zero.
+   Differs from sequence\_free since memory is not freed here. 
+   @param sq sequence structure
   */
 void sequence_clean(sequence_t *sq);
 
 /**
-  Nur free von Pointern innerhalb einer sequence_d_t struct,
-  seq_number wird auf 0 gesetzt. Die Daten selbst bleiben erhalten!
-  @param seq_struct  structure, in der die Pointer freigegeben werden
+   Cleans double sequence pointers in sequence struct. sets 
+   seq\_number to zero.
+   Differs from sequence\_free since memory is not freed here. 
+   @param sqd sequence structure
   */
-void sequence_d_clean(sequence_d_t *sq);
+void sequence_d_clean(sequence_d_t *sqd);
 
 /**
-  free aller Pointer UND Speicherplaetze einer sequence_t struct.
-  @param seq_struct  structure, in der Speicher freigegeben wird
+  Frees all memory in a given array of integer sequences.
+  @param sq sequence  structure
+  @return 0 for succes, -1 for error
   */
 int sequence_free(sequence_t **sq);
 
 /**
-  free aller Pointer UND Speicherplaetze einer sequence_d_t struct.
-  @param seq_struct  structure, in der Speicher freigegeben wird
+  Frees all memory in a given array of double sequences.
+  @param sq sequence  structure
+  @return 0 for succes, -1 for error
   */
 int sequence_d_free(sequence_d_t **sq);
 
-
 /**
-   liefert groesstes Symbol in einer Sequenz Struktur..
+   Return biggest symbol in an interger sequence.
+   @param sq sequence structure
+   @return max value
  */
 int sequence_max_symbol(sequence_t *sq);
 
 /**
-   Alloc einer Sequenz Struktur fuer seq\_number Sequenzen. Es wird nur
-   Speicher fuer die Pointer auf Sequenzen bereitgestellt, da die 
-   Sequenzlaenge ja noch nicht bekannt ist. seq_number in sequence_t wird
-   richtig belegt. Die Vektoren seq\_len und seq\_label werden auch allociert
-   und mit 0 initialisiert.
-   @param seq_number:  Anzahl der Sequenzen
-   @return:            leere Sequenz Struktur.
+   Memory allocation for an integer sequence struct. Allocates arrays of lenght
+   seq\_number. NO allocation for the actual sequence, since its length is 
+   unknown.
+   @param seq\_number:  number of sequences
+   @return:     pointer of sequence struct
 */
 sequence_t *sequence_calloc(long seq_number);
 
 /**
-   Gleiche Funktion wie sequence_calloc fuer sequence_d_t
- */
+   Memory allocation for a double  sequence struct. Allocates arrays of lenght
+   seq\_number. NO allocation for the actual sequence, since its length is 
+   unknown.
+   @param seq\_number:  number of sequences
+   @return:     pointer of sequence struct
+*/
 sequence_d_t *sequence_d_calloc(long seq_number);
 
 /**
-   Erzeugen einer Double-Kopie eines Int-Sequenzfeldes..
-   @return        zu erzeugendes double-Sequenzfeld
-   @param sq      int-Sequenzfeld, das kopiert wird
+   Copies array of integer sequences to double sequences.
+   @return       double sequence struct (target)
+   @param sq    integer sequence struct (source)
    */
 sequence_d_t *sequence_d_create_from_sq(const sequence_t *sq);
 
 /**
-   Erzeugen einer Int-Kopie eines Double-Sequenzfeldes..
-   @return        zu erzeugendes int-Sequenzfeld
-   @param sqd     double-Sequenzfeld, das kopiert wird
+   Copies array of double sequences into an array of integer
+   sequences. Truncates positions after decimal point.
+   @return       integer sequence struct (target)
+   @param sq    double sequence struct (source)
    */
 sequence_t *sequence_create_from_sqd(const sequence_d_t *sqd);
 
 /** 
-  Maximale Sequenzl\"ange eines Sequenzfeldes ermitteln..
+    Determines max sequence length in a given double sequence struct.
+    @param sqd sequence struct
+    @return max sequence length
  */
 int sequence_d_max_len(const sequence_d_t *sqd);
 
 /**
-  Berechnung der Mittelwertsequenz. Falls Sequenzen unterschiedlicher
-  L\"ange vorliegen, wird die gr\"o\ss{}te L\"ange ermittelt und die
-  fehlenden Teile der k\"urzeren Sequenzen werden mit null aufgef\"ullt.
+  Calculates a mean sequence of a given array of double sequences.
+  Missing values of shorter sequences a assumed to be zero.
+  @param sqd sequence struct
+  @return pointer of sequence struct containing the mean sequence
   */
 sequence_d_t *sequence_d_mean(const sequence_d_t *sqd);
 
 /**
-  Berechnung der Scattermatrix. Falls Sequenzen unterschiedlicher
-  L\"ange vorliegen, wird die gr\"o\ss{}te L\"ange ermittelt und die
-  fehlenden Teile der k\"urzeren Sequenzen werden NICHT BERUECKSICHTIGT!.
-  @return        zu erzeugende double-Matrix
-  @param sqd     double-Sequenzfeld
-  @param sqd     Gr\"o\ss{}e der quadratischen Matrix
+   Calculates the scatter matrix of an array of double sequences. 
+   Missing parts of short sequences are NOT taken into account.
+   @return        scatter matrix
+   @param sqd     sequence struct
+   @param sqd     (calculated) dimension of scatter matrix
   */
 double **sequence_d_scatter_matrix(const sequence_d_t *sqd, int *dim);
 
 /**
-  Schreiben von double-Sequenzen als Input-File fuer das K-Means-Programm
-  @param filename        Ausgabedatei
-  @param sqd             Sequenzfeld
-  @param cluster_number  Anzahl der zu bildenden Cluster
-  @param start_partition 1: Labels als Start-Partition der Clusterung nehmen
-*/
-int sequence_d_kmeans_print(char *filename, sequence_d_t *sqd, 
-			    int cluster_number, int start_partition);
-
-/**
-  Lesen des Ergebnisses einer kmeans-Clusterung, d.h. zugeordneten Cluster werden 
-  als Labels der Sequenzen gesetzt..
-  @param filename        Ausgabedatei
-  @param sqd             Sequenzfeld
-  @param max_label       return: groesstes gelesenes Label
-*/
-int sequence_d_read_kmeans_label(char *filename, sequence_d_t *sqd, 
-				 int *max_label);
-
-/** liefert den ersten Index der Sequenz, deren ID mit der uebergebenen ID
-    uebereinstimmt */
-long sequence_d_index(sequence_d_t *sqd, double id);
-
-/** liefert den ersten Index der Sequenz, deren ID mit der uebergebenen ID
-    uebereinstimmt */
-long sequence_index(sequence_t *sq, double id);
-
-/**
-   Funktion zur Klasseneinteilung einer Sequenz. Spar- und Tilgungsphase
-   sind getrennt, Sondersymbole werden nicht summiert.
-   Details auch im Source Kommentar.
-   @param O Sequenz
-   @param index Sequenzindex
+   Calculates transition class for a given double sequence
+   at a specified position. Very application specific!!! Currently 
+   implemented only dummy function: allways returns 0 which
+   means no usage of multiple transition classes.
+   @param O double sequence
+   @param index position for class calculation
+   @param osum sum of symbols upto index
+   @param phase from loan banking application
+   @return currently always 0
  */
-int sequence_d_class(const double *O, int index, double *osum, int *tilgphase);
+int sequence_d_class(const double *O, int index, double *osum, int *phase);
 
-/** Ist O[index] eine SPE Ausgabe?. Unterscheidung Tilg. und SPE
-   ueber vorangegangenes symbol_zut */
-int sequence_d_is_spar(double *O, int index);
-
-
-/** Ist O[index] eine Tilg. Ausgabe? */
-
-int sequence_d_is_tilg(double *O, int index);
-
-
-/** zufaellige Aufteilung eines Seq. Feldes in Test und Trainingssequenzen */
+/** Divides randomly a given array of double sequences into two sets. 
+    Useful if a training and test set is needed. Memory allocation is done 
+    here.
+    @param sqd input sequence array
+    @param sqd\_train training sequences
+    @param sqd\_test test sequences
+    @param train\_ratio ratio of number of train vs number of test sequences
+    @return 0 for success, -1 for error
+*/
 int sequence_d_partition(sequence_d_t *sqd, sequence_d_t * sqd_train, 
 			 sequence_d_t *sqd_test, double train_ratio);
 
 
-/** kopiert source[s_num] nach target[t_num] inkl. label, id, w, len.
-    Keine allocs hier!
+/** 
+    Copies all entries from one sequence in a source array to a target array.
+    No memory allocation here.
+    @param target double sequence target
+    @param source double sequence source
+    @param t_num position in target array
+    @param s_num position in source array
 */
 void sequence_d_copy_all(sequence_d_t *target, long t_num, 
 			 sequence_d_t *source, long s_num);
 
-int sequence_d_labels_from_kmeans(sequence_d_t *sqd, int smo_number);
-
-
-int sequence_d_is_sonder(double O);
-
-/** Likelihood function in a mixture model:
-   $sum_k w^k log( sum_c (alpha_c p(O^k | lambda_c)))$
+/** Log-Likelihood function in a mixture model:
+    (mathe mode?)
+    $\sum_k w^k \log( \sum_c (\alpha_c p(O^k | \lambda_c)))$
+    @param smo pointer to array of smodels
+    @param smo\_number number of models
+    @param sqd sequence struct
+    @param like log likelihood
 */
-
 int sequence_d_mix_like(smodel **smo, int  smo_number, sequence_d_t *sqd, double *like);
-
-int sequence_d_mix_likeBS(smodel **smo, int  smo_number, sequence_d_t *sqd,
-			  double *like);
 
 #endif
 /*@} (Doc++-Group: sequence) */
