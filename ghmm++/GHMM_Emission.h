@@ -10,6 +10,7 @@
 #ifndef _GHMM_EMISSION_H
 #define _GHMM_EMISSION_H 1
 
+#include <assert.h>
 #include <vector>
 #include <xmlio/XMLIO_Element.h>
 #include <ghmm/smodel.h>
