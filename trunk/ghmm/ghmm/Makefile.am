@@ -1,5 +1,5 @@
 #  author       : Achim Gaedke
-#  filename     : ghmm/ghmm/Makefile.am
+#  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
 #
@@ -16,7 +16,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   model.c model.h \
                   cluster.c cluster.h \
                   scluster.c scluster.h \
-		  root_finder.c root_finder.h \
+	  root_finder.c root_finder.h \
                   reestimate.c reestimate.h \
                   randvar.c randvar.h \
                   rng.c rng.h \
@@ -24,6 +24,7 @@ libghmm_a_SOURCES= foba.c foba.h \
                   vector.c vector.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
+	  sviterbi.c sviterbi.h \
                   smodel.c smodel.h \
                   sreestimate.c sreestimate.h \
                   smixturehmm.c smixturehmm.h \
@@ -45,7 +46,7 @@ pkginclude_HEADERS = foba.h \
                   model.h \
                   cluster.h \
                   scluster.h \
-		  root_finder.h \
+	  root_finder.h \
                   reestimate.h \
                   randvar.h \
                   rng.h \
@@ -53,6 +54,7 @@ pkginclude_HEADERS = foba.h \
                   vector.h \
                   viterbi.h \
                   sfoba.h \
+	  sviterbi.h \
                   smodel.h \
                   sreestimate.h \
                   smixturehmm.h \
