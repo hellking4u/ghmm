@@ -21,15 +21,6 @@ typedef enum {
   default_handler
 } object_handler_type;
 
-typedef void (*ChildDataHandler)(void* ChildData, object_handler_type ChildType);
-
-typedef struct 
-{
-  XML_StartElementHandler StartHandler;
-  XML_EndElementHandler EndHandler;
-  XML_CharacterDataHandler CharacterHandler;
-  ChildDataHandler ChildDataReciever;
-} object_handler_functions;
 
 /* these object handlers are stored in a double linked list
    the first element is an document handler, that can handle all events.
@@ -42,6 +33,20 @@ typedef struct
 */
 typedef struct object_handler object_handler;
 
+/*
+  evaluates contents of parsed elements
+ */
+typedef void (*ChildDataHandler)(object_handler* ChildData);
+
+typedef struct 
+{
+  XML_StartElementHandler StartHandler;
+  XML_EndElementHandler EndHandler;
+  XML_CharacterDataHandler CharacterHandler;
+  ChildDataHandler ChildDataReciever;
+} object_handler_functions;
+
+
 /* */
 struct object_handler
 {
@@ -52,6 +57,9 @@ struct object_handler
   /* type of this handler */
   object_handler_type type;
   
+  /* parser */
+  XML_Parser parser;
+
   /* its data */
   void* handler_data;
 
@@ -59,4 +67,45 @@ struct object_handler
   object_handler_functions functions;
 };
 
+object_handler*
+default_create_handler_object(XML_Parser parser,
+			      const XML_Char *name,
+			      const XML_Char **atts);
+
+void
+default_delete_handler_object(object_handler* handler);
+
+void
+default_set_handler(object_handler* handler);
+
+object_handler*
+default_push_handler(object_handler* old_handler,
+		     object_handler* new_handler);
+
+object_handler*
+default_pop_handler(object_handler* handler);
+
+void
+default_StartElement_handler(void *userData,
+			     const XML_Char *name,
+			     const XML_Char **atts);
+
+void
+default_CharacterData_handler(void *userData,
+			      const XML_Char *s,
+			      int len);
+
+void
+default_EndElement_handler(void *userData,
+			   const XML_Char *name);
+
+void
+default_ChildData_handler(object_handler* handler);
+
+int
+ghmm_xml_parse(const char* filename);
+
 #endif /* XMLIO_H */
+
+
+
