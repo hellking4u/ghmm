@@ -124,7 +124,7 @@ The objects one has to deal with in HMM modelling are the following
 
    HMMOpen(fileName) # Calls an object of type HMMOpen instantiated in ghmm
    HMMOpen(fileName, type=HMM.FILE_XML)
-   HMMFromMatrix(emission_domain, distribution, A, B, pi) # B is a list of distribution parameters
+   HMMFromMatrices(emission_domain, distribution, A, B, pi) # B is a list of distribution parameters
 
    Dynamic construction: Providing a context for dynamically
    editing existing HMMs or creating them from scratch
@@ -352,9 +352,25 @@ class GaussianDistribution(ContinousDistribution):
         return (self.mu, self.sigma2)
         
 
-class MixtureContinousDistribution(Distribution):
+class MixtureContinousDistribution(ContinousDistribution):
     pass
 
+class GaussianMixtureDistribution(MixtureContinousDistribution):
+    def __init__(self, domain):
+        self.emissionDomain = domain
+        self.M = None   # number of mixture components
+        self.mu = []
+        self.sigma = []
+        self.weight = []
+        
+    def set(self, index, (mu, sigma,w)):
+        pass
+        # assert M > index 
+        # self.mu = mu
+        # self.sigma = sigma
+
+    def get(self):
+        pass
 
 #-------------------------------------------------------------------------------
 #- Sequence, SequenceSet and derived  ------------------------------------------
@@ -887,7 +903,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 #initialize states
                 for i in range(cmodel.N):
 
-                    print "  state " + str(i) + ":"
+                    #print "  state " + str(i) + ":"
                     
                     state = ghmmwrapper.get_sstate_ptr(states,i)
                     state.pi = pi[i]
@@ -916,6 +932,66 @@ class HMMFromMatricesFactory(HMMFactory):
                 #append states to model
                 cmodel.s = states
                 return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
+            
+            if isinstance(distribution, GaussianMixtureDistribution):
+                print " ** mixture model"
+                
+                # Interpretation of B matrix for the mixture case (Example with three states and two components each):
+                #  B = [ 
+                #      [ ["mu11","mu12"],["sig11","sig12"],["w11","w12"]   ],
+                #      [  ["mu21","mu22"],["sig21","sig22"],["w21","w22"]  ],
+                #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
+                #      
+                #      ]
+                
+                cmodel = ghmmwrapper.smodel()
+                cmodel.N = len(A)
+                cmodel.M = len(B[0][0]) # Number of mixture componenent for emission distribution
+                cmodel.prior = -1 # Unused
+                cmodel.cos = 1  # number of transition classes in GHMM
+                states = ghmmwrapper.arraysstate(cmodel.N)
+
+                # XXX ? switching function ? XXX
+                # Switching functions and transition classes are handled
+                # elswhere
+
+                #initialize states
+                for i in range(cmodel.N):
+
+                    print "  state " + str(i) + ":"
+                    
+                    state = ghmmwrapper.get_sstate_ptr(states,i)
+                    state.pi = pi[i]
+
+                    # allocate arrays of emmission parameters
+                    state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weights. Unused
+                    mu_list = B[i][0]
+                    sigma_list = B[i][1]
+                    weight_list = B[i][2]
+                    
+                    state.mue = ghmmhelper.list2arrayd(mu_list) #mu = mue in GHMM C-lib.
+                    state.u = ghmmhelper.list2arrayd(sigma_list)
+                    state.c = ghmmhelper.list2arrayd(weight_list)
+                    
+                    #set out probabilities
+                    trans = ghmmhelper.extract_out_probs([A[i]], cmodel.cos) # cos = 1
+                    state.out_states = trans[0]
+                    state.out_id = trans[1]
+                    state.out_a = trans[2].array 
+
+                    #set "in" probabilities
+                    A_col_i = map( lambda x: x[i], A)
+                    trans = ghmmhelper.extract_out_probs([A_col_i],cmodel.cos) # cos = 1
+                    state.in_states = trans[0]
+                    state.in_id = trans[1]
+                    state.in_a = trans[2].array
+                
+                    state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation                
+                
+                #append states to model
+                cmodel.s = states
+                return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
+                
 
             else:
                 raise GHMMError(type(distribution),
@@ -1599,8 +1675,7 @@ class GaussianEmissionHMM(HMM):
                 inState = self.getStatePtr(self.cmodel.s,stateIds[j]) 
                 for k in range(inState.in_states):
                     inId = ghmmwrapper.get_arrayint(inState.in_id,k)
-                    if inId == i:
-                        ghmmwrapper.set_arrayd(inState.in_a,k,normP) # updating in probabilities
+
 
     def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
         """ Reestimate the model parameters given the training_sequences.
@@ -1662,9 +1737,69 @@ class GaussianEmissionHMM(HMM):
 
             training_sequences can either be a SequenceSet or a Sequence
         """
-        res = ghmmwrapper.sreestimate_one_step()
+        pass
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
         pass
 
+
+class GaussianMixtureHMM(GaussianEmissionHMM):
+    def __init__(self, emissionDomain, distribution, cmodel):
+        GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
+    
+    def getEmission(self, i, comp):
+        """ Return (mu, sigma^2, weight) of component 'comp' in state 'i'  """
+        state = ghmmwrapper.get_sstate(self.cmodel, i)
+        mu = ghmmwrapper.get_arrayd(state.mue, comp)
+        sigma = ghmmwrapper.get_arrayd(state.u,comp)
+        weigth = ghmmwrapper.get_arrayd(state.c,comp)
+        return (mu, sigma, weight)
+        
+    def setEmission(self, i, comp,(mu, sigma, weight)):
+        """ Set the emission distributionParameters for component 'comp' in state 'i'. """
+        state = ghmmwrapper.get_sstate(self.cmodel, i)
+        ghmmwrapper.set_arrayd(state.mue, comp, float(mu))  # GHMM C is german: mue instead of mu 
+        ghmmwrapper.set_arrayd(state.u, comp, float(sigma))            
+        ghmmwrapper.set_arrayd(state.c, comp, float(weight))  
+
+    def __str__(self):
+        "defines string representation"        
+        hmm = self.cmodel
+        
+        strout = "\nOverview of HMM:"
+        strout += "\nNumber of states: "+ str(hmm.N)
+        strout += "\nNumber of output distributions per state: "+ str(hmm.M)
+    
+        for k in range(hmm.N):
+            state = ghmmwrapper.get_sstate(hmm, k)
+            strout += "\n\nState number "+ str(k) +":"
+            strout += "\nInitial probability: " + str(state.pi)
+            strout += "\n"+ str(hmm.M) + " density function(s):\n"
+            
+            weight = ""
+            mue = ""
+            u =  ""
+
+            for outp in range(hmm.M):
+                weight += str(ghmmwrapper.get_arrayd(state.c,outp))+", "
+                mue += str(ghmmwrapper.get_arrayd(state.mue,outp))+", "
+                u += str(ghmmwrapper.get_arrayd(state.u,outp))+", "
+            
+            strout += "  pdf component weights : " + str(weight) + "\n"
+            strout += "  mean vector: " + str(mue) + "\n"
+            strout += "  variance vector: " + str(u) + "\n"
+            strout += "\nOutgoing transitions:"
+            
+            for i in range( state.out_states):
+                strout += "\ntransition to node " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) +" with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.out_a,0,i))
+              
+                     
+            strout +=  "\nIngoing transitions:"
+
+            for i in range(state.in_states):
+                strout += "\ntransition from node " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,0,i))
+                
+            strout += "\nint fix:" + str(state.fix) + "\n"
+        return strout                  
+        
