@@ -10,6 +10,7 @@
 #include "ppghmm++/GHMM_State.h"
 #include "ppghmm++/GHMM_Transition.h"
 #include "ppghmm++/GHMM_ContinuousModel.h"
+#include "ppghmm++/GHMM_Emission.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -18,9 +19,10 @@ using namespace std;
 
 
 GHMM_State::GHMM_State(XMLIO_Attributes& attrs) {
-  c_state = NULL;
-  reading = GHMM_STATE_NONE;
-  id      = attrs["id"];
+  c_state  = NULL;
+  reading  = GHMM_STATE_NONE;
+  id       = attrs["id"];
+  emission = NULL;
 }
 
 
@@ -29,6 +31,7 @@ GHMM_State::~GHMM_State() {
     state_clean(c_state);
     free(c_state);
   }
+  SAFE_DELETE(emission);
 }
 
 
@@ -45,11 +48,10 @@ XMLIO_Element* GHMM_State::XMLIO_startTag(const string& tag, XMLIO_Attributes &a
   }
 
   if (tag == "emission") {
-    emission_weight   = atoi(attrs["weight"].c_str());
-    emission_mue      = atof(attrs["mue"].c_str());
-    emission_variance = atof(attrs["variance"].c_str());
+    SAFE_DELETE(emission);
+    emission = new GHMM_Emission();
 
-    return this;
+    return emission;
   }
 
   fprintf(stderr,"tag '%s' not recognized in state element\n",tag.c_str());
@@ -131,9 +133,9 @@ void GHMM_State::fillState(GHMM_ContinuousModel* model, sstate* s) {
   }
 
   for (i = 0; (int) i < c_model->M; ++i) {
-    s->c[i]   = emission_weight;
-    s->mue[i] = emission_mue;
-    s->u[i]   = emission_variance;
+    s->c[i]   = emission->weight;
+    s->mue[i] = emission->mue;
+    s->u[i]   = emission->variance;
   }
 
   s->fix        = 0;

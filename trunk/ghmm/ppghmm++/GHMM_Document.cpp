@@ -8,6 +8,7 @@
 #include "ppghmm++/GHMM_Document.h"
 #include "ppghmm++/GHMM_DiscreteModel.h"
 #include "ppghmm++/GHMM_ContinuousModel.h"
+#include "ppghmm++/GHMM_Sequences.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -59,18 +60,34 @@ XMLIO_Element* GHMM_Document::XMLIO_startTag(const string& tag, XMLIO_Attributes
   if (reading_ghmm) {
     if (tag == "hmm") {
       if (attrs["type"] == "continuous") {
-	continuous_model = new GHMM_ContinuousModel(attrs);
+	continuous_model = new GHMM_ContinuousModel();
 	return continuous_model;
       }
-      
-      fprintf(stderr,"hmm type '%s' not recognized\n",attrs["type"].c_str());
+     
+      /* error message if no valid hmm type is specified. */
+      fprintf(stderr,"Error reading file: %s\n",xml_filename.c_str());
+      if (attrs["type"] == "")
+	fprintf(stderr,"No HMM type specified, ");
+      else
+	fprintf(stderr,"HMM type '%s' not recognized, ",attrs["type"].c_str());
+
+      fprintf(stderr,"choose out of: continuous\n");
+
       exit(1);
     }
-
-    fprintf(stderr,"tag '%s' not recognized in ghmm element\n",tag.c_str());
+    
+    if (tag == "sequences") {
+      fprintf(stderr,"<sequences>\n");
+      
+      sequences = new GHMM_Sequences(attrs);
+      
+      return sequences;
+    }
+    
+    fprintf(stderr,"Tag '%s' not recognized in ghmm element.\n",tag.c_str());
     exit(1);
   }
-
+  
   return this;
 }
 

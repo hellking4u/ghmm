@@ -8,7 +8,10 @@
 #ifndef _GHMM_SEQUENCES_H
 #define _GHMM_SEQUENCES_H 1
 
+#include <vector>
+#include <xmlio/XMLIO_Element.h>
 #include "ghmm/sequence.h"
+#include "ppghmm++/GHMM_Types.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -16,14 +19,15 @@ namespace std {
 #endif
 
 class GHMM_Sequences;
+class GHMM_Sequence;
 
 /** This can either be a sequence of double sequences or int sequences.*/
-class GHMM_Sequences {
-
-  enum GHMM_SequenceType {GHMM_INT, GHMM_DOUBLE};
+class GHMM_Sequences: public XMLIO_Element {
   
  public:
   
+  /** For reading from xml file. */
+  GHMM_Sequences(XMLIO_Attributes& attrs);
   /** Constructor. */
   GHMM_Sequences(GHMM_SequenceType sequence_type);
   /** Constructor. Constructs object from C structure.
@@ -39,12 +43,21 @@ class GHMM_Sequences {
   virtual const char* toString() const;
   
   /**
-     Adds all integer sequences, sequence lengths etc 
+     Adds all sequences, sequence lengths etc 
      from source to this object. Memory allocation is done here.
      @param source  source sequence structure
      @return -1 for error, 0 for success
   */
   int add(GHMM_Sequences* source);
+  /**
+     Adds all sequences, sequence lengths etc 
+     from source to this object. Memory allocation is done here.
+     @param source  source sequence structure
+     @return -1 for error, 0 for success
+  */
+  int add(GHMM_Sequence* source);
+  /** */
+  void clean_cpp();
   /** Returns double sequence with given index. 
       Aborts program if object doesn't contain double sequences. */
   double* getDoubleSequence(int index) const;
@@ -82,6 +95,11 @@ class GHMM_Sequences {
   */
   void read(char *filename);
 
+  /** */
+  virtual void XMLIO_finishedReading();
+  /** */
+  virtual XMLIO_Element* XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes);
+
   /** Type of current sequence. */
   GHMM_SequenceType sequence_type;
 
@@ -89,6 +107,12 @@ class GHMM_Sequences {
   sequence_t*   c_i_sequences;
   /** C type double sequence. */
   sequence_d_t* c_d_sequences;
+  /** */
+  int last_weight;
+
+ private:
+  
+  vector<GHMM_Sequence*> sequences;
 };
  
 #ifdef HAVE_NAMESPACES

@@ -9,7 +9,6 @@
 #include "ghmm/rng.h"
 #include "ghmm/vector.h"
 #include "ghmm/matrix.h"
-#include "ppghmm++/GHMM.h"
 #include "ppghmm++/GHMM_DiscreteModel.h"
 #include "ppghmm++/GHMM_Sequences.h"
 

@@ -20,6 +20,7 @@ namespace std {
 
 class GHMM_State;
 class GHMM_ContinuousModel;
+class GHMM_Emission;
 
 /** */
 class GHMM_State: public XMLIO_Element {
@@ -51,18 +52,14 @@ class GHMM_State: public XMLIO_Element {
   state* c_state;
   /** */
   string id;
+  /** */
+  GHMM_Emission* emission;
 
 
  private:
 
   /** */
   GHMM_StateReadingType reading;
-  /** */
-  int emission_weight;
-  /** */
-  double emission_mue;
-  /** */
-  double emission_variance;
   /** */
   double initial;
 };

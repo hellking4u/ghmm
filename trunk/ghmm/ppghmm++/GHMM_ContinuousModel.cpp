@@ -11,6 +11,7 @@
 #include "ppghmm++/GHMM_Sequences.h"
 #include "ppghmm++/GHMM_State.h"
 #include "ppghmm++/GHMM_Transition.h"
+#include "ppghmm++/GHMM_Emission.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -18,30 +19,9 @@ using namespace std;
 #endif
 
 
-GHMM_ContinuousModel::GHMM_ContinuousModel(XMLIO_Attributes& attrs) {
+GHMM_ContinuousModel::GHMM_ContinuousModel() {
   /* Do not initialize anything. It will be read from xml file. */
   c_model = NULL;
-
-  string d = attrs["density"];
-  bool found = false;
-
-  if (d == "normal" || d == "0" || d == "") {
-    density = normal;
-    found = true;
-  }
-  if (d == "truncated normal" || d == "1") {
-    density = normal_pos;
-    found = true;
-  }
-  if (d == "approximated normal" || d == "2") {
-    density = normal_approx;
-    found = true;
-  }
-
-  if (!found) {
-    fprintf(stderr,"density '%s' not supported by continuous hmm.\n",d.c_str());
-    exit(1);
-  }
 }
 
 
@@ -49,7 +29,7 @@ GHMM_ContinuousModel::GHMM_ContinuousModel(int N, int M, int cos, density_t dens
 					   double prior) {
   c_model = (smodel*) calloc(1,sizeof(smodel));
   if (!c_model) {
-    fprintf(stderr,"GHMM_ContinuousModel::GHMM_ContinuousModel() could not allocate c_model\n");
+    fprintf(stderr,"GHMM_ContinuousModel::GHMM_ContinuousModel() could not allocate c_model.\n");
     exit(1);
   }
 
@@ -142,6 +122,8 @@ XMLIO_Element* GHMM_ContinuousModel::XMLIO_startTag(const string& tag, XMLIO_Att
 
 
 void GHMM_ContinuousModel::XMLIO_finishedReading() {
+  unsigned int i;
+
   c_model = (smodel*) calloc(1,sizeof(smodel));
   if (!c_model) {
     fprintf(stderr,"GHMM_ContinuousModel::XMLIO_finishedReading() could not allocate c_model\n");
@@ -151,11 +133,18 @@ void GHMM_ContinuousModel::XMLIO_finishedReading() {
   c_model->N       = states.size();
   c_model->M       = 1;
   c_model->cos     = 1;
-  c_model->density = density;
   c_model->prior   = -1;
   c_model->s       = (sstate*) malloc(sizeof(sstate) * c_model->N);
 
-  unsigned int i;
+  c_model->density = normal;
+  if (states.size() > 0)
+    c_model->density = states[0]->emission->density;
+  for (i = 1; i < states.size(); ++i)
+    if (c_model->density != states[i]->emission->density) {
+      fprintf(stderr,"Not all gaussian functions are equal.\nThis is not yet supported by the library.\n");
+      exit(1);
+    }
+  
   for (i = 0; i < states.size(); ++i)
     states[i]->fillState(this,&c_model->s[i]);
 }

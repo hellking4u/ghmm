@@ -14,4 +14,6 @@
 
 #include <ghmm/model.h>
 
+enum GHMM_SequenceType {GHMM_INT, GHMM_DOUBLE};
+
 #endif /* _GHMM_TYPES_H */
