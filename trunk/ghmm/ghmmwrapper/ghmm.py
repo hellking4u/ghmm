@@ -736,10 +736,10 @@ class HMMOpenFactory(HMMFactory):
 	    models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
 	    nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
 	    if modelIndex == None:
-		cmodel = get_smodel_ptr(models, 0) # XXX Who owns the pointer?
+		cmodel = ghmmwrapper.get_smodel_ptr(models, 0) # XXX Who owns the pointer?
 	    else:
 		if modelIndex < nrModels:
-		    cmodel = get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
+		    cmodel = ghmmwrapper.get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
 		else:
 		    print "modelIndex too large -- only have ", nrModels
 		    return None
