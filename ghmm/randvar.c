@@ -40,14 +40,14 @@ __copyright__
    } ; \
    return result.val;
 
-# ifndef HAVE_GSL_ERF
+# ifndef HAVE_GSL_SF_ERF
 double gsl_sf_erfc(double x)
 {
   EVAL_RESULT(gsl_sf_erfc_e(x, &result));
 }
 # endif
 
-# ifndef HAVE_GSL_ERFC
+# ifndef HAVE_GSL_SF_ERFC
 double gsl_sf_erf(double x)
 {
   EVAL_RESULT(gsl_sf_erf_e(x, &result));

@@ -70,8 +70,8 @@ AC_MSG_RESULT(no)
 )
 
 dnl checking if gsl_sf_erf exists
-AC_MSG_CHECKING([if gsl_sf_erf exists])
-AC_TRY_COMPILE([#include <gsl/gsl_sf.h>],
+AC_MSG_CHECKING([for gsl_sf_erf])
+AC_TRY_LINK([#include <gsl/gsl_sf.h>],
 [
  (void)gsl_sf_erf(0.0);
 ],
@@ -79,9 +79,10 @@ AC_MSG_RESULT(yes)
 AC_DEFINE(HAVE_GSL_SF_ERF,1,[gsl_sf_erf exists]),
 AC_MSG_RESULT(no)
 )
+
 dnl checking if gsl_sf_erfc exists
-AC_MSG_CHECKING([if gsl_sf_erfc exists])
-AC_TRY_COMPILE([#include <gsl/gsl_sf.h>],
+AC_MSG_CHECKING([for gsl_sf_erfc])
+AC_TRY_LINK([#include <gsl/gsl_sf.h>],
 [
  (void)gsl_sf_erfc(0.0);
 ],
