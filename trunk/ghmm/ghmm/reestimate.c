@@ -76,9 +76,9 @@ static local_store_t *reestimate_alloc(const model *mo) {
   if (!m_calloc(r->a_denom, mo->N)) {mes_proc(); goto STOP;}
   //hier muss mehr platz:
   //r->b_num = stat_matrix_d_alloc(mo->N, mo->M);
-  r->b_num = stat_matrix_d_alloc(mo->N, model_ipow(mo->M,mo->maxorder+1));
+  r->b_num = stat_matrix_d_alloc(mo->N, model_ipow(mo, mo->M,mo->maxorder+1));
   if (!(r->b_num)) {mes_proc(); goto STOP;}
-  r->b_denom = stat_matrix_d_alloc(mo->N, model_ipow(mo->M, mo->maxorder));
+  r->b_denom = stat_matrix_d_alloc(mo->N, model_ipow(mo, mo->M, mo->maxorder));
   if (!(r->b_denom)) {mes_proc(); goto STOP;}
   return(r);
  STOP:
@@ -111,7 +111,7 @@ static int reestimate_init(local_store_t *r, const model *mo) {
 
   int i, j, m, size, b_len;
 
-  size = model_ipow(mo->M, mo->maxorder);
+  size = model_ipow(mo, mo->M, mo->maxorder);
   b_len = size*mo->M;
 
   r->pi_denom = 0.0;
@@ -175,7 +175,7 @@ void reestimate_update_tie_groups(model *mo) {
   
   if (mo->model_type & kHigherOrderEmissions) {
     /*  printf("reestimate_update_tie_groups: Allocating for higher order states\n"); */
-    if (!m_malloc(new_emissions, model_ipow(mo->M, mo->maxorder+1))) {
+    if (!m_malloc(new_emissions, model_ipow(mo, mo->M, mo->maxorder+1))) {
       mes_proc(); 
       goto STOP;
     }  
@@ -189,7 +189,7 @@ void reestimate_update_tie_groups(model *mo) {
   }
   
   for (i=0; i<mo->N; i++){
-    bi_len = model_ipow(mo->M, mo->s[i].order+1);
+    bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
     /* find tie group leaders */  
     if (mo->tied_to[i] == i) {
       nr = 1.0;
@@ -261,7 +261,7 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
   mes_check_0(r->pi_denom, goto STOP); 
   for (i = 0; i < mo->N; i++) {
     /* Pi */
-    bi_len = model_ipow(mo->M, mo->s[i].order+1);
+    bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
     mo->s[i].pi =  r->pi_num[i] / r->pi_denom;
     /* A */
     /* note: denom. might be 0; never reached state? */
@@ -320,7 +320,7 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
       continue;
     
     /* B */
-    size = model_ipow(mo->M, mo->s[i].order);
+    size = model_ipow(mo, mo->M, mo->s[i].order);
     for (hist=0; hist<size; hist++) {
       if (r->b_denom[i][hist] < EPS_PREC)
 	factor = 0.0;
@@ -409,7 +409,7 @@ static int reestimate_one_step(model *mo, local_store_t *r,
       for (i = 0; i < mo->N; i++) {
 	/* Pi */
 	//hier:
-	bi_len = model_ipow(mo->M, mo->s[i].order+1);
+	bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
 
@@ -449,7 +449,7 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 	*/
 
 	/* XXX TODO correct higher emissions*/
-	size = model_ipow(mo->M, mo->s[i].order);
+	size = model_ipow(mo, mo->M, mo->s[i].order);
 	for (hist=0; hist<size; hist++) {
 	  first = hist*mo->M;
 	  for (m=first;  m<first+mo->M; m++) {
@@ -666,7 +666,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
       for (i = 0; i < mo->N; i++) {
 	/* Pi */
 	//hier:
-	bi_len = model_ipow(mo->M, mo->s[i].order+1);
+	bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
 	/* A */
@@ -694,7 +694,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
 	  continue;
 	/* B */
 
-	size = model_ipow(mo->M, mo->s[i].order);
+	size = model_ipow(mo, mo->M, mo->s[i].order);
 	for (hist=0; hist<size; hist++) {
 	  first = hist*mo->M;
 	  for (m=first;  m<first+mo->M; m++) {

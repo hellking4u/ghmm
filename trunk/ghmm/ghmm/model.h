@@ -179,6 +179,12 @@ struct model {
   int* topo_order; 
   int  topo_order_length;
 
+  /** pow_lookup is a array of precomputed powers
+
+      It contains in the i-th entry M (alphabet size) to the power of i
+      The last entry is maxorder+1
+  */
+  int *pow_lookup;
 
 };
 typedef struct model model;
@@ -250,8 +256,9 @@ extern "C" {
 /*----------------------------------------------------------------------------*/
 /** 
     binary algorithm to compute powers of integers efficiently
-    see Knuth, TAOCP, Vol 2, 4.6.3 */
-inline int model_ipow(int x, unsigned int n);
+    see Knuth, TAOCP, Vol 2, 4.6.3 
+    uses if appropiate lookup table from struct model */
+inline int model_ipow(const model* mo, int x, unsigned int n);
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
