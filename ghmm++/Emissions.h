@@ -34,11 +34,9 @@ namespace std {
       Emission(const string& tag, XMLIO_Attributes &attributes);
       /** */
       virtual const char* toString() const;
-
-    protected:
-      /** */
+      /** name of the state */
       string state;
-      /** */
+      /** if fix==1 the emissions of this state is not trained */
       int fix;
     };
 
