@@ -785,7 +785,7 @@ class HMM:
 	    state_orders.append(s.order) # state order
 
 	    size = self.hmmAlphabet.size() 
-	    if math.pow(size, s.order+1) != len(s.emissions): 
+	    if size**(s.order+1) != len(s.emissions): 
 		raise ValueError # exception: inconsistency between ordering and emission
 	    else:
                 B.append(s.emissions) # emission
