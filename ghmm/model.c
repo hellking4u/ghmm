@@ -512,9 +512,13 @@ model *model_copy(const model *mo) {
   if (!m_calloc(m2->silent, mo->N)) {mes_proc(); goto STOP;}
   if (mo->model_type & kTiedEmissions) {
     if (!m_calloc(m2->tied_to, mo->N)) {mes_proc(); goto STOP;}
-  }
-  else m2->tied_to = NULL;
+  } else m2->tied_to = NULL;
   
+  if (mo->model_type & kHasBackgroundDistributions) {
+    if (!m_calloc(m2->background_id, mo->N)) {mes_proc(); goto STOP;}
+    m2->bp = mo->bp;
+  } else m2->background_id = NULL;
+
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
@@ -549,6 +553,8 @@ model *model_copy(const model *mo) {
       m2->s[i].label    = mo->s[i].label;
     if (mo->model_type & kHigherOrderEmissions)
       m2->s[i].order    = mo->s[i].order;
+    if (mo->model_type & kHasBackgroundDistributions)
+      m2->background_id[i] = mo->background_id[i];
     m2->s[i].out_states = nachf;
     m2->s[i].in_states  = vorg;
   }
