@@ -365,13 +365,19 @@ class DiscreteHMMAlphabet(DOM_Map):
 class HMMClass(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
+        self.code2name = {-1:'None'}
+        self.name2code = {'None':-1}
+        self.maxCode = 0
     
     def fromDOM(self, XMLNode):
         """Take dom subtree representing a <hmm:class></hmm:class> element"""
         self.initialize()
         self.symbolsFromDom(XMLNode)
-
-    def toDOM(self, XMLDoc, XMLNode):
+        # copy self.name to self.code2name
+        for key in self.name.keys():            
+            self.code2name[key] = self.name[key]
+        
+    def toDOM(self, XMLDoc, XMLNode):        
         hmmclass = XMLDoc.createElement("hmm:class")   
         DOM_Map.toDOM(self, XMLDoc, hmmclass)
         XMLNode.appendChild(hmmclass)
@@ -391,8 +397,8 @@ class HMMState:
         self.index = nodeIndex # The node index in the underlying graph
         self.id    = ValidatingString("None") # identification by the canvas, not always the same
 	
-	self.state_class = PopupableInt(0)
-        self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
+	self.state_class = PopupableInt(-1)
+        self.state_class.setPopup(itsHMM.hmmClass.code2name, itsHMM.hmmClass.name2code, 10)
 
 	self.order = DefaultedInt()
         self.order.setDefault(1, 0)
@@ -414,10 +420,10 @@ class HMMState:
         self.background = PopupableInt(-1)
         self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
 
-        self.editableAttr = ['label', 'initial', 'order', 'background']
+        self.editableAttr = ['label', 'state_class', 'initial', 'order', 'background']
         self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
         
-    editableAttr = ['label', 'initial', 'order', 'background']
+    editableAttr = ['label', 'state_class', 'initial', 'order', 'background']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
     # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
