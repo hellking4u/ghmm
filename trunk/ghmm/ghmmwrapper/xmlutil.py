@@ -359,23 +359,31 @@ class DiscreteHMMAlphabet(DOM_Map):
 	for code in range(1,nrOfSymbols+1):
 	    self.addCode( code, alphas[code-1], desc = None)
  
-	
+
+
 class HMMClass(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
+        self.code2name = {-1:'None'}
+        self.name2code = {'None':-1}
+        self.maxCode = 0
     
     def fromDOM(self, XMLNode):
         """Take dom subtree representing a <hmm:class></hmm:class> element"""
         self.initialize()
         self.symbolsFromDom(XMLNode)
-
-    def toDOM(self, XMLDoc, XMLNode):
+        # copy self.name to self.code2name
+        for key in self.name.keys():            
+            self.code2name[key] = self.name[key]
+        
+    def toDOM(self, XMLDoc, XMLNode):        
         hmmclass = XMLDoc.createElement("hmm:class")   
         DOM_Map.toDOM(self, XMLDoc, hmmclass)
         XMLNode.appendChild(hmmclass)
 
     def size(self):
         return len(self.name.keys())
+
             
 class HMMState:
 
@@ -777,10 +785,10 @@ class HMM:
 	    state_orders.append(s.order) # state order
 
 	    size = self.hmmAlphabet.size() 
-	    if s.order != 1 and size == len(s.emissions): 
+	    if math.pow(size, s.order+1) != len(s.emissions): 
 		raise ValueError # exception: inconsistency between ordering and emission
 	    else:
-		B.append(s.emissions) # emission
+                B.append(s.emissions) # emission
 	    
 	    # transition probability
 	    v = s.index
