@@ -7,8 +7,8 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-
-INCLUDES = -I$(top_srcdir)
+#FIXME: expat config
+INCLUDES = -I$(top_srcdir) -I/zpr/local/include
 lib_LIBRARIES = libghmm.a
 
 libghmm_a_SOURCES= foba.c foba.h \
@@ -32,7 +32,8 @@ libghmm_a_SOURCES= foba.c foba.h \
                   mprintf.c mprintf.h \
                   scanner.c scanner.h \
                   gauss_tail.c gauss_tail.h \
-                  smap_classify.c smap_classify.h
+                  smap_classify.c smap_classify.h \
+                  xmlio.c xmlio.h 
 
 # excluded sgenerate, generation of sequences now in smodel
 #                  sgenerate.c sgenerate.h \
