@@ -44,9 +44,18 @@ PYTHON_DLNK   =
 #
 all:
 	$(SWIG) -c -python $(INTERFACE)
+<<<<<<< Makefile
+	$(CC) -c $(CFLAGS) sdclass_change.c $(INCLUDE)
+	$(CC) -c $(CFLAGS) read_cxml.c $(INCLUDE)
+=======
+>>>>>>> 1.2
 	$(CC) -c $(CFLAGS) gql.c $(INCLUDE)
 	$(CC) -c $(CFLAGS) ghmmwrapper_wrap.c $(INCLUDE) $(PYTHON_INCLUDE)
+<<<<<<< Makefile
+	$(CC) -shared sdclass_change.o gql.o read_cxml.o ghmmwrapper_wrap.o $(PYTHON_DLNK) $(LIBS) -o _ghmmwrapper.so -L$(TOP)/lib -lswigpy
+=======
 	$(CC) -shared gql.o ghmmwrapper_wrap.o $(PYTHON_DLNK) $(LIBS) -o _ghmmwrapper.so -L$(TOP)/lib -lswigpy
+>>>>>>> 1.2
 
 clean:
 	rm -f *_wrap* *.o *~ *.so mypython *.pyc .~*

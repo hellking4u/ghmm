@@ -528,6 +528,7 @@ class hmm_sdmodel(HMM_base):
 			self.model.prior = -1
 			cos = len(matrans)
 			self.model.cos=cos  # number of classes in GHMM
+			# assigning cp_class_change from ghmmwrapper.i as switching function
 			setSwitchingFunction( self.model )
 			states = arraysdstate(self.model.N)
 			#code for silent stuff - necessary
@@ -840,7 +841,7 @@ class smodel_cluster_t:
 		string += "Number of models: " + str(self.scluster_t.smo_number) + "\n"
 		
 		for i in range(self.scluster_t.smo_number):
-			seq = get_seq_t_ptr(self.scluster_t.smo_seq,i)
+			seq = get_seq_d_ptr(self.scluster_t.smo_seq,i)
 			pseq = sequence_d(seq)
 			string += str(pseq) + "\n"
 		
@@ -885,138 +886,7 @@ def scluster_print(cl,seq,file_names):
 		set_arraychar(ch_array,i,file_names[i])
 	print_scluster(cl,seq,ch_array)
 
-def smodel_run_clustering(smodFile,seqFile):
-	sclustering = smodel_cluster_t(smodFile)
 
-	bw_eps = 0.0
-	bw_max_iter = 20
-
-	MAX_ITER = 15
-	iter = 0
-	changes = 1
-	
-	best_logp = double_array(1)
-	
-	# allocating smosqd_t array
-	# smosqd_t_list = smosqd_t_array(sclustering.scluster_t.smo_number)
-
-	# reading sequences
-	seq = seq_d_read(seqFile)
-	scluster_random_labels(seq, sclustering.scluster_t.smo_number)	
-	
-
-	#print self.scluster_t.smo
-	#model = get_smodel_ptr(self.scluster_t.smo,1)
-	#smodel_print_stdout(model)
-	#print sclustering.scluster_t.smo[0].N
-
-	#print sclustering.scluster_t.smo_number, seq.seq_number
-	all_log_p = double_2d_array(sclustering.scluster_t.smo_number,seq.seq_number)
-	
-	
-	# initializing smosqd_t struct
-	reest_struct = reestimate_smosqd_t()
-	reest_struct.set_eps(bw_eps)
-	reest_struct.set_max_iter(bw_max_iter)
-
-
-
-	while(iter < MAX_ITER and changes != 0):
-		print "iter = " + str(iter)
-		
-		# reset termination flag
-		changes = 0
-		
-		for i in range(sclustering.scluster_t.smo_number):
-			# assigning models to smosqd_t struct
-			smodel = get_smodel_ptr(sclustering.scluster_t.smo,i)
-			reest_struct.set_model(smodel)
-			reest_struct.set_sqd(seq)
-			# one row of all_logp is assigned to smosqd_t.logp field
-			reest_struct.set_logp(get_row_pointer_d(all_log_p, i))
-	
-			# calculating the log probabilites for the current model
-			scluster_prob(reest_struct.smosqd_t)
-			
-			# resetting seq_counter for next iteration
-			set_arrayl(sclustering.scluster_t.seq_counter,i,0)
-		
-		double_2d_print(all_log_p,sclustering.scluster_t.smo_number,seq.seq_number)
-	
-		# assigning cluster labels to sequences
-		for j in range(seq.seq_number):
-			label = scluster_best_model(sclustering.scluster_t,j, all_log_p,best_logp )
-			if changes == 0 and label != get_sequence_d_label(seq,j):
-				# print str(label) +" to "+ str(get_sequence_d_label(seq,j))
-				changes = 1
-			
-			#print j, label
-			set_sequence_d_label(seq,j,label)
-			# cl.seq_counter[sqd->seq_label[j]]++; 
-			
-			# counting sequences assinged to model
-			s_nr = get_arrayl(sclustering.scluster_t.seq_counter,label)
-			#print label, s_nr+1
-			set_arrayl(sclustering.scluster_t.seq_counter,int(label),int(s_nr +1))
-
-			# Update Z_MD, (whatever it may be)
-			old_MD = get_arrayd(sclustering.scluster_t.smo_Z_MD,label)
-			new_MD = old_MD + (get_arrayd(seq.seq_w,j) * get_2d_arrayd(all_log_p,label,j)  )
-			set_arrayd(sclustering.scluster_t.smo_Z_MD,label, new_MD)
-			
-			#  idummy = scluster_log_aposteriori(&cl, sqd, j, &log_apo);
-			# cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * log_apo;
-			# Update Z_MAW, (whatever it may be)
-			
-			log_apo = double_array(1)
-			scluster_log_aposteriori(sclustering.scluster_t,seq,j,log_apo)
-			old_MAW = get_arrayd(sclustering.scluster_t.smo_Z_MAW,label)
-			new_MAW = old_MAW +  (get_arrayd(seq.seq_w,j) * get_arrayd(log_apo,0 ))
-			set_arrayd(sclustering.scluster_t.smo_Z_MAW,label,new_MAW)
-		
-			
-		scluster_update(sclustering.scluster_t, seq)
-
-		####################################################################
-		#s = get_seq_t_ptr(sclustering.scluster_t.smo_seq, 0)	
-		#s2 = sequence_d(s)
-		#print s2
-		#s = get_seq_t_ptr(sclustering.scluster_t.smo_seq, 1)	
-		#s2 = sequence_d(s)
-		#print s2
-		####################################################################	
-	
-		for i in range(sclustering.scluster_t.smo_number):
-			# assigning models to smosqd_t struct
-			smodel = get_smodel_ptr(sclustering.scluster_t.smo,i)
-			reest_struct.set_model(smodel)
-			aseq = get_seq_t_ptr(sclustering.scluster_t.smo_seq, i)
-			reest_struct.set_sqd(seq)
-			# one row of all_logp is assigned to smosqd_t.logp field
-			reest_struct.set_logp(get_row_pointer_d(all_log_p, i))
-		
-			# reestimate models
-			#print "vorher:\n"
-			#smodel_print_stdout(reest_struct.smosqd_t.smo)
-			rs = sreestimate_baum_welch(reest_struct.smosqd_t)
-			if (rs == -1):
-				print "Warning: Baum Welch terminated with " + str(rs)
-			#print "\nnachher:\n"
-			#smodel_print_stdout(reest_struct.smosqd_t.smo)
-			
-			# updating prior probabilites   			
-			reest_struct.smosqd_t.smo.prior = aseq.total_w / seq.total_w
-			#print "prior = " + str(reest_struct.smosqd_t.smo.prior)
-			
-			# assigning updated model to scluster struct
-			set_smodel_ptr(sclustering.scluster_t.smo,reest_struct.smosqd_t.smo,i)
-				
-		iter+=1 
-
-	#print sclustering
-	#scluster_printl_stdout(sclustering.scluster_t)
-	#scluster_print(sclustering.scluster_t, seq,["clust1","clust1","clust1","clust1"])
-	
 
 #####################################################################################################
 ############################ modular version ########################################################
@@ -1026,9 +896,12 @@ class scluster_env:
 		# maximum values for models and sequence in the clustering are needed for edit operations
 		# like add / remove model etc.
 		self.MAX_MODELS = 40
-		self.MAX_SEQUENCES = 150
+		self.MAX_SEQUENCES = 7000
 		
-		
+		print "*** Note:"
+		print "MAX_MODELS = " + str(self.MAX_MODELS)
+		print "MAX_SEQUENCES = " + str(self.MAX_SEQUENCES)
+		print "Be sure not to exceed these constants !"
 		
 		bw_eps = 0.0
 		bw_max_iter = 20
@@ -1080,19 +953,19 @@ class scluster_env:
 			# assigning models to smosqd_t struct
 			smodel = get_smodel_ptr(sclustering.scluster_t.smo,i)
 			
-			print "   model " +str(self.index_map[i] ) + " prior " + str(smodel.prior)
+			print "  model " +str(self.index_map[i] ) + " prior " + str(smodel.prior)
 			
 			reest_struct.set_model(smodel)
 			reest_struct.set_sqd(seq)
 			# one row of all_logp is assigned to smosqd_t.logp field
 			reest_struct.set_logp(get_row_pointer_d(all_log_p, i))
-		
+			
 			# calculating the log probabilites for the current model
 			scluster_prob(reest_struct.smosqd_t)
 			
 			# resetting seq_counter for next iteration
 			set_arrayl(sclustering.scluster_t.seq_counter,i,0)
-		
+
 		print 
 		double_2d_print(all_log_p,sclustering.scluster_t.smo_number,seq.seq_number)
 		print 
@@ -1113,12 +986,12 @@ class scluster_env:
 			#print label, s_nr+1
 			set_arrayl(sclustering.scluster_t.seq_counter,int(label),int(s_nr +1))
 
-			# Update Z_MD, (whatever it may be)
+			# Update Z_MD
 			old_MD = get_arrayd(sclustering.scluster_t.smo_Z_MD,label)
 			new_MD = old_MD + (get_arrayd(seq.seq_w,j) * get_2d_arrayd(all_log_p,label,j)  )
 			set_arrayd(sclustering.scluster_t.smo_Z_MD,label, new_MD)
 			
-					
+			# Update Z_MAW	
 			log_apo = double_array(1)
 			scluster_log_aposteriori(sclustering.scluster_t,seq,j,log_apo)
 			old_MAW = get_arrayd(sclustering.scluster_t.smo_Z_MAW,label)
@@ -1137,7 +1010,7 @@ class scluster_env:
 			# assigning models to smosqd_t struct
 			smodel = get_smodel_ptr(sclustering.scluster_t.smo,i)
 			reest_struct.set_model(smodel)
-			aseq = get_seq_t_ptr(sclustering.scluster_t.smo_seq, i)
+			aseq = get_seq_d_ptr(sclustering.scluster_t.smo_seq, i)
 			reest_struct.set_sqd(seq)
 			# one row of all_logp is assigned to smosqd_t.logp field
 			reest_struct.set_logp(get_row_pointer_d(all_log_p, i))
@@ -1164,6 +1037,9 @@ class scluster_env:
 
 		return changes
 
+	def get_model(self,smo_id):
+		index = self.ID_map[smo_id] 
+		return get_smodel_ptr(self.sclustering.scluster_t.smo,index)
 
 	def free_scluster(self):
 		## Freeing scluster_t struct
@@ -1188,7 +1064,7 @@ class scluster_env:
 		## Freeing all_logp matrix
 		free_2darrayd(self.all_log_p)
 		
-		print "1111"
+		print "freeing sequence_d_t struct seq"
 		
 		## Freeing sequence_d_t struct
 		free_sequence_d(self.seq)
@@ -1199,7 +1075,7 @@ class scluster_env:
 	def add_SHMM_model(self, smodel,prior):
 		smodel.model.prior = prior
 		set_smodel_ptr(self.sclustering.scluster_t.smo, smodel.model, self.sclustering.scluster_t.smo_number ) 
-		self.index_map[self.sclustering.scluster_t.smo_number] = self.sclustering.scluster_t.smo_number
+		
 		
 		# rescaling prior probabilities
 		scale = 1/(1-prior)
@@ -1231,13 +1107,17 @@ class scluster_env:
 		set_smodel_ptr(self.sclustering.scluster_t.smo, get_smodel_ptr(self.sclustering.scluster_t.smo,last_model),index)
 		
 		# decrementing number of models
-		self.sclustering.scluster_t.smo_number = last_model
+		#n = self.sclustering.scluster_t.smo_number
+		self.sclustering.scluster_t.smo_number = last_model 
 		
 		# assigning new model index to index_map
 		self.index_map[index] = self.index_map[last_model]
-		self.ID_map[last_model] = index
+		self.ID_map[self.index_map[last_model]] = index
+	
+		#print self.index_map[index], self.ID_map[last_model],index
+		
 		del self.index_map[last_model]
-		del self.ID_map[index]
+		del self.ID_map[smo_id]
 		
 		
 		
@@ -1250,11 +1130,11 @@ class scluster_env:
 	def merge_models(self, smo_id1, smo_id2):
 		index1 = self.ID_map[smo_id1]
 		index2 = self.ID_map[smo_id2]
-				
+		
 		# get pointers to models to be merged
 		smo_num1 = get_arrayl(self.sclustering.scluster_t.seq_counter,index1)
 		smo_num2 = get_arrayl(self.sclustering.scluster_t.seq_counter,index2)
-		
+	
 		# the merging is implemented as the retraining of the model with the greater number of assinged sequences 
 		# with the sequences of both models 
 		if smo_num1 >= smo_num2:
@@ -1262,23 +1142,26 @@ class scluster_env:
 			model2dump = get_smodel_ptr(self.sclustering.scluster_t.smo,index2)	
 			retrain_index = index1
 			dump_index = index2
-			
+			dump_id = smo_id2
+			retrain_id = smo_id1
 		else:
 			model2retrain = get_smodel_ptr(self.sclustering.scluster_t.smo,index2)
 			model2dump = get_smodel_ptr(self.sclustering.scluster_t.smo,index1)	
 			retrain_index = index2
 			dump_index = index1
-	
+			retrain_id = smo_id2
+			dump_id = smo_id1
+			
 		# get sequence_d_t pointers 
-		retrain_seq = get_seq_t_ptr(self.sclustering.scluster_t.smo_seq,retrain_index)	
-		dump_seq = get_seq_t_ptr(self.sclustering.scluster_t.smo_seq,dump_index)	
+		retrain_seq = get_seq_d_ptr(self.sclustering.scluster_t.smo_seq,retrain_index)	
+		dump_seq = get_seq_d_ptr(self.sclustering.scluster_t.smo_seq,dump_index)	
 		# adding sequences to model to be retrained
 		
 		sequence_d_add(retrain_seq,dump_seq)			
 		
 		# raising sequence counter for this model
 		set_arrayl(self.sclustering.scluster_t.seq_counter, retrain_index, int(smo_num1 + smo_num2))
-		
+
 		# inserting model to be retrained into smosqd_t struct
 		self.smosqd_t.set_model(model2retrain)
 		self.smosqd_t.set_sqd(retrain_seq)
@@ -1287,32 +1170,34 @@ class scluster_env:
 		# reestimating model
 		sreestimate_baum_welch(self.smosqd_t.smosqd_t)	
 	
+
+	
 		# the merged model gets a fresh ID
 		print "setting ID of merged model to " + str(self.most_models)
 		self.index_map[retrain_index] = self.most_models
+		del self.ID_map[retrain_id]
 		self.ID_map[self.most_models] = retrain_index
 		
 		# adding model priors
 		model2retrain.prior += model2dump.prior
 		
-		print model2retrain.prior 
-		
 		self.most_models += 1
-		self.remove_model(dump_index,0)
+		self.remove_model(dump_id,0)
+		return self.most_models -1
 
-		print model2retrain.prior 		
 		
 		
-	def deviate_model(self, smo_id,trans_dev,mean_dev,var_dev,weight_dev):
+	def deviate_model(self, smo_id,trans_dev,mean_dev,var_dev,weight_dev,prior = 0):
+	
 		index = self.ID_map[smo_id]
-		hmm = get_smodel_ptr(self.sclustering.scluster_t.smo, index)
-		
+		base_hmm = get_smodel_ptr(self.sclustering.scluster_t.smo, index)
+		hmm = smodel_copy(base_hmm)		
 		
 				
 		for k in range(hmm.N):
 			state = get_sstate(hmm, k)
 			
-			print "*** STATE " + str(k)
+			#print "*** STATE " + str(k)
 			
 			w_sum = 0
 			for outp in range(hmm.M):
@@ -1320,7 +1205,7 @@ class scluster_env:
 				var = get_arrayd(state.u,outp)
 				w = get_arrayd(state.c,outp)
 				
-				print mean, var, w
+				#print mean, var, w
 				
 				mean_rand = mean + uniform(-mean_dev,mean_dev)
 				var_rand = abs(var + uniform(-var_dev,var_dev))
@@ -1329,7 +1214,7 @@ class scluster_env:
 					weight_rand = 1e-6
 				w_sum += weight_rand
 				
-				print mean_rand, var_rand, weight_rand
+				#print mean_rand, var_rand, weight_rand
 				
 				set_arrayd(state.mue,outp,mean_rand)
 				set_arrayd(state.u, outp,var_rand)
@@ -1341,7 +1226,7 @@ class scluster_env:
 				set_arrayd(state.c, outp,w/w_sum)	
 			
 			#print get_arrayd(state.c,0)
-			print " transitions"
+			#print " transitions"
 			
 			for tclass in range(hmm.cos):
 				p_sum = 0
@@ -1353,7 +1238,7 @@ class scluster_env:
 					if p > 0:
 						trans_rand = p + uniform(-trans_dev,trans_dev)
 						
-						print "  ",p," -->  ", trans_rand
+						#print "  ",p," -->  ", trans_rand
 						
 						set_2d_arrayd(state.out_a,tclass,sid,trans_rand)
 						p_sum += trans_rand
@@ -1362,7 +1247,8 @@ class scluster_env:
 				# renormalizing probabilities
 				for sid in range( state.out_states):
 					p = get_2d_arrayd(state.out_a,tclass,sid)
-					set_2d_arrayd(state.out_a,tclass, sid, p/p_sum)
+					if p_sum != 0:
+						set_2d_arrayd(state.out_a,tclass, sid, p/p_sum)
 				
 				
 				# updating the in_a probabilites to the deviated values
@@ -1376,5 +1262,8 @@ class scluster_env:
 						if get_arrayint(in_state.in_id,t) == k:
 							set_2d_arrayd(in_state.in_a,tclass,t,p_new)
 							break
+		
+		m = SHMM("bla",0,hmm,1) 
+		self.add_SHMM_model( m,prior)
 							
 	

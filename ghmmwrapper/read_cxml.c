@@ -4,8 +4,9 @@
 #include <ghmm/sequence.h>
 #include <ghmm/sdmodel.h>
 #include <ghmm++/GHMM_convertXMLtoC.h>
+#include "sdclass_change.h"
 
-int cp_class_change(int *seq, int len) {
+/*int cp_class_change(int *seq, int len) {
   int sum = 0;
   int i;
   for(i=0;i<=len;i++){
@@ -21,11 +22,10 @@ int cp_class_change(int *seq, int len) {
   } 
 } 		
 		
-		
 
 void setSwitchingFunction( sdmodel *smd ) {
   smd->get_class = cp_class_change;
-}
+} */
 
 
 /*========================================================================*/
