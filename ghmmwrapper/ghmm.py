@@ -434,7 +434,6 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
 #Sequence, SequenceSet and derived  ------------------------------------------
 
 # XXX write to FASTA function
-# XXX check for seq_label existance
 
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
@@ -445,7 +444,6 @@ class EmissionSequence:
     def __init__(self, emissionDomain, sequenceInput, labelDomain = None, labelInput = None):
 
         self.emissionDomain = emissionDomain
-        # XXX How do you maintain reference to the SequenceSet.cseq?
 
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
 
@@ -662,7 +660,6 @@ class SequenceSet:
                      self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
 
             #generate a a labeled sequenceSet from a list of lists (sequences), emissionDomain, a list of list (labels) and a model
-            # XXX needs a lot of testing XXX
             elif isinstance(sequenceSetInput, list) and isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
                 assert len(sequenceSetInput)==len(labelInput)
 
@@ -1040,7 +1037,7 @@ class HMMOpenFactory(HMMFactory):
                      m.cmodel.bp = cpt_background
                      ids = [-1]*m.N
                      for s in hmm_dom.state.values():
-                          ids[s.index-1] = s.background # s.index ranges from [1, m.N]  <- pfui
+                          ids[s.index-1] = s.background # s.index ranges from [1, m.N]  
                      m.cmodel.background_id = ghmmhelper.list2arrayint(ids)
                      #m.backgroundnames = background_dist.keys() # XXX
                      m.cmodel.model_type += 64 # XXX Should be kHasBackgroundDistributions from ghmm.h
@@ -1247,9 +1244,6 @@ class HMMFromMatricesFactory(HMMFactory):
             if (labelDomain is None and labelList is not None) or (labelList is None and labelList is not None):
                 raise InvalidModelParameters, "Either labelDomain and labelInput are both given or neither of the two."
             
-            
-            
-            
             if isinstance(distribution,DiscreteDistribution):
                 
                 if not len(emissionDomain) == len(B[0]):
@@ -1307,6 +1301,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                     #set out probabilities
                     state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
+
                     #set "in" probabilities
                     # XXX Check whether A is numarray or Python
                     A_col_i = map( lambda x: x[i], A)
@@ -1343,10 +1338,22 @@ class HMMFromMatricesFactory(HMMFactory):
                 
                 cmodel = ghmmwrapper.new_smodel()
                 
+                # def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None):                
+
                 cmodel.N = len(A)
                 cmodel.M = 1 # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
-                cmodel.cos = 1  # number of transition classes in GHMM
+
+                # determining number of transition classes
+                cos = 0
+                if type(A[0][0]) == list:
+                    cos = len(A)
+                else: 
+                    cos = 1
+                    A = [A]
+                cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
+
+
                 states = ghmmwrapper.arraysstate(cmodel.N)
 
                 # XXX ? switching function ? XXX
@@ -1371,19 +1378,18 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.mixture_fix = ghmmhelper.list2arrayint([0])
                     
                     #set out probabilities
-                    trans = ghmmhelper.extract_out_probs([A[i]], cmodel.cos) # cos = 1
+                    trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i) 
                     state.out_states = trans[0]
                     state.out_id = trans[1]
-                    state.out_a = trans[2].array 
+                    state.out_a = trans[2] 
 
                     #set "in" probabilities
-                    A_col_i = map( lambda x: x[i], A)
-                    trans = ghmmhelper.extract_out_probs([A_col_i],cmodel.cos) # cos = 1
+                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i) # XXX cos = 1
                     state.in_states = trans[0]
                     state.in_id = trans[1]
-                    state.in_a = trans[2].array
+                    state.in_a = trans[2]
                 
-                    state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
+                    state.fix = 0 # if fix = 1 exclude the state probabilities from reestimation
 
                 #append states to model
                 cmodel.s = states
@@ -1403,7 +1409,16 @@ class HMMFromMatricesFactory(HMMFactory):
                 cmodel.N = len(A)
                 cmodel.M = len(B[0][0]) # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
-                cmodel.cos = 1  # number of transition classes in GHMM
+                
+                # determining number of transition classes
+                cos = 0
+                if type(A[0][0]) == list:
+                    cos = len(A)
+                else: 
+                    cos = 1
+                    A = [A]
+                cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
+                
                 states = ghmmwrapper.arraysstate(cmodel.N)
 
                 # XXX ? switching function ? XXX
@@ -1431,19 +1446,17 @@ class HMMFromMatricesFactory(HMMFactory):
                     # mixture fixing deactivated by default
                     state.mixture_fix = ghmmhelper.list2arrayint([0] * cmodel.M)
                     
-                    
                     #set out probabilities
-                    trans = ghmmhelper.extract_out_probs([A[i]], cmodel.cos) # cos = 1
+                    trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i) 
                     state.out_states = trans[0]
                     state.out_id = trans[1]
-                    state.out_a = trans[2].array 
+                    state.out_a = trans[2] 
 
                     #set "in" probabilities
-                    A_col_i = map( lambda x: x[i], A)
-                    trans = ghmmhelper.extract_out_probs([A_col_i],cmodel.cos) # cos = 1
+                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i) # XXX cos = 1
                     state.in_states = trans[0]
                     state.in_id = trans[1]
-                    state.in_a = trans[2].array
+                    state.in_a = trans[2]
                 
                     state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation                
 
@@ -1621,7 +1634,7 @@ class HMM:
         error = self.forwardAlphaFunction(self.cmodel, seq,t, calpha, cscale, unused)
         if error == -1:
             print "ERROR: forward finished with -1: EmissionSequence cannot be build."
-            exit
+            
         
         # translate alpha / scale to python lists 
         pyscale = ghmmhelper.arrayd2list(cscale, t)
@@ -1657,7 +1670,7 @@ class HMM:
         error = self.backwardBetaFunction(self.cmodel,seq,t,cbeta,cscale)
         if error == -1:
             print "ERROR: backward finished with -1: EmissionSequence cannot be build."
-            exit
+            
         
         pybeta = ghmmhelper.matrixd2list(cbeta,t,self.N)
 
@@ -2213,11 +2226,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         self.gradientDescentFunction = ghmmwrapper.gradient_descent
         self.cmodel.state_label = ghmmwrapper.int_array(self.N)
 
-        # XXX outdated junk code: to be removed
-        #self.listOfLabels =  []
-        #self.index = {}
-        #self.r_index = {}
-
     def __str__(self):
         hmm = self.cmodel
         strout = "\nGHMM Model\n"
@@ -2550,7 +2558,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         error = self.backwardBetaLabelFunction(self.cmodel,seq,label,t,cbeta,cscale,logP)
         if error == -1:
             print "ERROR: backward finished with -1: EmissionSequence cannot be build."
-            exit
+            
 
         pybeta = ghmmhelper.matrixd2list(cbeta,t,self.cmodel.N)
         logpval = ghmmwrapper.get_arrayd(logP, 0)
@@ -2744,7 +2752,7 @@ class GaussianEmissionHMM(HMM):
         error = self.forwardAlphaFunction(self.cmodel, seq,t, None, calpha, cscale, logP)
         if error == -1:
             print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
-            exit
+            
 
         # translate alpha / scale to python lists
         pyscale = ghmmhelper.arrayd2list(cscale, t)
@@ -2778,7 +2786,7 @@ class GaussianEmissionHMM(HMM):
         error = self.backwardBetaFunction(self.cmodel,seq,t,None,cbeta,cscale)
         if error == -1:
             print "ERROR: backward finished with -1: EmissionSequence cannot be build."
-            exit
+            
 
         pybeta = ghmmhelper.matrixd2list(cbeta,t,self.cmodel.N)
 
