@@ -93,13 +93,11 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   */
   int reestimate_baum_welch(GHMM_Sequences* seq, double* logp, double eps, int max_iter);
   /** Clean model. */
-  void clean();
+  virtual void clean();
   /** Copies c model into this object. */
   void copyFromModel(smodel* smo);
   /** */
   virtual int getNumberOfTransitionMatrices() const;
-  /** */
-  int getStateID(const string& id);
   /** */
   void read(const string& filename);
 
@@ -110,8 +108,6 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
 
   /** C Model. */
   smodel* c_model;
-  /** */
-  vector<GHMM_Transition*> transitions;
 
 
  private:

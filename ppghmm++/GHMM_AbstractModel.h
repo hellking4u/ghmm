@@ -36,23 +36,32 @@ class GHMM_AbstractModel: public XMLIO_Element {
   virtual const char* toString() const;
 
   /** */
-  void addTransition(GHMM_Transition* transition);
+  void setTransition(GHMM_Transition* transition);
+  /** */
+  void setTransition(int start, int end, double prob);
   /**
      Tests if all standardization requirements of model are fulfilled. 
      @return 0 for succes, -1 on error
   */
   virtual int check();
+  /** Clean model. */
+  virtual void clean();
   /** */
   virtual int getNumberOfTransitionMatrices() const;
   /* Returns state with given index. */
   GHMM_State* getState(int index) const;
   /* Returns state with given id. */
   GHMM_State* getState(const string& id) const;
+  /** */
+  int getStateID(const string& id);
   /**
      Writes the model in matrix format.
      @param file: output file
   */
   virtual void print(FILE *file);
+
+  /** */
+  vector<GHMM_Transition*> transitions;
 
 
  protected:

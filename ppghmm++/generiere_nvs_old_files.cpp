@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
   GHMM_ContinuousModel smo;
 
   if (argc < 3) {
-    fprintf(stderr,"generiere_nvs nvs.mod nvs.sqd\n");
+    fprintf(stderr,"usage: generiere_nvs_old_files nvs.mod nvs.sqd\n");
     exit(1);
   }
 

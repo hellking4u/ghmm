@@ -6,11 +6,15 @@
  */
 
 #include <xmlio/XMLIO_Definitions.h>
+#include "ppghmm++/GHMM_IntVector.h"
+#include "ppghmm++/GHMM_DoubleVector.h"
 #include "ppghmm++/GHMM_DiscreteModel.h"
 #include "ppghmm++/GHMM_Sequences.h"
+#include "ppghmm++/GHMM_DoubleMatrix.h"
 #include "ghmm/viterbi.h"
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
+#include "ghmm/matrix.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -19,19 +23,14 @@ using namespace std;
 
 
 GHMM_DiscreteModel::GHMM_DiscreteModel(model* my_model) {
-  //  int i;
-
   c_model = my_model;
 
-  /* false means: C style states are owned by the model 
-                  rather than by the GHMM_State object. */
-  //  for (i = 0; i < c_model->N; ++i)
-  //    states.push_back(new GHMM_State(this,&c_model->s[i],false));
+  buildCppData();
 }
 
 
 GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my_prior) {
-  //  int i;
+  int i;
 
   c_model = (model*) calloc(1,sizeof(model));
   if (!c_model) {
@@ -43,11 +42,20 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my
   c_model->M       = my_M;
   c_model->prior   = my_prior;
   c_model->s       = (state*) malloc(sizeof(state) * c_model->N);
+  /* initialize all states. */
+  for (i = 0; i < number_of_states; ++i) {
+    c_model->s[i].pi         = 0;
+    c_model->s[i].b          = (double*) malloc(sizeof(double) * my_M);
+    c_model->s[i].out_id     = NULL;
+    c_model->s[i].in_id      = NULL;
+    c_model->s[i].out_a      = NULL;
+    c_model->s[i].in_a       = NULL;
+    c_model->s[i].out_states = 0;
+    c_model->s[i].in_states  = 0;
+    c_model->s[i].fix        = 0;
+  }
 
-  /* false means: C style states are owned by the model 
-                  rather than by the GHMM_State object. */
-  //  for (i = 0; i < c_model->N; ++i)
-  //    states.push_back(new GHMM_State(this,&c_model->s[i],false));
+  buildCppData();
 }
 
 
@@ -68,8 +76,11 @@ const char* GHMM_DiscreteModel::toString() const {
 }
 
 
-int* GHMM_DiscreteModel::Viterbi(GHMM_Sequences* sequences, int index, double *log_p) const {
-  return viterbi(c_model,sequences->getIntSequence(index),sequences->getLength(index),log_p);
+GHMM_IntVector* GHMM_DiscreteModel::Viterbi(GHMM_Sequences* sequences, 
+					    int index, double *log_p) const {
+  int len = sequences->getLength(index);
+
+  return new GHMM_IntVector(viterbi(c_model,sequences->getIntSequence(index),len,log_p),len);
 }
 
 
@@ -216,9 +227,28 @@ void GHMM_DiscreteModel::B_print_transp(FILE *file, char *tab, char *separator, 
 //}
 
 
-int GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int index, double **alpha, 
-			     double *scale, double *log_p) {
-  return foba_forward(c_model,seq->getIntSequence(index),seq->getLength(index),alpha,scale,log_p);
+GHMM_DoubleMatrix* GHMM_DiscreteModel::fobaForward(GHMM_Sequences* seq, int index, 
+						   GHMM_DoubleVector *scale, double *log_p) {
+  int len = seq->getLength(index);
+  GHMM_DoubleMatrix *alpha = new GHMM_DoubleMatrix(len,c_model->N);
+
+  bool delete_scale = false;
+  if (! scale) {
+    scale        = new GHMM_DoubleVector();
+    delete_scale = true;
+  }
+
+  scale->resize(len);
+
+  int result = foba_forward(c_model,seq->getIntSequence(index),len,alpha->c_matrix,scale->c_vector,log_p);
+
+  if (result == -1)
+    SAFE_DELETE(alpha);
+
+  if (delete_scale)
+    SAFE_DELETE(scale);
+
+  return alpha;
 }
 
 
@@ -233,9 +263,9 @@ int GHMM_DiscreteModel::fobaLogp(GHMM_Sequences* seq, int index, double *log_p) 
 }
 
 
-state* GHMM_DiscreteModel::getState(int index) const {
+state* GHMM_DiscreteModel::getCState(int index) const {
   if (index >= c_model->N) {
-    fprintf(stderr,"GHMM_DiscreteModel::getState(int):\n");
+    fprintf(stderr,"GHMM_DiscreteModel::getCState(int):\n");
     fprintf(stderr,"State no. %d does not exist. Model has %d states.\n",index,c_model->N);
     exit(1);
   }
@@ -246,4 +276,15 @@ state* GHMM_DiscreteModel::getState(int index) const {
 
 int GHMM_DiscreteModel::getNumberOfTransitionMatrices() const {
   return 1;
+}
+
+
+void GHMM_DiscreteModel::buildCppData() {
+  /* Create C++ wrapper for all states and fill C states with usefull 
+     information. */
+  int i;
+  for (i = 0; i < c_model->N; ++i) {
+    GHMM_State* state = new GHMM_State(this,i,&c_model->s[i]);
+    states.push_back(state);
+  }
 }

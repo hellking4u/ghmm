@@ -12,10 +12,10 @@ CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD    = $(top_builddir)/ppghmm++/libghmm++.a $(top_builddir)/ghmm/libghmm.a $(XMLIO_LIBS)
+LDADD    = $(top_builddir)/ppghmm++/libppghmm++.a $(top_builddir)/ghmm/libghmm.a $(XMLIO_LIBS)
 
-lib_LIBRARIES = libghmm++.a
-libghmm___a_SOURCES = \
+lib_LIBRARIES = libppghmm++.a
+libppghmm___a_SOURCES = \
 GHMM_DiscreteModel.cpp \
 GHMM_ContinuousModel.cpp \
 GHMM_AbstractModel.cpp \
@@ -26,7 +26,10 @@ GHMM_ModelFactory.cpp \
 GHMM_Document.cpp \
 GHMM_Transition.cpp \
 GHMM_Emission.cpp \
-GHMM_State.cpp
+GHMM_State.cpp \
+GHMM_IntVector.cpp \
+GHMM_DoubleVector.cpp \
+GHMM_DoubleMatrix.cpp
 
 pkginclude_HEADERS = \
 begin_code.h \
@@ -42,12 +45,15 @@ GHMM_Document.h \
 GHMM_Transition.h \
 GHMM_Emission.h \
 GHMM_State.h \
-GHMM_Types.h
+GHMM_Types.h \
+GHMM_IntVector.h \
+GHMM_DoubleVector.h \
+GHMM_DoubleMatrix.h
 
-#noinst_PROGRAMS = coin_toss_test chmm generiere_nvs
-noinst_PROGRAMS = generiere_nvs generiere_nvs_old_files
+#noinst_PROGRAMS =  chmm generiere_nvs
+noinst_PROGRAMS = generiere_nvs generiere_nvs_old_files coin_toss_test
 
-#coin_toss_test_SOURCES = coin_toss_test.cpp
+coin_toss_test_SOURCES = coin_toss_test.cpp
 
 #chmm_SOURCES = chmm.cpp
 

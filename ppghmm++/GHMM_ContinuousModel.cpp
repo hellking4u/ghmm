@@ -154,11 +154,6 @@ void GHMM_ContinuousModel::XMLIO_finishedReading() {
 }
 
 
-int GHMM_ContinuousModel::getStateID(const string& id) {
-  return state_by_id[id];
-}
-
-
 int GHMM_ContinuousModel::check() {
   return smodel_check(c_model);
 }
@@ -193,14 +188,7 @@ void GHMM_ContinuousModel::clean() {
   if (c_model)
     smodel_free(&c_model);
 
-  unsigned int i;
-  for (i = 0; i < states.size(); ++i)
-    SAFE_DELETE(states[i]);
-  states.clear();
-
-  for (i = 0; i < transitions.size(); ++i)
-    SAFE_DELETE(transitions[i]);
-  transitions.clear();
+  GHMM_AbstractModel::clean();
 }
 
 

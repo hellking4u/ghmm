@@ -21,18 +21,20 @@ namespace std {
 
 class GHMM_DiscreteModel;
 class GHMM_Sequences;
-
+class GHMM_IntVector;
+class GHMM_DoubleVector;
+class GHMM_DoubleMatrix;
 
 /** */
 class GHMM_DiscreteModel: public GHMM_AbstractModel {
 
  public:
-
+  
   /** Constructor. 
       @param number_of_states Number of the states.
       @param my_M Size of the alphabet. 
       @param my_prior Prior for the a priori probability for the model. */
-  GHMM_DiscreteModel(int number_of_states, int my_M, double my_prior);
+  GHMM_DiscreteModel(int number_of_states, int my_M, double my_prior=-1);
   /** Constructor. Construct from c model. Object now is owner of this model. */
   GHMM_DiscreteModel(model* my_model);
   /** Destructor. */
@@ -101,11 +103,12 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param seq:    sequences
       @param index:  index of sequence to take
       @param alpha:  alpha[t][i]
-      @param scale:  scale factors
+      @param scale:  scale factors (return value, if scale is NULL this vector will not be returned)
       @param log\_p:  log likelihood log( P(O|lambda) )
-      @return 0 for success, -1 for error
+      @return NULL on error, alpha matrix on success
   */
-  int fobaForward(GHMM_Sequences* seq, int index, double **alpha, double *scale, double *log_p);
+  GHMM_DoubleMatrix* fobaForward(GHMM_Sequences* seq, int index, GHMM_DoubleVector* scale, 
+				 double *log_p);
   /**
      Calculation of  log( P(O|lambda) ). 
      Done by calling sfoba\_forward. Use this function if only the
@@ -142,7 +145,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   /** */
   virtual int getNumberOfTransitionMatrices() const;
   /* Returns state with given index. */
-  state* getState(int index) const;
+  state* getCState(int index) const;
   /**
      Writes initial allocation vector of a matrix.
      @param file: output file
@@ -161,19 +164,20 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      the model) and the Viterbi probability to a given model and a given 
      sequence.
      @return Viterbi path
-     @param sequences     sequences structure
-     @param index         index of sequence to take
-     @param log_p          probability of the sequence in the Viterbi path
+     @param sequences  sequences structure
+     @param index      index of sequence to take
+     @param log_p      probability of the sequence in the Viterbi path (return value)
   */
-  int* Viterbi(GHMM_Sequences* sequences, int index, double *log_p) const;
+  GHMM_IntVector* Viterbi(GHMM_Sequences* sequences, int index, double *log_p) const;
+
+  /** C Model. */
+  model* c_model;
 
 
  private:
 
-  /** Vector of c++ states. */
-  //  vector<GHMM_State*> states;
-  /** C Model. */
-  model* c_model;
+  /** Build c++ data from c_model. */
+  void buildCppData();
 };
 
 #ifdef HAVE_NAMESPACES
