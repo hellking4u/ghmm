@@ -15,6 +15,7 @@ __copyright__
 #endif /* HAVE_LIBPTHREAD */
 #include <float.h>
 #include <math.h>
+#include <time.h>
 #include "mprintf.h"
 #include "mes.h"
 #include "scluster.h"
