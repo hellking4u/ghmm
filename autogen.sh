@@ -12,7 +12,7 @@ aclocal
 autoheader
 
 #creates Makefile.in from Makefile.am
-automake --add-missing --copy
+automake --add-missing
 
 #creates configure from configure.in
 autoconf

@@ -6,10 +6,10 @@
 *******************************************************************************/
 
 #include <stdio.h>
+#include <unistd.h>
 #include <ghmm/matrix.h>
 #include <ghmm/rng.h>
 #include <ghmm/smodel.h>
-#include <ghmm/sgenerate.h>
 
 /*
   Simple model with one state and 2 symbols, like a coin toss
@@ -50,6 +50,7 @@ int single_state_continuous()
   /* initialise model */
   my_model.N=1; /* states */
   my_model.M=1; /* density functions per state */
+  my_model.cos=1; /* class of states */
   my_model.density=0; /* normal distributions */
   my_model.prior=-1; /* a priori probability */
   my_model.s=&single_state; /* states array*/
@@ -62,22 +63,42 @@ int single_state_continuous()
   /* generate sequences */
   my_output=smodel_generate_sequences(&my_model,
 				      1,  /* random seed */
-				      20, /* length of sequences */
-				      1000, /* sequences */
+				      10, /* length of sequences */
+				      10, /* sequences */
 				      0,  /* label */
 				      0  /* maximal sequence length 0: no limit*/
 				      );
-#if 0
   /* print out sequences */
   sequence_d_print(stdout,    /* output file */
 		   my_output, /* sequence */
 		   0          /* do not truncate to integer*/
 		   );
-#endif
 
+
+  {  
+    FILE *my_file;
+    char filename_buffer[]="/tmp/achimXXXXXX";
+    int descriptor;
+    int model_counter;
+    smodel **model_array;
+
+    descriptor=mkstemp(filename_buffer);
+    /* write this model */
+    my_file=fdopen(descriptor,"w+");
+    fprintf(stdout,"printing model to file %s\n",filename_buffer);
+    smodel_print(my_file,&my_model);
+    (void)fseek(my_file, 0L, SEEK_SET);
+    fclose(my_file);
+    close(descriptor);
+
+    /* read this model */
+    model_array=smodel_read(filename_buffer,&model_counter);
+  }
+#if 0
   sequence_d_gnu_print(stdout,
 		       my_output
 		       );
+#endif
 
   return 0;
 }

@@ -325,10 +325,9 @@ double **sequence_d_scatter_matrix(const sequence_d_t *sqd, int *dim);
    @param O double sequence
    @param index position for class calculation
    @param osum sum of symbols upto index
-   @param phase from loan banking application
    @return currently always 0
  */
-int sequence_d_class(const double *O, int index, double *osum, int *phase);
+int sequence_d_class(const double *O, int index, double *osum);
 
 /** Divides randomly a given array of double sequences into two sets. 
     Useful if a training and test set is needed. Memory allocation is done 
