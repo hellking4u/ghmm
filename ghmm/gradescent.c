@@ -61,14 +61,14 @@ int gradient_descent_galloc(model* mo, double*** m_b, double*** n_b,
   *m_b = (double**)malloc(sizeof(double*)*mo->N);
   if (!*m_b) success = 0;
   for (i=0; i<mo->N && success; i++) {
-    (*m_b)[i] = (double*)calloc(model_ipow(mo->M, mo->s[i].order+1),
+    (*m_b)[i] = (double*)calloc(model_ipow(mo, mo->M, mo->s[i].order+1),
 				sizeof(double));
     if (!(*m_b)[i]) success = 0;
   }
   *n_b = (double**)malloc(sizeof(double*)*mo->N);
   if (!*n_b) success = 0;
   for (i=0; i<mo->N && success; i++) {
-    (*n_b)[i] = (double*)calloc(model_ipow(mo->M, mo->s[i].order+1),
+    (*n_b)[i] = (double*)calloc(model_ipow(mo, mo->M, mo->s[i].order+1),
 				sizeof(double));
     if (!(*n_b)[i]) success = 0;
   }
@@ -173,7 +173,7 @@ int gradescent_compute_expectations(model* mo, double** alpha, double** beta,
   for (i=0; i < mo->N; i++) {
     for (j=0; j < mo->N; j++)
       matrix_a[i*mo->N + j] = 0;
-    size = model_ipow(mo->M, mo->s[i].order+1);
+    size = model_ipow(mo, mo->M, mo->s[i].order+1);
     for (h=0; h<size; h++)
       matrix_b[i][h] = 0;
   }
@@ -403,7 +403,7 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
 	continue;
 
       /* update */
-      size = model_ipow(mo->M, mo->s[i].order);
+      size = model_ipow(mo, mo->M, mo->s[i].order);
       for (h=0; h<size; h++) {
 	b_block_sum = 0;
 	for (g=0; g < mo->M; g++) {
