@@ -4,6 +4,8 @@
 #
 # __copyright__
 
+SUBDIRS = .
+
 all: setup.py
 	swig -noruntime -python -nodefault ghmmwrapper.i
 	python setup.py build
