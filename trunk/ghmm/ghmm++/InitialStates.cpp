@@ -10,7 +10,7 @@
 #endif
 
 #include <iostream>
-#include "ghmm.h"
+#include "InitialStates.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;

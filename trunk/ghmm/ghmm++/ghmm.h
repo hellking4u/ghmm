@@ -16,6 +16,7 @@
 #include <ghmm++/sequences.h>
 #include <ghmm++/graph.h>
 #include <ghmm++/InitialStates.h>
+#include <ghmm++/Emissions.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -58,6 +59,10 @@ namespace std {
       */
       smodel* create_smodel() const;
 
+      /**
+       */
+      ~hmm();
+
     protected:
       /**
 	 safe the type of HMM.
@@ -70,6 +75,11 @@ namespace std {
 	 saves the initial states, as they come from xmlio
        */
       InitialStates* Initial;
+      /**
+	 saves the emissions informations
+       */
+      Emissions* ghmm_Emissions;
+
       /**
 	 apriori probability of this model
        */

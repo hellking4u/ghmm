@@ -16,8 +16,7 @@
 #include <map>
 #include <vector>
 #include <xmlio/XMLIO_Object.h>
-#include <ghmm++/sequences.h>
-#include <ghmm++/DiscretePD.h>
+#include <xmlio/XMLIO_ArrayObject.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -76,6 +75,12 @@ namespace std {
     };
 
   /**
+     to do: not correct
+   */
+  class TransitionClasses: public XMLIO_ArrayObject<double>
+    {};
+
+  /**
      Graph, conform to GXL, uses Edge and Node
    */
   class Graph:public XMLIO_Object, public vector<Node*>, public vector<Edge*>
@@ -105,22 +110,15 @@ namespace std {
       /** id is mandatory for gxl graphs */
       string id;
 
+      /** map from edge string-id  to its index */
+      map<string,int> edge_idx;
 
-      /** counter for edge id allocation */
-      int edge_id_counter;
+      /** map from node string-id to its index */
+      map<string,int> node_idx;
 
-      /** map from edge string-id  to its int-id */
-      map<string,int> edge_ids;
-
-      /** counter for node id allocation */
-      int node_id_counter;
-
-      /** map from node string-id to its int-id */
-      map<string,int> node_ids;
-
-      /** adiascense list */
+      /** adiascence list */
       map<int,set<int> > from_to_map;
-      /** inverse adiascense list */
+      /** inverse adiascence list */
       map<int,set<int> > to_from_map;
 
     };

@@ -5,7 +5,10 @@ Wunderschönes Hidden Markov Model
 
 <Graph id="hmm">
 <Node id="A"/>
+<Node id="B"/>
 <Edge id="a1" from="A" to="A"><Prob>1</Prob></Edge>
+<Edge id="a1" from="A" to="B"><Prob>1</Prob></Edge>
+<Edge id="a1" from="A" to="C"><Prob>1</Prob></Edge>
 </Graph>
 
 <InitialStates>
