@@ -160,6 +160,7 @@ from math import log
 
 ghmmwrapper.gsl_rng_init() # Initialize random number generator
 
+
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
 
@@ -403,6 +404,9 @@ class GaussianMixtureDistribution(MixtureContinousDistribution):
 
 #-------------------------------------------------------------------------------
 #Sequence, SequenceSet and derived  ------------------------------------------
+
+# write to FASTA function
+
 class EmissionSequence:
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
@@ -488,7 +492,8 @@ class EmissionSequence:
 
 
     def __setitem__(self, index, value):
-        self.setSymbol(self.seq_c.seq,0,index,value)
+        internalValue = self.emissionDomain.internal(value)
+        self.setSymbol(self.seq_c.seq,0,index,internalValue)
 		
 
     def __getitem__(self, index):
@@ -691,6 +696,7 @@ class SequenceSet:
             ghmmwrapper.set_arrayd(seq.seq_id, i, seq_id)
             seq_label = ghmmwrapper.get_arrayl(self.cseq.seq_label, i)
             ghmmwrapper.set_arrayl(seq.seq_label, i, int(seq_label))
+
             # XXX temp for GQL/ISMB to suppress |0| in SQD-file outputs
             #seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
             #ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
@@ -773,21 +779,36 @@ class HMMOpenFactory(HMMFactory):
 	    	print pi
 	    	return HMMFromMatrices(emission_domain, distribution, A, B, pi)
 	    
+        # XXX model support !!! XXX
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
 	        # MO & SMO Files
     	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
-    	    nrModelPtr = ghmmwrapper.int_array(1)
-    	    models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+    	    
+            #print "determineHMMClass = ",  (hmmClass, emission_domain, distribution)
+            
+            nrModelPtr = ghmmwrapper.int_array(1)
+    	    
+            # XXX broken since silent states are not supported by .smo file format XXX
+            if hmmClass == DiscreteEmissionHMM:
+                print nrModelPtr
+                models = ghmmwrapper.model_read(fileName, nrModelPtr)
+                getPtr = ghmmwrapper.get_model_ptr
+            else:
+                models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+                getPtr = ghmmwrapper.get_smodel_ptr
+            
             nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
+            print nrModels
             if modelIndex == None:
-        	    cmodel = ghmmwrapper.get_smodel_ptr(models, 0) # XXX Who owns the pointer?
+                cmodel = getPtr(models, 0) # XXX Who owns the pointer?
+                print cmodel
             else:
                 if modelIndex < nrModels:
-                    cmodel = ghmmwrapper.get_smodel_ptr(models, modelIndex) # XXX Who owns the pointer?
+                    cmodel = getPtr(models, modelIndex) # XXX Who owns the pointer?
                 else:
-        		    print "modelIndex too large -- only have ", nrModels
 		            return None
-    	    m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+    	    
+            m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             return m
         
         else:   
@@ -867,10 +888,12 @@ class HMMOpenFactory(HMMFactory):
                     
         file.close()
         if emission_domain == 'int':
+            # only integer alphabet
             emission_domain = IntegerRange(0,M)
             distribution = DiscreteDistribution
             hmm_class = DiscreteEmissionHMM
             return (hmm_class, emission_domain, distribution)
+        
         elif emission_domain == 'double':
             # M        number of mixture components
             # density  component type
@@ -880,6 +903,8 @@ class HMMOpenFactory(HMMFactory):
                 distribution = GaussianDistribution
                 hmm_class = GaussianEmissionHMM            
                 return (hmm_class, emission_domain, distribution)
+
+        # XXX support for Gaussian Mixtuer HMM
 
         return (None, None, None)
             
@@ -923,19 +948,17 @@ class HMMFromMatricesFactory(HMMFactory):
 
             if isinstance(distribution,DiscreteDistribution):
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
-                cmodel = ghmmwrapper.model()
-                print cmodel
-
+                cmodel = ghmmwrapper.new_model()
                 cmodel.N = len(A)
                 cmodel.M = emissionDomain.size()
                 cmodel.prior = -1 # No 
-                
+
                 # assign model identifier (if specified)
                 if hmmName != None:
                     cmodel.name = hmmName
                 else:
                     cmodel.name = 'Unused'
-                
+
                 states = ghmmwrapper.arraystate(cmodel.N)
 
                 silent_flag = 0
@@ -962,7 +985,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
                     #fix probabilities by reestimation, else 0
                     state.fix = 0
-                    
+
                 cmodel.s = states
                 cmodel.model_type = silent_flag
                 cmodel.silent = ghmmhelper.list2arrayint(silent_states)
@@ -974,7 +997,8 @@ class HMMFromMatricesFactory(HMMFactory):
             
             if isinstance(distribution,GaussianDistribution):
                 
-                cmodel = ghmmwrapper.smodel()
+                cmodel = ghmmwrapper.new_smodel()
+                
                 cmodel.N = len(A)
                 cmodel.M = 1 # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
@@ -1029,7 +1053,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      
                 #      ]
                 
-                cmodel = ghmmwrapper.smodel()
+                cmodel = ghmmwrapper.new_smodel()
                 cmodel.N = len(A)
                 cmodel.M = len(B[0][0]) # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
@@ -1110,19 +1134,17 @@ class HMM:
         self.backwardBetaFunction = ""   # C function backkward algorithm (beta matrix)
         self.getStatePtr = ""            # C function to get a pointer to a state struct
         self.getModelPtr = ""            # C function to get a pointer to the model struct
+        self.castModelPtr = ""           # C function to cast a *model to **model
         self.distanceFunction = ""       # C function to compute a probabilistic distance between models
         
-##    def __del__(self):
-##        """ Deallocation routine for the underlying C data structures. """
-##        print "HMM.__del__", self.cmodel, self.getModelPtr(self.cmodel)
-##        ghmmwrapper.call_model_free(self.cmodel)
-####        if self.cmodel is not None:
-####            modelPtr = self.getModelPtr(self.cmodel)
-####            self.freeFunction(modelPtr)
-####            self.cmodel = 0
-####        else:
-####            print "OOPS. __del__ called twice"
-    
+    def __del__(self):
+        """ Deallocation routine for the underlying C data structures. """
+        print "HMM.__del__", self.cmodel, self.castModelPtr(self.cmodel)
+        if self.cmodel is not None:
+            self.freeFunction(self.cmodel)
+            self.cmodel = 0
+        else:
+            print "OOPS. __del__ called twice"
     
     def loglikelihood(self, emissionSequences): 
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -1173,6 +1195,7 @@ class HMM:
             tmp = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
             ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
             if ret_val == -1:
+                
                 # print "Warning: forward returned -1: Sequence", i,"cannot be build."
                 # XXX Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
@@ -1335,6 +1358,8 @@ class HMM:
                         break
                                         
             allPaths.append(onePath)
+        ghmmwrapper.free_arrayi(viterbiPath)  
+            
         if emissionSequences.cseq.seq_number > 1:
             return allPaths
         else:
@@ -1366,8 +1391,9 @@ class HMM:
 
     def getInitial(self, i):
         """ Accessor function for the initial probability \pi_i """
-        return ghmmwrapper.get_arrayd(self.cmodel.pi,i)
-
+        state = self.getStatePtr(self.cmodel.s,i)
+        return state.pi
+    
     def setInitial(self, i, prob, fixProb=0):
         """ Accessor function for the initial probability \pi_i
             For 'fixProb' = 1 \pi will be rescaled to 1 with 'prob' fixed to the
@@ -1463,7 +1489,7 @@ def HMMwriteList(fileName,hmmList):
         model.write(fileName)
         
     
-
+# XXX relative max_eps in reestimate -> comment
         
 
 class DiscreteEmissionHMM(HMM):
@@ -1473,7 +1499,7 @@ class DiscreteEmissionHMM(HMM):
         self.silent = 1  # flag indicating whether the model type does include silent states
         
         # Assignment of the C function names to be used with this model type
-        self.freeFunction = ghmmwrapper.model_free
+        self.freeFunction = ghmmwrapper.call_model_free
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
         self.forwardFunction = ghmmwrapper.foba_logp
@@ -1481,7 +1507,8 @@ class DiscreteEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.foba_backward 
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
-        self.getModelPtr = ghmmwrapper.cast_model_ptr
+        self.getModelPtr = ghmmwrapper.get_model_ptr
+        self.castModelPtr = ghmmwrapper.cast_model_ptr        
         self.distanceFunction = ghmmwrapper.model_prob_distance
         
         
@@ -1490,7 +1517,6 @@ class DiscreteEmissionHMM(HMM):
         strout = "\nOverview of HMM:\n"
         strout += "\nNumber of states: "+ str(hmm.N)
         strout += "\nSize of Alphabet: "+ str(hmm.M)
-
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
             strout += "\n\nState number "+ str(k) +":"
@@ -1633,7 +1659,7 @@ class GaussianEmissionHMM(HMM):
         self.silent = 0  # flag indicating whether the model type does include silent states
         
         # Assignment of the C function names to be used with this model type
-        self.freeFunction = ghmmwrapper.smodel_free        
+        self.freeFunction = ghmmwrapper.call_smodel_free        
         self.samplingFunction = ghmmwrapper.smodel_generate_sequences
         self.viterbiFunction = ghmmwrapper.sviterbi
         self.forwardFunction = ghmmwrapper.sfoba_logp
@@ -1641,7 +1667,8 @@ class GaussianEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.sfoba_backward 
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
         self.fileWriteFunction = ghmmwrapper.call_smodel_print
-        self.getModelPtr = ghmmwrapper.cast_smodel_ptr
+        self.getModelPtr = ghmmwrapper.get_smodel_ptr
+        self.castModelPtr = ghmmwrapper.cast_smodel_ptr
         self.distanceFunction = ghmmwrapper.smodel_prob_distance
         
         # Baum Welch context, call baumWelchSetup to initalize
