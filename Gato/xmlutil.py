@@ -646,8 +646,9 @@ class HMM:
 
         edges = XMLNode.getElementsByTagName("edge")
         nr_classes = int(self.hmmClass.high()-self.hmmClass.low())+1
-        for i in range(nr_classes-1):
-            self.G.edgeWeights[i+1] = EdgeWeight(self.G)
+        for i in range(nr_classes):
+            self.G.edgeWeights[i] = EdgeWeight(self.G)
+
         for edge in edges:
             i = self.id2index[edge.attributes['source'].nodeValue]
             j = self.id2index[edge.attributes['target'].nodeValue]
@@ -664,8 +665,11 @@ class HMM:
                 for child in data.childNodes:
                     dataValue += child.nodeValue
                 p = listFromCSV(dataValue, types.FloatType)
-
-                self.G.AddEdge(i, j)        
+                self.G.AddEdge(i, j)
+                if len(p) == 1: # only one class
+                    for cl in range(nr_classes):
+                        p.append(0.0)
+                        
                 for cl in range(nr_classes):
                     self.G.edgeWeights[cl][(i,j)] = p[cl]
 
@@ -675,11 +679,14 @@ class HMM:
         initial_sum = 0.0
         for s in self.state:
             initial_sum = initial_sum + self.state[s].initial
-	
+
+        print "Initial sum", initial_sum
+        print "Alphabet size is",self.hmmAlphabet.size()
+        
 	if initial_sum == 0.0:
 	    raise NotValidHMMType("Initial state is not specified.")
 	    
-	if self.hmmAlphabet.size() == 0.0: 
+	if self.hmmAlphabet.size() == 0.0:
 	    raise AlphabetErrorType("Alphabet object is empty. You must create alphabet before saving.")
 	
     def toDOM(self, XMLDoc, XMLNode):
@@ -714,7 +721,7 @@ class HMM:
         for v in self.G.vertices:
             out_sum[v] = [0.0]*nr_classes
 
-        for cl in range(nr_classes):
+        for cl in range(1): # XXX Assuming one transition class
             for e in self.G.Edges():
                 if self.G.edgeWeights[cl].has_key(e):
                     out_sum[e[0]][cl] = out_sum[e[0]][cl] + self.G.edgeWeights[cl][e]
@@ -725,7 +732,8 @@ class HMM:
             edge_elem.setAttribute('source', "%s" % self.state[e[0]].id)
             edge_elem.setAttribute('target', "%s" % self.state[e[1]].id)
             # writeData(XMLDoc, edge_elem, 'prob', self.G.edgeWeights[cl][e] / out_sum[e[0]])
-            for cl in range(nr_classes):
+            # XXX Assuming one transition class for cl in range(nr_classes):
+            for cl in range(1):
                 if self.G.edgeWeights[cl].has_key(e) and out_sum[e[0]][cl]:
                     transitions.append(self.G.edgeWeights[cl][e]/ out_sum[e[0]][cl])
                 else:
