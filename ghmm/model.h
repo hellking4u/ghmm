@@ -549,6 +549,20 @@ int model_normalize(model* mo);
 */
 int model_add_noise(model* mo, double level, int seed);
 
+
+/** 
+   Allocates a new background_distributions struct and assigs the arguments to
+   the respective fields. Note: The arguments need allocation outside of this
+   function.
+   
+   @return     :               0 on success, -1 on error
+   @param mo   :               one model
+   @param cur  :               a id of a state
+   @param times:               number of times the state cur is at least evaluated
+*/
+int model_apply_duration(model* mo, int cur, int times);
+
+
 /**
    Apply the background distributions to the emission probabilities of states of
    the model which have one specified (background_id[state_id] != kNoBackgroundDistribution).
