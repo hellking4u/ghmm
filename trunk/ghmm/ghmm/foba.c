@@ -387,7 +387,7 @@ int foba_backward(model *mo, const int *O, int len, double **beta, double *scale
 	//  printf("  --> beta[%d][%d] = %f\n",t,i,sum);
 	
 	beta[t][i] = sum;
-	/* if (beta[t][i] < .01 || beta[t][i] > 100) beta_out++; */
+	/* if ((beta[t][i] > 0) && ((beta[t][i] < .01) || (beta[t][i] > 100))) beta_out++; */
       }	
     }
     
@@ -771,7 +771,7 @@ int foba_label_backward(model* mo, const int* O, const int* label, int len,
 	sum += mo->s[i].out_a[j] * emission * beta_tmp[j_id];
       }
       beta[t][i] = sum;
-      /* if (beta[t][i] < .01 || beta[t][i] > 100) beta_out++; */
+      /* if ((beta[t][i] > 0) && ((beta[t][i] < .01) || (beta[t][i] > 100))) beta_out++; */
     }
     
     for (i = 0; i < mo->N; i++)
