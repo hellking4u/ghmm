@@ -40,7 +40,7 @@ gslprefix = runtool('gsl-config', '--prefix')
 # defined symbols in link
 
 print "================================================================================"
-print "Please run the following command first: swig -c -python -nodefault ghmmwrapper.i"
+print "Please run the following command first: swig -noruntime -python -nodefault ghmmwrapper.i"
 print "================================================================================"
    
 setup(name="ghmmwrapper",
@@ -57,7 +57,7 @@ setup(name="ghmmwrapper",
                                include_dirs = [ghmmprefix + '/include', gslprefix + '/include'],
                                library_dirs = [ghmmlib_path ,swiglib_path],
                                libraries = ['gsl','stdc++','gsl','gslcblas','m','ghmm',
-                                            'swigpy']
+                               'swigpy' ] 
                                )
                      ]
      )
