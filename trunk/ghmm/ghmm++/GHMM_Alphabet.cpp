@@ -103,7 +103,7 @@ const int GHMM_Alphabet::XMLIO_writeContent(XMLIO_Document& writer) {
 
   writer.changeIndent(2);
   for (i = 0; i < symbols.size(); ++i) {
-    result = writer.writef("%s<symbol id=\"%s\"/>\n",writer.indent,symbols[i].c_str());
+    result = writer.writef("%s<symbol code=\"%s\"/>\n",writer.indent,symbols[i].c_str());
 
     if (result < 0)
       return result;
@@ -115,8 +115,11 @@ const int GHMM_Alphabet::XMLIO_writeContent(XMLIO_Document& writer) {
 
 
 XMLIO_Element* GHMM_Alphabet::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
-  if (tag == "symbol") 
-    addSymbol(attrs["id"]);
+  if (tag == "symbol") // HACK!! We should look at the text node , not attribute
+  { 
+    addSymbol(attrs["code"]);
+    return this;
+  }
 
   return NULL;
 }

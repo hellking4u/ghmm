@@ -5,7 +5,6 @@
   $Id$
 
   __copyright__
-
 */
 
 

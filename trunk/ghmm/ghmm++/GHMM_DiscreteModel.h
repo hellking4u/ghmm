@@ -5,7 +5,6 @@
   $Id$
 
   __copyright__
-
 */
 
 #ifndef _GHMM_DISCRETEMODEL_H
@@ -237,6 +236,10 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   /** Alphabet of model. */
   GHMM_Alphabet* alphabet;
 
+ protected:
+  void setNodeTag(const string& tag);
+  void setTransitionTag(const string& tag);
+
 
  private:
 
@@ -253,6 +256,9 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
                    (-1 for none). */
   void init(int number_of_states, int alphabet_size, double prior=-1);
   /** */
+  void init(GHMM_Alphabet *my_alphabet);
+
+  /** */
   virtual void XMLIO_finishedReading();
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
@@ -261,6 +267,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   /** */
   bool own_alphabet;
 };
+
 
 #ifdef HAVE_NAMESPACES
 }

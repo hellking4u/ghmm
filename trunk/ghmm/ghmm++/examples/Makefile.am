@@ -2,7 +2,8 @@
 #  filename     : /zpr/bspk/src/hmm/ghmm/ghmm++/examples/Makefile.am
 #  created      : DATE: 28 June 2001
 #  $Id$
-#
+#  revision date : $Date$
+# 
 # __copyright__
 
 SUBDIRS= .
@@ -12,11 +13,19 @@ message.txt
 DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
+#
+# if you want to link ghmm++ from C-code, you must use dynamic linking, 
+#
+# NOTICE: It is important to link libstdc++ when linking from gcc to a C++ library. 
+#
+CCLD     = $(CC) -lstdc++
+
+
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
 LDADD    = $(top_builddir)/ghmm++/.libs/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
-EXTRADIST = nvs.xml nvs.mod nvs.sqd 
+EXTRADIST = nvs.xml nvs.mod nvs.sqd gene_hmm.gml
 
-noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence
+noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence read_xml read_cxml
 
 coin_toss_test_SOURCES = coin_toss_test.cpp
 chmm_SOURCES = chmm.cpp
@@ -25,6 +34,8 @@ generiere_nvs_old_files_SOURCES = generiere_nvs_old_files.cpp
 dna_SOURCES = dna.cpp
 vector_test_SOURCES = vector_test.cpp
 create_sequence_SOURCES = create_sequence.cpp
+read_xml_SOURCES = read_xml.cpp
+read_cxml_SOURCES = read_cxml.c
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

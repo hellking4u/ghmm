@@ -5,6 +5,7 @@
   $Id$
 
   __copyright__
+  
  */
 
 #include "ghmm/sreestimate.h"

@@ -5,7 +5,6 @@
   $Id$
   
   __copyright__
-
 */
 
 #ifndef _GHMM_TRANSITION_H
@@ -49,7 +48,7 @@ class GHMM_Transition: public XMLIO_Element {
   double prob;
 
 
- private:
+ protected:
 
   /** Called by XMLIO_Document when a end tag is found. 
       This happens when a sub element has finished reading its

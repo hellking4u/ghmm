@@ -23,7 +23,7 @@ int dna_test() {
   alphabet.addSymbol("-");
 
   GHMM_DiscreteModel model(&alphabet);
-  
+
   model.addState("StartRegion");
   model.addState("EndRegion");
 
@@ -61,6 +61,8 @@ int dna_test() {
   seq.add("CGGG--TCGCGCGCGCG");
 
   model.reestimate_baum_welch(&seq);
+  model.A_print(stdout,""," ","\n"); 
+  model.B_print(stdout,""," ","\n"); 
 
   GHMM_Document doc;
   doc.open("dna.xml","w");
@@ -86,8 +88,13 @@ int dna_test() {
   doc.writeEndl();
   doc.close();
   
-  SAFE_DELETE(new_model);
-  SAFE_DELETE(new_seq);
+  cout << "Wrote to dna2.xml" << endl;
+
+  delete new_model;
+  delete new_seq;
+
+  //SAFE_DELETE(new_model);
+  //SAFE_DELETE(new_seq);
 
   return 0;
 }

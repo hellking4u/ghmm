@@ -3,6 +3,8 @@
  * authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
  * file   : $Source$
  * $Id$
+ *
+ * __copyright__
  */
 
 #include <xmlio/XMLIO_Definitions.h>
@@ -86,6 +88,7 @@ const char* GHMM_State::toString() const {
 
 
 XMLIO_Element* GHMM_State::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
+  
   if (tag == "initial") {
     reading = GHMM_STATE_INITIAL;
     
@@ -235,10 +238,16 @@ void GHMM_State::fillState(state* s) {
     s->in_id[i] = m->getStateIndex(in_edges[i]->source);
 
   for (i = 0; i < out_edges.size(); ++i)
-    s->out_a[i] = out_edges[i]->prob;
+    {
+      s->out_a[i] = out_edges[i]->prob;
+      // printf( "\t State %d, out %g\n", i, s->out_a[i]);
+    }
 
   for (i = 0; i < in_edges.size(); ++i)
-    s->in_a[i] = in_edges[i]->prob;
+    {
+      s->in_a[i] = in_edges[i]->prob;
+      // printf( "\t State %d, in %g\n", i, s->out_a[i]);
+    }
 
   s->out_states = out_edges.size();
   s->in_states  = in_edges.size();
@@ -455,7 +464,7 @@ const int GHMM_State::XMLIO_writeContent(XMLIO_Document& writer) {
   writer.changeIndent(2);
 
   //  if (initial > 0) {
-  result = writer.writeEndlIndent();
+  writer.writeEndlIndent();
   
   if (result < 0)
     return result;

@@ -21,7 +21,6 @@ namespace std {
 class GHMM_Alphabet;
 class GHMM_Sequence;
 
-
 /** */
 class GHMM_Alphabet: public XMLIO_Element {
 
@@ -50,7 +49,7 @@ class GHMM_Alphabet: public XMLIO_Element {
   unsigned int size() const;
 
   
- private:
+ protected:
 
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
@@ -68,6 +67,7 @@ class GHMM_Alphabet: public XMLIO_Element {
   /** */
   GHMM_AlphabetType alphabet_type;
 };
+
 
 #ifdef HAVE_NAMESPACES
 }
