@@ -143,7 +143,7 @@ public:
      @param log_p      probability of the sequence in the Viterbi path 
                        (return value).
   */
-  GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double* log_p = NULL) const;
+  GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double* log_p = NULL);
 
   /** topological ordering with cycle detection (using in-degrees) */
   void topological_sort(void);

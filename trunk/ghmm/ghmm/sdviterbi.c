@@ -253,17 +253,12 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
     int osc;
     __viterbi_silent( mo, t=0, v, recent_matchcount, countstates, nr_of_countstates );
   }
-  for (j = 0; j < mo->N; j++) 
+  /*
+  for (t=0, j = 0; j < mo->N; j++) 
     {
-      printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]);
-    }
+      printf("\npsi[%d],in:%f, phi=%f\n", t, v->psi[t][j], v->phi[j]);
+      }*/
 
-  for( i = 0; i < mo->N; i++){
-    printf("%d\t", former_matchcount[i]);
-  }
-  for (i = 0; i < mo->N; i++){
-    printf("%d\t", recent_matchcount[i]);
-  }
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
@@ -287,7 +282,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
 	for (i = 0; i < mo->s[St].in_states; i++) {
 	  // get_class of in state
 	  // printf("\nBerechnung von transclass fuer Zustand %d", mo->s[St].in_id[i]);
-	  if (mo->cos != 1){
+	  if (mo->cos > 1){
 	    osc = mo->get_class(mo->N, former_matchcount[mo->s[St].in_id[i]]);
 	  }
 	  if ( v->phi[ mo->s[St].in_id[i] ] != +1 &&
@@ -298,8 +293,9 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
 	      v->psi[t][St] = mo->s[St].in_id[i];
 	    }
 	  }
-	  else
-	    fprintf(stderr, " %d --> %d = %f, \n", i,St,v->log_in_a[St][osc][i]);
+	  else {
+	    // fprintf(stderr, " %d --> %d = %f, \n", i,St,v->log_in_a[St][osc][i]);
+	  }
 	}
 
 	/* No maximum found (that is, state never reached)
@@ -337,23 +333,13 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
       __viterbi_silent( mo, t, v, recent_matchcount, countstates, nr_of_countstates );
     } /* complete time step for silent states */
     
+    /*
     for (j = 0; j < mo->N; j++) 
       {      
 	printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]);
       }
+    */
       
-    for (i = 0; i < mo->N; i++){
-      printf("%d\t", former_matchcount[i]);
-    }
-
-    for (i = 0; i < mo->N; i++){
-      printf("%d\t", recent_matchcount[i]);
-    }
-    // swap the lists of matchcounts
-    tmp_matchcount = former_matchcount;
-    former_matchcount = recent_matchcount;
-    recent_matchcount = tmp_matchcount;
-
   } /* Next observation , increment time-step */
 
   /* Termination */
@@ -397,11 +383,19 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   }
 
   /* PRINT PATH */
+  /*
   fprintf(stderr, "Viterbi path: " );
   for(t=0; t < len_path; t++)
     if (state_seq[t] >= 0) fprintf(stderr, " %d ",  state_seq[t]);
   fprintf(stderr, "\n");
+  */
 
+  /* Free the memory space */
+  m_free(former_matchcount);
+  m_free(recent_matchcount);
+  m_free(tmp_matchcount);
+  m_free(countstates);
+  sdviterbi_free(&v, mo->N, mo->cos, len);
   return (state_seq);
 STOP:
   /* Free the memory space */

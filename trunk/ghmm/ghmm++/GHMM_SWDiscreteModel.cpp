@@ -482,6 +482,19 @@ model *GHMM_SWDiscreteModel::create_cmodel(int kclass) {
 }
 
 
+GHMM_IntVector* GHMM_SWDiscreteModel::viterbi(GHMM_Sequences* sequences, int index, double* log_p) {
+  double my_logp;
+
+  if (!log_p)
+    log_p = &my_logp;
+
+  int len = sequences->getLength(index);
+
+  return new GHMM_IntVector(sdviterbi(c_model,sequences->getIntSequence(index),len,log_p),len);
+}
+
+
+
 void GHMM_SWDiscreteModel::XMLIO_finishedReading() {
   unsigned int i;
 
