@@ -37,7 +37,7 @@ typedef struct sequence_t sequence_t;
 struct sequence_d_t {
     /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
    */
-  int **seq;
+  double **seq;
   /** array of sequence length */
   int *seq_len;
   /**  array of sequence labels */
@@ -65,8 +65,9 @@ typedef struct sequence_d_t sequence_d_t;
    and memory allocation is done. 
    @return pointer to sequence array
    @param filename    input filename
+   @param seq\_arrays number of sequence arrays read
 */
-sequence_t **sequence_read(char *filename, int *seq_number);
+sequence_t **sequence_read(char *filename, int *seq_arrays);
 
 /**
    Reading of one integer sequence field. Memory alloc here.

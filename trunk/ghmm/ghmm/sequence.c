@@ -2,7 +2,7 @@
   author       : Bernd Wichern
   filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sequence.c
   created      : TIME: 11:29:02     DATE: Thu 12. February 1998
-  last-modified: TIME: 18:04:47     DATE: Mon 09. April 2001
+  last-modified: TIME: 16:28:10     DATE: Wed 11. April 2001
 *****************************************************************************/
 /* $Id$ */
 
@@ -25,6 +25,7 @@
 /*============================================================================*/
 sequence_t** sequence_read(char *filename, int *sq_number) {
 #define CUR_PROC "sequence_read"
+  int i;
   sequence_t **sequence = NULL;
   scanner_t *s = NULL;
   *sq_number = 0;
@@ -52,9 +53,9 @@ sequence_t** sequence_read(char *filename, int *sq_number) {
 
 STOP:
   for (i = 0; i < *sq_number; i++) 
-    sequence_d_free(&(sequence[i]));
+    sequence_free(&(sequence[i]));
   m_free(sequence);
-  *sqd_number = 0;
+  *sq_number = 0;
   return NULL;
 #undef CUR_PROC
 }
@@ -925,7 +926,7 @@ STOP:
 
 int sequence_d_class(const double *O, int index, double *osum, int *phase) {
 #define CUR_PROC "sequence_d_class"
-  retun 0;
+  return 0;
 # undef CUR_PROC
 } /* sequence_d_class */
 

@@ -1,8 +1,8 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /homes/hmm/wichern/hmm/src/sfoba.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sfoba.c
   created      : TIME: 16:45:09     DATE: Mon 15. November 1999
-  last-modified: TIME: 18:37:32     DATE: Tue 24. October 2000
+  last-modified: TIME: 10:17:26     DATE: Tue 10. April 2001
 *******************************************************************************/
 
 #include <math.h>
@@ -13,6 +13,7 @@
 #include "const.h"
 #include "matrix.h"
 #include "randvar.h"
+
 
 
 /*----------------------------------------------------------------------------*/
@@ -37,7 +38,7 @@ static int sfoba_initforward(smodel *smo, double *alpha_1, double omega,
     for (i = 0; i < smo->N; i++) 
       alpha_1[i] *= c_0;
   }
-  return(0); /* BEACHTE: scale[0] kann jetzt sehr klein sein! */
+  return(0); 
 # undef CUR_PROC
 } /* sfoba_initforward */
 
@@ -50,7 +51,7 @@ static double sfoba_stepforward(sstate *s, double *alpha_t, int osc,
     id = s->in_id[i];
     value += s->in_a[osc][i] * alpha_t[id];
   }
-  value *= b_omega; /* b_omega vor die Summe ziehen */
+  value *= b_omega; /* b_omega outside the sum */
   return(value);
 } /* sfoba_stepforward */
 
@@ -62,62 +63,60 @@ int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
   int res = -1;  
   int i, t, osc, tilgphase = 0;
   double c_t, osum = 0.0;
-  /* double c_t; */
+
+  /* calculate alpha and scale for t = 0 */
   if (b == NULL)
     sfoba_initforward(smo, alpha[0], O[0], scale, NULL);
   else
     sfoba_initforward(smo, alpha[0], O[0], scale, b[0]);
   if (scale[0] <= DBL_MIN) {
-    /* d.h. f(O[0], mue, u) << 0, also 1.Zeichen unwahrsch. fuer SHMM */
-    /* diskret: *log_p = +1; */
+    /* means f(O[0], mue, u) << 0, first symbol very unlikely */
     /* mes_prot("scale[0] == 0.0!\n"); */
     goto STOP;
   }
   else {
     *log_p = - log(1/scale[0]);
-    osc = sequence_d_class(O, 0, &osum, &tilgphase); /* t startet erst bei 1! */
+    /* dummy function, returns 0 at the moment */
+    osc = sequence_d_class(O, 0, &osum, &tilgphase); 
     for (t = 1; t < T; t++) {
       scale[t] = 0.0;
-      if (b == NULL)
+      /* b not calculated yet */
+      if (b == NULL) {
 	for (i = 0; i < smo->N; i++) {
 	  alpha[t][i] = sfoba_stepforward(&smo->s[i],alpha[t-1], osc,
 					  smodel_calc_b(smo,i,O[t]));
 	  scale[t] +=  alpha[t][i];
 	}
-      else
+      }
+      /* b precalculated */
+      else {
 	for (i = 0; i < smo->N; i++) {
 	  alpha[t][i] = sfoba_stepforward(&smo->s[i], alpha[t-1], osc,
 					  b[t][i][smo->M]);
 	  scale[t] +=  alpha[t][i];
 	}
-      if (scale[t] <= DBL_MIN) {/* < EPS_PREC fkt. nicht! */
-	/* d.h. O-string kann vom HMM nicht erzeugt werden */
-	/* diskret: *log_p = +1; */
-	/*
-        char *str = 
-	  mprintf(NULL, 0, "scale[%d] == 0.0!\n", t); 
-	mes_prot(str);
-	m_free(str);
-	*/
+      }      
+      if (scale[t] <= DBL_MIN) { /* seq. can't be build */
 	goto STOP;
 	break;
       }
       c_t = 1/scale[t];
-      /* skalieren der alphas */
+      /* scale alpha */
       for (i = 0; i < smo->N; i++) 
 	alpha[t][i] *= c_t;
-      /* aufsummieren der log(c[t]) zur Berechnung log( P(O|lambda) ) */
+      /* summation of log(c[t]) for calculation of log( P(O|lambda) ) */
       *log_p -= log(c_t);
       osc = sequence_d_class(O, t, &osum, &tilgphase);
     }
   }
   /* log_p should not be smaller than value used for seqs. that 
-     can't be build */
-  if (*log_p < (double)PENALTY_LOGP)
-    *log_p = (double)PENALTY_LOGP;
+     can't be build ???
+     if (*log_p < (double)PENALTY_LOGP)
+     *log_p = (double)PENALTY_LOGP;
+     */
   return 0;
  STOP:
-  *log_p = (double)-DBL_MAX; /* Probleme bei der Ausgabe -> abfangen */
+  *log_p = (double)-DBL_MAX; 
   return(res);
 # undef CUR_PROC
 } /* sfoba_forward */
@@ -132,27 +131,25 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
   if (!m_calloc(beta_tmp, smo->N)) {mes_proc(); goto STOP;}
 
   for (t = 0; t < T; t++) {
-
-    
-    // Achtung: check auf  <= DBL_MIN reicht nicht immer. z. T. ergab sich
-    // damit fuer beta --> beta = NaN !!! Warum ???
-    // if (scale[t] < exp(-230)) {
-    //if (scale[t] <= DBL_MIN*100000000000000000000000) {
+    /* try differenent bounds here in case of problems 
+       like beta[t] = NaN 
+    */
+    /* if (scale[t] < exp(-130)) { */
+    /* if (scale[t] < exp(-230)) { */
     if (scale[t] <= DBL_MIN) {
 	printf("backward scale(%d) = %e\n", t , scale[t]);
       goto STOP;
     }
-  // printf("%d \t %.30 f\n", t , scale[t]);
   }
-  /* Initialisierung */
+  /* initialize */
   c_t = 1/scale[T-1];
   for (i = 0; i < smo->N; i++) {
     beta[T-1][i] = 1;
     beta_tmp[i] = c_t;
   }
   /* Backward Step for t = T-2, ..., 0 */
-  /* beta_tmp: Vek. zum Zwischenspeichern der skal. beta in einem Zeitschritt */
-  for (t = 0; t < T-1; t++) /* letzte Ausgabe wird nicht gebraucht! */
+  /* beta_tmp: Vector for storage of scaled beta in one time step */
+  for (t = 0; t < T-1; t++) 
     osc = sequence_d_class(O, t, &osum, &tilgphase);
   for (t = T-2; t >= 0; t--) {
     if (b == NULL)
@@ -177,8 +174,6 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
     c_t = 1/scale[t]; 
     for (i = 0; i < smo->N; i++) 
       beta_tmp[i] = beta[t][i] * c_t;
-    /* Aktualisierung der Klasse fuer naechsten Schritt 
-     nicht bes. elegant: immer wieder von t = 0 ausgehend neu berechnen */
     for (t2 = 0; t2 < t; t2++)
       osc = sequence_d_class(O, t2, &osum, &tilgphase);
   }
@@ -198,121 +193,13 @@ int sfoba_logp(smodel *smo, const double *O, int T, double *log_p) {
   alpha = matrix_d_alloc(T, smo->N);
   if (!alpha) {mes_proc(); goto STOP;}
   if (!m_calloc(scale, T)) {mes_proc(); goto STOP;}
-  /* forward durchlaufen lassen */
+  /* run forward alg. */
   if (sfoba_forward(smo, O, T, NULL, alpha, scale, log_p) == -1 ) { 
     /* mes_proc(); */
     goto STOP;
   }
   res = 0;
-  /*
-    int i;
-    for (i = 0; i < T; i++)
-    printf("%.1f ", O[i]);
-    printf("\n%.2f\n", *log_p);
-  */
-STOP:
-  matrix_d_free(&alpha, T);
-  m_free(scale);
-  return(res);
-# undef CUR_PROC
-} /* sfoba_logp */
 
-
-
-
-
-/* NUR TMP fuer Likelihoodberechnung bei BS-Merkmal */
-/*============================================================================*/
-int sfoba_forwardBS(smodel *smo, const double *O, int T, double ***b,
-		  double **alpha, double *scale, double *log_p) {
-# define CUR_PROC "sfoba_forwardBS"
-  int res = -1;  
-  int i, t, osc, tilgphase = 0;
-  double c_t, osum = 0.0;
-  /* double c_t; */
-  if (b == NULL)
-    sfoba_initforward(smo, alpha[0], O[0], scale, NULL);
-  else
-    sfoba_initforward(smo, alpha[0], O[0], scale, b[0]);
-  if (scale[0] <= DBL_MIN) {
-    /* d.h. f(O[0], mue, u) << 0, also 1.Zeichen unwahrsch. fuer SHMM */
-    /* diskret: *log_p = +1; */
-    /* mes_prot("scale[0] == 0.0!\n"); */
-    goto STOP;
-  }
-  else {
-    /*    *log_p = - log(1/scale[0]); */
-    /* 1. Merkmal BS zum Vergleich ignorieren */
-    *log_p = 0.0;
-    osc = sequence_d_class(O, 0, &osum, &tilgphase); /* t startet erst bei 1! */
-    for (t = 1; t < T; t++) {
-      scale[t] = 0.0;
-      if (b == NULL)
-	for (i = 0; i < smo->N; i++) {
-	  alpha[t][i] = sfoba_stepforward(&smo->s[i],alpha[t-1], osc,
-					  smodel_calc_b(smo,i,O[t]));
-	  scale[t] +=  alpha[t][i];
-	}
-      else
-	for (i = 0; i < smo->N; i++) {
-	  alpha[t][i] = sfoba_stepforward(&smo->s[i], alpha[t-1], osc,
-					  b[t][i][smo->M]);
-	  scale[t] +=  alpha[t][i];
-	}
-      if (scale[t] <= DBL_MIN) {/* < EPS_PREC fkt. nicht! */
-	/* d.h. O-string kann vom HMM nicht erzeugt werden */
-	/* diskret: *log_p = +1; */
-	/*
-        char *str = 
-	  mprintf(NULL, 0, "scale[%d] == 0.0!\n", t); 
-	mes_prot(str);
-	m_free(str);
-	*/
-	goto STOP;
-	break;
-      }
-      c_t = 1/scale[t];
-      /* skalieren der alphas */
-      for (i = 0; i < smo->N; i++) 
-	alpha[t][i] *= c_t;
-      /* aufsummieren der log(c[t]) zur Berechnung log( P(O|lambda) ) */
-      *log_p -= log(c_t);
-      osc = sequence_d_class(O, t, &osum, &tilgphase);
-    }
-  }
-  /* log_p should not be smaller than value used for seqs. that 
-     can't be build */
-  if (*log_p < (double)PENALTY_LOGP)
-    *log_p = (double)PENALTY_LOGP;
-  return 0;
- STOP:
-  *log_p = (double)-DBL_MAX; /* Probleme bei der Ausgabe -> abfangen */
-  return(res);
-# undef CUR_PROC
-} /* sfoba_forward */
-
-
-/*============================================================================*/
-int sfoba_logpBS(smodel *smo, const double *O, int T, double *log_p) {
-# define CUR_PROC "sfoba_logpBS"
-  int res = -1;
-
-  double **alpha, *scale = NULL;
-  alpha = matrix_d_alloc(T, smo->N);
-  if (!alpha) {mes_proc(); goto STOP;}
-  if (!m_calloc(scale, T)) {mes_proc(); goto STOP;}
-  /* forward durchlaufen lassen */
-  if (sfoba_forwardBS(smo, O, T, NULL, alpha, scale, log_p) == -1 ) { 
-    /* mes_proc(); */
-    goto STOP;
-  }
-  res = 0;
-  /*
-    int i;
-    for (i = 0; i < T; i++)
-    printf("%.1f ", O[i]);
-    printf("\n%.2f\n", *log_p);
-  */
 STOP:
   matrix_d_free(&alpha, T);
   m_free(scale);
