@@ -42,8 +42,10 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
 				   sgeneration_mode_t mode) {
 #define CUR_PROC "sgenerate_extensions"  
   sequence_d_t *sq = NULL;  
-  int i, j, t, n, m, len = global_len, short_len, max_short_len = 0, 
-    tilgphase = 0, up = 0;
+  int i, j, t, n, m, len = global_len, short_len, max_short_len = 0, up = 0;
+#ifdef bausparkasse
+  int tilgphase=0;
+#endif
   /* int *v_path = NULL; */
   double log_p, *initial_distribution, **alpha, *scale, p, sum, osum = 0.0;
   /* aicj */
@@ -153,13 +155,13 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
 	while (m > 0 && smo->s[i].c[m] == 0.0) m--;
       }
       sq->seq[n][t] = smodel_get_random_var(smo, i, m);
-      class = sequence_d_class(sq->seq[n], t, &osum, &tilgphase); 
+      class = sequence_d_class(sq->seq[n], t, &osum); 
       t++;
     }
     /* generate completion for sequence */   
     else {
       for (t = 0; t < short_len; t++)
-	class = sequence_d_class(sq->seq[n], t, &osum, &tilgphase); 
+	class = sequence_d_class(sq->seq[n], t, &osum); 
       t = short_len;
     }
     while (t < len) {      
@@ -186,7 +188,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
 	  class--;
 	  continue;
 	}
-	else if (class < COS - 1) {
+	else if (class < smo->cos - 1) {
 	  class++;
 	  up = 1;
 	  continue;
@@ -212,7 +214,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
       }
       /* random variable from density function */
       sq->seq[n][t] = smodel_get_random_var(smo, i, m);
-      class = sequence_d_class(sq->seq[n], t, &osum, &tilgphase); 
+      class = sequence_d_class(sq->seq[n], t, &osum); 
       up = 0;
       t++;
     }  /* while (t < len) */    
@@ -238,7 +240,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
 			     int *new_len, double **alpha,
 			     sgeneration_mode_t mode) {
 # define CUR_PROC "sgenerate_single_ext"
-  int i, j, m, t, phase, class, up = 0;
+  int i, j, m, t, class, up = 0;
   double *new_O = NULL, *scale = NULL, *initial_distribution = NULL;
   double log_p, sum, p, osum;
   int k;
@@ -310,7 +312,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
   /* End Test */
 
   for (t = 0; t < len; t++)
-    class = sequence_d_class(O, t, &osum, &phase); 
+    class = sequence_d_class(O, t, &osum); 
   t = len;
   while (t < (int)MAX_SEQ_LEN) {  
     if (smo->s[i].out_states == 0) 
@@ -337,7 +339,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
 	class--;
 	continue;
       }
-      else if (class < COS - 1) {
+      else if (class < smo->cos - 1) {
 	class++;
 	up = 1;
 	continue;
@@ -370,7 +372,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     /* Output in state i, komp. m */
     /* random variable from density function */
     new_O[t] = smodel_get_random_var(smo, i, m);
-    class = sequence_d_class(new_O, t, &osum, &phase); 
+    class = sequence_d_class(new_O, t, &osum); 
     t++;
     up = 0;
   }  /* while (t < MAX_SEQ_LEN) */ 
@@ -408,7 +410,7 @@ double sgenerate_next_value(smodel *smo, double *O, const int len) {
   double *scale = NULL, log_p, max_val = -1000000;
   int i, j, m, init_state = -1;
 
-  if (COS > 1) {
+  if (smo->cos > 1) {
     mes_prot("sgenerate_next_value only for COS == 1\n");
     goto STOP;
   }
