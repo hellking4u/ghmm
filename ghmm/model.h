@@ -62,6 +62,9 @@ struct state {
   int in_states;  
   /** if fix == 1 --> b stays fix during the training */
   int fix;
+
+  int label;
+    
 };
 typedef struct state state;
 
@@ -444,6 +447,9 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 */
 void state_clean(state *my_state); 
 
+
+sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
+
 /**
    Copies a given state. Allocates the necessary memory.
    @author Peter Pipenbacher
@@ -467,5 +473,6 @@ void state_clean(state *my_state);
 #endif
 
 #endif
+
 
 /*@} (Doc++-Group: model) */
