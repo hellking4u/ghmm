@@ -47,7 +47,10 @@ dnl AC_CHECK_FUNCS(gettimeofday)
 dnl append flags for gsl
 CFLAGS="$CFLAGS $GSL_CFLAGS"
 LIBS="$LIBS $GSL_LIBS"
-echo $LIBS | grep "l.*blas" >/dev/null || LIBS="$LIBS -lgslblas" && AC_MSG_RESULT([appended -lgslblas to linker options])
+if test -z "`echo $LIBS | grep l.*blas`" ; then 
+ LIBS="$LIBS -lgslblas"
+ AC_MSG_RESULT([appended -lgslblas to linker options]);
+fi
 dnl CPPFLAGS="$CPPFLAGS -I`$GSL_CONFIG --prefix`/include"
 
 dnl checking which root solver alloc function is used
@@ -61,7 +64,6 @@ AC_MSG_RESULT(yes)
 AC_DEFINE(GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG,1,[root solver allocation takes only one argument]),
 AC_MSG_RESULT(no)
 )
-
 
 dnl experimental things can be switched on or off
 AC_ARG_ENABLE(experimental,[  --enable-experimental   enable experimental features],
