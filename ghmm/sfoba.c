@@ -106,7 +106,7 @@ int sfoba_forward(smodel *smo, const double *O, int T, double ***b,
       c_t = 1/scale[t];
       /* scale alpha */
       for (i = 0; i < smo->N; i++) 
-	alpha[t][i] *= c_t;
+	    alpha[t][i] *= c_t;
       /* summation of log(c[t]) for calculation of log( P(O|lambda) ) */
       *log_p -= log(c_t);
       osc = sequence_d_class(O, t, &osum);

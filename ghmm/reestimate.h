@@ -18,6 +18,12 @@ __copyright__
 extern "C" {
 #endif
 
+
+/** matrix allocation and free for training algorithms */
+int reestimate_alloc_matvek(double ***alpha, double ***beta,double **scale, int T, int N);
+int reestimate_free_matvek(double **alpha, double **beta, double *scale, int T);
+
+
 /**@name Baum-Welch-Algorithmus */
 /*@{ (Doc++-Group: reestimate) */
 
@@ -53,6 +59,36 @@ int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double 
     values within all groups.
     */
 void reestimate_update_tie_groups(model *mo);
+
+
+/** Baum-Welch-Algorithm for parameter reestimation (training) in
+    a StateLabelHMM. Scaled version for multiple sequences, alpha and 
+    beta matrices are allocated with stat_matrix_d_alloc 
+    New parameters set directly in hmm (no storage of previous values!).
+    For reference see:  
+    Rabiner, L.R.: "`A Tutorial on Hidden {Markov} Models and Selected
+                Applications in Speech Recognition"', Proceedings of the IEEE,
+	77, no 2, 1989, pp 257--285    
+  @return            0/-1 success/error
+  @param mo          initial model
+  @param sq          training sequences
+  */
+
+int reestimate_baum_welch_label(model *mo, sequence_t *sq);
+
+/** Just like reestimate_baum_welch_label, but you can limit
+    the maximum number of steps
+  @return                   0/-1 success/error
+  @param mo                 initial model
+  @param sq                 training sequences
+  @param max_step           maximal number of Baum-Welch steps
+  @param likelihood_delta   minimal improvement in likelihood required for
+                            carrying on. Relative value to log likelihood
+  */
+int reestimate_baum_welch_nstep_label(model *mo, sequence_t *sq, int max_step,
+				      double likelihood_delta);
+
+
 
 #ifdef __cplusplus
 }

@@ -38,12 +38,9 @@ typedef enum {
 
 /**
    Makes part sequences longer given a model. There are some different possibilities
-   to do this (only Viterbi or take all paths into account (beruecksichtigen) , combined with 
+   to do this (only Viterbi or take all paths into account, combined with 
    sequence begin and end).
-   Verlaengert Teilsequenzen bei gegebenem Modell. Verschiedene Moeglichkeiten
-   sind vorgesehen (nur Viterbi oder alle Pfade beruecksichtigen kombiniert
-   mit Sequenzanfang und Sequenzende)
-   Steuerung ueber mode:
+
    Which method to use:
    0 = viterbi\_viterbi, 
    1 = viterbi\_all, 
