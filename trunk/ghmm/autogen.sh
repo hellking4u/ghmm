@@ -1,14 +1,5 @@
 #! /bin/sh
 
-#clean up
-rm -f aclocal.m4 configure \
-Makefile.in stamp-h.in config.h.in \
-mkinstalldirs missing install-sh \
-doc/Makefile.in \
-ghmm/Makefile.in \
-tests/Makefile.in \
-tools/Makefile.in
-
 #makes aclocal.m4 from acinclude.m4 and other files
 aclocal
 
