@@ -5,6 +5,8 @@
 #
 # __copyright__
 
+MAINTAINERCLEANFILES = Makefile.in
+
 BUILT_SOURCES = 
 INCLUDES = -I$(top_srcdir)
 bin_PROGRAMS = probdist cluster scluster

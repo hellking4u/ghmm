@@ -3,6 +3,8 @@
 #  created      : DATE: April 2001
 #  $Id$
 
+MAINTAINERCLEANFILES = Makefile.in
+
 #******************  Doc++ *******************
 
 DOCXX            = @DOCXX@
@@ -50,7 +52,7 @@ DOCXX_LATEX_OPTS = -t -eo a4paper
 DOCXX_HTML_OPTS  = #-H
 
 #for make (dist)clean
-CLEANFILES += docHTML/* docTEX/$(APP).*
+CLEANFILES += docTEX/$(APP).* -r docHTML
 EXTRA_DIST += docTEX/docxx.sty
 
 $(HTML)/index.html: $(DOCXX_FILES)
