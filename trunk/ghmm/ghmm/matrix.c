@@ -33,7 +33,7 @@ int matrix_d_read(scanner_t *s, double **matrix, int max_zeile, int max_spalte){
       scanner_error(s, "too many rows in matrix");
       return(-1);
     } 
-    /* Speicher Alloc erfolgt in scanner_get_double_array */
+    /* Memory allocation takes place in scanner_get_double_array */
     matrix[zeile] = scanner_get_double_array(s, &len);
     if (len != max_spalte) {
       scanner_error(s, "wrong number of elements in matrix");
@@ -66,7 +66,7 @@ int matrix_i_read(scanner_t *s, int **matrix, int max_zeile, int max_spalte) {
       scanner_error(s, "too many rows in matrix");
       return(-1);
     } 
-    /* Speicher Alloc erfolgt in scanner_get_int_array */
+    /* Memory allocation takes place in scanner_get_double_array */
     matrix[zeile] = scanner_get_int_array(s, &len);
     if (len != max_spalte) {
       scanner_error(s, "wrong number of elements in matrix");
@@ -214,7 +214,7 @@ int matrix_d_notzero_rows(double **matrix, int col, int max_row) {
 } /* matrix_d__notzero_rows */
 
 /*============================================================================*/
-/* Normiert die Zeilenvektoren einer Matrix auf Summe 1 */
+/* Scales the row vectors of a matrix to have the sum 1 */ 
 int matrix_d_normalize(double **matrix, int rows, int cols) {
 #define CUR_PROC "matrix_d_normalize"
   int i;
@@ -242,7 +242,7 @@ void matrix_d_random_values(double **matrix, int rows, int cols,
 } /* matrix_d_random_values */
 
 /*============================================================================*/
-/* fixed value for final state */
+/* Fixed value for final state */
 void matrix_d_random_const_values(double **matrix, int rows, int cols,
 				  double min, double max, double c) {
   int i, j;
@@ -303,7 +303,7 @@ int matrix_d_gaussrows_values(double **matrix, int rows, int cols,
   int i, j;
   if (u <= 0.0) {mes_prot("sigma^2 <= 0.0 not allowed\n"); goto STOP;}
   if (*mue == NULL) {
-    /* fuer jede Zeile zufaelliger Mittelwert mean[i] in (0, cols-1) */
+    /* for each row, a random mean value mean[i] in (0, cols-1) */
     if (!m_calloc(mean, rows)) {mes_proc(); goto STOP;}
     for (i = 0; i < rows; i++)
       mean[i] = gsl_rng_uniform(RNG) * (cols-1);
@@ -311,16 +311,16 @@ int matrix_d_gaussrows_values(double **matrix, int rows, int cols,
     *mue = mean;
   }
   else
-    /* Ueberpruefen, ob vorgegebene Mittelwerte im richtigen Intervall.. */
+    /* Check, if the mean value is on the right interval */
     mean = *mue;
   for (i = 0; i < rows; i++) {
-    /* fuer jeden Zustand Gaussverteilung um Mittelwert */
+    /* Gauss-distribution around the mean value for each state. */
     for (j = 0; j < cols; j++) {
       matrix[i][j] = randvar_normal_density((double)j, mean[i], u);
       if (matrix[i][j] == -1) {mes_proc(); goto STOP;}
-      /* NULL VERMEIDEN: (1.billige Version) */
+      /* To avoid zero: (Cheap version!!) */
       if (matrix[i][j] < 0.0001)
-	matrix[i][j] = 0.0001; /* Ausgabe nur 4 Nachkommastellen! */
+	matrix[i][j] = 0.0001; /* The Output has only 4 significant digits! */
     }
   }
   res = 0;
@@ -360,8 +360,10 @@ void matrix_d_transpose(double **A, int rows, int cols, double **A_T) {
 
 
 /*----------------------------------------------------------------------------*/
-/*--  zerlegt pos.def.sym.A in L*L-T, d.h. bis auf Diagonalel. wird         --*/
-/*--  L (=untere Dreiecksmatrix) auf A gespeichert, Diag.el. auf Vec. p     --*/
+/* Decomposes a positiv definit, symmetric matrix A in L*L-T, that is except for
+   the diagonal, L (= lower triangular marix) is stored in A. The Diagonal is 
+   stored in a vector p. 
+*/
 static void lrdecomp(int dim, double **a, double *p) {
   int k,i,j;
   double x;
@@ -381,7 +383,7 @@ static void lrdecomp(int dim, double **a, double *p) {
 }
 
 /*----------------------------------------------------------------------------*/
-/*--  loest L*y=b, L untere Dreieckmat. auf A gespeichert, p=1/Diag.elemente -*/
+/* Solves L*y=b, L is a lower triangular matrix stored in A, p=1/diagonal elements. */
 static void lyequalsb(double **a, double *b, double *p, int dim, double *y) {
   int k,j;
   for (k = 0; k < dim; k++) {
@@ -393,7 +395,7 @@ static void lyequalsb(double **a, double *b, double *p, int dim, double *y) {
 }
 
 /*----------------------------------------------------------------------------*/
-/*--  loest L-T*x=y, L-T obere Dreieckmat, ABER als L in A gespeichert !    --*/
+/* Solves L-T*x=y, L-T an upper triangular matrix, BUT saved in A as L! */
 static void ltranspxequalsy(double **a, double *y, double *p, int dim, 
 			    double *x) {
   int k,j;
@@ -407,7 +409,7 @@ static void ltranspxequalsy(double **a, double *y, double *p, int dim,
 
 
 /*============================================================================*/
-/*-----------------  LGS-Loesen fuer sym.,pos.def.Matrix ---------------------*/
+/* Solves a linear equation system for a symmetric, positiv definite matrix. */
 int matrix_cholesky(double **a, double *b, int dim, double *x) {
 #define CUR_PROC "matrix_cholesky"
   int res = -1;
@@ -423,7 +425,7 @@ STOP:
 #undef CUR_PROC
 }
 
-/*-----------------  Determinante einer sym.,pos.def.Matrix ------------------*/
+/* Finds the determinant of a symetric, positiv definit matrix. */
 int matrix_det_symposdef(double **a, int dim, double *det) {
 #define CUR_PROC "matrix_det_symposdef"
   int res = -1;
@@ -443,8 +445,7 @@ STOP:
 }
 
 /*============================================================================*/
-
-/* --------------- copy a matrix, alloc needs to be done outside ! -------------*/
+/* Copies a matrix, the memory allocations must to be done outside! */
 void matrix_d_copy(double **src, double **target, int rows, int cols) {
   int i, j;
 

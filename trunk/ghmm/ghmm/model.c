@@ -50,13 +50,13 @@ static int model_copy_vectors(model *mo, int index, double **a_matrix,
   for (i = 0; i < mo->M; i++)
     mo->s[index].b[i] = b_matrix[index][i];
   for (i = 0; i < mo->N; i++) {
-    if (a_matrix[index][i]) { /* Uebergang zum Nachfolger i moeglich */
+    if (a_matrix[index][i]) { /* Transitions to a following state possible */
       if (cnt_out >= mo->s[index].out_states) {mes_proc(); return(-1);}
       mo->s[index].out_id[cnt_out] = i;
       mo->s[index].out_a[cnt_out] = a_matrix[index][i];
       cnt_out++;
     }
-    if (a_matrix[i][index]) { /* Uebergang vom Vorgaenger i moeglich */
+    if (a_matrix[i][index]) { /* Transitions to a previous state possible */
       if (cnt_in >= mo->s[index].in_states) {mes_proc(); return(-1);}
       mo->s[index].in_id[cnt_in] = i;
       mo->s[index].in_a[cnt_in] = a_matrix[i][index];
@@ -70,7 +70,7 @@ static int model_copy_vectors(model *mo, int index, double **a_matrix,
 
 /*============================================================================*/
 
-/* alter Prototyp
+/* Old prototyp:
 
 model **model_read(char *filename, int *mo_number, int **seq,
 			 const int *seq_len, int seq_number) { */
@@ -92,9 +92,9 @@ model **model_read(char *filename, int *mo_number) {
       if (m_realloc(mo, *mo_number)) { mes_proc(); goto STOP; }
       mo[*mo_number - 1] = model_direct_read(s, (int *) &new_models); 
       if (!mo[*mo_number - 1]) { mes_proc(); goto STOP; }
-      /* gelesenes Modell kopieren */
+      /* Copies the model, that has already been read. */
       if (new_models > 1) { 
-	/* "-1" wg. mo_number++ schon oben */
+	/* "-1" because mo_number++ has already been done. */
 	if (m_realloc(mo, *mo_number - 1 + new_models)) { 
 	  mes_proc(); goto STOP; 
 	}
@@ -151,23 +151,23 @@ model *model_direct_read(scanner_t *s, int *multip){
     scanner_consume(s, '='); if(s->err) goto STOP;
     if (!strcmp(s->id, "multip")) {
       *multip = scanner_get_int(s);
-      if (*multip < 1) {/* Bloedsinn, daher Angabe ignorieren */
+      if (*multip < 1) {/* Doesn't make any sense! */
 	*multip = 1;
 	mes_prot("Multip < 1 ignored\n");
       }
     }
-    else if (!strcmp(s->id, "M")) {/*Anzahl Ausgabewerte*/
+    else if (!strcmp(s->id, "M")) {/*Number of output values*/
       if (m_read) {scanner_error(s, "identifier M twice"); goto STOP;}
       mo->M = scanner_get_int(s);
       m_read = 1;
     }
-    else if (!strcmp(s->id, "N")) {/*Anzahl Zustaende*/
+    else if (!strcmp(s->id, "N")) {/*Number of states*/
       if (n_read) {scanner_error(s, "identifier N twice"); goto STOP;}
       mo->N = scanner_get_int(s);
       if (!m_calloc(mo->s, mo->N)) {mes_proc(); goto STOP;}
       n_read = 1;
     }   
-    else if (!strcmp(s->id, "A")) {/*Uebergangs.WSK*/
+    else if (!strcmp(s->id, "A")) {/*Transition probability*/
       if (!n_read) {scanner_error(s, "need N as a range for A"); goto STOP;}	    
       if (a_read) {scanner_error(s, "identifier A twice"); goto STOP;}
       if (!m_calloc(a_matrix, mo->N)) {mes_proc(); goto STOP;}
@@ -182,7 +182,7 @@ model *model_direct_read(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
     }
-    else if (!strcmp(s->id, "B")) {/*Ausgabe WSK*/
+    else if (!strcmp(s->id, "B")) {/*Output probability*/
       if ((!n_read)||(!m_read)){
 	scanner_error(s, "need M and N as a range for B"); goto STOP;
       }
@@ -199,14 +199,14 @@ model *model_direct_read(scanner_t *s, int *multip){
 	scanner_error(s, "unknown identifier"); goto STOP;
       }
     }
-    else if (!strcmp(s->id, "prior")) {/* Modellprior */
+    else if (!strcmp(s->id, "prior")) {/*A prior model*/
       if (prior_read) {scanner_error(s,"identifier prior twice");goto STOP;}
       mo->prior = scanner_get_double(s);
       if ((mo->prior < 0 || mo->prior > 1) && mo->prior != -1)
 	{ scanner_error(s, "invalid model prior"); goto STOP; }
       prior_read = 1;
     }   
-    else if (!strcmp(s->id, "Pi")) {/*Initial State WSK*/
+    else if (!strcmp(s->id, "Pi")) {/*Initial state probabilty*/
       if (!n_read) {scanner_error(s, "need N as a range for Pi"); goto STOP;}
       if (pi_read) {scanner_error(s, "identifier Pi twice"); goto STOP;}
       scanner_get_name(s);
@@ -230,16 +230,16 @@ model *model_direct_read(scanner_t *s, int *multip){
   } /* while(..s->c-'}') */
   scanner_consume( s, '}' ); if(s->err) goto STOP;  
 
-  /* kein prior gelesen --> WErt auf -1 setzten */
+  /* No prior read --> give it the value -1 */
   if (prior_read == 0)
     mo->prior = -1;
-  /* Speicher Alloc fuer Modell */
+  /* Allocate memory for the model */
   for (i = 0; i < mo->N; i++) {
     mo->s[i].out_states = matrix_d_notzero_columns(a_matrix, i, mo->N);
     mo->s[i].in_states = matrix_d_notzero_rows(a_matrix, i, mo->N);
     if (model_state_alloc(mo->s + i, mo->M, mo->s[i].in_states,
 			  mo->s[i].out_states)) { mes_proc(); goto STOP; }
-    /* Eingelesene Parameter auf Modell uebertragen */
+    /* Assign the parameters to the model */
     if(model_copy_vectors(mo, i, a_matrix, b_matrix, pi_vektor)) {
       mes_proc(); goto STOP;
     }
@@ -258,8 +258,7 @@ STOP:
 } /* model_direct_read */
 
 /*============================================================================*/
-/* Erzeugung von Modellen nach vorgegebenen Sequenzen */
-
+/* Produces models from given sequences */
 model **model_from_sequence(sequence_t *sq, long *mo_number){
 #define CUR_PROC "model_from_sequence"
   long i;
@@ -280,8 +279,7 @@ model **model_from_sequence(sequence_t *sq, long *mo_number){
 } /* model_from_sequence */
 
 /*============================================================================*/
-/* Erzeugung von Modellen nach vorgegebenen Sequenzen */
-
+/* Produces models form given sequences */
 model **model_from_sequence_ascii(scanner_t *s, long *mo_number){
 #define CUR_PROC "model_from_sequence_ascii"
   long i;
@@ -293,7 +291,7 @@ model **model_from_sequence_ascii(scanner_t *s, long *mo_number){
   while(!s->err && !s->eof && s->c - '}') {    
     scanner_get_name(s);
     scanner_consume(s, '='); if(s->err) goto STOP; 
-    /* Lesen von Sequenzen im Standardformat */
+    /* Reads sequences on normal format */
     if (!strcmp(s->id, "SEQ")) {
       sq = sequence_read_alloc(s);
       if (!sq) { mes_proc(); goto STOP; }
@@ -307,7 +305,7 @@ model **model_from_sequence_ascii(scanner_t *s, long *mo_number){
   scanner_consume( s, '}' ); if(s->err) goto STOP;  
 
   if (!m_calloc(mo, sq->seq_number)) { mes_proc(); goto STOP; }
-  /* groesstes vorkommendes Symbol */
+  /* The biggest symbol that occurs */
   max_symb = sequence_max_symbol(sq);
   for (i = 0; i < sq->seq_number; i++)
     mo[i] = model_generate_from_sequence(sq->seq[i], sq->seq_len[i],
@@ -360,7 +358,7 @@ model *model_copy(const model *mo) {
     if(!m_calloc(m2->s[i].in_id, vorg)) {mes_proc(); goto STOP;}
     if(!m_calloc(m2->s[i].in_a, vorg)) {mes_proc(); goto STOP;}
     if(!m_calloc(m2->s[i].b, mo->M)) {mes_proc(); goto STOP;}
-    /* Werte kopieren */     
+    /* Copy the values */
     for (j = 0; j < nachf; j++) {
       m2->s[i].out_a[j] = mo->s[i].out_a[j];
       m2->s[i].out_id[j] = mo->s[i].out_id[j];
@@ -392,14 +390,13 @@ int model_check(const model* mo) {
   int res = -1;
   double sum;
   int i,j;
-  /* Summe der Pi[i] == 1 */
+  /* The sum of the Pi[i]'s is 1 */
   sum = 0.0;
   for (i = 0; i < mo->N; i++) {
     sum += mo->s[i].pi;
   }
   if ( fabs(sum - 1.0) >= EPS_PREC )
     { mes_prot("sum Pi[i] != 1.0\n"); goto STOP; }
-  /* printf("Summe der Pi[i] = %8.5f\n", sum); */
   for (i = 0; i < mo->N; i++) {
     sum = 0.0;
     if (mo->s[i].out_states == 0) {
@@ -407,7 +404,7 @@ int model_check(const model* mo) {
 	mprintf(NULL,0,"out_states = 0 (state %d -> final state!)\n",i); 
       mes_prot(str);
     }
-    /* Summe der a[i][j] */
+    /* Sum the a[i][j]'s */
     for (j = 0; j < mo->s[i].out_states; j++) {
       sum += mo->s[i].out_a[j];
       /* printf("    out_a[%d][%d] = %8.5f\n", i,j, mo->s[i].out_a[j]); */
@@ -419,7 +416,7 @@ int model_check(const model* mo) {
       m_free(str);
       /* goto STOP; */
     }
-    /* Summe der b[j] */
+    /* Sum the b[j]'s */
     sum = 0.0;
     for (j = 0; j < mo->M; j++)
       sum += mo->s[i].b[j];
@@ -477,48 +474,49 @@ model *model_generate_from_sequence(const int *seq, int seq_len, int anz_symb) {
   mo->N = seq_len; 
   mo->M = anz_symb;
 
-  /* Alloc aller Vektoren */
+  /* Allocate memory for all vectors */
   if (!m_calloc(mo->s, mo->N)) {mes_proc(); goto STOP;}
   for (i = 0; i < mo->N; i++) {
-    if (i == 0) {               /* Init State */
+    if (i == 0) {               /* Initial state */
       if (model_state_alloc(mo->s, mo->M, 0, 1)) { mes_proc(); goto STOP; }
     }          
-    else if (i == mo->N - 1) {  /* Final State */
+    else if (i == mo->N - 1) {  /* End state */
       if (model_state_alloc(mo->s + i, mo->M, 1, 0)) { mes_proc(); goto STOP; }
     }
-    else {                      /* other */ 
+    else {                      /* others */ 
       if (model_state_alloc(mo->s + i, mo->M, 1, 1)) { mes_proc(); goto STOP; }
     }
   }
 
-  /* States mit richtigen Werten belegen, Init State und Final State extra */
+  /* Allocate states with the right values, the initial state and the end 
+     state extra */
   for (i = 1; i < mo->N - 1; i++) {
     s = mo->s + i;
     s->pi = 0.0;
     s->out_states = 1; s->in_states = 1;
-    s->b[seq[i]] = 1.0; /* anderen bleiben 0 */    
+    s->b[seq[i]] = 1.0; /* others stay 0 */    
     *(s->out_id) = i + 1;
     *(s->in_id) = i - 1;
     *(s->out_a) = *(s->in_a) = 1.0;
   }
     
-  /* Init State */
+  /* Initial state */
   s = mo->s;
   s->pi = 1.0; 
   s->out_states = 1; s->in_states = 0;
   s->b[seq[0]] = 1.0;
   *(s->out_id) = 1; 
   *(s->out_a) = 1.0;
-  /* keine in_id und in_a */
+  /* No in_id and in_a */
 
-  /* Final State */
+  /* End state */
   s = mo->s + mo->N - 1;
   s->pi = 0.0; 
   s->out_states = 0; s->in_states = 1;
-  s->b[seq[mo->N-1]] = 1.0; /* alle anderen b bleiben null */
+  s->b[seq[mo->N-1]] = 1.0; /* All other b's stay zero */
   *(s->in_id) = mo->N - 2;
   *(s->in_a) = 1.0;
-  /* keine out_id und out_a */
+  /* No out_id and out_a */
 
   if (model_check(mo)) { mes_proc(); goto STOP; }
   return mo;
@@ -534,8 +532,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 				     long seq_number) {
 # define CUR_PROC "model_generate_sequences"
 
-  /* Endzustand dadurch charakterisiert, dass es keine Ausgangswahrsch. gibt */
-  /* vorerst keine binaere Suche beim Suchen der Ausgabe oder der Transition */
+  /* An end state is characterized by not having an output probabiliy. */
 
   sequence_t *sq = NULL;
   int state, n, i, j, m;
@@ -545,8 +542,8 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
   sq = sequence_calloc(seq_number);
   if (!sq) { mes_proc(); goto STOP; }
   if (len <= 0)
-    /* Keine spezielle Vorgabe der Sequenzlaenge, Modell sollte 
-       Endzustand haben, Verwendung der Konstanten MAX_SEQ_LEN: */
+    /* A specific length of the sequences isn't given. As a model should have
+       an end state, the konstant MAX_SEQ_LEN is used. */
     len = (int)MAX_SEQ_LEN;
   
   if (seed > 0)
@@ -554,7 +551,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 
   for (n = 0; n < seq_number; n++) {
     if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
-    /* Startzustand i wuerfeln */
+    /* Get a random initial state i */
     p = gsl_rng_uniform(RNG);
     sum = 0.0;
     for (i = 0; i < mo->N; i++) {
@@ -562,7 +559,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
       if (sum >= p)
 	break;
     }
-    /* Startausgabe m wuerfeln */
+    /* Get a random initial output m */
     p = gsl_rng_uniform(RNG);
     sum = 0.0;   
     for (m = 0; m < mo->M; m++) {
@@ -574,7 +571,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
     state = 1;
 
     while (state < len) {
-      /* neuen Zustand i wuerfeln: */
+      /* Get a random state i */
       p = gsl_rng_uniform(RNG);
       sum = 0.0;   
       for (j = 0; j < mo->s[i].out_states; j++) {
@@ -583,11 +580,11 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 	  break;
       }
       if (sum == 0.0) {
-	/* Finalzustand erreicht, aus while-Schleife raus: */
+	/* An end state is reached, get out of the while-loop */
 	break;
       }
       i = mo->s[i].out_id[j];
-      /* Ausgabe m vom Zustand i wuerfeln */
+      /* Get a random output m from state i */
       p = gsl_rng_uniform(RNG);
       sum = 0.0;   
       for (m = 0; m < mo->M; m++) {
@@ -641,25 +638,25 @@ double model_likelihood(model *mo, sequence_t *sq) {
 } /* model_likelihood */
 
 /*============================================================================*/
-/* Diverse Ausgaben */
+/* Some outputs */
 /*============================================================================*/
 
 void model_states_print(FILE *file, model *mo) {
   int i, j;
-  fprintf(file, "Modellparameter: \n M = %d \t N = %d\n", 
+  fprintf(file, "Modelparameters: \n M = %d \t N = %d\n", 
 	 mo->M, mo->N);
   for (i = 0; i < mo->N; i++) {
     fprintf(file, "\nState %d \n PI = %.3f \n out_states = %d \n in_states = %d \n",
 	   i, mo->s[i].pi, mo->s[i].out_states, mo->s[i].in_states);
-    fprintf(file, " Ausg. WSK:\t");
+    fprintf(file, " Output probability:\t");
     for (j = 0; j < mo->M; j++)
       fprintf(file, "%.3f \t", mo->s[i].b[j]);
-    fprintf(file, "\n Ueberg. WSK \n");
-    fprintf(file, "  Outstates (Id, a):\t");
+    fprintf(file, "\n Transition probability \n");
+    fprintf(file, "  Out states (Id, a):\t");
     for (j = 0; j < mo->s[i].out_states; j++)
       fprintf(file, "(%d, %.3f) \t", mo->s[i].out_id[j], mo->s[i].out_a[j]);
     fprintf(file, "\n");
-    fprintf(file, "  Instates (Id, a):\t");
+    fprintf(file, "  In states (Id, a):\t");
     for (j = 0; j < mo->s[i].in_states; j++)
       fprintf(file, "(%d, %.3f) \t", mo->s[i].in_id[j], mo->s[i].in_a[j]);
     fprintf(file, "\n");
@@ -935,8 +932,8 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
     
     if (seq0->seq_len[0] < maxT) { /* There is an absorbing state */
       
-      /* BEACHTE: Annahme, dass Modell ein eindeutiges Endsymbol liefert,
-	 deshalb Bedingung des festen Startzustands weggenommen */
+      /* NOTA BENE: Assumpting the model delivers an explicit end state, 
+	 the condition of a fix initial state is removed. */ 
       
       /* For now check that Pi puts all weight on state */
       /*
