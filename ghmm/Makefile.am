@@ -26,7 +26,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   sfoba.c sfoba.h \
                   sviterbi.c sviterbi.h \
                   smodel.c smodel.h sdmodel.c sdmodel.h \
-		  sdviterbi.c \
+		  sdviterbi.c sdfoba.c sdfoba.h \
                   ghmm.h \
                   sreestimate.c sreestimate.h \
                   sgenerate.c sgenerate.h \
@@ -54,7 +54,7 @@ pkginclude_HEADERS = ghmm.h \
                   sfoba.h \
                   sviterbi.h \
                   smodel.h \
-		  sdmodel.h \
+		  sdmodel.h sdfoba.h \
                   sreestimate.h \
                   sgenerate.h \
                   smixturehmm.h \

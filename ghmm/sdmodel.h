@@ -194,7 +194,6 @@ extern "C" {
 
   /*============================================================================*/
   /** sdviterbi is working for switching discrete model
-   *  sdfoba -- not yet functional
    *  sdmodel_topo_ordering -- need to be implemented with DFS (as in model_util.c)
    *============================================================================
    **/
@@ -214,8 +213,9 @@ extern "C" {
       @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
       @return 0 for success, -1 for error
   */
-  int sdfoba_forward(sdmodel *mo, const int *O, int length, double **alpha, 
+  int sdfoba_forward(sdmodel *mo, const int *O, int len, double **alpha, 
 		     double *scale, double *log_p);
+
 
   /** Descale
       descales the alpha matrix from the forward algorithm
@@ -227,7 +227,7 @@ extern "C" {
       @return 0 for success, -1 for error
   */
   int sdfoba_descale(double **alpha, double *scale, int t, int n, double **newalpha);
-
+  
 
 /**
    Calculates the sum log( P( O | lambda ) ).
