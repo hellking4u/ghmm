@@ -17,6 +17,10 @@ __copyright__
 extern "C" {
 #endif /*__cplusplus*/
 
+/**
+   @name Help functions for printing.
+*/
+
   /**
    */
 char* mprintf( char* dst, int maxlen, char* format, ... );

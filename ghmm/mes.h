@@ -21,6 +21,7 @@ extern "C" {
 
 /**
    @name Help functions concerning memory and small calculations.
+*/
 
 #define MES_0_PTR 0
 #define MES_NEG_ARG 1
