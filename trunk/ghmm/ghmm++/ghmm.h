@@ -23,12 +23,20 @@ namespace std {
 #endif
 
   /** 
+      possible elements are:
+      \begin{itemize}
+      \item ghmm_graph: it is a gxl compatible graph, that is extended by transition probabilities
+      \item InitialStates
+      \item Emissions
+      \item Alphabet
       @memo class containing hmm
    */
   class ghmm: public XMLIO_Element
     {
     public:
-      /** constructor from XMLIO interface */
+      /**
+	 constructor from XMLIO interface
+      */
       ghmm(const string& name, XMLIO_Attributes &attrs);
       /**
 	 expected elements are: Graph, Initial, Emissions and Sequences

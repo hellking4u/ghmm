@@ -19,7 +19,6 @@ ghmm_test_SOURCES = ghmm_test.cpp
 
 lib_LIBRARIES = libghmm++.a
 libghmm___a_SOURCES = \
-DiscretePD.cpp \
 sequence.cpp \
 sequences.cpp \
 sequences_document.cpp \
