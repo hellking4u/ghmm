@@ -628,7 +628,10 @@ class HMM:
 
     def AddState(self, index, label='None'):
         state = HMMState(-1, self)
-        state.id = max(self.id2index.keys()) + 1
+        if self.id2index.keys() != []:
+            state.id = max(self.id2index.keys()) + 1
+        else:
+            state.id = 1
         state.index = index
         self.id2index[state.id] = state.index
         self.state[state.index] = state # XXX Use canvas id
