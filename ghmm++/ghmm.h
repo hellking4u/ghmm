@@ -43,6 +43,20 @@ namespace std {
       virtual const char* toString() const;
       /** dumps all content to cout */
       virtual void print() const;
+      /**
+	 return id of this model
+       */
+      const string& get_id() const;
+      /**
+	 creates a model structure from collected data.
+	 if data are not suitable, NULL is returned.
+      */
+      model* create_model() const;
+      /**
+	 creates a smodel structure from collected data.
+	 if data are not suitable, NULL is returned.
+      */
+      smodel* create_smodel() const;
 
     protected:
       /**
@@ -57,6 +71,14 @@ namespace std {
        */
       InitialStates* Initial;
       /**
+	 apriori probability of this model
+       */
+      double prior;
+      /**
+	 id is mandatory for each object in gxl (!?)
+       */
+      string id;
+      /**
 	 saves a discrete hmm
        */
       model* hmm_model;
@@ -64,6 +86,9 @@ namespace std {
 	 saves a continuous/switched hmm
        */
       smodel* shmm_model;
+      /**
+       */
+      Graph* ghmm_graph;
     };
 
 #ifdef HAVE_NAMESPACES
@@ -71,3 +96,5 @@ namespace std {
 #endif
 
 #endif /* GHMMPP_GHMM_H */
+
+

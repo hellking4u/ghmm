@@ -12,6 +12,7 @@
 #include "config.h"
 #endif
 
+#include <map>
 #include <xmlio/XMLIO_Object.h>
 #include <ghmm++/DiscretePD.h>
 
@@ -25,21 +26,52 @@ namespace std {
   class State: public XMLIO_Object
     {
     public:
+      /**
+       */
       State(const string& tag, XMLIO_Attributes &attributes);
+      /**
+       */
       void print() const;
-      const char* toString() const;
+      /**
+       */
+      virtual const char* toString() const;
+      /**
+       */
+      virtual const string& get_id() const;
     private:
+      /**
+       */
       string id_ref;
     };
-  
+
+  /**
+     container with all initial states probabilities
+   */  
   class InitialStates: public XMLIO_Object
     {
     public:
+      /**
+       */
       InitialStates(const string& tag, XMLIO_Attributes &attributes);
+      /**
+       */
       virtual XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      /**
+       */
       virtual const char* toString() const {return "InitialStates";}
+      /**
+       */
       virtual void print() const;
+      /**
+       */
+      virtual map<State*,double>* get_map()
+	{
+	  return state_pd;
+	}
+      
     private:
+      /**
+       */
       DiscretePD<State>* state_pd;
     };
 

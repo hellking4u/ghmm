@@ -3,8 +3,10 @@
 <hmm type="discrete">
 Wunderschönes Hidden Markov Model
 
-<graph>
-</graph>
+<Graph id="hmm">
+<Node id="A"/>
+<Edge id="a1" from="A" to="A"><Prob>1</Prob></Edge>
+</Graph>
 
 <InitialStates>
 <DiscretePD>

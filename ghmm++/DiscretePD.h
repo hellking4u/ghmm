@@ -20,8 +20,11 @@
 namespace std {
 #endif
 
+  /**
+     a map consisting of doubles followed by elements E
+   */
   template <class E>
-    class DiscretePD: public XMLIO_ContentElementArrayObject<double,E>
+    class DiscretePD: public map<E*,double>, public XMLIO_ContentElementArrayObject<double,E>
     {
     public:
       /**
@@ -30,7 +33,6 @@ namespace std {
       DiscretePD()
 	{
 	  default_weight=1;
-	  actual_weight=default_weight;
 	}
 
       /**
@@ -58,9 +60,48 @@ namespace std {
 	    default_weight=1;
 	  actual_weight=default_weight;
 	}
+
+      /**
+	 makes map from ContentElementArray
+       */
+      virtual void XMLIO_finishedReading()
+	{
+	  /* parse pair vector and collect information into a map */
+	  double actual_weight=default_weight;
+	  for (XMLIO_ContentElementArrayObject<double,E>::iterator pos=XMLIO_ContentElementArrayObject<double,E>::begin();
+	       pos!=XMLIO_ContentElementArrayObject<double,E>::end();
+	       ++pos)
+	    {
+	      if (pos->content!=NULL)
+		{
+		  actual_weight=*(pos->content);
+		}
+	      if (pos->element!=NULL)
+		{
+		  map<E*,double>::insert(pair<E*,double>(pos->element,actual_weight));
+		  actual_weight=default_weight;
+		}
+	    }
+	}
+
+      /**
+       */
+      virtual void print() const
+	{
+	  cout<<toString()<<endl;
+	  for (map<E*,double>::const_iterator pos=map<E*,double>::begin();
+	       pos!=map<E*,double>::end();
+	       ++pos)
+	    {
+	      pos->first->print();
+	      cout<<":"<<pos->second<<endl;
+	    }
+	}
+
     private:
+      /**
+       */
       double default_weight;
-      double actual_weight;
     };
 
 
@@ -69,6 +110,3 @@ namespace std {
 #endif
 
 #endif /* GHMMPP_DISCRETEPD_H */
-
-
-

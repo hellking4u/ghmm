@@ -9,6 +9,7 @@
 #include "config.h"
 #endif
 
+#include <cstdio>
 #include <xmlio/XMLIO_ObjectReader.h>
 #include <ghmm++/ghmm.h>
 
@@ -26,6 +27,8 @@ int main()
       cout<<my_model_reader.toString()<<"found something: "<<endl;
       my_model_reader.get_element()->print();
     }
+  model* my_model=my_model_reader.get_element()->create_model();
+  model_print(stdout,my_model);
   return 0;
 }
 
