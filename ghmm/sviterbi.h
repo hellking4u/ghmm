@@ -1,40 +1,30 @@
 #ifndef CVITERBI_H
 #define CVITERBI_H
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
-#if __EXPERIMENTAL__ == 3
+#endif
+
+/* #if __EXPERIMENTAL__ == 3  */
 
 /**@name CHMM-Viterbi-Algorithmus */
-/*@{ (Doc++-Group: cviterbi) */
+/*@{ (Doc++-Group: sviterbi) */
 
-#include "stdmacro.h"
-#include "cmodel.h"
-
-/**
-  Viterbi-Algorithmus. Berechnung des Viterbi-Pfades (bester Pfad durch den
-  Zustandsraum) und der Viterbi-"Wahrscheinlichkeit" zu einem gegebenen 
-  stetigen Modell und einer gegebenen double-Sequenz.
-  @return        Viterbi-Pfad (pointer auf int-Vektor)
-  @param cmo     Modell
-  @param o       double-Sequenz
-  @param T       Sequenzlaenge
-  @param log_p   "Wahrscheinlichkeit" der Sequenz im Viterbi-Pfad
-  */
-int *cviterbi(cmodel *cmo, double *o, int T, double *log_p);
+#include "smodel.h"
 
 /**
-  Kontrollrechnung: logP zu geg. Zustandspfad, Sequenz und Modell..
-  @return           0/-1 (Fehler)
-  @param cmo        Modell
-  @param o          Sequenz
-  @param T          Sequenzlaenge
-  @param state_seq  gegebene Zustandsfolge
-  @param log_p      log(P) der Zustandsfolge (Rückgabe)
+   Viterbi algorithm: calculation of the viterbi path (best possible
+   state sequenz for a given sequenz and a given model (smo)). Also 
+   calculates logp according to this path.
+  @return        Viterbi-path 
+  @param smo    model
+  @param o       double-sequence
+  @param T       sequence length
+  @param log_p   log(p) of the sequence using the vitberbi path
   */
-int cviterbi_logp(cmodel *cmo, double *o, int T, int *state_seq, double *log_p);
+int *sviterbi(smodel *smo, double *o, int T, double *log_p);
 
-
-#endif /* __EXPERIMENTAL__ == 3 */
+/* #endif */ /* __EXPERIMENTAL__ == 3 */
 
 #endif
 
