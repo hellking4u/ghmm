@@ -13,7 +13,6 @@
 #include <ghmm/vector.h>
 #include <ghmm/sequence.h>
 #include "ghmm++/ghmm.h"
-#include <xmlio/XMLIO_IgnoreObject.h>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -78,7 +77,7 @@ ghmm::ghmm(const string& tag, XMLIO_Attributes &attributes)
     }
 }
 
-XMLIO_Object* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   /* what's next? */
   if (tag=="graph")
@@ -116,7 +115,7 @@ XMLIO_Object* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribut
       else
 	{
 	  cerr<<toString()<<": alphabet allready existing,ignoring"<<endl;
-	  return new XMLIO_IgnoreObject();
+	  return NULL;
 	}
 
     }
@@ -125,7 +124,7 @@ XMLIO_Object* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribut
       if (ghmm_Emissions!=NULL)
 	{
 	  cerr<<toString()<<" only one Emissions section expected"<<endl;
-	  return new XMLIO_IgnoreObject();
+	  return NULL;
 	}
       else
 	{
@@ -136,7 +135,7 @@ XMLIO_Object* ghmm::XMLIO_startTag(const string& tag, XMLIO_Attributes &attribut
   else
     {
       cerr<<toString()<<": found unexpected element "<<tag<<", ignoring"<<endl;
-      return new XMLIO_IgnoreObject();
+      return NULL;
     }
 }
 

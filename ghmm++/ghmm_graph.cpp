@@ -29,7 +29,7 @@ const char* ghmm_graph::toString() const
 }
 
 
-XMLIO_Object* ghmm_graph::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* ghmm_graph::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="edge")
     {

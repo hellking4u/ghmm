@@ -52,7 +52,7 @@ InitialStates::InitialStates(const string& tag, XMLIO_Attributes &attributes)
   state_pd=NULL;
 }
 
-XMLIO_Object* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* InitialStates::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="DiscretePD")
     {

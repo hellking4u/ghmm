@@ -28,7 +28,7 @@ const char* Emission::toString() const
 
 
 Emission::Emission(const string& tag, XMLIO_Attributes &attributes):
-  XMLIO_ContentElementArrayObject<double,XMLIO_AttributedObject>(tag,attributes)
+  XMLIO_ContentElementArrayElement<double,XMLIO_AttributedElement>(tag,attributes)
 {
   fix=0;
   XMLIO_Attributes::const_iterator pos;

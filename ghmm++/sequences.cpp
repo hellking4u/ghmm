@@ -13,7 +13,6 @@
 #endif
 
 #include "sequences.h"
-#include <xmlio/XMLIO_SkipObject.h>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -53,13 +52,13 @@ double_sequence::~double_sequence()
   SAFE_DELETE(label);
 }
 
-XMLIO_Object* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="label")
     {
       if (label==NULL)
 	{
-	  label=new XMLIO_StringObject();
+	  label=new XMLIO_StringElement();
 	  return label;
 	}
       else
@@ -77,7 +76,7 @@ XMLIO_Object* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attribute
 double* double_sequence::create_double_array() const
 {
   double* array=(double*)malloc(sizeof(double)*size());
-  XMLIO_ArrayObject<double>::const_iterator iter=begin();
+  XMLIO_ArrayElement<double>::const_iterator iter=begin();
   int i=0;
   while (iter!=end())
     {
@@ -90,7 +89,7 @@ double* double_sequence::create_double_array() const
 int* double_sequence::create_int_array() const
 {
   int* array=(int*)malloc(sizeof(int)*size());
-  XMLIO_ArrayObject<double>::const_iterator iter=begin();
+  XMLIO_ArrayElement<double>::const_iterator iter=begin();
   int i=0;
   while (iter!=end())
     {
@@ -123,7 +122,7 @@ double double_sequence::get_id_as_double() const
 
 void double_sequence::print() const
 {
-  XMLIO_ArrayObject<double>::print();
+  XMLIO_ArrayElement<double>::print();
 }
 
 /***********************************************************************************/
@@ -159,13 +158,13 @@ int_sequence::~int_sequence()
   SAFE_DELETE(label);
 }
 
-XMLIO_Object* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="label")
     {
       if (label==NULL)
 	{
-	  label=new XMLIO_StringObject();
+	  label=new XMLIO_StringElement();
 	  return label;
 	}
       else
@@ -176,7 +175,7 @@ XMLIO_Object* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &
   else
     {
       cout<<tag<<" not supported in sequence"<<endl;
-      return new XMLIO_SkipObject(this);
+      return NULL;
     }
   return NULL;
 }
@@ -184,7 +183,7 @@ XMLIO_Object* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes &
 int* int_sequence::create_int_array() const
 {
   int* array=(int*)malloc(sizeof(int)*size());
-  XMLIO_ArrayObject<int>::const_iterator iter=begin();
+  XMLIO_ArrayElement<int>::const_iterator iter=begin();
   int i=0;
   while (iter!=end())
     {
@@ -197,7 +196,7 @@ int* int_sequence::create_int_array() const
 double* int_sequence::create_double_array() const
 {
   double* array=(double*)malloc(sizeof(double)*size());
-  XMLIO_ArrayObject<int>::const_iterator iter=begin();
+  XMLIO_ArrayElement<int>::const_iterator iter=begin();
   int i=0;
   while (iter!=end())
     {
@@ -230,7 +229,7 @@ double int_sequence::get_id_as_double() const
 
 void int_sequence::print() const
 {
-  XMLIO_ArrayObject<int>::print();
+  XMLIO_ArrayElement<int>::print();
 }
 
 
@@ -335,7 +334,7 @@ sequences_DiscretePD::~sequences_DiscretePD()
 void sequences_DiscretePD::XMLIO_finishedReading()
 {}
 
-XMLIO_Object* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="sequence")
     {
@@ -358,13 +357,13 @@ XMLIO_Object* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Attr
       else
 	{
 	  cout<<"Do not know what to do with "<<tag<<" of type "<<type<<endl;
-	  return new XMLIO_SkipObject(this);
+	  return NULL;
 	}      
     }
   else
     {
       cout<<"Do not know what to do with "<<tag<<endl;
-      return new XMLIO_SkipObject(this);
+      return NULL;
     }
 }
 
@@ -559,7 +558,7 @@ void sequences::print() const
     cout<<"no sequences available"<<endl;
 }
 
-XMLIO_Object* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
 {
   if (tag=="DiscretePD")
     {
@@ -600,12 +599,12 @@ sequenceReader::~sequenceReader()
     }
 }
 
-XMLIO_Object* sequenceReader::XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes) {
+XMLIO_Element* sequenceReader::XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes) {
   if (tag == "sequences") {
     next_sequence_array=new sequences(tag,attributes);
     return next_sequence_array;
   }
-  return new XMLIO_SkipObject(this);
+  return NULL;
 }
 
 void sequenceReader::XMLIO_endTag(const string& tag)

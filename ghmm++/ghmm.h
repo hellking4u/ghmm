@@ -25,7 +25,7 @@ namespace std {
   /** 
       @memo class containing hmm
    */
-  class ghmm: public XMLIO_Object
+  class ghmm: public XMLIO_Element
     {
     public:
       /** constructor from XMLIO interface */
@@ -33,7 +33,7 @@ namespace std {
       /**
 	 expected elements are: Graph, Initial, Emissions and Sequences
        */
-      virtual XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /** */
       virtual void XMLIO_endTag(const string& tag);
       /** */
@@ -91,7 +91,7 @@ namespace std {
        */
       double prior;
       /**
-	 id is mandatory for each object in gxl (!?)
+	 id is mandatory for each Element in gxl (!?)
        */
       string id;
       /**
