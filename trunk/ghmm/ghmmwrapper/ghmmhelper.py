@@ -20,6 +20,32 @@ def list2arrayint(lisems):
 	return arrems
 
 
+def arrayd2list(carray,length):
+    "converts C double array to python list."
+    l = []
+    for i in range(length):
+        l.append(ghmmwrapper.get_arrayd(carray,i))
+    return l
+    
+def arrayint2list(carray,length):
+    "converts C double array to python list."
+    l = []
+    for i in range(length):
+        l.append(ghmmwrapper.get_arrayint(carray,i))
+    return l
+    
+def matrixd2list(cmatrix,row,col):
+    llist = []
+    for i in range(row):
+        llist.append([])    
+     
+    for i in range(row):
+        for j in range(col):
+            llist[i].append(ghmmwrapper.get_2d_arrayd(cmatrix,i,j) )
+    return llist       
+        
+
+
 def list2matrixd(matrix):
     """ Allocation and initialization of a double** based on a   
         two dimensional Python list (list of lists). The number of elements
