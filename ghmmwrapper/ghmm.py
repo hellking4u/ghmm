@@ -1004,10 +1004,15 @@ class HMMOpenFactory(HMMFactory):
     		# build adjacency list
 
                 # check for background distributions
-                (background_dist, orders) = hmm_dom.getBackgroundDist()
+                (background_dist, orders, code2name) = hmm_dom.getBackgroundDist()
+                bg_list = []
+                # if background distribution exists, set background distribution here
                 if background_dist != {}:
-                    # if background distribution exists, set background distribution here
-                    bg_list = list(background_dist.values()) # transformation to list for input into BackgroundDistribution, kind of ugly
+                    # transformation to list for input into BackgroundDistribution,
+                    # ensure the rigth order
+                    for i in range(len(code2name.keys())-1):
+                        bg_list.append(background_dist[code2name[i]])
+                        
                     bg = BackgroundDistribution(emission_domain, bg_list)
                     
                 # check for state labels
@@ -2357,7 +2362,7 @@ class DiscreteEmissionHMM(HMM):
             for j in  xrange(self.cmodel.N):
                 if A[i][j] > 0.0:
                     w = hmm_dom.id2index[j]
-                    hmm_dom.G.edgeWeights[0][(v,w)] = A[i][j]
+                    hmm_dom.G.AddEdge(v,w,A[i][j])
 
         hmm_dom.WriteXML(filename)
         del hmm_dom
@@ -2497,8 +2502,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if seqNumber == 1:
             labels = map(lambda i: self.labelDomain.external(self.getLabel(i)), vPath)
         else:
-            for i in range(seqNumber):
-                labels.append( map(lambda i: self.labelDomain.external(self.getLabel(i)), vPath) )
+            for j in range(seqNumber):
+                labels.append( map(lambda i: self.labelDomain.external(self.getLabel(i)), vPath[j]) )
 
         return (labels, log_p)
 
