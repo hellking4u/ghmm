@@ -42,7 +42,7 @@ void GHMM_DoubleVector::print(FILE *file, char *tab, char *separator, char *endi
 
 
 void GHMM_DoubleVector::resize(int new_len) {
-  c_vector = (double*) realloc(c_vector,new_len);
+  c_vector = (double*) realloc(c_vector,new_len * sizeof(double));
 
   for (int i = len; i < new_len; ++i)
     c_vector[i] = 0.0;

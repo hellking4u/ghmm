@@ -166,9 +166,10 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @return Viterbi path
      @param sequences  sequences structure
      @param index      index of sequence to take
-     @param log_p      probability of the sequence in the Viterbi path (return value)
+     @param log_p      probability of the sequence in the Viterbi path 
+                       (return value).
   */
-  GHMM_IntVector* Viterbi(GHMM_Sequences* sequences, int index, double *log_p) const;
+  GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double *log_p) const;
   /**
      Baum-Welch Algorithm for HMMs.
      Training of model parameter with multiple integer sequences (incl. scaling).
