@@ -94,6 +94,13 @@ def write_file(strf,strcontent):
     finally:
         f.close()
 
+def remove_state(matrix, index):
+	for i in range(len(matrix)):
+		del(matrix[i][index])
+	del(matrix[index])	
+	return matrix
+
+
 class hmmer:
     "reads hmmer file and converts it to xml"
 
@@ -264,14 +271,14 @@ class hmmer:
         # intitializing pi vector, always starting in B state (index 0)
         pi = [1] + [0] * ((self.n * 3) + 4)
     
-        silent = [0] * ((self.n * 3) + 5)  # emissions for silent states
-        equal = [1.0/((self.n * 3) + 5)] * ((self.n * 3) + 5)  # uniform distribution over the number of symbols
+        silent = [0] * (self.m)  # emissions for silent states
+        equal = [1.0/(self.m)] * self.m  # uniform distribution over the number of symbols
 
         # conversion of the HMMER emission matrices into ghmm format
         # emmission probs in HMMER: [match=0/insert=1][state][emission-letter]
         # order of states in HMMER transition matrix: N B E J C T M1 I1 D1 M2 I2 D2 ... Mn In Dn
     
-        emiss_mat.append(silent)    # N state (equal)
+        emiss_mat.append(equal)    # N state (equal)
         emiss_mat.append(silent)     # B state (silent)
         emiss_mat.append(silent)       # E state (silent)
         emiss_mat.append(equal)     # J state  (equal)
