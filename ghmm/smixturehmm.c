@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     if (argc == 11)
       gsl_rng_set(RNG,atoi(argv[10]));
     else {      
-      gsl_rng_timeseed(RNG); /* vorher: gsl_rng_set(RNG,0); */
+      gsl_rng_timeseed(RNG); /* Before: gsl_rng_set(RNG,0); */
     }
   }
   else {
@@ -503,10 +503,9 @@ int smixturehmm_calc_cp(double **cp, sequence_d_t *sqd, smodel **smo,
 } /* smixturehmm_calc_cp */
 
 /*============================================================================*/
-/* wird z. Zt. nicht verwendet. Spaeter diese Funktion in calc_cp UND
-   smixturehmm_like verwenden (spart die Haelfte der sfoba_logp() Aufrufe).
-   Aber Vorsicht: Seq_w beruecksichtigen ???
-
+/* Is currently not used. Use this function in calc_cp and smixturehmm_like
+   later on (saves half of the sfoba_logp() calls).
+   Danger: Is it neccessary to take seq_w into account? 
 */
 void smixture_calc_logp(double **logp, int **error, sequence_d_t *sqd, 
 		       smodel **smo,  int smo_number) {
