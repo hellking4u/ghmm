@@ -1,11 +1,6 @@
 #include "ppghmm++/GHMM_Sequences.h"
 #include "ppghmm++/GHMM_ContinuousModel.h"
 #include "ppghmm++/GHMM_Document.h"
-#ifdef HAVE_CMATH
-#  include <cmath>
-#else
-#  include <math.h>
-#endif
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -21,7 +16,16 @@ int main(int argc, char* argv[]) {
   GHMM_ContinuousModel* smo;
   GHMM_Document doc;
 
-  doc.open(argv[1],"r");
+  if (argc<2) {
+    fprintf(stderr,"generiere_nvs needs a file as argument\n");
+    exit(1);
+  }
+
+  if (0!=doc.open(argv[1],"r")) {
+    fprintf(stderr,"generiere_nvs could not open file %s\n",argv[1]);
+    exit(1);
+  }
+
   doc.readDocument();
   doc.close();
 
@@ -37,7 +41,8 @@ int main(int argc, char* argv[]) {
       printf("%8f\n",(genseq->getDoubleSequence(0)[i]));
   }
 
-  delete genseq;
+  if (genseq!=NULL)
+    delete genseq;
 
   //printf("Generierte Sequenzen :\n");
   // sequence_d_print(stdout,genseq,0);
