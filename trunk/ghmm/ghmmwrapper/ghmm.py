@@ -910,6 +910,7 @@ class HMMFromMatricesFactory(HMMFactory):
             if isinstance(distribution,DiscreteDistribution):
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
                 cmodel = ghmmwrapper.model()
+                print cmodel
 
                 cmodel.N = len(A)
                 cmodel.M = emissionDomain.size()
@@ -939,18 +940,12 @@ class HMMFromMatricesFactory(HMMFactory):
                         silent_states.append(0)
 
                     #set out probabilities
-                    trans = ghmmhelper.extract_out(A[i])
-                    state.out_states = trans[0]
-                    state.out_id = trans[1]
-                    state.out_a = trans[2]
+                    state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
                     #set "in" probabilities
                     # XXX Check whether A is numarray or Python
                     A_col_i = map( lambda x: x[i], A)
                     # Numarray use A[,:i]
-                    trans = ghmmhelper.extract_out(A_col_i)
-                    state.in_states = trans[0]
-                    state.in_id = trans[1]
-                    state.in_a = trans[2]
+                    state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
                     #fix probabilities by reestimation, else 0
                     state.fix = 0
                     
@@ -1105,9 +1100,13 @@ class HMM:
         
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-        modelPtr = self.getModelPtr(self.cmodel)
-        self.freeFunction(modelPtr)
-        
+        print "HMM.__del__", self.cmodel, self.getModelPtr(self.cmodel)
+        if self.cmodel is not None:
+            modelPtr = self.getModelPtr(self.cmodel)
+            self.freeFunction(modelPtr)
+            self.cmodel = 0
+        else:
+            print "OOPS. __del__ called twice"
     
     
     def loglikelihood(self, emissionSequences): 

@@ -569,6 +569,7 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
 extern int reestimate_baum_welch(model *mo, sequence_t *sq);
+extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
 /******* Viterbi (viterbi.c)*******/
 /**
@@ -661,9 +662,12 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
   }
 
   model **cast_model_ptr(model *mo){
-     model** res = (model**) malloc(sizeof(model*));
-     res[0] = mo;
-     return res;
+    /*model** res = (model**) malloc(sizeof(model*));
+      res[0] = mo;*/
+    model** result = &mo;
+    /*printf("cast_model_ptr %xlu %xlu\n", (unsigned long)mo, (unsigned long)result);*/
+     return result;
+
   }   
   
 %}
