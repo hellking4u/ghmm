@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<ghmm>
+
+<hmm type="discrete">
 Wunderschönes Hidden Markov Model
 
 <graph>
@@ -29,4 +30,4 @@ Wunderschönes Hidden Markov Model
  <sequence id="12"><label>8</label> 1 2 3 4 </sequence>
 </DiscretePD>
 </sequences>
-</ghmm>
+</hmm>

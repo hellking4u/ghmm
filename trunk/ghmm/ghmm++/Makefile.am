@@ -12,15 +12,20 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 LDADD = libghmm++.a $(top_builddir)/ghmm/libghmm.a -lxmlio -lexpat
 
-noinst_PROGRAMS = sequences_reader sequence_test DiscretePD_test
+noinst_PROGRAMS = sequences_reader sequence_test DiscretePD_test ghmm_test
 sequences_reader_SOURCES = sequences_reader.cpp
 sequence_test_SOURCES = sequence_test.cpp
 DiscretePD_test_SOURCES = DiscretePD_test.cpp
+ghmm_test_SOURCES = ghmm_test.cpp
 
 lib_LIBRARIES = libghmm++.a
 libghmm___a_SOURCES = \
+DiscretePD.cpp DiscretePD.h \
 sequences.cpp sequences.h \
-DiscretePD.cpp DiscretePD.h
+graph.cpp graph.h \
+InitialStates.cpp InitialStates.h \
+ghmm.cpp ghmm.h
+
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

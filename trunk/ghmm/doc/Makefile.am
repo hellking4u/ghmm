@@ -23,7 +23,7 @@ DOCXX_FILES      = docu.dxx
 BUILT_SOURCES   += $(DOCXX_FILES)
 
 # html installation
-htmldir   = $(prefix)/html
+htmldir   = $(prefix)/share/html
 html_DATA = docHTML
 
 install-htmlDATA:
@@ -32,7 +32,7 @@ install-htmlDATA:
 	@list='docHTML/*'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=`basename $$p` ;\
-	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(htmldir)/hmmlib/$$f"; \
+	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(htmldir)/$(APP)/$$f"; \
 	    $(INSTALL_DATA) $$p $(DESTDIR)$(htmldir)/$(APP)/$$f; \
 	  else :; fi; \
 	done

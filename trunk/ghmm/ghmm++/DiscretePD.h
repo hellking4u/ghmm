@@ -1,3 +1,12 @@
+/*
+  author: Achim Gaedke
+  created: 9. Juli 2001
+  file: xmlio/examples/ghmm++/DiscretePD.h
+  $Id$
+ */
+
+#ifndef GHMMPP_DISCRETEPD_H
+#define GHMMPP_DISCRETEPD_H
 
 #include <iostream>
 #include <vector>
@@ -54,30 +63,12 @@ namespace std {
       double actual_weight;
     };
 
-  class State: public XMLIO_Object
-    {
-    public:
-      State(const string& tag, XMLIO_Attributes &attributes);
-      void print() const;
-      const char* toString() const;
-    private:
-      string id_ref;
-    };
-  
-  class InitialStates: public XMLIO_Object
-    {
-    public:
-      InitialStates(const string& tag, XMLIO_Attributes &attributes);
-      XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
-      const char* toString() const {return "InitialStates";}
-      void print() const;
-    private:
-      DiscretePD<State>* state_pd;      
-    };
 
 #ifdef HAVE_NAMESPACES
 }
 #endif
+
+#endif /* GHMMPP_DISCRETEPD_H */
 
 
 
