@@ -424,6 +424,7 @@ int model_check(const model* mo) {
   int res = -1;
   double sum;
   int i,j;
+  char *str;
   /* The sum of the Pi[i]'s is 1 */
 
   sum = 0.0;
@@ -460,8 +461,8 @@ int model_check(const model* mo) {
       sum += mo->s[i].b[j];
     if ( fabs(sum - 1.0) >= EPS_PREC ) { 
       res = -2; /* So we can ignore a silent state */
-      char *str = mprintf(NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n",
-			  sum, i); 
+      str = mprintf(NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n",
+		    sum, i); 
       mes_prot(str);
       m_free(str);
       goto STOP;
