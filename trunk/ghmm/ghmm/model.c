@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : ghmm/ghmm/model.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/model.c
   created      : TIME: 10:47:27     DATE: Fri 19. December 1997
   $Id$
 
@@ -43,10 +43,11 @@ STOP:
 /*----------------------------------------------------------------------------*/
 
 static int model_copy_vectors(model *mo, int index, double **a_matrix, 
-			 double **b_matrix, double *pi) {
+			 double **b_matrix, double *pi, int *fix) {
 #define CUR_PROC "model_alloc_vectors"
   int i, cnt_out = 0, cnt_in = 0;
   mo->s[index].pi = pi[index];
+  mo->s[index].fix = fix[index];
   for (i = 0; i < mo->M; i++)
     mo->s[index].b[i] = b_matrix[index][i];
   for (i = 0; i < mo->N; i++) {
@@ -133,11 +134,12 @@ STOP:
 
 model *model_direct_read(scanner_t *s, int *multip){
 #define CUR_PROC "model_direct_read"
-  int i, m_read, n_read, a_read, b_read, pi_read, len, prior_read;
+  int i, m_read, n_read, a_read, b_read, pi_read, len, prior_read, fix_read;
   model *mo      = NULL;
   double **a_matrix = NULL, **b_matrix = NULL;
-  double *pi_vektor = NULL;
-  m_read = n_read = a_read = b_read = pi_read = prior_read = 0;
+  double *pi_vector = NULL;
+  int *fix_vector = NULL;
+  m_read = n_read = a_read = b_read = pi_read = prior_read = fix_read = 0;
   *multip = 1; /* default */
   if (!(m_calloc(mo, 1))) { mes_proc(); goto STOP; }
   scanner_consume( s, '{' ); if(s->err) goto STOP; 
@@ -145,7 +147,8 @@ model *model_direct_read(scanner_t *s, int *multip){
     scanner_get_name(s);
     if (strcmp(s->id, "M") && strcmp(s->id, "N") && strcmp(s->id, "Pi")
 	&& strcmp(s->id, "A") && strcmp(s->id, "B") && 
-	strcmp(s->id, "multip") && strcmp(s->id, "prior")) {
+	strcmp(s->id, "multip") && strcmp(s->id, "prior") &&
+	strcmp(s->id, "fix_state")) {
       scanner_error(s, "unknown identifier"); goto STOP;
     }    
     scanner_consume(s, '='); if(s->err) goto STOP;
@@ -212,11 +215,28 @@ model *model_direct_read(scanner_t *s, int *multip){
       scanner_get_name(s);
       if (!strcmp(s->id, "vector")) {
 	scanner_consume( s, '{' ); if(s->err) goto STOP; 
-	pi_vektor = scanner_get_double_array(s, &len);
+	pi_vector = scanner_get_double_array(s, &len);
 	if (len != mo->N) {scanner_error(s, "wrong number of elements in PI"); goto STOP;}
 	scanner_consume( s, ';' ); if(s->err) goto STOP;
 	scanner_consume( s, '}' ); if(s->err) goto STOP; 
 	pi_read = 1;
+      }
+      else {
+	scanner_error(s, "unknown identifier"); goto STOP;
+      }
+    }
+    else if (!strcmp(s->id, "fix_state")) {
+      if (!n_read) {scanner_error(s, "need N as a range for fix_state"); goto STOP;}
+      if (fix_read) {scanner_error(s, "identifier fix_state twice"); goto STOP;}
+      scanner_get_name(s);
+      if (!strcmp(s->id, "vector")) {
+	scanner_consume( s, '{' ); if(s->err) goto STOP; 
+	fix_vector = scanner_get_int_array(s, &len);
+	if (len != mo->N) 
+	  {scanner_error(s, "wrong number of elements in fix_state"); goto STOP;}
+	scanner_consume( s, ';' ); if(s->err) goto STOP;
+	scanner_consume( s, '}' ); if(s->err) goto STOP; 
+	fix_read = 1;
       }
       else {
 	scanner_error(s, "unknown identifier"); goto STOP;
@@ -240,18 +260,18 @@ model *model_direct_read(scanner_t *s, int *multip){
     if (model_state_alloc(mo->s + i, mo->M, mo->s[i].in_states,
 			  mo->s[i].out_states)) { mes_proc(); goto STOP; }
     /* Assign the parameters to the model */
-    if(model_copy_vectors(mo, i, a_matrix, b_matrix, pi_vektor)) {
+    if(model_copy_vectors(mo, i, a_matrix, b_matrix, pi_vector, fix_vector)) {
       mes_proc(); goto STOP;
     }
   }
   matrix_d_free(&a_matrix, mo->N);
   matrix_d_free(&b_matrix, mo->N);
-  m_free(pi_vektor);
+  m_free(pi_vector);
   return(mo);
 STOP:
   matrix_d_free(&a_matrix, mo->N);
   matrix_d_free(&b_matrix, mo->N);
-  m_free(pi_vektor);
+  m_free(pi_vector);
   model_free(&mo);
   return NULL;
 #undef CUR_PROC
