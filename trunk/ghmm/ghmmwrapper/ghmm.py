@@ -167,24 +167,36 @@ class GHMMError(Exception):
     """Base class for exceptions in this module."""
     def __init__(self, message):
         self.message = message
+    def __str__(self):
+        return repr(self.message)    
 
 class UnknownInputType(GHMMError):
     def __init__(self,message):
-       print "\n\n UnknownInputType Exception: " + str(message) + "\n"
+       self.message = message
+    def __str__(self):
+        return repr(self.message)    
+
 
 class NoValidCDataType(GHMMError):
     def __init__(self,message):   
-        print "\n\n NoValidCDataType: " + str(message) + "\n"
+        self.message = message
+    def __str__(self):
+        return repr(self.message)    
+
         
 class badCPointer(GHMMError):
     def __init__(self,message):   
-        print "\n\nbadCPointer Exception: " + str(message) + "\n"
+        self.message = message
+    def __str__(self):
+        return repr(self.message)    
+
         
 class SequenceCannotBeBuild(GHMMError):
     def __init__(self,message):   
-        print "\n\nSequenceCannotBeBuild: " + str(message) + "\n"        
-        #self.message = message
-                
+        self.message = message
+    def __str__(self):
+        return repr(self.message)    
+ 
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain:
@@ -399,7 +411,8 @@ class EmissionSequence:
             self.cleanFunction = ghmmwrapper.sequence_clean
             
             if isinstance(sequenceInput, list):  
-                (seq,l) = ghmmhelper.list2matrixint([sequenceInput])
+                internalInput = map( self.emissionDomain.internal, sequenceInput)
+                (seq,l) = ghmmhelper.list2matrixint([internalInput])
                 self.cseq = ghmmwrapper.sequence_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
@@ -793,7 +806,6 @@ class HMMOpenFactory(HMMFactory):
         #
         # smo files 
         #
-        #
         file = open(fileName,'r')
         
         hmmRe = re.compile("^HMM\s*=")
@@ -889,7 +901,6 @@ def readMultipleHMMERModels(fileName):
 
 class HMMFromMatricesFactory(HMMFactory):
     def __call__(self, emissionDomain, distribution, A, B, pi,hmmName = None):
-
         if isinstance(emissionDomain,Alphabet):
 
             if isinstance(distribution,DiscreteDistribution):
