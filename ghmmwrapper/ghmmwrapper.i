@@ -1230,7 +1230,6 @@ typedef struct smosqd_t smosqd_t;
   */
 extern int sreestimate_baum_welch(smosqd_t *cs);
 
-extern int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,int *T, double **O, double *log_p, double *seq_w);
 
 %inline%{
   
