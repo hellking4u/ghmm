@@ -13,6 +13,7 @@ RUNTEST=$(RUNTEST_FOR_DEJAGNU)
 
 CLEANFILES = ghmm.log ghmm.sum site.exp site.bak
 MAINTAINERCLEANFILES = Makefile.in
+# stuff from dejagnu
 
 INCLUDES=-I$(top_srcdir)
 
@@ -23,9 +24,16 @@ LDADD = ../ghmm/libghmm.a
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
+# creates copyright tags and copies some files
 dist-hook:
+	DEJAGNU_FILES=`(cd $(srcdir) && find ghmm.tests lib config -name \*.exp)` ;\
+	for f in $$DEJAGNU_FILES ; do \
+	  dirpart=`dirname $$f`; \
+	  test -d $(distdir)/$$dirpart || mkdir $(distdir)/$$dirpart ; \
+	  cp -p $(srcdir)/$$f $(distdir)/$$dirpart ; \
+	done; \
 	test -z "$(AWK)" && exit 0 ;\
-	for f in $(DISTFILES) ; do \
+	for f in $(DISTFILES) $$DEJAGNU_FILES ; do \
 	  distfile=$(distdir)/$$f ; \
 	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
 	    mv $$distfile tmp; \
@@ -35,6 +43,12 @@ dist-hook:
 	  fi; \
 	done ; \
 	rm -f tmp
+
+
+
+
+
+
 
 
 
