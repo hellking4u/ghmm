@@ -89,137 +89,6 @@ static int sdviterbi_free(local_store_t **v, int n, int cos, int len) {
 #undef CUR_PROC
 } /* viterbi_free */
 
-<<<<<<< sdviterbi.c
-=======
-/*----------------------------------------------------------------------------*/
-static void __VisitNext(sdmodel *mo, int j, int *counter, local_store_t *v)
-{
-  int i, nextState, ins;
-
-  v->colors[j] = VISITED; 
-  v->topo_order[(*counter)++] = j;
-
-  for(i = 0; i < mo->s[j].out_states; i++)	
-    {
-      if (v->colors[mo->s[j].out_id[i]] == NOTVISITED &&
-	  mo->silent[ mo->s[j].out_id[i] ]) { /* looping back taken care of */
-	nextState = mo->s[j].out_id[i];
-	/* Check if all in-coming silent states has been visited */
-	for( ins=0; ins < mo->s[nextState].in_states; ins++) {	
-	  if ( nextState != mo->s[nextState].in_id[ins] &&
-	       mo->silent[ mo->s[nextState].in_id[ins] ] ) {
-	    if ( v->colors[ mo->s[nextState].in_id[ins] ] == NOTVISITED ) {
-	      fprintf(stderr, "%d, %d to %d\n",j, ins, nextState);
-	      goto find_next_silent;
-	    }
-	  }
-	}
-	
-	v->colors[nextState] = VISITED; 
-	v->topo_order[(*counter)++] = nextState; /* All in-coming silent states
-						  * has been visited,
-						  * and so we have the ordering
-						  */
-
-      }
- find_next_silent:;
-    }
-}
-
-
-
-/*----------------------------------------------------------------------------*/
-static void __sdmodel_topo_ordering(sdmodel *mo, local_store_t *v) 
-{
-  int i,j,k;
-
-  assert(mo->model_type == kSilentStates); /* otherwise, why are you here? */
-
-  v->colors   =   (DFSFLAG*)malloc( sizeof(DFSFLAG)*mo->N );
-  v->topo_order = (int*)malloc( sizeof(int)*mo->N );
-  v->topo_order_length = 0;
-
-  for(i=0; i < mo->N; i++)
-    {
-      v->colors[i] = NOTVISITED;
-    }
-    
-  for(i=0; i < mo->N; i++) {
-    if ( mo->silent[i] && 
-	 v->colors[i] == NOTVISITED ) {
-      for(j = 0; j < mo->s[i].in_states; j++) {
-	if ( i != mo->s[i].in_id[j] &&
-	     mo->silent[ mo->s[i].in_id[j] ] ) {
-	  goto find_start_points;
-	}
-      }
-      fprintf(stderr, "Starting at %d\n", i);
-      v->colors[i] = VISITED;
-      v->topo_order[v->topo_order_length++] = i;
-      for(j = 0; j < mo->s[i].out_states; j++)	
-	{
-	  if ( mo->silent[ mo->s[i].out_id[j] ]) {  /* HACK!!! for a starting point */
-	    v->colors[ mo->s[i].out_id[j] ] = VISITED;
-	    v->topo_order[v->topo_order_length++] = mo->s[i].out_id[j];
-	  } 
-	}
-    }
-find_start_points:;
-  }
-
-  for(i=0; i < mo->N; i++) {
-    if ( mo->silent[i] && 
-	 v->colors[i] == NOTVISITED ) {
-      for(j = 0; j < mo->s[i].in_states; j++) {
-	if ( i != mo->s[i].in_id[j] &&
-	     mo->silent[ mo->s[i].in_id[j] ] ) {
-	  /*
-	   * If an in-coming transition is from a silent state, 
-	   * it must be visited before.
-	   */
-	  if ( v->colors[ mo->s[i].in_id[j] ] == NOTVISITED ) {
-	    /* fprintf(stderr, "%d to %d\n", mo->s[i].in_id[j], i); */
-	    goto find_start; 
-	  }
-	}
-      }
-      __VisitNext(mo, i, &v->topo_order_length, v);	
-    }
-find_start:;
-  }
-
-}
-
-
-/*----------------------------------------------------------------------------
-void sdmodel_topo_ordering(sdmodel *mo) 
-{
-#define CUR_PROC "sdmodel_topo_ordering"
-  int i;
-  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi 
-  local_store_t *v;
-
-  v = viterbi_alloc(mo, 1);
-  if (!v) { mes_proc(); goto STOP; }
-
-  __sdmodel_topo_ordering( mo, v);
-  
-  mo->topo_order_length = v->topo_order_length;
-  if (!m_calloc(mo->topo_order, mo->topo_order_length)) {mes_proc(); goto STOP;}
-
-  for(i=0; i < v->topo_order_length; i++) {
-    mo->topo_order[i] = v->topo_order[i];
-  }
-  fprintf(stderr,"Ordering silent states....\n\t");
-  for(i=0; i < mo->topo_order_length; i++) {
-    fprintf(stderr, "%d, ", mo->topo_order[i]);
-  }
-  /* viterbi_free(&v, mo->N, mo->cos, 1); Memory problem !!!! 
- STOP:
-#undef CUR_PROC
-} */
-
->>>>>>> 1.3
 
 static void Viterbi_precompute( sdmodel *mo, int *o, int len, local_store_t *v)
 {
@@ -333,6 +202,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   int *tmp_matchcount = NULL;
   int *countstates = NULL;
   int nr_of_countstates = 2*((mo->N - 5)/3);	// # of matchstates + deletestates
+  int lastemState;
 
   osc = 0;
 
@@ -396,11 +266,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
-<<<<<<< sdviterbi.c
     //int osc = mo->get_class(mo->N,t);
-=======
-    int osc = mo->get_class(*o, t);
->>>>>>> 1.3
 
     for (j = 0; j < mo->N; j++) /** initialization of phi, psi **/
     {
@@ -490,7 +356,6 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   } /* Next observation , increment time-step */
 
   /* Termination */
-  int lastemState;
   max_value = -DBL_MAX;
   state_seq[len_path-1] = -1;
   for (j = 0; j < mo->N; j++)
@@ -557,6 +422,11 @@ int *sdviterbi_silent(sdmodel *mo, int *o, int len, double *log_p)
 
 #undef CUR_PROC
 }
+
+
+
+
+
 
 
 
