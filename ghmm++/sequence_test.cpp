@@ -1,4 +1,12 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "XMLIO_ArrayObject.h"
+
+#ifdef HAVE_NAMESPACE
+using namespace std;
+#endif
 
 int main_ArrayObject()
 {

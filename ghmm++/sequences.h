@@ -8,8 +8,12 @@
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Object.h>
 #include <xmlio/XMLIO_ObjectReader.h>
-#include <XMLIO_ArrayObject.h>
+#include <xmlio/XMLIO_ArrayObject.h>
 #include <ghmm/sequence.h>
+
+#ifdef HAVE_NAMESPACES
+namespace std {
+#endif
 
 sequence_t* return_sequences(const char* file);
 
@@ -92,5 +96,10 @@ public:
 private:
   sequences* next_sequence_array;
 };
+
+#ifdef HAVE_NAMESPACES
+}
+#endif
+
 
 #endif /* __GHMMPP_SEQUENCES__ */

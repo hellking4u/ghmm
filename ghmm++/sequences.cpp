@@ -7,6 +7,10 @@
 
 #include <iostream>
 #include <cerrno>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sequences.h"
 #include <xmlio/XMLIO_SkipObject.h>
 
