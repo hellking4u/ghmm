@@ -19,6 +19,9 @@ __copyright__
 extern "C" {
 #endif /*__cplusplus*/
 
+/**
+   @name Help functions concerning memory and small calculations.
+
 #define MES_0_PTR 0
 #define MES_NEG_ARG 1
 #define MES_BIG_ARG 2
