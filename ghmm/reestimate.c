@@ -131,58 +131,92 @@ void reestimate_update_tie_groups(model *mo) {
   int bi_len;
 
   double *new_emissions;
-  double nr;
+  double nr = 0.0, non_silent_nr = 0.0;
 
+   /* printf("** Start of reestimate_update_tie_groups **\n");*/
+  
   /* do nothing if there are no tied emissions */
-  if (!mo->model_type & kTiedEmissions)
-    return;
-   
+  if (!(mo->model_type & kTiedEmissions)){
+     printf("No tied emissions in reestimate_update_tie_groups\n");
+     return;
+  }
+  
   if (mo->model_type & kHigherOrderEmissions) {
-    if (!m_malloc(new_emissions,pow(mo->M,(mo->maxorder)+1)))
-      mes_proc(); return;
+    /*  printf("reestimate_update_tie_groups: Allocating for higher order states\n"); */
+    if (!m_malloc(new_emissions,pow(mo->M,(mo->maxorder)+1))){
+      mes_proc(); 
+      goto STOP;
+    }  
   }
   else {
-    if (!m_malloc(new_emissions,mo->M))
-      mes_proc(); return;
+    /* printf("reestimate_update_tie_groups: No higher order states\n");*/
+    if (!m_malloc(new_emissions,mo->M)){
+      mes_proc();
+      goto STOP;
+    }  
   }
   
   for(i=0;i<mo->N;i++){
-    bi_len=pow(mo->M,mo->s[i].order+1);
+    
+    bi_len= pow(mo->M,mo->s[i].order+1);
+    
     /* find tie group leaders */  
     if (mo->tied_to[i] == i) {
       nr = 1.0;
-      //printf("tie group leader %d found.\n",i);
+      if (mo->silent[i] == 0){
+        non_silent_nr = 1.0;
+      }
+      else {
+        non_silent_nr = 0.0;
+      }            
+      
+      /* printf("tie group leader %d found.\n",i);*/
        
       /* initializing with tie group leader emissions */
-      for (k=0; k<bi_len; k++)
-	new_emissions[k] = mo->s[i].b[k];
+      for (k=0; k<bi_len; k++){
+	    new_emissions[k] = mo->s[i].b[k];
+      }
        
       /* finding tie group members */
-      for (j=i+1; j<mo->N; j++)
-	if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order) {
-	  nr+=1.0;
-	  /* printf("  tie group member %d -> leader %d.\n",j,i); */
-	  /* summing up emissions in the tie group */
-	  for (k=0; k<bi_len; k++)
-	    new_emissions[k] += mo->s[j].b[k];
-	}
-
-      /* printf("i = %d\n",i); */
-      /* updating emissions */
-      if (nr > 1)
-	for (j=i; j<mo->N; j++)
-	  if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order) {
-	    /* printf("j = %d\n",j); */
-	    for (k=0; k<bi_len; k++) {
-	      mo->s[j].b[k] = (new_emissions[k] / nr);
-	      /* printf("s(%d)[%d] -> %f / %f = %f\n", j, k, new_emissions[k],
-		 nr,mo->s[j].b[k]); */
+      for (j=i+1; j<mo->N; j++){
+ 	    if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order ) {
+  	      /* silent states have no contribution to the pooled emissions within a group */
+          if (mo->silent[j] == 0){
+            nr+=1.0;
+    	    non_silent_nr +=1.0;
+            /* printf("  tie group member %d -> leader %d.\n",j,i);*/ 
+	        /* summing up emissions in the tie group */
+	        for (k=0; k<bi_len; k++){
+	          new_emissions[k] += mo->s[j].b[k];
+            }  
+          }
+          /* updating silent flag */
+          else {
+            if (non_silent_nr > 0.0){
+              mo->silent[j] = 0;
+            }  
+            nr += 1.0;
+          }     
 	    }
-	  }
-	  
+      }
+      printf("i = %d\n",i); 
+      /* updating emissions */
+      if (nr > 1.0){
+	    for (j=i; j<mo->N; j++){
+	      /* states within one tie group are required to have the same order */  
+          if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order) {
+	        for (k=0; k<bi_len; k++) {
+	          mo->s[j].b[k] = (new_emissions[k] / non_silent_nr);
+	          /* printf("s(%d)[%d] -> %f / %f = %f\n", j, k, new_emissions[k], nr,mo->s[j].b[k]);   */
+	        }
+	      }
+        }  
+      }
     }
-  }
-  m_free(new_emissions);
+  }  
+  
+  STOP:
+    m_free(new_emissions);
 #undef CUR_PROC
 }
 /* reestimate_update_tie_groups */
@@ -303,7 +337,8 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
     model_apply_background(mo, background_weight);
   
   res = 0;
-  reestimate_update_tie_groups(mo);
+  if (mo->model_type & kTiedEmissions)
+    reestimate_update_tie_groups(mo);
  STOP:
   return(res);
 # undef CUR_PROC
