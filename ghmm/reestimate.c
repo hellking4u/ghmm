@@ -729,8 +729,8 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     /* new parameter lambda: set directly in model */
     if ( reestimate_setlambda(r, mo) == -1 ) { mes_proc(); goto STOP; }
     printf("---- reestimate: after normalization ----\n");
-    printf("Emission:\n");
-    model_B_print(stdout, mo, "\t", " ", "\n");
+/*     printf("Emission:\n"); */
+/*     model_B_print(stdout, mo, "\t", " ", "\n"); */
 
     /* only test: */
     /*    if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
