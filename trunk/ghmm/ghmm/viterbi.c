@@ -62,7 +62,7 @@ static int viterbi_free(local_store_t **v, int n, int len) {
   for (j = 0; j < n; j++)
     m_free((*v)->log_in_a[j]);
   m_free((*v)->log_in_a);
-  matrix_d_free( &((*v)->log_b), n );
+  matrix_d_free( &((*v)->log_b));
   m_free((*v)->phi);
   m_free((*v)->phi_new);
   matrix_i_free( &((*v)->psi), len );

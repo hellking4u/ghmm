@@ -35,7 +35,7 @@ int single_state_coin_toss() {
   fprintf(stdout,"observation symbol matrix:\n");
   my_model.B_print(stdout,""," ","\n");
 
-  my_output = my_model.generate_sequences(1,10,10);
+  my_output = my_model.generate_sequences(1,10,10,10);
   my_output->print(stdout);
 
   delete my_output;
@@ -78,7 +78,7 @@ int two_states_coin_toss() {
   fprintf(stdout,"observation symbol matrix:\n");
   my_model.B_print(stdout,""," ","\n");
 
-  my_output = my_model.generate_sequences(1,10,100);
+  my_output = my_model.generate_sequences(1,10,100,100);
   my_output->print(stdout);
 
   /* try viterbi algorithm in a clear situation */

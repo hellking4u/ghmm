@@ -16,7 +16,7 @@
 
 #include <ghmm++/GHMM_GMLAlphabet.h>
 #include <ghmm++/GHMM_GMLClass.h>
-#include <ghmm++/GHMM_GMLContinuousModel.h>
+#include <ghmm++/GHMM_ContinuousModel.h>
 #include <ghmm++/GHMM_SWDiscreteModel.h>
 
 #ifdef HAVE_NAMESPACES
@@ -39,7 +39,7 @@ class GHMM_GraphMLDoc : public XMLIO_Document {
 
   /** Returns continuous model, which has been read from file or NULL
       if no such model exists. */
-  GHMM_GMLContinuousModel* getContinuousModel() const;
+  GHMM_ContinuousModel* getContinuousModel() const;
   /** Returns discrete model, which has been read from file or NULL
       if no such model exists. */
   GHMM_SWDiscreteModel* getDiscreteModel() const;
@@ -75,7 +75,7 @@ class GHMM_GraphMLDoc : public XMLIO_Document {
   /** */
   // GHMM_GMLDiscreteModel*   discrete_model;
   /** */
-  GHMM_GMLContinuousModel* continuous_model;
+  GHMM_ContinuousModel* continuous_model;
   /** */
   GHMM_SWDiscreteModel*   sdiscrete_model;
   /** */

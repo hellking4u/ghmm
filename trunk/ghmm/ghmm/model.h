@@ -31,10 +31,17 @@ struct state {
   int *out_id;  
   /** ID of the previous state */    
   int *in_id;
-  /** Transition probability to a successor */
+
+  /** transition probs to successor states. */
   double *out_a; 
-  /** Transition probablity to a precursor */
+  /** transition probs from predecessor states. */ 
   double *in_a;
+
+  /** Transition probability to a successor 
+      double *out_a; */
+  /** Transition probablity to a precursor 
+      double *in_a;*/
+
   /** Number of successor states */     
   int out_states; 
   /** Number of precursor states */
@@ -60,7 +67,11 @@ struct model {
       distributions*/
   double prior;
 
-  /** Contains bit flags for varios model extensions such as
+ 
+  /* contains a arbitrary name for the model */
+  char* name;
+  
+   /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
   int model_type;
@@ -92,7 +103,10 @@ struct model {
 
       Note: emission_order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   int* emission_order; 
-
+  
+  int  topo_order_length; /*WR*/
+  int* topo_order;        /*WR*/
+  
   /* XXX label HMM */
 };
 typedef struct model model;
@@ -251,7 +265,7 @@ model*  model_generate_from_sequence(const int *seq, int seq_len,
     @param seq_number:  number of sequences
 */
 sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
-				     long seq_number);
+				     long seq_number,int Tmax);
 
 /**
    Calculates the sum log( P( O | lambda ) ).

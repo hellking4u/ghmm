@@ -397,20 +397,20 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 			   u_matrix)) {mes_proc(); goto STOP;}
   }
   if (a_3dmatrix)
-    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
+    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]));
   m_free(a_3dmatrix);
-  matrix_d_free(&c_matrix, smo->N);
-  matrix_d_free(&mue_matrix, smo->N);
-  matrix_d_free(&u_matrix, smo->N);
+  matrix_d_free(&c_matrix);
+  matrix_d_free(&mue_matrix);
+  matrix_d_free(&u_matrix);
   m_free(pi_vektor); m_free(fix_vektor);
   return(smo);
 STOP:
   if (a_3dmatrix) 
-    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
+    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]));
   m_free(a_3dmatrix);
-  matrix_d_free(&c_matrix, smo->N);
-  matrix_d_free(&mue_matrix, smo->N);
-  matrix_d_free(&u_matrix, smo->N);
+  matrix_d_free(&c_matrix);
+  matrix_d_free(&mue_matrix);
+  matrix_d_free(&u_matrix);
   m_free(pi_vektor); m_free(fix_vektor);
   smodel_free(&smo);
   return NULL;
@@ -427,8 +427,8 @@ int smodel_free(smodel **smo) {
   for (i = 0; i < (*smo)->N; i++) {
     m_free((*smo)->s[i].out_id);
     m_free((*smo)->s[i].in_id);
-    matrix_d_free(&((*smo)->s[i].out_a), (*smo)->cos);
-    matrix_d_free(&((*smo)->s[i].in_a), (*smo)->cos);
+    matrix_d_free(&((*smo)->s[i].out_a));
+    matrix_d_free(&((*smo)->s[i].in_a));
     m_free((*smo)->s[i].c);
     m_free((*smo)->s[i].mue);
     m_free((*smo)->s[i].u);
@@ -645,7 +645,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
       if (sum >= p)
 	break;
     }
-    if (i == smo->N) { /* Can happens by a rounding error in the input */
+    if (i == smo->N) { /* Can happen by a rounding error in the input */
       i--;
       while (i > 0 && smo->s[i].pi == 0.0) i--;
     }
@@ -675,7 +675,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	if (sum >= p)
 	  break;
       }
-      if (j == smo->s[i].out_states) {/* Can happens by a rounding error */
+      if (j == smo->s[i].out_states) {/* Can happen by a rounding error */
 	j--;
 	while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
       }
@@ -708,7 +708,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	}
 	else
 
-	  /* Final state reached, otu of while-loop */
+	  /* Final state reached, out of while-loop */
 	  break;
       }
       i = smo->s[i].out_id[j];
@@ -1033,7 +1033,7 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
  
   for (k = 0; k < 2; k++) {
     
-    seq0 = smodel_generate_sequences(smo1, 1998, maxT+1, 1, 0, 0);
+    seq0 = smodel_generate_sequences(smo1, 0, maxT+1, 1, 0, 0);
     
     if (seq0->seq_len[0] < maxT) { /* There is an absorbing state */
             

@@ -204,7 +204,7 @@ int sfoba_logp(smodel *smo, const double *O, int T, double *log_p) {
   res = 0;
 
 STOP:
-  matrix_d_free(&alpha, T);
+  matrix_d_free(&alpha);
   m_free(scale);
   return(res);
 # undef CUR_PROC

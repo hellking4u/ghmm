@@ -36,14 +36,14 @@ struct scluster_t{
   Vector of SHMMs pointers */
   smodel **smo;
   /** 
-    Vector of sequence_t pointers; to storage the sequences, that 
+    Vector of sequence_t pointers; to store the sequences, that 
     belong to the models */
   sequence_d_t **smo_seq;
   /** 
     Number of models to read in */
   int smo_number;
   /** 
-    Number of sequences fot each model */
+    Number of sequences for each model */
   long *seq_counter;
   /** 
     log(P) for the model */
@@ -72,7 +72,7 @@ int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile,
    Avoids empty models going out as outputs by assigning them a random 
    sequence. This may lead to a produce of a new empty model - therefore
    change out sequences until a non empty model is found. (Quit after 100 
-   iterations to avoid a infinite loop). 
+   iterations to avoid an infinite loop). 
    @return 0 for success; -1 for error
    @param sqd sequences to generate the model from
    @param cl cluster for the models
@@ -116,7 +116,7 @@ void scluster_print_likelihood(FILE *outfile, scluster_t *cl);
 /** 
     Determines form an already calculated probability matrix, which model 
     fits best to a certain sequence. 
-    @return number of best model if success, otherwize -1
+    @return index of best model if success, otherwize -1
     @param cl cluster 
     @param seq_id ID of the sequence in question
     @param all_log_p matrix containing the probability of each sequence

@@ -108,17 +108,17 @@ static int sreestimate_free(local_store_t **r, int N) {
   if( !*r ) return(0);
   m_free((*r)->pi_num);  
   for (i = 0; i < N; i++)
-    matrix_d_free( &((*r)->a_num[i]), (*r)->cos);
+    matrix_d_free( &((*r)->a_num[i]));
   m_free((*r)->a_num);
-  matrix_d_free( &((*r)->a_denom), N);
+  matrix_d_free( &((*r)->a_denom));
   /***/
   m_free((*r)->c_denom);
-  matrix_d_free( &((*r)->c_num), N );
-  matrix_d_free( &((*r)->mue_num), N );
-  matrix_d_free( &((*r)->u_num), N );
-  matrix_d_free( &((*r)->mue_u_denom), N );
-  matrix_d_free( &((*r)->sum_gt_otot), N );
-  matrix_d_free( &((*r)->sum_gt_logb), N );
+  matrix_d_free( &((*r)->c_num) );
+  matrix_d_free( &((*r)->mue_num) );
+  matrix_d_free( &((*r)->u_num) );
+  matrix_d_free( &((*r)->mue_u_denom) );
+  matrix_d_free( &((*r)->sum_gt_otot) );
+  matrix_d_free( &((*r)->sum_gt_logb) );
   m_free(*r);
   return(0);
 # undef CUR_PROC
@@ -178,12 +178,12 @@ static int sreestimate_free_matvec(double **alpha,double **beta,double *scale,
 				   double ***b, int T, int N) {
 # define CUR_PROC "sreestimate_free_matvec"
   int t;
-  matrix_d_free(&alpha, T);
-  matrix_d_free(&beta, T);
+  matrix_d_free(&alpha);
+  matrix_d_free(&beta);
   m_free(scale); 
   if (!b) return(0);
   for (t = 0; t < T; t++)
-    matrix_d_free(&b[t], N);
+    matrix_d_free(&b[t]);
   m_free(b);
   return(0);
 # undef CUR_PROC
@@ -599,13 +599,15 @@ int sreestimate_baum_welch(smosqd_t *cs) {
 
   max_iter_bw = m_min(MAX_ITER_BW, cs->max_iter);
   eps_iter_bw = m_max(EPS_ITER_BW, cs->eps);
-
+  
+  //printf("  *** sreestimate_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );
+  
   while (n <= max_iter_bw) {      
     valid = sreestimate_one_step(cs->smo, r, cs->sqd->seq_number, 
 				 cs->sqd->seq_len, cs->sqd->seq, &log_p,
 				 cs->sqd->seq_w);
     /* to follow convergence of bw: uncomment next line */
-    printf("\tBW Iter %d\t log(p) %.4f\n", n, log_p); 
+    //printf("\tBW Iter %d\t log(p) %.4f\n", n, log_p); 
     if (valid == -1) { 
       str = mprintf(NULL, 0, "sreestimate_one_step false (%d.step)\n",n); 
       mes_prot(str);

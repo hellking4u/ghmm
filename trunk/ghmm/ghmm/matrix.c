@@ -90,10 +90,48 @@ int matrix_i_read(scanner_t *s, int **matrix, int max_zeile, int max_spalte) {
 
 /*============================================================================*/
 
+double** matrix_d_alloc(int n, int m) {
+#define CUR_PROC "matrix_d_alloc"
+  int i, j;
+  double **A;
+  double *tmp;
+  //A = (double**)malloc(    n * sizeof(double*) +  n * m * sizeof(double)  );
+  
+  if (!m_calloc(A,  n * sizeof(double*) +  n * m * sizeof(double)) ){
+	mes_proc(); 
+	goto STOP;
+  }
+  
+  tmp = (double*)(A + n);
+  for (i = 0; i < n; i++) {
+    A[i] = tmp;
+    tmp += m;
+  }
+  return A;
+STOP:
+  matrix_d_free(&A);
+  return NULL;
+}
+
+
+int matrix_d_free(double ***matrix) {
+#define CUR_PROC "matrix_d_free"
+  free(*matrix);
+  return 0;
+#undef CUR_PROC
+}
+
+
+/*============================================================================
+
+
 double** matrix_d_alloc(int zeilen, int spalten) {
 #define CUR_PROC "matrix_d_alloc"
   double **matrix;
   int i;
+  
+  //printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);
+  
   if (!m_calloc(matrix, zeilen)) {mes_proc(); goto STOP;}
   for (i = 0; i < zeilen; i++)
     if (!m_calloc(matrix[i], spalten)) {mes_proc(); goto STOP;}
@@ -105,6 +143,8 @@ STOP:
 } /* matrix_d_alloc */
 
 /*============================================================================*/
+
+//TO DO: einzelnes alloc in allen Funktionen
 
 double** matrix_d_alloc_copy(int zeilen, int spalten, double **copymatrix) {
 #define CUR_PROC "matrix_d_alloc_copy"
@@ -118,7 +158,7 @@ double** matrix_d_alloc_copy(int zeilen, int spalten, double **copymatrix) {
   }
   return matrix;
 STOP:
-  matrix_d_free(&matrix, zeilen);
+  matrix_d_free(&matrix);
   return NULL;
 #undef CUR_PROC
 } /* matrix_d_alloc_copy */
@@ -153,7 +193,7 @@ int matrix_i_free(int ***matrix, long zeilen) {
 # undef CUR_PROC
 } /* matrix_i_free */
 
-/*============================================================================*/
+/*============================================================================
 
 int matrix_d_free(double ***matrix, long zeilen) {
 # define CUR_PROC "matrix_d_free"

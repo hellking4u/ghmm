@@ -10,6 +10,7 @@
 #include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_Sequences.h"
 
+#include <iostream>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -25,8 +26,9 @@ GHMM_Document::GHMM_Document() {
 
 
 GHMM_Document::~GHMM_Document() {
-  //  SAFE_DELETE(discrete_model);
-  //  SAFE_DELETE(continuous_model);
+  cerr << "Delete " << toString() << endl;
+  //SAFE_DELETE(discrete_model);
+  //SAFE_DELETE(continuous_model);
 }
 
 

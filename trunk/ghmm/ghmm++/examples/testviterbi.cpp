@@ -216,7 +216,7 @@ int main(int argc,char* argv)
   vbiobj->print_path(10, "\t");
 
   mat3_free(&matrans,cos,n);
-  matrix_d_free(&maems,n);
+  matrix_d_free(&maems);
   sdmodel_free(&sdm);
 
   delete vbiobj;

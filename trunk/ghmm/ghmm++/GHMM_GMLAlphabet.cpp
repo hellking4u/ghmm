@@ -61,7 +61,7 @@ void GHMM_GMLAlphabet::XMLIO_getCharacters(const string& characters) {
   switch (reading) {
 
   case READ_SINGLE_CHAR:
-    cout << "Alphabet seen: " << characters.c_str() << endl;
+    // cout << "Alphabet seen: " << characters.c_str() << endl;
     addSymbol(characters);
     char tmp[3];
     sprintf(tmp, "%d", size()-1);

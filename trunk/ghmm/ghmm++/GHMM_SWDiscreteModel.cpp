@@ -61,7 +61,7 @@ GHMM_SWDiscreteModel::GHMM_SWDiscreteModel( sdmodel* my_model)
 GHMM_SWDiscreteModel::~GHMM_SWDiscreteModel() 
 {
   /* frees model. */  
-  sdmodel_free(&c_model);
+  // sdmodel_free(&c_model);
   if (own_alphabet)
     SAFE_DELETE(alphabet);
   cleanCPP();

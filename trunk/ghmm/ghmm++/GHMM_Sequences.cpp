@@ -333,6 +333,7 @@ int GHMM_Sequences::max_len() const {
 
 
 void GHMM_Sequences::clean() {
+
   if (c_i_sequences)
     sequence_free(&c_i_sequences);
   if (c_d_sequences)

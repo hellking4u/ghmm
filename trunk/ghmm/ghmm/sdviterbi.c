@@ -80,9 +80,9 @@ static int viterbi_free(local_store_t **v, int n, int cos, int len) {
   mes_check_ptr(v, return(-1));
   if( !*v ) return(0);
   for (j = 0; j < n; j++)
-    matrix_d_free(&((*v)->log_in_a[j]), cos);
+    matrix_d_free(&((*v)->log_in_a[j]));
   m_free((*v)->log_in_a);
-  matrix_d_free( &((*v)->log_b), n );
+  matrix_d_free( &((*v)->log_b));
   m_free((*v)->phi);
   m_free((*v)->phi_new);
   matrix_i_free( &((*v)->psi), len );
@@ -193,12 +193,12 @@ find_start:;
 }
 
 
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------
 void sdmodel_topo_ordering(sdmodel *mo) 
 {
 #define CUR_PROC "sdmodel_topo_ordering"
   int i;
-  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
+  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi 
   local_store_t *v;
 
   v = viterbi_alloc(mo, 1);
@@ -216,10 +216,10 @@ void sdmodel_topo_ordering(sdmodel *mo)
   for(i=0; i < mo->topo_order_length; i++) {
     fprintf(stderr, "%d, ", mo->topo_order[i]);
   }
-  /* viterbi_free(&v, mo->N, mo->cos, 1); Memory problem !!!! */
+  /* viterbi_free(&v, mo->N, mo->cos, 1); Memory problem !!!! 
  STOP:
 #undef CUR_PROC
-}
+} */
 
 
 static void Viterbi_precompute( sdmodel *mo, int *o, int len, local_store_t *v)
@@ -306,7 +306,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   /* Recursion step */
   for (t = 1; t < len; t++) {
 
-    int osc = mo->get_class(&dummy,t,&osum);
+    int osc = mo->get_class(*o, t);
 
     for (k = 0; k < v->nonSilentCount; k++) {
 

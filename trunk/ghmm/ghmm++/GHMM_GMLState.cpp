@@ -32,6 +32,7 @@ GHMM_GMLState::GHMM_GMLState(GHMM_SWDiscreteModel* my_model, int my_index, XMLIO
   emission          = NULL;
   tag               = "node"; // state
   hasData["ngeom"]  = 0;
+
 }
 
 /************
@@ -56,6 +57,7 @@ GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDiscreteModel>(my_model, my_inde
   emission          = NULL;
   tag               = "node"; // state
   hasData["ngeom"]  = 0;
+  // m_countme         = 0;
 }
 
 const char* GHMM_GMLState::toString() const {
@@ -125,13 +127,12 @@ void GHMM_GMLState::fillState(sdstate* s) {
     s->b[i] = emission->weights[i];
 
   s->fix = 0;
+  s->label = (char *)malloc(sizeof(label.c_str()));
+  strcpy(s->label, label.c_str());
 }
 
 
 GHMM_GMLTransition* GHMM_GMLState::createTransition(int edge_index, sdmodel *mo) {
-//  if (c_state)
-//    return new GHMM_GMLTransition(this,parent_model->getState(c_state->out_id[edge_index]),c_state->out_a[edge_index]);
-
   if (c_sdstate)
     {	 
       vector<double> vtprobs;
@@ -140,8 +141,6 @@ GHMM_GMLTransition* GHMM_GMLState::createTransition(int edge_index, sdmodel *mo)
       }
       return new GHMM_GMLTransition(this,parent_model->getState(c_sdstate->out_id[edge_index]), vtprobs);
     }
-  //  if (c_sstate)
-  //    return new GHMM_GMLTransition(this,parent_model->getState(c_sstate->out_id[edge_index]),c_sstate->out_a[0][edge_index]);
   
   return NULL;
 }
@@ -162,6 +161,7 @@ void GHMM_GMLState::setOutputProbability(int index, double prob) {
       c_sdstate->b[index] = prob;
     }
 
+  /******************
   if (!c_state) {
     fprintf(stderr,"GHMM_State::setOutputProbability(int,double): object does not contain state.\n");
     exit(1);
@@ -175,6 +175,7 @@ void GHMM_GMLState::setOutputProbability(int index, double prob) {
 
       c_state->b[index] = prob;
     }
+  ***************/
 }
 
 void GHMM_GMLState::setOutputProbability(const string& id, double prob) {
@@ -197,6 +198,7 @@ XMLIO_Element* GHMM_GMLState::XMLIO_startTag(const string& tag, XMLIO_Attributes
 	hasData["label"] = 1;
 	return this;
       }
+
       if (attrs["key"] == "emissions") {
 		hasData["emissions"] = 1;
 		attributes["key"] = "emissions";
@@ -246,9 +248,8 @@ void GHMM_GMLState::XMLIO_getCharacters(const string& characters) {
 
   case GHMM_STATE_LABEL:
     label = characters.c_str();
-    cout << "State label " << label << endl;
     break;
-    
+
   case GHMM_STATE_NONE:
     break;
   }

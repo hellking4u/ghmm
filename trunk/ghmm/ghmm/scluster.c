@@ -53,7 +53,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "smap_classify.h"
 
 #ifdef HAVE_LIBPTHREAD
-/* switsch for parallel mode: (1) = sequential, (0) = parallel */ 
+/* switch for parallel mode: (1) = sequential, (0) = parallel */ 
 # define POUT 0
 /* number of parallel threads */
 # define THREADS 4
@@ -222,7 +222,7 @@ int scluster_hmm(char* argv[]) {
     } 
     
     /*----------- classification,  sequence labeling and error function -----------*/
-    if (iter == 1 && labels ==1) {
+    if (iter == 1 && labels == 1) {
       for (i = 0; i < cl.smo_number; i++) {
 	cl.seq_counter[i] = sqd->seq_number;
       }
@@ -230,27 +230,26 @@ int scluster_hmm(char* argv[]) {
     else {
     for (j = 0; j < sqd->seq_number; j++) {
       if (iter > 1 || labels == 0) 
-	/* classification: set seq_label to ID of best_model  */
-	sqd->seq_label[j] = scluster_best_model(&cl, j, all_log_p, &log_p);
+	    /* classification: set seq_label to ID of best_model  */
+	    sqd->seq_label[j] = scluster_best_model(&cl, j, all_log_p, &log_p);
       if (sqd->seq_label[j] == -1 || sqd->seq_label[j] >= cl.smo_number) { 
-	/* no model fits! What to do?  hack: use arbitrary model ! */
-	str =  mprintf(NULL, 0, "Warning: seq. %ld, ID %.0f: scluster_best_model returns %d\n",
+	    /* no model fits! What to do?  hack: use arbitrary model ! */
+	    str =  mprintf(NULL, 0, "Warning: seq. %ld, ID %.0f: scluster_best_model returns %d\n",
 		       j, sqd->seq_id[j], sqd->seq_label[j]); 
-	mes_prot(str); m_free(str);
-	sqd->seq_label[j] = j % cl.smo_number;
-	/* goto STOP; */
+	     mes_prot(str); m_free(str);
+	     sqd->seq_label[j] = j % cl.smo_number;
+	     /* goto STOP; */
       }
       cl.seq_counter[sqd->seq_label[j]]++; 
       /* add to error function value with seq. weights  */
       /* 1. Z_MD */
-      cl.smo_Z_MD[sqd->seq_label[j]] += sqd->seq_w[j] * 
-	all_log_p[sqd->seq_label[j]][j];  
+      cl.smo_Z_MD[sqd->seq_label[j]] += sqd->seq_w[j] * all_log_p[sqd->seq_label[j]][j];  
       /* 2. Z_MAW */
       if (CLASSIFY == 1) { 
-	idummy = scluster_log_aposteriori(&cl, sqd, j, &log_apo);
-	if (idummy == -1) {
-	  str = mprintf(NULL, 0 , "Warn: no model fits to Seq %10.0f, use  PENALTY_LOGP\n",
-			sqd->seq_id[j]);	     
+	     idummy = scluster_log_aposteriori(&cl, sqd, j, &log_apo);
+	  if (idummy == -1) {
+	     str = mprintf(NULL, 0 , "Warn: no model fits to Seq %10.0f, use 
+				 PENALTY_LOGP\n", sqd->seq_id[j]);	     
 	  mes_prot(str); m_free(str);
 	  cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * PENALTY_LOGP;
 	  continue;
@@ -307,12 +306,13 @@ int scluster_hmm(char* argv[]) {
       scluster_print_likelihood(outfile, &cl);
       
       for (i = 0; i < cl.smo_number; i++) {
-	cs[i].smo = cl.smo[i]; 
-	if (!(iter == 1 && labels == 1))
-	  cs[i].sqd = cl.smo_seq[i];
-	cs[i].logp = &cl.smo_Z_MD[i]; 
-	cs[i].eps = eps_bw;
-	cs[i].max_iter = max_iter_bw;
+		cs[i].smo = cl.smo[i]; 
+		if (!(iter == 1 && labels == 1)) 
+			cs[i].sqd = cl.smo_seq[i];
+
+		cs[i].logp = &cl.smo_Z_MD[i]; 
+		cs[i].eps = eps_bw;
+		cs[i].max_iter = max_iter_bw;
       }
 
 
@@ -487,8 +487,7 @@ int scluster_update(scluster_t *cl, sequence_d_t *sqd) {
   /* Allocate memoery block by block */
   for (i = 0; i < cl->smo_number; i++) {
     if (cl->smo_seq[i]) {
-      /* Important: No sequence_free here, because then the originals 
-	 will be lost. */
+      /* Important: No sequence_free here, because then the originals  will be lost. */
       sequence_d_clean(cl->smo_seq[i]);
       m_free(cl->smo_seq[i]);
     }
@@ -607,7 +606,7 @@ int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl){
       }
     }
   } /* while */
-  if (!error) return (0);
+  if (!error) return (0);int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]);
 STOP: 
   if (result) m_free(result);
   return(-1);
@@ -629,7 +628,7 @@ long scluster_update_label(long *oldlabel, long *seq_label, long seq_number,
 
 /*============================================================================*/
 
-/* Determines form an already calculated probability matrix, which model 
+/* Determines from an already calculated probability matrix, which model 
    fits best to the sequence with the ID seq_id. */
 int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p, double *log_p) {
 #define CUR_PROC "scluster_best_model"
@@ -674,9 +673,11 @@ int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p, double 
 
 void scluster_prob(smosqd_t *cs) {
   int i;
+  
+  //printf("seq_num = %d\n", cs->sqd->seq_number);
+  
   for (i = 0; i < cs->sqd->seq_number; i++)
-    if (sfoba_logp(cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i], 
-		   &(cs->logp[i])) == -1)
+    if (sfoba_logp(cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i], &(cs->logp[i])) == -1)
       cs->logp[i] = (double) PENALTY_LOGP;  /*  Penalty costs */
 } /* scluster_prob */
 

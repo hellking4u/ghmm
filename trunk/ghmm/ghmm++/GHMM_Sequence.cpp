@@ -51,6 +51,7 @@ GHMM_Sequence::GHMM_Sequence(GHMM_Alphabet* my_alphabet, int len, int my_weight)
 
 
 GHMM_Sequence::~GHMM_Sequence() {
+
   if (c_i_sequences)
     sequence_free(&c_i_sequences);
   if (c_d_sequences)

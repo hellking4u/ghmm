@@ -35,14 +35,14 @@ model_t *graphmldoc_cwrapper(char *filename)
 {
   /*   GHMM_GraphMLDoc    doc; */
   GHMM_GraphMLDoc    doc;
-  // GHMM_GMLDiscreteModel *dmo;
   GHMM_SWDiscreteModel *dmo;
   GHMM_ContinuousModel *cmo;
 
   model_t *model_pt;
   void    *tmpvoid;
 
-  doc.open(filename, "r");
+  if ( doc.open(filename, "r") < 0 ) return NULL;
+
   doc.readDocument();
   doc.close();
 

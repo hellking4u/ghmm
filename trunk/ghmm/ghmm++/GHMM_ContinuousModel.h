@@ -48,21 +48,25 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   */
   GHMM_ContinuousModel(int N, int M, int cos, density_t density, double prior=-1);
   /** Destructor. */
-  virtual ~GHMM_ContinuousModel();
+  ~GHMM_ContinuousModel();
 
   /** Returns name of class. */
-  virtual const char* toString() const;
+  const char* toString() const;
 
   /**
      Tests if all standardization requirements of model are fulfilled. 
      (That is, if the sum of the probabilities is 1).
      @return 0 for succes; -1 for error. 
   */
-  virtual int check() const;
+  int check() const;
   /* Returns state with given index. */
   sstate* getCState(int index) const;
   /** Returns model type. */
-  virtual GHMM_ModelType getModelType() const;
+  GHMM_ModelType getModelType() const;
+
+  /** Returns a pointer to the C model */
+  void *get_cmodel() const { return (void*)c_model; }
+
   /** 
       Produces sequences to a given model. All memory that is needed for the 
       sequences is allocated inside the function. It is possible to define
@@ -84,7 +88,7 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
      Writes the model in matrix format.
      @param file: output file
   */
-  virtual void print(FILE *file) const;
+  void print(FILE *file) const;
   /**
      Baum-Welch Algorithm for SHMMs.
      Training of model parameter with multiple double sequences (incl. scaling).
@@ -98,11 +102,11 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   */
   int reestimate_baum_welch(GHMM_Sequences* seq, double* logp, double eps, int max_iter);
   /** Clean model. */
-  virtual void clean();
+  void clean();
   /** Copies c model into this object. */
   void copyFromModel(smodel* smo);
   /** */
-  virtual int getNumberOfTransitionMatrices() const;
+  int getNumberOfTransitionMatrices() const;
   /** */
   void read(const string& filename);
   /**
@@ -123,7 +127,9 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
  private:
 
   /** */
-  virtual void XMLIO_finishedReading();
+  XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+  /** */
+  void XMLIO_finishedReading();
 
   /** Build c++ data from c_model. */
   void buildCppData();

@@ -6,7 +6,7 @@
 
 #include "GHMM_Alphabet.h"
 #include "GHMM_Sequence.h"
-
+#include <iostream>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -21,6 +21,7 @@ GHMM_Alphabet::GHMM_Alphabet() {
 
 
 GHMM_Alphabet::~GHMM_Alphabet() {
+  cerr << " Delete " << toString() << endl;
 }
 
 

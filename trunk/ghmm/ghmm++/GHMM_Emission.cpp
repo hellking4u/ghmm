@@ -14,51 +14,40 @@
 #include "ghmm++/GHMM_DiscreteModel.h"
 #include "ghmm++/GHMM_Alphabet.h"
 
+#include <iostream>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
 
 
-GHMM_Emission::~GHMM_Emission() {}
-
-
-XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
-  bool found = false;
-
-  switch (getModelType()) {
-
-  case GHMM_CONTINOUS:
-    if (tag == "gauss") {
-      mue.push_back(atof(attrs["mue"].c_str()));
-      variance.push_back(atof(attrs["variance"].c_str()));
-      density  = normal;
-      found    = true;
-    }
-    if (tag == "gauss-positive") {
-      mue.push_back(atof(attrs["mue"].c_str()));
-      variance.push_back(atof(attrs["variance"].c_str()));
-      density  = normal_pos;
-      found    = true;
-    }
-    if (tag == "gauss-approximated") {
-      mue.push_back(atof(attrs["mue"].c_str()));
-      variance.push_back(atof(attrs["variance"].c_str()));
-      density  = normal_approx;
-      found    = true;
-    }
-    break;
-
-  case GHMM_DISCRETE:
-    break;
+XMLIO_Element* GHMM_CEmission::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
+  bool found = false; 
+  if (tag == "gauss") {
+    mue.push_back(atof(attrs["mue"].c_str()));
+    variance.push_back(atof(attrs["variance"].c_str()));
+    density  = normal;
+    found    = true;
   }
-
+  if (tag == "gauss-positive") {
+    mue.push_back(atof(attrs["mue"].c_str()));
+    variance.push_back(atof(attrs["variance"].c_str()));
+    density  = normal_pos;
+    found    = true;
+  }
+  if (tag == "gauss-approximated") {
+    mue.push_back(atof(attrs["mue"].c_str()));
+    variance.push_back(atof(attrs["variance"].c_str()));
+    density  = normal_approx;
+    found    = true;
+  }
+  
   if (! found) {
     fprintf(stderr,"<emission> element of state '%s' has unrecognized tag '%s'.\n",
 	    state->id.c_str(),tag.c_str());
     exit(1);
   }
-
+  
   if (attrs["mue"] == "") {
     fprintf(stderr,"<%s> element of state '%s' lacks mue attribute.\n",
 	    tag.c_str(),state->id.c_str());
@@ -75,7 +64,7 @@ XMLIO_Element* GHMM_Emission::XMLIO_startTag(const string& tag, XMLIO_Attributes
 }
 
 
-void GHMM_Emission::XMLIO_getCharacters(const string& characters) {
+void GHMM_CEmission::XMLIO_getCharacters(const string& characters) {
   unsigned int pos;
   for (pos = 0; pos < characters.size(); ++pos) {
     while (pos < characters.size() && isspace(characters[pos]))
@@ -89,23 +78,18 @@ void GHMM_Emission::XMLIO_getCharacters(const string& characters) {
   }
 }
 
-
-void GHMM_Emission::XMLIO_finishedReading() {
+void GHMM_CEmission::XMLIO_finishedReading() {
   /* continuous model */
-  if (state->c_sstate)
-    if (weights.size() != mue.size()) {
-      fprintf(stderr,"Different number of weights and density functions in state '%s'.\n",state->id.c_str());
-      exit(1);
-    }
+  if (weights.size() != mue.size()) {
+    fprintf(stderr,"Different number of weights and density functions in state '%s'.\n",state->id.c_str());
+    exit(1);
+  }
 }
 
-
-const int GHMM_Emission::XMLIO_writeContent(XMLIO_Document& writer) {
+const int GHMM_CEmission::XMLIO_writeContent(XMLIO_Document& writer) {
   int result = 0;
-  int i;
-
   writer.changeIndent(2);
-
+  
   /* continuous model */
   if (state->c_sstate) {
     result = writer.writef("1 <");
@@ -124,19 +108,24 @@ const int GHMM_Emission::XMLIO_writeContent(XMLIO_Document& writer) {
     }
     result += writer.writef(" mue=\"%f\" variance=\"%f\">",mue[0],variance[0]);
   }
+  return result;
+}
 
-  /* discrete model */
-  if (state->c_state) {
-    GHMM_Alphabet* alphabet = state->getModel()->getAlphabet();
-    GHMM_DiscreteModel* model = (GHMM_DiscreteModel*) state->getModel();
+const int GHMM_DEmission::XMLIO_writeContent(XMLIO_Document& writer) {
+  int result = 0;
+  int i;
+  
+  writer.changeIndent(2);
 
+  GHMM_Alphabet* alphabet = state->getModel()->getAlphabet();
+  GHMM_DiscreteModel* model = (GHMM_DiscreteModel*) state->getModel();
+
+  result += writer.writeEndl();
+  for (i = 0; i < model->c_model->M; ++i) {
+    result += writer.writef("%s%.2f",writer.indent,state->c_state->b[i]);
+    if (alphabet)
+      result += writer.writef(" <!-- %s -->",alphabet->getSymbol(i).c_str());
     result += writer.writeEndl();
-    for (i = 0; i < model->c_model->M; ++i) {
-      result += writer.writef("%s%.2f",writer.indent,state->c_state->b[i]);
-      if (alphabet)
-	result += writer.writef(" <!-- %s -->",alphabet->getSymbol(i).c_str());
-      result += writer.writeEndl();
-    }
   }
 
   return result;

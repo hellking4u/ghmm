@@ -1,17 +1,19 @@
 /*******************************************************************************
-  author       : Bernd Wichern
-  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/model.c
+  author       : Wasinee R. and Andrea and Utz
   created      : TIME: 10:47:27     DATE: Fri 19. December 1997
   $Id$
 
 __copyright__
 
 *******************************************************************************/
+
 #undef NDEBUG 
 #include <assert.h>
 #include <float.h>
 #include <math.h>
+#include <stdlib.h>
 #include "sdmodel.h"
+#include "model.h"
 #include "matrix.h"
 #include "sequence.h"
 #include "const.h"
@@ -23,6 +25,20 @@ __copyright__
 #include "ghmm.h"
 
 #define  __EPS 10e-6
+
+typedef enum DFSFLAG
+  { GRAY, NOTVISITED, VISITED } DFSFLAG;
+
+
+typedef struct local_store_t {
+  DFSFLAG *colors; 
+  int     *topo_order;
+  int     topo_order_length;
+} local_store_t;
+
+static local_store_t *sdtopo_alloc(sdmodel *mo, int len);
+static int sdtopo_free(local_store_t **v, int n, int cos, int len);
+
 
 /*----------------------------------------------------------------------------*/
 static int sdmodel_state_alloc(sdstate *state, int M, int in_states,
@@ -47,7 +63,33 @@ STOP:
   return(res);
 # undef CUR_PROC
 } /* model_state_alloc */
+/*----------------------------------------------------------------------------*/
+double sdmodel_likelihood(sdmodel *mo, sequence_t *sq) {
+# define CUR_PROC "sdmodel_likelihood"
+  double log_p_i, log_p;
+  int found, i;
 
+  found = 0;
+  log_p = 0.0;
+  for (i = 0; i < sq->seq_number; i++) {
+    sdfoba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i);
+
+    if (log_p_i != +1) {
+      log_p += log_p_i;
+      found = 1;
+    }
+    //    else {
+    //  char *str =
+    //   mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);
+    //  mes_prot(str);
+    //}
+  }
+  if (!found)
+    log_p = +1.0;
+  return(log_p);
+# undef CUR_PROC
+} /* model_likelihood */
+                                                         
 /*----------------------------------------------------------------------------*/
 
 static int sdmodel_copy_vectors(sdmodel *mo, int index, double ***a_matrix, 
@@ -110,12 +152,9 @@ int sdmodel_free(sdmodel **mo) {
       if (my_state->in_a)
       m_free(my_state->in_a);*/
     if (my_state->out_a)
-      matrix_d_free(&((*mo)->s[i].out_a), (*mo)->cos);
+      matrix_d_free(&((*mo)->s[i].out_a));
     if (my_state->in_a)
-      matrix_d_free(&((*mo)->s[i].in_a), (*mo)->cos);
-    
-    printf("Free every thing set it to NULL\n");
-
+      matrix_d_free(&((*mo)->s[i].in_a));    
     my_state->pi         = 0;
     my_state->b          = NULL;
     my_state->out_id     = NULL;  
@@ -128,9 +167,10 @@ int sdmodel_free(sdmodel **mo) {
   }
   m_free((*mo)->s);
   m_free(*mo);
+  fprintf(stderr, "Free sdmodel\n");
   return(0);
 #undef CUR_PROC
-} /* model_free */   
+} /* model_free */
 
 
 /*============================================================================*/
@@ -170,6 +210,9 @@ sdmodel *sdmodel_copy(const sdmodel *mo) {
     m2->s[i].pi = mo->s[i].pi;
     m2->s[i].out_states = nachf;
     m2->s[i].in_states = vorg;
+    m2->s[i].label = (char*)malloc(sizeof( mo->s[i].label));
+    strcpy( m2->s[i].label, mo->s[i].label);
+    m2->s[i].countme = mo->s[i].countme;
   }
   m2->N = mo->N;
   m2->M = mo->M;
@@ -178,6 +221,16 @@ sdmodel *sdmodel_copy(const sdmodel *mo) {
   m2->model_type = mo->model_type;
   if ( mo->model_type == kSilentStates ) {
     assert( mo->silent != NULL );
+    if (!m_calloc(m2->silent, mo->N)) { mes_proc(); goto STOP; }
+    for(i=0; i < mo->N; i++) {
+      m2->silent[i]=mo->silent[i];
+    }
+    if (mo->topo_order_length > 0) {
+      if (!m_calloc(m2->topo_order, mo->topo_order_length)) { mes_proc(); goto STOP; }
+      for(i=0; i < mo->topo_order_length; i++) {
+	m2->topo_order[i]=mo->topo_order[i];
+      }      
+    } 
   }
   if ( mo->get_class ) {
     m2->get_class = mo->get_class;
@@ -191,13 +244,229 @@ STOP:
 
 
 
+/*----------------------------------------------------------------------------*/
+static local_store_t *sdtopo_alloc(sdmodel *mo, int len) {
+#define CUR_PROC "sdtopo_alloc"
+  local_store_t* v = NULL;
+  int j;
+  if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
+
+  v->topo_order_length = 0;
+  if (!m_calloc(v->topo_order, mo->N)) {mes_proc(); goto STOP;}
+
+  return(v);
+STOP:
+  sdtopo_free(&v, mo->N, mo->cos, len);
+  return(NULL);
+#undef CUR_PROC
+} /* viterbi_alloc */
+
+
+/*----------------------------------------------------------------------------*/
+static int sdtopo_free(local_store_t **v, int n, int cos,int len) {
+#define CUR_PROC "sdviterbi_free"
+  int j;
+  mes_check_ptr(v, return(-1));
+  if( !*v ) return(0);
+  m_free((*v)->colors);
+  m_free((*v)->topo_order);
+  m_free(*v);
+  return(0);
+#undef CUR_PROC
+} /* viterbi_free */
+
+
+/*----------------------------------------------------------------------------*/
+static void __VisitNext(sdmodel *mo, int j, int *counter, local_store_t *v)
+{
+  int i, nextState, ins;
+
+  v->colors[j] = VISITED; 
+  v->topo_order[(*counter)++] = j;
+
+  for(i = 0; i < mo->s[j].out_states; i++)	
+    {
+      if (v->colors[mo->s[j].out_id[i]] == NOTVISITED && 
+	        j != mo->s[j].out_id[i]) { 
+	if (mo->silent[ mo->s[j].out_id[i] ]) { /* looping back taken care of */
+	  nextState = mo->s[j].out_id[i];
+	  /* Check if all in-coming silent states has been visited */
+	  for( ins=0; ins < mo->s[nextState].in_states; ins++) {	
+	    if ( nextState != mo->s[nextState].in_id[ins] &&
+		 mo->silent[ mo->s[nextState].in_id[ins] ] ) {
+	      if ( v->colors[ mo->s[nextState].in_id[ins] ] == NOTVISITED ) {
+		/* fprintf(stderr, "%d, %d to %d\n",j, ins, nextState); */
+		goto find_next_silent;
+	      }
+	    }
+	  }
+	  
+	  v->colors[nextState] = VISITED; 
+	  v->topo_order[(*counter)++] = nextState; /* All in-coming silent states
+						    * has been visited,
+						  * and so we have the ordering
+						  */
+	}
+      }   
+find_next_silent:;
+    }
+}
+
+static int __nextSilentState(sdmodel *mo, int st, int *counter, local_store_t *v)
+{
+  int j;
+  int nextst=-1;
+
+  for(j=0; j < mo->s[ st ].out_states; j++) {
+    if ( v->colors[mo->s[ st ].out_id[j]] == NOTVISITED &&
+	 mo->silent[mo->s[ st ].out_id[j]] ) {
+      v->topo_order[v->topo_order_length++] = mo->s[ st ].out_id[j];
+      nextst = mo->s[ st ].out_id[j];
+      break; 
+    }
+  }
+
+  return nextst;
+}
+
+/*----------------------------------------------------------------------------*/
+/* WS 05.30.2003 :
+ * Description: Produce a topological ordering of all silent states 
+ * in the strictly Left-Right HMMEr Plan 7.
+ * Stupid algorithm: O(N*N) and only work on DAG graph with 
+ * Profile HMM topology
+ *
+ *--------------------------------------------------------------------------*/
+static void __sdmodel_topo_ordering(sdmodel *mo, local_store_t *v) 
+{
+  int i,j,k;
+  int terminal_node=-1;
+  int fstState, nextSt;
+
+  //assert(mo->model_type == kSilentStates); /* otherwise, why are you here? */
+
+  v->colors   =   (DFSFLAG*)malloc( sizeof(DFSFLAG)*mo->N );
+  v->topo_order = (int*)malloc( sizeof(int)*mo->N );
+  v->topo_order_length = 0;
+
+  for(i=0; i < mo->N; i++) 
+    {
+      v->topo_order[i] = -1;
+      v->colors[i]     = NOTVISITED;
+    }
+
+  for(i=0; i < mo->N; i++) {  
+    if ( mo->s[i].pi >  0.0 ) { 
+      v->colors[ i ] = VISITED;
+      fstState = i;
+      fprintf(stderr, "First state is %d\n", fstState);
+      if ( mo->silent[i] ) {
+	v->topo_order[v->topo_order_length++] = i;
+      }
+      break; /** pick only one starting state **/
+    }
+  }
+
+  /* WS, HACK!! to prevent a cycle of silent states in the model !!!, 
+     not pretty */
+
+  /** removing a cycle, so that we can sort 
+      -- mark all terminal silent states --- **/ 
+  int done = 0;
+  nextSt = fstState;
+  while ( !done ) {
+    if ( mo->s[nextSt].out_states == 1 &&
+	 mo->s[nextSt].out_id[0] == nextSt) {
+      done = 1;
+    } else 
+      if ( mo->silent[ nextSt ] &&
+	   mo->s[nextSt].in_states == 2 ) {
+	for(j=0; j < mo->s[ nextSt ].in_states; j++) {
+	  if ( v->colors[mo->s[nextSt].in_id[j]] == NOTVISITED &&
+	       mo->silent[mo->s[nextSt].in_id[j]] ) {
+	    v->colors[ mo->s[nextSt].in_id[j] ] = GRAY;
+	    fprintf(stderr, " GRAY .... %d \n", mo->s[nextSt].in_id[j]);
+	    done = 1;
+	  }	  
+	} 
+      } else {
+	nextSt = __nextSilentState( mo, nextSt, 0,v);
+	v->colors[ nextSt ] = VISITED; 
+	fprintf(stderr, " Next state .... %d \n", nextSt);
+      }
+  }
+
+  done = 0;
+  nextSt = v->topo_order[v->topo_order_length-1];
+  fprintf(stderr, " Next search: state at %d .... \n", nextSt);
+  while ( !done ) {
+    for(j=0; j < mo->s[ nextSt ].out_states; j++) {
+      if ( v->colors[mo->s[nextSt].out_id[j]] == NOTVISITED &&
+	   mo->silent[mo->s[nextSt].out_id[j]] ) {
+	v->topo_order[v->topo_order_length++] = mo->s[nextSt].out_id[j];
+	nextSt = mo->s[nextSt].out_id[j];
+	v->colors[nextSt] = VISITED;
+	fprintf(stderr, " Next search: state at %d .... \n", nextSt);
+	break;
+      }
+      if ( v->colors[mo->s[nextSt].out_id[j]] == GRAY ) {
+	v->topo_order[v->topo_order_length++] = mo->s[nextSt].out_id[j];
+	nextSt = mo->s[nextSt].out_id[j];
+	v->colors[nextSt] = VISITED;
+	fprintf(stderr, " Next search: state at %d .... \n", nextSt);
+	done = 1;
+	break;
+      }
+    }
+  }
+
+  /* 
+   * To finish the ordering of Profile HMM, Add E and T to mark the cycle 
+   */
+  for(i=0; i < mo->N; i++) {
+    if ( mo->silent[i] && v->colors[i] == NOTVISITED ) {
+      v->topo_order[v->topo_order_length++] = i;
+    }
+  }      
+}
+
+/*----------------------------------------------------------------------------*/
+void sdmodel_topo_ordering(sdmodel *mo) 
+{
+#define CUR_PROC "sdmodel_topo_ordering"
+  int i;
+  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
+  local_store_t *v;
+
+  v = sdtopo_alloc(mo, 1);
+  if (!v) { mes_proc(); goto STOP; }
+
+  __sdmodel_topo_ordering( mo, v);
+  
+  mo->topo_order_length = v->topo_order_length;
+  if (!m_calloc(mo->topo_order, mo->topo_order_length)) {mes_proc(); goto STOP;}
+
+  for(i=0; i < v->topo_order_length; i++) {
+    mo->topo_order[i] = v->topo_order[i];
+  }
+  fprintf(stderr,"Ordering silent states....\n\t");
+  for(i=0; i < mo->topo_order_length; i++) {
+    fprintf(stderr, "%d, ", mo->topo_order[i]);
+  }
+  fprintf(stderr,"\n\n");
+  sdtopo_free(&v, mo->N, mo->cos, 1);
+STOP:
+#undef CUR_PROC
+}
+
+
 /*============================================================================*/
 static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 					      long seq_number, int Tmax) {
 # define CUR_PROC "sdmodel_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
-
+  unsigned long tm; /* Time seed */
   sequence_t *sq = NULL;
   int state, n, i, j, m,  reject_os, reject_tmax, badseq, class;
   double p, sum, osum = 0.0;
@@ -208,13 +477,17 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
   if (!sq) { mes_proc(); goto STOP; }
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
-       an end state, the konstant MAX_SEQ_LEN is used. */
+       an end state, the constant MAX_SEQ_LEN is used. */
     len = (int)MAX_SEQ_LEN;
   
-  if (seed > 0)
+  if (seed > 0) {
     gsl_rng_set(RNG,seed);
-
-  // for (n = 0; n < seq_number; n++) {
+  } else
+    {
+      tm = rand();
+      gsl_rng_set(RNG, tm);
+      fprintf(stderr, "# using GSL rng '%s' seed=%ld\n", gsl_rng_name(RNG), tm);      
+    }
 
   n = 0;
   reject_os = reject_tmax = 0;
@@ -247,7 +520,7 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
       state = 1;
 
       /* The first symbol chooses the start class */
-      class = mo->get_class(&dummy,0,&osum);
+      class = mo->get_class(sq->seq[n],state);
       //class = sequence_d_class(&dummy, 0, &osum); /*  dummy function */
       while (state < len) {
       
@@ -305,7 +578,7 @@ static sequence_t *__sdmodel_generate_sequences(sdmodel* mo, int seed, int globa
 	sq->seq[n][state] = m;
 
 	/* Decide the class for the next step */
-	class = mo->get_class(&dummy,state,&osum);
+	class =mo->get_class(sq->seq[n],state);
 	//class = sequence_d_class(&dummy, state, &osum); /* dummy */
 	up = 0;
 	state++;
@@ -371,7 +644,6 @@ int  sdmodel_initSilentStates(sdmodel *mo) {
     if ( sum < __EPS ) {
       __silents[i] = 1;
       nSilentStates++;
-      fprintf(stderr, "Silent States %d\n", i);
     } else
       __silents[i] = 0;
   }
@@ -391,12 +663,17 @@ STOP:
 }
 
 /*============================================================================*/
-sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
-				     long seq_number, int Tmax) {
+/*
+ * Before calling generate sequence, the global GSL random number generator must
+ * be initialized by calling gsl_rng_init().
+ *
+ */
+//returns the extended sequence struct with state matrix
+sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len, long seq_number, int Tmax) {
 # define CUR_PROC "sdmodel_generate_sequences"
 
   /* An end state is characterized by not having out-going transition. */
-
+  unsigned long tm; /* Time seed */
   sequence_t *sq = NULL;
   int state, n, i, j, m,  reject_os, reject_tmax, badseq, trans_class;
   double p, sum, osum = 0.0;
@@ -405,18 +682,24 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
   double dummy = 0.0;
   int silent_len = 0, badSilentStates = 0;
   int	lastStateSilent = 0;
+  int matchcount = 0;
 
   sq = sequence_calloc(seq_number);
+  
   if (!sq) { mes_proc(); goto STOP; }
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
        an end state, the konstant MAX_SEQ_LEN is used. */
     len = (int)MAX_SEQ_LEN;
   
-  if (seed > 0)
+  if (seed > 0) {
     gsl_rng_set(RNG,seed);
-
-  // for (n = 0; n < seq_number; n++) {
+  } else
+    {
+      tm = rand();
+      gsl_rng_set(RNG, tm);
+      fprintf(stderr, "# using GSL rng '%s' seed=%ld\n", gsl_rng_name(RNG), tm);      
+    }
 
   n = 0;
   reject_os = reject_tmax = 0;
@@ -426,7 +709,9 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
       /* Test: A new seed for each sequence */
       /*   gsl_rng_timeseed(RNG); */
       stillbadseq = badseq = 0;
+      matchcount = 0;
       if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
+      if(!m_calloc(sq->states[n], len)) {mes_proc(); goto STOP;}
 
       /* Get a random initial state i */
       p = gsl_rng_uniform(RNG);
@@ -439,7 +724,8 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
       /* assert( !mo->silent[i] ); */
 
       if ( mo->model_type == kSilentStates ) { 	
-	if ( !mo->silent[i] ) { /* first state emits */
+	
+	if ( !mo->silent[i] ) { /* fDte emits */
 	  lastStateSilent = 0;
 	  silent_len      = 0;				 
 	  /* Get a random initial output m */
@@ -451,6 +737,10 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 	      break;
 	  }
 	  sq->seq[n][0] = m;
+	  sq->states[n][0] = i;
+	  if (mo->s[i].countme){
+	    matchcount++;
+	  }
 	  state = 1;
 	} else { /* silent state: we do nothing, no output */
 	  state = 0;
@@ -466,15 +756,25 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 	  if (sum >= p)
 	    break;
 	}
-	sq->seq[n][0] = m;	
+	sq->seq[n][0] = m;
+	sq->states[n][0] = i;
+	if (mo->s[i].countme){
+	  matchcount++;
+	}
 	state = 1;
       }
+      
+      obsLength = 0;
 
-      /* The first symbol chooses the start class */
-      trans_class = mo->get_class(&dummy,0,&osum);
+      /* class NOT dependent on observable but on path!!!! */
       while (state < len && 
 	     obsLength < Tmax ) {
 	/* Get a new state */
+
+	if (mo->cos>1)
+	  trans_class = mo->get_class(sq->seq[n],state);
+	else
+	  trans_class = 0;
 	p = gsl_rng_uniform(RNG);
 	sum = 0.0;   
 	for (j = 0; j < mo->s[i].out_states; j++) {
@@ -496,11 +796,11 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 	       first, sweep down to zero; if still no success, sweep up to
 	       COS - 1. If still no success --> Repudiate the sequence. */
 	    if (trans_class > 0 && up == 0) {
-	      trans_class--;
+	      //trans_class--;
 	      continue;
 	    } else {
 	      if (trans_class < mo->cos - 1) {
-		trans_class++;
+		//trans_class++;          // as it is not dependent on time!
 		up = 1;
 		continue;
 	      } else {
@@ -513,6 +813,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 	    break;
 	  }
 	}
+	
 	i = mo->s[i].out_id[j];
 
 	if (mo->model_type == kSilentStates && mo->silent[i]) { /* Get a silent state i */
@@ -536,17 +837,22 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 	      break;
 	  }
 	  sq->seq[n][state] = m;
+	  sq->states[n][state] = i;
+	  if (mo->s[i].countme){
+	    matchcount++;
+	  }
 	  state++;
 	}			
 	 
 	/* Decide the class for the next step */
-	trans_class = mo->get_class(&dummy,obsLength,&osum);
+	//trans_class = mo->get_class(sq->seq[n],state);
 	up = 0;
 	obsLength++;
 	
       } /* while (state < len) , global_len depends on the data */  
 
 next_sequence:;   
+
       if (badseq) {
 	reject_os_tmp++;
       }
@@ -554,18 +860,24 @@ next_sequence:;
       if (stillbadseq) {
 	reject_os++;
 	m_free(sq->seq[n]);
+	m_free(sq->states[n]);
 	/*  printf("cl %d, s %d, %d\n", class, i, n); */
       } else {
 	if (badSilentStates) {
 	  reject_tmax++;
 	  m_free(sq->seq[n]);
+	  m_free(sq->states[n]);
 	} else {
 	  if ( obsLength > Tmax ) { 
 	    reject_tmax++;
 	    m_free(sq->seq[n]);
+	    m_free(sq->seq[n]);
 	  } else {
 	    if (state < len)
-	      if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
+	      {
+		if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
+		if(m_realloc(sq->states[n], state)) {mes_proc(); goto STOP;}
+	      }
 	    sq->seq_len[n] = state;
 	    /* sq->seq_label[n] = label; */
 	    /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
@@ -574,6 +886,7 @@ next_sequence:;
 	}
       }
 	
+
       /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
       if (reject_os > 10000) {
 	mes_prot("Reached max. no. of rejections\n");
@@ -589,14 +902,27 @@ next_sequence:;
   if (reject_tmax > 0) printf("%d sequences rejected (Tmax, %d)!\n", 
 			      reject_tmax, Tmax);
 
+
   return(sq);
  STOP:
+
   sequence_free(&sq);
   return(NULL);
 # undef CUR_PROC
 } /* data */
 
+/*=======================================================================
+generate sequences by calling generate_sequences_ext
+========================================*/
 
+/*
+sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
+				     long seq_number, int Tmax) {
+  sequence_ext_t *sq = sdmodel_generate_sequences_ext(mo,seed,global_len,seq_number,Tmax);
+  printf("jaja\n\n");
+  return sequence_unext(&sq);
+}
+*/
 /*============================================================================*/
 /* Some outputs */
 /*============================================================================*/
@@ -674,6 +1000,63 @@ void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator,
   fprintf(file, "%s\n", ending);
 } /* model_Pi_print */
 
+
+model *sdmodel_to_model(const sdmodel *mo, int kclass) {
+#define CUR_PROC "sdmodel_to_model"
+  /*
+   * Set the pointer appropriately
+   */
+  int i, j, nachf, vorg, m;
+  model *m2 = NULL;
+  if(!m_calloc(m2, 1)) {mes_proc(); goto STOP;}
+  if (!m_calloc(m2->s, mo->N)) {mes_proc(); goto STOP;}
+  for (i = 0; i < mo->N; i++) {
+    nachf = mo->s[i].out_states;
+    vorg = mo->s[i].in_states;
+    if(!m_calloc(m2->s[i].out_id, nachf)) {mes_proc(); goto STOP;}
+    if(!m_calloc(m2->s[i].out_a, nachf)) {mes_proc(); goto STOP;}
+    if(!m_calloc(m2->s[i].in_id, vorg)) {mes_proc(); goto STOP;}
+    if(!m_calloc(m2->s[i].in_a, vorg)) {mes_proc(); goto STOP;}
+    if(!m_calloc(m2->s[i].b, mo->M)) {mes_proc(); goto STOP;}
+    /* Copy the values */
+    for (j = 0; j < nachf; j++) {
+      m2->s[i].out_a[j]  = mo->s[i].out_a[kclass][j];
+      m2->s[i].out_id[j] = mo->s[i].out_id[j];
+    }
+    for (j = 0; j < vorg; j++) {
+      m2->s[i].in_a[j]  = mo->s[i].in_a[kclass][j];
+      m2->s[i].in_id[j] = mo->s[i].in_id[j];
+    }
+    for (m = 0; m < mo->M; m++)
+      m2->s[i].b[m] = mo->s[i].b[m];
+    m2->s[i].pi = mo->s[i].pi;
+    m2->s[i].out_states = nachf;
+    m2->s[i].in_states = vorg;
+  }
+  m2->N = mo->N;
+  m2->M = mo->M;
+  m2->prior = mo->prior;
+
+  m2->model_type=mo->model_type;
+  if ( mo->model_type == kSilentStates ) {
+    assert( mo->silent != NULL );
+    if(!m_calloc(m2->silent, mo->N)) {mes_proc(); goto STOP;}
+    for(i=0; i < m2->N; i++) {
+      m2->silent[i]=mo->silent[i];
+    }
+    m2->topo_order_length=mo->topo_order_length;
+    if(!m_calloc(m2->topo_order, mo->topo_order_length)) {mes_proc(); goto STOP;}
+    for(i=0; i < m2->topo_order_length; i++) {
+      m2->topo_order[i]=mo->topo_order[i];
+    }
+  }
+  return(m2);
+STOP:
+  m_free(m2->silent);
+  m_free(m2->topo_order);
+  model_free(&m2);
+  return(NULL);
+}
 
 /*============================================================================*/
 

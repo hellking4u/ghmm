@@ -125,6 +125,12 @@ int GHMM_ContinuousModel::reestimate_baum_welch(GHMM_Sequences* seq, double* log
 }
 
 
+XMLIO_Element* GHMM_ContinuousModel::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) 
+{
+  return GHMM_AbstractModel::XMLIO_startTag(tag,attrs);
+}
+
+
 void GHMM_ContinuousModel::XMLIO_finishedReading() {
   unsigned int i;
 
@@ -142,9 +148,9 @@ void GHMM_ContinuousModel::XMLIO_finishedReading() {
 
   c_model->density = normal;
   if (states.size() > 0)
-    c_model->density = states[0]->emission->density;
+    c_model->density = states[0]->cemission->density;
   for (i = 1; i < states.size(); ++i)
-    if (c_model->density != states[i]->emission->density) {
+    if (c_model->density != states[i]->cemission->density) {
       fprintf(stderr,"Not all gaussian functions are equal.\nThis is not yet supported by the library.\n");
       exit(1);
     }

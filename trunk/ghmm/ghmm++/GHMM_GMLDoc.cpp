@@ -13,7 +13,7 @@
 #include <assert.h>
 
 #include "ghmm++/GHMM_GMLDoc.h"
-#include "ghmm++/GHMM_GMLContinuousModel.h"
+#include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_Sequences.h"
 #include "ghmm++/GHMM_GMLAlphabet.h"
 
@@ -49,7 +49,7 @@ GHMM_SWDiscreteModel* GHMM_GraphMLDoc::getDiscreteModel() const {
 }
 
 
-GHMM_GMLContinuousModel* GHMM_GraphMLDoc::getContinuousModel() const {
+GHMM_ContinuousModel* GHMM_GraphMLDoc::getContinuousModel() const {
   return continuous_model;
 }
 
@@ -62,8 +62,8 @@ XMLIO_Element* GHMM_GraphMLDoc::XMLIO_startTag(const string& my_tag, XMLIO_Attri
 
   if (my_tag == "graphml") {
     reading_ghmm = true;
-printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
-  cout << "\t\t" << my_tag << endl;
+    //printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
+    //cout << "\t\t" << my_tag << endl;
 
     return this;
   }
@@ -76,8 +76,8 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
 
     if (my_tag == "hmm:class")
       { 
-printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
-  cout << "\t\t" << my_tag << endl;
+	//printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
+	//cout << "\t\t" << my_tag << endl;
 
 	hmmclass = new GHMM_GMLClass();
 	return hmmclass;
@@ -93,8 +93,8 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
       { return this; }
 
     if (my_tag == "hmm:alphabet") {
-printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
-  cout << "\t\t" << my_tag << endl;
+      //printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
+      //cout << "\t\t" << my_tag << endl;
 
 
       tmp_alphabets = new GHMM_GMLAlphabet();
@@ -102,8 +102,8 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
     }
 
     if (my_tag == "key") {
-printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
-  cout << "\t\t" << my_tag << endl;
+      //printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
+      //cout << "\t\t" << my_tag << endl;
 
        if (attrs["id"] == "emissions")
 	 {
@@ -130,32 +130,24 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
 
     if (my_tag == "graph")
       {
-	printf("GHMM_GraphMLDoc::XMLIO_startTag:"); cout << my_tag << endl;
+	// printf("GHMM_GraphMLDoc::XMLIO_startTag:"); cout << my_tag << endl;
 
 	if ( model_type != NONE )
 	  {
 	    if ( model_type == GHMM_DISCRETE )
 	      {
-		printf("Discrete model found\n");
+		fprintf(stderr, "Discrete model found\n");
 
 		GHMM_Alphabet *alphas = tmp_alphabets;
 		assert( alphas != NULL );
-		for(int i=0; i < (int)(alphas->size()); i++)
-		  {
-		    cout << "Symbol " << i << ":";
-		    cout << alphas->getSymbol(i) << endl;
-		  }
-
 		assert( hmmclass != NULL );
 		if ( hmmclass->size() == 1 ) { // a set of transition matrices
-		  cout << "hmmclass size" << (hmmclass->size()) << endl;
 		  sdiscrete_model = new GHMM_SWDiscreteModel(tmp_alphabets, 1); // 1 class
 		  return sdiscrete_model;
-		} 
+		}
 		else
 		if ( hmmclass->size() > 1 )  // a set of transition matrices
 		  {
-		    cout << "hmmclass size" << (hmmclass->size()) << endl;
 		    sdiscrete_model = new GHMM_SWDiscreteModel(tmp_alphabets, (int)hmmclass->size()); 
 		    return sdiscrete_model;
 		  } else
@@ -167,9 +159,9 @@ printf("GHMM_GraphMLDoc::XMLIO_startTag\n");
 
 	    if ( model_type == GHMM_CONTINUOUS )
 	      {
-			printf("Continous model found\n");		
-			continuous_model = new GHMM_GMLContinuousModel();
-			return continuous_model;
+		fprintf(stderr, "Continous model found\n");		
+		continuous_model = new GHMM_ContinuousModel();
+		return continuous_model;
 	      } // CONTINUOUS
 	  }
 	else
