@@ -20,14 +20,12 @@ int single_state_coin_toss() {
   /* initialise model with 1 state and 2 symbols */
   GHMM_DiscreteModel my_model(1,2);
 
-
   /* initialise this state */
   my_model.getState(0)->setInitialProbability(1.0);
   my_model.getState(0)->setOutputProbability(0,0.5);
   my_model.getState(0)->setOutputProbability(1,0.5);
 
   my_model.setTransition(0,0,1.0);
-
 
   if (my_model.check() == -1)
     return 1;
@@ -58,6 +56,7 @@ int two_states_coin_toss() {
   GHMM_IntVector* viterbi_path;
   GHMM_DoubleMatrix* forward_alpha = NULL;
 
+  /* flags indicating whether a state is silent */
   /* initialise model */
   GHMM_DiscreteModel my_model(2,2);
 
@@ -92,9 +91,6 @@ int two_states_coin_toss() {
     return 1;
   }
 
-  fprintf(stdout,"viterbi path:\n");
-  viterbi_path->print(stdout,""," ","\n");
-
   fprintf(stdout,
 	  "log-p of this sequence (viterbi algorithm): %f\n",
   	  log_p_viterbi);
@@ -112,7 +108,6 @@ int two_states_coin_toss() {
   
   /* alpha matrix */
   fprintf(stdout,"Done.\nalpha matrix from forward algorithm:\n");
-  forward_alpha->print(stdout,""," ","\n");
   fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
 
   /* change initialise probabilities */
@@ -121,8 +116,6 @@ int two_states_coin_toss() {
 
   if (my_model.check() == -1)
     return 1;
-
-  my_model.print(stdout);
 
   my_model.reestimate_baum_welch(my_output);
 

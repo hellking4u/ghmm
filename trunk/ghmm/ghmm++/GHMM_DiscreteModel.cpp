@@ -308,6 +308,9 @@ void GHMM_DiscreteModel::init(GHMM_Alphabet *my_alphabet) {
 
   c_model->N        = 0;
   c_model->M        = alphabet->size();
+  c_model->silent   = NULL; /* No silent states */
+  c_model->model_type = kNotSpecified; /* (0) */
+  c_model->topo_order = NULL;
   buildCppData();
 }
 
@@ -328,10 +331,11 @@ void GHMM_DiscreteModel::init(int number_of_states, int my_M, double my_prior) {
   c_model->prior   = my_prior;
   c_model->s       = (state*) malloc(sizeof(state) * max(c_model->N,1));
   /* initialize all states. */
-  c_model->silent  = NULL; /* No silent states */
-  c_model->model_type = kNotSpecified; /* (0) */
   c_model->topo_order = NULL;
-
+  c_model->silent  = (int*) malloc(sizeof(int) * number_of_states); 
+  for (i = 0; i < number_of_states; ++i) {
+    c_model->silent[i] = 0; /* No silent states */
+  }
   for (i = 0; i < number_of_states; ++i) {
     c_model->s[i].pi         = 0;
     c_model->s[i].b          = (double*) malloc(sizeof(double) * my_M);
