@@ -28,7 +28,9 @@ static int foba_initforward(model *mo, double *alpha_1, int symb,
   //printf(" *** foba_initforward\n");
   
   //iterate over non-silent states
+  //printf(" *** iterate over non-silent states \n");
   for (i = 0; i < mo->N; i++) {
+    printf("silent[%d] = %d\n",i,mo->silent[i]); 
     if (!(mo->silent[i])) {
       alpha_1[i] = mo->s[i].pi * mo->s[i].b[symb];
 	  //printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);
@@ -37,27 +39,29 @@ static int foba_initforward(model *mo, double *alpha_1, int symb,
     }
   }
   //iterate over silent states
-  for (i=0;i<mo->topo_order_length;i++)
-    {
-      id = mo->topo_order[i];
-      alpha_1[id] = mo->s[id].pi;
+  //printf(" *** iterate over silent states \n");
+  if (mo->model_type == kSilentStates){
+      for (i=0;i<mo->topo_order_length;i++)
+      {
+         id = mo->topo_order[i];
+         alpha_1[id] = mo->s[id].pi;
       
-	  //printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id]);
+	     //printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id]);
       
-	  for (j=0;j<mo->s[id].in_states;j++){ 
-	    in_id = mo->s[id].in_id[j];
-	    alpha_1[id] += mo->s[id].in_a[j] * alpha_1[in_id];
+	     for (j=0;j<mo->s[id].in_states;j++){ 
+	       in_id = mo->s[id].in_id[j];
+	       alpha_1[id] += mo->s[id].in_a[j] * alpha_1[in_id];
 	  
-		//printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id]);
+		   //printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id]);
 		
-	  }
-      scale[0] += alpha_1[id];
-    }
-  
+	    }
+        scale[0] += alpha_1[id];
+      }
+  }
   //printf("\n%f\n",scale[0]);
   
   if (scale[0] >= EPS_PREC) {
-    c_0 = 1/scale[0];
+     c_0 = 1/scale[0];
     for (i = 0; i < mo->N; i++) 
       alpha_1[i] *= c_0;
     }
