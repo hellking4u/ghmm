@@ -33,9 +33,11 @@ AC_DEFINE_UNQUOTED(__EXPERIMENTAL__,$enable_experimental,include experimental fe
 fi
 )
 
+dnl preparation for c++ use
 AC_LANG_CPLUSPLUS
 AC_CXX_HAVE_STL
 AC_CXX_NAMESPACES
+AC_CHECK_HEADERS(cstdio cstdlib cstring cerrno cmath cstdarg)
 
 XMLIO_CONFIG=""
 AC_ARG_WITH(xmlio,
