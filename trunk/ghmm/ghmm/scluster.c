@@ -29,11 +29,11 @@ __copyright__
 
 #ifdef HAVE_LIBPTHREAD
 /* switsch for parallel mode: (1) = sequential, (0) = parallel */ 
-#define POUT 1
+# define POUT 0
 /* number of parallel threads */
-#define THREADS 4
+# define THREADS 4
 #else
-#define POUT 0
+# define POUT 1
 #endif /* HAVE_LIBPTHREAD */
 
 
@@ -60,12 +60,12 @@ int scluster_hmm(char* argv[]) {
   /* sreestimate_baum_welch needs this structure (introduced for parallel mode) */
   smosqd_t *cs;
   double *tilgw, *model_weight;
-#ifdef HAVE_LIBPTHREAD
+#if POUT == 0
   int *return_value;
   pthread_t *tid;
   int perror;
   pthread_attr_t Attribute;
-#endif /* HAVE_LIBPTHREAD */
+#endif /* POUT */
   cl.smo = NULL;
   cl.smo_seq = NULL;
   cl.seq_counter = NULL;
@@ -121,18 +121,18 @@ int scluster_hmm(char* argv[]) {
     for (i = 0; i < cl.smo_number; i++) 
       cl.smo[i]->prior = 1/(double) cl.smo_number;
   /*--------for parallel mode  --------------------*/
-#if POUT != 0
+#if POUT == 0
   /* id for threads */
   if(!m_calloc(tid, cl.smo_number)) {mes_proc(); goto STOP;} 
-#endif /* POUT != 0 */
+#endif /* POUT */
   /* data structure for  threads */
   if(!m_calloc(cs, cl.smo_number)) {mes_proc(); goto STOP;} 
   for (i = 0; i < cl.smo_number; i++)
     cs[i].smo = cl.smo[i]; 
   /* returnvalues for each thread */
-#if POUT != 0
+#if POUT == 0
   if(!m_calloc(return_value, cl.smo_number)) {mes_proc(); goto STOP;} 
-#endif /* POUT != 0 */
+#endif /* POUT */
 #ifdef HAVE_LIBPTHREAD
   pthread_attr_init(&Attribute);
   pthread_attr_setscope(&Attribute, PTHREAD_SCOPE_SYSTEM);	
@@ -162,7 +162,7 @@ int scluster_hmm(char* argv[]) {
       cs[i].logp = all_log_p[i];
     }
     /* ------------calculate logp for all seqs. and all models --------------*/
-#if POUT == 0
+#if POUT
     /* sequential version */
     for (i = 0; i < cl.smo_number; i++) {
       if (!smo_changed[i]) continue;
@@ -293,7 +293,7 @@ int scluster_hmm(char* argv[]) {
       }
 
 
-#if POUT == 0
+#if POUT
       /* sequential version */
       for (i = 0; i < cl.smo_number; i++) {	
 	printf("SMO %d\n", i);
@@ -364,9 +364,9 @@ int scluster_hmm(char* argv[]) {
 /*--------------------------------------------------------------------------*/
   res = 0;
 STOP:
-#ifdef HAVE_LIBPTHREAD
+#if POUT == 0
   pthread_attr_destroy(&Attribute);
-#endif /* HAVE_LIBPTHREAD */
+#endif /* POUT */
   /* ...noch div. free! */
   if (outfile) fclose(outfile);
   return(res);
@@ -716,8 +716,7 @@ void scluster_print_header(FILE *file, char* argv[]) {
   }
 }
 
-
-#ifdef HAVE_LIBPTHREAD
-#undef POUT
+#if POUT == 0
 #undef THREADS
 #endif /* HAVE_LIBPTHREAD */
+#undef POUT
