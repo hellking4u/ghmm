@@ -21,12 +21,15 @@ int main() {
   v.push_back(0.35);
   v.push_back(0.75);
 
-  GHMM_Sequence seq(GHMM_DOUBLE,v.size(),1);
+  GHMM_Sequence seq1(GHMM_DOUBLE,v.size(),1);
   for (unsigned int i = 0; i < v.size(); ++i)
-    seq.setDouble(i,v[i]);
+    seq1.setDouble(i,v[i]);
 
-  seq.print(stdout);
+  seq1.print(stdout);
   
+  GHMM_Sequences seq2(&seq1);
+  seq2.print(stdout);
+
 #ifdef WIN32
   printf("\nPress ENTER\n");
   fgetc(stdin);

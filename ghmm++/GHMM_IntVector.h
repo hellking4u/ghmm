@@ -45,9 +45,6 @@ class GHMM_IntVector {
       will be initialized with 'default_value'. */
   void resize(int new_len, int default_value = 0);
 
-  
- private:
-
   /** C type integer vector. */
   int* c_vector;
   /** length of C type integer vector. */

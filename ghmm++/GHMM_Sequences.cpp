@@ -53,6 +53,17 @@ GHMM_Sequences::GHMM_Sequences(GHMM_SequenceType my_sequence_type) {
 }
 
 
+GHMM_Sequences::GHMM_Sequences(GHMM_Sequence* sequence) {
+  if (sequence->sequence_type == GHMM_DOUBLE)
+    init_DOUBLE(NULL);
+  else
+    init_INT(NULL,NULL);
+
+  add(sequence);
+  last_weight   = 1;
+}
+
+
 GHMM_Sequences::GHMM_Sequences(sequence_t* seq) {
   init_INT(NULL,seq);
 }
