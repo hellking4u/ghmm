@@ -138,7 +138,7 @@ double smodel_get_transition(smodel *smo, int i, int j, int cos) {
     }
   }
   fprintf(stderr, "smodel_get_transition(1): data structure not initialized\n");
-  return 0.0;
+  return -1.0;
 }
 
 void smodel_set_mean(smodel *smo, int i, double *mu) {

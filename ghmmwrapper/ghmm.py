@@ -338,7 +338,7 @@ class ContinousDistribution(Distribution):
     pass
 
 class GaussianDistribution(ContinousDistribution):
-
+    # XXX attributes unused 
     def __init__(self, domain):
         self.emissionDomain = domain
         self.mu = None
@@ -428,7 +428,7 @@ class EmissionSequence:
                 self.cseq = ghmmwrapper.sequence_d_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
-                set_arrayint(self.cseq.seq_len,0,1)
+                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,1)
 				
 
             elif isinstance(sequenceInput, str): # from file
@@ -1071,7 +1071,8 @@ class HMM:
         elif isinstance(emissionSequences,SequenceSet):
             seqNumber = len(emissionSequences)        
         else:    
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
+            raise TypeError, "EmissionSequence or SequenceSet required, got " + \
+                  str(emissionSequences.__class__.__name__)        
               
         likelihood = ghmmwrapper.double_array(1)
         likelihoodList = []
@@ -1079,10 +1080,20 @@ class HMM:
         
         for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
-            ret_val = self.forwardFunction(self.cmodel, seq,ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i), likelihood)
-            likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
+            tmp = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
+            ret_val = self.forwardFunction(self.cmodel, seq, tmp, likelihood)
             if ret_val == -1:
-                print "Warning: forward finished with -1: Sequence ",i ," cannot be build."
+                # print "Warning: forward returned -1: Sequence", i,"cannot be build."
+                # XXX Eventually this should trickle down to C-level
+                # Returning -DBL_MIN instead of infinity is stupid, since it allows
+                # to continue further computations with that value, which causes
+                # Things to blow up later.
+                # forwardFunction could do without a return value if -Inf is returned
+                # What should be the semantics in case of computing the likelihood of
+                # a set of sequences
+                likelihoodList.append(-float('Inf'))
+            else:
+                likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
 
         ghmmwrapper.free_arrayd(likelihood)  
         return likelihoodList
@@ -1278,18 +1289,22 @@ class HMM:
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
         state = self.getStatePtr(self.cmodel.s,i)
-        transition = 0
+        transition = None
         for i in range(state.out_states):
             stateId = ghmmwrapper.get_arrayint(state.out_id,i)
             if stateId == j:
                 transition = ghmmwrapper.get_arrayd(state.out_a,i)
                 break
-        return transition    
+        if transition:
+            return transition
+        else:
+            raise KeyError
             
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij. """
         out_state = self.getStatePtr(self.cmodel.s,i)
         in_state = self.getStatePtr(self.cmodel.s,j)
+        print "XXX BUG: HMM.setTransition is not doing anything"
         
 
     def getEmission(self, i):
@@ -1525,7 +1540,10 @@ class GaussianEmissionHMM(HMM):
 
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
-        return ghmmwrapper.smodel_get_transition(self.cmodel, i, j, 0)
+        transition = ghmmwrapper.smodel_get_transition(self.cmodel, i, j, 0)
+        if transition < 0.0: # Tried to access non-existing edge:
+            raise IndexError
+        return transition
 
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij """
