@@ -170,6 +170,7 @@ int *viterbi( model *mo, int *o, int len, double *log_p)
   double dummy = 0.0;
   local_store_t *v;
   int len_path  = mo->N*len;
+  int lastemState;
   
   printf("---- viterbi -----\n");
 
@@ -287,7 +288,6 @@ int *viterbi( model *mo, int *o, int len, double *log_p)
   } /* Next observation , increment time-step */
 
   /* Termination */
-  int lastemState;
   max_value = -DBL_MAX;
   state_seq[len_path-1] = -1;
   for (j = 0; j < mo->N; j++)
