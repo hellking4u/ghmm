@@ -12,9 +12,10 @@ CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD    = $(top_builddir)/ppghmm++/libppghmm++.a $(top_builddir)/ghmm/libghmm.a $(XMLIO_LIBS)
+LDADD    = $(top_builddir)/ppghmm++/libppghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
 
 lib_LIBRARIES = libppghmm++.a
+#libppghmm___la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
 libppghmm___a_SOURCES = \
 GHMM_DiscreteModel.cpp \
 GHMM_ContinuousModel.cpp \

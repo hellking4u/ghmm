@@ -275,7 +275,7 @@ void GHMM_State::changeOutEdge(int matrix_index, int target, double prob) {
 
     /* create new state. */
     c_sstate->out_states += 1;
-    c_sstate->out_id = (int*) realloc(c_sstate->out_a,sizeof(int) * c_sstate->out_states);
+    c_sstate->out_id = (int*) realloc(c_sstate->out_id,sizeof(int) * c_sstate->out_states);
     c_sstate->out_id[c_sstate->out_states - 1] = target;
     
     for (i = 0; i < parent_model->getNumberOfTransitionMatrices(); ++i) {
@@ -294,7 +294,7 @@ void GHMM_State::changeOutEdge(int matrix_index, int target, double prob) {
 
     /* create new state. */
     c_state->out_states += 1;
-    c_state->out_id = (int*) realloc(c_state->out_a,sizeof(int) * c_state->out_states);
+    c_state->out_id = (int*) realloc(c_state->out_id,sizeof(int) * c_state->out_states);
     c_state->out_id[c_state->out_states - 1] = target;
     
     c_state->out_a = (double*) realloc(c_state->out_a,sizeof(double) * c_state->out_states);
@@ -367,11 +367,11 @@ void GHMM_State::changeInEdge(int matrix_index, int source, double prob) {
     
     /* create new state. */
     c_sstate->in_states += 1;
-    c_sstate->in_id = (int*) realloc(c_sstate->in_a,sizeof(int) * c_sstate->in_states);
+    c_sstate->in_id = (int*) realloc(c_sstate->in_id,sizeof(int) * c_sstate->in_states);
     c_sstate->in_id[c_sstate->in_states - 1] = source;
     
     for (i = 0; i < parent_model->getNumberOfTransitionMatrices(); ++i) {
-      c_sstate->in_a[i] = (double*) realloc(c_sstate->in_a,sizeof(double) * c_sstate->in_states);
+      c_sstate->in_a[i] = (double*) realloc(c_sstate->in_a[i],sizeof(double) * c_sstate->in_states);
       c_sstate->in_a[i][c_sstate->in_states - 1]  = 0;
     }
     c_sstate->in_a[matrix_index][c_sstate->in_states - 1]  = prob;
@@ -386,7 +386,7 @@ void GHMM_State::changeInEdge(int matrix_index, int source, double prob) {
     
     /* create new state. */
     c_state->in_states += 1;
-    c_state->in_id = (int*) realloc(c_state->in_a,sizeof(int) * c_state->in_states);
+    c_state->in_id = (int*) realloc(c_state->in_id,sizeof(int) * c_state->in_states);
     c_state->in_id[c_state->in_states - 1] = source;
     
     c_state->in_a = (double*) realloc(c_state->in_a,sizeof(double) * c_state->in_states);
