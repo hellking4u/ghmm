@@ -782,6 +782,32 @@ void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator,
 } /* model_Pi_print */
 
 
+void model_to_sdmodel(const model *mo, const sdmodel *smo, int klass) {
+#define CUR_PROC "model_to_sdmodel"
+  int i,j,m, nachf, vorg;
+
+  for (i = 0; i < mo->N; i++) {
+    nachf = mo->s[i].out_states;
+    vorg  = mo->s[i].in_states;
+    /* Copy the values */
+    for (j = 0; j < nachf; j++) {
+      smo->s[i].out_a[klass][j]  = mo->s[i].out_a[j];
+      smo->s[i].out_id[j]        = mo->s[i].out_id[j];
+    }
+    for (j = 0; j < vorg; j++) {
+      smo->s[i].in_a[klass][j]  = mo->s[i].in_a[j];
+      smo->s[i].in_id[j]        = mo->s[i].in_id[j];
+    }
+    for (m = 0; m < mo->M; m++)
+      smo->s[i].b[m] = mo->s[i].b[m];
+    smo->s[i].pi = mo->s[i].pi;
+    smo->s[i].out_states = nachf;
+    smo->s[i].in_states = vorg;
+  }
+  smo->prior = mo->prior;
+}
+
+
 model *sdmodel_to_model(const sdmodel *mo, int kclass) {
 #define CUR_PROC "sdmodel_to_model"
   /*
