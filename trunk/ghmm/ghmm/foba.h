@@ -73,6 +73,15 @@ int foba_backward(model *mo, const int *O, int length, double **beta,
   */
 int foba_logp(model *mo, const int *O, int len, double *log_p);
 
+
+/* Labeled HMMs */
+
+int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
+
+
+
+
 /*@} (Doc++-Group: foba) */
 
 #ifdef __cplusplus

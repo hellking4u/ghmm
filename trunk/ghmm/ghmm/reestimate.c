@@ -125,6 +125,57 @@ static int reestimate_free_matvek(double **alpha, double **beta,
 } /* reestimate_free_matvek */   
 
 /*----------------------------------------------------------------------------*/
+void reestimate_update_tie_groups(model *mo){
+   int i,j;
+   int k;
+   double *new_emissions;
+   double nr;
+   if (!m_malloc(new_emissions,mo->M)){printf("m_malloc failed in reestimate_update_tie_groups!\n ");}
+     
+   for(i=0;i<mo->N;i++){
+     
+     /* find tie group leaders */  
+     if (mo->tied_to[i] == i) {
+        nr = 1.0;
+        //printf("tie group leader %d found.\n",i);
+       
+       /* initializing with tie group leader emissions */
+       for(k=0;k<mo->M;k++){
+         new_emissions[k] = mo->s[i].b[k];
+       }
+       
+       /* finding tie group members */
+       for(j=i+1;j<mo->N;j++){  
+         if(mo->tied_to[j] == i) {  
+           nr+=1.0; 
+           //printf("  tie group member %d -> leader %d.\n",j,i);
+           
+           /* summing up emissions in the tie group */  
+           for(k=0;k<mo->M;k++){
+              new_emissions[k] += mo->s[j].b[k];
+           }  
+         }
+       }
+       // printf("i = %d\n",i);
+       /* updating emissions */
+       if(nr > 1) {
+         for(j=i;j<mo->N;j++){ 
+           if(mo->tied_to[j] == i){
+             // printf("j = %d\n",j);           
+             for(k=0;k<mo->M;k++){
+                 mo->s[j].b[k] = (new_emissions[k] / nr);
+                 // printf("s(%d)[%d] -> %f / %f = %f\n",j,k,new_emissions[k],nr,mo->s[j].b[k]); 
+             }             
+           }    
+         }
+       }  
+     }  
+   }
+   m_free(new_emissions);    
+}    
+/* reestimate_update_tie_groups */
+
+/*----------------------------------------------------------------------------*/
 static int reestimate_setlambda(local_store_t *r, model *mo) {
 # define CUR_PROC "reestimate_setlambda"
   int res = -1;
@@ -252,14 +303,11 @@ static int reestimate_one_step(model *mo, local_store_t *r,
     /* initialization of  matrices and vector depends on T_k */
     if ( reestimate_alloc_matvek(&alpha, &beta, &scale, T_k, mo->N) == -1 ) 
       {mes_proc(); goto STOP;}
-    
      if (foba_forward(mo, O[k], T_k, alpha, scale, &log_p_k) == -1) 
       {mes_proc(); goto STOP;}    
-     
      if (log_p_k != +1) { /* O[k] can be generated */
        *log_p += log_p_k;
        valid = 1;
-      
       if (foba_backward(mo, O[k], T_k, beta, scale) == -1) 
 	{ mes_proc(); goto STOP;}
       
@@ -281,7 +329,7 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 		* (1.0 / scale[t+1]) );  /* c[t] = 1/scale[t] */
 	  }
 	}
-	/* ========= if state fix, continue;====================== */
+    /* ========= if state fix, continue;====================== */
 	if (mo->s[i].fix)
 	  continue;
 	/* B */
@@ -306,8 +354,9 @@ static int reestimate_one_step(model *mo, local_store_t *r,
   
   if (valid) {
     /* new parameter lambda: set directly in model */
+    
     if ( reestimate_setlambda(r, mo) == -1 ) { mes_proc(); goto STOP; } 
-
+    
     /* only test: */
     /*    if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
   }
@@ -347,12 +396,12 @@ int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double 
     if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq, 
 			    &log_p, sq->seq_w) == -1) { 
       char *str = 
-	mprintf(NULL, 0, "reestimate_one_step false (%d.step)\n",n); 
+	  mprintf(NULL, 0, "reestimate_one_step false (%d.step)\n",n); 
       mes_prot(str);
       m_free(str);
       goto STOP;
     }
-    
+        
     if (n == 1)
       printf("%8.5f (-log_p input model)\n", -log_p); /* */
     else

@@ -385,7 +385,6 @@ model **model_from_sequence_ascii(scanner_t *s, long *mo_number){
 int model_free(model **mo) {
 #define CUR_PROC "model_free"
   int i;
-  //printf("freeing model %s\n",(*mo)->name);
   mes_check_ptr(mo, return(-1));
   if( !*mo ) return(0);
   for (i = 0; i < (*mo)->N; i++)
@@ -393,17 +392,18 @@ int model_free(model **mo) {
   
   if ( (*mo)->s)
     m_free((*mo)->s);
-  //if ((*mo) ->  name)
-  //  m_free((*mo)->name);
   if ((*mo) ->  silent)
     m_free((*mo)->silent);
-  if ((*mo) ->  tied_to)
+
+  if ((*mo) -> tied_to)
     m_free((*mo)->tied_to);
+  
   /*if ((*mo) -> emission_order) Moved to state
     m_free((*mo)->emission_order);*/
+  
   if ((*mo) -> topo_order)
     m_free((*mo)->topo_order);
-  
+              
   m_free(*mo);
   return(0);
 #undef CUR_PROC
@@ -1391,4 +1391,209 @@ void state_clean(state *my_state) {
   memcpy(dest->in_a,source->in_a,xxx);
   }*/ /* state_copy_to */
 
-/*===================== E n d   o f  f i l e  "model.c"       ===============*/
+
+ /*==========================Labeled HMMS ================================*/         
+
+           
+sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len,
+				     long seq_number, int Tmax) {
+# define CUR_PROC "model_label_generate_sequences"
+
+  /* An end state is characterized by not having an output probabiliy. */
+
+  sequence_t *sq = NULL;
+  int i, j, m,temp;
+  double p, sum;
+  int len = global_len;
+  //int silent_len = 0;
+  int n=0;
+  int incomplete_seq = 0;
+  int state=0;
+  int label_index = 0;
+  
+  sq = sequence_calloc(seq_number);
+
+  if (!sq) { mes_proc(); goto STOP; }
+
+  /* allocating additional fields for the labels in the sequence_t struct */
+  if(!m_calloc(sq->state_labels, seq_number)) {mes_proc(); goto STOP;}
+  if(!m_calloc(sq->state_labels_len, seq_number)) {mes_proc(); goto STOP;}
+
+  if (len <= 0)
+    /* A specific length of the sequences isn't given. As a model should have
+       an end state, the konstant MAX_SEQ_LEN is used. */
+    len = (int)MAX_SEQ_LEN;
+  
+  if (seed > 0) {
+	gsl_rng_set(RNG,seed);
+  }
+   
+
+while (n < seq_number) {
+	//printf("sequenz n = %d\n",n);
+    //printf("incomplete_seq: %d\n",incomplete_seq);
+	
+    if (incomplete_seq == 0) { 
+	    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
+   		if (mo->model_type == kSilentStates){
+          
+          printf("Model has silent states. \n");  
+          /* for silent models we have to allocate for the maximal possible number of lables*/
+          if(!m_calloc(sq->state_labels[n], len * mo->N)) {mes_proc(); goto STOP;}
+        }    
+        else {
+            printf("Model has no silent states. \n");
+            if(!m_calloc(sq->state_labels[n], len)) {mes_proc(); goto STOP;}
+        }
+        label_index = 0;
+        state = 0;
+    }
+   
+	/* Get a random initial state i */
+    p = gsl_rng_uniform(RNG);
+	sum = 0.0;
+    for (i = 0; i < mo->N; i++) {
+      sum += mo->s[i].pi;
+      if (sum >= p)
+	   break;
+    }
+    
+    /* add label of fist state to the label list */
+    sq->state_labels[n][label_index] = mo->s[i].label;
+    label_index++;
+    
+  	if ( mo->model_type == kSilentStates ){
+	  if (!mo->silent[i]) { /* first state emits */
+	    //printf("first state %d not silent\n",i);
+		  
+		/* Get a random initial output m */
+        p = gsl_rng_uniform(RNG);
+	    sum = 0.0;   
+        for (m = 0; m < mo->M; m++) {
+          sum += mo->s[i].b[m];
+          if (sum >= p)
+	        break;
+        }
+          sq->seq[n][state] = m;
+          state = state+1;
+	  }
+	  else {  /* silent state: we do nothing, no output */
+		//printf("first state %d silent\n",i);
+		//state = 0; 
+		//silent_len = silent_len + 1; 
+	  }
+   }
+	else {
+	  /* Get a random initial output m */
+	  p = gsl_rng_uniform(RNG);
+	  sum = 0.0;   
+	  for (m = 0; m < mo->M; m++) {
+	    sum += mo->s[i].b[m];
+		 if (sum >= p)
+	      break;
+	  }
+	  sq->seq[n][state] = m;	
+	  state = state + 1;
+    }
+	/* check whether sequence was completed by inital state*/ 
+	if (state >= len && incomplete_seq == 1){
+ 	    
+		//printf("assinging length %d to sequence %d\n",state,n);
+		//printf("sequence complete...\n");
+		
+        sq->seq_len[n] = state;    
+	
+        sq->state_labels_len[n] = label_index;
+		
+        printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]);
+        
+        if (mo->model_type == kSilentStates){
+          printf("reallocating\n");
+          if (m_realloc(sq->state_labels[n], sq->state_labels_len[n])){mes_proc(); goto STOP;}
+        }  
+        
+  		incomplete_seq = 0;
+		n++;
+        continue;
+	}
+    while (state < len) {		
+	  /* Get a random state i */
+     p = gsl_rng_uniform(RNG);
+	  sum = 0.0;   
+     for (j = 0; j < mo->s[i].out_states; j++) {
+	    sum += mo->s[i].out_a[j];   
+	    if (sum >= p)
+	      break;
+     }
+
+     i = mo->s[i].out_id[j];
+    
+    /* add label of state to the label list */
+    sq->state_labels[n][label_index] = mo->s[i].label;
+    label_index++;	
+     
+    //printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state);
+	 
+	if (sum == 0.0) {
+	    if (state < len) {
+			incomplete_seq = 1;			
+			//printf("final state reached - aborting\n");
+			break;
+		}
+		else {
+			n++;
+			break;
+		}
+	 }	
+     
+     if (mo->model_type == kSilentStates && mo->silent[i]) { /* Got a silent state i */
+	    //printf("silent state \n");
+        //silent_len += 1;
+		/*if (silent_len >= Tmax) {
+		   printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
+		   incomplete_seq = 0;
+		   sq->seq_len[n] = state; 
+		   n++; 
+		   break;
+		}*/
+	  }  
+	  else {
+		/* Get a random output m from state i */
+      	p = gsl_rng_uniform(RNG);
+        sum = 0.0;   
+        for (m = 0; m < mo->M; m++) {
+	    	sum += mo->s[i].b[m];
+	      	if (sum >= p)
+	        	break;
+        }
+        sq->seq[n][state] = m;
+        state++;
+      }	
+	  if (state == len ){
+	     incomplete_seq = 0;
+  	 	 
+         sq->state_labels_len[n] = label_index;
+		
+         printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]);
+        
+         if (mo->model_type == kSilentStates){
+           printf("reallocating\n");
+           if (m_realloc(sq->state_labels[n], sq->state_labels_len[n])){mes_proc(); goto STOP;}
+         } 
+         
+         sq->seq_len[n] = state;    
+		 n++;
+	  }  
+	}  /* while (state < len) */  
+ } /* while( n < seq_number )*/
+
+return(sq);
+STOP:
+  sequence_free(&sq);
+  return(NULL);
+# undef CUR_PROC
+} /* data */
+  
+/*============================================================================*/
+          
+ /*===================== E n d   o f  f i l e  "model.c"       ===============*/

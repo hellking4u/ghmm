@@ -38,7 +38,7 @@ extern "C" {
 int reestimate_baum_welch(model *mo, sequence_t *sq);
 
 /** Just like reestimate_baum_welch, but you can limit
-    the 
+    the maximum number of steps
   @return            0/-1 success/error
   @param mo          initial model
   @param sq          training sequences
@@ -47,6 +47,12 @@ int reestimate_baum_welch(model *mo, sequence_t *sq);
   to log likelihood
   */
 int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+
+
+/** Update the emissions according to the tie groups by computing the mean
+    values within all groups.
+    */
+void reestimate_update_tie_groups(model *mo);
 
 #ifdef __cplusplus
 }
