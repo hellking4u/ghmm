@@ -436,6 +436,13 @@ extern int     model_free(model **mo);
 extern model** model_read(char *filename, int *mo_number);
 
 /**
+   Writes a model in matrix format.
+   @param file: output file
+   @param mo:   model
+*/
+void model_print(FILE *file, model *mo); 
+
+/**
    Reads in a model, where the model parameters are explicit given in
    matrix form. Memory allocation for the model is also done here.
    @return pointer to the model
@@ -618,6 +625,16 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
   
   /* extract pointer to a state */
   state *get_stateptr(state *ary, int index) { return ary + index; }
+  
+  void call_model_print(char *filename, model *mo) {
+  FILE *fp=fopen(filename, "a");
+  if (fp == NULL) {
+    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
+  } else {
+    model_print(fp, mo);
+    fclose(fp);
+  }
+}
   
 %}
 
@@ -944,7 +961,7 @@ extern void smodel_set_mean(smodel *smo, int i, double *mu);
 
 extern void smodel_set_variance(smodel *smo, int i, double *variance);
 
-extern void call_smodel_print(char *filename, smodel *smo);
+// extern void call_smodel_print(char *filename, smodel *smo);
 
 extern int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
 
@@ -999,6 +1016,17 @@ extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
   smodel *get_smodel_ptr(smodel **smo, int index) { return smo[index]; }
  
   void set_smodel_ptr(smodel **smo_array ,smodel *smo, int index) { smo_array[index] = smo; }
+  
+  // write a smodel to a file
+  void call_smodel_print(char *filename, smodel *smo) {
+  FILE *fp=fopen(filename, "a");
+  if (fp == NULL) {
+    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
+  } else {
+    smodel_print(fp, smo);
+    fclose(fp);
+  }
+}
 
 %}
 
@@ -1281,11 +1309,11 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   
   double get_2d_arrayd(double **ary, int index1, int index2) { return ary[index1][index2]; }
 
-  int *get_row_pointer_int(int **ary, int index) {
+  int *get_col_pointer_int(int **ary, int index) {
 	  return ary[index];
   }
   
-  double *get_row_pointer_d(double **ary, int index) {
+  double *get_col_pointer_d(double **ary, int index) {
 	  return ary[index];
   }
   
@@ -1320,6 +1348,10 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   void set_2d_arrayint_col(int **ary, int index, int *col){
 	  ary[index] = col;
   }	  
+  
+  void set_2d_arrayint(int **ary, int index1,int index2, int value) {
+    ary[index1][index2] = value;
+  }
   
   /* Get two dimensional array entry */
   int  get_2d_arrayint (int **ary, int index1, int index2) {return ary[index1][index2]; }

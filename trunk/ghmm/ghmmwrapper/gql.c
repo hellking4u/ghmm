@@ -159,7 +159,7 @@ void smodel_set_variance(smodel *smo, int i, double *variance) {
   }
 }
 
-
+/*
 void call_smodel_print(char *filename, smodel *smo) {
   FILE *fp=fopen(filename, "w");
   if (fp == NULL) {
@@ -168,7 +168,7 @@ void call_smodel_print(char *filename, smodel *smo) {
     smodel_print(fp, smo);
     fclose(fp);
   }
-}
+} */
 
 int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps, int *seq_rank) {
   int matched, res;
@@ -212,7 +212,7 @@ int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps
       matched++;
     }
     else  {
-      /* Test: very small log score for sequence cannot be produced. */
+      /* Test: very small log score for sequence cannot be produced. 
       log_ps[i] = -DBL_MAX;
       /* fprintf(stderr,"sequence[%d] cannot be build.\n", i); 
     }
