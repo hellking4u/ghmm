@@ -1013,9 +1013,8 @@ class HMMOpenFactory(HMMFactory):
     	    hmm_dom = xmlutil.HMM(fileName)
     	    emission_domain = hmm_dom.AlphabetType()
     	    if emission_domain == int:
-                # XXX label_l XXX
-                #[alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
-                [alphabets, A, B, pi, state_orders, label_list] = hmm_dom.buildMatrices()
+
+                [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
 
     		emission_domain = Alphabet(alphabets)
     		distribution = DiscreteDistribution(emission_domain)
@@ -1046,8 +1045,12 @@ class HMMOpenFactory(HMMFactory):
                         ghmmwrapper.set_arrayint(cpt_background.order, i,orders[name])
                         for j in range(len(background_dist[name])):
                             ghmmwrapper.set_2d_arrayd(cpt_background.b,i,j, background_dist[name][j])
+
+                # check for state labels
+                label_list = hmm_dom.getLabels()
                 
-                m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, state_orders, label_list)
+                m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, LabelDomain(label_list), label_list)
+
                 if background_dist != {}:
                      m.cmodel.bp = cpt_background
                      ids = [-1]*m.N
@@ -1061,6 +1064,13 @@ class HMMOpenFactory(HMMFactory):
                 else:
                      m.cmodel.bp = None
                      m.cmodel.background_id = None
+
+                # check for tied states
+                tied = hmm_dom.getTiedStates()
+                if tied is not []:
+                    m.cmodel.model_type += 8 # XXX should be kTiedEmissions from ghmm.h
+                    m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
+                        
 	    	return m
 	    
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
@@ -1294,9 +1304,8 @@ class HMMFromMatricesFactory(HMMFactory):
                     #print "order in state ",i," = ", order
                     # check or valid number of emission parameters
                     order = int(order)
-                    if  cmodel.M**(order+1) == len(B[i]:
+                    if  cmodel.M**(order+1) == len(B[i]):
                         state.order = order
-
                     else:
                         raise InvalidModelParameters, "The number of "+str(len(B[i]))+ " emission parameters for state "+str(i)+" is invalid. State order can not be determined."
                     
