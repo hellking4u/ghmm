@@ -1217,7 +1217,7 @@ class HMM:
 
 def HMMwriteList(fileName,hmmList):
     if path.exists(fileName):
-        print "Warning: File " + str(fileName) + " already exists. " + str(len(hmmList)) + " new models will be appended."
+        print "HMMwriteList warning: File " + str(fileName) + " already exists. " + str(len(hmmList)) + " new models will be appended."
     for model in hmmList:
         model.write(fileName)
         
