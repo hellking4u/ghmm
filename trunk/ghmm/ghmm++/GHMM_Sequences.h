@@ -82,6 +82,12 @@ class GHMM_Sequences: public XMLIO_Element {
      Frees allocated memory of C structs and sets pointer to NULL.
   */
   void clean();
+  /** Generates all possible integer sequence of lenght n from an alphabet with
+      M letters. Use lexicographical ordering. Memory allocation here.
+      @param n     length of sequences
+      @param M     size of alphabet
+  */
+  void lexWords(int n, int M);
   /** 
       Determines max length of all sequences.
       @return max sequence length

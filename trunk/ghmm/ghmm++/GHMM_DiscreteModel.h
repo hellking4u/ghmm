@@ -28,17 +28,17 @@ class GHMM_IntVector;
 class GHMM_DoubleVector;
 class GHMM_DoubleMatrix;
 
-/** Discrete HMM model (model in C data structure). */
+/** Discrete HMM model (wrapper around model in C data structure). */
 class GHMM_DiscreteModel: public GHMM_AbstractModel {
 
  public:
   
   /** Constructor. 
       @param number_of_states Number of the states.
-      @param my_M Size of the alphabet. 
-      @param my_prior Prior for the a priori probability for the model 
-                      (-1 for none). */
-  GHMM_DiscreteModel(int number_of_states, int my_M, double my_prior=-1);
+      @param alphabet_size Size of the alphabet. 
+      @param prior Prior for the a priori probability for the model 
+                   (-1 for none). */
+  GHMM_DiscreteModel(int number_of_states, int alphabet_size, double prior=-1);
   /** Constructor. Construct from c model. Object now is owner of this model. 
       @param my_model model as C data structure. */
   GHMM_DiscreteModel(model* my_model);
@@ -160,10 +160,37 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   */
   void Pi_print(FILE *file, char *tab, char *separator, char *ending) const;
   /**
+     Writes transposed initial allocation vector of a matrix.
+     @param file: output file
+     @param tab:  format: leading Tabs
+     @param separator: format: seperator for columns
+     @param ending:    format: end of a row  
+  */
+  void Pi_print_transp(FILE *file, char *tab, char *ending);
+  /**
      Writes the model in matrix format.
      @param file: output file
   */
   virtual void print(FILE *file) const;
+  /** Computes probabilistic distance of this model to a second model. 
+      This model is used to generate random output. The second model
+      is compared to these sequences.
+      @return probabilistic distance
+      @param m  model to compare with
+      @param maxT  maximum output length (for HMMs with absorbing states multiple
+                   sequences with a toal langth of at least maxT will be 
+                   generated)
+      @param symmetric  flag, whether to symmetrize distance (not implemented yet)
+      @param verbose  flag, whether to monitor distance in 40 steps. 
+                      Prints to stdout (yuk!)
+  */
+  double prob_distance(GHMM_DiscreteModel* m, int maxT, int symmetric, int verbose);
+  /** 
+      Writes the parameters of this model sorted by states. 
+      Is not very concise.   
+      @param file: output file
+  */
+  void states_print(FILE *file);
   /**
      Viterbi algorithm. Calculates the Viterbi path (the optimal path trough
      the model) and the Viterbi probability to a given model and a given 
