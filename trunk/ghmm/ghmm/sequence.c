@@ -896,6 +896,17 @@ STOP:
 
 /*============================================================================*/
 
+int sequence_max_len(const sequence_t *sqd) {
+  int i, max_len = 0;
+  for (i = 0; i < sqd->seq_number; i++)
+    if (max_len < sqd->seq_len[i])
+      max_len = sqd->seq_len[i];
+  return max_len;
+} /* sequence_max_len */
+
+
+/*============================================================================*/
+
 int sequence_d_max_len(const sequence_d_t *sqd) {
   int i, max_len = 0;
   for (i = 0; i < sqd->seq_number; i++)
@@ -1095,12 +1106,3 @@ int sequence_d_mix_like(smodel **smo, int  smo_number, sequence_d_t *sqd,
 
 #undef CUR_PROC
 } /* sequence_d_mix_like */
-
-
-
-
-
-
-
-
-
