@@ -1,5 +1,9 @@
 #include "XMLIO_ArrayObject.h"
 
+#include <cstdlib>
+#include <cerrno>
+#include <cstdio>
+
 /***********************************************************************************/
 
 void XMLIO_StringObject::XMLIO_getCharacters(const string& characters)
@@ -9,11 +13,38 @@ void XMLIO_StringObject::XMLIO_getCharacters(const string& characters)
 
 /***********************************************************************************/
 
-int* get_token(const string &characters,int &position)
+size_t evaluate_token(const string &characters, const size_t position, const size_t length, int* &return_int)
 {
-  position++;
-  return new int(0);
+  errno=0;
+  int new_value=strtol(&(characters.c_str()[position]),NULL,0);
+  if (errno)
+    {
+      return_int=NULL;
+      return 0;
+    }
+  else
+    {
+      return_int=new int(new_value);
+      return 1;
+    }
 }
+
+size_t evaluate_token(const string &characters, const size_t position, const size_t length, double* &return_double)
+{
+  errno=0;
+  double new_value=strtod(&(characters.c_str()[position]),NULL);
+  if (errno)
+    {
+      return_double=NULL;
+      return 1;
+    }
+  else
+    {
+      return_double=new double(new_value);
+      return 0;
+    }
+}
+
 
 /***********************************************************************************/
 
