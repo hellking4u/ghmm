@@ -39,3 +39,13 @@ const char* GHMM_IntVector::toString() const {
 void GHMM_IntVector::print(FILE *file, char *tab, char *separator, char *ending) {
   vector_i_print(file,c_vector,len,tab,separator,ending);
 }
+
+
+void GHMM_IntVector::resize(int new_len, int default_value) {
+  c_vector = (int*) realloc(c_vector,new_len * sizeof(int));
+
+  for (int i = len; i < new_len; ++i)
+    c_vector[i] = default_value;
+
+  len = new_len;
+}

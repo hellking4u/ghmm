@@ -41,8 +41,9 @@ class GHMM_DoubleVector {
      @param ending     format: end of a row  
   */
   void print(FILE *file, char *tab, char *separator, char *ending);
-  /** Resizes vector. */
-  void resize(int new_len);
+  /** Resizes vector. When vector is enlarged, all new elements
+      will be initialized with 'default_value'. */
+  void resize(int new_len, double default_value = 0.0);
 
   /** C type double vector. */
   double* c_vector;
