@@ -20,85 +20,85 @@ extern "C" {
 /*@{ (Doc++-Group: model) */
 
 /** @name state
-    Grundlegende Struktur, in der alle zu einem Zustand gehoerigen Parameter
-    gespeichert werden.
+    The basic structure, keeps all parameters that belong to a state. 
 */
 struct state{
-  /** Anfangswahrscheinlichkeit */ 
+  /** Initial probability */ 
   double pi;
-  /** Ausgabewahrscheinlichkeit */
+  /** Output probability */
   double *b;
-  /** ID's der Nachfolge States */ 
+  /** ID of the following state */ 
   int *out_id;  
-  /** ID's der Vorgaenger States */    
+  /** ID of the previous state */    
   int *in_id;
-  /** Nachfolge Uebergangswahrscheinlichkeiten */
+  /** Transition probability to a successor */
   double *out_a; 
-  /** Vorgaenger Uebergangswahrscheinlichkeiten */
+  /** Transition probablity to a precursor */
   double *in_a;
-  /** Anzahl Nachfolge States */     
+  /** Number of successor states */     
   int out_states; 
-  /** Anzahl Vorgaenger States */
+  /** Number of precursor states */
   int in_states;  
-  /** falls fix == 1 --> b bleibt fix, wird also nicht trainiert */
+  /** if fix == 1 --> b stays fix during the training */
   int fix;
 };
 typedef struct state state;
 
-/** @name struct model
-    Gesamt HMM-Modell. Enth\"alt also alle Parameter, die ein HMM festlegen.
+/** @name model
+    The complete HMM. Contains all parameters, that define a HMM.
 */
 struct model{
-  /** Zahl der Zustaende */
+  /** Number of states */
   int N;
-  /** Zahl der Ausgabewerte */   
+  /** Number of outputs */   
   int M;   
-  /** Vektor der Zustaende*/
+  /** Vector of the states */
   state *s; 
-  /** Prior fuer die a priori Wahrscheinlichkeit des Modells.
-   Kein prior definiert: Wert auf -1 gesetzt */
+  /** Prior for the a priori probability for the model.
+   Gets the value -1 if no prior defined. */
   double prior;
 };
 typedef struct model model;
 
 
-/** @name model\_direct
-    Modellparameter in Matrixform fuer hmm\_input
+/** @name model_direct
+    The complete HMM. Keeps the model parameters in a matrix form. 
 */
 struct model_direct{
-  /** Zahl der Zustaende */
+  /** Number of states */
   int N;
-  /** Zahl der Ausgabewerte */  
+  /** Number of outputs */  
   int M;
-  /** Prior fuer die a priori Wahrscheinlichkeit des Modells.
-   Kein prior definiert: Wert auf -1 gesetzt */
+  /** Prior for the a priori probability for the model.
+      Gets the value -1 if no prior defined. */
   double prior;
-  /** Uebergangsmatrix */
+  /** Transition matrix  */
   double **A;
-  /** Ausgabematrix */
+  /** Output matrix */
   double **B;
-  /** Anfangsmatrix */
+  /** Initial matrix */
   double * Pi;
-  /** Vektor zur Kennzeichnung von States, deren Ausgabeparameter nicht 
-      trainiert werden sollen. Default ist 0 fuer alle states */
+  /** A vector to know the states where the output should not be trained.
+      Default value is 0 for all states. */
   int *fix_state;
 };
 typedef struct model_direct model_direct;
 
-/** @name hmm_check\_t
+/** @name hmm_check_t
+    Checks the consistence of the model
   */
 struct hmm_check_t{
-  /** */
+  /** Number of rows in the A matrix */
   int r_a;
-  /** */
+  /** Number of columns in the A matrix */
   int c_a;
-  /** */
+  /** Number of rows in the B matrix */
   int r_b;
-  /** */
+  /** Number of columns in the B matrix */
   int c_b;
-  /** */
+  /** Length of the phi vector */
   int len_pi;
-  /** */
+  /** Length of the fix vector */
   int len_fix;
 };
 typedef struct hmm_check_t hmm_check_t;
@@ -109,8 +109,8 @@ typedef struct hmm_check_t hmm_check_t;
 
 
 /*
-  Wichtig: Include von sequence.h zur Vermeidung von Fehlern beim Uebersetzen
-  erst an dieser Stelle. (sequence.h und model.h includen sich gegenseitig)
+  Important: The inclusion of sequence.h ist not done before this point in
+  order to avoid error by compiling.
 */
 #include <ghmm/sequence.h>
 #include <ghmm/scanner.h>
@@ -120,206 +120,215 @@ typedef struct hmm_check_t hmm_check_t;
 extern "C" {
 #endif
 
-/** Speicher eines Modells freir\"aumen..
-    @return Erfolgsstatus: 0 succes; -1 error
-    @param mo:  ptr. auf ptr auf Modell */
+
+/** Frees the memory of a model.
+    @return 0 for succes; -1 for error
+    @param mo:  pointer to a model */
 int     model_free(model **mo);
 
 /**
-   Einlesen einer Ascii-Datei zur Initialisierung der Modelle. Alloc vom 
-   Speicher f\"ur die Modelle erfolgt hier.
-   @return Vektor von Pointern der eingelesenen Modelle
-   @param filename:   Name der einzulesenden Ascii-Datei
-   @param mo_number:  Zahl der eingelesenen Modelle */
+   Reads in ASCII data to initialize the model. Memory allocation for
+   the model is also done here.
+   @return vector of pointers to the model
+   @param filename:   the ASCII input file
+   @param mo_number:  number of models to read */
 model** model_read(char *filename, int *mo_number);
+
 /**
-   Einlesen eines Modells bei expliziter Angabe aller relevanten 
-   Modellparameter in Matrixform. Alloc vom Speicher f\"ur die Modelle erfolgt hier.
-   @return Pointer auf eingelesenes Modell
+   Reads in a model, where the model parameters are explicit given in
+   matrix form. Memory allocation for the model is also done here.
+   @return pointer to the model
    @param s:       scanner
-   @param multip:  eingelesene Multiplizitaet; gibt Anzahl der Kopien an, die vom 
-   eingelesenen Modell erzeugt werden sollen */
+   @param multip:  multiplicity; gives how many copies should 
+   be made of the model */
 model*  model_direct_read(scanner_t *s, int *multip);
 
 /**
-   Erzeugung von einfachen left-right Modellen nach vorgegebenen Sequenzen.
-   Daf\"ur wird f\"ur jede Sequenz "model_generate_from_sequence" aufgerufen.
-   Die Sequenzen werden direkt aus dem Ascii File eingelesen und nach 
-   Verlassen der Funktion wieder verworfen.
-   @return Vektor von Modellen
+   Produces simple left-right models given sequences. 
+   The function "model_generate_from_sequence" is called for each 
+   model that should be made. The sequences are read in from the
+   ASCII file and thrown away again when leaving the function.
+   @return vector of models
    @param s:          scanner
-   @param new_models: Anzahl der erzeugten Modelle */
-
+   @param new_models: number of models to produce */
 model **model_from_sequence_ascii(scanner_t *s, long *mo_number);
 
-
 /** 
-    Aufgabe siehe: model_from_sequence_ascii. Unterschied: die Sequenzen werden
-    nicht aus Ascii File eingelesen, sondern liegen bereits als Struktur vor.
-    @return Vektor von Modellen
+    Produces simple left-right models given sequences. The sequences
+    are not read in from file, but exists already as a structur.
+    @return vector of models
     @param s:          scanner
-    @param new_models: Anzahl der erzeugten Modelle */
-
+    @param new_models: number of models to produce */
 model **model_from_sequence(sequence_t *sq, long *mo_number);
 
 /**
-   Kopieren eines vorgegebenen Modells. Speicher alloc geschieht in model\_copy.
-   @return Kopie des Modells
-   @param mo:  zu kopierendes Modell */
+   Copies a given model. Allocates the necessary memory.
+   @return copy of the model
+   @param mo:  model to copy */
 model*  model_copy(const model *mo);
 
 /**
-   Pr\"ufen, ob alle Normierungsbedingungen vom Modell erf\"ullt werden. (Summen 
-   der versch. Wahrscheinlichkeiten = 1?)
-   @return Erfolgsstatus: 0 succes; -1 error
-   @param mo:  zu ueberpruefendes Modell */
+   Tests if all standardization requirements of model are fulfilled. 
+   (That is, if the sum of the probabilities is 1).
+   @return 0 for succes; -1 for error
+   @param mo:  model to test */
 int     model_check(const model* mo);
 
 /**
-   Check Anzahl States und Anzahl Ausgabewerte in den Modellen auf
-   Uebereinstimmung..
-   @return Erfolgsstatus: 0 succes; -1 error
-   @param mo:           Vektor der Modelle
-   @param model_number: Anzahl der Modelle */
+   Tests if number of states and number of outputs in the models match.
+   @return 0 for succes; -1 for error
+   @param mo:           vector of models
+   @param model_number: numbr of models */
 int     model_check_compatibility(model **mo, int model_number);
+
 /**
-   Erzeugt ein Modell, das die uebergebene Sequenz mit P = 1 ausgibt. 
-   Striktes Left-Right Model, pro Element der
-   Sequenz ein Zustand, in dem mit P = 1 das gegebene Symbol ausgegeben wird.
-   Das Modell erhaelt speziellen "final State", der keine out-states hat.
-   @return         Pointer auf das erzeugte Modell (Allozierung hier)
-   @param seq      Vorgabesequenz
-   @param seq_len  Laenge der Vorgabesequenz
-   @param anz_symb Zahl der Symbole der Vorgabesequenz
+   Produces a model, which generates the given sequence with probability 1.
+   The model is a strict left-right model with one state for each element 
+   in the sequence and the output in state i is the i-th value in the sequence 
+   with probability 1. The model also has a final state, a state with no output.
+   @return         pointer to the produced model 
+   @param seq:      sequence
+   @param seq_len:  length of the sequence
+   @param anz_symb: number of symbols in the sequence
 */
 model*  model_generate_from_sequence(const int *seq, int seq_len, 
 				     int anz_symb);
 
 /** 
-    Erzeugt zu einem gegebenen Modell zuf\"allige Sequenzen.
-    Speicher f\"ur die Sequenzen und den L\"angenvektor wird in der Fkt. selbst
-    bereitgestellt.
-    Die L\"ange der Sequenzen kann global vorgegeben werden (global_len > 0)
-    oder in der Funktion dadurch bestimmt werden, dass ein "final state"
-    erreicht wird (ein state, dessen Ausgangswahrscheinlichkeiten =0 sind).
-    Besitzt das Modell keinen Final State, so werden Sequenzen der L\"ange 
-    MAX_SEQ_LEN generiert. 
-    @return            Pointer auf ein Feld von Sequenzen (Allozierung)
-    @param mo          vorgegebenes Modell
-    @param seed        Initialisierungsvariable des Zufallsgenerators (int).
-                       Wird 0 übergeben, wird der RNG nicht ge-seeded 
-    @param global_len  gewuenschte Sequenzlaenge (=0: autom. ueber final state)
-    @param seq_number  gewuenschte Anzahl von Sequenzen
+    Produces sequences to a given model. All memory that is needed for the 
+    sequences is allocated inside the function. It is possible to define
+    the length of the sequences global (global_len > 0) or it can be set 
+    inside the function, when a final state in the model is reach (a state
+    with no output). If the model has no final state, the sequences will
+    have length MAX_SEQ_LEN.
+    @return             pointer to an array of sequences
+    @param mo:          model
+    @param seed:        initial parameter for the random value generator
+                        (an integer). If seed == 0, then the random value
+			generator is not initialized.
+    @param global_len:  length of sequences (=0: automatically via final states)
+    @param seq_number:  number of sequences
 */
 sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 				     long seq_number);
 
 /**
-   Berechnung der Summe der log( P ( O | lambda ) ).
-   Sequenzen, die vom Modell nicht dargestellt werden koennen, werden 
-   vernachlaessigt.
+   Calculates the sum log( P( O | lambda ) ).
+   Sequences, that can not be generated from the given model, are neglected.
    @return    log(P)
-   @param mo vorgegebenes Modell
-   @param sq vorgegebene Sequenzen       
+   @param mo model
+   @param sq sequences       
 */
 double model_likelihood(model *mo, sequence_t *sq);
+
 /**
-   Schreiben eines Modells in Matrixform..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
+   Writes a model in matrix format.
+   @param file: output file
+   @param mo:   model
 */
 void model_print(FILE *file, model *mo); 
+
 /**
-   Schreiben der Uebergangsmatrix eines Modells..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
-   @param tab:  zur Formatierung: fuehrende Tabs
-   @param separator: Formatierung: Trennzeichen der Spalten
-   @param ending:    Formatierung: Endzeichen der Zeile  
+   Writes transition matrix of a model.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
 */
 void model_A_print(FILE *file, model *mo, char *tab, char *separator, 
 		   char *ending);
 /**
-   Schreiben der Ausgabematrix eines Modells..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
-   @param tab:  zur Formatierung: fuehrende Tabs
-   @param separator: Formatierung: Trennzeichen der Spalten
-   @param ending:    Formatierung: Endzeichen der Zeile  
+   Writes output matrix of a model.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
 */
 void model_B_print(FILE *file, model *mo, char *tab, char *separator, 
 		   char *ending);
 /**
-   Schreiben des Anfangsbelegungsvektors eines Modells..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
-   @param tab:  zur Formatierung: fuehrende Tabs
-   @param separator: Formatierung: Trennzeichen der Spalten
-   @param ending:    Formatierung: Endzeichen der Zeile  
+   Writes initial allocation vector of a matrix.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading Tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
 */
 void model_Pi_print(FILE *file, model *mo, char *tab, char *separator, 
 		    char *ending);
-
 /**
- */
+   Writes fix vector of a matrix.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading Tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
+*/
 void model_fix_print(FILE *file, model *mo, char *tab, char *separator, 
 		     char *ending);
 /**
-   Schreiben der transponierten Uebergangsmatrix eines Modells..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
-   @param tab:  zur Formatierung: fuehrende Tabs
-   @param separator: Formatierung: Trennzeichen der Spalten
-   @param ending:    Formatierung: Endzeichen der Zeile  
+   Writes transposed transition matrix of a model.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading Tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
 */
 void model_A_print_transp(FILE *file, model *mo, char *tab, char *separator, 
 			  char *ending);
 /**
-   Schreiben der transponierten Ausgabematrix eines Modells..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
-   @param tab:  zur Formatierung: fuehrende Tabs
-   @param separator: Formatierung: Trennzeichen der Spalten
-   @param ending:    Formatierung: Endzeichen der Zeile  
-*/
+   Writes transposed output matrix of a model.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading Tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
+*/   
 void model_B_print_transp(FILE *file, model *mo, char *tab, char *separator, 
 			  char *ending);
+
 /**
-   Schreiben des transponierten Anfangsbelegungsvektors eines Modells..
-   @param file: Ausgabedatei
-   @param mo:   zu schreibendes Modell
-   @param tab:  zur Formatierung: fuehrende Tabs
-   @param separator: Formatierung: Trennzeichen der Spalten
-   @param ending:    Formatierung: Endzeichen der Zeile  
-   */
+   Writes transposed initial allocation vector of a matrix.
+   @param file: output file
+   @param mo:   model
+   @param tab:  format: leading Tabs
+   @param separator: format: seperator for columns
+   @param ending:    format: end of a row  
+*/
 void model_Pi_print_transp(FILE *file, model *mo, char *tab, char *ending);
+
 /**
-   Schreiben eines HMM-Modells in Matrixformat. 
-   Input: model\_direct (heisst: Parameter als Matrix gespeichert.)
-   @param file:   Ausgabedatei
-   @param mo_d:   zu schreibendes Modell in Matrixformat
-   @param multip: Modell wird in multip Kopien geschrieben
+   Writes a HMM in matrix format. The input model must be of type
+   model_direct, that is, have the parameters saved as matrices.
+   @param file:   output file
+   @param mo_d:   model of type model_direct
+   @param multip: number of copies to write
 */
 void model_direct_print(FILE *file, model_direct *mo_d, int multip);
+
 /** 
-    Etwas unuebersichtliche Parameterausgabe sortiert nach den States 
-    des Modells..
-    @param file: Ausgabedatei
-    @param mo:   zu schreibendes Modell
+    Writes the parameters of a model sorted by states. 
+    Is not very concise.   
+    @param file: output file
+    @param mo:   model
 */
 void model_states_print(FILE *file, model *mo); 
 
-/** Alle Pointer des Modell freigeben und auf NULL setzen, Variablen 
-    auf Null setzen..
-    @param mo_d  HMM-Modell-Struktur (\Ref{struct model_direct})
-    @param check Check-Struktur (\Ref{struct hmm_check_t})
+/** 
+    Frees all memory from a model, sets the pointers to NULL and 
+    variables to zero.
+    @param mo_d  HMM structure (\Ref{struct model_direct})
+    @param check Check structure (\Ref{struct hmm_check_t})
 */
 void model_direct_clean(model_direct *mo_d, hmm_check_t *check); 
 
-/** Teste Kompatibiliatet der Modell-Komponenten..
-    @return ??
-    @param mo_d  HMM-Modell-Struktur  (\Ref{struct model_direct})
-    @param check Check-Struktur  (\Ref{struct hmm_check_t})
+/** 
+    Tests compatibility of the model components.
+    @return 0 for success; -1 for failure 
+    @param mo_d  HMM structure  (\Ref{struct model_direct})
+    @param check Check structure  (\Ref{struct hmm_check_t})
 */
 int model_direct_check_data(model_direct *mo_d, hmm_check_t *check); 
 
