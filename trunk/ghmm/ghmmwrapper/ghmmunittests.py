@@ -1,16 +1,18 @@
 #!/usr/bin/env python2.3
 ################################################################################
 #
-#       This file is part of GHMM (General Hidden Markov Model library) 
+#       This file is part of the General Hidden Markov Model Library,
+#       GHMM version __VERSION__, see http://ghmm.org
 #
 #       file:    ghmmunittests.py
 #       authors: Benjamin Georgi, Wasinee Rungsarityotin, Alexander Schliep
 #
-#       Copyright (C) 2003-2004, Alexander Schliep and MPI Molekulare Genetik, Berlin
-#                                   
-#       Contact: schliep@molgen.mpg.de         
+#       Copyright (C) 1998-2004 Alexander Schliep
+#       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+#       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+#                               Berlin
 #
-#       Information: http://ghmm.org
+#       Contact: schliep@ghmm.org
 #
 #       This library is free software; you can redistribute it and/or
 #       modify it under the terms of the GNU Library General Public
@@ -24,17 +26,11 @@
 #
 #       You should have received a copy of the GNU Library General Public
 #       License along with this library; if not, write to the Free
-#       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 #
-#
-#
-#       This file is version $Revision$ 
-#                       from $Date$
-#             last change by $Author$.
 #
 ################################################################################
-
 """
 Testing GHMM
 
@@ -433,8 +429,11 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(self.pi,tpi)        
             
     def testsample(self):
-        # print"\ntestsample ",
+        print"\ntestsample ",
         seq = self.model.sampleSingle(100,seed=3586662)
+        print "*************" 
+        print seq
+        
         seq2 = self.model.sample(10,100,seed=3586662)
 
 

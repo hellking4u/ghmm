@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 ################################################################################
 #
-#       This file is part of Gato (Graph Algorithm Toolbox) 
-#       version _VERSION_ from _BUILDDATE_. You can find more information at 
-#       http://www.zpr.uni-koeln.de/~gato
+#       This file is part of the General Hidden Markov Model Library,
+#       GHMM version __VERSION__, see http://ghmm.org
 #
-#	file:   HMMEd.py
-#	author: Alexander Schliep (schliep@zpr.uni-koeln.de)
+#       file:    xmlutil.py
+#       authors: Wasinee Rungsarityotin
 #
-#       Copyright (C) 1998-2002, Alexander Schliep, Winfried Hochstaettler and 
-#       ZAIK/ZPR, Universitaet zu Koeln
-#                                   
-#       Contact: schliep@zpr.uni-koeln.de, wh@zpr.uni-koeln.de             
+#       Copyright (C) 1998-2004 Alexander Schliep
+#       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+#       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+#                               Berlin
 #
-#       Information: http://gato.sf.net
+#       Contact: schliep@ghmm.org
 #
 #       This library is free software; you can redistribute it and/or
 #       modify it under the terms of the GNU Library General Public
@@ -27,15 +26,11 @@
 #
 #       You should have received a copy of the GNU Library General Public
 #       License along with this library; if not, write to the Free
-#       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-#
-#
-#       This file is version $Revision$ 
-#                       from $Date$
-#             last change by $Author$.
 #
 ################################################################################
+
 
 from DataStructures import Point2D,EdgeWeight
 from Graph import Graph, SubGraph
