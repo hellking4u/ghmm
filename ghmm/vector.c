@@ -8,6 +8,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <float.h>
 #include <stdio.h>
 #include "mes.h"
@@ -57,7 +65,7 @@ void vector_const_preserve_struct(double *v, int len, double c) {
 void vector_random_values(double *v, int len) {
   int i;
   for (i = 0; i < len; i++)
-    v[i] = gsl_rng_uniform(RNG);
+    v[i] = GHMM_RNG_UNIFORM(RNG);
 } /* vector_random_values */
 
 
@@ -66,7 +74,7 @@ void vector_random_preserve_struct(double *v, int len) {
   int i;
   for (i = 0; i < len; i++) {
     if (v[i] != 0.0)
-      v[i] = gsl_rng_uniform(RNG);
+      v[i] = GHMM_RNG_UNIFORM(RNG);
   }
 } /* vector_random_preserve_struct */
 

@@ -8,6 +8,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -70,8 +78,8 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
   alpha = matrix_d_alloc(max_short_len, smo->N);
   if (!alpha) {mes_proc(); goto STOP;}
   if (!m_calloc(scale, max_short_len)) {mes_proc(); goto STOP;}
-  gsl_rng_init();
-  gsl_rng_set(RNG,seed); 
+  ghmm_rng_init();
+  GHMM_RNG_SET(RNG,seed); 
 
   /*---------------main loop over all seqs-------------------------------*/
   for (n = 0; n < sqd_short->seq_number; n++) {
@@ -127,7 +135,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
        else
        choose inittial state according to pi and do output
     */
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;
     for (i = 0; i < smo->N; i++) {
       sum += initial_distribution[i];
@@ -142,7 +150,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
     t = 0;
     if (short_len == 0) {
       /* Output in state i */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (m = 0; m < smo->M; m++) {
 	sum += smo->s[i].c[m];
@@ -201,7 +209,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
       i = smo->s[i].out_id[j];
 
       /* Output in state i */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (m = 0; m < smo->M; m++) {
 	sum += smo->s[i].c[m];
@@ -281,7 +289,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     }
   }
 
-  p = gsl_rng_uniform(RNG);
+  p = GHMM_RNG_UNIFORM(RNG);
   sum = 0.0;
   for (i = 0; i < smo->N; i++) {
     sum += initial_distribution[i];
@@ -310,7 +318,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     if (smo->s[i].out_states == 0) 
 	/* reached final state, exit while loop */
 	break;
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;   
     for (j = 0; j < smo->s[i].out_states; j++) {
       sum += smo->s[i].out_a[class][j];   
@@ -349,7 +357,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
     if (smo->M == 1)
       m = 0;
     else {            
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (m = 0; m < smo->M; m++) {
 	sum += smo->s[i].c[m];
@@ -433,7 +441,7 @@ double sgenerate_next_value(smodel *smo, double *O, const int len) {
 
   /* random state */
   /*
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;
     for (i = 0; i < smo->N; i++) {
     sum += alpha[len - 1][i];
@@ -450,7 +458,7 @@ double sgenerate_next_value(smodel *smo, double *O, const int len) {
 
   if (init_state == -1 || smo->s[init_state].out_states == 0) goto STOP;
 
-  p = gsl_rng_uniform(RNG);
+  p = GHMM_RNG_UNIFORM(RNG);
   sum = 0.0;   
   for (j = 0; j < smo->s[init_state].out_states; j++) {
     sum += smo->s[init_state].out_a[0][j];   
@@ -469,7 +477,7 @@ double sgenerate_next_value(smodel *smo, double *O, const int len) {
   if (smo->M == 1)
     m = 0;
   else {            
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;   
     for (m = 0; m < smo->M; m++) {
       sum += smo->s[i].c[m];

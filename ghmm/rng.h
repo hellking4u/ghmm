@@ -11,14 +11,13 @@ __copyright__
 #ifndef RNG_H
 #define RNG_H
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
+#include "ghmmutil.h"
 
 /** @name rng Initialization for the random number generator */
 
 /**
  */
-extern gsl_rng * RNG;
+extern GHMM_RNG * RNG;
 
 
 #ifdef __cplusplus
@@ -27,11 +26,11 @@ extern "C" {
 
 /**
  */
-void gsl_rng_init(void);
+void ghmm_rng_init(void);
 
 /**
  */
-void gsl_rng_timeseed(gsl_rng * r);
+void ghmm_rng_timeseed(GHMM_RNG * r);
 
 #ifdef __cplusplus
 }

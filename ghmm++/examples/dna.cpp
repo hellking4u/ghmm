@@ -102,7 +102,7 @@ int dna_test() {
 
 int main() {
   /* Important! initialise rng  */
-  GHMM_Toolkit::gsl_rng_init();
+  GHMM_Toolkit::ghmm_rng_init();
 
   int result = dna_test();
 

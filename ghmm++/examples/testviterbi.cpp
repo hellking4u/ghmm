@@ -195,7 +195,7 @@ int main(int argc,char* argv)
 
   Viterbi* vbiobj;
 
-  gsl_rng_init(); //Init - important!!
+  ghmm_rng_init(); //Init - important!!
 
   sdmodel* sdm = new sdmodel;
   create_model(sdm,matrans,maems,vecpi,n,m,cos);

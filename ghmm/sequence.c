@@ -8,6 +8,14 @@ __copyright__
 
 *****************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "mprintf.h"
 #include "mes.h"
 #include "sequence.h"
@@ -330,8 +338,8 @@ sequence_d_t **sequence_d_truncate(sequence_d_t **sqd_in, int sqd_fields,
   }
   if( !m_calloc(sq, sqd_fields) ) {mes_proc();goto STOP;}
 
-  gsl_rng_init();
-  gsl_rng_set(RNG,seed);
+  ghmm_rng_init();
+  GHMM_RNG_SET(RNG,seed);
 
   for (i = 0; i < sqd_fields; i++) {
     sq[i] = sequence_d_calloc(sqd_in[i]->seq_number);
@@ -345,7 +353,7 @@ sequence_d_t **sequence_d_truncate(sequence_d_t **sqd_in, int sqd_fields,
 	trunc_len = 0;
       else
 	trunc_len = (int) ceil(( sqd_in[i]->seq_len[j] * 
-				 (1 - trunc_ratio * gsl_rng_uniform(RNG)) ));
+				 (1 - trunc_ratio * GHMM_RNG_UNIFORM(RNG)) ));
       sequence_d_copy(sq[i]->seq[j], sqd_in[i]->seq[j], trunc_len);
       if(m_realloc(sq[i]->seq[j], trunc_len)) {mes_proc(); goto STOP;}
       sq[i]->seq_len[j] = trunc_len;
@@ -1057,7 +1065,7 @@ int sequence_d_partition(sequence_d_t *sqd, sequence_d_t * sqd_train,
   }
 
   for (i = 0; i < total_seqs; i++) {
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     if (p <= train_ratio)
       sqd_dummy = sqd_train;
     else

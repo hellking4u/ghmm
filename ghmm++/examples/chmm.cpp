@@ -85,7 +85,7 @@ int single_state_continuous() {
 
 int main() {
   /* Important! initialise rng  */
-  GHMM_Toolkit::gsl_rng_init();
+  GHMM_Toolkit::ghmm_rng_init();
 
   int result = single_state_continuous();
 

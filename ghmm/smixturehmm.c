@@ -7,6 +7,14 @@
 __copyright__
 
 *******************************************************************************/
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
@@ -48,7 +56,7 @@ int main(int argc, char* argv[]) {
   FILE *outfile = NULL, *likefile = NULL, *smofile = NULL;
   char filename[256], likefilename[256];
 
-  gsl_rng_init();
+  ghmm_rng_init();
   
   if (argc == 10 || argc == 11) {
 
@@ -79,9 +87,9 @@ int main(int argc, char* argv[]) {
     }
     printf("TRAIN RATIO %.2f\n", train_ratio);
     if (argc == 11)
-      gsl_rng_set(RNG,atoi(argv[10]));
+      GHMM_RNG_SET(RNG,atoi(argv[10]));
     else {      
-      gsl_rng_timeseed(RNG); /* Before: gsl_rng_set(RNG,0); */
+      ghmm_rng_timeseed(RNG);
     }
   }
   else {
@@ -394,7 +402,7 @@ int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
   /* 1. strict random partition; cp = 0/1 */
   if (mode == 1) {
     for (i = 0; i < sqd->seq_number; i++) {
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       j = (int) floor(smo_number * p);  /* ??? */
       if (j < 0 || j >= smo_number) {
 	mes_prot("Error: initial model out of range\n"); goto STOP;

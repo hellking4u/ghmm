@@ -8,6 +8,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <float.h>
 #include <math.h>
 #include "mprintf.h"
@@ -633,14 +641,14 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     Tmax = (int)MAX_SEQ_LEN;
 
   
-  /* gsl is also used by randvar_std_normal 
+  /* rng is also used by randvar_std_normal 
      seed == -1: Initialization, has already been done outside the function */
   if (seed >= 0) {
-    gsl_rng_init();
+    ghmm_rng_init();
     if (seed > 0)
-      gsl_rng_set(RNG,seed);
+      GHMM_RNG_SET(RNG,seed);
     else /* Random initialization! */
-      gsl_rng_timeseed(RNG);
+      ghmm_rng_timeseed(RNG);
   }
 
   n = 0;
@@ -648,12 +656,12 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
   
   while (n < seq_number) {
     /* Test: A new seed for each sequence */
-    /*   gsl_rng_timeseed(RNG); */
+    /*   ghmm_rng_timeseed(RNG); */
     stillbadseq = badseq = 0;
     if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
 
     /* Get a random initial state i */
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;
     for (i = 0; i < smo->N; i++) {
       sum += smo->s[i].pi;
@@ -667,7 +675,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     
     /* Get a random initial output
        -> get a random m and then respectively a pdf omega. */
-    p = gsl_rng_uniform(RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;   
     for (m = 0; m < smo->M; m++) {
       sum += smo->s[i].c[m];
@@ -683,7 +691,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
     class = sequence_d_class(sq->seq[n], 0, &osum);
     while (state < len) {
       /* Get a new state */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (j = 0; j < smo->s[i].out_states; j++) {
 	sum += smo->s[i].out_a[class][j];   
@@ -732,7 +740,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
       /*      fprintf(stderr, "%d\n", i); */
 
       /* Get output from state i */
-      p = gsl_rng_uniform(RNG);
+      p = GHMM_RNG_UNIFORM(RNG);
       sum = 0.0;   
       for (m = 0; m < smo->M; m++) {
 	sum += smo->s[i].c[m];

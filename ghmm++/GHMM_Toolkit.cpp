@@ -13,8 +13,8 @@ using namespace std;
 #endif
 
 
-void GHMM_Toolkit::gsl_rng_init() {
-  ::gsl_rng_init();
+void GHMM_Toolkit::ghmm_rng_init() {
+  ::ghmm_rng_init();
 }
 
 

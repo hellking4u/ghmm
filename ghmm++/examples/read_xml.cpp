@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   GHMM_Alphabet*  alphas = NULL;
 
   /* Important! initialise rng  */
-  GHMM_Toolkit::gsl_rng_init();
+  GHMM_Toolkit::ghmm_rng_init();
 
 
   doc.open("dna.xml", "r");

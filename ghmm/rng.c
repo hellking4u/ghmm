@@ -8,22 +8,30 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
-#include <gsl/gsl_rng.h>
+#include "ghmmutil.h"
 #include "rng.h"
 #include "math.h"
 #include "time.h"
 
 /* The global RNG */
-gsl_rng * RNG;
+GHMM_RNG * RNG;
 
-void gsl_rng_init(void)
+void ghmm_rng_init(void)
 {
-   gsl_rng_env_setup(); /* rng is choosen according to GSL_RNG_TYPE env var */
-   RNG = gsl_rng_alloc(gsl_rng_default);
+   GHMM_RNG_ENV_SETUP();
+   RNG = GHMM_RNG_ALLOC(GHMM_RNG_DEFAULT);
 }
 
-void gsl_rng_timeseed(gsl_rng * r)
+void ghmm_rng_timeseed(GHMM_RNG * r)
 {
   unsigned long tm; /* Time seed */
   unsigned int timeseed;
@@ -31,8 +39,8 @@ void gsl_rng_timeseed(gsl_rng * r)
   timeseed = time(NULL);
   srand(timeseed);
   tm = rand();
-  gsl_rng_set(r, tm);
-  //printf("# using GSL rng '%s' seed=%ld\n", gsl_rng_name(r), tm);  
+  GHMM_RNG_SET(r, tm);
+  //printf("# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(r), tm);  
   fflush(stdout);
 }
 
