@@ -42,7 +42,9 @@ double zbrent_AB(double (*func)(double, double, double, double),
   /* initialisation of wrapper structure */
   struct parameter_wrapper param;
   gsl_function f;
+#ifdef HAVE_GSL_INTERVAL /* gsl_interval vanished with version 0.9 */
   gsl_interval x;
+#endif
   gsl_root_fsolver* s;
   double tolerance;
   int success=0;
@@ -50,15 +52,21 @@ double zbrent_AB(double (*func)(double, double, double, double),
 
   param.func=func; param.x2=A; param.x3=B; param.x4=eps;
   f.function=&function_wrapper; f.params=(void*)&param;
-  x.lower=x1; x.upper=x2;
   tolerance=tol;
 
   /* initialisation */
-#ifdef GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG
+#ifdef HAVE_GSL_INTERVAL
+# ifdef GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG
+  x.lower=x1;
+  x.upper=x2;
   s = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
   gsl_root_fsolver_set (s,&f,x);
-#else
+# else
   s = gsl_root_fsolver_alloc (gsl_root_fsolver_brent, &f, x);
+# endif
+#else /* gsl_interval vanished with version 0.9 */
+  s = gsl_root_fsolver_alloc (gsl_root_fsolver_brent);
+  gsl_root_fsolver_set (s,&f,x1,x2);
 #endif
 
   /* iteration */
@@ -66,9 +74,18 @@ double zbrent_AB(double (*func)(double, double, double, double),
     success=gsl_root_fsolver_iterate(s);
     if (success==GSL_SUCCESS)
       {
+#ifdef HAVE_GSL_INTERVAL
 	gsl_interval new_x;
 	new_x = gsl_root_fsolver_interval (s);
 	success=gsl_root_test_interval(new_x,tolerance,tolerance);
+#else /* gsl_interval vanished with version 0.9 */
+	double x_up;
+	double x_low;
+	(void)gsl_root_fsolver_iterate (s);
+	x_up=  gsl_root_fsolver_x_upper(s);
+	x_low= gsl_root_fsolver_x_lower(s);
+	success=gsl_root_test_interval(x_low,x_up,tolerance,tolerance);
+#endif
       }
   } while (success==GSL_CONTINUE);
 
