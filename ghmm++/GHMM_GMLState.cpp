@@ -10,55 +10,175 @@
  */
 
 #include <iostream>
+#include <assert.h>
 
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Document.h>
-#include "ghmm++/GHMM_GMLState.h"
-#include "ghmm++/GHMM_Emission.h"
-#include "ghmm++/GHMM_GMLDiscreteModel.h"
+#include "ghmm/matrix.h"
+#include <ghmm++/GHMM_GMLTransition.h>
+#include "ghmm++/GHMM_GMLEmission.h"
+#include "ghmm++/GHMM_StateT.hh"
 #include "ghmm++/GHMM_GMLDataNode.h"
+#include "ghmm++/GHMM_SWDiscreteModel.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
 
 
-GHMM_GMLState::GHMM_GMLState(GHMM_AbstractModel* my_model, int my_index, XMLIO_Attributes& attrs):
-  GHMM_State(my_model, my_index, attrs)
+GHMM_GMLState::GHMM_GMLState(GHMM_SWDiscreteModel* my_model, int my_index, XMLIO_Attributes& attrs) :
+  GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDiscreteModel>(my_model, my_index, attrs)
 {
+  emission          = NULL;
   tag               = "node"; // state
-  hasData["ngeom"]  = false;
+  hasData["ngeom"]  = 0;
 }
 
-
+/************
 GHMM_GMLState::GHMM_GMLState(GHMM_AbstractModel* my_model, int my_index, sstate* my_state) :
-  GHMM_State(my_model, my_index, my_state)
+GHMM_StateT<sdstate, GHMM_GMLTransition>(my_model, my_index, my_state)
 {
   tag               = "node"; // state
   hasData["ngeom"]  = false;
 }
 
 GHMM_GMLState::GHMM_GMLState(GHMM_AbstractModel* my_model, int my_index, state* my_state) :
-  GHMM_State(my_model, my_index, my_state)
+GHMM_StateT<sdstate, GHMM_GMLTransition>(my_model, my_index, my_state)
 {
   tag               = "node"; // state
   hasData["ngeom"]  = false;
-}
+}****************/
 
+
+GHMM_GMLState::GHMM_GMLState(GHMM_SWDiscreteModel* my_model, int my_index, sdstate* my_state) :
+GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDiscreteModel>(my_model, my_index, my_state)
+{
+  emission          = NULL;
+  tag               = "node"; // state
+  hasData["ngeom"]  = 0;
+}
 
 const char* GHMM_GMLState::toString() const {
   return "GHMM_GMLState";
 }
 
 
-GHMM_GMLTransition* GHMM_GMLState::createTransition(int edge_index) {
-  if (c_state)
-    return new GHMM_GMLTransition(this,parent_model->getState(c_state->out_id[edge_index]),c_state->out_a[edge_index]);
+void GHMM_GMLState::fillState(sdstate* s) {
+  GHMM_SWDiscreteModel* m = (GHMM_SWDiscreteModel*) parent_model;
+  sdmodel* c_model        = m->c_model;
 
-  if (c_sstate)
-    return new GHMM_GMLTransition(this,parent_model->getState(c_sstate->out_id[edge_index]),c_sstate->out_a[0][edge_index]);
+  /* store current c representation of state. */
+  c_sdstate = s;
 
+  s->b   = (double*) malloc(sizeof(double) * c_model->M);
+
+  vector<GHMM_GMLTransition*> out_edges;
+  vector<GHMM_GMLTransition*> in_edges;
+  unsigned int i;
+  
+  for (i = 0; i < m->transitions.size(); ++i) {
+    if (m->transitions[i]->source == id)
+      out_edges.push_back(m->transitions[i]);
+    if (m->transitions[i]->target == id)
+      in_edges.push_back(m->transitions[i]);
+  }
+
+  if (out_edges.size() > 0) {
+    assert ( out_edges.size() <= c_model->N );
+    s->out_id = (int*) malloc(sizeof(int) * out_edges.size());
+    s->out_a  = matrix_d_alloc(c_model->cos, out_edges.size());
+  }
+
+  if (in_edges.size() > 0) {
+    assert ( in_edges.size() <= c_model->N );
+    s->in_id = (int*) malloc(sizeof(int) * in_edges.size());
+    s->in_a  = matrix_d_alloc(c_model->cos, in_edges.size());
+  }
+
+  /* now fill with useful data. */
+  s->pi = initial;
+
+  for (i = 0; i < out_edges.size(); ++i)
+    s->out_id[i] = m->getStateIndex(out_edges[i]->target);
+
+  for (i = 0; i < in_edges.size(); ++i)
+    s->in_id[i] = m->getStateIndex(in_edges[i]->source);
+
+  int cos;
+  for (cos = 0; cos < c_model->cos; ++cos) {
+    for (i = 0; i < out_edges.size(); ++i)
+      s->out_a[cos][i] = out_edges[i]->probs[cos];
+
+    for (i = 0; i < in_edges.size(); ++i)
+      s->in_a[cos][i] = in_edges[i]->probs[cos];
+  }
+
+  s->out_states = out_edges.size();
+  s->in_states  = in_edges.size();
+
+  if (c_model->M != (int) emission->weights.size()) {
+    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) emission->weights.size());
+    exit(1);
+  }
+
+  for (i = 0; (int) i < c_model->M; ++i)
+    s->b[i] = emission->weights[i];
+
+  s->fix = 0;
+}
+
+
+GHMM_GMLTransition* GHMM_GMLState::createTransition(int edge_index, sdmodel *mo) {
+//  if (c_state)
+//    return new GHMM_GMLTransition(this,parent_model->getState(c_state->out_id[edge_index]),c_state->out_a[edge_index]);
+
+  if (c_sdstate)
+    {	 
+      vector<double> vtprobs;
+      for(int i=0; i < mo->cos; i++) {
+	vtprobs.push_back( c_sdstate->out_a[i][edge_index] );
+      }
+      return new GHMM_GMLTransition(this,parent_model->getState(c_sdstate->out_id[edge_index]), vtprobs);
+    }
+  //  if (c_sstate)
+  //    return new GHMM_GMLTransition(this,parent_model->getState(c_sstate->out_id[edge_index]),c_sstate->out_a[0][edge_index]);
+  
   return NULL;
+}
+
+
+void GHMM_GMLState::setOutputProbability(int index, double prob) {
+  if (!c_sdstate) {
+    fprintf(stderr,"GHMM_State::setOutputProbability(int,double): object does not contain state.\n");
+    exit(1);
+  } else
+    {
+      GHMM_SWDiscreteModel* m = (GHMM_SWDiscreteModel*) parent_model;
+      if (index >= m->c_model->M) {
+	fprintf(stderr,"GHMM_State::setOutputProbability(int,double): symbol No. %d requested, but maximum number is %d.\n",index,m->c_model->M - 1);
+	exit(1);
+      }
+
+      c_sdstate->b[index] = prob;
+    }
+
+  if (!c_state) {
+    fprintf(stderr,"GHMM_State::setOutputProbability(int,double): object does not contain state.\n");
+    exit(1);
+  } else
+    {
+      GHMM_SWDiscreteModel* m = (GHMM_SWDiscreteModel*) parent_model;
+      if (index >= m->c_model->M) {
+	fprintf(stderr,"GHMM_State::setOutputProbability(int,double): symbol No. %d requested, but maximum number is %d.\n",index,m->c_model->M - 1);
+	exit(1);
+      }
+
+      c_state->b[index] = prob;
+    }
+}
+
+void GHMM_GMLState::setOutputProbability(const string& id, double prob) {
+  setOutputProbability(((GHMM_SWDiscreteModel*)(parent_model))->alphabet->getIndex(id),prob);
 }
 
 
@@ -68,34 +188,34 @@ XMLIO_Element* GHMM_GMLState::XMLIO_startTag(const string& tag, XMLIO_Attributes
     {
       if (attrs["key"] == "initial") {
 	reading = GHMM_STATE_INITIAL;
-	hasData["initial"] = true;
+	hasData["initial"] = 1;
 	return this;
       }
 
       if (attrs["key"] == "label") {
 	reading = GHMM_STATE_LABEL;
-	hasData["label"] = true;
+	hasData["label"] = 1;
 	return this;
       }
       if (attrs["key"] == "emissions") {
-	hasData["emissions"] = true;
-	attributes["key"] = "emissions";
-	SAFE_DELETE(emission);
-	emission = new GHMM_Emission(this);
-	return emission;
+		hasData["emissions"] = 1;
+		attributes["key"] = "emissions";
+		SAFE_DELETE(emission);
+		emission = new GHMM_GMLEmission(this);
+		return emission;
       }
 
       if (attrs["key"] == "ngeom") {
-	attributes["key"] = "ngeom";
-	return this;
+		attributes["key"] = "ngeom";
+		return this;
       }
     }
   else
     if (tag == "pos")
       {
-	hasData["ngeom"] = true;
-	vPosition[0] = atof(attrs["x"].c_str());
-	vPosition[1] = atof(attrs["y"].c_str());
+	hasData["ngeom"] = 1;
+	vPosition[0] = (float)atof(attrs["x"].c_str());
+	vPosition[1] = (float)atof(attrs["y"].c_str());
 	return this;
       }
     else
@@ -142,7 +262,7 @@ XMLIO_Attributes& GHMM_GMLState::XMLIO_getAttributes() {
 
 const int GHMM_GMLState::XMLIO_writeContent(XMLIO_Document& writer) {
   int total_bytes = 0;
-  int result;
+  int result = 0;
   
   double initial = getInitial();
 
@@ -175,7 +295,7 @@ const int GHMM_GMLState::XMLIO_writeContent(XMLIO_Document& writer) {
 
   //  }
 
-  if ( hasData["ngeom"] == true )
+  if ( hasData["ngeom"] )
     {
       GHMM_GMLDataNode* my_pos = new GHMM_GMLDataNode(this, "ngeom");
       result = writer.writeElement(my_pos);

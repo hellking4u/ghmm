@@ -11,7 +11,9 @@
 #ifndef _GHMM_STATE_H
 #define _GHMM_STATE_H 1
 
+
 #include <ghmm/model.h>
+#include <ghmm/sdmodel.h>
 #include <xmlio/XMLIO_Element.h>
 #include <ghmm++/GHMM_Types.h>
 
@@ -42,6 +44,8 @@ class GHMM_State: public XMLIO_Element {
   GHMM_State(GHMM_AbstractModel* my_model, int index, sstate* my_state);
   /** */
   GHMM_State(GHMM_AbstractModel* my_model, int index, state* my_state);
+  /** */
+  GHMM_State(GHMM_AbstractModel* my_model, int index, sdstate* my_state);
   /** Destructor. */
   virtual ~GHMM_State();
 
@@ -61,6 +65,8 @@ class GHMM_State: public XMLIO_Element {
   void fillState(sstate* s);
   /** Fills given state. */
   void fillState(state* s);
+  /** Fills given state. */
+  void fillState(sdstate* s);
   /** */
   void setID(const string& my_id);
   /** */
@@ -85,6 +91,8 @@ class GHMM_State: public XMLIO_Element {
   sstate* c_sstate;
   /** C type state. Object is not owner of this state. */
   state* c_state;
+  /** C type state. Object is not owner of this state. */
+  sdstate* c_sdstate;
   /** */
   string id;
   /** */

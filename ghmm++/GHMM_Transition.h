@@ -31,6 +31,9 @@ class GHMM_Transition: public XMLIO_Element {
   enum GHMM_TransitionReadingType {GHMM_TRANSITION_READING_NONE, GHMM_TRANSITION_READING_PROB};
 
   /** Constructor. */
+  GHMM_Transition() {} 
+
+  /** Constructor. */
   GHMM_Transition(XMLIO_Attributes &attrs);
   /** Constructor. */
   GHMM_Transition(GHMM_State* my_source, GHMM_State* my_target, double my_prob);
@@ -68,6 +71,8 @@ class GHMM_Transition: public XMLIO_Element {
   /** Current reading state. */
   GHMM_TransitionReadingType reading;
 };
+
+
 
 #ifdef HAVE_NAMESPACES
 }

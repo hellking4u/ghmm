@@ -12,7 +12,7 @@
 #include <xmlio/XMLIO_Element.h>
 #include "ghmm++/GHMM_GMLDataNode.h"
 #include "ghmm++/GHMM_DiscreteModel.h"
-#include "ghmm++/GHMM_GMLState.h"
+#include "ghmm++/GHMM_StateT.hh"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -46,16 +46,16 @@ const int GHMM_GMLDataNode::XMLIO_writeContent(XMLIO_Document& writer)
     }
 
   /* discrete model */
-  if (state->c_state)
+  if (state->c_sdstate)
   {
     if (keyvalue == "emissions")
       {
 	//GHMM_Alphabet* alphabet   = state->getModel()->getAlphabet();
 	GHMM_DiscreteModel* model = (GHMM_DiscreteModel*) state->getModel();
 	for (i = 0; i < model->c_model->M - 1; ++i) {
-	  result += writer.writef("%.2f, ",state->c_state->b[i]); // space is important	    
+	  result += writer.writef("%.2f, ",state->c_sdstate->b[i]); // space is important	    
 	}
-	result += writer.writef("%.2f",state->c_state->b[i]);	   
+	result += writer.writef("%.2f",state->c_sdstate->b[i]);	   
 	total_bytes += result;
       }    
   }

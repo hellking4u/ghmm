@@ -1,61 +1,83 @@
 /*
-  created: 21 Jan 2002 by Peter Pipenbacher
-  authors: Peter Pipenbacher (pipenb@zpr.uni-koeln.de)
+  created: 4. April 2003 by Wasinee Rungsarityotin
+  authors: Wasinee Rungsarityotin (rungsari@molgen.mpg.de)
   file   : $Source$
   $Id$
 
   __copyright__
 */
 
-#ifndef _GHMM_DISCRETEMODEL_H
-#define _GHMM_DISCRETEMODEL_H 1
+#ifndef _GHMM_DISCRETEMODELT_H
+#define _GHMM_DISCRETEMODELT_H 1
 
 #include <vector>
-#include <ghmm/model.h>
-#include "ghmm++/GHMM_State.h"
-#include "ghmm++/GHMM_Transition.h"
-#include "ghmm++/GHMM_AbstractModelT.hh"
-#include "ghmm++/GHMM_AbstractModel.h"
+#include <ghmm/sdmodel.h>
+#include <ghmm++/GHMM_Alphabet.h>
 
-#include <ghmm++/begin_code.h>
+#include <ghmm++/GHMM_AbstractModelT.hh> // Template
 
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
 
-class GHMM_DiscreteModel;
+
 class GHMM_Sequences;
 class GHMM_IntVector;
 class GHMM_DoubleVector;
 class GHMM_DoubleMatrix;
 class GHMM_Alphabet;
+  class GHMM_GMLState;
+  class GHMM_GMLTransition;
+
 
 /** Discrete HMM model (wrapper around model in C data structure). */
-class GHMM_DiscreteModel: public GHMM_AbstractModel {
-
+class GHMM_DiscreteModelT : public GHMM_AbstractModelT<GHMM_GMLState, GHMM_GMLTransition> {
  public:
   
   /** Constructor. */
-  GHMM_DiscreteModel();
+  GHMM_DiscreteModelT ()
+    {
+      init();
+    }
+
   /** Constructor. 
       @param number_of_states Number of the states.
       @param alphabet_size Size of the alphabet. 
       @param prior Prior for the a priori probability for the model 
                    (-1 for none). */
-  GHMM_DiscreteModel(int number_of_states, int alphabet_size, double prior=-1);
+
+  GHMM_DiscreteModelT(int number_of_states, int alphabet_size, double prior=-1)
   /** Constructor. Construct from c model. Object now is owner of this model. 
       @param my_model model as C data structure. */
-  GHMM_DiscreteModel(model* my_model);
+    {
+    }
+
   /** Constructor. */
-  GHMM_DiscreteModel(GHMM_Alphabet* alphabet);
+  GHMM_DiscreteModelT( sdmodel* my_model)
+    {
+      init();
+      c_model = my_model;
+      buildCppData();
+    }
+
+
+  /** Constructor. */
+  GHMM_DiscreteModelT(GHMM_Alphabet* my_alphabet)
+    {
+      init(0,my_alphabet->size());
+      alphabet = my_alphabet;
+    }
+
   /** Destructor. */
-  virtual ~GHMM_DiscreteModel();
+
+  virtual ~GHMM_DiscreteModelT() {;}
 
   /** Returns name of class. */
-  virtual const char* toString() const;
+  virtual const char* toString() const {;}
 
   /** Adds state with given id to model. */
-  void addState(const string& id);
+  void addState(const string& my_id);
+
   /** 
       Writes transition matrix of a model.
       @param file: output file
@@ -63,15 +85,9 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param separator: format: seperator for columns
       @param ending:    format: end of a row 
   */
-  void A_print(FILE *file, char *tab, char *separator, char *ending) const;
-  /**
-     Writes transposed transition matrix of the model.
-     @param file: output file
-     @param tab:  format: leading Tabs
-     @param separator: format: seperator for columns
-     @param ending:    format: end of a row  
-  */
-  void A_print_transp(FILE *file, char *tab, char *separator, char *ending) const;
+  virtual void A_print(FILE *file, char *tab, char *separator, char *ending)
+    { ;  }
+
   /**
      Writes output matrix of a model.
      @param file: output file
@@ -79,26 +95,23 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void B_print(FILE *file, char *tab, char *separator, char *ending) const;
-  /**
-     Writes transposed output matrix of a model.
-     @param file: output file
-     @param tab:  format: leading Tabs
-     @param separator: format: seperator for columns
-     @param ending:    format: end of a row  
-  */   
-  void B_print_transp(FILE *file, char *tab, char *separator, char *ending) const;
+  virtual void B_print(FILE *file, char *tab, char *separator, char *ending)
+    { ;  }
+
   /**
      Tests if all standardization requirements of model are fulfilled. 
      (That is, if the sum of the probabilities is 1).
      @return 0 on succes; -1 on error. 
   */
-  virtual int check() const;
+  virtual int check() { return 0; }
+
   /**
      Copies a given model. Allocates the necessary memory.
      @return copy of the model
   */
-  GHMM_DiscreteModel* copy() const;
+  virtual GHMM_DiscreteModelT* copy() = 0;
+
+
   /** 
       Backward-Algorithm. 
       Calculates beta[t][i] given an integer sequence and a model. Scale factors 
@@ -109,7 +122,9 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param scale    scale factors
       @return 0 for success, -1 for error
   */
-  int foba_backward(GHMM_Sequences* seq, int index, double **beta, const double *scale) const;
+  //int foba_backward(GHMM_Sequences* seq, int index, double **beta, const double *scale) const;
+
+  
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
       a given double sequence and a given model.
@@ -122,6 +137,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   */
   GHMM_DoubleMatrix* foba_forward(GHMM_Sequences* seq, int index, GHMM_DoubleVector* scale, 
 				  double *log_p) const;
+
   /**
      Calculation of  log( P(O|lambda) ). 
      Done by calling sfoba\_forward. Use this function if only the
@@ -131,7 +147,8 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param log\_p    log likelihood log( P(O|lambda) )
      @return 0 for success, -1 for error
   */
-  int foba_logp(GHMM_Sequences* seq, int index, double *log_p) const;
+  // int foba_logp(GHMM_Sequences* seq, int index, double *log_p) const;
+
   /**
      Writes fix vector of a matrix.
      @param file: output file
@@ -139,7 +156,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void fix_print(FILE *file, char *tab, char *separator, char *ending) const;
+  // void fix_print(FILE *file, char *tab, char *separator, char *ending) const;
   /** 
       Produces sequences to a given model. All memory that is needed for the 
       sequences is allocated inside the function. It is possible to define
@@ -154,15 +171,32 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param global_len:  length of sequences (=0: automatically via final states)
       @param seq_number:  number of sequences
   */
-  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number) const;
+  virtual GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number)
+    {
+      return NULL; 
+    }
+
   /** Returns alphabet of model or NULL, if no such alphabet exists. */
-  virtual GHMM_Alphabet* getAlphabet() const;
+  virtual GHMM_Alphabet* getAlphabet();
+
   /** Returns model type. */
-  virtual GHMM_ModelType getModelType() const;
+  GHMM_ModelType getModelType() { return GHMM_DISCRETE; }
+
   /** */
-  virtual int getNumberOfTransitionMatrices() const;
+  virtual int getNumberOfTransitionMatrices();
+
   /* Returns state with given index. */
-  state* getCState(int index) const;
+  sdstate* getCState(int index) const
+    {
+      if (index >= c_model->N) {
+	fprintf(stderr,"GHMM_SWDiscreteModel::getCState(int):\n");
+	fprintf(stderr,"State no. %d does not exist. Model has %d states.\n",index,c_model->N);
+	exit(1);
+      }
+      
+      return &c_model->s[index]; 
+    }
+
   /**
      Writes initial allocation vector of a matrix.
      @param file: output file
@@ -170,7 +204,8 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void Pi_print(FILE *file, char *tab, char *separator, char *ending) const;
+  virtual void Pi_print(FILE *file, char *tab, char *separator, char *ending);
+  
   /**
      Writes transposed initial allocation vector of a matrix.
      @param file: output file
@@ -178,12 +213,12 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void Pi_print_transp(FILE *file, char *tab, char *ending);
+  //void Pi_print_transp(FILE *file, char *tab, char *ending);
   /**
      Writes the model in matrix format.
      @param file: output file
   */
-  virtual void print(FILE *file) const;
+  //virtual void print(FILE *file) const;
   /** Computes probabilistic distance of this model to a second model. 
       This model is used to generate random output. The second model
       is compared to these sequences.
@@ -196,13 +231,14 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param verbose  flag, whether to monitor distance in 40 steps. 
                       Prints to stdout (yuk!)
   */
-  double prob_distance(GHMM_DiscreteModel* m, int maxT, int symmetric, int verbose);
+  //double prob_distance(GHMM_DiscreteModel* m, int maxT, int symmetric, int verbose);
   /** 
       Writes the parameters of this model sorted by states. 
       Is not very concise.   
       @param file: output file
   */
-  void states_print(FILE *file);
+  //void states_print(FILE *file);
+
   /**
      Viterbi algorithm. Calculates the Viterbi path (the optimal path trough
      the model) and the Viterbi probability to a given model and a given 
@@ -214,6 +250,8 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
                        (return value).
   */
   GHMM_IntVector* viterbi(GHMM_Sequences* sequences, int index, double* log_p = NULL) const;
+
+
   /**
      Calculates the logarithmic probability to a given path through the 
      states (does not have to be the Viterbi path), given sequence and
@@ -223,7 +261,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @param state_seq: path through the states
      @return log P
   */
-  double viterbi_logp(GHMM_Sequences* seq, int index, int* state_seq);
+  // double viterbi_logp(GHMM_Sequences* seq, int index, int* state_seq);
   /**
      Baum-Welch Algorithm for HMMs.
      Training of model parameter with multiple integer sequences (incl. scaling).
@@ -231,34 +269,98 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      @return           0/-1 success/error
      @param seq        sequences used for training.
   */
-  int reestimate_baum_welch(GHMM_Sequences* seq);
+  //int reestimate_baum_welch(GHMM_Sequences* seq);
 
   /** C Model. */
-  model* c_model;
+  sdmodel* c_model;
+
   /** Alphabet of model. */
   GHMM_Alphabet* alphabet;
 
  protected:
-  void setNodeTag(const string& tag);
-  void setTransitionTag(const string& tag);
+  virtual void setNodeTag      (const string& tag);
+  virtual void setTransitionTag(const string& tag);
 
 
- private:
+ protected:
+
+  /** */
+  bool own_alphabet;
 
   /** Build c++ data from c_model. */
-  void buildCppData();
+  virtual void buildCppData() {;}
+
   /** */
   void cleanCPP();
+
   /** Init function. */
-  void init();
+  virtual void init()
+    { 
+      //attributes["type"] = "discrete";
+      alphabet           = NULL;
+      c_model            = NULL;
+      own_alphabet       = false;      
+    }
+
   /** Init function.
       @param number_of_states Number of the states.
       @param alphabet_size Size of the alphabet. 
       @param prior Prior for the a priori probability for the model 
                    (-1 for none). */
-  void init(int number_of_states, int alphabet_size, double prior=-1);
+  virtual void init(int number_of_states, int alphabet_size, double prior=-1)
+    {
+      int i;
+      int j;
+
+      init();
+      c_model = (sdmodel*) calloc(1,sizeof(sdmodel));
+      if (!c_model) {
+		fprintf(stderr,"GHMM_DiscreteModel::GHMM_DiscreteModel() could not allocate c_model\n");
+		exit(1);
+      }
+
+      c_model->N       = number_of_states;
+      c_model->M       = alphabet_size;
+      c_model->prior   = prior;
+      c_model->s       = (sdstate*) malloc(sizeof(sdstate) * max(c_model->N,1));
+      /* initialize all states. */
+      
+      for (i = 0; i < number_of_states; ++i) {
+	  c_model->s[i].pi         = 0;
+	  c_model->s[i].b          = (double*) malloc(sizeof(double) * alphabet_size);
+	/* output probabilities are initialized with 0. */
+	for (j = 0; j < alphabet_size; ++j)
+	  c_model->s[i].b[j] = 0;
+	c_model->s[i].out_id     = NULL;
+	c_model->s[i].in_id      = NULL;
+	c_model->s[i].out_a      = NULL;
+	c_model->s[i].in_a       = NULL;
+	c_model->s[i].out_states = 0;
+	c_model->s[i].in_states  = 0;
+	c_model->s[i].fix        = 0;
+      }
+
+      buildCppData();
+    }
+
   /** */
-  void init(GHMM_Alphabet *my_alphabet);
+  virtual void init(GHMM_Alphabet *my_alphabet)
+    {
+      attributes["type"] = "discrete";
+      alphabet           = my_alphabet;
+      c_model            = NULL;
+      own_alphabet       = true; 
+      
+      c_model = (sdmodel*) calloc(1,sizeof(sdmodel));
+      if (!c_model) {
+	fprintf(stderr,"GHMM_DiscreteModel::GHMM_DiscreteModel() could not allocate c_model\n");
+	exit(1);
+      }
+
+      c_model->N        = 0;
+      c_model->M        = alphabet->size();
+      buildCppData();
+    }
 
   /** */
   virtual void XMLIO_finishedReading();
@@ -266,15 +368,14 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       attributes are passed to this function. */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
-  /** */
-  bool own_alphabet;
-};
+  virtual void createTransitions();
 
+  virtual const int      XMLIO_writeContent(XMLIO_Document& writer); 
+};
 
 #ifdef HAVE_NAMESPACES
 }
 #endif
 
-#include <ghmm++/close_code.h>
 
 #endif /* _GHMM_DISCRETEMODEL_H */

@@ -38,14 +38,21 @@ GHMM_IntMatrix.cpp \
 GHMM_Alphabet.cpp \
 GHMM_Toolkit.cpp \
 GHMM_GMLDataNode.cpp \
-GHMM_GMLDiscreteModel.cpp \
 GHMM_GMLContinuousModel.cpp \
 GHMM_GMLState.cpp \
 GHMM_GMLTransition.cpp \
 GHMM_GMLAlphabet.cpp \
-GHMM_GMLClassWriter.cpp \
+GHMM_GMLClass.cpp \
 GHMM_GMLDoc.cpp \
-GHMM_convertXMLtoC.cpp 
+GHMM_GMLEmission.cpp \
+GHMM_SWDiscreteModel.cpp \
+GHMM_convertXMLtoC.cpp \
+GHMM_Viterbi.cpp \
+GHMM_StateT.hh \
+GHMM_AbstractModelT.hh \
+GHMM_Emission.h \
+GHMM_Transition.h 
+
 
 pkginclude_HEADERS = \
 begin_code.h \
@@ -73,10 +80,13 @@ GHMM_convertXMLtoC.h \
 GHMM_GMLDataNode.h \
 GHMM_GMLDiscreteModel.h \
 GHMM_GMLContinuousModel.h \
-GHMM_GMLState.h \
 GHMM_GMLTransition.h \
-GHMM_GMLAlphabet.h
-
+GHMM_GMLAlphabet.h \
+GHMM_GMLClass.h \
+GHMM_StateT.hh \
+GHMM_AbstractModelT.hh \
+GHMM_SWDiscreteModel.h \
+GHMM_Computation.h
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt

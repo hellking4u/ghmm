@@ -110,7 +110,7 @@ void GHMM_DoubleMatrix::const_preserve_struct(double c) {
 
 
 void GHMM_DoubleMatrix::random_preserve_struct(double **matrix, int rows, int cols) {
-  random_preserve_struct(c_matrix,rows,cols);
+	// random_preserve_struct(c_matrix,rows,cols);
 }
 
 

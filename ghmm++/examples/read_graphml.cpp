@@ -14,6 +14,12 @@
 #include <assert.h>
 #include <ghmm/rng.h>
 #include "ghmm++/GHMM.h"
+#include "ghmm++/GHMM_StateT.hh"
+#include "ghmm++/GHMM_Emission.h"
+#include "ghmm++/GHMM_Transition.h"
+#include "ghmm++/GHMM_AbstractModelT.hh"
+#include "ghmm++/GHMM_SWDiscreteModel.h"
+#include "ghmm++/GHMM_GMLClass.h"
 #include "ghmm++/GHMM_GMLDoc.h"
 #include <iostream>
 
@@ -24,7 +30,8 @@ using namespace std;
 int main(int argc, char* argv[]) {
   //GHMM_Document      doc;
   GHMM_GraphMLDoc    doc;
-  GHMM_GMLDiscreteModel *dmo;
+  // GHMM_GMLDiscreteModel *dmo;
+  GHMM_SWDiscreteModel *dmo;
   GHMM_Sequences* training_seq = NULL;
   GHMM_Sequences* my_output = NULL;
   GHMM_Alphabet*  alphas = NULL;
@@ -64,33 +71,38 @@ int main(int argc, char* argv[]) {
       cout << alphas->getSymbol(i) << endl;
     }
 
+  /***
   if ( ( training_seq = doc.getSequences() ) != NULL )
     {
       training_seq->print(stdout);
       
       printf("reestimating with Baum-Welch-algorithm...");
-      dmo->reestimate_baum_welch( training_seq );
+      // dmo->reestimate_baum_welch( training_seq );
 
-      /* print the result */
       printf("Done\nthe result is:\n");  
       dmo->A_print(stdout,""," ","\n");
       fprintf(stdout,"observation symbol matrix:\n");
       dmo->B_print(stdout,""," ","\n");
 
     }
+  ****/
 
-  my_output = dmo->generate_sequences(1,10,10);
+// my_output = dmo->generate_sequences(1,10,10);
   // my_output->print(stdout);
 
-  GHMM_GMLClassWriter *dco = new GHMM_GMLClassWriter( dmo->getAlphabet() );
+
+  GHMM_GMLClass *dco = new GHMM_GMLClass( doc.getClass() );
+
 
   doc.open("gml2.xml","w"); // Try writing to a new format!!!!
   doc.writeElement(dco);
   doc.writeEndl();
+
   doc.writeElement(dmo->getAlphabet());
   doc.writeEndl();
   doc.writeElement(dmo);
   doc.writeEndl();
+
   doc.close();
   SAFE_DELETE( dco );
 
@@ -99,13 +111,15 @@ int main(int argc, char* argv[]) {
   // doc.writeElement(my_output);
   doc.writeEndl();
   doc.close();
-  
-  cout << "Wrote to gml2.xml" << endl;
 
+
+  cout << "Wrote to gml2.xml" << endl;
+  
   delete my_output;
   delete alphas;
 
-  SAFE_DELETE(dmo);
+  // memory leak, check the destructor of GHMM_SWDiscreteModel
+  // SAFE_DELETE(dmo); 
 
   return 0;
 }

@@ -10,8 +10,8 @@
  */
 
 
-#ifndef _GHMM_GMLALPHABET_H
-#define _GHMM_GMLALPHABET_H 1
+#ifndef _GHMM_GMLCLASS_H
+#define _GHMM_GMLCLASS_H 1
 
 #include <xmlio/XMLIO_Element.h>
 #include <ghmm++/GHMM_Alphabet.h>
@@ -21,22 +21,21 @@
 namespace std {
 #endif
 
-class GHMM_GMLAlphabet;
+class GHMM_GMLClass;
 
 
 /** */
-class GHMM_GMLAlphabet: public GHMM_Alphabet {
+class GHMM_GMLClass: public GHMM_Alphabet {
 
  public:
 
   enum READ_CHAR_TYPE { READ_SINGLE_CHAR, READ_NONE };
 
   /** Constructor. */
-  GHMM_GMLAlphabet();
-
+  GHMM_GMLClass();
+  GHMM_GMLClass(GHMM_Alphabet *alp);  
   /** Destructor. */
-  ~GHMM_GMLAlphabet();
-  
+  ~GHMM_GMLClass();
   const int XMLIO_writeContent(XMLIO_Document& writer);
 
  protected:
@@ -52,20 +51,6 @@ class GHMM_GMLAlphabet: public GHMM_Alphabet {
  private:
   READ_CHAR_TYPE reading;
 
-};
-
-
-/** */
-class GHMM_GMLClassWriter: public GHMM_Alphabet {
-
- public:
-
-  enum READ_CHAR_TYPE { READ_SINGLE_CHAR, READ_NONE };
-
-  /** Constructor. */
-  GHMM_GMLClassWriter(GHMM_Alphabet *alphabet);
-  
-  const int XMLIO_writeContent(XMLIO_Document& writer);
 };
 
 

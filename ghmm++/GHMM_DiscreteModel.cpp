@@ -16,7 +16,7 @@
 #include "ghmm++/GHMM_DoubleMatrix.h"
 #include "ghmm++/GHMM_Alphabet.h"
 #include "ghmm++/GHMM_Emission.h"
-#include "ghmm++/GHMM_GMLAlphabet.h"
+
 
 #include "ghmm/viterbi.h"
 #include "ghmm/mes.h"
@@ -391,8 +391,8 @@ void GHMM_DiscreteModel::XMLIO_finishedReading() {
     states[i]->fillState(&c_model->s[i]);
 
   /* check whether sum of initial probs is 1. */
-  if (check() == -1) 
-    exit(1);
+  //if (check() == -1)  to allow silent states
+  //  exit(1);
 
   /* we dont need the transitions any more. */
   cleanTransitions();

@@ -12,14 +12,17 @@
 #include <stdio.h>
 
 #include "ghmm++/GHMM.h"
-#include "ghmm++/GHMM_DiscreteModel.h"
 #include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_GMLDoc.h"
 #include "ghmm++/GHMM_convertXMLtoC.h"
+// #include "ghmm++/templatetest.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
+
+
+//myvector<double> Vecdouble;
 
 /** This function is compiled as a C-function ( no C++ "name-mangled" )
     so that we can read data from an XML-file into a C "struct",
@@ -32,7 +35,8 @@ model_t *graphmldoc_cwrapper(char *filename)
 {
   /*   GHMM_GraphMLDoc    doc; */
   GHMM_GraphMLDoc    doc;
-  GHMM_DiscreteModel *dmo;
+  // GHMM_GMLDiscreteModel *dmo;
+  GHMM_SWDiscreteModel *dmo;
   GHMM_ContinuousModel *cmo;
 
   model_t *model_pt;
@@ -60,7 +64,7 @@ model_t *graphmldoc_cwrapper(char *filename)
       //
       // Make a new copy so that we can free the pointer to a C++ object. 
       //
-      model_pt->model_pt = (void*) model_copy((const model*) dmo->c_model);
+      model_pt->model_pt = (void*) sdmodel_copy((const sdmodel*) dmo->c_model);
       delete dmo;
     }
   else
