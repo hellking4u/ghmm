@@ -159,7 +159,7 @@ from os import path
 from math import log,ceil
 
 ghmmwrapper.gsl_rng_init() # Initialize random number generator
-
+ghmmwrapper.time_seed()
 
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
@@ -2121,7 +2121,7 @@ class GaussianEmissionHMM(HMM):
 
     
     # different function signatures require overloading of parent class methods    
-    def sample(self, seqNr ,T,seed = 0):
+    def sample(self, seqNr ,T,seed = -1):
         """ Sample emission sequences 
 
 
@@ -2132,7 +2132,7 @@ class GaussianEmissionHMM(HMM):
         return SequenceSet(self.emissionDomain,seqPtr)
         
 
-    def sampleSingle(self, T,seed=0):
+    def sampleSingle(self, T,seed= -1):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
