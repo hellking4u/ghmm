@@ -48,7 +48,7 @@ from GraphEditor import EditWeightsDialog
 from tkFileDialog import askopenfilename, asksaveasfilename
 import tkMessageBox
 from tkMessageBox import askokcancel
-from xml.dom.minidom import *
+
 import tkSimpleDialog 
 import whrandom
 import string
@@ -57,16 +57,16 @@ import copy
 import ProbEditorBasics
 import ProbEditorDialogs
 
-import HMMXML
+import xmlutil
+from xmlutil import NamedDistributions, XMLElementWriter, toprettyxml, DiscreteHMMAlphabet, HMMClass, HMMState, HMM 
+
 import EditObjectAttributesDialog
 from EditObjectAttributesDialog import EditObjectAttributesDialog, ValidatingString, ValidatingInt, ValidatingFloat, PopupableInt, Probability, DefaultedInt, DefaultedString
 
-from GHMMXML import GHMMXML
 
 from MapEditor import MapEditor, NamedCollectionEditor
-
-sys.path.append('/home/rungsari/EditObj-0.4/lib/lib/python2.2/site-packages')
 import editobj, editobj.editor as editor
+
 
 def typed_assign(var, val):
     result = type(var)(val)
@@ -86,105 +86,6 @@ def csvFromList(list, perRow = None):
             result += string.join(map(str,list[start:start+perRow]), ', ') + ',\n'
         return result[0:len(result)-2]
 
-def writeContents(XMLDoc, XMLNode, data):
-    contents = XMLDoc.createTextNode("%s" % data)
-    XMLNode.appendChild(contents)
-
-def writeData(XMLDoc, XMLNode, dataKey, dataValue):
-    data = XMLDoc.createElement("data")
-    data.setAttribute('key', "%s" % dataKey)
-    contents = XMLDoc.createTextNode("%s" % dataValue)
-    data.appendChild(contents)
-    XMLNode.appendChild(data)
-
-def writeXMLData(XMLDoc, XMLNode, dataKey, XMLData):
-    data = XMLDoc.createElement("data")
-    data.setAttribute('key', "%s" % dataKey)
-    data.appendChild(XMLData)
-    XMLNode.appendChild(data)
-
-def writeXMLTextNode(XMLDoc, XMLNode, keyName, XMLData):
-    data = XMLDoc.createElement(keyName)
-    contents = XMLDoc.createTextNode("%s" % XMLData)
-    data.appendChild(contents)
-    XMLNode.appendChild(data)
-
-
-class XMLElementWriter:
-    
-    def __init__(self):
-        import string
-        self._string = string
-
-    def _write_data(self, writer, data):
-        "Writes datachars to writer."
-        replace = self._string.replace
-        data = replace(data, "&", "&amp;")
-        data = replace(data, "<", "&lt;")
-        data = replace(data, "\"", "&quot;")
-        data = replace(data, ">", "&gt;")
-        writer.write(data)
-
-    def writexml(self, XMLNode, writer, indent="", addindent="", newl=""): 
-        """This version of write xml makes sure text nodes are 
-        surrounded by tags for easier reading rather than being 
-        on lines by themselves."""  
-
-        # indent = current indentation
-        # addindent = indentation to add to higher levels
-        # newl = newline string
-        
-        if ( XMLNode.nodeType == XMLNode.TEXT_NODE ): 
-            self._write_data(writer, "%s%s%s"%(indent, XMLNode.data, newl))
-        else:
-            writer.write(indent+"<" + XMLNode.nodeName)
-            
-            # build attribute list
-            a_names = []
-            try:
-                for key in ['id', 'hmm:low', 'hmm:high', 'hmm:type', 'for', 'gd:type', 'code', 'key', 'x', 'y', 'source', 'target']:
-                    if ( XMLNode.getAttribute(key) != ""):
-                        a_names.append( key )
-                        a_names.sort()
-            except AttributeError:
-                a_names = []
-        
-            for a_name in a_names:
-                writer.write(" %s=\"" % a_name)
-                self._write_data(writer, XMLNode.getAttribute(a_name))
-                writer.write("\"")
-            if XMLNode.childNodes:
-                writer.write(">%s"%(newl))
-                for node in XMLNode.childNodes:
-                    if node.nodeType!=node.TEXT_NODE: 
-                        self.writexml(node,writer,indent+addindent,addindent,newl)
-                    else:
-                        writer.seek(writer.tell()-1)
-                        self.writexml(node,writer,"",addindent,"")
-
-                if XMLNode.childNodes[-1].nodeType!=node.TEXT_NODE:
-                    writer.write("%s</%s>%s" % (indent,XMLNode.nodeName,newl))
-                else:  writer.write("</%s>%s" % (XMLNode.nodeName,newl))
-            else:
-                writer.write("/>%s"%(newl))
-                     
-
-#
-# Notice for this function:
-# minidom.Element.toprettyxml is not so pretty and its output format is not compatible
-# with XMLIO parser. The particular problem with minidom.toprettyxml is that
-# it put the text data of a text node on a new line, instead of immediately after the element tag.
-# Because XMLIO cannot parse this format, thus we need our own pretty print program 
-#
-def toprettyxml( XMLDoc ):
-    # we can't use cStringIO since it doesn't support Unicode strings
-    from StringIO import StringIO
-    writer = StringIO()
-    prettydoc = XMLElementWriter()
-    writer.write('<?xml version="1.0" ?>\n')
-    for node in XMLDoc.childNodes:
-        prettydoc.writexml(node, writer, "","  ", "\n")
-    return writer.getvalue();
     
 class ValidStringEditor(editor.StringEditor):
 
@@ -206,56 +107,11 @@ class ProbabilityEditor(editor.FloatEditor):
     def set_value(self, value):
         editor.Editor.set_value(self, Probability(editor.editobj.eval(value)))
 
-class NamedDistributions:
+class NamedDistributions(xmlutil.NamedDistributions ):
+
     def __init__(self, itsHMM):
-        self.initialize()
-        self.itsHMM = itsHMM
-        self.code2name = {-1:'None'}
-        self.name2code = {'None':-1}
-        self.maxCode = 0
-
-    def initialize(self):
-        self.dist = {}
-        self.order = {}
-       
-    def addDistribution(self, name, order, p): 
-        self.dist[name] = p
-        self.order[name] = order
-        self.code2name[self.maxCode] = name
-        self.name2code[name] = self.maxCode
-        self.maxCode += 1
-
-    def deleteDistribution(self, name):
-        del self.dist[name]
-        del self.order[name]
-        del self.code2name[self.name2code[name]]
-        del self.name2code[name]
-   
-    def fromDOM(self, XMLNode):
-        self.initialize()
-        datas = XMLNode.getElementsByTagName("hmm:background")
-        for data in datas:
-            dataKey = data.attributes['key'].nodeValue
-            dataOrder = int(data.attributes['order'].nodeValue)
-            dataValue = ""
-            for child in data.childNodes:
-                dataValue += child.nodeValue
-            p = listFromCSV(dataValue, types.FloatType)
-            self.addDistribution(dataKey, dataOrder, p)
-
-    def toDOM(self, XMLDoc, XMLNode):
-        for name in self.dist.keys():
-            background_elem = XMLDoc.createElement("hmm:background")
-            background_elem.setAttribute('key', "%s" % name)
-            background_elem.setAttribute('order', "%s" % self.order[name])
-            if self.order[name] == 0:
-                contents = XMLDoc.createTextNode(csvFromList(self.dist[name]))
-            else:
-                 contents = XMLDoc.createTextNode(csvFromList(self.dist[name],
-                                                              self.itsHMM.hmmAlphabet.size()))               
-            background_elem.appendChild(contents)
-            XMLNode.appendChild(background_elem)
-
+        xmlutil.NamedDistributions.__init__(self, itsHMM)
+        
     def editDistributions(self, master):        
         editor = NamedCollectionEditor(master, self)
 
@@ -293,85 +149,9 @@ class NamedDistributions:
                     weight = self.dist[name][code] = emission_probabilities[key] / emission_probabilities.sum
 
 
-class DOM_Map:
+class DiscreteHMMAlphabet( xmlutil.DiscreteHMMAlphabet ):
     def __init__(self):
-        self.initialize()
-
-    def initialize(self):
-        self.name = {}
-        self.desc = {}
-        self.hasDesc = None
-        self.name2code = {}
-        
-    def addCode(self, code, name, desc = None):
-        self.name[code] = name
-        if desc != None:
-            self.desc[code] = desc
-            self.hasDesc = 1
-        self.name2code[name] = code
-
-    def low(self):
-        return min(self.name.keys())
-
-    def high(self):
-        return max(self.name.keys())
-    
-    def fromDOM(self, XMLNode):
-        pass
-
-    def symbolsFromDom(self, XMLNode):
-        symbols = XMLNode.getElementsByTagName("symbol")
-        
-        for symbol in symbols:
-            symbolCode = ValidatingInt(int(symbol.getAttribute("code")))
-            symbolName = ValidatingString(symbol.firstChild.nodeValue)
-            symbolDesc = symbol.getAttribute("desc")
-            if symbolDesc != None:
-                self.addCode(symbolCode, symbolName, ValidatingString(symbolDesc))
-            else:
-                self.addCode(symbolCode, symbolName)
-                
-    def toDOM(self, XMLDoc, XMLNode):
-        XMLNode.setAttribute('hmm:low', "%s" % self.low())
-        XMLNode.setAttribute('hmm:high', "%s" % self.high())
-        map = XMLDoc.createElement("map")  
-        for key in self.name.keys():
-            symbol = XMLDoc.createElement("symbol")
-            symbol.setAttribute('code', "%s" % key)
-            if self.hasDesc and self.desc[key] != "":
-                symbol.setAttribute('desc', "%s" % self.desc[key])
-            writeContents(XMLDoc, symbol, "%s" % self.name[key])
-            map.appendChild(symbol)
-        XMLNode.appendChild(map)
-   
-
-class DiscreteHMMAlphabet(DOM_Map):
-    def __init__(self):
-        DOM_Map.__init__(self)
-        self.hmm_type = 'discrete'
-
-    def fromDOM(self, XMLNode):
-        """Take dom subtree representing a <hmm:alphabet</hmm:alphabet> element"""
-        self.initialize()
-        # Not reading: hmm:low hmm:high
-        if XMLNode.getAttribute("hmm:type") == self.hmm_type:
-            self.symbolsFromDom(XMLNode)
-        else:
-            print "DiscreteHMMAlphabet wrong type %s" % XMLNode.getAttribute("hmm:type") 
-
-    def toDOM(self, XMLDoc, XMLNode):
-        hmmalphabet = XMLDoc.createElement("hmm:alphabet")
-        hmmalphabet.setAttribute('hmm:type', 'discrete')
-        DOM_Map.toDOM(self, XMLDoc, hmmalphabet)
-        XMLNode.appendChild(hmmalphabet)
-
-    def toGHMM(self, XMLDoc, XMLNode):
-        hmmalphabet = XMLDoc.createElement("alphabet")
-        for key in self.name.keys():
-            alphabet = XMLDoc.createElement("symbol")
-            alphabet.setAttribute('id', "%s" % key)
-            hmmalphabet.appendChild(alphabet)
-        XMLNode.appendChild(hmmalphabet)
+        xmlutil.DiscreteHMMAlphabet.__init__(self)
         
     def size(self):
         return len(self.name.keys())
@@ -394,21 +174,16 @@ class DiscreteHMMAlphabet(DOM_Map):
                     del self.name[key] 
                 else:
                     self.name2code[self.name[key]] = key
-    
-class HMMClass(DOM_Map):
+
+class HMMState( xmlutil.HMMState ):
     def __init__(self):
-        DOM_Map.__init__(self)
-
-    def fromDOM(self, XMLNode):
-        """Take dom subtree representing a <hmm:class></hmm:class> element"""
-        self.initialize()
-        self.symbolsFromDom(XMLNode)
-
-    def toDOM(self, XMLDoc, XMLNode):
-        hmmclass = XMLDoc.createElement("hmm:class")   
-        DOM_Map.toDOM(self, XMLDoc, hmmclass)
-        XMLNode.appendChild(hmmclass)
-
+        xmlutil.HMMState.__init__(self)
+  
+    
+class HMMClass( xmlutil.HMMClass ):
+    def __init__(self):
+        xmlutil.HMMClass.__init__(self)
+   
     def edit(self, master):        
         mapedit = MapEditor(master, [self.name, self.desc], ['code','name','desc'], [3,5,35])
         print mapedit.result
@@ -429,384 +204,13 @@ class HMMClass(DOM_Map):
                     del self.desc[key]
                 else:
                     self.name2code[self.name[key]] = key
-            
-            
-class HMMState:
-    def __init__(self, nodeIndex, itsHMM):
 
-        self.initial  = Probability("0.0")
-        self.label    = ValidatingString("<none>")
-        
-        self.itsHMM       = itsHMM
+class HMM (xmlutil.HMM):
 
-        self.index = nodeIndex # The node index in the underlying graph
-        
-        self.id = ValidatingString("%s" % nodeIndex)
-        self.state_class = PopupableInt()        
-        self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
-
-        self.order = DefaultedInt()
-        self.order.setDefault(1, 0)
-
-        self.emissions = []
-
-        self.tiedto = DefaultedString()
-        self.tiedto.setDefault(1, '')
-        self.desc = self.id
-
-        self.reading_frame = PopupableInt(-1)
-        code2name = {-1:'None', 0:'0', 1:'1', 2:'2'}
-        name2code = {'None':-1, '0':0, '1':1, '2':2}
-        self.reading_frame.setPopup(code2name, name2code, 4)
-
-        self.duration = DefaultedInt()
-        self.duration.setDefault(1, 0)
-
-        self.background = PopupableInt(-1)
-        self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
-
-
-    # editableAttr = ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
-    editableAttr = ['label', 'initial']
-    xmlAttr = editableAttr + ['ngeom', 'emissions']
-
-    #
-    # Set_<Attribute> Methods: for integration with class editobj.Editor.set_value()
-    # the name of the method must be in the form of set_<attr name>(self,value).
-    # Otherwise, EditObj cannot propogate new values. (See the base method editobj.EntryEditor.set_value())
-    # When necessary, we also update the Graph here.
-    #
-    def set_label(self, value):
-        # Get the id2index from the Graph
-        oldv = self.itsHMM.id2index[self.id]
-        self.label = typed_assign(self.label, value)
-        
-        # We only show the label out of the editable items
-        self.itsHMM.G.labeling[oldv] = "%s\n%s" % (self.id, self.label) # XXX Hack Aaaargh!
-        self.itsHMM.itsEditor.UpdateVertexLabel(oldv, 0)
-
-
-    def set_initial(self, value):
-        self.initial = typed_assign(self.initial, value)
-
-    def fromDOM(self, XMLNode):
-
-        self.id = ValidatingString(XMLNode.attributes['id'].nodeValue.encode('ascii', 'replace'))
-        
-        self.index = self.itsHMM.G.AddVertex()
-        
-        datas = XMLNode.getElementsByTagName("data")
-        for data in datas:
-            dataKey = data.attributes['key'].nodeValue
-            dataValue = data.firstChild.nodeValue
-            
-            if dataKey == 'class':
-                if dataValue == None: # use default Value
-                    self.state_class = typed_assign(self.state_class, int(0))
-                else:
-                    self.state_class = typed_assign(self.state_class, int(dataValue))
-                    
-            elif  dataKey == 'label':
-                self.label = type(self.label)(dataValue.encode('ascii', 'replace'))
-
-            elif  dataKey == 'order':
-                if dataValue == None: # use default value
-                    self.order = typed_assign(self.order, self.order.defaultValue)
-                    self.order.useDefault = 1
-                else:
-                    self.order = typed_assign(self.order, int(dataValue))
-                    self.order.useDefault = 0
-
-            elif  dataKey == 'initial':
-                self.initial = typed_assign(self.initial, float(dataValue))
-                
-            elif  dataKey == 'tiedto':
-                
-                if dataValue == None: # use default value
-                    self.tiedto = typed_assign(self.tiedto, self.tiedto.defaultValue)
-                    self.tiedto.useDefault = 1
-                else:
-                    self.tiedto = typed_assign(self.tiedto, dataValue.encode('ascii', 'replace'))
-                    self.tiedto.useDefault = 0
-
-            elif dataKey == 'reading-frame':
-                self.reading_frame = typed_assign(self.reading_frame, int(dataValue))
-
-            elif dataKey == 'background':
-                self.background = typed_assign(self.background, self.itsHMM.backgroundDistributions.name2code[dataValue])
-
-            elif dataKey == 'duration':
-                self.duration = typed_assign(self.duration, int(dataValue))
-                self.duration.useDefault = 0
-                                    
-            elif dataKey == 'ngeom':
-                # We only use pos
-                pos = XMLNode.getElementsByTagName('pos')[0] # Just one pos ...                
-                self.pos = Point2D(float(pos.attributes['x'].nodeValue),
-                                   float(pos.attributes['y'].nodeValue))
-                
-            elif dataKey == 'emissions':
-                # collect all strings from childnodes
-                dataValue = ""
-                for child in data.childNodes:
-                    dataValue += child.nodeValue
-                self.emissions = listFromCSV(dataValue, types.FloatType)
-                #print self.emissions
-                    
-            else:
-                print "HMMState.fromDOM: unknown key %s of value %s" % (dataKey, dataValue)
-        
-
-    def toDOM(self, XMLDoc, XMLNode, initial_sum):
-        node = XMLDoc.createElement("node")
-        node.setAttribute('id', "%s" % self.id)
-
-        # Mandatory elems
-        writeData(XMLDoc, node, 'label', self.label)
-        writeData(XMLDoc, node, 'class', self.state_class)
-        writeData(XMLDoc, node, 'initial', self.initial / initial_sum)
-        pos = self.itsHMM.G.embedding[self.index]
-        pos_elem = XMLDoc.createElement("pos")
-        pos_elem.setAttribute('x', "%s" % pos.x)
-        pos_elem.setAttribute('y', "%s" % pos.y)
-        writeXMLData(XMLDoc, node, 'ngeom', pos_elem)
-
-        if not self.order.useDefault:
-            writeData(XMLDoc, node, 'order', self.order)
-
-        if self.reading_frame != -1:
-            writeData(XMLDoc, node, 'reading-frame', self.reading_frame)
-
-        if self.background != -1:
-            writeData(XMLDoc, node, 'background', self.itsHMM.backgroundDistributions.code2name[self.background])
-
-        if not self.duration.useDefault:
-            writeData(XMLDoc, node, 'duration', self.duration)
-           
-        if not self.tiedto == '':
-            writeData(XMLDoc, node, 'tiedto', self.tiedto)
-        else:
-            if self.order.useDefault:
-                order = 0
-            else:
-                order = self.order
-
-            # XXX Produce uniform emission probs, if we dont have the correct number of
-            # parameters
-            
-            size = self.itsHMM.hmmAlphabet.size()**(order+1)
-            if len(self.emissions) != size:
-                tmp = [1.0/self.itsHMM.hmmAlphabet.size()] * self.itsHMM.hmmAlphabet.size()
-                if order == 0:
-                    self.emissions = tmp
-                else:
-                    self.emissions = tmp * self.itsHMM.hmmAlphabet.size()**order
-                    
-                
-            if order > 0:
-                writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions,
-                                                                 self.itsHMM.hmmAlphabet.size()))
-            else:
-                writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions))
-            
-        XMLNode.appendChild(node)
-
-    def toGHMM(self, XMLDoc, XMLNode, initial_sum):
-        node = XMLDoc.createElement("state")
-        node.setAttribute('id', "%s" % self.id)
-
-        writeXMLTextNode(XMLDoc, node, 'initial', self.initial / initial_sum)
-        # ignore order
-        writeXMLTextNode(XMLDoc, node, 'emission', string.join(map(str,self.emissions),'\n'))
-        XMLNode.appendChild(node)
-        
-        
-class HMM:    
     def __init__(self, itsEditor, XMLFileName = None):
-
         self.itsEditor = itsEditor
- 	self.G = Graph()
-	self.G.directed = 1
-	self.G.euclidian = 0
-	self.Pi = {}
-        self.id2index = {}
-
-        self.hmmAlphabet = DiscreteHMMAlphabet()
-        self.hmmClass = HMMClass()
+        xmlutil.HMM.__init__(self, XMLFileName)
         
-        self.editableAttr = {}
-        self.editableAttr['HMM'] = ['desc']
-        self.desc = ValidatingString()       
-
-        self.state = {}
-
-        self.backgroundDistributions = NamedDistributions(self)
-
-        self.DocumentName = "graphml"
-        if XMLFileName != None:
-            self.OpenXML(XMLFileName)
-
-
-    def AddState(self, v):
-        state = HMMState(v, self)
-        self.state[v] = state
-        
-    def DeleteState(self, v):
-        del self.id2index[self.state[v].id]
-        del self.state[v]        
-
-    def fromDOM(self, XMLNode):
-        
-        self.hmmClass.fromDOM(XMLNode.getElementsByTagName("hmm:class")[0]) # One class!
-        self.hmmAlphabet.fromDOM(XMLNode.getElementsByTagName("hmm:alphabet")[0]) # One alphabet!
-        self.backgroundDistributions.fromDOM(XMLNode)
-
-        nodes = XMLNode.getElementsByTagName("node")
-        for n in nodes:
-            state = HMMState(-1, self)
-            state.fromDOM(n)
-            i = state.index
-            self.state[i] = state
-            self.id2index[state.id] = i
-
-            self.G.embedding[i] = state.pos
-            self.G.labeling[i] = "%s\n%s" % (state.id, state.label) # XXX Hack Aaaargh!
-
-        edges = XMLNode.getElementsByTagName("edge")
-        for edge in edges:
-            i = self.id2index[edge.attributes['source'].nodeValue]
-            j = self.id2index[edge.attributes['target'].nodeValue]
-
-            datas = edge.getElementsByTagName("data")
-            for data in datas:
-                dataKey = data.attributes['key'].nodeValue
-                dataValue = data.firstChild.nodeValue
-
-            if dataKey == 'prob':
-                p = float(dataValue)
-                               
-            self.G.AddEdge(i, j)
-            self.G.edgeWeights[0][(i,j)] = p
-
-
-    def toGHMM(self, XMLDoc, XMLNode):        
-        hmm = XMLDoc.createElement("hmm")
-        hmm.setAttribute('type', 'discrete')
-        XMLNode.appendChild(hmm)
-
-        self.hmmAlphabet.toGHMM(XMLDoc, hmm) 
-
-         # Compute sums of initial probabilities for renormalization 
-        initial_sum = 0.0
-        for s in self.state:
-            initial_sum = initial_sum + self.state[s].initial
-
-        for s in self.state:
-            self.state[s].toGHMM(XMLDoc, hmm, initial_sum)
-        
-        # Compute sums of outgoing probabilities for renormalization of transition probabilities
-        # NOTE: need dictionaries here
-        out_sum = {}
-        for v in self.G.vertices:
-            out_sum[v] = 0.0
-        
-        for e in self.G.Edges():
-             out_sum[e[0]] = out_sum[e[0]] + self.G.edgeWeights[0][e]
-
-        for e in self.G.Edges():
-            edge_elem = XMLDoc.createElement("transition")
-            edge_elem.setAttribute('source', "%s" % self.state[e[0]].id)
-            edge_elem.setAttribute('target', "%s" % self.state[e[1]].id)
-            writeXMLTextNode(XMLDoc, edge_elem, 'prob', self.G.edgeWeights[0][e] / out_sum[e[0]])
-            hmm.appendChild(edge_elem)
-        
-
-    def toDOM(self, XMLDoc, XMLNode):
-        graphml = XMLDoc.createElement("graphml")
-        XMLNode.appendChild(graphml)
-
-        # Create key elements
-        hmmtype = XMLDoc.createElement("key")
-        hmmtype.setAttribute('id', 'emissions')
-        hmmtype.setAttribute('gd:type', 'HigherDiscreteProbDist') # what's your type?
-        hmmtype.setAttribute('for', 'node')
-        graphml.appendChild(hmmtype)
-        
-        self.hmmClass.toDOM(XMLDoc, graphml)
-        self.hmmAlphabet.toDOM(XMLDoc, graphml) 
-        self.backgroundDistributions.toDOM(XMLDoc, graphml) 
-
-        graph = XMLDoc.createElement("graph")
-
-        # Compute sums of initial probabilities for renormalization 
-        initial_sum = 0.0
-        for s in self.state:
-            initial_sum = initial_sum + self.state[s].initial
-        
-        for s in self.state:
-            self.state[s].toDOM(XMLDoc, graph, initial_sum)
-        
-        # Compute sums of outgoing probabilities for renormalization of transition probabilities
-        # NOTE: need dictionaries here
-        out_sum = {}
-        for v in self.G.vertices:
-            out_sum[v] = 0.0
-        
-        for e in self.G.Edges():
-             out_sum[e[0]] = out_sum[e[0]] + self.G.edgeWeights[0][e]
-
-        for e in self.G.Edges():
-            edge_elem = XMLDoc.createElement("edge")
-            edge_elem.setAttribute('source', "%s" % self.state[e[0]].id)
-            edge_elem.setAttribute('target', "%s" % self.state[e[1]].id)
-            writeData(XMLDoc, edge_elem, 'prob', self.G.edgeWeights[0][e] / out_sum[e[0]])
-            graph.appendChild(edge_elem)
-            
-        graphml.appendChild(graph)
-
-    def OpenXML(self, fileName):
-        dom = xml.dom.minidom.parse(fileName)
-        if dom.documentElement.tagName == "ghmm":
-            self.DocumentName = "ghmm"
-            ghmmdom  = dom
-            ghmml = GHMMXML()
-            dom   = ghmml.GraphMLDOM(ghmmdom)
-            ghmmdom.unlink()
-        else:
-            assert dom.documentElement.tagName == "graphml"   
-
-        self.fromDOM(dom)
-        dom.unlink()
-
-    def WriteXML(self, fileName):
-        doc = xml.dom.minidom.Document()
-        self.toDOM(doc, doc)
-        file = open(fileName, 'w')
-        # xml.dom.ext.PrettyPrint(doc, file)        
-        file.write(toprettyxml(doc)) # problem with white spaces
-        file.close()
-        doc.unlink()
-
-    def WriteGHMM(self, fileName):
-        doc = xml.dom.minidom.Document()
-        ghmm = doc.createElement("ghmm")
-        doc.appendChild(ghmm)
-        self.toGHMM(doc, ghmm)
-        file = open(fileName, 'w')
-        # xml.dom.ext.PrettyPrint(doc, file)        
-        file.write(toprettyxml(doc)) # problem with white spaces
-        file.close()
-        doc.unlink()
-        
-    def SaveAs(self, fileName):
-        if ( self.DocumentName == "graphml" ):
-            self.WriteXML(fileName)
-        else:
-            self.WriteGHMM(fileName)
-            
-    def SaveAsGHMM(self, fileName):
-        self.WriteGHMM(fileName)
-
 class HMMEditor(SAGraphEditor):
 
     def __init__(self, master=None):
@@ -966,7 +370,7 @@ class HMMEditor(SAGraphEditor):
     # The menu commands are passed as call back parameters to 
     # the menu items.
     #
-    def NewGraph(self, nrOfSymbols=0):
+    def NewGraph(self, nrOfSymbols=0, newInput=1):
 	self.HMM = HMM(self)
 
 	self.HMM.G.euclidian = 0
@@ -978,13 +382,20 @@ class HMMEditor(SAGraphEditor):
 	self.fileName = None
 	self.SetTitle("HMMEd _VERSION_ - New Graph")
 	self.SetGraphMenuOptions()
-	if nrOfSymbols == 0:
-	    nrOfSymbols  = tkSimpleDialog.askinteger("New HMM",
-						     "Enter the number of output symbols")
-	for i in xrange(nrOfSymbols):
-	    self.HMM.G.vertexWeights[i] = VertexWeight(0.0)
+        if newInput:
+            if nrOfSymbols == 0:
+                nrOfSymbols  = tkSimpleDialog.askinteger("New HMM",
+                                                         "Enter the number of output symbols")
+                for i in xrange(nrOfSymbols):
+                    self.HMM.G.vertexWeights[i] = VertexWeight(0.0)
 
-    def OpenGraph(self):	
+    def OpenGraph(self):
+        # clear screen
+
+        self.HMM.G.Clear()        
+        self.DeleteDrawItems()
+        self.hasGraph = 0
+
 	file = askopenfilename(title="Open HMM",
 			       defaultextension=".xml",
 			       filetypes = (("XML", ".xml"),
@@ -1041,6 +452,7 @@ class HMMEditor(SAGraphEditor):
                 
 
     def EditWeightUp(self,event):
+        """ Need to have editors multiple sets of transition probability """
 	if event.widget.find_withtag(CURRENT):
 	    widget = event.widget.find_withtag(CURRENT)[0]
 	    tags = self.canvas.gettags(widget)
@@ -1091,13 +503,14 @@ class HMMEditor(SAGraphEditor):
                         label = self.HMM.hmmAlphabet.name[code]
                         weight = state.emissions[code]
                         emission_probabilities.update({label:weight})
-
+                        
                     # Normalize ... should be member function
                     if abs(emission_probabilities.sum - 1.0) > 0.01:
                         key_list = emission_probabilities.keys()
                         for key in key_list:
                             emission_probabilities[key] = 1.0 / len(key_list)
 
+                            
                     e = ProbEditorBasics.emission_data(emission_probabilities)
                     d = ProbEditorDialogs.emission_dialog(self, e,
                                                           "emission probs of state %s" % state.id)
@@ -1226,10 +639,23 @@ class HMMInformer(GraphInformer):
     
 
     def EdgeInfo(self,tail,head):
-        tail_state = self.itsHMM.state[tail]
+        """ Display a list of transition probabilities for this edge
+            (We only draw the edge once, not as many as a number of classes)
+        """
+        tail_state = self.itsHMM.state[tail]        
         head_state = self.itsHMM.state[head]
-        p = self.itsHMM.G.edgeWeights[0][(tail, head)]
-        msg = "Transition: '%s' -> '%s' prob=%0.2f" % (tail_state.id, head_state.id, p)
+        # p = self.itsHMM.G.edgeWeights[0][(tail, head)]
+        transitions  = []
+        nr_classes = int(self.itsHMM.hmmClass.high())-int(self.itsHMM.hmmClass.low())+1
+        for cl in range(nr_classes):
+            if self.itsHMM.G.edgeWeights[cl].has_key( (tail,head) ):
+                transitions.append(self.itsHMM.G.edgeWeights[cl][(tail,head)])
+            else:
+                transitions.append(0.0)
+
+        plist = csvFromList( transitions )
+        msg = "Transition: '%s' -> '%s'(%2d):" % (tail_state.id, head_state.id, nr_classes)
+        msg = msg + plist
         return msg
        
         
