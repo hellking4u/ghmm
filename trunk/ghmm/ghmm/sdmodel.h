@@ -152,7 +152,11 @@ extern "C" {
      @param mo:  model to copy */
   sdmodel*  sdmodel_copy(const sdmodel *mo);
 
+  /** Utility for converting between single discrete model and switching model */
   model*    sdmodel_to_model(const sdmodel *mo, int kclass);
+
+  /** */
+  void      model_to_sdmodel(const model *mo, const sdmodel *smo, int klass);
 
   /**
      Writes a model in matrix format.
