@@ -300,7 +300,7 @@ void GHMM_DiscreteModel::init(int number_of_states, int my_M, double my_prior) {
   c_model->N       = number_of_states;
   c_model->M       = my_M;
   c_model->prior   = my_prior;
-  c_model->s       = (state*) malloc(sizeof(state) * max(c_model->N,1));
+  c_model->s       = (state*) malloc(sizeof(state) * MAX(c_model->N,1));
   /* initialize all states. */
 
   for (i = 0; i < number_of_states; ++i) {
