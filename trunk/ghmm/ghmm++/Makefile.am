@@ -11,6 +11,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
 
+pkgincludedir = $(includedir)/ghmm++
+
 lib_LIBRARIES = libghmm++.a
 libghmm___a_SOURCES = \
 sequence.cpp \
