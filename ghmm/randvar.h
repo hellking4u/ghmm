@@ -11,7 +11,7 @@ __copyright__
 #ifndef RANDVAR_H
 #define RANDVAR_H
 
-/**@name Hilfsfunktionen für Zufallsvariablen */
+/**@name Help functions for random values */
 /*@{ (Doc++-Group: randvar) */
 
 
@@ -22,133 +22,152 @@ extern "C" {
 #endif
 
 /**
-   Berechnen der eindimensionalen Dichtefkt(mean, u) an der Stelle x..
-   @return       Funktionswert
-   @param x      Variablenwert
-   @param mean   Mittelwert der Normalverteilung
-   @param u      Varianz der Normalverteilung ($\sigma^2$)
+   Calculates the one dimensional density function phi( mean, u ) for the
+   normal distribution at point x.
+   @return       function value
+   @param x:      point value
+   @param mean:   mean value for the normal distribution
+   @param u:      variance for the normal distribution ($\sigma^2$)
    */
 double randvar_normal_density(double x, double mean, double u);
 
 /**
-   Bestimmung der eindimensionalen Dichtefkt(mean, u) an der Stelle x.
-   Der Wert wird aus einer vorberechneten Liste geholt, die erstellt wird
-   beim ersten Aufruf.
-   @return       Funktionswert
-   @param x      Variablenwert
-   @param mean   Mittelwert der Normalverteilung
-   @param u      Varianz der Normalverteilung ($\sigma^2$)
+   Determinates the value of the one dimensional density function 
+   phi( mean, u ) for the normal distribution at point x. The value is
+   got from a previoously calculated list, which is made in first call
+   to this function.
+   @return       function value
+   @param x:      point value
+   @param mean:   mean value for the normal distribution
+   @param u:      variance for the normal distribution ($\sigma^2$)
    */
 double randvar_normal_density_approx(double x, double mean, double u);
 
 /**
-   Bestimmung der eindimensionalen, im negativen Bereich auf 0 gesetzten
-   Gauss-Dichte-Fkt(mean, u) an der Stelle x.
-   @return       Funktionswert
-   @param x      Variablenwert
-   @param mean   Mittelwert der Normalverteilung
-   @param u      Varianz der Normalverteilung ($\sigma^2$)
+   Calculates the one dimensional Gauss density function phi( mean, u ) 
+   at point x. In this case: phi = 0 for x < 0. 
+   @return       function value
+   @param x:      point value
+   @param mean:   mean value for the normal distribution
+   @param u:      variance for the normal distribution ($\sigma^2$)
    */
 double randvar_normal_density_pos(double x, double mean, double u);
 
 /**
-   Bestimmung der eindimensionalen, im Bereich ($-\infty$,a) auf 0 gesetzten
-   Gauss-Dichte-Fkt(mean, u) an der Stelle x.
-   @return       Funktionswert
-   @param x      Variablenwert
-   @param mean   Mittelwert der Normalverteilung
-   @param u      Varianz der Normalverteilung ($sigma^2$)
-   @param a     linke Grenze der Dichte
+   Calculates the one dimensional Gauss density function phi( mean, u ) 
+   at point x. In this case: phi = 0 for x on the interval ($-\infty$, a).
+   @return       function value
+   @param x:      point value
+   @param mean:   mean value for the normal distribution
+   @param u:      variance for the normal distribution ($sigma^2$)
+   @param a:      left limit for the density function
    */
 double randvar_normal_density_trunc(double x, double mean, double u, double a);
 
 /** 
-   Erzeugen einer U(0,K-1) verteilten ganzzahligen Zufallszahl..
-   @return          Zufallszahl
-   @param seed      1: nur initialisieren des U(0,1) Generators, 
-                    0: Rueckgabe der gleichverteilten ganzz. Zufallszahl 
+   Generates a Uniform( 0, K-1 ) distributed random integer. 
+   @return          random integer
+   @param seed:      1: initialize only the Uniform( 0, 1 ) generator, 
+                     0: return a uniform distributed integer 
+   @param K:         right limit for uniform distribution
   */
 double randvar_uniform_int(int seed, int K);
 
 /** 
-   Erzeugen einer N(0,1) verteilten Zufallszahl..
-   @return          Zufallszahl
-   @param seed      1: nur initialisieren des U(0,1) Generators,
-                    0: Rueckgabe einer standardnormalverteilen Zufallszahl 
+   Generates a N( 0, 1 ) distributed random number.
+   @return          random value
+   @param seed:      1: only initialize the U(0,1) generator,
+                    0: returns a standard normal distributed random number 
   */
 double randvar_std_normal(int seed);
 
-/** 
-   Erzeugen einer N(mue, u) verteilten Zufallszahl..
-   @return          Zufallszahl
-   @param seed      1: nur initialisierung
-                    0: Rueckgabe einer standardnormalverteilen Zufallszahl 
+/**
+   Generates a N( mue, u ) distributed random number.
+   @return           random number
+   @param mue:       mean value for the normal distribution 
+   @param u:         variance for the random distribution
+   @param seed:      1: only initialization
+                     0: returns a standard normal distributed random number 
   */
 double randvar_normal(double mue, double u, int seed);
 
 /** 
-   Erzeugen einer positiven N(mue, u) verteilten Zufallszahl..
-   @return          Zufallszahl
-   @param seed      1: nur initialisieren des U(0,1) Generators,
-                    0: Rueckgabe einer standardnormalverteilen Zufallszahl 
+   Generates a positive, N( mue, u ) distributed random number.
+   @return          random number
+   @param mue:       mean value for the normal distribution 
+   @param u:         variance for the random distribution
+   @param seed:      1: only initialize the N( 0, 1 ) generator
+                     0: returns a standard normal distributed random number 
   */
 double randvar_normal_pos(double mue, double u, int seed);
 
 /**
-   Bestimmen der N(0,1)-Verteilungsfunktion an der Stelle x. 
-   Die Verteilung wird als Tabelle eingelesen und dann wird zwischen 
-   den St""utzstellen linear interpoliert.
-   @return          Wert PHI(x)
-   @param x         x-Wert
+   Determinates the N( 0, 1 ) distribution function at point x.
+   The distribution is read in as a table and points between the
+   sampling points are generated with interpolation.
+   @return           function value
+   @param x:         point value
    */
 double randvar_get_PHI(double x);
 
 /**
-   Bestimmen des Skalierungsfaktors 1/a fuer die gestutzte Normalverteilung. 
-   a entspricht dem Integral von x bis Infinity ueber die Normaldichte.
-   @return          1/a
-   @param x         linke Integralgrenze
-   @param mean      Mittelwert der Normaldichte
-   @param u         Varianz der Normaldichte
+   Calculates scaling factor 1/a for the truncated normal distribution.
+   a corresponds to the value of the integral from x to infinity over
+   the normal density function.
+   @return           1/a
+   @param x:         left limit for integral
+   @param mean:      mean value for the normal distribution
+   @param u:         variance for the normal distribution
    */
 double randvar_get_1overa(double x, double mean, double u);
 
 /**
-   Bestimmen derjenigen Stuetzstelle x, fuer die PHI(x) das erste Mal 1 wird..
-   @return          x mit PHI(x)==1, PHI(y) < 1 fuer alle y < x
+   Determinates the first sampling point x, for which PHI(x) = 1 for the first
+   time.
+   @return          x with PHI(x)==1, PHI(y) < 1 for all y < x
    */
 double randvar_get_xPHIless1();
 
 #if 0
-/* *
-   Bestimmen derjenigen Stuetzstelle x, fuer die PHI(x) 
-   das erste Mal gleich PHI(y) wird, wenn x und y aufeinander folgen.
-   @return          x mit PHI(x)==PHI(y) mit PHI(x')<PHI(y') f.a.x',y'<x,y
+/**
+   Determinates the sampling point x, for which PHI(x) = PHI(y) for 
+   the first time, where x and y consecutive.
+   @return          x with PHI(x)==PHI(y), where PHI(x')<PHI(y') f.a.x',y'<x,y
    */
 double randvar_get_xPHIxgleichPHIy();
 #endif
 
 /**                                 
-   cumalative distribution function F(x;mean,u) der NV(mean, u)..
-   @return          F(x)
-   @param x         x
-   @param mean      Mittelwert der Normaldichte
-   @param u         Varianz der Normaldichte
+   Cumalative distribution function F(x;mean,u) for the N(mean, u).
+   @return           F(x)
+   @param x:         point value
+   @param mean:      mean value for the normal distribution
+   @param u:         variance for the normal distribution
 */
 double randvar_normal_cdf(double x, double mean, double u);
+
 /**                                 _
-   cumalative distribution function F(x;mean,u) der gestutzten NV(mean, u)..
+   Cumalative distribution function F(x;mean,u) for the truncated N(mean, u).
    @return          F(x)
-   @param x         x
-   @param mean      Mittelwert der Normaldichte
-   @param u         Varianz der Normaldichte
+   @param x:         point value
+   @param mean:      mean value for the normal distribution
+   @param u:         variance for the normal distribution
 */
 double randvar_normal_pos_cdf(double x, double mean, double u);
 
+  /**
+   Small help function for interpolation, returns a constant.
+  */
 double randvar_get_xfaktphi();
 
+/**
+   Small help function for interpolation, returns a constant.
+  */
 double randvar_get_xstepphi();
 
+  /** 
+   Small help function for interpolation, returns a constant.
+  */
 double randvar_get_philen();
 
 #ifdef __cplusplus
