@@ -13,8 +13,8 @@
 #endif
 
 #include <string>
-#include <xmlio/XMLIO_AttributedObject.h>
-#include <xmlio/XMLIO_ArrayObject.h>
+#include <xmlio/XMLIO_AttributedElement.h>
+#include <xmlio/XMLIO_ArrayElement.h>
 
 
 #ifdef HAVE_NAMESPACES
@@ -24,7 +24,7 @@ namespace std {
   /**
      collect everything with weight
    */
-  class Emission: public XMLIO_ContentElementArrayObject<double,XMLIO_AttributedObject>
+  class Emission: public XMLIO_ContentElementArrayElement<double,XMLIO_AttributedElement>
     {
     public:
       /** Poor Constructor. */
@@ -42,7 +42,7 @@ namespace std {
 
   /**
    */
-  class Emissions: public XMLIO_ElementArrayObject<Emission>
+  class Emissions: public XMLIO_ElementArrayElement<Emission>
     {
     public:
       /** Poor constructor. */

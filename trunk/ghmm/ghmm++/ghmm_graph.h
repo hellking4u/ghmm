@@ -29,7 +29,7 @@ namespace std {
       /** constructor from XMLIO interface */
       ghmm_graph(const string& tag, XMLIO_Attributes &attributes);
       /** */
-      virtual XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);      
+      virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);      
       /** */
       virtual const char* toString() const;
     };

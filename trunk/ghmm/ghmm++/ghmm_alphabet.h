@@ -13,14 +13,14 @@
 #endif
 
 #include <ghmm++/ghmm_symbol.h>
-#include <xmlio/XMLIO_ArrayObject.h>
+#include <xmlio/XMLIO_ArrayElement.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
 #endif
 
 /** */
-class ghmm_alphabet: public XMLIO_ElementArrayObject<ghmm_symbol>
+class ghmm_alphabet: public XMLIO_ElementArrayElement<ghmm_symbol>
 {
 public:
   /** */

@@ -10,11 +10,9 @@
 
 #include <iostream>
 #include <vector>
-#include <xmlio/XMLIO_Object.h>
+#include <xmlio/XMLIO_Element.h>
 #include <xmlio/XMLIO_ObjectReader.h>
-#include <xmlio/XMLIO_SkipObject.h>
-#include <xmlio/XMLIO_IgnoreObject.h>
-#include <xmlio/XMLIO_ArrayObject.h>
+#include <xmlio/XMLIO_ArrayElement.h>
 
 #ifdef HAVE_NAMESPACES
 namespace std {
@@ -24,7 +22,7 @@ namespace std {
      a map consisting of doubles followed by elements E
    */
   template <class E>
-    class DiscretePD: public map<E*,double>, public XMLIO_ContentElementArrayObject<double,E>
+    class DiscretePD: public map<E*,double>, public XMLIO_ContentElementArrayElement<double,E>
     {
     public:
       /**
@@ -68,8 +66,8 @@ namespace std {
 	{
 	  /* parse pair vector and collect information into a map */
 	  double actual_weight=default_weight;
-	  for (XMLIO_ContentElementArrayObject<double,E>::iterator pos=XMLIO_ContentElementArrayObject<double,E>::begin();
-	       pos!=XMLIO_ContentElementArrayObject<double,E>::end();
+	  for (XMLIO_ContentElementArrayElement<double,E>::iterator pos=XMLIO_ContentElementArrayElement<double,E>::begin();
+	       pos!=XMLIO_ContentElementArrayElement<double,E>::end();
 	       ++pos)
 	    {
 	      if (pos->content!=NULL)

@@ -13,10 +13,10 @@
 #include <list>
 #include <iostream>
 #include <xmlio/XMLIO_Definitions.h>
-#include <xmlio/XMLIO_Object.h>
-#include <xmlio/XMLIO_StringObject.h>
+#include <xmlio/XMLIO_Element.h>
+#include <xmlio/XMLIO_StringElement.h>
 #include <xmlio/XMLIO_ObjectReader.h>
-#include <xmlio/XMLIO_ArrayObject.h>
+#include <xmlio/XMLIO_ArrayElement.h>
 #include <ghmm/sequence.h>
 
 #ifdef HAVE_NAMESPACES
@@ -25,7 +25,7 @@ namespace std {
 
   /**
    */
-  class double_sequence: public XMLIO_ArrayObject<double>
+  class double_sequence: public XMLIO_ArrayElement<double>
     {
     public:
       /**
@@ -45,7 +45,7 @@ namespace std {
       ~double_sequence();
       /**
        */
-      XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
       double* create_double_array() const;
@@ -64,7 +64,7 @@ namespace std {
     private:
       /**
        */
-      XMLIO_StringObject* label;
+      XMLIO_StringElement* label;
       /**
        */
       string id;
@@ -72,7 +72,7 @@ namespace std {
 
   /**
    */
-  class int_sequence: public XMLIO_ArrayObject<int>
+  class int_sequence: public XMLIO_ArrayElement<int>
     {
     public:
       /**
@@ -92,7 +92,7 @@ namespace std {
       ~int_sequence();
       /**
        */
-      XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
       double* create_double_array() const;
@@ -111,7 +111,7 @@ namespace std {
     private:
       /**
        */
-      XMLIO_StringObject* label;
+      XMLIO_StringElement* label;
       /**
        */
       string id;
@@ -119,7 +119,7 @@ namespace std {
 
   /**
    */
-  class sequences_DiscretePD: public XMLIO_Object
+  class sequences_DiscretePD: public XMLIO_Element
     {
     public:
       /**
@@ -142,7 +142,7 @@ namespace std {
       ~sequences_DiscretePD();
       /**
        */
-      XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
       void XMLIO_endTag(const string& tag);
@@ -188,7 +188,7 @@ namespace std {
 
   /**
    */
-  class sequences: public XMLIO_Object
+  class sequences: public XMLIO_Element
     {
     public:
       /**
@@ -214,7 +214,7 @@ namespace std {
       ~sequences();
       /**
        */
-      XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
       /**
        */
       void XMLIO_endTag(const string& tag);
@@ -265,7 +265,7 @@ namespace std {
       size_t read_sequences(const string& filename);
       /**
        */
-      XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes);
+      XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes);
       /**
        */
       void XMLIO_endTag(const string& tag);

@@ -10,7 +10,7 @@
 #endif
 
 #include <iostream>
-#include <xmlio/XMLIO_ArrayObject.h>
+#include <xmlio/XMLIO_ArrayElement.h>
 #include "ghmm_symbol.h"
 
 #ifdef HAVE_NAMESPACES
@@ -18,13 +18,13 @@ using namespace std;
 #endif
 
 ghmm_symbol::ghmm_symbol():
-  XMLIO_StringObject()
+  XMLIO_StringElement()
 {
   init_members();
 }
 
 ghmm_symbol::ghmm_symbol(int my_code, const string& my_symbol):
-  XMLIO_StringObject(my_symbol)
+  XMLIO_StringElement(my_symbol)
 {
   init_members();
   valid=1;
@@ -32,7 +32,7 @@ ghmm_symbol::ghmm_symbol(int my_code, const string& my_symbol):
 }
 
 ghmm_symbol::ghmm_symbol(const string& tag, XMLIO_Attributes &attributes):
-  XMLIO_StringObject(tag,attributes)
+  XMLIO_StringElement(tag,attributes)
 {
   init_members();
   XMLIO_Attributes::const_iterator pos=attributes.find("code");
@@ -65,7 +65,7 @@ void ghmm_symbol::print() const
   if (valid)
     cout<<toString()<<": code="<<code<<" value="<<*this<<endl;
   else
-    cout<<toString()<<": object not valid"<<endl;
+    cout<<toString()<<": element not valid"<<endl;
 }
 
 void ghmm_symbol::init_members()
