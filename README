@@ -1,1 +1,12 @@
-Es fehlt evtl pvonmue in sreestimate...
+build from cvs:
+===============
+
+0. you need automake, autoconf and m4 from ftp://ftp.gnu.org
+
+1. call autogen.sh
+   (ignore messages like:
+    automake: configure.in: installing `./mkinstalldirs'
+        error while copying
+   )
+
+2. continue with normal build instructions as written in INSTALL
