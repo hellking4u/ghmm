@@ -892,13 +892,13 @@ class HMM:
         self.forwardAlphaFunction = ""   # C function forward algorithm (alpha matrix,scale)
         self.backwardBetaFunction = ""   # C function backkward algorithm (beta matrix)
         self.getStatePtr = ""            # C function to get a pointer to a state struct
-        self.getModelPtr = ""            # C function to get a pointer to the model struct
+       # self.getModelPtr = ""            # C function to get a pointer to the model struct
         
         
-    def __del__(self):
-        """ Deallocation routine for the underlying C data structures. """
-        modelPtr = getModelPtr(self.cmodel)
-        self.freeFunction(modelPtr)
+  #  def __del__(self):
+  #      """ Deallocation routine for the underlying C data structures. """
+  #      modelPtr = getModelPtr(self.cmodel)
+  #      self.freeFunction(modelPtr)
         
     
     
@@ -1273,7 +1273,7 @@ class DiscreteEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.foba_backward 
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
-        self.getModelPtr = ghmmwrapper.get_model_ptr
+      #  self.getModelPtr = ghmmwrapper.get_model_ptr
       
     def __str__(self):
         hmm = self.cmodel
