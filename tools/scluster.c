@@ -8,6 +8,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <ghmm/mes.h>
 #include <ghmm/rng.h>
@@ -17,14 +25,14 @@ int main(int argc, char* argv[]) {
 #define CUR_PROC "scluster_main"
   int exitcode = -1;
 
-  gsl_rng_init();
+  ghmm_rng_init();
 
   if (argc == 5 || argc == 6) {
     if (argc == 6)
-      gsl_rng_set(RNG,atoi(argv[5]));
+      GHMM_RNG_SET(RNG,atoi(argv[5]));
     else {
       /* random init */
-      gsl_rng_timeseed(RNG); /*previously: gsl_rng_set(RNG,0); */
+      ghmm_rng_timeseed(RNG);
     }
 
     printf("Clustering Sequences with start partition\n");

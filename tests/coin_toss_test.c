@@ -5,6 +5,14 @@
   $Id$
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <ghmm/matrix.h>
 #include <ghmm/vector.h>
@@ -176,7 +184,7 @@ int main() {
   int result;
 
   /* Important! initialise rng  */
-  gsl_rng_init();
+  ghmm_rng_init();
 
   if (single_state_coin_toss() || two_states_coin_toss())
     result = 1;

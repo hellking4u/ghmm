@@ -6,6 +6,14 @@
   $Id$
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ghmm/mes.h>
@@ -75,11 +83,11 @@ int main(int argc, char* argv[]) {
     printf("mix_hmm [Seq.File] [InitModel File] [Out File] <seed>\n");
     goto STOP;
   }
-  gsl_rng_init();
+  ghmm_rng_init();
   if (argc == 5)
-      gsl_rng_set(RNG,atoi(argv[4]));
+      GHMM_RNG_SET(RNG,atoi(argv[4]));
     else {      
-      gsl_rng_timeseed(RNG); 
+      ghmm_rng_timeseed(RNG); 
     }
   
   exitcode = smix_hmm_run(argc, argv);

@@ -20,6 +20,14 @@ __copyright__
 
 *******************************************************************************/
 
+#ifdef WIN32
+#  include "win_config.h"
+#endif
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <math.h>
 
 #include "ghmm/mes.h"
@@ -64,7 +72,7 @@ int main(int argc, char* argv[]) {
   T = atoi(argv[3]);
   smodelflag = atoi(argv[4]);
 
-  gsl_rng_init();
+  ghmm_rng_init();
   if (smodelflag) {
     smo = smodel_read(argv[1], &smo_number);
     if (!smo)  {mes_proc(); return -1;}  
