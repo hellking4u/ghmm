@@ -23,6 +23,8 @@
 #include <ghmm/foba.h>
 #include <ghmm/scluster.h>
 #include <ghmm/mes.h>
+#include <ghmm/gradescent.h>
+#include <ghmm/kbest.h>
 #include "sdclass_change.h"
 %}
 
@@ -433,7 +435,6 @@ struct model {
       distributions*/
   double prior;
 
- 
   /* contains a arbitrary name for the model */
   char* name;
   
@@ -446,6 +447,13 @@ struct model {
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
   int* silent; /*AS*/
+
+  /** Int variable for the maximum level of higher order emissions */
+  int maxorder;
+  /** saves the history of emissions as int, 
+      the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
+      see ...*/
+  int emission_history;
 
   /** Flag variables for each state indicating whether the states emissions
       are tied to another state. Groups of tied states are represented
@@ -460,7 +468,7 @@ struct model {
       Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
   int* tied_to; 
   
-  /** Flag variables for each state giving the order of the emissions
+  /** Note: State store order information of the emissions.
       Classic HMMS have emission order 0, that is the emission probability
       is conditioned only on the state emitting the symbol.
 
@@ -472,7 +480,15 @@ struct model {
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   
-  /** 
+  /** background_distributions is a pointer to a
+      background_distributions structure, which holds (essentially) an
+      array of background distributions (which are just vectors of floating
+      point numbers like state.b).
+
+      For each state the array background_id indicates which of the background
+      distributions to use in parameter estimation. A value of kNoBackgroundDistribution
+      indicates that none should be used.
+
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
   int *background_id;
   background_distributions* bp;
@@ -608,6 +624,41 @@ extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, 
 
 extern void reestimate_update_tie_groups(model *mo);
 
+/**
+  Baum Welch training for StateLabelHMMs
+*/
+extern int reestimate_baum_welch_label(model *mo, sequence_t *sq);
+
+/**
+  Just like reestimate_baum_welch_label, but you can limit
+  the maximum number of steps
+  */
+extern int reestimate_baum_welch_nstep_label(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+
+
+
+/********  Gradient Descent (gradescent.c) ********/
+/**
+   Trains the model with a set of annotated sequences until the training
+   converges using gradient descent.
+   Model must not have silent states. (checked in Python wrapper)
+   @return            0/-1 success/error
+   @param mo:         reference to a model pointer
+   @param sq:         struct of annotated sequences
+   @param eta:
+ */
+extern int gradient_descent(model** mo, sequence_t *sq);
+
+/********  K-Best decoding (kbest.c) ********/
+/**
+   Calculates the most probable labeling for the given sequence in the given
+   model using k-best decoding.
+   @return array of labels (internal representation)
+   @param mo:         pointer to a model
+   @param o_seq:      output sequence (array of internal representation chars)
+   @param seq_len:    length of output sequence
+   */
+extern int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p);
 
 /******* Viterbi (viterbi.c)*******/
 /**
@@ -635,6 +686,40 @@ extern int *viterbi(model *mo, int *o, int len, double *log_p);
   @return log P
   */
 extern double viterbi_logp(model *mo, int *o, int len, int *state_seq);
+
+
+/********  Discriminative Training (discrime.c) ********/
+/**
+   Trains two or more models to opimise the discrimination between the
+   classes in the trainingset.
+   The models must have the same topology. (checked)
+   @return                 0/-1 success/error
+   @param mo:              array of pointers to some models
+   @param sqs:             array of annotated sequence sets
+   @param noC:             number of classes
+ */
+extern int discriminative(model** mo, sequence_t** sqs, int noC, int gradient);
+
+/**
+   Returns the value of the in this discriminative training algorithm optimised
+   function for a tupel of HMMs and sequencesets.
+   @return                 value of funcion
+   @param mo:              array of pointers to some models
+   @param sqs:             array of annotated sequence sets
+   @param noC:             number of classes
+*/
+extern double discrime_compute_performance(model** mo, sequence_t** sqs, int noC);
+
+extern model** discrime_modelarray_alloc(int size);
+extern void discrime_modelarray_dealloc(model** mos);
+extern void discrime_modelarray_setptr(model** mos, model* mo, int pos);
+extern model* discrime_modelarray_getptr(model** mos, int pos);
+
+extern sequence_t** discrime_seqarray_alloc(int size);
+extern void discrime_seqarray_dealloc(sequence_t** seqs);
+
+extern void discrime_seqarray_setptr(sequence_t** seqs, sequence_t* seq, int pos);
+extern sequence_t* discrime_seqarray_getptr(sequence_t** seqs, int pos);
 
 
 /******* Forward , backward (foba.c) ******/
