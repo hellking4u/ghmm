@@ -399,8 +399,8 @@ int model_free(model **mo) {
     m_free((*mo)->silent);
   if ((*mo) ->  tied_to)
     m_free((*mo)->tied_to);
-  if ((*mo) -> emission_order)
-    m_free((*mo)->emission_order);
+  /*if ((*mo) -> emission_order) Moved to state
+    m_free((*mo)->emission_order);*/
   if ((*mo) -> topo_order)
     m_free((*mo)->topo_order);
   
