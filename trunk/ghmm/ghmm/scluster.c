@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : /zpr/bspk/data/hmm/ngayeva/hmm/src/scluster.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/scluster.c
   created      : TIME: 15:47:54     DATE: Tue 16. November 1999
 *******************************************************************************/
 
@@ -112,15 +112,8 @@ int scluster_hmm(char* argv[]) {
   cl.smo = smodel_read(smo_file, &cl.smo_number);
   if (!cl.smo) {mes_proc(); goto STOP;}
   /* if labels == 0 || labels == 1: keine Startlabels benoetigt. */
-  /* if `labels` =  2:   use kmeans clustering to get start labels */
-  if (labels == 2) {
-    fprintf(outfile, "(start partition from a K-Means clustering!)\n");
-    fprintf(stdout, "(Start K-Means for the start partition...)\n");
-    if (sequence_d_labels_from_kmeans(sqd, cl.smo_number) == -1)
-      {mes_proc(); goto STOP;}
-  }
   /* if `labels` =  3: random start labels */
-  else if (labels == 3) {
+  if (labels == 3) {
     fprintf(outfile, "(random start partition)n");
     fprintf(stdout, "(Random start partition...)\n");
     scluster_random_labels(sqd, cl.smo_number);
@@ -378,41 +371,6 @@ int scluster_hmm(char* argv[]) {
   if (scluster_out(&cl, sqd, outfile, argv) == -1) 
     { mes_proc(); goto STOP; }
 
-  /* calculate for each model the total weight of seqs. that reached the tilg phase */
-  //  tilgw = smixturehmm_tilg_w(cp, sqd_train, smo, smo_number);
-  if (!m_calloc(tilgw, cl.smo_number)) {mes_proc(); goto STOP;}
-  if (!m_calloc(model_weight, cl.smo_number)) {mes_proc(); goto STOP;}
-  
-  for (i = 0; i < sqd->seq_number; i++) {
-    k = sqd->seq_label[i];
-    model_weight[k] += sqd->seq_w[i];
-    if (sqd->seq_len[i] > 1) { /* if len <= 1 seq can't be in tilgphase */
-      if ( sequence_d_is_tilg(sqd->seq[i], sqd->seq_len[i] - 1) ||
-           sequence_d_is_tilg(sqd->seq[i], sqd->seq_len[i] - 2)) 
-	tilgw[k] += sqd->seq_w[i];
-    }  
-  }
-  if (tilgw == NULL || model_weight == NULL) {
-    mes_prot("Error calculating tilgw \n"); goto STOP;
-  }
-  fprintf(outfile, "\n fraction of tilg seqs\n");
-  for (k = 0; k < cl.smo_number; k++) {
-    if (model_weight[k] != 0.0)
-      fprintf(outfile, "%.4f\n", tilgw[k]/model_weight[k]);
-    else
-      fprintf(outfile, "0.0\n");
-  }
-#if 0
-  /* TEMP */
-  for (k = 0; k < 200 /*sqd->seq_number*/; k++) {
-    fprintf(outfile, "%d <%d>\t", k, sqd->seq_label[k]);
-    for (i = 0; i < cl.smo_number; i++) {
-      sfoba_logp(cl.smo[i], sqd->seq[k], sqd->seq_len[k], &log_p);
-      fprintf(outfile, "%.4f\t", log_p);      
-    }
-    fprintf(outfile,"\n");
-  }
-#endif
 
 /*--------------------------------------------------------------------------*/
   res = 0;
