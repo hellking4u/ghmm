@@ -60,17 +60,18 @@
   =============================== Random Number Generator (RNG) ================================= */
 
 /* The global RNG */
-extern gsl_rng * RNG; 
+//extern gsl_rng * RNG; 
+extern GHMM_RNG * RNG;
 
 /* Important! initialise rng  */
-extern void gsl_rng_init(void);
+extern void ghmm_rng_init(void);
 
 /* Initialise random timeseed */
-extern void gsl_rng_timeseed(gsl_rng * r);
+extern void ghmm_rng_timeseed(GHMM_RNG * r);
 
 %inline %{
 	void time_seed(){
-		gsl_rng_timeseed(RNG);
+		ghmm_rng_timeseed(RNG);
 	}
 %}
 		
