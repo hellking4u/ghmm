@@ -872,7 +872,7 @@ class HMM:
             if s.tiedto == '':
                 tiedstates.append(-1)
             else:
-                tiedstates.append(orders[s.tiedto])
+                tiedstates.append(orders[int(s.tiedto)])
                 isTied = 1
 
         if not isTied:
