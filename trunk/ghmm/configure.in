@@ -62,6 +62,7 @@ dnl aborts on failure
 AM_PATH_GSL(0.7,,AC_MSG_ERROR("GSL Version 0.7 or higher required."))
 LIBS="$LIBS $GSL_LIBS"
 CFLAGS="$CFLAGS $GSL_CFLAGS"
+CXXFLAGS="$CXXFLAGS $GSL_CFLAGS"
 
 dnl Checks for libraries.
 AC_CHECK_LIB(pthread, pthread_join)
