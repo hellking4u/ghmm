@@ -620,7 +620,7 @@ double randvar_normal_pos_cdf(double x, double mean, double u) {
 
   if (x <= 0.0) return(0.0);
   if (u <= 0.0) { mes_prot("u <= 0.0 not allowed\n"); goto STOP; }
-#if DO_WITH_GSL
+#ifdef DO_WITH_GSL
   /*
     Function: int gsl_sf_erfc_e (double x, gsl_sf_result * result) 
     These routines compute the complementary error function
