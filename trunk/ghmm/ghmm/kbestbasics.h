@@ -1,5 +1,5 @@
 /*******************************************************************************
-  author       : Alexander Riemer
+  author       : Alexander Riemer, Janne Grunau
   filename     : ghmm/ghmm/kbestbasics.h
   created      : TIME: 17:40:38     DATE: Tue 22. June 2004
   $Id$
@@ -23,37 +23,23 @@ extern "C" {
            /* log(0.03) => threshold: 3% of most probable partial hypothesis */
 #define KBEST_EPS 1E-15
 
-/** Data type for linked list of hypotheses */
+/** Data type for linked list of hypotheses
+    Stores the actual label, a link to the parent hypothesis, a counter of the
+    links to this hypothesis, a the gamm values */
 typedef struct hypo_List {
-    int* hyp;
-    struct hypo_List* next;
+  int hyp_c;
+  int refcount;
+  int chosen;
+  double* gamma;
+  struct hypo_List* next;
+  struct hypo_List* parent;
 } hypoList;
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
-inline void hlist_insertElem(hypoList** plist, int* newhyp);
-
+inline void hlist_insertElem(hypoList** plist, int newhyp, hypoList* parlist);
 
 /* removes hypothesis at position indicated by pointer plist from the list */
 inline void hlist_removeElem(hypoList** plist);
-
-/* deletes the whole list of hypotheses */
-inline void hlist_delete(hypoList** list);
-
-/** Linked list for gamma matrices */
-typedef struct gamma_List {
-    double* g;
-    struct gamma_List* next;
-} gammaList;
-
-/* inserts new row into gamma list at position indicated by pointer plist */
-inline void glist_insertElem(gammaList** plist, double* newG);
-
-/* removes row at position indicated by pointer plist from gamma list */
-inline void glist_removeElem(gammaList** plist);
-
-/* deletes the whole gamma list */
-inline void glist_delete(gammaList** list);
-
 
 /**
    Propagates list of hypotheses forward by extending each old hypothesis to
@@ -61,25 +47,21 @@ inline void glist_delete(gammaList** list);
    @return number of old hypotheses
    @param h:          pointer to list of hypotheses
    @param labels:     number of labels
-   @param t:          last position in current sub-sequence
    @param seq_len:    total sequence length
  */
-inline int propFwd(hypoList* h, int labels, int t, int seq_len);
+int propFwd(hypoList* h, hypoList** hplus, int labels, int seq_len);
 
 
 /**
-   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
-   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
+   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j]))
+   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j]
    @return logSum for products of a row from gamma and a row from matrix A
    @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
    @param a_pos:      number of row from log_a
    @param N:          width of matrix log_a
-   @param gamma:      matrix gamma with logarithmic values (1.0 for log(0))
-   @param g_pos:      number of row in gamma
-   @param no_oldHyps: width of matrix gamma
+   @param gamma:      a row of matrix gamma with logarithmic values (1.0 for log(0))
 */
-inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma,
-			  int g_pos, int no_oldHyps);
+inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma);
 
 
 /**

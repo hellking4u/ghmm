@@ -1,5 +1,5 @@
 /*******************************************************************************
-  author       : Alexander Riemer
+  author       : Alexander Riemer, Janne Grunau
   filename     : ghmm/ghmm/kbestbasics.c
   created      : TIME: 17:56:38     DATE: Tue 22. June 2004
   $Id$
@@ -14,61 +14,36 @@ __copyright__
 #include <stdlib.h>
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
-inline void hlist_insertElem(hypoList** plist, int* newhyp) {
+inline void hlist_insertElem(hypoList** plist, int newhyp, hypoList* parlist) {
+
     hypoList* newlist;
-    newlist = (hypoList*)malloc(sizeof(hypoList));
-    newlist->hyp = newhyp;
+
+    newlist = (hypoList*)calloc(1, sizeof(hypoList));
+    newlist->hyp_c = newhyp;
+    if (parlist)
+      parlist->refcount += 1;
+    newlist->parent = parlist;
     newlist->next = *plist;
+
     *plist = newlist;
 }
 
-/* removes hypothesis at position indicated by pointer plist from the list */
+/* removes hypothesis at position indicated by pointer plist from the list
+   removes recursively parent hypothesis with refcount==0 */
 inline void hlist_removeElem(hypoList** plist) {
-    hypoList* tempPtr=(*plist)->next;
-    free((*plist)->hyp);
-    free(*plist);
-    *plist=tempPtr;
-}
 
-/* deletes the whole list of hypotheses */
-inline void hlist_delete(hypoList** list){
-    hypoList* temp_ptr;
-    while (*list != NULL){
-        free((*list)->hyp);
-        temp_ptr = (*list)->next;
-        free(*list);
-        *list = temp_ptr;
+    hypoList* tempPtr = (*plist)->next;
+
+    if ((*plist)->gamma) free((*plist)->gamma);
+    if ((*plist)->parent) {
+      (*plist)->parent->refcount -= 1;
+      if (0==(*plist)->parent->refcount)
+	hlist_removeElem(&((*plist)->parent));
     }
-}
-
-/* inserts new row into gamma list at position indicated by pointer plist */
-inline void glist_insertElem(gammaList** plist, double* newG) {
-    gammaList* newlist;
-    newlist = (gammaList*)malloc(sizeof(gammaList));
-    newlist->g = newG;
-    newlist->next = *plist;
-    *plist = newlist;
-}
-
-/* removes row at position indicated by pointer plist from gamma list */
-inline void glist_removeElem(gammaList** plist) {
-    gammaList* tempPtr=(*plist)->next;
-    free((*plist)->g);
     free(*plist);
-    *plist=tempPtr;
-}
 
-/* deletes the whole gamma list */
-inline void glist_delete(gammaList** list){
-    gammaList* temp_ptr;
-    while (*list != NULL){
-    	free((*list)->g);
-        temp_ptr = (*list)->next;
-        free(*list);
-        *list = temp_ptr;
-    }
+    *plist = tempPtr;
 }
-
 
 /**
    Propagates list of hypotheses forward by extending each old hypothesis to
@@ -76,39 +51,30 @@ inline void glist_delete(gammaList** list){
    @return number of old hypotheses
    @param h:          pointer to list of hypotheses
    @param labels:     number of labels
-   @param t:          last position in current sub-sequence
    @param seq_len:    total sequence length
  */
-inline int propFwd(hypoList* h, int labels, int t, int seq_len) {
-  int c,d,i;
-  int no_oldHyps=0;
-  int* hypothesis;
+int propFwd(hypoList* h, hypoList** hplus, int labels, int seq_len) {
+  int c;
+  int no_oldHyps = 1;
   hypoList* list = h;
   hypoList* end;
-  
-  while (list != NULL) {
-    /* extend original hypotheses by first label (=0) */
-    list->hyp[t]=0;
-    no_oldHyps++;
-    end = list;
-    list = list->next;
-  }
-  for (c=1; c<labels; c++) {
-    /* start at beginning of original list */
-    list = h;
-    for (d=0; d<no_oldHyps; d++) {
-      /* create new hypothesis by extending an old one: */
-      hypothesis = (int*)malloc(sizeof(int)*seq_len);
-      for (i=0; i<t; i++) {
-        hypothesis[i] = list->hyp[i];
-      }
-      hypothesis[t] = c;
-      hlist_insertElem(&(end->next),hypothesis);
-      end = end->next;
+
+  hlist_insertElem(hplus, 0, list);
+  end = *hplus;
+  list = list->next;
+
+  /* extend original hypotheses */
+  for (c=0; c<labels; c++) {
+    while (list != NULL) {
+      no_oldHyps++;
+      hlist_insertElem(&(end->next), c, list);
       list = list->next;
+      end = end->next;
     }
+    list = h;
   }
-  return no_oldHyps;
+  
+  return (no_oldHyps/labels);
 }
 
 
@@ -119,12 +85,9 @@ inline int propFwd(hypoList* h, int labels, int t, int seq_len) {
    @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
    @param a_pos:      number of row from log_a
    @param N:          width of matrix log_a
-   @param gamma:      matrix gamma with logarithmic values (1.0 for log(0))
-   @param g_pos:      number of row in gamma
-   @param no_oldHyps: width of matrix gamma
+   @param gamma:      a row of matrix gamma with logarithmic values (1.0 for log(0))
 */
-inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma,
-			  int g_pos, int no_oldHyps) {
+inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma) {
   double result;
   int j;
   double max=1.0;
@@ -134,8 +97,8 @@ inline double logGammaSum(double* log_a, int a_pos, int N, double* gamma,
 
   /* calculate logs of a[k,l]*gamma[k,hi] as sums of logs and find maximum: */
   for (j=0; j<N; j++) {
-    if (log_a[j*N+a_pos]<KBEST_EPS && gamma[j*no_oldHyps+g_pos]<KBEST_EPS) {
-      logP[j] = log_a[j*N+a_pos] + gamma[j*no_oldHyps+g_pos];
+    if (log_a[j*N+a_pos]<KBEST_EPS && gamma[j]<KBEST_EPS) {
+      logP[j] = log_a[j*N+a_pos] + gamma[j];
       if (logP[j]<KBEST_EPS && (max==1.0 || logP[j]>max)) {
 	max = logP[j];
 	argmax=j;
