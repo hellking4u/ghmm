@@ -16,3 +16,10 @@ using namespace std;
 void GHMM_Toolkit::gsl_rng_init() {
   ::gsl_rng_init();
 }
+
+
+string GHMM_Toolkit::toString(int var) {
+  char mem[100];
+  sprintf(mem,"%d",var);
+  return string(mem);
+}

@@ -1,3 +1,12 @@
+/*******************************************************************************
+  authors      : Peter Pipenbacher
+  filename     : ghmm++/examples/generiere_nvs_old_files.cpp
+  created      : DATE: 2002-03-14
+  $Id$
+
+  __copyright__
+*******************************************************************************/
+
 #include "ghmm++/GHMM.h"
 
 #ifdef HAVE_NAMESPACES
@@ -14,12 +23,20 @@ int main(int argc, char* argv[]) {
   GHMM_ContinuousModel smo;
 
   if (argc < 3) {
-    fprintf(stderr,"usage: generiere_nvs_old_files nvs.mod nvs.sqd\n");
+    fprintf(stderr,"usage: generiere_nvs_old_files nvs.mod nvs.sqd [output.xml]\n");
     exit(1);
   }
 
   smo.read(argv[1]);
   trainingsseq.read(argv[2]);
+
+  if (argc > 3) {
+    GHMM_Document doc;
+    doc.open(argv[3],"w");
+    doc.writeElement(&smo);
+    doc.writeEndl();
+    doc.close();
+  }
 
   smo.reestimate_baum_welch(&trainingsseq,&logp,0.00001,35);
 

@@ -21,6 +21,7 @@ namespace std {
 
 class GHMM_Sequences;
 class GHMM_Sequence;
+class GHMM_Alphabet;
 
 /** This can either be a sequence of double sequences or int sequences.*/
 class GHMM_Sequences: public XMLIO_Element {
@@ -37,6 +38,8 @@ class GHMM_Sequences: public XMLIO_Element {
   /** Constructor. Constructs object from C structure.
       Object now owns the sequence_d_t. */
   GHMM_Sequences(sequence_d_t* seq);
+  /** Constructor. */
+  GHMM_Sequences(GHMM_Alphabet* my_alphabet);
   /** Destructor. */
   virtual ~GHMM_Sequences();
   
@@ -58,6 +61,8 @@ class GHMM_Sequences: public XMLIO_Element {
   */
   int add(GHMM_Sequence* source);
   /** */
+  int add(const string& sequence);
+  /** */
   void clean_cpp();
   /** Copy content from C sequence to this object. */
   void copyFromSequences(sequence_t* seq);
@@ -71,6 +76,10 @@ class GHMM_Sequences: public XMLIO_Element {
   int* getIntSequence(int index) const;
   /** Returns length of sequence with given index. */
   unsigned int getLength(int index) const;
+  /** Returns number of sequences. */
+  unsigned int getNumberOfSequences() const;
+  /** Returns sequence as string. */
+  string getSequence(int index) const;
   /**
      Make sure that the sequences only contain allowed symbols. 
      (between 0 and max\_symbol - 1)
@@ -106,15 +115,8 @@ class GHMM_Sequences: public XMLIO_Element {
   */
   void read(const string& filename);
 
-  /** */
-  virtual void XMLIO_finishedReading();
-  /** Called by GHMM_Document when a start tag is received. Tag and 
-      attributes are passed to this function. */
-  virtual XMLIO_Element* XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes);
-
   /** Type of current sequence. */
   GHMM_SequenceType sequence_type;
-
   /** C type int sequence. */
   sequence_t*   c_i_sequences;
   /** C type double sequence. */
@@ -122,9 +124,36 @@ class GHMM_Sequences: public XMLIO_Element {
   /** */
   int last_weight;
 
+
+ protected:
+
+  /** */
+  virtual void XMLIO_finishedReading();
+  /** Called by GHMM_Document when a start tag is received. Tag and 
+      attributes are passed to this function. */
+  virtual XMLIO_Element* XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes);
+  /** Writes the content (XML Spec[43]) of this element.
+      You should use the public XMLIO_Document::write* functions.
+      @return Returns the number of bytes written,
+      but is negative when an error occured and 0 by default. */
+  virtual const int XMLIO_writeContent(XMLIO_Document& doc);
+
+
  private:
-  
+
+  /** Used by constructor. */
+  void init();
+  /** Used by constructor. */
+  void init_INT(GHMM_Alphabet* my_alphabet, sequence_t* my_c_i_sequences);
+  /** Used by constructor. */
+  void init_DOUBLE(sequence_d_t* my_c_d_sequences);
+
+  /** */
   vector<GHMM_Sequence*> sequences;
+  /** alphabet used */
+  GHMM_Alphabet* alphabet;
+  /** Does object own this alphabet? */
+  bool own_alphabet;
 };
  
 #ifdef HAVE_NAMESPACES
@@ -134,4 +163,3 @@ class GHMM_Sequences: public XMLIO_Element {
 #include <ghmm++/close_code.h>
 
 #endif /* _GHMM_SEQUENCES_H */
-

@@ -5,7 +5,10 @@
  * $Id$
  */
 
+#include <xmlio/XMLIO_Document.h>
 #include "GHMM_Transition.h"
+#include "GHMM_Toolkit.h"
+#include "GHMM_State.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -14,9 +17,24 @@ using namespace std;
 
 
 GHMM_Transition::GHMM_Transition(XMLIO_Attributes &attrs) {
-  reading = GHMM_TRANSITION_READING_NONE;
-  source = attrs["source"];
-  target = attrs["target"];
+  reading           = GHMM_TRANSITION_READING_NONE;
+  source            = attrs["source"];
+  target            = attrs["target"];
+  attributes        = attrs;
+  tag               = "transition";
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
+}
+
+
+GHMM_Transition::GHMM_Transition(GHMM_State* my_source, GHMM_State* my_target, double my_prob) {
+  reading              = GHMM_TRANSITION_READING_NONE;
+  source               = my_source->index;
+  target               = my_target->index;
+  prob                 = my_prob;
+  attributes["source"] = my_source->id;
+  attributes["target"] = my_target->id;
+  tag                  = "transition";
+  xmlio_indent_type    = XMLIO_INDENT_BOTH;
 }
 
 
@@ -58,4 +76,14 @@ void GHMM_Transition::XMLIO_getCharacters(const string& characters) {
   case GHMM_TRANSITION_READING_NONE:
     break;
   }
+}
+
+
+const int GHMM_Transition::XMLIO_writeContent(XMLIO_Document& writer) {
+  int result = 0;
+
+  writer.changeIndent(2);
+  result += writer.writef("\n%s<prob>%f</prob>\n",writer.indent,prob);
+
+  return result;
 }

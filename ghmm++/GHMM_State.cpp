@@ -6,12 +6,15 @@
  */
 
 #include <xmlio/XMLIO_Definitions.h>
+#include <xmlio/XMLIO_Document.h>
 #include "ghmm/matrix.h"
 #include "ghmm++/GHMM_State.h"
 #include "ghmm++/GHMM_Transition.h"
 #include "ghmm++/GHMM_ContinuousModel.h"
 #include "ghmm++/GHMM_DiscreteModel.h"
 #include "ghmm++/GHMM_Emission.h"
+#include "ghmm++/GHMM_Toolkit.h"
+#include "ghmm++/GHMM_Alphabet.h"
 
 
 #ifdef HAVE_NAMESPACES
@@ -20,49 +23,55 @@ using namespace std;
 
 
 GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, XMLIO_Attributes& attrs) {
-  index        = my_index;
-  c_sstate     = NULL;
-  reading      = GHMM_STATE_NONE;
-  emission     = NULL;
-  parent_model = my_model;
+  index             = my_index;
+  c_state           = NULL; 
+  c_sstate          = NULL;
+  reading           = GHMM_STATE_NONE;
+  emission          = NULL;
+  parent_model      = my_model;
+  tag               = "state";
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
 
   /* by default take index as id. */
   id = attrs["id"];
-  if (id == "") {
-    char mem[100];
-    sprintf(mem,"%d",my_index);
-    id = string(mem);
-  }
+  if (id == "")
+    id = GHMM_Toolkit::toString(my_index);
+
+  my_model->addStateID(id,index);
+
+  attributes = attrs;
 }
 
 
 GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sstate* my_state) {
-  index        = my_index;
-  c_sstate     = my_state;
-  c_state      = NULL;
-  reading      = GHMM_STATE_NONE;
-  emission     = NULL;
-  parent_model = my_model;
+  index             = my_index;
+  c_sstate          = my_state;
+  c_state           = NULL;
+  reading           = GHMM_STATE_NONE;
+  emission          = NULL;
+  parent_model      = my_model;
+  tag               = "state";
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
   
   /* take index as id. */
-  char mem[100];
-  sprintf(mem,"%d",my_index);
-  id = string(mem);
+  id = GHMM_Toolkit::toString(my_index);
+  my_model->addStateID(id,index);
 }
 
 
 GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, state* my_state) {
-  index        = my_index;
-  c_sstate     = NULL;
-  c_state      = my_state;
-  reading      = GHMM_STATE_NONE;
-  emission     = NULL;
-  parent_model = my_model;
+  index             = my_index;
+  c_sstate          = NULL;
+  c_state           = my_state;
+  reading           = GHMM_STATE_NONE;
+  emission          = NULL;
+  parent_model      = my_model;
+  tag               = "state";
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
   
   /* take index as id. */
-  char mem[100];
-  sprintf(mem,"%d",my_index);
-  id = string(mem);
+  id = GHMM_Toolkit::toString(my_index);
+  my_model->addStateID(id,index);
 }
 
 
@@ -172,10 +181,15 @@ void GHMM_State::fillState(sstate* s) {
     exit(1);
   }
 
+  if (c_model->M != (int) emission->weights.size()) {
+    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) emission->weights.size());
+    exit(1);
+  }
+
   for (i = 0; (int) i < c_model->M; ++i) {
-    s->c[i]   = emission->weight;
-    s->mue[i] = emission->mue;
-    s->u[i]   = emission->variance;
+    s->c[i]   = emission->weights[i];
+    s->mue[i] = emission->mue[i];
+    s->u[i]   = emission->variance[i];
   }
 
   s->fix = 0;
@@ -229,13 +243,13 @@ void GHMM_State::fillState(state* s) {
   s->out_states = out_edges.size();
   s->in_states  = in_edges.size();
 
-  if (c_model->M != 1) {
-    fprintf(stderr,"M != 1 not yet supported in GHMM_State.cpp\n");
+  if (c_model->M != (int) emission->weights.size()) {
+    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) emission->weights.size());
     exit(1);
   }
 
   for (i = 0; (int) i < c_model->M; ++i)
-    s->b[i]   = emission->weight;
+    s->b[i] = emission->weights[i];
 
   s->fix = 0;
 }
@@ -411,10 +425,124 @@ void GHMM_State::setOutputProbability(int index, double prob) {
 }
 
 
+void GHMM_State::setOutputProbability(const string& id, double prob) {
+  setOutputProbability(((GHMM_DiscreteModel*)(parent_model))->alphabet->getIndex(id),prob);
+}
+
+
 void GHMM_State::setInitialProbability(double prob) {
   if (c_state)
     c_state->pi = prob;
 
   if (c_sstate)
     c_sstate->pi = prob;
+}
+
+
+XMLIO_Attributes& GHMM_State::XMLIO_getAttributes() {
+  attributes["id"] = id;
+
+  return attributes;
+}
+
+
+const int GHMM_State::XMLIO_writeContent(XMLIO_Document& writer) {
+  int total_bytes = 0;
+  int result;
+  
+  double initial = getInitial();
+
+  writer.changeIndent(2);
+
+  //  if (initial > 0) {
+  writer.writeEndlIndent();
+  
+  if (result < 0)
+    return result;
+  total_bytes += result;
+  
+  result = writer.writef("<initial>%f</initial>",initial);
+  
+  if (result < 0)
+    return result;
+  total_bytes += result;
+  //  }
+
+  /* write emission */
+  result = writer.writeEndl();
+  
+  if (result < 0)
+    return result;
+  total_bytes += result;
+  
+  GHMM_Emission* my_emission = new GHMM_Emission(this);
+  result = writer.writeElement(my_emission);
+  SAFE_DELETE(my_emission);
+  
+  if (result < 0)
+    return result;
+  total_bytes += result;
+  /* end write emission */
+
+  result = writer.writeEndl();
+
+  if (result < 0)
+    return result;
+  total_bytes += result;
+
+  return total_bytes;
+}
+
+
+double GHMM_State::getInitial() const {
+  if (c_sstate)
+    return c_sstate->pi;
+
+  if (c_state)
+    return c_state->pi;
+
+  fprintf(stderr,"%s::getInitial() state is empty\n",toString());
+  exit(1);
+
+  return 0;
+}
+
+
+GHMM_Transition* GHMM_State::createTransition(int edge_index) {
+  if (c_state)
+    return new GHMM_Transition(this,parent_model->getState(c_state->out_id[edge_index]),c_state->out_a[edge_index]);
+
+  if (c_sstate)
+    return new GHMM_Transition(this,parent_model->getState(c_sstate->out_id[edge_index]),c_sstate->out_a[0][edge_index]);
+
+  return NULL;
+}
+
+
+void GHMM_State::setID(const string& my_id) {
+  parent_model->stateIDChanged(id,my_id);
+
+  id               = my_id;
+  attributes["id"] = my_id;
+}
+
+
+GHMM_AbstractModel* GHMM_State::getModel() const {
+  return parent_model;
+}
+
+
+int GHMM_State::getOutEdges() const {
+  if (c_sstate)
+    return c_sstate->out_states;
+
+  if (c_state)
+    return c_state->out_states;
+
+  return 0;
+}
+
+
+GHMM_ModelType GHMM_State::getModelType() const {
+  return getModel()->getModelType();
 }

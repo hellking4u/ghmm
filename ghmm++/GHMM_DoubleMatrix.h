@@ -14,6 +14,7 @@ namespace std {
 #endif
 
 class GHMM_DoubleMatrix;
+ class GHMM_DoubleVector;
 
 /** */
 class GHMM_DoubleMatrix {
@@ -21,7 +22,7 @@ class GHMM_DoubleMatrix {
  public:
 
   /** Constructor. */
-  GHMM_DoubleMatrix(int rows, int cols);
+  GHMM_DoubleMatrix(int rows, int cols, double default_value = 0.0);
   /** Destructor. */
   virtual ~GHMM_DoubleMatrix();
 
@@ -36,6 +37,13 @@ class GHMM_DoubleMatrix {
      @param ending:     format: end of a row  
   */
   void print(FILE *file, char *tab, char *separator, char *ending);
+
+  /**
+     Calculates matrix x vec, where vec is a double vector
+     @param vec            vector to calculate
+     @return calculated vector
+  */
+  GHMM_DoubleVector* times_vec(GHMM_DoubleVector* vec);
 
   /** C style double matrix. */
   double** c_matrix;

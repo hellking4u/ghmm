@@ -8,6 +8,8 @@
 #ifndef _GHMM_TOOLKIT_H
 #define _GHMM_TOOLKIT_H 1
 
+#include <string>
+
 #include <ghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
@@ -21,7 +23,10 @@ class GHMM_Toolkit {
 
  public:
 
+  /** */
   static void gsl_rng_init();
+  /** Converts integer to string. */
+  static string toString(int var);
 };
 
 #ifdef HAVE_NAMESPACES

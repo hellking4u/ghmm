@@ -14,6 +14,8 @@
 #include "ghmm++/GHMM_DiscreteModel.h"
 #include "ghmm++/GHMM_Sequences.h"
 #include "ghmm++/GHMM_DoubleMatrix.h"
+#include "ghmm++/GHMM_Alphabet.h"
+#include "ghmm++/GHMM_Emission.h"
 #include "ghmm/viterbi.h"
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
@@ -26,7 +28,14 @@ using namespace std;
 #endif
 
 
+GHMM_DiscreteModel::GHMM_DiscreteModel() {
+  init();
+}
+
+
 GHMM_DiscreteModel::GHMM_DiscreteModel(model* my_model) {
+  init();
+
   c_model = my_model;
 
   buildCppData();
@@ -34,42 +43,23 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(model* my_model) {
 
 
 GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my_prior) {
-  int i;
-  int j;
+  init(number_of_states,my_M,my_prior);
+}
 
-  c_model = (model*) calloc(1,sizeof(model));
-  if (!c_model) {
-    fprintf(stderr,"GHMM_DiscreteModel::GHMM_DiscreteModel() could not allocate c_model\n");
-    exit(1);
-  }
 
-  c_model->N       = number_of_states;
-  c_model->M       = my_M;
-  c_model->prior   = my_prior;
-  c_model->s       = (state*) malloc(sizeof(state) * c_model->N);
-  /* initialize all states. */
-  for (i = 0; i < number_of_states; ++i) {
-    c_model->s[i].pi         = 0;
-    c_model->s[i].b          = (double*) malloc(sizeof(double) * my_M);
-    /* output probabilities are initialized with 0. */
-    for (j = 0; j < my_M; ++j)
-      c_model->s[i].b[j] = 0;
-    c_model->s[i].out_id     = NULL;
-    c_model->s[i].in_id      = NULL;
-    c_model->s[i].out_a      = NULL;
-    c_model->s[i].in_a       = NULL;
-    c_model->s[i].out_states = 0;
-    c_model->s[i].in_states  = 0;
-    c_model->s[i].fix        = 0;
-  }
+GHMM_DiscreteModel::GHMM_DiscreteModel(GHMM_Alphabet* my_alphabet) {
+  init(0,my_alphabet->size());
 
-  buildCppData();
+  alphabet = my_alphabet;
 }
 
 
 GHMM_DiscreteModel::~GHMM_DiscreteModel() {
   /* frees model. */  
   model_free(&c_model);
+  if (own_alphabet)
+    SAFE_DELETE(alphabet);
+  cleanCPP();
 }
 
 
@@ -80,9 +70,19 @@ const char* GHMM_DiscreteModel::toString() const {
 
 GHMM_IntVector* GHMM_DiscreteModel::viterbi(GHMM_Sequences* sequences, 
 					    int index, double *log_p) const {
+  double my_logp;
+
+  if (!log_p)
+    log_p = &my_logp;
+
   int len = sequences->getLength(index);
 
   return new GHMM_IntVector(::viterbi(c_model,sequences->getIntSequence(index),len,log_p),len);
+}
+
+
+double GHMM_DiscreteModel::viterbi_logp(GHMM_Sequences* seq, int index, int* state_seq) {
+  return ::viterbi_logp(c_model,seq->getIntSequence(index),seq->getLength(index),state_seq);
 }
 
 
@@ -242,4 +242,145 @@ void GHMM_DiscreteModel::buildCppData() {
 
 int GHMM_DiscreteModel::reestimate_baum_welch(GHMM_Sequences* seq) {
   return ::reestimate_baum_welch(c_model,seq->c_i_sequences);
+}
+
+
+void GHMM_DiscreteModel::addState(const string& my_id) {
+  int i;
+
+  c_model->N += 1; /* increase number of states. */
+  c_model->s  = (state*) realloc(c_model->s,sizeof(state) * c_model->N);
+
+  int index = c_model->N - 1;
+  /* initialize new state. */
+  c_model->s[index].pi = 0;
+  c_model->s[index].b  = (double*) malloc(sizeof(double) * c_model->M);
+  /* output probabilities are initialized with 0. */
+  for (i = 0; i < c_model->M; ++i)
+    c_model->s[index].b[i] = 0;
+  c_model->s[index].out_id     = NULL;
+  c_model->s[index].in_id      = NULL;
+  c_model->s[index].out_a      = NULL;
+  c_model->s[index].in_a       = NULL;
+  c_model->s[index].out_states = 0;
+  c_model->s[index].in_states  = 0;
+  c_model->s[index].fix        = 0;
+
+  GHMM_State* state = new GHMM_State(this,index,&c_model->s[index]);
+  state->setID(my_id);
+  states.push_back(state);
+
+  /* reallocation of c_model->c might change position of c_states
+     in memory. */
+  for (i = 0; i < index; ++i)
+    states[i]->c_state = &c_model->s[i];
+}
+
+
+void GHMM_DiscreteModel::init() {
+  attributes["type"] = "discrete";
+  alphabet           = NULL;
+  c_model            = NULL;
+  own_alphabet       = false;
+}
+
+
+void GHMM_DiscreteModel::init(int number_of_states, int my_M, double my_prior) {
+  init();
+
+  int i;
+  int j;
+
+  c_model = (model*) calloc(1,sizeof(model));
+  if (!c_model) {
+    fprintf(stderr,"GHMM_DiscreteModel::GHMM_DiscreteModel() could not allocate c_model\n");
+    exit(1);
+  }
+
+  c_model->N       = number_of_states;
+  c_model->M       = my_M;
+  c_model->prior   = my_prior;
+  c_model->s       = (state*) malloc(sizeof(state) * max(c_model->N,1));
+  /* initialize all states. */
+
+  for (i = 0; i < number_of_states; ++i) {
+    c_model->s[i].pi         = 0;
+    c_model->s[i].b          = (double*) malloc(sizeof(double) * my_M);
+    /* output probabilities are initialized with 0. */
+    for (j = 0; j < my_M; ++j)
+      c_model->s[i].b[j] = 0;
+    c_model->s[i].out_id     = NULL;
+    c_model->s[i].in_id      = NULL;
+    c_model->s[i].out_a      = NULL;
+    c_model->s[i].in_a       = NULL;
+    c_model->s[i].out_states = 0;
+    c_model->s[i].in_states  = 0;
+    c_model->s[i].fix        = 0;
+  }
+
+  buildCppData();
+}
+
+
+void GHMM_DiscreteModel::cleanCPP() {
+  unsigned int i;
+
+  for (i = 0; i < states.size(); ++i)
+    SAFE_DELETE(states[i]);
+  states.clear();
+}
+
+
+GHMM_Alphabet* GHMM_DiscreteModel::getAlphabet() const {
+  return alphabet;
+}
+
+
+void GHMM_DiscreteModel::XMLIO_finishedReading() {
+  unsigned int i;
+
+  c_model = (model*) calloc(1,sizeof(model));
+  if (!c_model) {
+    fprintf(stderr,"GHMM_ContinuousModel::XMLIO_finishedReading() could not allocate c_model\n");
+    exit(1);
+  }
+
+  int alphabet_size = 0;
+  if (getAlphabet())
+    alphabet_size = getAlphabet()->size();
+  else
+    alphabet_size = states[0]->emission->weights.size();
+
+  c_model->N       = states.size();
+  c_model->M       = alphabet_size;
+  c_model->prior   = -1;
+  c_model->s       = (state*) malloc(sizeof(state) * c_model->N);
+
+  /* fill states. */
+  for (i = 0; i < states.size(); ++i)
+    states[i]->fillState(&c_model->s[i]);
+
+  /* check whether sum of initial probs is 1. */
+  if (check() == -1) 
+    exit(1);
+
+  /* we dont need the transitions any more. */
+  cleanTransitions();
+}
+
+
+XMLIO_Element* GHMM_DiscreteModel::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
+  /* process alphabet */
+  if (tag == "alphabet") {
+    alphabet     = new GHMM_Alphabet();
+    own_alphabet = true;
+    return alphabet;
+  }
+
+  return GHMM_AbstractModel::XMLIO_startTag(tag,attrs);
+}
+
+
+GHMM_ModelType GHMM_DiscreteModel::getModelType() const {
+  return GHMM_DISCRETE;
 }

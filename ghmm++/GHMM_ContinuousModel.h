@@ -12,6 +12,7 @@
 #include <map>
 #include <ghmm/smodel.h>
 #include <ghmm++/GHMM_AbstractModel.h>
+#include <ghmm++/GHMM_Types.h>
 
 #include <ghmm++/begin_code.h>
 
@@ -23,6 +24,8 @@ class GHMM_ContinuousModel;
 class GHMM_Sequences;
 class GHMM_State;
 class GHMM_Transition;
+class GHMM_IntVector;
+
 
 /** */
 class GHMM_ContinuousModel: public GHMM_AbstractModel {
@@ -58,6 +61,8 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   virtual int check() const;
   /* Returns state with given index. */
   sstate* getCState(int index) const;
+  /** Returns model type. */
+  virtual GHMM_ModelType getModelType() const;
   /** 
       Produces sequences to a given model. All memory that is needed for the 
       sequences is allocated inside the function. It is possible to define
@@ -100,6 +105,16 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
   virtual int getNumberOfTransitionMatrices() const;
   /** */
   void read(const string& filename);
+  /**
+     Viterbi algorithm: calculation of the viterbi path (best possible
+     state sequence for a given sequence. Also calculates logp according 
+     to this path.
+     @return        Viterbi-path 
+     @param seq     Sequences
+     @param index   index of sequence to take
+     @param log_p   log(p) of the sequence using the vitberbi path
+  */
+  GHMM_IntVector* viterbi(GHMM_Sequences* seq, int index, double *log_p);
 
   /** C Model. */
   smodel* c_model;
@@ -109,9 +124,6 @@ class GHMM_ContinuousModel: public GHMM_AbstractModel {
 
   /** */
   virtual void XMLIO_finishedReading();
-  /** Called by GHMM_Document when a start tag is received. Tag and 
-      attributes are passed to this function. */
-  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
   /** Build c++ data from c_model. */
   void buildCppData();

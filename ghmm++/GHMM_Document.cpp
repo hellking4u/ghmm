@@ -50,18 +50,23 @@ GHMM_Sequences* GHMM_Document::getSequences() const {
 }
 
 
-XMLIO_Element* GHMM_Document::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
-  if (tag == "ghmm") {
+XMLIO_Element* GHMM_Document::XMLIO_startTag(const string& my_tag, XMLIO_Attributes &attrs) {
+  if (my_tag == "ghmm") {
     reading_ghmm = true;
 
     return this;
   }
 
   if (reading_ghmm) {
-    if (tag == "hmm") {
+    if (my_tag == "hmm") {
       if (attrs["type"] == "continuous") {
 	continuous_model = new GHMM_ContinuousModel();
 	return continuous_model;
+      }
+
+      if (attrs["type"] == "discrete") {
+	discrete_model = new GHMM_DiscreteModel();
+	return discrete_model;
       }
      
       /* error message if no valid hmm type is specified. */
@@ -76,13 +81,13 @@ XMLIO_Element* GHMM_Document::XMLIO_startTag(const string& tag, XMLIO_Attributes
       exit(1);
     }
     
-    if (tag == "sequences") {
+    if (my_tag == "sequences") {
       sequences = new GHMM_Sequences(attrs);
       
       return sequences;
     }
     
-    fprintf(stderr,"Tag '%s' not recognized in ghmm element.\n",tag.c_str());
+    fprintf(stderr,"Tag '%s' not recognized in ghmm element.\n",my_tag.c_str());
     exit(1);
   }
   
@@ -90,7 +95,37 @@ XMLIO_Element* GHMM_Document::XMLIO_startTag(const string& tag, XMLIO_Attributes
 }
 
 
-void GHMM_Document::XMLIO_endTag(const string& tag) {
-  if (tag == "ghmm")
+void GHMM_Document::XMLIO_endTag(const string& my_tag) {
+  if (my_tag == "ghmm")
     reading_ghmm = false;
+}
+
+
+int GHMM_Document::XMLIO_writeTrailer() {
+  return writef("</ghmm>\n");
+}
+
+
+int GHMM_Document::XMLIO_writeProlog() {
+  int this_result;
+  int return_result = 0;
+
+  this_result = XMLIO_Document::XMLIO_writeProlog();
+
+  /* Returns error code if an error occured. */
+  if (this_result < 0)
+    return this_result;
+
+  return_result += this_result;
+
+  this_result = writef("<ghmm version=\"1.0\">\n");
+
+  /* Returns error code if an error occured. */
+  if (this_result < 0)
+    return this_result;
+  return_result += this_result;
+
+  changeIndent(2);
+
+  return return_result;
 }

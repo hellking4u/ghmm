@@ -18,6 +18,7 @@ namespace std {
 #endif
 
 class GHMM_Sequence;
+class GHMM_Alphabet;
 
 /** */
 class GHMM_Sequence: public XMLIO_ArrayElement<string> {
@@ -25,13 +26,17 @@ class GHMM_Sequence: public XMLIO_ArrayElement<string> {
  public:
 
   /** Constructor. */
-  GHMM_Sequence(GHMM_SequenceType my_sequence_type, int my_weight);
+  GHMM_Sequence(GHMM_SequenceType my_sequence_type, int len, int weight);
+  /** Constructor. */
+  GHMM_Sequence(GHMM_Alphabet* my_alphabet, int len, int my_weight);
   /** Destructor. */
   virtual ~GHMM_Sequence();
 
   /** Returns name of class. */
   virtual const char* toString() const;
 
+  /** */
+  void resize(int new_len);
   /** */
   virtual void XMLIO_finishedReading();
 
@@ -44,6 +49,19 @@ class GHMM_Sequence: public XMLIO_ArrayElement<string> {
   sequence_d_t* c_d_sequences;
   /** */
   int weight;
+
+  
+ private:
+
+  /** */
+  void init();
+  /** */
+  void init_INT(GHMM_Alphabet* my_alphabet, int len, int my_weight);
+  /** */
+  void init_DOUBLE(int len, int my_weight);
+
+  /** Alphabet for discrete sequences .*/
+  GHMM_Alphabet* alphabet;
 };
 
 #ifdef HAVE_NAMESPACES

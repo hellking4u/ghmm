@@ -8,6 +8,9 @@
 #include "ghmm/sequence.h"
 #include "ghmm++/GHMM_Sequences.h"
 #include "ghmm++/GHMM_Sequence.h"
+#include "ghmm++/GHMM_Alphabet.h"
+#include "ghmm++/GHMM_Toolkit.h"
+
 #ifdef HAVE_CSTDLIB
 #  include <cstdlib>
 #else
@@ -24,26 +27,24 @@ GHMM_Sequences::GHMM_Sequences(XMLIO_Attributes& attrs) {
 
   if (attrs["type"] == "continuous") {
     found = true;
-    sequence_type = GHMM_DOUBLE;
+    init_DOUBLE(NULL);
   }
 
   if (attrs["type"] == "discrete") {
     found = true;
-    sequence_type = GHMM_INT;
+    init_INT(NULL,NULL);
   }
 
   if (! found) {
     fprintf(stderr,"unrecognized sequences type: type=\"%s\"\nchoose out of: continuous, discrete\n",attrs["type"].c_str());
     exit(1);
   }
-
-  c_i_sequences = NULL;
-  c_d_sequences = NULL;
-  last_weight   = 1;
 }
 
 
 GHMM_Sequences::GHMM_Sequences(GHMM_SequenceType my_sequence_type) {
+  init_DOUBLE(NULL);
+
   sequence_type = my_sequence_type;
 
   c_i_sequences = NULL;
@@ -53,20 +54,17 @@ GHMM_Sequences::GHMM_Sequences(GHMM_SequenceType my_sequence_type) {
 
 
 GHMM_Sequences::GHMM_Sequences(sequence_t* seq) {
-  sequence_type = GHMM_INT;
-
-  c_i_sequences = seq;
-  c_d_sequences = NULL;
-  last_weight   = 1;
+  init_INT(NULL,seq);
 }
 
 
 GHMM_Sequences::GHMM_Sequences(sequence_d_t* seq) {
-  sequence_type = GHMM_DOUBLE;
+  init_DOUBLE(seq);
+}
 
-  c_i_sequences = NULL;
-  c_d_sequences = seq;
-  last_weight   = 1;
+
+GHMM_Sequences::GHMM_Sequences(GHMM_Alphabet* my_alphabet) {
+  init_INT(my_alphabet,NULL);
 }
 
 
@@ -127,6 +125,19 @@ int GHMM_Sequences::add(GHMM_Sequences* source) {
     return sequence_add(c_i_sequences,source->c_i_sequences);
 
   return sequence_d_add(c_d_sequences,source->c_d_sequences);
+}
+
+
+int GHMM_Sequences::add(const string& sequence) {
+  /* sequence should be integer sequence. */
+  if (sequence_type != GHMM_INT)
+    return -1;
+
+  /* sequence should have alphabet. */
+  if (!alphabet)
+    return -1;
+
+  return add(alphabet->getSequence(sequence));
 }
 
 
@@ -319,6 +330,12 @@ void GHMM_Sequences::clean() {
   c_i_sequences = NULL;
   c_d_sequences = NULL;
 
+  if (own_alphabet)
+    SAFE_DELETE(alphabet);
+  
+  alphabet     = NULL;
+  own_alphabet = false;
+
   clean_cpp();
 }
 
@@ -358,13 +375,35 @@ unsigned int GHMM_Sequences::getLength(int index) const {
 
 
 XMLIO_Element* GHMM_Sequences::XMLIO_startTag(const string& my_tag, XMLIO_Attributes& my_attributes) {
-  if (my_tag == "sequence") {
-    GHMM_Sequence* sequence = new GHMM_Sequence(sequence_type,last_weight);
-    sequences.push_back(sequence);
+  /* discrete models */
+  if (c_i_sequences) {
+    if (my_tag == "alphabet") {
+      alphabet     = new GHMM_Alphabet();
+      own_alphabet = true;
+      
+      return alphabet;
+    }
 
-    last_weight = 1;
+    if (my_tag == "sequence") {
+      GHMM_Sequence* sequence = new GHMM_Sequence(alphabet,0,last_weight);
+      sequences.push_back(sequence);
+      
+      last_weight = 1;
+      
+      return sequence;
+    }
+  }
 
-    return sequence;
+  /* continuous models */
+  if (c_d_sequences) {
+    if (my_tag == "sequence") {
+      GHMM_Sequence* sequence = new GHMM_Sequence(GHMM_DOUBLE,0,last_weight);
+      sequences.push_back(sequence);
+      
+      last_weight = 1;
+      
+      return sequence;
+    }
   }
 
   fprintf(stderr,"unexpected tag: %s in <sequences>\n",my_tag.c_str());
@@ -484,4 +523,97 @@ void GHMM_Sequences::lexWords(int n, int M) {
   clean();
 
   c_i_sequences = sequence_lexWords(n,M);
+}
+
+
+void GHMM_Sequences::init() {
+  tag               = "sequences";
+  c_i_sequences     = NULL;
+  c_d_sequences     = NULL;
+  alphabet          = NULL;
+  own_alphabet      = false;
+  last_weight       = 1;
+  xmlio_indent_type = XMLIO_INDENT_BOTH;
+}
+
+
+void GHMM_Sequences::init_INT(GHMM_Alphabet* my_alphabet, sequence_t* my_c_i_sequences) {
+  init();
+
+  sequence_type      = GHMM_INT;
+  alphabet           = my_alphabet;
+  c_i_sequences      = my_c_i_sequences;
+  attributes["type"] = "discrete";
+
+  /* always initialize sequence data structure. */
+  if (!c_i_sequences)
+    c_i_sequences = sequence_calloc(0);
+}
+
+
+void GHMM_Sequences::init_DOUBLE(sequence_d_t* my_c_d_sequences) {
+  init();
+
+  sequence_type      = GHMM_DOUBLE;
+  c_d_sequences      = my_c_d_sequences;
+  attributes["type"] = "continuous";
+
+  /* always initialize sequence data structure. */
+  if (!c_d_sequences)
+    c_d_sequences = sequence_d_calloc(0);
+}
+
+
+const int GHMM_Sequences::XMLIO_writeContent(XMLIO_Document& writer) {
+  unsigned int i;
+  int result = 0;
+
+  writer.changeIndent(2);
+  result += writer.writeEndl();
+  result += writer.writeElement(alphabet);
+  result += writer.writeEndl();
+
+  for (i = 0; i < getNumberOfSequences(); ++i) {
+    result += writer.writeIndent();
+    result += writer.writeStartTag("sequence");
+    result += writer.writef("%s",getSequence(i).c_str());
+    result += writer.writeEndTag("sequence");
+    result += writer.writeEndl();
+  }
+
+  return result;
+}
+
+
+unsigned int GHMM_Sequences::getNumberOfSequences() const {
+  if (c_i_sequences)
+    return c_i_sequences->seq_number;
+
+  if (c_d_sequences)
+    return c_d_sequences->seq_number;
+
+  return 0;
+}
+
+
+string GHMM_Sequences::getSequence(int index) const {
+  string seq;
+  unsigned int i;
+
+  if (c_i_sequences)
+    for (i = 0; i < getLength(index); ++i)
+      if (alphabet)
+	seq += alphabet->getSymbol(c_i_sequences->seq[index][i]);
+      else {
+	if (i > 0) seq += " ";
+	seq += GHMM_Toolkit::toString(c_i_sequences->seq[index][i]);
+      }
+
+  if (c_d_sequences)
+    for (i = 0; i < getLength(index); ++i) {
+      if (i > 0) seq += " ";
+      seq += GHMM_Toolkit::toString(c_i_sequences->seq[index][i]);
+    }
+  
+  return seq;
 }
