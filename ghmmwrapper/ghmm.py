@@ -648,7 +648,7 @@ class SequenceSet:
        
         """
         seqNumber = len(seqIndixes)       
-        seq = ghmmwrapper.sequence_calloc(seqNumber)
+        seq = self.calloc(seqNumber)
         seq.seq = self.emptySeq(seqNumber)
         for i in range(seqNumber):
             self.setSeq(seq.seq,i,self.__array[ seqIndixes[i] ]) 
