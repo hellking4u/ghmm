@@ -50,7 +50,7 @@ typedef struct cluster_t cluster_t;
    @param outfile output file
    @param out_filename name of the output file
  */
-int cluster_ausgabe(cluster_t *cl, sequence_t *sq, FILE *outfile,
+int cluster_out(cluster_t *cl, sequence_t *sq, FILE *outfile,
 		    char *out_filename);
 
 /**
