@@ -1,3 +1,14 @@
+/*
+ *
+ * created: 26 Feb 2002 by Wasinee Rungsarityotin
+ * authors: Wasinee Rungsarityotin (rungsari@molgen.mpg.de)
+ * file   : $Source$
+ * $Id$
+ * revision date   : $Date$
+  ___copyright__
+ 
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <assert.h>
