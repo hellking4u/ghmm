@@ -801,6 +801,36 @@ class HMM:
         alphabets = self.hmmAlphabet.name.values() # list of alphabets
 	return [alphabets, A, B, pi, state_orders]
     
+    def getLabels(self):
+        """ returns list of labels """
+        labels = []
+        for s in self.state.values(): # a list of indices
+            labels.append(self.hmmClass.code2name[s.state_class])
+
+        return labels
+
+    def getTiedStates(self):    
+        """ returns list of tied states, entry is None if a state isn't to
+            any other state, returns an empty list, if no state is tied """
+        tiedstates = []
+        isTied = 0
+        
+        orders = {}
+        k = 0 # C style index
+        for s in self.state.values(): # ordering from XML
+            orders[s.id] = k
+            k = k + 1
+
+        for s in self.state.values(): # a list of indices
+            if s.tiedto == '':
+                tiedstates.append(-1)
+            else:
+                tiedstates.append(orders[s.tiedto])
+                isTied = 1
+
+        if not isTied:
+            tiedstates = []
+        return tiedstates
     
     def OpenXML(self, fileName):
         dom = xml.dom.minidom.parse(fileName)
