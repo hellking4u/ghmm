@@ -111,7 +111,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_filename)  {
 
 /*----------------------------------------------------------------------------*/
 
-  if (!cluster_ausgabe(&cl, sq, outfile, out_filename)) {
+  if (!cluster_out(&cl, sq, outfile, out_filename)) {
     mes_proc(); goto STOP;
   }
       
@@ -227,9 +227,9 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number,
 } /* cluster_avoid_empty_model */
 
 /*============================================================================*/
-int cluster_ausgabe(cluster_t *cl, sequence_t *sq, FILE *outfile,
+int cluster_out(cluster_t *cl, sequence_t *sq, FILE *outfile,
 		     char *out_filename) {
-#define CUR_PROC "cluster_ausgabe"
+#define CUR_PROC "cluster_out"
   int res = -1;
   int i;
   sequence_d_t *sqd = NULL;
@@ -243,7 +243,7 @@ STOP:
   sequence_d_free(&sqd);
   return(res);
 #undef CUR_PROC
-} /* cluster_ausgabe */
+} /* cluster_out */
 
 
 /*============================================================================*/
