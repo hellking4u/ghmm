@@ -2,33 +2,49 @@
 #include "config.h"
 #endif
 
-#include <xmlio/XMLIO_ArrayObject.h>
+#include <string>
+#include <iostream>
+#include "sequences.h"
 
-#ifdef HAVE_NAMESPACE
+#ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
 
-int main_ArrayObject()
+int sequenceReader_test()
 {
-  XMLIO_ArrayObject<double> my_array;
-  my_array.XMLIO_getCharacters("1.3 1.4 1e4 1 f2dsdf");
-  my_array.push_back(0);
-  my_array.print();
+  string filename="ghmm.xml";
+  sequenceReader seq;
+  (void)seq.read_sequences(filename);
+  cout<<"read "<<seq.size()<<" sequences"<<endl;
 
-  XMLIO_ArrayObject<string> my2_array;
-  my2_array.XMLIO_getCharacters("1.3 1.4 1e4 1 f2dsdf");
-  my2_array.print();
-  
-  XMLIO_ArrayObject<char> my3_array;
-  my3_array.XMLIO_getCharacters("1.3 1.4 1e4 1 f2dsdf");
-  my3_array.print();
-
+  sequenceReader::const_iterator pos=seq.begin();
+  while(pos!=seq.end())
+    {
+      const sequences* these_sequences=*pos;
+      if (these_sequences!=NULL)
+	{
+	  if (these_sequences->get_type()=="int")
+	    {
+	      sequence_t* my_seq=these_sequences->create_sequence_t();
+	      sequence_print(stdout,my_seq);
+	      sequence_free(&my_seq);
+	    }
+	  else if (these_sequences->get_type()=="double")
+	    {
+	      sequence_d_t* my_seq=these_sequences->create_sequence_d_t();
+	      sequence_d_print(stdout,my_seq,0);
+	      sequence_d_free(&my_seq); 
+	    }
+	}
+      ++pos;
+    }
   return 0;
 }
 
 int main()
 {
-  return main_ArrayObject();
+  return sequenceReader_test();
+
 }
 
 

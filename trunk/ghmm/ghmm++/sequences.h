@@ -7,6 +7,7 @@
 #include <iostream>
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Object.h>
+#include <xmlio/XMLIO_StringObject.h>
 #include <xmlio/XMLIO_ObjectReader.h>
 #include <xmlio/XMLIO_ArrayObject.h>
 #include <ghmm/sequence.h>
@@ -23,6 +24,10 @@ public:
   double_sequence(XMLIO_Attributes &attributes);
   ~double_sequence();
   XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
+  double* create_double_array() const;
+  int* create_int_array() const;
+  int get_label_as_int() const;
+  double get_id_as_double() const;
 private:
   XMLIO_StringObject* label;
   string id;
@@ -34,9 +39,10 @@ public:
   int_sequence(XMLIO_Attributes &attributes);
   ~int_sequence();
   XMLIO_Object* XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes);
-  int* create_array();
-  int get_label();
-  double get_id();
+  double* create_double_array() const;
+  int* create_int_array() const;
+  int get_label_as_int() const;
+  double get_id_as_double() const;
 private:
   XMLIO_StringObject* label;
   string id;
@@ -51,9 +57,10 @@ public:
   void XMLIO_endTag(const string& tag);
   void XMLIO_finishedReading();
   void XMLIO_getCharacters(const string& characters);
+  const string& get_type() const {return type;}
 
-  sequence_t* create_sequence_t();
-  sequence_d_t* create_sequence_d_t();
+  sequence_t* create_sequence_t() const;
+  sequence_d_t* create_sequence_d_t() const;
 
 private:
   string type;
@@ -74,6 +81,7 @@ public:
   void XMLIO_endTag(const string& tag);
   void XMLIO_finishedReading();
   const char* toString() const;
+  const string& get_type() const {return type;}
   sequence_t* create_sequence_t() const;
   sequence_d_t* create_sequence_d_t() const;
 
