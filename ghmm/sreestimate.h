@@ -9,7 +9,8 @@ __copyright__
 ------------------------------------------------------------------------------*/
 #ifndef SREESTIMATE_H
 #define SREESTIMATE_H
-#include "smodel.h"
+
+#include <ghmm/smodel.h>
 
 /**@name SHMM-Baum-Welch-Algorithm */
 /*@{ (Doc++-Group: sreestimate) */

@@ -1,8 +1,10 @@
 /*******************************************************************************
   author       : Bernd Wichern
-  filename     : /homes/hmm/wichern/hmm/src/smap_classify.c
+  filename     : ghmm/ghmm/smap_classify.c
   created      : TIME: 15:57:29     DATE: Mon 03. January 2000
-  last-modified: TIME: 16:40:45     DATE: Wed 03. January 2001
+  $Id$
+
+__copyright__
 *******************************************************************************/
 
 #include <math.h>

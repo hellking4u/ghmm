@@ -12,10 +12,11 @@ __copyright__
 #ifndef VITERBI_H
 #define VITERBI_H
 
+#include <ghmm/model.h>
+
 /**@name Viterbi-Algorithmus */
 /*@{ (Doc++-Group: viterbi) */
 
-#include "model.h"
 /**
   Viterbi-Algorithmus. Berechnung des Viterbi-Pfades (bester Pfad durch den
   Zustandsraum) und der Viterbi-Wahrscheinlichkeit zu einem gegebenen Modell

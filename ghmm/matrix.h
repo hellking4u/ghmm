@@ -10,7 +10,9 @@ __copyright__
 
 #ifndef MATRICE_H
 #define MATRICE_H
-#include "model.h"
+
+#include <stdio.h>
+#include <ghmm/scanner.h>
 
 /**@name Matrix */
 /*@{ (Doc++-Group: matrix) */

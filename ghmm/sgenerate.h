@@ -10,6 +10,10 @@ __copyright__
 #ifndef SGENERATE_H
 #define SGENERATE_H
 
+
+#include <ghmm/smodel.h>
+#include <ghmm/sequence.h>
+
 /**
    @name generation and extention of sequences from shmm
 */

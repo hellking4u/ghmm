@@ -20,8 +20,5 @@ void gsl_rng_init(void);
 
 void gsl_rng_timeseed(gsl_rng * r);
 
-
-
-
 #endif /* RNG_H */
 

@@ -102,8 +102,8 @@ typedef struct hmm_check_t hmm_check_t;
   Wichtig: Include von sequence.h zur Vermeidung von Fehlern beim Uebersetzen
   erst an dieser Stelle. (sequence.h und model.h includen sich gegenseitig)
 */
-#include "sequence.h" 
-#include "scanner.h"
+#include <ghmm/sequence.h>
+#include <ghmm/scanner.h>
 
 /** Speicher eines Modells freir\"aumen..
     @return Erfolgsstatus: 0 succes; -1 error
@@ -152,12 +152,14 @@ model **model_from_sequence(sequence_t *sq, long *mo_number);
    @return Kopie des Modells
    @param mo:  zu kopierendes Modell */
 model*  model_copy(const model *mo);
+
 /**
    Pr\"ufen, ob alle Normierungsbedingungen vom Modell erf\"ullt werden. (Summen 
    der versch. Wahrscheinlichkeiten = 1?)
    @return Erfolgsstatus: 0 succes; -1 error
    @param mo:  zu ueberpruefendes Modell */
 int     model_check(const model* mo);
+
 /**
    Check Anzahl States und Anzahl Ausgabewerte in den Modellen auf
    Uebereinstimmung..
@@ -196,7 +198,6 @@ model*  model_generate_from_sequence(const int *seq, int seq_len,
 */
 sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 				     long seq_number);
-
 
 /**
    Berechnung der Summe der log( P ( O | lambda ) ).
@@ -317,11 +318,6 @@ int model_direct_check_data(model_direct *mo_d, hmm_check_t *check);
                     Prints to stdout (yuk!)
 */
 double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
-
-
-
-
-
 
 #endif
 

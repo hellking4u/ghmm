@@ -11,8 +11,8 @@ __copyright__
 #ifndef SMODEL_H
 #define SMODEL_H
 
-#include "const.h"
-#include "scanner.h"
+#include <ghmm/const.h>
+#include <ghmm/scanner.h>
 
 /**@name SHMM-Modell */
 /*@{ (Doc++-Group: smodel) */
@@ -78,8 +78,7 @@ struct smodel{
 typedef struct smodel smodel;
 
 /* don't include this earlier: in sequence.h smodel has to be known */
-#include "sequence.h"  
-
+#include <ghmm/sequence.h>
 
 /** Free memory smodel 
     @return 0: success, -1: error

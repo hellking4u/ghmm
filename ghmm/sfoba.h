@@ -11,7 +11,7 @@ __copyright__
 #ifndef SFOBA_H
 #define SFOBA_H
 
-#include "smodel.h"
+#include <ghmm/smodel.h>
 
 /**@name SHMM Forward-Backward-Algorithm */
 /*@{ (Doc++-Group: sfoba) */

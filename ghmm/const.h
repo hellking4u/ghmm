@@ -56,8 +56,6 @@ __copyright__
 /* in float.h: DBL_EPSILON = 0.000000000000000222044604925031... 
 */
 
-
-
 /**
    Anzahl von O-Sum-Klassen.
 */
