@@ -22,7 +22,7 @@ extern "C" {
 /** @name state
     The basic structure, keeps all parameters that belong to a state. 
 */
-struct state{
+struct state {
   /** Initial probability */ 
   double pi;
   /** Output probability */
@@ -47,7 +47,7 @@ typedef struct state state;
 /** @name model
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct model{
+struct model {
   /** Number of states */
   int N;
   /** Number of outputs */   
@@ -55,7 +55,7 @@ struct model{
   /** Vector of the states */
   state *s; 
   /** Prior for the a priori probability for the model.
-   Gets the value -1 if no prior defined. */
+      A value of -1 indicates that no prior is defined. */
   double prior;
 };
 typedef struct model model;

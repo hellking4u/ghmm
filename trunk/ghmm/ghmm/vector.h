@@ -85,7 +85,7 @@ void vector_d_print_prec(FILE *file, double *vector, int len, int width,
 			 int prec, char *tab, char *separator, char *ending);
 
 /**
-  Writes a integer vector (without parenthesis)
+  Writes an integer vector (without parenthesis)
   @param file       output file
   @param vector     vector to write
   @param len        dimension
