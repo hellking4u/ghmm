@@ -175,7 +175,7 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
     scanner_consume(s, '='); if(s->err) goto STOP;
     if (!strcmp(s->id, "multip")) {
       *multip = scanner_get_int(s);
-      if (*multip < 1) {/* ignore: make no sense */
+      if (*multip < 1) {/* ignore: makes no sense */
 	*multip = 1;
 	mes_prot("Multip < 1 ignored\n");
       }
@@ -598,7 +598,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 					long seq_number, long label, int Tmax) {
 # define CUR_PROC "smodel_generate_sequences"
 
-  /* Endzustand dadurch charakterisiert, dass es keine Ausgangswahrsch. gibt */
+  /* An end state is characterized by not having an output probabiliy. */
 
   sequence_d_t *sq = NULL;
   int state, n, i, j, m, reject_os, reject_tmax, badseq, class;
@@ -608,20 +608,20 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
   sq = sequence_d_calloc(seq_number);
   if (!sq) { mes_proc(); goto STOP; }
   if (len <= 0)
-    /* Keine spezielle Vorgabe der Sequenzlaenge, Modell sollte 
-       Endzustand haben, Verwendung der Konstanten MAX_SEQ_LEN: */
+    /* A specific length of the sequences isn't given. As a model should have
+       an end state, the konstant MAX_SEQ_LEN is used. */
     len = (int)MAX_SEQ_LEN;
   if (Tmax <= 0)
-    /* Keine spezielle Vorgabe einer MAX. Sequenzlaenge */
+    /* Maximum length of a sequence not given */
     Tmax = (int)MAX_SEQ_LEN;
   
-  /* gsl wird auch von randvar_std_normal "benutzt" 
-     seed == -1: Initialisierung fand schon von aussen statt */
+  /* gsl is also used by randvar_std_normal 
+     seed == -1: Initialization, has already been done outside the function */
   if (seed >= 0) {
     gsl_rng_init();
     if (seed > 0)
       gsl_rng_set(RNG,seed);
-    else /* Zufallsinitialisierung! */
+    else /* Random initialization! */
       gsl_rng_timeseed(RNG);
   }
 
@@ -629,12 +629,12 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
   reject_os = reject_tmax = 0;
 
   while (n < seq_number) {
-    /* Test : fuer jede Seq einen neuen Seed */
+    /* Test: A new seed for each sequence */
     /*   gsl_rng_timeseed(RNG); */
     stillbadseq = badseq = 0;
     if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
 
-    /* Startzustand i wuerfeln */
+    /* Get a random initial state i */
     p = gsl_rng_uniform(RNG);
     sum = 0.0;
     for (i = 0; i < smo->N; i++) {
@@ -642,13 +642,13 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
       if (sum >= p)
 	break;
     }
-    if (i == smo->N) { /* kann durch Rundungsfehler in der Eingabe passieren */
+    if (i == smo->N) { /* Can happens by a rounding error in the input */
       i--;
       while (i > 0 && smo->s[i].pi == 0.0) i--;
     }
-
-    /* Startausgabe erzeugen
-       -> m "auswuerfeln", dann nach entspr. pdf omega "auswuerfeln" */
+    
+    /* Get a random initial output
+       -> get a random m and then respectively a pdf omega. */
     p = gsl_rng_uniform(RNG);
     sum = 0.0;   
     for (m = 0; m < smo->M; m++) {
@@ -657,14 +657,14 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	break;
     }
     if (m == smo->M) m--;
-    /* Zufallszahl nach entsprechender Dichtefunktion */
+    /* Get random numbers according to the density function */
     sq->seq[n][0] = smodel_get_random_var(smo, i, m);
     state = 1;
 
-    /* Anfangsklasse nach erstem Symbol */
+    /* The first symbol chooses the start class */
     class = sequence_d_class(sq->seq[n], 0, &osum);
     while (state < len) {
-      /* neuen Zustand i wuerfeln: */
+      /* Get a new state */
       p = gsl_rng_uniform(RNG);
       sum = 0.0;   
       for (j = 0; j < smo->s[i].out_states; j++) {
@@ -672,25 +672,23 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	if (sum >= p)
 	  break;
       }
-      if (j == smo->s[i].out_states) {/* kann durch Rundungsfehler passieren */
+      if (j == smo->s[i].out_states) {/* Can happens by a rounding error */
 	j--;
 	while (j > 0 && smo->s[i].out_a[class][j] == 0.0) j--;
       }
       if (sum == 0.0) {
 	if (smo->s[i].out_states > 0) {
-	  /* Sequenz verwerfen, falls alle smo->s[i].out_a[class][.] == 0, 
-	     d.h. Klasse class ist in Orginaldaten nicht belegt:
-	     aus while-Schleife raus, n soll nicht hochgezaehlt werden */
+	  /* Repudiate the sequence, if all smo->s[i].out_a[class][.] == 0,
+	     that is, class "class" isn't used in the original data:
+	     go out of the while-loop, n should not be counted. */
 	  /* printf("Zustand %d, class %d, len %d out_states %d \n", i, class,
 	     state, smo->s[i].out_states); */
 	  badseq = 1;
 	  /* break; */
 	  
-	  /* Versuch: bei "leerer" class die Nachbarklassen probieren; 
-	     erst sweep down bis null; falls immer noch ohne Erfolg sweep 
-	     up bis cos - 1. Falls immer noch kein Erfolg --> Sequenz
-	     verwerfen.
-	  */
+	  /* Try: If the class is "empty", try the neighbour class;
+	     first, sweep down to zero; if still no success, sweep up to
+	     COS - 1. If still no success --> Repudiate the sequence. */
 	  if (class > 0 && up == 0) {
 	    class--;
 	    continue;
@@ -706,16 +704,16 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	  }
 	}
 	else
-	  /* Finalzustand erreicht, aus while-Schleife raus: */
+
+	  /* Final state reached, otu of while-loop */
 	  break;
       }
       i = smo->s[i].out_id[j];
 
-      /* Printing commented out 04.02.01 by Disa */
       /* fprintf(stderr, "%d\n", i); */
       /*      fprintf(stderr, "%d\n", i); */
 
-      /* Ausgabe von Zustand i erzeugen */
+      /* Get output from state i */
       p = gsl_rng_uniform(RNG);
       sum = 0.0;   
       for (m = 0; m < smo->M; m++) {
@@ -727,10 +725,10 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
 	m--;
 	while (m > 0 && smo->s[i].c[m] == 0.0) m--;
       }
-      /* Zufallszahl nach entsprechender Dichtefunktion */
+      /* Get a random number from the corresponding density function */
       sq->seq[n][state] = smodel_get_random_var(smo, i, m);
 
-      /* class fuer naechsten Schritt bestimmen */
+      /* Decide the class for the next step */
       class = sequence_d_class(sq->seq[n], state, &osum);
       up = 0;
       state++;
