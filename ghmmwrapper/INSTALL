@@ -6,18 +6,19 @@
 #
 # __copyright__
 
-GHMM_TOP is set in the Makefile to point to the parent ghmm directory,
-so that you will see ghmm/lib automatically.
 
-That means:
-1. Install ghmm ( C version ) to set include and lib directories, by running
-       % make install
+With the python interpreter you want to use, run
 
-2. Edit variables TOP, SWIG, PYTHON_LIB, PYTHON_INCLUDE to point to local installation
-of SWIG and Python.
+> python setup.py build
 
-3. cd to ghmmwrapper and:
-       % make
 
-That should generate the dynamic library for use with Python.
+> python setup.py install --prefix==/some/where/
+
+This will install the files of the ghmm python
+wrapper into /some/where/lib/pythonX.Y/site-packages.
+
+Make sure to include /some/where/lib/pythonX.Y/site-packages
+into your PYTHONPATH.
+
+
 
