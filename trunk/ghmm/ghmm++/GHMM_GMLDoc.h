@@ -31,9 +31,8 @@ class GHMM_GraphMLDoc : public XMLIO_Document {
 
   enum enumModelType { NONE, GHMM_DISCRETE, GHMM_CONTINUOUS };
 
-
   /** Constructor. */
-  GHMM_GraphMLDoc();
+  GHMM_GraphMLDoc(enumModelType model_type=GHMM_DISCRETE);
   /** Destructor. */
   ~GHMM_GraphMLDoc();
 
