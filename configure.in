@@ -85,6 +85,18 @@ AC_STRUCT_TM
 dnl AC_CHECK_FUNCS(tmpnam mkstemp)
 dnl AC_CHECK_FUNCS(gettimeofday)
 
+
+dnl checking for gsl_inteval
+AC_MSG_CHECKING([for gsl_inteval])
+AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
+[
+  gsl_interval x;
+],
+AC_MSG_RESULT(yes)
+AC_DEFINE(HAVE_GSL_INTERVAL,1,[struct gsl_interval exists]),
+AC_MSG_RESULT(no)
+)
+
 dnl checking which root solver alloc function is used
 AC_MSG_CHECKING([whether gsl_root_fsolver_alloc takes one argument])
 AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
