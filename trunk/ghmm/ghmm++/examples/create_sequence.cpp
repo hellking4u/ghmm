@@ -13,20 +13,20 @@ using namespace std;
 
 
 int main() {
-  /* Important! initialise rng  */
-  GHMM_Toolkit::gsl_rng_init();
-
   vector<double> v;
   v.push_back(0.5);
   v.push_back(0.35);
   v.push_back(0.75);
 
-  GHMM_Sequence seq1(GHMM_DOUBLE,v.size(),1);
+  // init GHMM_Sequence data structure
+  GHMM_Sequence seq1(GHMM_DOUBLE,v.size());
   for (unsigned int i = 0; i < v.size(); ++i)
     seq1.setDouble(i,v[i]);
 
   seq1.print(stdout);
   
+  // create a new GHMM_Sequences data structure from 
+  // the GHMM_Sequence object created above
   GHMM_Sequences seq2(&seq1);
   seq2.print(stdout);
 

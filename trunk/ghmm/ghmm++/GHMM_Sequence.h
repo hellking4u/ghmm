@@ -26,9 +26,9 @@ class GHMM_Sequence: public XMLIO_ArrayElement<string> {
  public:
 
   /** Constructor. */
-  GHMM_Sequence(GHMM_SequenceType my_sequence_type, int len, int weight);
+  GHMM_Sequence(GHMM_SequenceType my_sequence_type, int len, int weight = 1);
   /** Constructor. */
-  GHMM_Sequence(GHMM_Alphabet* my_alphabet, int len, int my_weight);
+  GHMM_Sequence(GHMM_Alphabet* my_alphabet, int len, int weight = 1);
   /** Destructor. */
   virtual ~GHMM_Sequence();
 
