@@ -1,5 +1,5 @@
 #  author       : Achim Gaedke
-#  filename     : ghmm/tests/Makefile.am
+#  filename     : /zpr/bspk/src/hmm/ghmm/tests/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
 #
@@ -18,7 +18,7 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
-noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm xml_parser_test
+noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm xml_parser_test shmm_viterbi_test
 
 LDADD = ../ghmm/libghmm.a
 
