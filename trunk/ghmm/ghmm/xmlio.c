@@ -20,7 +20,7 @@ __copyright__
 #include "xmlio.h"
 
 object_handler*
-default_create_handler_object(XML_Parser parser,
+default_create_handler_object(document_handler* dh,
 			      const XML_Char *name,
 			      const XML_Char **atts)
 {
@@ -38,8 +38,8 @@ default_create_handler_object(XML_Parser parser,
   /*
     set handler
    */
-  new_handler->type=default_handler;
-  new_handler->parser=parser;
+  new_handler->type=default_object;
+  new_handler->dh=dh;
   new_handler->handler_data=NULL;
   new_handler->functions.StartHandler=&default_StartElement_handler;
   new_handler->functions.EndHandler=&default_EndElement_handler;
@@ -47,9 +47,8 @@ default_create_handler_object(XML_Parser parser,
   new_handler->functions.ChildDataReciever=&default_ChildData_handler;
 
   /*
-    evaluate name and attributes
+    evaluate type, name and attributes
    */
-
   fprintf(stderr,"this is the new %s handler at %p\n",name,new_handler);
 
   /*
@@ -78,50 +77,6 @@ default_delete_handler_object(object_handler* handler)
 
 }
 
-
-/*
-  installs handlers in expat
- */
-void
-default_set_handler(object_handler* handler)
-{
-  XML_SetUserData(handler->parser,handler);
-  XML_SetElementHandler(handler->parser,
-			handler->functions.StartHandler,
-			handler->functions.EndHandler);
-  XML_SetCharacterDataHandler(handler->parser,
-			      handler->functions.CharacterHandler);
-}
-
-/*
-  pushs new handler and installs its event handlers in expat
- */
-object_handler*
-default_push_handler(object_handler* old_handler,
-		     object_handler* new_handler)
-{
-  old_handler->succ=new_handler;
-  new_handler->prec=old_handler;
-  default_set_handler(new_handler);
-  return new_handler;
-}
-
-/*
-  pops this handler and installs old event handlers in expat
-  returns actual event handler
- */
-
-object_handler*
-default_pop_handler(object_handler* handler)
-{
-  object_handler* prec;
-  prec=handler->prec;
-  default_set_handler(prec);
-  prec->succ=NULL;
-  handler->prec=NULL;
-  return prec;
-}
-
 /*
   create new child
  */
@@ -130,18 +85,21 @@ default_StartElement_handler(void *userData,
 			     const XML_Char *name,
 			     const XML_Char **atts)
 {
-  object_handler* this_handler;
+  document_handler* my_dh;
   object_handler* new_handler;
+  my_dh=((object_handler*)userData)->dh;
 
-  this_handler=(object_handler*)userData;
   /* print information */
   fprintf(stderr,"New handler for %s\n",name);
 
   /* create new handler */
-  new_handler=default_create_handler_object(this_handler->parser,name,atts);
+  new_handler=create_object_handler(my_dh,
+				    default_object,
+				    name,
+				    atts);
 
   /* push new handler on stack */
-  default_push_handler(this_handler,new_handler);
+  document_handler_push_object_handler(my_dh,new_handler);
 }
 
 /*
@@ -185,11 +143,32 @@ default_ChildData_handler(object_handler* handler)
   /* look at obtained data */
 
   /* pop handler from stack */
-  default_pop_handler(handler);
+  document_handler_pop_object_handler(handler->dh);
 
   /* delete it */
+  delete_object_handler(handler);
+}
+
+/***************************************************************/
+/* abstract object_handler functions */
+object_handler*
+create_object_handler(document_handler* dh,
+		      const object_handler_type type,
+		      const XML_Char *name,
+		      const XML_Char **atts)
+{
+  /* nothing other implemented ! */
+  return default_create_handler_object(dh,name,atts);
+}
+
+void
+delete_object_handler(object_handler* handler)
+{
   default_delete_handler_object(handler);
 }
+
+
+/***************************************************************/
 
 void
 document_EndElement_handler(void *userData,
@@ -206,84 +185,165 @@ document_ChildData_handler(object_handler* handler)
   fprintf(stderr,"document_handler: recieving child data at %p\n",handler);
 
   /* pop handler from stack */
-  default_pop_handler(handler);
+  (void)document_handler_pop_object_handler(handler->dh);
 
   /* delete it */
-  default_delete_handler_object(handler);
+  delete_object_handler(handler);
 }
 
-/*
-  just do something...
- */
-int ghmm_xml_parse(const char* filename)
+
+/***************************************************************/
+
+
+/* create document handler */
+
+document_handler*
+create_document_handler(const char* filename)
 {
-  FILE* xml_source=NULL;
-  XML_Parser my_parser;
-  object_handler handler_chain_root;
+  document_handler* my_dh;
+  my_dh=(document_handler*)malloc(sizeof(document_handler));
+  if (my_dh==NULL)
+    {
+      fprintf(stderr,"Can not allocate document_handler\n");
+      return NULL;
+    }
 
   /* open file */
-  xml_source=fopen(filename,"r");
-  if (xml_source==NULL)
+  my_dh->xml_file=fopen(filename,"r");
+  if (my_dh->xml_file==NULL)
     {
       fprintf(stderr,"could not open file\n");
-      return 0;
+      free(my_dh);
+      return NULL;
     }
 
   /* initialise handler chain */
-  my_parser=XML_ParserCreate((const XML_Char*)NULL);
-  
+  my_dh->parser=XML_ParserCreate((const XML_Char*)NULL);
+  if (my_dh->parser==NULL)
+    {
+      fprintf(stderr,"could not create parser!\n");
+      fclose(my_dh->xml_file);
+      free(my_dh);
+      return NULL;
+    }
+
   /* write first structure */
-  handler_chain_root.prec=NULL;
-  handler_chain_root.succ=NULL;
-  handler_chain_root.type=document_handler;
-  handler_chain_root.parser=my_parser;
-  handler_chain_root.functions.StartHandler=&default_StartElement_handler;
-  handler_chain_root.functions.EndHandler=&document_EndElement_handler; /* should not be called! */
-  handler_chain_root.functions.CharacterHandler=&default_CharacterData_handler;
-  handler_chain_root.functions.ChildDataReciever=document_ChildData_handler;
+  my_dh->root.prec=NULL;
+  my_dh->root.succ=NULL;
+  my_dh->last=&(my_dh->root);
+  my_dh->root.type=document_object;
+  my_dh->root.functions.StartHandler=&default_StartElement_handler;
+  my_dh->root.functions.EndHandler=&document_EndElement_handler; /* should not be called! */
+  my_dh->root.functions.CharacterHandler=&default_CharacterData_handler;
+  my_dh->root.functions.ChildDataReciever=document_ChildData_handler;
 
-  default_set_handler(&handler_chain_root);
+  document_handler_set_handler(&(my_dh->root));
 
+  return my_dh;
+}
+
+/*
+  installs handlers in expat
+ */
+void
+document_handler_set_handler(object_handler* handler)
+{
+  XML_Parser* parser;
+  parser=handler->dh->parser;
+  XML_SetUserData(parser,handler);
+  XML_SetElementHandler(parser,
+			handler->functions.StartHandler,
+			handler->functions.EndHandler);
+  XML_SetCharacterDataHandler(parser,
+			      handler->functions.CharacterHandler);
+}
+
+/*
+  pushs new handler on stack and installs its event handlers in expat
+ */
+object_handler*
+document_handler_push_object_handler(document_handler* dh,
+		     object_handler* new_handler)
+{
+  dh->last->succ=new_handler;
+  new_handler->prec=dh->last;
+  new_handler->succ=NULL;
+  dh->last=new_handler;
+  document_handler_set_handler(new_handler);
+  return new_handler;
+}
+
+/*
+  pops this handler and installs old event handlers in expat
+  returns removed handler
+ */
+object_handler*
+document_handler_pop_object_handler(document_handler* dh)
+{
+  object_handler* last;
+  last=dh->last;
+  dh->last=last->prec;
+  dh->last->prec=NULL;
+  last->prec=last->succ=NULL;
+  document_handler_set_handler(dh->last);
+  return last;
+}
+
+int
+parse_document(document_handler* dh)
+{
+  const int buffer_length=1000;
   while (1)
-  {
-    int length;
-    const int buffer_length=1000;
-    void* xml_buffer;
-    xml_buffer=XML_GetBuffer(my_parser,buffer_length);
+    {
+      int length;
+      void* xml_buffer;
+      xml_buffer=XML_GetBuffer(dh->parser,buffer_length);
+      
+      length=fread(xml_buffer,1,buffer_length,dh->xml_file);
+      if (ferror(dh->xml_file)!=0)
+	{
+	  fprintf(stderr,"An error occured while reading...\n");
+	  return 0;
+	}
+      
+      if (XML_ParseBuffer(dh->parser,length,length==0)==0)
+	{
+	  enum XML_Error error;
+	  error=XML_GetErrorCode(dh->parser);
+	  fprintf(stderr,"An error occured while parsing...\n%s\n",
+		  XML_ErrorString(error));	
+	  return 0;
+	}
+      
+      if (length==0)
+	{
+	  fprintf(stderr,"Ready!\n");
+	  break;
+	}
+    }
+  return 1;
+}
 
-    length=fread(xml_buffer,1,buffer_length,xml_source);
-    if (ferror(xml_source)!=0)
-      {
-	fprintf(stderr,"An error occured while reading...\n");
-	break;
-      }
+/* destroy document handler */
 
-    if (XML_ParseBuffer(my_parser,length,length==0)==0)
-      {
-	enum XML_Error error;
-	error=XML_GetErrorCode(my_parser);
-	fprintf(stderr,"An error occured while parsing...\n%s\n",
-		XML_ErrorString(error));	
-	break;
-      }
+void
+delete_document_handler(document_handler* dh)
+{
+  /* rebuild stack */
+  /* delete all, except root*/
+  while (dh->last->prec!=NULL)
+    {
+      object_handler* old_object_handler;
+      old_object_handler=document_handler_pop_object_handler(dh);
+      delete_object_handler(old_object_handler);
+    }
 
-    if (length==0)
-      {
-	fprintf(stderr,"Ready!\n");
-	break;
-      }
-  }
-
-  fprintf(stderr,"deleting parser and closing file\n");
-  /* delete parser */  
-  XML_ParserFree(my_parser);
-
-  /* close file */
-  (void)fclose(xml_source);
-
-  return 0;
+  XML_ParserFree(dh->xml_file);
+  fclose(dh->xml_file);
+  free(dh);
 }
 
 #endif /* defined(HAVE_EXPAT_H) && defined(HAVE_LIBEXPAT)  */
 #endif /* __experimental__ */
+
 
