@@ -2,6 +2,7 @@
 #include <config.h>
 #endif
 
+#include <xmlio/XMLIO_ObjectReader.h>
 #include "sequences.h"
 #include "DiscretePD.h"
 
@@ -11,12 +12,13 @@ using namespace std;
 
 int main()
 {
-  XMLIO_ElementArrayReader<InitialStates> pd;
-  pd.set_element_name("InitialStates");
-  (void)pd.read_file("ghmm.xml");
+  XMLIO_ElementArrayReader<InitialStates> ghmm_doc;
+  ghmm_doc.set_doc_name("ghmm");
+  ghmm_doc.set_element_name("InitialStates");
+  (void)ghmm_doc.read_file("ghmm.xml");
 
-  XMLIO_ElementArrayReader<InitialStates>::const_iterator pos=pd.begin();
-  while(pos!=pd.end())
+  XMLIO_ElementArrayReader<InitialStates>::const_iterator pos=ghmm_doc.begin();
+  while(pos!=ghmm_doc.end())
     {
       cout<<"element"<<endl;
       (*pos)->print();
