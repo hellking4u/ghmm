@@ -9,7 +9,7 @@ __copyright__
 *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+# include "config.h"
 #endif
 #include <math.h>
 #ifdef HAVE_LIBPTHREAD
@@ -27,6 +27,32 @@ __copyright__
 # include <gsl/gsl_math.h>
 # include <gsl/gsl_sf_erf.h>
 # include <gsl/gsl_randist.h>
+
+/* missing functions in gsl-0.7 */
+
+#define EVAL_RESULT(fn) \
+   gsl_sf_result result; \
+   int status = fn; \
+   if (status == GSL_EDOM) { \
+     return GSL_NAN; \
+   } else if (status != GSL_SUCCESS) { \
+     GSL_ERROR(#fn, status); \
+   } ; \
+   return result.val;
+
+# ifndef HAVE_GSL_ERF
+double gsl_sf_erfc(double x)
+{
+  EVAL_RESULT(gsl_sf_erfc_e(x, &result));
+}
+# endif
+
+# ifndef HAVE_GSL_ERFC
+double gsl_sf_erf(double x)
+{
+  EVAL_RESULT(gsl_sf_erf_e(x, &result));
+}
+# endif
 
 #else
 
