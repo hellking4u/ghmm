@@ -31,24 +31,28 @@ public:
   GHMM_AbstractModel();
 
 	/** Destructor. */
-   ~GHMM_AbstractModel();
-
-   /** Returns name of class. */
-   const char* toString() const;
-
-    /**
+  ~GHMM_AbstractModel();
+  
+  /** Returns name of class. */
+  const char* toString() const;
+  
+  /**
      Tests if all standardization requirements of model are fulfilled. 
      @return 0 for succes, -1 on error
-   */
-   int check() const;
-
-
+  */
+  int check() const;
+  
+  
   /** Returns alphabet of model or NULL, if no such alphabet exists. */
   GHMM_Alphabet* getAlphabet() const;
   /** Returns model type. */
-  GHMM_ModelType getModelType() const;
+  virtual GHMM_ModelType getModelType() const = 0;
   /** */
-  int getNumberOfTransitionMatrices() const;
+  virtual int getNumberOfTransitionMatrices() const = 0;
+
+  /** */
+  virtual void *get_cmodel() const = 0;
+
   /* Returns state with given index. */
   //GHMM_State* getState(int index) const;
   /* Returns state with given id. */

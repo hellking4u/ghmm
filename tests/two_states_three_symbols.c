@@ -96,9 +96,10 @@ int my_model()
   /* generate sequences */
   fprintf(stdout,"generating sequences:...");
   my_output=model_generate_sequences(&my_model, /* model */
-				     1,   /* random seed */
+				     0,   /* random seed */
 				     100, /* length of each sequence */
-				     100); /* no of sequences */
+				     100, /* no of sequences */
+		  			 100); /* maxT */ 
   fprintf(stdout,"Done\n");
   sequence_print(stdout,my_output);
 

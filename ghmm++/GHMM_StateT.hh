@@ -24,14 +24,12 @@ template<class CStateType, class TransitionT, class ModelT> class GHMM_StateT: p
 public:
 
   /** */
-  enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL, GHMM_STATE_LABEL};
+  enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL, GHMM_STATE_LABEL, GHMM_STATE_COUNTME};
 
   /** Constructor */
   GHMM_StateT(ModelT* my_model, int my_index, XMLIO_Attributes& attrs)
   {
 	index             = my_index;
-	c_state           = NULL; 
-	c_sstate          = NULL;
 	c_sdstate         = NULL;
 	reading           = GHMM_STATE_NONE;
 	parent_model      = my_model;
@@ -50,8 +48,6 @@ public:
   GHMM_StateT(ModelT* my_model, int my_index, CStateType* my_state)
   {
     index             = my_index;
-	c_sstate          = NULL;
-	c_state           = NULL;
 	c_sdstate         = my_state;
 	reading           = GHMM_STATE_NONE;
 	// emission          = NULL;
@@ -110,14 +106,18 @@ public:
   
   /** C type sstate. Object is not owner of this state. */
   CStateType *c_sdstate; 
-  state      *c_state;  // bad legacy
-  sdstate    *c_sstate; // bad legacy
+
+  double getEmissionFrom(int i) {
+    if (c_sdstate) {
+      return (double) c_sdstate->b[i];
+    } else {
+      return -1;
+    }
+  }
 
   /** */
   string id;
-  /** */
-  // EmissionT* emission;
-  /** */
+
   int index;
 
 
@@ -195,6 +195,7 @@ class GHMM_GMLState : public GHMM_StateT<sdstate, GHMM_GMLTransition, GHMM_SWDis
 
   /** */
   string label;
+  int m_countme;
 
   GHMM_GMLEmission* emission;
 

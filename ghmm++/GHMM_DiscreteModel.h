@@ -49,10 +49,10 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
   /** Constructor. */
   GHMM_DiscreteModel(GHMM_Alphabet* alphabet);
   /** Destructor. */
-  virtual ~GHMM_DiscreteModel();
-
+  ~GHMM_DiscreteModel();
+  
   /** Returns name of class. */
-  virtual const char* toString() const;
+  const char* toString() const;
 
   /** Adds state with given id to model. */
   void addState(const string& id);
@@ -154,15 +154,19 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param global_len:  length of sequences (=0: automatically via final states)
       @param seq_number:  number of sequences
   */
-  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number) const;
+  GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number, int maxT) const;
   /** Returns alphabet of model or NULL, if no such alphabet exists. */
-  virtual GHMM_Alphabet* getAlphabet() const;
+  GHMM_Alphabet* getAlphabet() const;
   /** Returns model type. */
-  virtual GHMM_ModelType getModelType() const;
+  GHMM_ModelType getModelType() const;
   /** */
-  virtual int getNumberOfTransitionMatrices() const;
+  int getNumberOfTransitionMatrices() const;
   /* Returns state with given index. */
   state* getCState(int index) const;
+
+  /** Returns a pointer to the C model */
+  void *get_cmodel() const { return (void*) c_model; }
+
   /**
      Writes initial allocation vector of a matrix.
      @param file: output file

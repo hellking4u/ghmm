@@ -111,7 +111,7 @@ int     smodel_free(smodel **smo);
     For each smodel block smodel\_read\_block() is called.
    @return vector of read smodels
    @param filename   input ascii file
-   @param smo_number  number of read smodels */
+   @param smo_number  number of smodels to read*/
 smodel** smodel_read(const char *filename, int *smo_number);
 
 /** Reads one smodel block. It is possible to generate multiple
@@ -291,7 +291,7 @@ double smodel_calc_b(smodel *smo, int state, double omega);
     @param cm0  smodel used for generating random output
     @param cm   smodel to compare with
     @param maxT  maximum output length (for HMMs with absorbing states multiple
-                 sequences with a toal langth of at least maxT will be 
+                 sequences with a toal length of at least maxT will be 
 		 generated)
     @param symmetric  flag, whether to symmetrize distance (not implemented yet)
     @param verbose  flag, whether to monitor distance in 40 steps. 

@@ -20,6 +20,23 @@ __copyright__
 #include "mes.h"
 #include "mprintf.h"
 #include "string.h"
+#include "ghmm.h"
+
+#define  __EPS 10e-6
+
+typedef enum DFSFLAG
+  { DONE, NOTVISITED, VISITED } DFSFLAG;
+
+
+typedef struct local_store_t {
+  DFSFLAG *colors;
+  int    *topo_order;
+  int    topo_order_length;
+} local_store_t;
+
+static local_store_t *topo_alloc(model *mo, int len);
+static int topo_free(local_store_t **v, int n, int cos, int len);
+
 
 /*----------------------------------------------------------------------------*/
 static int model_state_alloc(state *state, int M, int in_states,
@@ -70,9 +87,153 @@ static int model_copy_vectors(model *mo, int index, double **a_matrix,
 } /* model_copy_vectors */
 
 
+/*----------------------------------------------------------------------------*/
+static local_store_t *topo_alloc(model *mo, int len) {
+#define CUR_PROC "topo_alloc"
+  local_store_t* v = NULL;
+  int j;
+  if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
+
+  v->topo_order_length = 0;
+  if (!m_calloc(v->topo_order, mo->N)) {mes_proc(); goto STOP;}
+
+  return(v);
+STOP:
+  topo_free(&v, mo->N, 1, len);
+  return(NULL);
+#undef CUR_PROC
+} /* topo_alloc */
+
+
+/*----------------------------------------------------------------------------*/
+static int topo_free(local_store_t **v, int n, int cos,int len) {
+#define CUR_PROC "topo_free"
+  int j;
+  mes_check_ptr(v, return(-1));
+  if( !*v ) return(0);
+  m_free((*v)->topo_order);
+  m_free(*v);
+  return(0);
+#undef CUR_PROC
+} /* topo_free */
+
+
+/*----------------------------------------------------------------------------*/
+static void __VisitNext(model *mo, int j, int *counter, local_store_t *v)
+{
+  int i, nextState, ins;
+
+  v->colors[j] = VISITED; 
+  v->topo_order[(*counter)++] = j;
+
+  for(i = 0; i < mo->s[j].out_states; i++)	
+    {
+      if (v->colors[mo->s[j].out_id[i]] == NOTVISITED &&
+	  mo->silent[ mo->s[j].out_id[i] ]) { /* looping back taken care of */
+	nextState = mo->s[j].out_id[i];
+	/* Check if all in-coming silent states has been visited */
+	for( ins=0; ins < mo->s[nextState].in_states; ins++) {	
+	  if ( nextState != mo->s[nextState].in_id[ins] &&
+	       mo->silent[ mo->s[nextState].in_id[ins] ] ) {
+	    if ( v->colors[ mo->s[nextState].in_id[ins] ] == NOTVISITED ) {
+	      /* fprintf(stderr, "%d, %d to %d\n",j, ins, nextState); */
+	      goto find_next_silent;
+	    }
+	  }
+	}
+	
+	v->colors[nextState] = VISITED; 
+	v->topo_order[(*counter)++] = nextState; /* All in-coming silent states
+						  * have been visited,
+						  * and so we have the ordering
+						  */
+
+      }
+ find_next_silent:;
+    }
+}
+
+
+/*----------------------------------------------------------------------------*/
+static void __model_topo_ordering(model *mo, local_store_t *v) 
+{
+  int i,j,k;
+
+  //assert(mo->model_type == kSilentStates); /* otherwise, why are you here? */
+
+  v->colors   =   (DFSFLAG*)malloc( sizeof(DFSFLAG)*mo->N );
+  v->topo_order = (int*)malloc( sizeof(int)*mo->N );
+  v->topo_order_length = 0;
+
+  for(i=0; i < mo->N; i++)
+    {
+      v->colors[i] = NOTVISITED;
+    }
+   
+  for(i=0; i < mo->N; i++) {  
+    if ( mo->s[i].pi == 1.0 ) { 
+      v->colors[ i ] = VISITED;
+	  if ( mo->silent[i] )
+      	v->topo_order[v->topo_order_length++] = i;
+      break;
+    }
+  }
+
+  for(i=0; i < mo->N; i++) {
+    if ( mo->silent[i] && 
+	 v->colors[i] == NOTVISITED ) {
+      for(j = 0; j < mo->s[i].in_states; j++) {
+	if ( i != mo->s[i].in_id[j] &&
+	     mo->silent[ mo->s[i].in_id[j] ] ) {
+	  /*
+	   * If an in-coming transition is from a silent state, 
+	   * it must be visited before.
+	   */
+	  if ( v->colors[ mo->s[i].in_id[j] ] == NOTVISITED ) {
+	    /* fprintf(stderr, "%d to %d\n", mo->s[i].in_id[j], i); */
+	    goto find_start; 
+	  }
+	}
+      }
+      __VisitNext(mo, i, &v->topo_order_length, v);	
+    }
+find_start:;
+  }
+}
+
+
+/*----------------------------------------------------------------------------*/
+void model_topo_ordering(model *mo) 
+{
+#define CUR_PROC "model_topo_ordering"
+  int i;
+  /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
+  local_store_t *v;
+
+  v = topo_alloc(mo, 1);
+  if (!v) { mes_proc(); goto STOP; }
+
+  __model_topo_ordering( mo, v);
+  
+  mo->topo_order_length = v->topo_order_length;
+  if (!m_calloc(mo->topo_order, mo->topo_order_length)) {mes_proc(); goto STOP;}
+
+  for(i=0; i < v->topo_order_length; i++) {
+    mo->topo_order[i] = v->topo_order[i];
+  }
+  //fprintf(stderr,"\nOrdering silent states....\n\t");
+  //for(i=0; i < mo->topo_order_length; i++) {
+  //  fprintf(stderr, "%d, ", mo->topo_order[i]);
+  //}
+  topo_free(&v, mo->N, 1, 1);
+ STOP:
+#undef CUR_PROC
+}
+
+
 /*============================================================================*/
 
-/* Old prototyp:
+/* Old prototype:
 
 model **model_read(char *filename, int *mo_number, int **seq,
 			 const int *seq_len, int seq_number) { */
@@ -283,13 +444,13 @@ model *model_direct_read(scanner_t *s, int *multip){
       mes_proc(); goto STOP;
     }
   }
-  matrix_d_free(&a_matrix, mo->N);
-  matrix_d_free(&b_matrix, mo->N);
+  matrix_d_free(&a_matrix );
+  matrix_d_free(&b_matrix );
   m_free(pi_vector);
   return(mo);
 STOP:
-  matrix_d_free(&a_matrix, mo->N);
-  matrix_d_free(&b_matrix, mo->N);
+  matrix_d_free(&a_matrix);
+  matrix_d_free(&b_matrix);
   m_free(pi_vector);
   model_free(&mo);
   return NULL;
@@ -366,16 +527,75 @@ model **model_from_sequence_ascii(scanner_t *s, long *mo_number){
 int model_free(model **mo) {
 #define CUR_PROC "model_free"
   int i;
+  //printf("freeing model %s\n",(*mo)->name);
   mes_check_ptr(mo, return(-1));
   if( !*mo ) return(0);
   for (i = 0; i < (*mo)->N; i++)
     state_clean(&(*mo)->s[i]);
-  m_free((*mo)->s);
+  
+  if ( (*mo)->s)
+    m_free((*mo)->s);
+  //if ((*mo) ->  name)
+  //  m_free((*mo)->name);
+  if ((*mo) ->  silent)
+    m_free((*mo)->silent);
+  if ((*mo) ->  tied_to)
+    m_free((*mo)->tied_to);
+  if ((*mo) -> emission_order)
+    m_free((*mo)->emission_order);
+  if ((*mo) -> topo_order)
+    m_free((*mo)->topo_order);
+  
   m_free(*mo);
   return(0);
 #undef CUR_PROC
 } /* model_free */   
 
+
+/*===========================================================================
+
+int model_free(model **mo) {
+#define CUR_PROC "sdmodel_free"
+  state *my_state;
+  int i;
+  mes_check_ptr(mo, return(-1));
+  if( !*mo ) return(0);
+  for (i = 0; i < (*mo)->N; i++) {
+    my_state = &((*mo)->s[i]);
+    if (my_state->b)
+      m_free(my_state->b);
+    if (my_state->out_id)
+      m_free(my_state->out_id);
+    if (my_state->in_id)
+      m_free(my_state->in_id);
+    
+    if (my_state->out_a)
+      m_free(my_state->out_a);
+    if (my_state->in_a)
+      m_free(my_state->in_a);
+    
+	/*if (my_state->out_a)
+	  matrix_d_free(&((*mo)->s[i].out_a), (*mo)->cos);
+    if (my_state->in_a)
+      matrix_d_free(&((*mo)->s[i].in_a), (*mo)->cos); 
+    
+    printf("Free every thing set it to NULL\n");
+
+    my_state->pi         = 0;
+    my_state->b          = NULL;
+    my_state->out_id     = NULL;  
+    my_state->in_id      = NULL;
+    my_state->out_a      = NULL;
+    my_state->in_a       = NULL;
+    my_state->out_states = 0;
+    my_state->in_states  = 0;
+    my_state->fix        = 0;
+  }
+  m_free((*mo)->s);
+  m_free(*mo);
+  return(0);
+#undef CUR_PROC
+} /* model_free */   
 
 /*============================================================================*/
 model *model_copy(const model *mo) {
@@ -569,16 +789,25 @@ STOP:
 
 /*============================================================================*/
 sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
-				     long seq_number) {
+				     long seq_number, int Tmax) {
 # define CUR_PROC "model_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
 
   sequence_t *sq = NULL;
-  int state, n, i, j, m;
+  int i, j, m,temp;
   double p, sum;
   int len = global_len;
-
+  //int silent_len = 0;
+  int n=0;
+  int incomplete_seq = 0;
+  int state=0;
+  
+  
+  //printf("***  model_generate_sequences:\n");
+		  
+  //printf("oben: state= %d, len= %d ",state,len);
+  
   sq = sequence_calloc(seq_number);
   if (!sq) { mes_proc(); goto STOP; }
   if (len <= 0)
@@ -586,94 +815,199 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
        an end state, the konstant MAX_SEQ_LEN is used. */
     len = (int)MAX_SEQ_LEN;
   
-  if (seed > 0)
-    gsl_rng_set(RNG,seed);
-
-  for (n = 0; n < seq_number; n++) {
-    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
-    /* Get a random initial state i */
+  if (seed > 0) {
+    //printf("not Random is ok \n");
+	gsl_rng_set(RNG,seed);
+  }
+   
+while (n < seq_number) {
+	//printf("sequenz n = %d\n",n);
+    //printf("incomplete_seq: %d\n",incomplete_seq);
+	
+    if (incomplete_seq == 0) { 
+ 		//printf("next sequence %d\n",n);
+	    if(!m_calloc(sq->seq[n], len)) {mes_proc(); goto STOP;}
+   		state = 0;
+    }
+   
+	/* Get a random initial state i */
     p = gsl_rng_uniform(RNG);
-    sum = 0.0;
+	sum = 0.0;
     for (i = 0; i < mo->N; i++) {
       sum += mo->s[i].pi;
       if (sum >= p)
-	break;
+	   break;
     }
-    /* Get a random initial output m */
-    p = gsl_rng_uniform(RNG);
-    sum = 0.0;   
-    for (m = 0; m < mo->M; m++) {
-      sum += mo->s[i].b[m];
-      if (sum >= p)
-	break;
-    }
-    sq->seq[n][0] = m;
-    state = 1;
+    
+   	/*###############################################
+    if ( mo->model_type == kSilentStates ){
+		//printf("es gibt silent states\n");
+		/*###############################################
+    	printf("silent array:\n");
+		for (temp = 0;temp < mo->N;temp++){
+	   		printf("s: %d, ",mo->silent[temp]);
+		}
+		printf("\n");
+	}
+	else {
+		//printf("es gibt keine silent states\n");
+	}
+	/*###############################################*/	
+		
+	if ( mo->model_type == kSilentStates ){
+	  if (!mo->silent[i]) { /* first state emits */
+	    //printf("first state %d not silent\n",i);
+		  
+		/* Get a random initial output m */
+        p = gsl_rng_uniform(RNG);
+	    sum = 0.0;   
+        for (m = 0; m < mo->M; m++) {
+          sum += mo->s[i].b[m];
+          if (sum >= p)
+	        break;
+        }
+          sq->seq[n][state] = m;
+          state = state+1;
+        //sq->seq[n][state] = m;
+		//  state = 1;
+	  }
+	  else {  /* silent state: we do nothing, no output */
+		//printf("first state %d silent\n",i);
+		//state = 0; 
+		//silent_len = silent_len + 1; 
+	  }
+   }
+	else {
+	  /* Get a random initial output m */
+	  p = gsl_rng_uniform(RNG);
+	  sum = 0.0;   
+	  for (m = 0; m < mo->M; m++) {
+	    sum += mo->s[i].b[m];
+		 if (sum >= p)
+	      break;
+	  }
+	  sq->seq[n][state] = m;	
+	  //sq->seq[n][0] = m;	
+	  state = state + 1;
+	  //state = 0;
+   }
+	/* check whether sequence was completed by inital state*/ 
+	if (state >= len && incomplete_seq == 1){
+ 	    
+		//printf("assinging length %d to sequence %d\n",state,n);
+		//printf("sequence complete...\n");
+		sq->seq_len[n] = state;    
+		incomplete_seq = 0;
+		n++;
+		continue;
+	}
+    while (state < len) {		
+	  /* Get a random state i */
+     p = gsl_rng_uniform(RNG);
+	  sum = 0.0;   
+     for (j = 0; j < mo->s[i].out_states; j++) {
+	    sum += mo->s[i].out_a[j];   
+	    if (sum >= p)
+	      break;
+     }
 
-    while (state < len) {
-      /* Get a random state i */
-      p = gsl_rng_uniform(RNG);
-      sum = 0.0;   
-      for (j = 0; j < mo->s[i].out_states; j++) {
-	sum += mo->s[i].out_a[j];   
-	if (sum >= p)
-	  break;
-      }
-      if (sum == 0.0) {
-	/* An end state is reached, get out of the while-loop */
-	break;
-      }
-      i = mo->s[i].out_id[j];
-      /* Get a random output m from state i */
-      p = gsl_rng_uniform(RNG);
-      sum = 0.0;   
-      for (m = 0; m < mo->M; m++) {
-	sum += mo->s[i].b[m];
-	if (sum >= p)
-	  break;
-      }
-      sq->seq[n][state] = m;
-      state++;
-    }  /* while (state < len) */  
+	//printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state);
+	 
+	if (sum == 0.0) {
+	    if (state < len) {
+			incomplete_seq = 1;			
+			//printf("final state reached - aborting\n");
+			break;
+		}
+		else {
+			n++;
+			break;
+		}
+	 }	
+     i = mo->s[i].out_id[j];
+     if (mo->model_type == kSilentStates && mo->silent[i]) { /* Get a silent state i */
+	    //printf("silent state \n");
+        //silent_len += 1;
+		/*if (silent_len >= Tmax) {
+		   printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
+		   incomplete_seq = 0;
+		   sq->seq_len[n] = state; 
+		   n++; 
+		   break;
+		}*/
+	  }  
+	  else {
+		/* Get a random output m from state i */
+      	p = gsl_rng_uniform(RNG);
+        sum = 0.0;   
+        for (m = 0; m < mo->M; m++) {
+	    	sum += mo->s[i].b[m];
+	      	if (sum >= p)
+	        	break;
+        }
+        sq->seq[n][state] = m;
+        state++;
+      }	
+	  //printf("state: %d,  len: %d\n",state,len);
+	  if (state == len ){
+	    //printf("sequence complete\n\n");
+	    incomplete_seq = 0;
+  	   // printf("assinging length %d to sequence %d\n",state,n);
+ 		sq->seq_len[n] = state;    
+		n++;
+	  }  
+	}  /* while (state < len) */  
+ } /* while( n < seq_number )*/
 
-    if (state < len)
-      if(m_realloc(sq->seq[n], state)) {mes_proc(); goto STOP;}
-    sq->seq_len[n] = state;    
-  } /* for (n = 0; n < seq_number; n++) */
-
-  return(sq);
+return(sq);
 STOP:
   sequence_free(&sq);
   return(NULL);
 # undef CUR_PROC
 } /* data */
   
-
 /*============================================================================*/
+
 
 double model_likelihood(model *mo, sequence_t *sq) {
 # define CUR_PROC "model_likelihood"
   double log_p_i, log_p;
-  int found, i;
-
+  int found, i,j;
+	
+  //printf("***  model_likelihood:\n");
+  
   found = 0;
   log_p = 0.0;
   for (i = 0; i < sq->seq_number; i++) {
-    foba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i);
- 
-    if (log_p_i != +1) {
+    
+	//printf("sequence:\n");
+	//for (j=0;j < sq->seq_len[i];j++) { 
+	//	printf("%d, ",sq->seq[i][j]);
+	//}
+	//printf("\n"); 
+	   
+	  
+	if (foba_logp(mo, sq->seq[i], sq->seq_len[i], &log_p_i)  == -1) {
+	  mes_proc();
+	  goto STOP;
+	}
+	
+	//printf("\nlog_p_i = %f\n", log_p_i);
+    
+	if (log_p_i != +1) {
       log_p += log_p_i;
       found = 1;
     }
     else {
-      char *str = 
-	mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);
+      char *str = mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);
       mes_prot(str);
     }
   }
   if (!found)
     log_p = +1.0;
   return(log_p);
+STOP:
+  return -1;
 # undef CUR_PROC
 } /* model_likelihood */
 
@@ -956,6 +1290,8 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
   int step_width = 0;
   int steps = 1;
 
+  //printf("***  model_prob_distance:\n");
+   
   if (verbose) { /* If we are doing it verbosely we want to have 40 steps */ 
     step_width = maxT / 40;
     steps = STEPS;
@@ -971,94 +1307,99 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
   for (k = 0; k < 2; k++) { /* Two passes for the symmetric case */
     
     /* seed = 0 -> no reseeding. Call  gsl_rng_timeseed(RNG) externally */
-    seq0 = model_generate_sequences(mo1, 0, maxT+1, 1);
+    seq0 = model_generate_sequences(mo1, 0, maxT+1, 1,maxT+1);
     
+	
+	
+	if (seq0 == NULL) { mes_prot(" generate_sequences failed !");goto STOP;} 
+		
     if (seq0->seq_len[0] < maxT) { /* There is an absorbing state */
       
       /* NOTA BENE: Assumpting the model delivers an explicit end state, 
-	 the condition of a fix initial state is removed. */ 
+		 the condition of a fix initial state is removed. */ 
       
       /* For now check that Pi puts all weight on state */
       /*
-	t = 0;
-	for (i = 0; i < mo1->N; i++) {
-	if (mo1->s[i].pi > 0.001)
-	t++;
-	}    
-	if (t > 1) {
-	mes_prot("ERROR: No proper left-to-right model. Multiple start states");
-	goto STOP;
-	} */
+		t = 0;
+		for (i = 0; i < mo1->N; i++) {
+		if (mo1->s[i].pi > 0.001)
+		t++;
+		}    
+		if (t > 1) {
+		mes_prot("ERROR: No proper left-to-right model. Multiple start states");
+		goto STOP;
+		} */
       
       left_to_right = 1;
       total = seq0->seq_len[0];
 
       while (total <= maxT) {
 	
-	/* create a additional sequences at once */
-	a = (maxT - total) / (total / seq0->seq_number) + 1;
-	/* printf("total=%d generating %d", total, a); */
-	tmp = model_generate_sequences(mo1, 0, 0, a);
-	sequence_free(&tmp);  
-	sequence_add(seq0,tmp);
+		/* create a additional sequences at once */
+		a = (maxT - total) / (total / seq0->seq_number) + 1;
+		/* printf("total=%d generating %d", total, a); */
+		tmp = model_generate_sequences(mo1, 0, 0, a,a);
+    	if (tmp == NULL) { mes_prot(" generate_sequences failed !");goto STOP;} 
+		sequence_free(&tmp);  
+		sequence_add(seq0,tmp);
 	
-	total = 0;
-	for (i = 0; i < seq0->seq_number; i++)
-	  total += seq0->seq_len[i];      
-      }
-    }
+		total = 0;
+		for (i = 0; i < seq0->seq_number; i++)
+		  total += seq0->seq_len[i];      
+   	   }
+   	 }
     
-    if (left_to_right) {
+   	 if (left_to_right) {
       
-      for (t=step_width, i=0; t <= maxT; t+= step_width, i++) {
+   	   for (t=step_width, i=0; t <= maxT; t+= step_width, i++) {
 
-	index = 0;
-	total = seq0->seq_len[0];
+		index = 0;
+		total = seq0->seq_len[0];
 	
-	/* Determine how many sequences we need to get a total of t
-	   and adjust length of last sequence to obtain total of 
-	   exactly t */
+		/* Determine how many sequences we need to get a total of t
+		   and adjust length of last sequence to obtain total of 
+		   exactly t */
 
-	while(total < t) {
-	  index++;
-	  total += seq0->seq_len[index];      
-	}
+		while(total < t) {
+		  index++;
+		  total += seq0->seq_len[index];      
+		}
 
-	true_len = seq0->seq_len[index];
-	true_number = seq0->seq_number;
+		true_len = seq0->seq_len[index];
+		true_number = seq0->seq_number;
 	
-	if ((total - t) > 0)
-	  seq0->seq_len[index] = total - t;
-	seq0->seq_number = index;
+		if ((total - t) > 0)
+		  seq0->seq_len[index] = total - t;
+		seq0->seq_number = index;
 	
-	p0 = model_likelihood(mo1, seq0);
-	if (p0 == +1) { /* error! */
-	  mes_prot("seq0 can't be build from mo1!");
-	  goto STOP;
-	}	  
-	p = model_likelihood(mo2, seq0);
-	if (p == +1) { /* what shall we do now? */
-	  mes_prot("problem: seq0 can't be build from mo2!");
-	  goto STOP;
-	}	  
+		p0 = model_likelihood(mo1, seq0);
+		if (p0 == +1 || p0 == -1) { /* error! */
+		  mes_prot("problem: model_likelihood failed !");
+		  goto STOP;
+		}	  
+		p = model_likelihood(mo2, seq0);
+		if (p == +1 || p == -1) { /* what shall we do now? */
+		  mes_prot("problem: model_likelihood failed !");
+		  goto STOP;
+		}	  
 
-	d = 1.0 / t * (p0 -  p);
+		d = 1.0 / t * (p0 -  p);
 
-	if (symmetric) {
-	  if (k == 0)
-	    /* save d */
-	    d1[i] = d;
-	  else {
-	    /* calculate d */
-	    d = 0.5 * (d1[i] + d);
-	  }  
-	}
+		if (symmetric) {
+		  if (k == 0)
+		    /* save d */
+	  	  d1[i] = d;
+		  else {
+		    /* calculate d */
+		    d = 0.5 * (d1[i] + d);
+		  }  
+		}
 
-	if (verbose && (!symmetric || k == 1))
-	  printf("%d\t%f\t%f\t%f\n", t, p0, p, d);
+		if (verbose && (!symmetric || k == 1))
+		  printf("%d\t%f\t%f\t%f\n", t, p0, p, d);
 	
-	seq0->seq_len[index] = true_len;
-	seq0->seq_number = true_number;
+		seq0->seq_len[index] = true_len;
+		seq0->seq_number = true_number;
       }
     } 
 
@@ -1067,20 +1408,22 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
       true_len = seq0->seq_len[0];
 
       for (t=step_width, i=0; t <= maxT; t+= step_width, i++) {
-	seq0->seq_len[0] = t;
+		seq0->seq_len[0] = t;
 	
 	p0 = model_likelihood(mo1, seq0);
+	//printf("   P(O|m1) = %f\n",p0);
 	if (p0 == +1) { /* error! */
-	  mes_prot("seq0 can't be build from mo1!");
+	 	mes_prot("seq0 can't be build from mo1!");
 	  goto STOP;
 	}	  
 	p = model_likelihood(mo2, seq0);
+	//printf("   P(O|m2) = %f\n",p);
 	if (p == +1) { /* what shall we do now? */
-	  mes_prot("problem: seq0 can't be build from mo2!");
+	    mes_prot("problem: seq0 can't be build from mo2!");
 	  goto STOP;
 	}	  
 
-	d = 1.0 / t * (p0 -  p);
+	d = (1.0 / t) * (p0 -  p);
 
 	if (symmetric) {
 	  if (k == 0)
@@ -1110,11 +1453,12 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric,
   } /* k = 1,2 */ 
   
   sequence_free(&seq0);
-      
+  free(d1);    
   return d;
 
 STOP:
   sequence_free(&seq0);
+  free(d1);
   return(0.0);
 #undef CUR_PROC
 }
@@ -1125,15 +1469,19 @@ STOP:
 void state_clean(state *my_state) {
 #define CUR_PROC "state_clean"
   if (!my_state) return;
-
+  
   if (my_state->b)
     m_free(my_state->b);
+  
   if (my_state->out_id)
     m_free(my_state->out_id);
+  
   if (my_state->in_id)
     m_free(my_state->in_id);
+  
   if (my_state->out_a)
     m_free(my_state->out_a);
+  
   if (my_state->in_a)
     m_free(my_state->in_a);
 
@@ -1145,7 +1493,7 @@ void state_clean(state *my_state) {
   my_state->in_a       = NULL;
   my_state->out_states = 0;
   my_state->in_states  = 0;
-  my_state->fix        = 0;
+  my_state->fix        = 0;  
 
 #undef CUR_PROC
 } /* state_clean */

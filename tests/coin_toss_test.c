@@ -50,7 +50,7 @@ int single_state_coin_toss()
   fprintf(stdout,"observation symbol matrix:\n");
   model_B_print(stdout,&my_model,""," ","\n");
 
-  my_output=model_generate_sequences(&my_model,1,10,10);
+  my_output=model_generate_sequences(&my_model,0,10,10,100);
   sequence_print(stdout,my_output);
 
   return 0;
@@ -114,7 +114,7 @@ int two_states_coin_toss()
   fprintf(stdout,"observation symbol matrix:\n");
   model_B_print(stdout,&my_model,""," ","\n");
 
-  my_output=model_generate_sequences(&my_model,1,10,10);
+  my_output=model_generate_sequences(&my_model,0,10,10,100);
   sequence_print(stdout,my_output);
 
   /* try viterbi algorithm in a clear situation */
@@ -150,7 +150,7 @@ int two_states_coin_toss()
 		   &log_p_forward))
     {
       fprintf(stderr,"foba_logp failed!");
-      matrix_d_free(&forward_alpha,10);
+      matrix_d_free(&forward_alpha);
       return 1;
     }
 
@@ -160,7 +160,7 @@ int two_states_coin_toss()
   fprintf(stdout,"probability of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */
-  matrix_d_free(&forward_alpha,10);
+  matrix_d_free(&forward_alpha);
   return 0;
 }
 

@@ -50,6 +50,8 @@ struct sdstate {
   int in_states;  
   /** if fix == 1 --> b stays fix during the training */
   int fix;
+  char *label;
+  int countme; /* WS: if 1 then counts me, 0 don't count me */
 };
 typedef struct sdstate sdstate;
 
@@ -72,19 +74,21 @@ struct sdmodel {
   double prior;
   /** pointer to class function
    */
-  int (*get_class)(const double*,int,double*);
+  int (*get_class)(int*,int);
+      
+  /*int (*get_class)(const double*,int,double*);*/
 
- /** Contains bit flags for various model extensions such as
-     kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
- */
+  /** Contains bit flags for various model extensions such as
+      kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
+  */
   int model_type;
   
   /** Flag variables for each state indicating whether it is emitting
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
   int* silent; /*AS*/
-  int  topo_order_length;
-  int* topo_order;
+  int  topo_order_length; /*WR*/
+  int* topo_order;        /*WR*/
 };
 typedef struct sdmodel sdmodel;
 
@@ -138,6 +142,8 @@ extern "C" {
      @return copy of the model
      @param mo:  model to copy */
   sdmodel*  sdmodel_copy(const sdmodel *mo);
+
+  model*    sdmodel_to_model(const sdmodel *mo, int kclass);
 
   /**
      Writes a model in matrix format.
@@ -286,8 +292,8 @@ extern "C" {
    @return    log(P)
    @param mo model
    @param sq sequences       
-double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
 */
+double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
 
 /**
    Writes fix vector of a matrix.

@@ -27,7 +27,7 @@ extern "C" {
   @param rows: number of rows
   @param columns: number of columns
   */
-double** matrix_d_alloc(int rows, int columns);
+double** matrix_d_alloc(int n, int m);
 
 /**
   Copying and allocation of a double matrix.
@@ -44,7 +44,7 @@ double** matrix_d_alloc_copy(int rows, int columns, double **copymatrix);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-int matrix_d_free(double ***matrix, long rows);
+int matrix_d_free(double ***matrix);
 
 /**
   Allocation of a integer matrix.

@@ -47,12 +47,11 @@ GHMM_GMLDoc.cpp \
 GHMM_GMLEmission.cpp \
 GHMM_SWDiscreteModel.cpp \
 GHMM_convertXMLtoC.cpp \
-GHMM_Viterbi.cpp \
 GHMM_StateT.hh \
 GHMM_AbstractModelT.hh \
 GHMM_Emission.h \
 GHMM_Transition.h 
-
+# GHMM_Viterbi.cpp \
 
 pkginclude_HEADERS = \
 begin_code.h \
@@ -85,8 +84,8 @@ GHMM_GMLAlphabet.h \
 GHMM_GMLClass.h \
 GHMM_StateT.hh \
 GHMM_AbstractModelT.hh \
-GHMM_SWDiscreteModel.h \
-GHMM_Computation.h
+GHMM_SWDiscreteModel.h 
+# GHMM_Computation.h
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt

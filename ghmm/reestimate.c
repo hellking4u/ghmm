@@ -72,7 +72,7 @@ static int reestimate_free(local_store_t **r, int N) {
     m_free((*r)->a_num[i]);
   m_free((*r)->a_num);
   m_free((*r)->a_denom);
-  matrix_d_free( &((*r)->b_num), N );
+  matrix_d_free( &((*r)->b_num));
   m_free((*r)->b_denom);
   m_free(*r);
   return(0);
@@ -117,8 +117,8 @@ STOP:
 static int reestimate_free_matvek(double **alpha, double **beta, 
 				  double *scale, int T) {
 # define CUR_PROC "reestimate_free_matvek"
-  matrix_d_free(&alpha, T);
-  matrix_d_free(&beta, T);
+  matrix_d_free(&alpha);
+  matrix_d_free(&beta);
   m_free(scale); 
   return(0);
 # undef CUR_PROC

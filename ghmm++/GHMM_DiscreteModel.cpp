@@ -17,13 +17,13 @@
 #include "ghmm++/GHMM_Alphabet.h"
 #include "ghmm++/GHMM_Emission.h"
 
-
 #include "ghmm/viterbi.h"
 #include "ghmm/mes.h"
 #include "ghmm/foba.h"
 #include "ghmm/matrix.h"
 #include "ghmm/reestimate.h"
 
+#include <iostream>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -49,14 +49,13 @@ GHMM_DiscreteModel::GHMM_DiscreteModel(int number_of_states, int my_M, double my
 
 GHMM_DiscreteModel::GHMM_DiscreteModel(GHMM_Alphabet* my_alphabet) 
 {  
-  init(0,my_alphabet->size());
-
-  alphabet = my_alphabet;
+  init(my_alphabet);
 }
 
 
 GHMM_DiscreteModel::~GHMM_DiscreteModel() 
 {
+  cerr << " Delete " << toString() << endl;
   /* frees model. */  
   model_free(&c_model);
   if (own_alphabet)
@@ -118,9 +117,9 @@ int GHMM_DiscreteModel::check() const {
 //}
 
 
-GHMM_Sequences* GHMM_DiscreteModel::generate_sequences(int seed, int global_len, long seq_number) const {
+GHMM_Sequences* GHMM_DiscreteModel::generate_sequences(int seed, int global_len, long seq_number, int maxT) const {
 
-  return new GHMM_Sequences(model_generate_sequences(c_model,seed,global_len,seq_number));
+  return new GHMM_Sequences(model_generate_sequences(c_model,seed,global_len,seq_number, maxT));
 }
 
 
@@ -379,7 +378,7 @@ void GHMM_DiscreteModel::XMLIO_finishedReading() {
   if (getAlphabet())
     alphabet_size = getAlphabet()->size();
   else
-    alphabet_size = states[0]->emission->weights.size();
+    alphabet_size = states[0]->demission->weights.size();
 
   c_model->N       = states.size();
   c_model->M       = alphabet_size;

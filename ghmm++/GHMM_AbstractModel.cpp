@@ -14,6 +14,7 @@
 #include "ghmm++/GHMM_State.h"
 #include "ghmm++/GHMM_Alphabet.h"
 
+#include <iostream>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -74,9 +75,6 @@ void GHMM_AbstractModel::setTransition(const string& start, const string& end, d
   setTransition(getStateIndex(start),getStateIndex(end),prob);
 }
 
-int GHMM_AbstractModel::getNumberOfTransitionMatrices() const {
-  return 0;
-}
 
 const int GHMM_AbstractModel::XMLIO_writeContent(XMLIO_Document& writer) {
   int total_bytes = 0;

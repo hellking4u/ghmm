@@ -10,6 +10,7 @@
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Document.h>
 #include "ghmm/matrix.h"
+#include "ghmm++/GHMM_Types.h"
 #include "ghmm++/GHMM_State.h"
 #include "ghmm++/GHMM_Transition.h"
 #include "ghmm++/GHMM_ContinuousModel.h"
@@ -18,6 +19,7 @@
 #include "ghmm++/GHMM_Toolkit.h"
 #include "ghmm++/GHMM_Alphabet.h"
 
+#include <iostream>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -29,7 +31,8 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, XMLIO_Attribu
   c_state           = NULL; 
   c_sstate          = NULL;
   reading           = GHMM_STATE_NONE;
-  emission          = NULL;
+  cemission          = NULL;
+  demission          = NULL;
   parent_model      = my_model;
   tag               = "state";
   xmlio_indent_type = XMLIO_INDENT_BOTH;
@@ -49,9 +52,10 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sstate* my_st
   index             = my_index;
   c_sstate          = my_state;
   c_state           = NULL;
-  c_sdstate           = NULL;
+  c_sdstate          = NULL;
   reading           = GHMM_STATE_NONE;
-  emission          = NULL;
+  cemission          = NULL;
+  demission          = NULL;
   parent_model      = my_model;
   tag               = "state";
   xmlio_indent_type = XMLIO_INDENT_BOTH;
@@ -68,7 +72,8 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, state* my_sta
   c_state           = my_state;
   c_sdstate         = NULL;
   reading           = GHMM_STATE_NONE;
-  emission          = NULL;
+  cemission          = NULL;
+  demission          = NULL;
   parent_model      = my_model;
   tag               = "state";
   xmlio_indent_type = XMLIO_INDENT_BOTH;
@@ -85,7 +90,8 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sdstate* my_s
   c_state           = NULL;
   c_sdstate         = my_state;
   reading           = GHMM_STATE_NONE;
-  emission          = NULL;
+  demission          = NULL;
+  cemission          = NULL;
   parent_model      = my_model;
   tag               = "state";
   xmlio_indent_type = XMLIO_INDENT_BOTH;
@@ -97,7 +103,8 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sdstate* my_s
 
 
 GHMM_State::~GHMM_State() {
-  SAFE_DELETE(emission);
+  SAFE_DELETE(cemission);
+  SAFE_DELETE(demission);
 }
 
 
@@ -109,16 +116,20 @@ const char* GHMM_State::toString() const {
 XMLIO_Element* GHMM_State::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
   
   if (tag == "initial") {
-    reading = GHMM_STATE_INITIAL;
-    
+    reading = GHMM_STATE_INITIAL;    
     return this;
   }
 
   if (tag == "emission") {
-    SAFE_DELETE(emission);
-    emission = new GHMM_Emission(this);
 
-    return emission;
+    if (getModelType() == GHMM_CONTINOUS) {
+      SAFE_DELETE(cemission);
+      return (cemission = new GHMM_CEmission(this));
+    }
+    if (getModelType() == GHMM_DISCRETE) {
+      SAFE_DELETE(demission);
+      return (demission = new GHMM_DEmission(this));
+    }
   }
 
   fprintf(stderr,"tag '%s' not recognized in state element\n",tag.c_str());
@@ -203,15 +214,16 @@ void GHMM_State::fillState(sstate* s) {
     exit(1);
   }
 
-  if (c_model->M != (int) emission->weights.size()) {
-    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) emission->weights.size());
+  
+  if (c_model->M != (int) cemission->weights.size()) {
+    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) cemission->weights.size());
     exit(1);
   }
 
   for (i = 0; (int) i < c_model->M; ++i) {
-    s->c[i]   = emission->weights[i];
-    s->mue[i] = emission->mue[i];
-    s->u[i]   = emission->variance[i];
+    s->c[i]   = cemission->weights[i];
+    s->mue[i] = cemission->mue[i];
+    s->u[i]   = cemission->variance[i];
   }
 
   s->fix = 0;
@@ -271,13 +283,13 @@ void GHMM_State::fillState(state* s) {
   s->out_states = out_edges.size();
   s->in_states  = in_edges.size();
 
-  if (c_model->M != (int) emission->weights.size()) {
-    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) emission->weights.size());
+  if (c_model->M != (int) demission->weights.size()) {
+    fprintf(stderr,"M == %d, but just %d weights found in GHMM_State.cpp\n",c_model->M,(int) demission->weights.size());
     exit(1);
   }
 
   for (i = 0; (int) i < c_model->M; ++i)
-    s->b[i] = emission->weights[i];
+    s->b[i] = demission->weights[i];
 
   s->fix = 0;
 }
@@ -288,7 +300,7 @@ void GHMM_State::fillState(sdstate* s) {
 }
 
 void GHMM_State::XMLIO_finishedReading() {
-  if (!emission) {
+  if (!demission && !cemission) {
     fprintf(stderr,"state with id='%s' lacks emission element.\n",id.c_str());
     exit(1);
   }
@@ -313,17 +325,18 @@ void GHMM_State::changeOutEdge(int matrix_index, int target, double prob) {
   
   int i;
   if (c_sstate) {
-    for (i = 0; i < c_sstate->out_states; ++i)
+    for (i = 0; i < c_sstate->out_states; ++i) {
       if (c_sstate->out_id[i] == target) {
 	c_sstate->out_a[matrix_index][i] = prob;
 	return;
       }
+    }
 
     /* create new state. */
     c_sstate->out_states += 1;
     c_sstate->out_id = (int*) realloc(c_sstate->out_id,sizeof(int) * c_sstate->out_states);
     c_sstate->out_id[c_sstate->out_states - 1] = target;
-    
+
     for (i = 0; i < parent_model->getNumberOfTransitionMatrices(); ++i) {
       c_sstate->out_a[i] = (double*) realloc(c_sstate->out_a[i],sizeof(double) * c_sstate->out_states);
       c_sstate->out_a[i][c_sstate->out_states - 1]  = 0;
@@ -507,10 +520,18 @@ const int GHMM_State::XMLIO_writeContent(XMLIO_Document& writer) {
     return result;
   total_bytes += result;
   
-  GHMM_Emission* my_emission = new GHMM_Emission(this);
-  result = writer.writeElement(my_emission);
-  SAFE_DELETE(my_emission);
-  
+  if (getModelType() == GHMM_CONTINOUS) {
+    GHMM_CEmission* my_emission = new GHMM_CEmission(this);
+    result = writer.writeElement(my_emission);
+    SAFE_DELETE(my_emission);
+  }
+
+  if (getModelType() == GHMM_DISCRETE) {
+    GHMM_DEmission* my_emission = new GHMM_DEmission(this);
+    result = writer.writeElement(my_emission);
+    SAFE_DELETE(my_emission);
+  }
+
   if (result < 0)
     return result;
   total_bytes += result;

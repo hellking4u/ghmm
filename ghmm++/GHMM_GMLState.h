@@ -46,6 +46,7 @@ class GHMM_GMLState: public GHMM_State {
 
   /** */
   string label;
+  // int    m_countme;
 
  protected:
 

@@ -26,9 +26,11 @@ extern "C" {
  */
 
 struct sequence_t {
-  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.      
+  /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
   int **seq;
+  /** matrix of state ids  */
+  int **states;
   /** array of sequence length */
   int *seq_len;
   /**  array of sequence labels */

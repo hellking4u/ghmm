@@ -25,6 +25,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   vector.c vector.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
+				  sdfoba.c sdfoba.h \
                   sviterbi.c sviterbi.h \
                   smodel.c smodel.h \
 		  sdmodel.c sdviterbi.c sdmodel.h ghmm.h \

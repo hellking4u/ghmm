@@ -16,7 +16,6 @@
 #include <ghmm/sdmodel.h>
 #include <xmlio/XMLIO_Element.h>
 #include <ghmm++/GHMM_Types.h>
-
 #include <ghmm++/begin_code.h>
 
 #ifdef HAVE_NAMESPACES
@@ -25,7 +24,8 @@ namespace std {
 
 class GHMM_State;
 class GHMM_ContinuousModel;
-class GHMM_Emission;
+class GHMM_CEmission;
+class GHMM_DEmission;
 class GHMM_AbstractModel;
 class GHMM_Transition;
 class GHMM_Alphabet;
@@ -36,7 +36,7 @@ class GHMM_State: public XMLIO_Element {
  public:
 
   /** */
-  enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL, GHMM_STATE_LABEL};
+  enum GHMM_StateReadingType {GHMM_STATE_NONE,GHMM_STATE_INITIAL, GHMM_STATE_LABEL, GHMM_STATE_COUNTME};
 
   /** */
   GHMM_State(GHMM_AbstractModel* my_model, int index, XMLIO_Attributes& attrs);
@@ -96,7 +96,8 @@ class GHMM_State: public XMLIO_Element {
   /** */
   string id;
   /** */
-  GHMM_Emission* emission;
+  GHMM_CEmission* cemission;
+  GHMM_DEmission* demission;
   /** */
   int index;
 
@@ -109,24 +110,24 @@ class GHMM_State: public XMLIO_Element {
   void removeOutEdge(int target);
 
   /** */
-  virtual void XMLIO_finishedReading();
+  void XMLIO_finishedReading();
   /** Collects all character data. */
-  virtual void XMLIO_getCharacters(const string& characters);
+  void XMLIO_getCharacters(const string& characters);
   /** Called by XMLIO_Document when a end tag is found. 
       This happens when a sub element has finished reading its
       content. By default this function does nothing. */
-  virtual void XMLIO_endTag(const string& tag);
+  void XMLIO_endTag(const string& tag);
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
-  virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
+  XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
   /** Returns the attributes of this element (XML Spec [40], [41]). 
       By default returns content of variable 'attributes'.*/
-  virtual XMLIO_Attributes& XMLIO_getAttributes();
+  XMLIO_Attributes& XMLIO_getAttributes();
   /** Writes the content (XML Spec[43]) of this element.
       You should use the public XMLIO_Document::write* functions.
       @return Returns the number of bytes written,
       but is negative when an error occured and 0 by default. */
-  virtual const int XMLIO_writeContent(XMLIO_Document& doc);
+  const int XMLIO_writeContent(XMLIO_Document& doc);
 
   /** */
   GHMM_StateReadingType reading;
