@@ -428,12 +428,17 @@ class EmissionSequence:
             self.setSymbol = ghmmwrapper.set_2d_arrayint
             self.cleanFunction = ghmmwrapper.free_sequence
             
-            if isinstance(sequenceInput, list):  
+            if isinstance(sequenceInput, list):  # from list
                 internalInput = map( self.emissionDomain.internal, sequenceInput)
                 (seq,l) = ghmmhelper.list2matrixint([internalInput])
                 self.cseq = ghmmwrapper.sequence_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
+                
+                # deactivating labels
+                self.cseq.state_labels = None
+                self.cseq.state_labels_len = None                
+                
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0]) 
                 
             elif isinstance(sequenceInput, str): # from file
@@ -767,6 +772,10 @@ def SequenceSetOpen(emissionDomain, fileName):
     for i in range(setNr):
         seq = seqPtr(structArray,i)
         sequenceSets.append(SequenceSet(emissionDomain, seq) )
+
+        # setting labels to NULL
+        sequenceSets[i].cseq.state_labels = None
+        sequenceSets[i].cseq.state_labels_len = None
        
     ghmmwrapper.freearray(dArr)    
     return  sequenceSets
@@ -1417,9 +1426,6 @@ class HMM:
             seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
             
             viterbiPath =  self.viterbiFunction(self.cmodel,seq,seq_len,log_p)
-
-            #viterbi_prob = get_arrayd( log_p, 0 )
-        
             onePath = []
             
             # for model types without possible silent states the length of the viterbi path is known
@@ -1529,7 +1535,6 @@ class HMM:
         assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
         
         ghmmwrapper.model_set_transition(self.cmodel, i, j, prob)
-        
 
     
     def getEmission(self, i):
@@ -1610,7 +1615,10 @@ class DiscreteEmissionHMM(HMM):
         self.getModelPtr = ghmmwrapper.get_model_ptr
         self.castModelPtr = ghmmwrapper.cast_model_ptr        
         self.distanceFunction = ghmmwrapper.model_prob_distance
-
+    
+    def __del__(self):
+        self.removeTiegroups()
+        DiscreteEmissionHMM.__del__(self)
         
     def __str__(self):
         hmm = self.cmodel
@@ -1743,7 +1751,6 @@ class DiscreteEmissionHMM(HMM):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         
         return ghmmhelper.arrayint2list(self.cmodel.tied_to, self.N)
-    
     
     
     def normalize(self):
@@ -2021,8 +2028,8 @@ class GaussianEmissionHMM(HMM):
 
         """
         seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) 
-        seqPtr.state_labels = None
-        seqPtr.state_labels_len = None
+        #seqPtr.state_labels = None
+        #seqPtr.state_labels_len = None
         return SequenceSet(self.emissionDomain,seqPtr)
         
 
@@ -2031,8 +2038,8 @@ class GaussianEmissionHMM(HMM):
             Returns a Sequence object.
         """
         seqPtr = self.samplingFunction(self.cmodel,0,T,1,0,-1) 
-        seqPtr.state_labels = None
-        seqPtr.state_labels_len = None
+        #seqPtr.state_labels = None
+        #seqPtr.state_labels_len = None
 
         return EmissionSequence(self.emissionDomain,seqPtr)
         
