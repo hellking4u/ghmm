@@ -153,6 +153,7 @@ The objects one has to deal with in HMM modelling are the following
 import ghmmwrapper
 import ghmmhelper
 import re
+from os import path
 
 ghmmwrapper.gsl_rng_init() #Init random number generator
 
@@ -799,53 +800,56 @@ class HMMFromMatricesFactory(HMMFactory):
             else:
                 raise GHMMError(type(distribution), "Not a valid distribution for Alphabet") 
         else:
-			
+            
             if isinstance(distribution,GaussianDistribution):
-				
-				cmodel = ghmmwrapper.smodel()
-				cmodel.N = len(A)
-				cmodel.M = 1 # Number of mixture componenent for emission distribution
-				cmodel.prior = -1 # Unused
-				cmodel.cos = 1  # number of transition classes in GHMM
-				states = ghmmwrapper.arraysstate(cmodel.N)
+                
+                cmodel = ghmmwrapper.smodel()
+                cmodel.N = len(A)
+                cmodel.M = 1 # Number of mixture componenent for emission distribution
+                cmodel.prior = -1 # Unused
+                cmodel.cos = 1  # number of transition classes in GHMM
+                states = ghmmwrapper.arraysstate(cmodel.N)
 
-				# XXX ? switching function ? XXX
-				# Switching functions and transition classes are handled
-				# elswhere
+                # XXX ? switching function ? XXX
+                # Switching functions and transition classes are handled
+                # elswhere
 
-				#initialize states
-				for i in range(cmodel.N):
-					state = ghmmwrapper.get_sstate_ptr(states,i)
-					state.pi = pi[i]
+                #initialize states
+                for i in range(cmodel.N):
 
-					# allocate arrays of emmission parameters
-					state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weights. Unused
-					(mu, sigma) = B[i]
-					state.mue = ghmmhelper.list2arrayd([mu]) #mu = mue in GHMM C-lib.
-					state.u = ghmmhelper.list2arrayd([sigma])
+                    print "  state " + str(i) + ":"
+                    
+                    state = ghmmwrapper.get_sstate_ptr(states,i)
+                    state.pi = pi[i]
 
-					#set out probabilities
-					trans = ghmmhelper.extract_out_probs([A[i]], cmodel.cos) # cos = 1
-					state.out_states = trans[0]
-					state.out_id = trans[1]
-					state.out_a = trans[2].array 
+                    # allocate arrays of emmission parameters
+                    state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weights. Unused
+                    (mu, sigma) = B[i]
+                    state.mue = ghmmhelper.list2arrayd([mu]) #mu = mue in GHMM C-lib.
+                    state.u = ghmmhelper.list2arrayd([sigma])
 
-					#set "in" probabilities
-					A_col_i = map( lambda x: x[i], A)
-					trans = ghmmhelper.extract_out_probs([A_col_i],cmodel.cos) # cos = 1
-					state.in_states = trans[0]
-					state.in_id = trans[1]
-					state.in_a = trans[2].array
-				
-					state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
+                    #set out probabilities
+                    trans = ghmmhelper.extract_out_probs([A[i]], cmodel.cos) # cos = 1
+                    state.out_states = trans[0]
+                    state.out_id = trans[1]
+                    state.out_a = trans[2].array 
 
-				#append states to model
-				cmodel.s = states
-				return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
+                    #set "in" probabilities
+                    A_col_i = map( lambda x: x[i], A)
+                    trans = ghmmhelper.extract_out_probs([A_col_i],cmodel.cos) # cos = 1
+                    state.in_states = trans[0]
+                    state.in_id = trans[1]
+                    state.in_a = trans[2].array
+                
+                    state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
+
+                #append states to model
+                cmodel.s = states
+                return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
 
             else:
                 raise GHMMError(type(distribution),
-								"Cannot construct model for this domain/distribution combination") 
+                                "Cannot construct model for this domain/distribution combination") 
 
 
 HMMFromMatrices = HMMFromMatricesFactory()
@@ -904,8 +908,6 @@ class HMM:
             Result: log( P[emissionSequences| model]) of type float
                     (numarray) vector of floats
             
-            Note: The implementation will not compute the full forward matrix (ToDo)
-
         """
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
             raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
@@ -1001,7 +1003,7 @@ class HMM:
         if not isinstance(emissionSequence,EmissionSequence):
             raise AttributeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
-        unused = ghmmwrapper.double_array(1) # Dummy return value for forwardAlphaFunction		
+        unused = ghmmwrapper.double_array(1) # Dummy return value for forwardAlphaFunction    	
      
         t = ghmmwrapper.get_arrayint(emissionSequence.cseq.seq_len,0)
         calpha = ghmmwrapper.matrix_d_alloc(t,self.N)
@@ -1206,6 +1208,22 @@ class HMM:
         """ """
         pass
     
+    def write(self,fileName):
+        """ Writes HMM to file 'fileName'.
+        
+        """
+        self.fileWriteFunction(fileName,self.cmodel)
+
+
+def HMMwriteList(fileName,hmmList):
+    if path.exists(fileName):
+        print "Warning: File " + str(fileName) + " already exists. " + str(len(hmmList)) + " new models will be appended."
+    for model in hmmList:
+        model.write(fileName)
+        
+    
+
+        
 
 class DiscreteEmissionHMM(HMM):
     
@@ -1218,6 +1236,7 @@ class DiscreteEmissionHMM(HMM):
         self.forwardAlphaFunction = ghmmwrapper.foba_forward      
         self.backwardBetaFunction = ghmmwrapper.foba_backward 
         self.getStatePtr = ghmmwrapper.get_stateptr 
+        self.fileWriteFunction = ghmmwrapper.call_model_print
       
     def __str__(self):
         hmm = self.cmodel
@@ -1304,6 +1323,7 @@ class GaussianEmissionHMM(HMM):
         self.forwardAlphaFunction = ghmmwrapper.sfoba_forward
         self.backwardBetaFunction = ghmmwrapper.sfoba_backward 
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
+        self.fileWriteFunction = ghmmwrapper.call_smodel_print
 
     def loglikelihood_sqd(self, sequenceSet):
         # XXX REMOVE soon XXX
