@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : ghmm/ghmm/sreestimate.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sreestimate.c
   created      : TIME: 17:11:14     DATE: Mon 15. November 1999
   $Id$
 
@@ -605,7 +605,7 @@ int sreestimate_baum_welch(smosqd_t *cs) {
 				 cs->sqd->seq_len, cs->sqd->seq, &log_p,
 				 cs->sqd->seq_w);
     /* to follow convergence of bw: uncomment next line */
-    /*    printf("\tBW Iter %d\t log(p) %.4f\n", n, log_p); */
+    printf("\tBW Iter %d\t log(p) %.4f\n", n, log_p); 
     if (valid == -1) { 
       str = mprintf(NULL, 0, "sreestimate_one_step false (%d.step)\n",n); 
       mes_prot(str);
