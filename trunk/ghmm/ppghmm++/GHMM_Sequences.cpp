@@ -7,7 +7,11 @@
 
 #include "ppghmm++/GHMM_Sequences.h"
 #include "ppghmm++/GHMM_Sequence.h"
-
+#ifdef HAVE_CSTDLIB
+#  include <cstdlib>
+#else
+#  include <stdlib.h>
+#endif
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
