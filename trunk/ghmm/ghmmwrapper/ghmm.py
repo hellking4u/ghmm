@@ -942,7 +942,7 @@ class HMMOpenFactory(HMMFactory):
         nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
         result = []
         for i in range(nrModels):
-            cmodel = ghmmwrapper.getPtr(models, i)
+            cmodel = getPtr(models, i)
             m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             result.append(m)
         return result
@@ -1263,7 +1263,7 @@ class HMM:
         
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-        print "HMM.__del__", self.cmodel
+        # print "HMM.__del__", self.cmodel
 
         self.freeFunction(self.cmodel)
         self.cmodel = None
@@ -1606,7 +1606,8 @@ class HMM:
             Defined in derived classes.
          """
         pass
-
+    
+    
     def toMatrices(self):
         "To be defined in derived classes."
         print "Root class function."
@@ -1691,24 +1692,27 @@ class DiscreteEmissionHMM(HMM):
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
         assert len(distributionParameters) == self.M
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+
         state = self.getStatePtr(self.cmodel.s,i)
 
         # updating silent flag if necessary        
         if sum(distributionParameters) > 0:
-            silentFlag =  1 
-        else:
             silentFlag =  0 
+        else:
+            silentFlag =  1 
         oldFlag = ghmmwrapper.get_arrayint(self.cmodel.silent,i)
-
+        
         if silentFlag != oldFlag:
             ghmmwrapper.set_arrayint(self.cmodel.silent,i,silentFlag)            
             # checking if model type changes
             if silentFlag == 0 and self.cmodel.model_type == 4:
-                s = sum(ghmmhelper.arrayint2list(self.cmodel.silent) )
+                s = sum(ghmmhelper.arrayint2list(self.cmodel.silent,self.N) )
                 if s == 0:
                     # model contains no more silent states
                     self.cmodel.model_type = 0
-            if silentFlag == 1 and  self.cmodel.model_type == 0:                  
+            elif silentFlag == 1 and  self.cmodel.model_type == 0:                  
                 # model contains one silent state
                 self.cmodel.model_type = 4
         
@@ -1814,7 +1818,13 @@ class DiscreteEmissionHMM(HMM):
         
         return ghmmhelper.arrayint2list(self.cmodel.tied_to, self.N)
     
+    def getSilentFlag(self,state):
+        pass
     
+    def setSilentFlag(self,state,value):
+        pass
+    
+
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
         
@@ -2082,22 +2092,22 @@ class GaussianEmissionHMM(HMM):
 
     
     # different function signatures require overloading of parent class methods    
-    def sample(self, seqNr ,T):
+    def sample(self, seqNr ,T,seed = 0):
         """ Sample emission sequences 
 
 
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,seqNr,0,-1) 
+        seqPtr = self.samplingFunction(self.cmodel,seed,T,seqNr,0,-1) 
         #seqPtr.state_labels = None
         #seqPtr.state_labels_len = None
         return SequenceSet(self.emissionDomain,seqPtr)
         
 
-    def sampleSingle(self, T):
+    def sampleSingle(self, T,seed=0):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
-        seqPtr = self.samplingFunction(self.cmodel,0,T,1,0,-1) 
+        seqPtr = self.samplingFunction(self.cmodel,seed,T,1,0,-1) 
         #seqPtr.state_labels = None
         #seqPtr.state_labels_len = None
 
@@ -2190,7 +2200,6 @@ class GaussianEmissionHMM(HMM):
                 for k in range(inState.in_states):
                     inId = ghmmwrapper.get_arrayint(inState.in_id,k)
 
-
     def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
         """ Reestimate the model parameters given the training_sequences.
             Perform at most nr_steps until the improvement in likelihood
@@ -2201,19 +2210,17 @@ class GaussianEmissionHMM(HMM):
             Result: Final loglikelihood
         """
         
-        if not isinstance(trainingSequences, SequenceSet):
-            raise TypeError
+        if not isinstance(trainingSequences, SequenceSet) and not isinstance(trainingSequences, EmissionSequence):
+            raise TypeError, "baumWelch requires a SequenceSet object."
         
-        if self.emissionDomain.CDataType == "double":
-            smosqd_cpt = self.baumWelchSetup(trainingSequences, nrSteps)
-            ghmmwrapper.sreestimate_baum_welch(smosqd_cpt)        
-            likelihood = ghmmwrapper.get_arrayd(smosqd_cpt.logp, 0)
-            ghmmwrapper.free_smosqd_t(smosqd_cpt)
-            smosqd_cpt = None
+        assert self.emissionDomain.CDataType == "double", "Continous sequence needed."
+        
+        self.baumWelchSetup(trainingSequences, nrSteps)
+        ghmmwrapper.sreestimate_baum_welch(self.BWcontext)        
+        likelihood = ghmmwrapper.get_arrayd(self.BWcontext.logp, 0)
             
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
-
         self.baumWelchDelete()
 
         return likelihood
@@ -2227,23 +2234,14 @@ class GaussianEmissionHMM(HMM):
 
             Return: a C-array of type smosqd_t
         """
-        baumWelchCData = ghmmwrapper.smosqd_t_array(1)
-
-        #smosqd_ptr = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, 0)
-        #smosqd_ptr.smo  = self.cmodel
-        #smosqd_ptr.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
-        #smosqd_ptr.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
-        #smosqd_ptr.eps  = 10e-6
-        #smosqd_ptr.max_iter = nrSteps
-        #return baumWelchCData
-        
-        self.BWcontext = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, 0)
+        self.BWcontext = ghmmwrapper.smosqd_t_array(1)
         self.BWcontext.smo  = self.cmodel
         self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
         self.BWcontext.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
         self.BWcontext.eps  = 10e-6
         self.BWcontext.max_iter = nrSteps
-        return baumWelchCData
+        
+        
     
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
         """ Compute one iteration of Baum Welch estimation.
@@ -2256,12 +2254,13 @@ class GaussianEmissionHMM(HMM):
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-
+        
+        print "* BaumWelchDelete"
+        
         ghmmwrapper.free_arrayd(self.BWcontext.logp)
         self.BWcontext.logp = None
         ghmmwrapper.free_smosqd_t(self.BWcontext)
         self.BWcontext = None
-        
     
         # XXX needs to be freed ?
         #self.BWcontext.smo  = self.cmodel
@@ -2304,6 +2303,10 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         
     def setEmission(self, i, comp,(mu, sigma, weight)):
         """ Set the emission distributionParameters for component 'comp' in state 'i'. """
+        
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        
         state = ghmmwrapper.get_sstate(self.cmodel, i)
         ghmmwrapper.set_arrayd(state.mue, comp, float(mu))  # GHMM C is german: mue instead of mu 
         ghmmwrapper.set_arrayd(state.u, comp, float(sigma))            
