@@ -4,20 +4,30 @@
 
 #include <string>
 #include <iostream>
-#include "sequences.h"
+#include <ghmm++/sequences.h>
+#include <ghmm++/sequences_document.h>
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
 
+/***********************************************************************************/
+
+int sequences_read_write(){
+  string filename="ghmm.xml";
+  sequences_document seq;
+  (void)seq.read_sequences(filename);
+  seq.write_sequences("/dev/stdout");
+}
+
 int sequenceReader_test()
 {
   string filename="ghmm.xml";
-  sequenceReader seq;
+  sequences_document seq;
   (void)seq.read_sequences(filename);
   cout<<"read "<<seq.size()<<" sequences"<<endl;
 
-  sequenceReader::const_iterator pos=seq.begin();
+  sequences_document::const_iterator pos=seq.begin();
   while(pos!=seq.end())
     {
       const sequences* these_sequences=*pos;
@@ -43,11 +53,7 @@ int sequenceReader_test()
 
 int main()
 {
-  return sequenceReader_test();
+  return sequences_read_write();
+  /*  return sequenceReader_test(); */
 
 }
-
-
-
-
-

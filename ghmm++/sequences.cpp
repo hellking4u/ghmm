@@ -1,7 +1,7 @@
 /*
   author: Achim Gaedke
   created: 26. June 2001
-  file: xmlio/examples/ghmm/sequences.cpp
+  file: ghmm/ghmm++/sequences.cpp
   $Id$
  */
 
@@ -23,6 +23,7 @@ using namespace std;
 
 double_sequence::double_sequence(double* seq_data, size_t length)
 {
+  tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back(seq_data[count]);
   label=NULL;
@@ -31,14 +32,16 @@ double_sequence::double_sequence(double* seq_data, size_t length)
 
 double_sequence::double_sequence(int* seq_data, size_t length)
 {
+  tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back(seq_data[count]);
   label=NULL;
   id="";
 }
 
-double_sequence::double_sequence(const string& tag, XMLIO_Attributes &attributes)
+double_sequence::double_sequence(const string& name, XMLIO_Attributes &attributes)
 {
+  tag=name;
   XMLIO_Attributes::iterator id_key=attributes.find("id");
   if (id_key!=attributes.end())
     {
@@ -72,6 +75,30 @@ XMLIO_Element* double_sequence::XMLIO_startTag(const string& tag, XMLIO_Attribut
     }
   return NULL;
 }
+
+
+const XMLIO_Attributes&
+double_sequence::XMLIO_getAttributes () const{
+  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+  attrs.clear();
+  if (!id.empty())
+    attrs["id"]=id;
+  return attributes;
+}
+
+const int double_sequence::XMLIO_writeContent (XMLIO_Document& doc) const
+{
+  int result=0;
+  int tmp_result;
+  if (label!=NULL) {
+    tmp_result=doc.writeElement(*label);
+    if (tmp_result<0) return tmp_result;
+  }
+  tmp_result=XMLIO_ArrayElement<double>::XMLIO_writeContent(doc);
+  if (tmp_result<0) return tmp_result;
+  return result+tmp_result;
+}
+
 
 double* double_sequence::create_double_array() const
 {
@@ -129,6 +156,7 @@ void double_sequence::print() const
 
 int_sequence::int_sequence(int* seq_data, size_t length)
 {
+  tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back(seq_data[count]);
   label=NULL;
@@ -137,14 +165,16 @@ int_sequence::int_sequence(int* seq_data, size_t length)
 
 int_sequence::int_sequence(double* seq_data, size_t length)
 {
+  tag="sequence";
   for(size_t count=0; count<length; count++)
     push_back((int)floor(seq_data[count]));
   label=NULL;
   id="";
 }
 
-int_sequence::int_sequence(const string& tag, XMLIO_Attributes &attributes)
+int_sequence::int_sequence(const string& name, XMLIO_Attributes &attributes)
 {
+  tag=name;
   XMLIO_Attributes::iterator id_key=attributes.find("id");
   if (id_key!=attributes.end())
     {
@@ -178,6 +208,28 @@ XMLIO_Element* int_sequence::XMLIO_startTag(const string& tag, XMLIO_Attributes 
       return NULL;
     }
   return NULL;
+}
+
+const XMLIO_Attributes&
+int_sequence::XMLIO_getAttributes () const{
+  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+  attrs.clear();
+  if (!id.empty())
+    attrs["id"]=id;
+  return attributes;
+}
+
+const int int_sequence::XMLIO_writeContent (XMLIO_Document& doc) const
+{
+  int result=0;
+  int tmp_result;
+  if (label!=NULL) {
+    tmp_result=doc.writeElement(*label);
+    if (tmp_result<0) return tmp_result;
+  }
+  tmp_result=XMLIO_ArrayElement<int>::XMLIO_writeContent(doc);
+  if (tmp_result<0) return tmp_result;
+  return result+tmp_result;
 }
 
 int* int_sequence::create_int_array() const
@@ -236,8 +288,8 @@ void int_sequence::print() const
 /***********************************************************************************/
 
 
-sequences_DiscretePD::sequences_DiscretePD(int** data, double* weight_data, size_t length, size_t number)
-{
+sequences_DiscretePD::sequences_DiscretePD(int** data, double* weight_data, size_t length, size_t number) {
+  tag="DiscretePD";
   type="int";
   default_weight=1.0;
   for (size_t sequence_pos=0;sequence_pos<number;sequence_pos++)
@@ -250,8 +302,8 @@ sequences_DiscretePD::sequences_DiscretePD(int** data, double* weight_data, size
     }
 }
 
-sequences_DiscretePD::sequences_DiscretePD(double** data, double* weight_data, size_t length, size_t number)
-{
+sequences_DiscretePD::sequences_DiscretePD(double** data, double* weight_data, size_t length, size_t number) {
+  tag="DiscretePD";
   type="double";
   default_weight=1.0;
   for (size_t sequence_pos=0;sequence_pos<number;sequence_pos++)
@@ -264,8 +316,8 @@ sequences_DiscretePD::sequences_DiscretePD(double** data, double* weight_data, s
     }
 }
 
-sequences_DiscretePD::sequences_DiscretePD(sequence_t* seq)
-{
+sequences_DiscretePD::sequences_DiscretePD(sequence_t* seq) {
+  tag="DiscretePD";
   if (seq==NULL) return;
   type="int";
   default_weight=1.0;
@@ -280,8 +332,8 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_t* seq)
     }
 }
 
-sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq)
-{
+sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq) {
+  tag="DiscretePD";
   if (seq==NULL) return;
   type="double";
   default_weight=1.0;
@@ -297,9 +349,8 @@ sequences_DiscretePD::sequences_DiscretePD(sequence_d_t* seq)
 }
 
 
-
-sequences_DiscretePD::sequences_DiscretePD(XMLIO_Attributes& attributes, const string& sequence_type)
-{
+sequences_DiscretePD::sequences_DiscretePD (XMLIO_Attributes& attributes, const string& sequence_type) {
+  tag="DiscretePD";
   type=sequence_type;
   XMLIO_Attributes::iterator default_weight_key=attributes.find("default_weight");
   if (default_weight_key!=attributes.end())
@@ -334,13 +385,13 @@ sequences_DiscretePD::~sequences_DiscretePD()
 void sequences_DiscretePD::XMLIO_finishedReading()
 {}
 
-XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Attributes &attributes)
+XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& name, XMLIO_Attributes &attributes)
 {
-  if (tag=="sequence")
+  if (name=="sequence")
     {
       if (type=="int")
 	{
-	  int_sequence* new_sequence=new int_sequence(tag,attributes);
+	  int_sequence* new_sequence=new int_sequence(name,attributes);
 	  int_sequence_vector.push_back(new_sequence);
 	  weight_vector.push_back(actual_weight);
 	  actual_weight=default_weight;
@@ -348,7 +399,7 @@ XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Att
 	}
       else if (type=="double")
 	{
-	  double_sequence* new_sequence=new double_sequence(tag,attributes);
+	  double_sequence* new_sequence=new double_sequence(name,attributes);
 	  double_sequence_vector.push_back(new_sequence);
 	  weight_vector.push_back(actual_weight);
 	  actual_weight=default_weight;
@@ -356,13 +407,13 @@ XMLIO_Element* sequences_DiscretePD::XMLIO_startTag(const string& tag, XMLIO_Att
 	}
       else
 	{
-	  cout<<"Do not know what to do with "<<tag<<" of type "<<type<<endl;
+	  cout<<"Do not know what to do with "<<name<<" of type "<<type<<endl;
 	  return NULL;
 	}      
     }
   else
     {
-      cout<<"Do not know what to do with "<<tag<<endl;
+      cout<<"Do not know what to do with "<<name<<endl;
       return NULL;
     }
 }
@@ -389,6 +440,68 @@ void sequences_DiscretePD::XMLIO_getCharacters(const string& characters)
       cout<<"weight is not a float: "<<characters<<endl;
       actual_weight=default_weight;
     }
+}
+
+const int sequences_DiscretePD::XMLIO_writeContent (XMLIO_Document& doc) const {
+  int result = doc.writeEndl();
+  if (result<0) return result;
+  /* distinguish between int and double sequences */
+  if (type=="int") {
+      vector<double>::const_iterator weight_pos=weight_vector.begin();
+      for (vector<int_sequence*>::const_iterator pos=int_sequence_vector.begin();
+	   pos != int_sequence_vector.end();
+	   ++pos)
+	{
+	  int tmp_result;
+	  if (weight_pos != weight_vector.end())
+	    {
+	      tmp_result=doc.writef("%f ",*weight_pos);
+	      if (tmp_result<0) return tmp_result;
+	      result+=tmp_result;
+	      ++weight_pos;
+	    }
+	  tmp_result=doc.writeElement(**pos);
+	  if (tmp_result<0) return tmp_result;
+	  result+=tmp_result+1;
+	  tmp_result=doc.writeEndl();
+	  if (tmp_result<0) return tmp_result;
+	}
+      return result;
+  }
+  if (type=="double") {
+      vector<double>::const_iterator weight_pos=weight_vector.begin();
+      for (vector<double_sequence*>::const_iterator pos=double_sequence_vector.begin();
+	   pos != double_sequence_vector.end();
+	   ++pos)
+	{
+	  int tmp_result;
+	  if (weight_pos != weight_vector.end())
+	    {
+	      tmp_result=doc.writef("%f ",*weight_pos);
+	      if (tmp_result<0) return tmp_result;
+	      result+=tmp_result;
+	      ++weight_pos;
+	    }
+	  tmp_result=doc.writeElement(**pos);
+	  if (tmp_result<0) return tmp_result;
+	  result+=tmp_result+1;
+	  tmp_result=doc.writeEndl();
+	  if (tmp_result<0) return tmp_result;
+	}
+      return result;
+  }
+}
+
+
+const XMLIO_Attributes& sequences_DiscretePD::XMLIO_getAttributes () const {
+  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+  attrs.clear();
+  if (default_weight!=0) {
+    strstream my_stream;
+    my_stream<<default_weight<<ends;
+    attrs["default_weight"]=my_stream.str();
+  }
+  return attributes;
 }
 
 sequence_t* sequences_DiscretePD::create_sequence_t() const
@@ -475,35 +588,42 @@ void sequences_DiscretePD::print() const
 
 sequences::sequences()
 {
+  tag="sequences";
+  type="";
   sequence_array=NULL;
 }
 
 sequences::sequences(int** data, double* weights, size_t length, size_t number)
 {
+  tag="sequences";
   type="int";
   sequence_array=new sequences_DiscretePD(data,weights,length,number); 
 }
 
 sequences::sequences(double** data, double* weights, size_t length, size_t number)
 {
+  tag="sequences";
   type="double";
   sequence_array=new sequences_DiscretePD(data,weights,length,number);
 }
 
 sequences::sequences(sequence_t* seq)
 {
+  tag="sequences";
   type="int";
   sequence_array=new sequences_DiscretePD(seq);
 }
 
 sequences::sequences(sequence_d_t* seq)
 {
+  tag="sequences";
   type="double";
   sequence_array=new sequences_DiscretePD(seq);  
 }
 
-sequences::sequences(const string& tag, XMLIO_Attributes& attributes)
+sequences::sequences(const string& name, XMLIO_Attributes& attributes)
 {
+  tag=name;
   sequence_array=NULL;
   XMLIO_Attributes::iterator type_key=attributes.find("type");
   if (type_key!=attributes.end())
@@ -582,46 +702,32 @@ XMLIO_Element* sequences::XMLIO_startTag(const string& tag, XMLIO_Attributes &at
 void sequences::XMLIO_endTag(const string& tag)
 {}
 
-/***********************************************************************************/
-
-sequenceReader::sequenceReader()
-{
-  next_sequence_array=NULL;
+const XMLIO_Attributes&
+sequences::XMLIO_getAttributes () const{
+  XMLIO_Attributes& attrs=(XMLIO_Attributes&)attributes;
+  attrs.clear();
+  if (!type.empty())
+    attrs["type"]=type;
+  if (!coding.empty())
+    attrs["coding"]=coding;
+  return attributes;
 }
 
-sequenceReader::~sequenceReader()
-{
-  SAFE_DELETE(next_sequence_array);
-  while (!empty())
-    {
-      SAFE_DELETE(front());
-      pop_front();
-    }
+bool
+sequences::XMLIO_isEmpty () const{
+  return false;
 }
 
-XMLIO_Element* sequenceReader::XMLIO_startTag(const string& tag, XMLIO_Attributes& attributes) {
-  if (tag == "sequences") {
-    next_sequence_array=new sequences(tag,attributes);
-    return next_sequence_array;
+const int
+sequences::XMLIO_writeContent (XMLIO_Document& doc) const{
+  if (sequence_array!=NULL) {
+    doc.writeEndl();
+    return doc.writeElement(*sequence_array);
+    doc.writeEndl();
   }
-  return NULL;
-}
-
-void sequenceReader::XMLIO_endTag(const string& tag)
-{
-  if (tag=="sequences" && next_sequence_array!=NULL)
-    {
-      push_back(next_sequence_array);
-      next_sequence_array=NULL;
-    }
-}
-
-size_t sequenceReader::read_sequences(const string& filename)
-{
-  open(filename,"r");
-  readDocument();
-  close();
-  return 0;
+  else {
+    return doc.writeComment("no sequences");
+  }
 }
 
 
