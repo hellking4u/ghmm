@@ -104,7 +104,10 @@ public:
   /** */
   int getNumberOfTransitionMatrices() const;
 
-   /** */
+  /** */
+  model *create_cmodel(int kclass);
+
+  /** */
   void XMLIO_finishedReading();
   /** Called by GHMM_Document when a start tag is received. Tag and 
       attributes are passed to this function. */
