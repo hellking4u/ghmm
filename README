@@ -33,6 +33,7 @@ So allocate your number by appending it to the following list:
    it will be compiled with --enable-experimental
 1: achim (xml)
 2: achim (cleanup and compartibility)
+3: bernd wichern (sviterbi implementation)
 
 If this code is working, but not tested by everybody, use
 
