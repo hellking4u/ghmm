@@ -13,9 +13,9 @@
 #include <list>
 #include <iostream>
 #include <xmlio/XMLIO_Definitions.h>
+#include <xmlio/XMLIO_Document.h>
 #include <xmlio/XMLIO_Element.h>
 #include <xmlio/XMLIO_StringElement.h>
-#include <xmlio/XMLIO_ObjectReader.h>
 #include <xmlio/XMLIO_ArrayElement.h>
 #include <ghmm/sequence.h>
 
@@ -251,7 +251,7 @@ namespace std {
 
   /**
    */
-  class sequenceReader: public XMLIO_ObjectReader, public list<sequences*>
+  class sequenceReader: public XMLIO_Document, public list<sequences*>
     {
     public:
       /**

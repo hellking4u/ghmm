@@ -10,7 +10,7 @@
 #endif
 
 #include <cstdio>
-#include <xmlio/XMLIO_ObjectReader.h>
+#include <xmlio/XMLIO_Document.h>
 #include <ghmm++/ghmm.h>
 
 #ifdef HAVE_NAMESPACES
