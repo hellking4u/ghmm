@@ -199,9 +199,9 @@ static int sreestimate_precompute_b(smodel *smo, double *O, int T, double ***b){
 static int sreestimate_setlambda(local_store_t *r, smodel *smo) {
 # define CUR_PROC "sreestimate_setlambda"
   int res = -1;
-  int i, j, m, l, j_id, osc;
+  int i, j, m, l, j_id, osc,fix_flag;
   double pi_factor, a_factor_i = 0.0, c_factor_i = 0.0, u_im, mue_im, 
-    mue_left, mue_right, A, B, Atil, Btil; /* Q; */
+    mue_left, mue_right, A, B, Atil, Btil, fix_w,unfix_w; /* Q; */
   int a_num_pos, a_denom_pos, c_denom_pos, c_num_pos;
   char *str;
 
@@ -302,103 +302,122 @@ static int sreestimate_setlambda(local_store_t *r, smodel *smo) {
       c_factor_i = 1/r->c_denom[i];
     
     c_num_pos = 0;
+    fix_w = 1.0;
+    unfix_w = 0.0;
+    fix_flag = 0;
     for (m = 0; m < smo->M; m++) {
 
+       /* if fixed continue to next component */
+       if (smo->s[i].mixture_fix[m] == 1) {
+           //printf("state %d, component %d is fixed !\n",i,m);
+           fix_w = fix_w - smo->s[i].c[m];
+           fix_flag = 1; /* we have to normalize weights -> fix flag is set to one */
+           continue;
+       }    
+        
       /* TEST: denom. < numerator */
       if ((r->c_denom[i] - r->c_num[i][m]) < 0.0) { /* < -EPS_PREC ? */
-#if MCI
-	mes(MESCONTR,"c[%d][%d]: numerator > denominator! (%.4f > %.4f)!\n", 
-	    i, m, r->c_num[i][m], r->c_denom[i]);
-#endif
-	smo->s[i].c[m] = 1.0;
+        #if MCI
+        	mes(MESCONTR,"c[%d][%d]: numerator > denominator! (%.4f > %.4f)!\n",  i, m, r->c_num[i][m], r->c_denom[i]);
+        #endif
+ 	    smo->s[i].c[m] = 1.0;
       }
       else if (c_denom_pos) 
-	/* c_denom == 0: no change in c_im (?) */
-	smo->s[i].c[m] = r->c_num[i][m] * c_factor_i;
+	    /* c_denom == 0: no change in c_im (?) */
+	    smo->s[i].c[m] = r->c_num[i][m] * c_factor_i;
       
       if (r->c_num[i][m] > 0.0)
-	c_num_pos = 1;
+	    c_num_pos = 1;
+      
+      unfix_w = unfix_w + smo->s[i].c[m];
       
       if ( fabs(r->mue_u_denom[i][m]) <= DBL_MIN) /* < EPS_PREC ? */
-#if MCI
-	mes(MESCONTR,"mue[%d][%d]: denominator == 0.0!\n", i, m);
-#else
-      ;
-#endif
+        #if MCI
+	      mes(MESCONTR,"mue[%d][%d]: denominator == 0.0!\n", i, m);
+        #else
+          ;
+        #endif
       else { 
-	/* set mue_im */
-	smo->s[i].mue[m] = r->mue_num[i][m] / r->mue_u_denom[i][m];		
+	  /* set mue_im */
+	    smo->s[i].mue[m] = r->mue_num[i][m] / r->mue_u_denom[i][m];		
       }
       
       /* TEST: u_denom == 0.0 ? */
       if ( fabs(r->mue_u_denom[i][m]) <= DBL_MIN) { /* < EPS_PREC ? */
-#if MCI
-	mes(MESCONTR,"u[%d][%d]: denominator == 0.0!\n", i, m);
-#endif
-	;
-	/* smo->s[i].u[m]  unchanged! */
+        #if MCI
+	      mes(MESCONTR,"u[%d][%d]: denominator == 0.0!\n", i, m);
+        #endif
+	    ;
+	    /* smo->s[i].u[m]  unchanged! */
       }
       else {        	
-	u_im = r->u_num[i][m] / r->mue_u_denom[i][m];		
-	if (u_im <= EPS_U)
-	  u_im = (double)EPS_U;
-	smo->s[i].u[m] = u_im;
+	    u_im = r->u_num[i][m] / r->mue_u_denom[i][m];		
+	    if (u_im <= EPS_U)
+	      u_im = (double)EPS_U;
+	    smo->s[i].u[m] = u_im;
       }
       
       /* modification for truncated normal density:
-	 1-dim optimization for mue, calculate u directly 
-	 note: if denom == 0 --> mue and u not recalculated above */     
+	   1-dim optimization for mue, calculate u directly 
+	   note: if denom == 0 --> mue and u not recalculated above */     
       if (smo->density == normal_pos && fabs(r->mue_u_denom[i][m]) > DBL_MIN) {
-	A = smo->s[i].mue[m];
-	B = r->sum_gt_otot[i][m] / r->mue_u_denom[i][m]; 
+	    A = smo->s[i].mue[m];
+	    B = r->sum_gt_otot[i][m] / r->mue_u_denom[i][m]; 
 
-	/* A^2 ~ B -> search max at border of EPS_U */
-	if (B - A*A < EPS_U) {
-	  mue_left = -EPS_NDT; /* attention: only works if  EPS_NDT > EPS_U ! */
-	  mue_right = A;
+	   /* A^2 ~ B -> search max at border of EPS_U */
+	    if (B - A*A < EPS_U) {
+	      mue_left = -EPS_NDT; /* attention: only works if  EPS_NDT > EPS_U ! */
+	      mue_right = A;
 
-	  if ((pmue_umin(mue_left, A, B, EPS_NDT) > 0.0 && 
-	       pmue_umin(mue_right, A, B, EPS_NDT) > 0.0) ||
-	      (pmue_umin(mue_left, A, B, EPS_NDT) < 0.0 && 
-	       pmue_umin(mue_right, A, B, EPS_NDT) < 0.0))
-	    fprintf(stderr,"umin:fl:%.3f\tfr:%.3f\t; left %.3f\t right %3f\t A %.3f\t B %.3f\n",
-		    pmue_umin(mue_left, A, B, EPS_NDT),
-		    pmue_umin(mue_right, A, B, EPS_NDT),
-		    mue_left, mue_right, A, B);
+          if ((pmue_umin(mue_left, A, B, EPS_NDT) > 0.0 && 
+	         pmue_umin(mue_right, A, B, EPS_NDT) > 0.0) ||
+	        (pmue_umin(mue_left, A, B, EPS_NDT) < 0.0 && 
+	         pmue_umin(mue_right, A, B, EPS_NDT) < 0.0))
+	          fprintf(stderr,"umin:fl:%.3f\tfr:%.3f\t; left %.3f\t right %3f\t A %.3f\t B %.3f\n",
+		      pmue_umin(mue_left, A, B, EPS_NDT),
+		      pmue_umin(mue_right, A, B, EPS_NDT),
+		      mue_left, mue_right, A, B);
 	  
-	  mue_im = zbrent_AB(pmue_umin, mue_left, mue_right, 
-			     ACC, A, B, EPS_NDT);
-	  u_im = EPS_U;
-	}
-	else {
-	  Atil = A + EPS_NDT;
-	  Btil = B + EPS_NDT*A;
-	  mue_left = (-C_PHI * sqrt(Btil + EPS_NDT*Atil 
+  	      mue_im = zbrent_AB(pmue_umin, mue_left, mue_right, ACC, A, B, EPS_NDT);
+          u_im = EPS_U;
+	    }
+	    else {
+	      Atil = A + EPS_NDT;
+	      Btil = B + EPS_NDT*A;
+	      mue_left = (-C_PHI * sqrt(Btil + EPS_NDT*Atil 
 				    + CC_PHI*m_sqr(Atil)/4.0) 
-		      - CC_PHI*Atil/2.0 - EPS_NDT)*0.99;
-	  mue_right = A;
-	  if (A < Btil*randvar_normal_density_pos(-EPS_NDT,0,Btil)) 
-	    mue_right = m_min(EPS_NDT,mue_right);
-	  else 
-	    mue_left = m_max(-EPS_NDT, mue_left);
-	  mue_im = zbrent_AB(pmue_interpol, 
-			     mue_left, mue_right, ACC, A, B, EPS_NDT);	 
-	  u_im = Btil - mue_im*Atil;
-	}
-	/* set modified values of mue and u */
-	smo->s[i].mue[m] = mue_im;
-	if (u_im < (double)EPS_U)
-	  u_im = (double)EPS_U;
-	smo->s[i].u[m] = u_im;
+		        - CC_PHI*Atil/2.0 - EPS_NDT)*0.99;
+	      mue_right = A;
+	      if (A < Btil*randvar_normal_density_pos(-EPS_NDT,0,Btil)) 
+	        mue_right = m_min(EPS_NDT,mue_right);
+	      else 
+	        mue_left = m_max(-EPS_NDT, mue_left);
+	      mue_im = zbrent_AB(pmue_interpol, mue_left, mue_right, ACC, A, B, EPS_NDT);	 
+          u_im = Btil - mue_im*Atil;
+	    }
+	    /* set modified values of mue and u */
+	    smo->s[i].mue[m] = mue_im;
+	    if (u_im < (double)EPS_U)
+	      u_im = (double)EPS_U;
+	    smo->s[i].u[m] = u_im;
       } /* end modifikation truncated density */
       
+    
     } /* for (m ..) */
     
-#if MCI
-    if (!c_num_pos)
-      mes(MESCONTR,"all numerators c[%d][m] == 0 (denominator=%.4f)!\n", 
-	  i, r->c_denom[i]);
-#endif
+    /* adjusting weights for fixed mixture components if necessary  */
+    if(fix_flag == 1){ 
+      for (m = 0; m < smo->M; m++) {
+         if (smo->s[i].mixture_fix[m] == 0) {
+           smo->s[i].c[m] = (smo->s[i].c[m] * fix_w) / unfix_w;
+         }  
+      }
+    }    
+        
+    #if MCI
+      if (!c_num_pos)
+        mes(MESCONTR,"all numerators c[%d][m] == 0 (denominator=%.4f)!\n", i, r->c_denom[i]);
+    #endif
     
   } /* for (i = 0 .. < smo->N)  */
   res = 0;
@@ -505,7 +524,10 @@ int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
 	/* loop over no of density functions for C-numer., mue and u */
 	for (m = 0; m < smo->M; m++) {	  
 	  /*  c_im * b_im  */
-	  f_im = b[t][i][m];
+	  
+        
+        
+      f_im = b[t][i][m];
 	  gamma = seq_w[k] * sum_alpha_a_ji * f_im * beta[t][i];
 	  gamma_ct = gamma * c_t; /* c[t] = 1/scale[t] */
 	  

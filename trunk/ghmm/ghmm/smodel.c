@@ -31,9 +31,18 @@ static int smodel_state_alloc(sstate *state,
 			      int cos) {
 # define CUR_PROC "smodel_state_alloc"
   int res = -1;
+  int i;
   if(!m_calloc(state->c, M)) {mes_proc(); goto STOP;}
   if(!m_calloc(state->mue, M)) {mes_proc(); goto STOP;}
   if(!m_calloc(state->u, M)) {mes_proc(); goto STOP;}
+  
+  if(!m_calloc(state->mixture_fix, M)) {mes_proc(); goto STOP;}
+  
+  /* mixture component fixing deactivated by default */
+  for(i=0;i<M;i++){
+      state->mixture_fix[i] = 0;
+  }    
+  
   if (out_states > 0) {
     if(!m_calloc(state->out_id, out_states)) {mes_proc(); goto STOP;}
     state->out_a = matrix_d_alloc(cos, out_states);
@@ -432,6 +441,9 @@ int smodel_free(smodel **smo) {
     m_free((*smo)->s[i].c);
     m_free((*smo)->s[i].mue);
     m_free((*smo)->s[i].u);
+
+    m_free((*smo)->s[i].mixture_fix);
+    
   }
   m_free((*smo)->s);
   m_free(*smo);
@@ -459,6 +471,7 @@ smodel *smodel_copy(const smodel *smo) {
     if(!m_calloc(sm2->s[i].c, smo->M)) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].mue, smo->M)) {mes_proc(); goto STOP;}
     if(!m_calloc(sm2->s[i].u, smo->M)) {mes_proc(); goto STOP;}
+    if(!m_calloc(sm2->s[i].mixture_fix, smo->M)) {mes_proc(); goto STOP;}
     /* copy values */     
     for (j = 0; j < nachf; j++) {
       for (k = 0; k < smo->cos; k++)
@@ -474,6 +487,7 @@ smodel *smodel_copy(const smodel *smo) {
       sm2->s[i].c[m] = smo->s[i].c[m];
       sm2->s[i].mue[m] = smo->s[i].mue[m];
       sm2->s[i].u[m] = smo->s[i].u[m];
+      sm2->s[i].mixture_fix[m] = smo->s[i].mixture_fix[m];
     }
     sm2->s[i].pi = smo->s[i].pi;
     sm2->s[i].fix = smo->s[i].fix;

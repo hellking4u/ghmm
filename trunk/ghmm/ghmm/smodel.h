@@ -70,6 +70,10 @@ struct sstate {
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
   int fix;
+
+  /**  array of flags for fixing mixture components in the reestimation
+        fix[i] = 1 means mu and sigma of component i are fixed.  **/
+  int *mixture_fix;
 };
 typedef struct sstate sstate;
 
