@@ -13,6 +13,7 @@
 #include "ghmm/foba.h"
 #include "ghmm/matrix.h"
 #include "ghmm/model.h"
+#include "ghmm/vector.h"
 
 #include <xmlio/XMLIO_Definitions.h>
 #include <xmlio/XMLIO_Document.h>
@@ -489,10 +490,9 @@ GHMM_IntVector* GHMM_SWDiscreteModel::viterbi(GHMM_Sequences* sequences, int ind
     log_p = &my_logp;
 
   int len = sequences->getLength(index);
-
-  return new GHMM_IntVector(sdviterbi(c_model,sequences->getIntSequence(index),len,log_p),len);
+  int *seq = sdviterbi(c_model,sequences->getIntSequence(index),len,log_p);
+  return new GHMM_IntVector(seq,len);
 }
-
 
 
 void GHMM_SWDiscreteModel::XMLIO_finishedReading() {
