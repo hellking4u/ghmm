@@ -1,7 +1,7 @@
 SHMM = {
 	M = 1;
 	N = 12;
-	cos = 6;
+	cos = 1;
 	density = 0; # 0 = normal, 1 = normal_pos
 	prior = -1.000;
 	Pi = vector {
@@ -71,7 +71,7 @@ SHMM = {
 SHMM = {
 	M = 1;
 	N = 12;
-	cos = 6;
+	cos = 1;
 	density = 0; # 0 = normal, 1 = normal_pos
 	prior = -1.000;
 	Pi = vector {
@@ -141,7 +141,7 @@ SHMM = {
 SHMM = {
 	M = 1;
 	N = 12;
-	cos = 6;
+	cos = 1;
 	density = 0; # 0 = normal, 1 = normal_pos
 	prior = -1.000;
 	Pi = vector {
@@ -211,7 +211,7 @@ SHMM = {
 SHMM = {
 	M = 1;
 	N = 12;
-	cos = 6;
+	cos = 1;
 	density = 0; # 0 = normal, 1 = normal_pos
 	prior = -1.000;
 	Pi = vector {
@@ -281,7 +281,7 @@ SHMM = {
 SHMM = {
 	M = 1;
 	N = 12;
-	cos = 6;
+	cos = 1;
 	density = 0; # 0 = normal, 1 = normal_pos
 	prior = -1.000;
 	Pi = vector {
