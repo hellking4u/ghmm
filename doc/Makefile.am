@@ -20,7 +20,7 @@ DOC              = docTEX
 
 #eine sammelnde Doku-Datei mit Includes auf die .h-Files
 DOCXX_FILES      = docu.dxx
-BUILT_SOURCES   += $(DOCXX_FILES)
+BUILT_SOURCES   = $(DOCXX_FILES)
 
 # html installation
 htmldir   = $(prefix)/share/html
@@ -53,8 +53,8 @@ DOCXX_LATEX_OPTS = -t -eo a4paper
 DOCXX_HTML_OPTS  = #-H
 
 #for make (dist)clean
-CLEANFILES += docTEX/$(APP).* -r docHTML
-EXTRA_DIST += docTEX/docxx.sty
+CLEANFILES = docTEX/$(APP).* -r docHTML
+EXTRA_DIST = docTEX/docxx.sty
 
 $(HTML)/index.html: $(DOCXX_FILES)
 	test -z "$(DOCXX)" || $(DOCXX) $(DOCXX_OPTS) $(DOCXX_HTML_OPTS) -d $(HTML) $(DOCXX_FILES)
