@@ -7,8 +7,7 @@
  * __copyright__
  */
 
-#include "ppghmm++/GHMM_DiscreteModel.h"
-#include "ppghmm++/GHMM_Document.h"
+#include "ghmm++/GHMM.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -22,6 +21,11 @@ int main() {
   doc.close();
 
   //  GHMM_DiscreteModel* model = doc.getDiscreteModel();
+
+#ifdef WIN32
+  printf("\nPress ENTER\n");
+  fgetc(stdin);
+#endif
 
   return 0;
 }

@@ -5,19 +5,13 @@
   $Id$
 *******************************************************************************/
 
-#include "ghmm/rng.h"
-#include "ghmm++/GHMM_DiscreteModel.h"
-#include "ghmm++/GHMM_Sequences.h"
-#include "ghmm++/GHMM_IntVector.h"
-#include "ghmm++/GHMM_DoubleVector.h"
-#include "ghmm++/GHMM_DoubleMatrix.h"
+#include "ghmm++/GHMM.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
 
 /* Simple model with one state and 2 symbols, like a coin toss */
-
 int single_state_coin_toss() {
   GHMM_Sequences* my_output = NULL;
 
@@ -36,7 +30,7 @@ int single_state_coin_toss() {
   my_model.setTransition(0,0,1.0);
 
   if (my_model.check() == -1)
-    exit(1);
+    return 1;
 
   fprintf(stdout,"transition matrix:\n");
   my_model.A_print(stdout,""," ","\n");
@@ -79,7 +73,7 @@ int two_states_coin_toss() {
   my_model.setTransition(1,1,0.5);
 
   if (my_model.check() == -1)
-    exit(1);
+    return 1;
 
   fprintf(stdout,"transition matrix:\n");
   my_model.A_print(stdout,""," ","\n");
@@ -124,14 +118,14 @@ int two_states_coin_toss() {
   my_model.getState(1)->setInitialProbability(0.9);
 
   if (my_model.check() == -1)
-    exit(1);
+    return 1;
 
   my_model.print(stdout);
 
   my_model.reestimate_baum_welch(my_output);
 
   if (my_model.check() == -1)
-    exit(1);
+    return 1;
 
   my_model.print(stdout);
   
@@ -146,10 +140,14 @@ int two_states_coin_toss() {
 
 int main() {
   /* Important! initialise rng  */
-  gsl_rng_init();
+  GHMM_Toolkit::gsl_rng_init();
 
-  if (single_state_coin_toss() || two_states_coin_toss())
-    return 1;
-  else
-    return 0;
+  int result = (single_state_coin_toss() || two_states_coin_toss());
+
+#ifdef WIN32
+  printf("\nPress ENTER\n");
+  fgetc(stdin);
+#endif
+
+  return result;
 }

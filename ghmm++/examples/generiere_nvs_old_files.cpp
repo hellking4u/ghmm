@@ -1,6 +1,4 @@
-#include "ghmm++/GHMM_Sequences.h"
-#include "ghmm++/GHMM_ContinuousModel.h"
-#include "ghmm++/GHMM_Document.h"
+#include "ghmm++/GHMM.h"
 
 #ifdef HAVE_NAMESPACES
 using namespace std;
@@ -41,5 +39,10 @@ int main(int argc, char* argv[]) {
 
   //smodel_print(stdout,smo[0]);
 
- return 1;  
+#ifdef WIN32
+  printf("\nPress ENTER\n");
+  fgetc(stdin);
+#endif
+
+ return 0;  
 }

@@ -2,9 +2,9 @@
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
-# TARGTYPE "Win32 (x86) Console Application" 0x0103
+# TARGTYPE "Win32 (x86) Static Library" 0x0104
 
-CFG=ghmmpp - Win32 Debug
+CFG=GHMMPP - WIN32 RELEASE
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,11 @@ CFG=ghmmpp - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "ghmmpp.mak" CFG="ghmmpp - Win32 Debug"
+!MESSAGE NMAKE /f "ghmmpp.mak" CFG="GHMMPP - WIN32 RELEASE"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "ghmmpp - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "ghmmpp - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "ghmmpp - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
@@ -27,9 +26,6 @@ CFG=ghmmpp - Win32 Debug
 # PROP Scc_LocalPath ""
 CPP=cl.exe
 RSC=rc.exe
-
-!IF  "$(CFG)" == "ghmmpp - Win32 Release"
-
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
 # PROP BASE Output_Dir "Release"
@@ -40,100 +36,77 @@ RSC=rc.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\..\\" /I "..\..\..\gsl-1.0" /I "..\..\..\xmlio-0.0.0\include" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\..\\" /I "..\..\..\gsl-1.0" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD BASE RSC /l 0x407 /d "NDEBUG"
 # ADD RSC /l 0x407 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-
-!ELSEIF  "$(CFG)" == "ghmmpp - Win32 Debug"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "Debug"
-# PROP BASE Intermediate_Dir "Debug"
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Debug"
-# PROP Intermediate_Dir "Debug"
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ  /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\..\\" /I "..\..\..\gsl-1.0" /I "..\..\..\xmlio-0.0.0\include" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ  /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-
-!ENDIF 
-
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
 # Begin Target
 
 # Name "ghmmpp - Win32 Release"
-# Name "ghmmpp - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_AbstractModel.cpp"
+SOURCE="..\..\ghmm++\GHMM_AbstractModel.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_ContinuousModel.cpp"
+SOURCE="..\..\ghmm++\GHMM_ContinuousModel.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_DiscreteModel.cpp"
+SOURCE="..\..\ghmm++\GHMM_DiscreteModel.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Document.cpp"
+SOURCE="..\..\ghmm++\GHMM_Document.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_DoubleMatrix.cpp"
+SOURCE="..\..\ghmm++\GHMM_DoubleMatrix.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_DoubleVector.cpp"
+SOURCE="..\..\ghmm++\GHMM_DoubleVector.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Emission.cpp"
+SOURCE="..\..\ghmm++\GHMM_Emission.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_IntVector.cpp"
+SOURCE="..\..\ghmm++\GHMM_IntVector.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_ModelFactory.cpp"
+SOURCE="..\..\ghmm++\GHMM_ModelFactory.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Sequence.cpp"
+SOURCE="..\..\ghmm++\GHMM_Sequence.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Sequences.cpp"
+SOURCE="..\..\ghmm++\GHMM_Sequences.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_State.cpp"
+SOURCE="..\..\ghmm++\GHMM_State.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Transition.cpp"
+SOURCE="..\..\ghmm++\GHMM_Toolkit.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\ghmm++\GHMM_Transition.cpp"
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -141,72 +114,68 @@ SOURCE="..\..\ppghmm++\GHMM_Transition.cpp"
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\begin_code.h"
+SOURCE="..\..\ghmm++\begin_code.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\close_code.h"
+SOURCE="..\..\ghmm++\close_code.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_AbstractModel.h"
+SOURCE="..\..\ghmm++\GHMM_AbstractModel.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_ContinuousModel.h"
+SOURCE="..\..\ghmm++\GHMM_ContinuousModel.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_DiscreteModel.h"
+SOURCE="..\..\ghmm++\GHMM_DiscreteModel.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Document.h"
+SOURCE="..\..\ghmm++\GHMM_Document.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_DoubleMatrix.h"
+SOURCE="..\..\ghmm++\GHMM_DoubleMatrix.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_DoubleVector.h"
+SOURCE="..\..\ghmm++\GHMM_DoubleVector.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Emission.h"
+SOURCE="..\..\ghmm++\GHMM_Emission.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_IntVector.h"
+SOURCE="..\..\ghmm++\GHMM_IntVector.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_ModelFactory.h"
+SOURCE="..\..\ghmm++\GHMM_ModelFactory.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Sequence.h"
+SOURCE="..\..\ghmm++\GHMM_Sequence.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Sequences.h"
+SOURCE="..\..\ghmm++\GHMM_Sequences.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_State.h"
+SOURCE="..\..\ghmm++\GHMM_State.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Transition.h"
+SOURCE="..\..\ghmm++\GHMM_Transition.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\ppghmm++\GHMM_Types.h"
+SOURCE="..\..\ghmm++\GHMM_Types.h"
 # End Source File
-# End Group
-# Begin Group "Resource Files"
-
-# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # End Group
 # End Target
 # End Project

@@ -24,13 +24,13 @@ GHMM_AbstractModel.cpp \
 GHMM_State.cpp \
 GHMM_Sequence.cpp \
 GHMM_Sequences.cpp \
-GHMM_ModelFactory.cpp \
 GHMM_Document.cpp \
 GHMM_Transition.cpp \
 GHMM_Emission.cpp \
 GHMM_IntVector.cpp \
 GHMM_DoubleVector.cpp \
-GHMM_DoubleMatrix.cpp
+GHMM_DoubleMatrix.cpp \
+GHMM_Toolkit.cpp
 
 pkginclude_HEADERS = \
 begin_code.h \
@@ -41,7 +41,6 @@ GHMM_AbstractModel.h \
 GHMM_State.h \
 GHMM_Sequence.h \
 GHMM_Sequences.h \
-GHMM_ModelFactory.h \
 GHMM_Document.h \
 GHMM_Transition.h \
 GHMM_Emission.h \
@@ -49,7 +48,9 @@ GHMM_State.h \
 GHMM_Types.h \
 GHMM_IntVector.h \
 GHMM_DoubleVector.h \
-GHMM_DoubleMatrix.h
+GHMM_DoubleMatrix.h \
+GHMM_Toolkit.h \
+GHMM.h
 
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt

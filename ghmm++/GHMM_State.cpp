@@ -30,7 +30,7 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, XMLIO_Attribu
   id = attrs["id"];
   if (id == "") {
     char mem[100];
-    snprintf(mem,sizeof(mem),"%d",my_index);
+    sprintf(mem,"%d",my_index);
     id = string(mem);
   }
 }
@@ -46,7 +46,7 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sstate* my_st
   
   /* take index as id. */
   char mem[100];
-  snprintf(mem,sizeof(mem),"%d",my_index);
+  sprintf(mem,"%d",my_index);
   id = string(mem);
 }
 
@@ -61,7 +61,7 @@ GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, state* my_sta
   
   /* take index as id. */
   char mem[100];
-  snprintf(mem,sizeof(mem),"%d",my_index);
+  sprintf(mem,"%d",my_index);
   id = string(mem);
 }
 
@@ -116,7 +116,7 @@ void GHMM_State::XMLIO_getCharacters(const string& characters) {
 
 
 void GHMM_State::fillState(sstate* s) {
-  GHMM_ContinuousModel* model = dynamic_cast<GHMM_ContinuousModel*>(parent_model);
+  GHMM_ContinuousModel* model = (GHMM_ContinuousModel*) parent_model;
   smodel* c_model             = model->c_model;
 
   /* store current c representation of state. */
@@ -183,7 +183,7 @@ void GHMM_State::fillState(sstate* s) {
 
 
 void GHMM_State::fillState(state* s) {
-  GHMM_DiscreteModel* m = dynamic_cast<GHMM_DiscreteModel*>(parent_model);
+  GHMM_DiscreteModel* m = (GHMM_DiscreteModel*) parent_model;
   model* c_model        = m->c_model;
 
   /* store current c representation of state. */
@@ -401,7 +401,7 @@ void GHMM_State::setOutputProbability(int index, double prob) {
     exit(1);
   }
    
-  GHMM_DiscreteModel* m = dynamic_cast<GHMM_DiscreteModel*>(parent_model);
+  GHMM_DiscreteModel* m = (GHMM_DiscreteModel*) parent_model;
   if (index >= m->c_model->M) {
     fprintf(stderr,"GHMM_State::setOutputProbability(int,double): symbol No. %d requested, but maximum number is %d.\n",index,m->c_model->M - 1);
     exit(1);
