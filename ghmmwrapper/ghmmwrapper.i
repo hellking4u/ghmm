@@ -1,5 +1,5 @@
 /* author       : Wasinee Rungsarityotin and Benjamin Georgi
- *  filename    : ghmmwrapper/gql.c
+ *  filename    : ghmmwrapper/ghmmwrapper.i
  *  created      : DATE: September, 2003
  *
  * $Id$
@@ -20,13 +20,10 @@
 #include <ghmm/smodel.h>
 #include <ghmm/rng.h>
 #include <ghmm/reestimate.h>
-<<<<<<< ghmmwrapper.i
 #include <ghmm/foba.h>
 #include <ghmm/scluster.h>
 #include "sdclass_change.h"
 #include "read_cxml.h"
-=======
->>>>>>> 1.2
 %}
 
 %include carrays.i
@@ -161,79 +158,7 @@ struct sequence_d_t {
 };
 typedef struct sequence_d_t sequence_d_t;
 
-<<<<<<< ghmmwrapper.i
-=======
 
-/** @name state
-    The basic structure, keeps all parameters that belong to a state. 
-*/
-struct state {
-  /** Initial probability */ 
-  double pi;
-  /** Output probability */
-  double *b;
-  /** ID of the following state */ 
-  int *out_id;  
-  /** ID of the previous state */    
-  int *in_id;
-  /** Transition probability to a successor */
-  double *out_a; 
-  /** Transition probablity to a precursor */
-  double *in_a;
-  /** Number of successor states */     
-  int out_states; 
-  /** Number of precursor states */
-  int in_states;  
-  /** if fix == 1 --> b stays fix during the training */
-  int fix;
-};
-typedef struct state state;
-
-/** @name model
-    The complete HMM. Contains all parameters, that define a HMM.
-*/
-struct model {
-  /** Number of states */
-  int N;
-  /** Number of outputs */   
-  int M;   
-  /** Vector of the states */
-  state *s; 
-  /** Prior for the a priori probability for the model.
-      A value of -1 indicates that no prior is defined. */
-  double prior;
-};
-typedef struct model model;
-
-
-/** @name model_direct
-    The complete HMM. Keeps the model parameters in a matrix form. 
-*/
-struct model_direct {
-  /** Number of states */
-  int N;
-  /** Number of outputs */  
-  int M;
-  /** Prior for the a priori probability for the model.
-      Gets the value -1 if no prior defined. */
-  double prior;
-  /** Transition matrix  */
-  double **A;
-  /** Output matrix */
-  double **B;
-  /** Initial matrix */
-  double* Pi;
-  /** A vector to know the states where the output should not be trained.
-      Default value is 0 for all states. */
-  int *fix_state;
-};
-
-typedef struct model_direct model_direct;
-
-
-
-
->>>>>>> 1.2
 /**
    Memory allocation for an integer sequence struct. Allocates arrays of lenght
    seq\_number. NO allocation for the actual sequence, since its length is 
@@ -278,6 +203,15 @@ void sequence_copy(int *target, int *source, int len);
 sequence_d_t **sequence_d_read(const char *filename, int *sqd_number);
 
 /**
+  Adds all double sequences, sequence lengths etc 
+  from source to target. Memory allocation is done here.
+  @param target target sequence structure
+  @param source  source sequence structure
+  @return -1 for error, 0 for success
+  */
+extern int sequence_d_add(sequence_d_t *target, sequence_d_t *source);
+
+/**
   Frees all memory in a given array of integer sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
@@ -293,70 +227,13 @@ int sequence_d_free(sequence_d_t **sq);
 
 /*** !!!!!!!! TO DO: Free functions for all types of pointers !!!!!!!!***/
 
-<<<<<<< ghmmwrapper.i
-=======
-/* Some array helpers */
-%inline %{
-/* Create any sort of [size] array */
-  int *int_array(int size) {
-    return (int *) malloc(size*sizeof(int));
-  }
-
-  /* Create any sort of [size] array */
-  double *double_array(int size) {
-    return (double *) malloc(size*sizeof(double));
-  }
-  
-  void set_arrayd(double *ary, int index, double value) {
-    ary[index] = value;
-  }
-
-  double get_arrayd(double *ary, int index) { return ary[index]; }
-
-  void set_arrayint(int  *ary, int index, int value) {
-    ary[index] = value;
-  }
-
-  int  get_arrayint(int  *ary, int index) { return ary[index]; }
-
-  /* Get two dimensional array entry */
-  int  get_2d_arrayint (int **ary, int index1, int index2) {return ary[index1][index2]; }
-		  
-  /* Get two dimensional array entry */
-  double get_2d_arrayd (double **ary, int index1, int index2) {return ary[index1][index2]; }
-
-  /* Set two dimensional array entry */
-  void  set_2d_arrayd (double **ary, int index1, int index2, double val) 
-    {ary[index1][index2] = val; }
-		  
-
-  /* Create a two-dimension array [size][10] */
-  int (*int_array_10(int size))[10] {
-     return (int (*)[10]) malloc(size*10*sizeof(int));
-  }
-
-  state *get_stateptr(state *ary, int index) { return ary + index; }
->>>>>>> 1.2
-
-/**
-  Frees all memory in a given array of double sequences.
-  @param sq sequence  structure
-  @return 0 for succes, -1 for error
-  */
-int sequence_d_free(sequence_d_t **sq);
-
-<<<<<<< ghmmwrapper.i
-
 %inline%{
- 
-=======
->>>>>>> 1.2
-  /* return a C-pointer to an integer sequence */
+
+	  /* return a C-pointer to an integer sequence */
   int *get_onesequence(sequence_t *seqpt, int seqnumber) { 
     return (int *) seqpt->seq[seqnumber];
   }
-<<<<<<< ghmmwrapper.i
-  
+
   /*** create and manipulate an array of pointers of pointers to sequence_d_t structs ***/
   sequence_d_t **sequence_d_t_array(int size) {
      int i;
@@ -509,29 +386,6 @@ struct model_direct {
 };
 typedef struct model_direct model_direct;
 
-=======
-
-  sequence_d_t *get_onesequence_d(sequence_d_t **seqpt, int seqnumber) { 
-    return seqpt[seqnumber];
-  }
-
-  void freearray(void *pt)  { free(pt); }
-
-  void free_arrayi(int *pt) { free(pt); }
-
-  void free_arrayd(double *pt) { free(pt); }
-
-  void free_2darrayd(double **pt, int rows) 
-    {
-      matrix_d_free(&pt, rows);
-    }
-
-  void free_2darrayint(int **pt, int rows,int cols) 
-    {
-      matrix_i_free(&pt, rows);
-    }
-%}
->>>>>>> 1.2
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -539,10 +393,6 @@ typedef struct model_direct model_direct;
 */
 extern int     model_free(model **mo);
 
-<<<<<<< ghmmwrapper.i
-
-=======
->>>>>>> 1.2
 /**
    Reads in ASCII data to initialize an array of models. Memory allocation for
    the models is done here.
@@ -630,7 +480,6 @@ extern sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
 				     long seq_number, int Tmax);
 
 
-<<<<<<< ghmmwrapper.i
 /** Computes probabilistic distance of two models
     @return the distance
     @param m0  model used for generating random output
@@ -646,12 +495,6 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
 
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
-=======
-/* Important! initialise rng  */
-extern void gsl_rng_init(void);
-
-/* Reestimate Baum-Welch */
->>>>>>> 1.2
 extern int reestimate_baum_welch(model *mo, sequence_t *sq);
 
 /******* Viterbi (viterbi.c)*******/
@@ -725,7 +568,6 @@ extern int foba_backward(model *mo, const int *O, int length, double **beta,
 extern int foba_logp(model *mo, const int *O, int len, double *log_p);
 
 
-<<<<<<< ghmmwrapper.i
 %inline%{
 	
   /* allocation of an array of state structs*/
@@ -753,39 +595,12 @@ struct sdstate {
   int *out_id;  
   /** ID of the previous state */    
   int *in_id;
-=======
-/******* Utility function: Matrix allocation and destruction ******/
-/**
-  Allocation of a double matrix. 
-  @return pointer to a matrix
-  @param rows: number of rows
-  @param columns: number of columns
-  */
-extern double** matrix_d_alloc(int rows, int columns);
->>>>>>> 1.2
-
   /** transition probs to successor states. It is a
    matrix in case of mult. transition matrices (COS > 1)*/
   double **out_a; 
   /** transition probs from predecessor states. It is a
    matrix in case of mult. transition matrices (COS > 1) */ 
   double **in_a;
-
-<<<<<<< ghmmwrapper.i
-  /** Transition probability to a successor 
-      double *out_a; */
-  /** Transition probablity to a precursor 
-      double *in_a;*/
-=======
-/**
-  Free the memory of a double matrix.
-  @return 0 for succes; -1 for error
-  @param  matrix: matrix to free
-  @param  rows: number of rows
-  */
-extern int matrix_d_free(double ***matrix, long rows);
->>>>>>> 1.2
-
   /** Number of successor states */     
   int out_states; 
   /** Number of precursor states */
@@ -826,7 +641,6 @@ struct sdmodel {
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
   int* silent; /*AS*/
 
-<<<<<<< ghmmwrapper.i
 };
 typedef struct sdmodel sdmodel;
 
@@ -852,8 +666,7 @@ int     sdmodel_free(sdmodel **mo);
 */
 sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 				     long seq_number, int Tmax);
-=======
->>>>>>> 1.2
+
 
 /**
    Calculates the sum log( P( O | lambda ) ).
@@ -865,8 +678,6 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
 
 
-
-<<<<<<< ghmmwrapper.i
 /******* Viterbi for switching discrete model (sdviterbi.c) *******/
 int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
 
@@ -904,12 +715,6 @@ extern void setSwitchingFunction( sdmodel *smd );
 
 /*=============================================================================================
   =============================== smodel.c  ============================================== */
-=======
-/*============================================================================*/
-/** Wrappers for Continuous model
- *  Structure: sstate, smodel
- */
->>>>>>> 1.2
 
 /** @name sstate
     Structure for one state.
@@ -973,10 +778,6 @@ typedef struct smodel smodel;
     @param smo  pointer pointer of smodel */
 extern int     smodel_free(smodel **smo);
 
-<<<<<<< ghmmwrapper.i
-
-=======
->>>>>>> 1.2
 /** Reads an ascii file with specifications for one or more smodels.
     All parameters in matrix or vector form.
     This is necessary whenever an initial model is needed (e.g. 
@@ -986,33 +787,6 @@ extern int     smodel_free(smodel **smo);
    @param filename   input ascii file
    @param smo_number  number of read smodels */
 extern smodel** smodel_read(const char *filename, int *smo_number);
-
-<<<<<<< ghmmwrapper.i
-=======
-%inline %{
-
-  int call_sequence_free(sequence_t *sq) {
-    return sequence_free(&sq);
-  }
-
-  int call_sequenced_free(sequence_d_t *sq) {
-    return sequence_d_free(&sq);
-  }
-
-  smodel* get_onesmodel(smodel** smos, int snum) {
-    return smos[snum];
-  }
-  void call_smodel_free(smodel *smo) {
-    smodel_free(&smo);
-  }
-  void smodel_print_stdout(smodel *smo) {
-    smodel_print(stdout, smo);
-  }
-  sstate *get_sstate(smodel *smo, int k) {
-    return &(smo->s[k]);
-  }
-%}
->>>>>>> 1.2
 
 /**
    Copies one smodel. Memory alloc is here.
@@ -1062,7 +836,6 @@ extern int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
 extern int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps);
 
 extern int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps, int *seq_rank);
-<<<<<<< ghmmwrapper.i
 
 
 %inline %{
@@ -1377,5 +1150,3 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   void free_2darrayint(int **pt, int rows,int cols) {  matrix_i_free(&pt, rows); }
 
 %}
-=======
->>>>>>> 1.2
