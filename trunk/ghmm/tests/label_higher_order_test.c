@@ -31,7 +31,7 @@ void generateModel(model *mo, int noStates) {
 
   /* flags indicating whether a state is silent */
   int *silent_array;
-  
+
   /*allocate memory for states and array of silent flags*/
   states = (state*)malloc(sizeof(state)*noStates);
   if (states==NULL) {fprintf(stderr, "Null Pointer in malloc(state).\n");}
@@ -167,7 +167,7 @@ void testBaumwelch(){
   model *mo = NULL;
   sequence_t *my_output, *your_output;
   int seqlen = 1000;
-	tl = 100;
+	tl = 150;
 
   mo = malloc(sizeof(model));
   if (mo==NULL) {fprintf(stderr,"Null Pointer in malloc(model).\n");}
@@ -181,7 +181,7 @@ void testBaumwelch(){
   generateModel(mo, 5);
 
   /*generate a random sequence*/
-  my_output = model_label_generate_sequences(mo, 0, seqlen, 3, seqlen);
+  my_output = model_label_generate_sequences(mo, 0, seqlen, 10, seqlen);
   for (i=0; i<seqlen; i++){
     printf("%d", my_output->state_labels[0][i]);
   }
@@ -189,31 +189,34 @@ void testBaumwelch(){
 
   /*viterbi*/
   path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &first_prob);
-	path1 = viterbi(mo, my_output->seq[1], my_output->seq_len[1], &first_prob1);
-	path2 = viterbi(mo, my_output->seq[2], my_output->seq_len[2], &first_prob2);
-	printf("\n viterbi-path\n");
-	z=0;
-	z1=0;
-	z2=0;
+  path1 = viterbi(mo, my_output->seq[1], my_output->seq_len[1], &first_prob1);
+  path2 = viterbi(mo, my_output->seq[2], my_output->seq_len[2], &first_prob2);
+  printf("\n viterbi-path\n");
+  z=0;
+  z1=0;
+  z2=0;
   for (i=0; i<(my_output->seq_len[0]*mo->N); i++){
   if (path1[i] != -1) {
       real_path1[z1]=path1[i];
-			z1++;
-			printf("%d", path1[i]);
-			}
-		
- if (path2[i] != -1) {
+	  z1++;
+      printf("%d", path1[i]);
+  }
+  else printf("hallo");
+
+  if (path2[i] != -1) {
       real_path2[z2]=path2[i];
-			z2++;
-			printf("%d", path2[i]);
-			}
-		
-   if (path[i] != -1) {
+	  z2++;
+	  printf("%d", path2[i]);
+  }
+  else printf("hallo");
+
+  if (path[i] != -1) {
       real_path[z]=path[i];
-			z++;
-			printf("%d", path[i]);
-			}
-		}
+	  z++;
+	  printf("%d", path[i]);
+  }
+  else printf("hallo");
+  }
   printf("\n");
   printf("log-prob: %g\n",first_prob);
   my_output->state_labels[0]=real_path;
@@ -229,7 +232,7 @@ void testBaumwelch(){
 	for (i=0; i<tl; i++) {
 
 	  your_output = model_label_generate_sequences(mo, 0, seqlen, 1, seqlen);
-		error = cgradientD(mo, your_output, &log_p, tl);
+	  error = cgradientD(mo, your_output, &log_p, i);
 		path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &proba[i]);
 	  free(path);
 		printf("log-prob after %d training: %g\n", i, proba[i]);
@@ -255,7 +258,7 @@ void testBaumwelch(){
   /* freeing memory */
   freeModel(mo);
   free(path);
-  printf("sequence_free success: %d\n", sequence_free(&my_output));
+  /*printf("sequence_free success: %d\n", */sequence_free(&my_output)/*)*/;
   free(my_output);
 
 }
