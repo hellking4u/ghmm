@@ -725,8 +725,7 @@ class HMM:
         self.emissionDomain = emissionDomain
         self.distribution = distribution
         self.cmodel = cmodel
-        self.baumWelchCData = None
-        self.one_model_sqd = None
+        self.seqd_crefs  = []
         
     def loglikelihood(self, emissionSequences):
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -776,12 +775,27 @@ class HMM:
   
             Result: Final loglikelihood
         """
+        seqset_number = trainingSequences.cseq_number
+        likelihoods   = [-1.0] * seqset_number
         if (self.emissionDomain.CDataType == "double"):
-            self.baumWelchSetup(trainingSequences, nrSteps)
+
+            baumWelchCData = self.baumWelchSetup(trainingSequences, nrSteps)
+        
+            for i in range(seqset_number):
+                smosqd_cpt = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, i)
+                ghmmwrapper.sreestimate_baum_welch(smosqd_cpt)        
+                logp = ghmmwrapper.get_arrayd(smosqd_cpt.logp, 0)
+                likelihoods[i] = logp
+                
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
-        return 0.0 
 
+        self.baumWelchDelete()
+
+        if seqset_number == 1:
+            return likelihoods[0]
+        else:
+            return likelihoods
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
@@ -789,25 +803,26 @@ class HMM:
             over the training, compute diagnostics or do noise-insertion
 
             training_sequences can either be a SequenceSet or a Sequence
+
+            Return: a C-array of type smosqd_t
         """
-        seqset_number = trainingSequences.cseq_number
-        self.baumWelchCData = ghmmwrapper.smosqd_t_array(seqset_number) # an array of smosqd_t
+        seqset_number  = trainingSequences.cseq_number
+        baumWelchCData = ghmmwrapper.smosqd_t_array(seqset_number) # an array of smosqd_t
 
-        one_model_sequenceSet = ghmmwrapper.get_smosqd_t_ptr(self.baumWelchCData, 0)
-        seqd = trainingSequences[0] # type = EmissionSequence
-        one_model_sequenceSet.smo =  self.cmodel
-        one_model_sequenceSet.sqd  = seqd.cseq # type is ghmmwrapper.sequence_d_tPtr
-        one_model_sequenceSet.logp = ghmmwrapper.double_array(seqd.cseq.seq_number)
-        one_model_sequenceSet.eps  = 10e-6
-        one_model_sequenceSet.max_iter = nrSteps
-        ghmmwrapper.sreestimate_baum_welch(one_model_sequenceSet)
-        seqnumber = trainingSequences[0].cseq_number
-        sumlog = 0.0
-        for j in range(seqnumber):
-            logp = ghmmwrapper.get_arrayd(one_model_sequenceSet.logp, j)
-            print logp
-            sumlog += logp
+        for i in range(seqset_number):
+            smosqd_ptr = ghmmwrapper.get_smosqd_t_ptr(baumWelchCData, i)
+            seqdref    = trainingSequences[i] # type is EmissionSequence, create a reference to C sequence
+            smosqd_ptr.smo  = self.cmodel
+            smosqd_ptr.sqd  = seqdref.cseq # create reference to sequence_d_t
+            smosqd_ptr.logp = ghmmwrapper.double_array(1)            # place holder for sum of log-likelihood
+            smosqd_ptr.eps  = 10e-6
+            smosqd_ptr.max_iter = nrSteps
 
+            # Maintain a list of references to C sequence struct
+            # clean this up in baumWelchDelete
+            self.seqd_crefs.append(seqdref)
+            
+        return baumWelchCData
     
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
@@ -820,9 +835,9 @@ class HMM:
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-        if (self.baumWelchCData != None):
-            ghmmwrapper.free_smosqd_t(self.baumWelchCData)
-
+        del self.seqd_crefs
+        self.seqd_crefs = []
+        
     def forward(self, emissionSequence):
         """
 
