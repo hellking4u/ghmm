@@ -24,7 +24,7 @@
 #include <ghmm/scluster.h>
 #include <ghmm/mes.h>
 #include "sdclass_change.h"
-#include "tmtest.h"
+//#include "tmtest.h"
 
 // #include "read_cxml.h"
 

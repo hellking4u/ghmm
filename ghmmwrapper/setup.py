@@ -23,6 +23,7 @@ ghmmprefix  = runtool('ghmm-config' , '--prefix')
 swiglib = runtool('swig','-swiglib')
 swiglib_path  = os.path.split(swiglib)[0]
 ghmmlib_path  = runtool('ghmm-config','--lib-prefix')
+gslprefix = runtool('gsl-config', '--prefix')
 
 #print "********* PATHS ***********"
 #print "ghmmprefix " ,ghmmprefix
@@ -53,7 +54,7 @@ setup(name="ghmmwrapper",
       ext_modules = [Extension('_ghmmwrapper',
                                ['sdclass_change.c',
                                 'gql.c', 'ghmmwrapper_wrap.c'],
-                               include_dirs = [ghmmprefix + '/include'],
+                               include_dirs = [ghmmprefix + '/include', gslprefix + '/include'],
                                library_dirs = [ghmmlib_path ,swiglib_path],
                                libraries = ['gsl','stdc++','gsl','gslcblas','m','ghmm',
                                             'swigpy']
