@@ -20,6 +20,7 @@ GHMM_AbstractModel::GHMM_AbstractModel() {
 
 
 GHMM_AbstractModel::~GHMM_AbstractModel() {
+  clean();
 }
 
 
