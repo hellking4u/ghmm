@@ -150,9 +150,12 @@ The objects one has to deal with in HMM modelling are the following
 
 """
 
+from ghmmwrapper import *
 
 import ghmmwrapper
 import ghmmhelper
+
+
 
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
@@ -352,52 +355,136 @@ class EmissionSequence(list):
         domain where the emission orginated from.
     """
 
-    def __init__(self, emissionDomain, sequenceInput ,inputType = "pylist"):
+    def __init__(self, emissionDomain, sequenceInput):
         self.emissionDomain = emissionDomain # XXX identical name problematic ? Noe!
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-            if inputType == "pylist":
+            if isinstance(sequenceInput, list):  
                 l = len(sequenceInput)
                 seq = ghmmhelper.list2arrayint(sequenceInput)
-                self.cseq = sequence_t()
-                self.cseq.seq
+                self.cseq = ghmmwrapper.sequence_calloc(1)
+#                self.cseq.seq = seq
+                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l)
                 
-            elif inputType == "fromFile":    
+            elif isinstance(sequenceInput, str): # from file
+                # Does it make sense to read only one sequence from file??
+                # sequence_t **sequence_read(const char *filename, int *seq_arrays)
                 pass
-            elif inputType == "fromCpointer": # for internal use mostly
-                pass
+            elif isinstance(sequenceInput, ghmmwrapper.sequence_tPtr): # inputType == "fromCpointer", internal use
+                # Should check for sequence_t
+                self.cseq = sequenceInput
             else:    
-                raise UnknownInputType, "inputType " + str(inputType) + " not recognized."
+                raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
         
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
-            if inputType == "pylist":
+            if isinstance(sequenceInput, list): 
+                l = len(sequenceInput)
+                seq = ghmmhelper.list2arrayd(sequenceInput)
+                self.cseq = ghmmwrapper.sequence_d_calloc(1)
+                self.cseq.seq = seq
+                ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l)
+
+            elif isinstance(sequenceInput, str): # from file
                 pass
-            elif inputType == "fromFile":    
-                pass
-            elif inputType == "fromCpointer": # for internal use mostly
-                pass
+            elif isinstance(sequenceInput, ghmmwrapper.sequence_d_tPtr): # inputType == "fromCpointer", internal 
+                self.cseq = sequenceInput
             else:    
-                raise UnknownInputType, "inputType " + str(inputType) + " not recognized."
+                raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
         
         
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
-        
-        
-        self.c_seq 
+
+        # internal only
+        if self.emissionDomain.CDataType == "int": 
+            self.__array = ghmmhelper.int_array(self.cseq.seq)
+        elif self.emissionDomain.CDataType == "double":
+            cols = ghmmwrapper.get_arrayint(self.cseq.seq_len,0)
+            self.__array = ghmmhelper.double_array(self.cseq.seq, cols)
+            
+    def __del__(self):
+        if self.emissionDomain.CDataType == "int":
+            ghmmwrapper.sequence_clean(self.cseq)
+            
+        elif self.emissionDomain.CDataType == "double":
+            ghmmwrapper.sequence_d_clean(self.cseq)
+
+    def __setitem__(self, index, value):
+        self.__array[0,index] = value
+
+    def __getitem__(self, index):
+        return self.__array[0,index]
         
 #    def sequenceSet(self):
 #        """ Make a one-element SequenceSet out of me """
 
-class SequenceSet:
-    def __init__(self, emissionDomain, fromList = None):
-        self.emissionDomain = emissionDomain # XXX identical name problematic ?
-        self.c_seq 
-    
 
-def SequenceSetOpen(fileName):
-    c_ptr = ghmmwrapper.seq_d_read(fileName)  
-    return SequenceSet(c_ptr)
+class SequenceSet:
+    def __init__(self, emissionDomain, sequenceSetInput, seqNumber=0):
+        self.emissionDomain = emissionDomain # XXX identical name problematic ?
+        self.cseq_number    = seqNumber
+        self.cseq = None
+        
+        if self.emissionDomain.CDataType == "int": # underlying C data type is integer
+            if isinstance(sequenceSetInput, str): # from file
+                ptNumber = ghmmwrapper.int_array(1)
+                self.cseq = ghmmwrapper.sequence_read(sequenceSetInput, ptNumber)
+                self.cseq_number = ghmmwrapper.get_arrayint(ptNumber,0)
+                ghmmwrapper.freearray(ptNumber)
+                
+            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_tPtr): # inputType == "fromCpointer"
+                self.cseq = sequenceSetInput
+                
+            else:    
+                raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
+        
+        elif self.emissionDomain.CDataType == "double": # underlying C data type is double
+            if isinstance(sequenceSetInput, list): 
+                pass
+            elif isinstance(sequenceSetInput, str): # from file
+
+                ptNumber = ghmmwrapper.int_array(1)
+                self.cseq = ghmmwrapper.sequence_d_read(sequenceSetInput, ptNumber)
+                self.cseq_number = ghmmwrapper.get_arrayint(ptNumber,0)
+                ghmmwrapper.freearray(ptNumber)
+                print "fromFile", type(self.cseq)
+                
+            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_tPtr): # inputType == "fromCpointer", internal use
+                self.cseq = sequenceSetInput
+            else:    
+                raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
+        
+        
+        else:
+            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+
+        # internal only
+        if self.emissionDomain.CDataType == "int": 
+            self.__array = ghmmhelper.int_array(self.cseq.seq)
+        elif self.emissionDomain.CDataType == "double":
+            self.__array = []
+            for index in range(self.cseq_number):
+                oneset = ghmmwrapper.get_seq_d_ptr(self.cseq, index) # return sequence_d_t
+                self.__array.append(oneset)
+
+    def __del__(self):
+        self.cseq_number = 0
+        if self.emissionDomain.CDataType == "int":
+            ghmmwrapper.sequence_free(self.cseq)
+            
+        elif self.emissionDomain.CDataType == "double":
+            ghmmwrapper.sequence_d_free(self.cseq)
+            
+    def __setitem__(self, index, value): # Only allow EmissionSequence?
+        pass
+        
+    def __getitem__(self, index):
+        # Get the sequent_d_t or sequence_t from the set
+        return EmissionSequence(self.emissionDomain, self.__array[index])
+
+        
+def SequenceSetOpen(emissionDomain, fileName):
+    return SequenceSet(emissionDomain, fileName)
 
 
 
@@ -583,7 +670,7 @@ class HMM:
         self.emissionDomain = emissionDomain
         self.distribution = distribution
         self.cmodel = cmodel
-
+        self.baumWelchCData = None
 
     def loglikelihood(self, emissionSequences):
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -633,20 +720,33 @@ class HMM:
   
             Result: Final loglikelihood
         """
-        self.baumWelchSetup(trainingSequences)
-        (steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
-                                                                            loglikelihoodCutoff)
+        self.baumWelchSetup(trainingSequences, nrSteps)
+        #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
+        #                                                                    loglikelihoodCutoff)
+
+        ghmmwrapper.sreestimate_baum_welch(self.baumWelchCData)
+        
         return loglikelihood_array[-1]
 
-    def baumWelchSetup(self, trainingSequences):
+    def baumWelchSetup(self, trainingSequences, nrSteps):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
             Use baum_welch_setup and baum_welch_step if you want more control
             over the training, compute diagnostics or do noise-insertion
 
             training_sequences can either be a SequenceSet or a Sequence
         """
-        pass
-    
+        seqset_number = trainingSequences.cseq_number
+        self.baumWelchCData = ghmmwrapper.smosqd_t_array(seqset_number)
+
+        for i  in range(seqset_number):
+            ghmmwrapper.set_smosq_t_smo(self.baumWelchCData, self.cmodel, i)
+            one_model_sequenceSet = ghmmwrapper.get_smosqd_t_ptr(self.baumWelchCData, i)
+            oneEmissionSeq = trainingSequences(i)
+            one_model_sequenceSet.sqd  =  oneEmissionSeq.cseq
+            one_model_sequenceSet.logp =  ghmmwrapper.double_array(oneEmissionSeq.cseq_number)
+            one_model_sequenceSet.eps  = 10e-6
+            one_model_sequenceSet.max_iter = nrSteps
+            
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
             Use baum_welch_setup and baum_welch_step if you want more control
@@ -658,8 +758,8 @@ class HMM:
     
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
-        # Needed ?
-        pass
+        if (self.baumWelchCData != None):
+            ghmmwrapper.free_smosqd_t(self.baumWelchCData)
 
     def forward(self, emissionSequence):
         """
