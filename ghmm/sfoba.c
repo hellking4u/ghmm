@@ -1,6 +1,6 @@
 /*******************************************************************************
   author       : Bernhard Knab
-  filename     : ghmm/ghmm/sfoba.c
+  filename     : /zpr/bspk/src/hmm/ghmm/ghmm/sfoba.c
   created      : TIME: 16:45:09     DATE: Mon 15. November 1999
   $Id$
 
@@ -137,10 +137,10 @@ int sfoba_backward(smodel *smo, const double *O, int T, double ***b,
     /* try differenent bounds here in case of problems 
        like beta[t] = NaN 
     */
-    /* if (scale[t] < exp(-130)) { */
+    if (scale[t] < exp(-130)) { 
     /* if (scale[t] < exp(-230)) { */
-    if (scale[t] <= DBL_MIN) {
-	printf("backward scale(%d) = %e\n", t , scale[t]);
+      /*    if (scale[t] <= DBL_MIN) { */
+      /* printf("backward scale(%d) = %e\n", t , scale[t]); */
       goto STOP;
     }
   }
