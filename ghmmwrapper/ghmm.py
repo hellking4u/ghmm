@@ -367,6 +367,7 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbol = ghmmwrapper.set_2d_arrayint
+            self.cleanFunction = ghmmwrapper.sequence_clean
             
             if isinstance(sequenceInput, list):  
                 (seq,l) = ghmmhelper.list2matrixint([sequenceInput])
@@ -392,6 +393,7 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbol = ghmmwrapper.set_2d_arrayd
+            self.cleanFunction = ghmmwrapper.sequence_d_clean
                         
             if isinstance(sequenceInput, list): 
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
@@ -417,11 +419,7 @@ class EmissionSequence:
 
         
     def __del__(self):        
-        if self.emissionDomain.CDataType == "int": # delete the C ptr to sequence_t
-            ghmmwrapper.sequence_clean(self.cseq)
-            
-        elif self.emissionDomain.CDataType == "double": # delete the C ptr to sequence_d_t
-            ghmmwrapper.sequence_d_clean(self.cseq)
+        self.cleanFunction(self.cseq)
 
         
     def __len__(self):
@@ -467,6 +465,7 @@ class SequenceSet:
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
             self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within a int**
+            self.cleanFunction = ghmmwrapper.sequence_clean
             
             if isinstance(sequenceSetInput, str): # from file
                 # reads in the first sequence struct in the input file
@@ -502,6 +501,7 @@ class SequenceSet:
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
             self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign an double* to a position within a double**
+            self.cleanFunction = ghmmwrapper.sequence_d_clean
                         
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
@@ -533,12 +533,9 @@ class SequenceSet:
 
 
     def __del__(self):
-        if self.emissionDomain.CDataType == "int":
-            ghmmwrapper.sequence_clean(self.cseq)
-            
-        elif self.emissionDomain.CDataType == "double":
-            ghmmwrapper.sequence_d_clean(self.cseq)
-            
+        "Deallocation of C sequence struct."
+        self.cleanFunction(self.cseq)
+
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
@@ -884,7 +881,7 @@ class HMM:
         
         self.silent = 0   # flag for silent states
         
-        # Function pointer to the C level (defined in derived classes)
+        # Function pointers to the C level (assigned in derived classes)
         self.freeFunction = ""           # C function for deallocation
         self.samplingFunction = ""       # C function for sequence generation
         self.viterbiFunction = ""        # C function viterbi algorithm
@@ -892,13 +889,13 @@ class HMM:
         self.forwardAlphaFunction = ""   # C function forward algorithm (alpha matrix,scale)
         self.backwardBetaFunction = ""   # C function backkward algorithm (beta matrix)
         self.getStatePtr = ""            # C function to get a pointer to a state struct
-       # self.getModelPtr = ""            # C function to get a pointer to the model struct
+        self.getModelPtr = ""            # C function to get a pointer to the model struct
         
         
-  #  def __del__(self):
-  #      """ Deallocation routine for the underlying C data structures. """
-  #      modelPtr = getModelPtr(self.cmodel)
-  #      self.freeFunction(modelPtr)
+    def __del__(self):
+        """ Deallocation routine for the underlying C data structures. """
+        modelPtr = self.getModelPtr(self.cmodel)
+        self.freeFunction(modelPtr)
         
     
     
@@ -949,7 +946,8 @@ class HMM:
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             ret_val = self.forwardFunction(self.cmodel, seq,ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i), likelihood)
             likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
-            # XXX check ret_val
+            if ret_val == -1:
+                print "Warning: forward finished with -1: Sequence ",i ," cannot be build."
 
         ghmmwrapper.free_arrayd(likelihood)  
         return likelihoodList
@@ -1266,6 +1264,9 @@ class DiscreteEmissionHMM(HMM):
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
         self.silent = 1  # flag indicating whether the model type does include silent states
+        
+        # Assignment of the C function names to be used with this model type
+        self.freeFunction = ghmmwrapper.model_free
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
         self.forwardFunction = ghmmwrapper.foba_logp
@@ -1273,7 +1274,7 @@ class DiscreteEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.foba_backward 
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
-      #  self.getModelPtr = ghmmwrapper.get_model_ptr
+        self.getModelPtr = ghmmwrapper.cast_model_ptr
       
     def __str__(self):
         hmm = self.cmodel
@@ -1354,6 +1355,8 @@ class GaussianEmissionHMM(HMM):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
         self.silent = 0  # flag indicating whether the model type does include silent states
         
+        # Assignment of the C function names to be used with this model type
+        self.freeFunction = ghmmwrapper.smodel_free        
         self.samplingFunction = ghmmwrapper.smodel_generate_sequences
         self.viterbiFunction = ghmmwrapper.sviterbi
         self.forwardFunction = ghmmwrapper.sfoba_logp
@@ -1361,23 +1364,8 @@ class GaussianEmissionHMM(HMM):
         self.backwardBetaFunction = ghmmwrapper.sfoba_backward 
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
         self.fileWriteFunction = ghmmwrapper.call_smodel_print
-        #  self.getModelPtr = ghmmwrapper.get_model_ptr
+        self.getModelPtr = ghmmwrapper.cast_smodel_ptr
 
-    def loglikelihood_sqd(self, sequenceSet):
-        # XXX REMOVE soon XXX. Currently needed in GLQQuery.py
-        """ Compute log( P[emissionSequences| model]) using the forward algorithm
-
-            sequences can either be a SequenceSet or a EmissionSequence
-
-            Result: log( P[emissionSequences| model]) of type float
-                    numarray vector of floats
-            
-            Note: The implementation will not compute the full forward matrix 
-        """
-        likelihood = ghmmwrapper.double_array(len(sequences))
-        result = ghmmwrapper.smodel_individual_likelihoods(self.cmodel, sequences, likelihood)
-        return likelihood # Caller owns it 
-	
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
         return ghmmwrapper.smodel_get_transition(self.cmodel, i, j, 0)
