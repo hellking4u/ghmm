@@ -73,6 +73,16 @@ int foba_backward(model *mo, const int *O, int length, double **beta,
   */
 int foba_logp(model *mo, const int *O, int len, double *log_p);
 
+/** Forward-Algorithm (lean version).
+  Calculates log( P(O|lambda) ) for a given double sequence and a given model.
+  @param smo      model
+  @param O        sequence
+  @param length: length of sequence
+  @param log\_p:  log likelihood log( P(O|lambda) )
+  @return 0 for success, -1 for error
+  */
+int foba_forward_lean(model *mo, const int *O, int len, double *log_p); 
+
 
 /* Labeled HMMs */
 

@@ -690,6 +690,17 @@ extern int foba_logp(model *mo, const int *O, int len, double *log_p);
 */
 extern void model_set_transition(model *mo, int i, int j, double prob);
 
+/** Forward-Algorithm (lean version).
+  Calculates log( P(O|lambda) ) for a given double sequence and a given model.
+  @param smo      model
+  @param O        sequence
+  @param length: length of sequence
+  @param log\_p:  log likelihood log( P(O|lambda) )
+  @return 0 for success, -1 for error
+  */
+int foba_forward_lean(model *mo, const int *O, int len, double *log_p); 
+
+
 /* Labeled HMMs */
 extern int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 extern int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
