@@ -459,6 +459,7 @@ int model_check(const model* mo) {
     for (j = 0; j < mo->M; j++)
       sum += mo->s[i].b[j];
     if ( fabs(sum - 1.0) >= EPS_PREC ) { 
+      res = -2; /* So we can ignore a silent state */
       char *str = mprintf(NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n",
 			  sum, i); 
       mes_prot(str);
