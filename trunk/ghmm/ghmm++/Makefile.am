@@ -15,9 +15,9 @@ INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
 
 pkgincludedir = $(includedir)/ghmm++
 
-lib_LIBRARIES = libghmm++.a
-#libghmm___la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
-libghmm___a_SOURCES = \
+lib_LTLIBRARIES = libghmm++.la
+libghmm___la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
+libghmm___la_SOURCES = \
 GHMM_DiscreteModel.cpp \
 GHMM_ContinuousModel.cpp \
 GHMM_AbstractModel.cpp \
@@ -28,7 +28,6 @@ GHMM_ModelFactory.cpp \
 GHMM_Document.cpp \
 GHMM_Transition.cpp \
 GHMM_Emission.cpp \
-GHMM_State.cpp \
 GHMM_IntVector.cpp \
 GHMM_DoubleVector.cpp \
 GHMM_DoubleMatrix.cpp

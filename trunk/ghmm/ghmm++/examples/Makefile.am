@@ -6,11 +6,14 @@
 # __copyright__
 
 SUBDIRS= .
+CLEANFILES = \
+chmm.tmp \
+message.txt
 DISTCLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD    = $(top_builddir)/ghmm++/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
+LDADD    = $(top_builddir)/ghmm++/.libs/libghmm++.a $(top_builddir)/ghmm/.libs/libghmm.a $(XMLIO_LIBS)
 EXTRADIST = nvs.xml nvs.mod nvs.sqd 
 
 noinst_PROGRAMS = chmm generiere_nvs generiere_nvs_old_files coin_toss_test
