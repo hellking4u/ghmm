@@ -1092,11 +1092,18 @@ class HMMFromMatricesFactory(HMMFactory):
         if isinstance(emissionDomain,Alphabet):
 
             if isinstance(distribution,DiscreteDistribution):
+                
+                # checking matrix dimensions and argument validation 
+                assert len(A) == len(A[0]), "ERROR: A is not quadratic."
+                assert len(pi) == len(A),  "ERROR: Length of pi does not match length of A."
+                assert len(A) == len(B), "ERROR: Different number of entries in A and B."
+                assert emissionDomain.size() == len(B[0]) ,"ERROR: EmissionDomain and B do not match."
+                
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
                 cmodel = ghmmwrapper.new_model()
                 cmodel.N = len(A)
                 cmodel.M = emissionDomain.size()
-                cmodel.prior = -1 # No 
+                cmodel.prior = -1 # No prior by default
                 
                 # tie groups are deactivated by default
                 cmodel.tied_to = None
