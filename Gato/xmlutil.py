@@ -423,7 +423,7 @@ class HMMState:
         self.editableAttr = ['label', 'state_class', 'initial', 'order', 'background']
         self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
         
-    editableAttr = ['label', 'state_class', 'initial', 'order', 'background', 'tiedto', 'reading_frame']
+    editableAttr = ['label', 'initial', 'order', 'background', 'tiedto', 'reading_frame']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
     # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
@@ -460,11 +460,11 @@ class HMMState:
             #print dataValue
                        
             if dataKey == 'class':
-                if len(self.itsHMM.hmmClass.name2code.keys()) == 1:
-                    key = self.itsHMM.hmmClass.name2code.keys()
-                    self.state_class = typed_assign(self.state_class, self.itsHMM.hmmClass.name2code[key[0]])
-                else:
-                    self.state_class = typed_assign(self.state_class, int(dataValue)) # code for the state class
+                #if len(self.itsHMM.hmmClass.name2code.keys()) == 1:
+                #    key = self.itsHMM.hmmClass.name2code.keys()
+                #    self.state_class = typed_assign(self.state_class, self.itsHMM.hmmClass.name2code[key[0]])
+                #else:
+                self.state_class = typed_assign(self.state_class, int(dataValue)) # code for the state class
 
             elif  dataKey == 'label':
                 self.label = type(self.label)(dataValue.encode('ascii', 'replace'))
@@ -544,32 +544,29 @@ class HMMState:
         if not self.duration.useDefault:
             writeData(XMLDoc, node, 'duration', self.duration)
            
-        if not self.tiedto == '':
+        if not self.tiedto == '': # XXX tied emission
             writeData(XMLDoc, node, 'tiedto', self.tiedto)
-        else:
-            if self.order.useDefault:
-                order = 0
-            else:
-                order = self.order
 
-            # XXX Produce uniform emission probs, if we dont have the correct number of
-            # parameters
-            
-            size = self.itsHMM.hmmAlphabet.size()**(order+1)
-            if len(self.emissions) != size:
-                tmp = [1.0/self.itsHMM.hmmAlphabet.size()] * self.itsHMM.hmmAlphabet.size()
-                if order == 0:
-                    self.emissions = tmp
-                else:
-                    self.emissions = tmp * self.itsHMM.hmmAlphabet.size()**order
-                    
-                
-            if order > 0:
-                writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions,
-                                                                 self.itsHMM.hmmAlphabet.size()))
+        if self.order.useDefault:
+            order = 0
+        else:
+            order = self.order
+
+        # XXX Produce uniform emission probs, if we dont have the correct number of
+        # parameters            
+        size = self.itsHMM.hmmAlphabet.size()**(order+1)
+        if len(self.emissions) != size:
+            tmp = [1.0/self.itsHMM.hmmAlphabet.size()] * self.itsHMM.hmmAlphabet.size()
+            if order == 0:
+                self.emissions = tmp
             else:
-                writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions))
-            
+                self.emissions = tmp * self.itsHMM.hmmAlphabet.size()**order
+
+        if order > 0:
+            writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions,
+                                                             self.itsHMM.hmmAlphabet.size()))
+        else:
+            writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions))            
         XMLNode.appendChild(node)
 
     def toGHMM(self, XMLDoc, XMLNode, initial_sum):
@@ -648,9 +645,11 @@ class HMM:
 
     def fromDOM(self, XMLNode):
         
-        # self.hmmClass.fromDOM(XMLNode.getElementsByTagName("hmm:class")[0]) 
-        for tag in XMLNode.getElementsByTagName("hmm:class"):
-            self.hmmClass.fromDOM(tag)
+        # self.hmmClass.fromDOM(XMLNode.getElementsByTagName("hmm:class")[0])
+        class_elements = XMLNode.getElementsByTagName("hmm:class")
+        if class_elements != []:
+            for tag in XMLNode.getElementsByTagName("hmm:class"):
+                self.hmmClass.fromDOM(tag)
 
         # One "hmm:alphabet" XML element
         self.hmmAlphabet.fromDOM(XMLNode.getElementsByTagName("hmm:alphabet")[0]) 
@@ -807,7 +806,7 @@ class HMM:
 		outprobs[myorder] = self.G.edgeWeights[0][(v,outid)]
 	    A.append(outprobs)
 	return [A, B, pi]
-    
+
     def OpenXML(self, fileName):
         dom = xml.dom.minidom.parse(fileName)
         if dom.documentElement.tagName == "ghmm":
