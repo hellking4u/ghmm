@@ -108,7 +108,7 @@ class NamedDistributions:
         self.code2name[self.maxCode] = name
         self.name2code[name] = self.maxCode
         self.maxCode += 1
-        print self.dist
+        #print self.dist
         
     def deleteDistribution(self, name):
         del self.dist[name]
@@ -130,7 +130,7 @@ class NamedDistributions:
 
     def toDOM(self, XMLDoc, XMLNode):
         for name in self.dist.keys():
-            print "background: name = ", name, self.dist[name], self.order[name]
+            #print "background: name = ", name, self.dist[name], self.order[name]
             background_elem = XMLDoc.createElement("hmm:background")
             background_elem.setAttribute('key', "%s" % name)
             background_elem.setAttribute('order', "%s" % self.order[name])
@@ -387,7 +387,7 @@ class HMMState:
         self.initial  = Probability("0.0")
         self.label    = ValidatingString("None")
         self.itsHMM   = itsHMM
-	print type(self.label)
+	#print type(self.label)
 	
         self.index = nodeIndex # The node index in the underlying graph
         self.id    = ValidatingString("None") # identification by the canvas, not always the same
@@ -789,7 +789,7 @@ class HMM:
         """ Return a pair of two dictionaries: (distribution, its orders):
             a distribution is a list of real values of length N^(order+1).   
         """        
-        return (self.backgroundDistributions.dist, self.backgroundDistributions.order)
+        return (self.backgroundDistributions.dist, self.backgroundDistributions.order, self.backgroundDistributions.code2name)
 
         
     def buildMatrices(self):    
