@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------
-  author       : Bernhard Knab
+  author       : Bernhard Knab, Benjamin Georgi
   filename     : ghmm/ghmm/scluster.h
   created      : TIME: 15:53:53     DATE: Tue 16. November 1999
   $Id$
@@ -55,6 +55,14 @@ struct scluster_t{
 /**
  */
 typedef struct scluster_t scluster_t;
+
+
+/**
+   Frees the memory allocated for a scluster_t struct.
+   @return 0 for success; -1 for error
+   @param scl pointer to scl struct
+*/
+int scluster_t_free(scluster_t *scl);
 
 
 /**

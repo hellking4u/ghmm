@@ -22,11 +22,11 @@ SWIGOPT    =
 
 
 # These should locate your local installation of ghmm and ghmm++ (and xmlio if you use ghmm++)
-GHMM_TOP   = ..
-GHMM_INCLUDE  = ../include
-# XMLIO_INCLUDE = /project/algorithmics/Sopra/xmlio-1.0.0/include
-INCLUDE    =  -I$(GHMM_INCLUDE)
-LIBS       = -lstdc++ -lgsl -lgslcblas -lm -L$(GHMM_TOP)/lib -lghmm 
+GHMM_TOP   = /home/georgi/hmm/ghmm
+GHMM_INCLUDE  = /home/georgi/hmm/ghmm
+XMLIO_INCLUDE = /project/algorithmics/Sopra/xmlio-1.0.0/include
+INCLUDE    =  -I$(GHMM_INCLUDE) -I$(XMLIO_INCLUDE)
+LIBS       = -lstdc++ -L/usr/local/lib -lgsl -lgslcblas -lm -L$(GHMM_TOP)/lib -lghmm -lghmm++ -L/project/algorithmics/Sopra/xmlio-1.0.0/lib -lxmlio
 
 #-lghmm++ -L/project/algorithmics/Sopra/xmlio-1.0.0/lib -lxmlio
 
@@ -44,18 +44,11 @@ PYTHON_DLNK   =
 #
 all:
 	$(SWIG) -c -python $(INTERFACE)
-<<<<<<< Makefile
 	$(CC) -c $(CFLAGS) sdclass_change.c $(INCLUDE)
-	$(CC) -c $(CFLAGS) read_cxml.c $(INCLUDE)
-=======
->>>>>>> 1.2
 	$(CC) -c $(CFLAGS) gql.c $(INCLUDE)
+	$(CC) -c $(CFLAGS) read_cxml.c $(INCLUDE)
 	$(CC) -c $(CFLAGS) ghmmwrapper_wrap.c $(INCLUDE) $(PYTHON_INCLUDE)
-<<<<<<< Makefile
 	$(CC) -shared sdclass_change.o gql.o read_cxml.o ghmmwrapper_wrap.o $(PYTHON_DLNK) $(LIBS) -o _ghmmwrapper.so -L$(TOP)/lib -lswigpy
-=======
-	$(CC) -shared gql.o ghmmwrapper_wrap.o $(PYTHON_DLNK) $(LIBS) -o _ghmmwrapper.so -L$(TOP)/lib -lswigpy
->>>>>>> 1.2
 
 clean:
 	rm -f *_wrap* *.o *~ *.so mypython *.pyc .~*

@@ -194,15 +194,16 @@ sequence_d_t** sequence_d_read(const char *filename, int *sqd_number) {
   sequence_d_t **sequence = NULL;
   *sqd_number = 0;
   s = scanner_alloc(filename);  if(!s) {mes_proc(); goto STOP;}
+  
   while(!s->err && !s->eof && s->c - '}') {
     scanner_get_name(s);
     scanner_consume(s, '='); if(s->err) goto STOP; 
     /* sequence file */
-    if (!strcmp(s->id, "SEQD")) {
+	if (!strcmp(s->id, "SEQD")) {
       (*sqd_number)++;
       /* more mem */	 
       if (m_realloc(sequence, *sqd_number)) { mes_proc(); goto STOP; }
-      sequence[*sqd_number-1] = sequence_d_read_alloc(s);
+	  sequence[*sqd_number-1] = sequence_d_read_alloc(s);
       if (!sequence[*sqd_number-1]) { mes_proc(); goto STOP; }
     }
     else {
@@ -857,8 +858,11 @@ int sequence_free(sequence_t **sq) {
 int sequence_d_free(sequence_d_t **sqd) {
 # define CUR_PROC "sequence_d_free"
   mes_check_ptr(sqd, return(-1));
- if( !*sqd ) return(0);
-  matrix_d_free(&(*sqd)->seq);
+  if( !*sqd ) return(0);
+  
+  // sequence_d_print(stdout,*sqd,0);
+		  
+  matrix_d_free(&(*sqd)->seq, (*sqd)->seq_number);
   m_free((*sqd)->seq_len);
   m_free((*sqd)->seq_label);
   m_free((*sqd)->seq_id);
@@ -1003,7 +1007,7 @@ double **sequence_d_scatter_matrix(const sequence_d_t *sqd, int *dim) {
   }
   return W;
 STOP:
-  matrix_d_free(&W);
+  matrix_d_free(&W, *dim);
   return NULL;
 # undef CUR_PROC
 } /* sequence_d_scatter_matrix */

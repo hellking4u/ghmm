@@ -51,7 +51,8 @@ typedef struct smosqd_t smosqd_t;
 /**
   Baum-Welch Algorithm for SHMMs.
   Training of model parameter with multiple double sequences (incl. scaling).
-  New parameters set directly in hmm (no storage of previous values!).
+  New parameters set directly in hmm (no storage of previous values!). Matrices
+  are allocated with stat_matrix_d_alloc.
   @return            0/-1 success/error
   @param cs         initial model and train sequences
   */

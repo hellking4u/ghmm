@@ -1,4 +1,4 @@
 #include <ghmm/model.h>
 
-/** XML to C data structure Wrapper */
+/* XML to C data structure Wrapper */
 extern sdmodel* graphmlTosdModel(char *filename);

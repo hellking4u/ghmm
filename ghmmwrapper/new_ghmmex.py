@@ -1,4 +1,5 @@
 # Python-wrapper for the ghmm library
+# Author       : Benjamin Georgi
 
 from ghmmwrapper import *
 import math
@@ -887,10 +888,6 @@ def scluster_print(cl,seq,file_names):
 	print_scluster(cl,seq,ch_array)
 
 
-
-#####################################################################################################
-############################ modular version ########################################################
-
 class scluster_env:
 	def __init__(self, smodFile,seqFile):
 		# maximum values for models and sequence in the clustering are needed for edit operations
@@ -910,10 +907,15 @@ class scluster_env:
 		# counter for the maximum number of models present at any time during the clustering,
 		# used to assign fresh IDs to new models
 		self.most_models = self.sclustering.scluster_t.smo_number
-			
-		self.seq = seq_d_read(seqFile)
+		
+		self.seq = seq_d_read(seqFile) # wrapper function seq_d_read calls sequence_d_read
+		
+		# XXX check seq.seq_number > MAX_SEQUENCES
+		
+		# XXX optional ?
 		scluster_random_labels(self.seq, self.sclustering.scluster_t.smo_number)	
-
+		
+		
 		#print sclustering.scluster_t.smo_number, seq.seq_number
 		self.all_log_p = double_2d_array(self.MAX_MODELS,self.MAX_SEQUENCES)
 	
@@ -1004,8 +1006,6 @@ class scluster_env:
 		
 		scluster_update(sclustering.scluster_t, seq)
 
-		print
-		
 		for i in range(sclustering.scluster_t.smo_number):
 			# assigning models to smosqd_t struct
 			smodel = get_smodel_ptr(sclustering.scluster_t.smo,i)
@@ -1034,7 +1034,7 @@ class scluster_env:
 				
 		# freeing stuff
 		free_arrayd(best_logp)
-
+		
 		return changes
 
 	def get_model(self,smo_id):
@@ -1042,11 +1042,24 @@ class scluster_env:
 		return get_smodel_ptr(self.sclustering.scluster_t.smo,index)
 
 	def free_scluster(self):
+				
+		print "freeing sequence_d_t struct seq"
+		## Freeing sequence_d_t struct
+		#print self.seq
+		free_sequence_d(self.seq)
+		
+		# XXX for loop
+				
 		## Freeing scluster_t struct
 		# freeing models
-		smodel_free(self.sclustering.scluster_t.smo)
+		for i in range(self.sclustering.scluster_t.smo_number):
+			smodel = get_smodel_ptr(self.sclustering.scluster_t.smo,i)
+			free_smodel(smodel)
+		
+		free_smodel_array(self.sclustering.scluster_t.smo)
+				
 		# freeing sequences
-		sequence_d_free(self.sclustering.scluster_t.smo_seq)		 
+		#sequence_d_free(self.sclustering.scluster_t.smo_seq)		 
 		# freeing sequence counters
 		free_arrayl(self.sclustering.scluster_t.seq_counter)
 		# freeing error function arrays
@@ -1054,21 +1067,12 @@ class scluster_env:
 		free_arrayd(self.sclustering.scluster_t.smo_Z_MAW)		
 		
 		## Freeing smosqd_t struct
-		# model
-		free_smodel(self.smosqd_t.smosqd_t.smo)
-		# sequence
-		free_sequence_d(self.smosqd_t.smosqd_t.sqd)
-		# log_p
-		free_arrayd(self.smosqd_t.smosqd_t.logp)
-	
+		free_smosqd_t(self.smosqd_t.smosqd_t)
+		
 		## Freeing all_logp matrix
-		free_2darrayd(self.all_log_p)
+		free_2darrayd(self.all_log_p,self.sclustering.scluster_t.smo_number)
 		
-		print "freeing sequence_d_t struct seq"
-		
-		## Freeing sequence_d_t struct
-		free_sequence_d(self.seq)
-	
+			
 	def add_sequence_d(self, source_seqs):
 		sequence_d_add(self.seq,source_seqs.seq_c)
 		
@@ -1266,4 +1270,27 @@ class scluster_env:
 		m = SHMM("bla",0,hmm,1) 
 		self.add_SHMM_model( m,prior)
 							
+	def update_labels(self):
+		for i in range(self.seq.seq_number):
+			old_label = get_arrayl(self.seq.seq_label,i)
+			new_label = self.index_map[old_label]
+			set_arrayl(self.seq.seq_label,i,new_label)
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 	

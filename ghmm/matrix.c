@@ -90,12 +90,12 @@ int matrix_i_read(scanner_t *s, int **matrix, int max_zeile, int max_spalte) {
 
 /*============================================================================*/
 
-double** matrix_d_alloc(int n, int m) {
-#define CUR_PROC "matrix_d_alloc"
+/* allocation of matrices with fixed dimensions  */
+double** stat_matrix_d_alloc(int n, int m) {
+#define CUR_PROC "stat_matrix_d_alloc"
   int i, j;
   double **A;
   double *tmp;
-  //A = (double**)malloc(    n * sizeof(double*) +  n * m * sizeof(double)  );
   
   if (!m_calloc(A,  n * sizeof(double*) +  n * m * sizeof(double)) ){
 	mes_proc(); 
@@ -109,20 +109,23 @@ double** matrix_d_alloc(int n, int m) {
   }
   return A;
 STOP:
-  matrix_d_free(&A);
+  stat_matrix_d_free(&A);
   return NULL;
+#undef CUR_PROC
 }
 
 
-int matrix_d_free(double ***matrix) {
-#define CUR_PROC "matrix_d_free"
+int stat_matrix_d_free(double ***matrix) {
+#define CUR_PROC "stat_matrix_d_free"
+  mes_check_ptr(matrix, return(-1));
+  if ( !*matrix) return(0);
   free(*matrix);
   return 0;
 #undef CUR_PROC
 }
 
 
-/*============================================================================
+/*============================================================================*/
 
 
 double** matrix_d_alloc(int zeilen, int spalten) {
@@ -142,9 +145,24 @@ STOP:
 #undef CUR_PROC
 } /* matrix_d_alloc */
 
+
+int matrix_d_free(double ***matrix, long zeilen) {
+# define CUR_PROC "matrix_d_free"
+  long i;
+  mes_check_ptr(matrix, return(-1));
+  if ( !*matrix) return(0);
+  for (i = zeilen - 1; i >=  0; i--) 
+    m_free((*matrix)[i]);
+  m_free(*matrix);
+  return (0);
+# undef CUR_PROC
+} /* matrix_d_free */
+
+
+
 /*============================================================================*/
 
-//TO DO: einzelnes alloc in allen Funktionen
+
 
 double** matrix_d_alloc_copy(int zeilen, int spalten, double **copymatrix) {
 #define CUR_PROC "matrix_d_alloc_copy"
@@ -158,7 +176,7 @@ double** matrix_d_alloc_copy(int zeilen, int spalten, double **copymatrix) {
   }
   return matrix;
 STOP:
-  matrix_d_free(&matrix);
+  matrix_d_free(&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
 } /* matrix_d_alloc_copy */
@@ -192,20 +210,6 @@ int matrix_i_free(int ***matrix, long zeilen) {
   return (0);
 # undef CUR_PROC
 } /* matrix_i_free */
-
-/*============================================================================
-
-int matrix_d_free(double ***matrix, long zeilen) {
-# define CUR_PROC "matrix_d_free"
-  long i;
-  mes_check_ptr(matrix, return(-1));
-  if ( !*matrix) return(0);
-  for (i = zeilen - 1; i >=  0; i--) 
-    m_free((*matrix)[i]);
-  m_free(*matrix);
-  return (0);
-# undef CUR_PROC
-} /* matrix_d_free */
 
 /*============================================================================*/
 

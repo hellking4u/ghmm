@@ -51,7 +51,7 @@ static local_store_t *reestimate_alloc(const model *mo) {
   for (i = 0; i < mo->N; i++)
     if (!m_calloc(r->a_num[i], mo->s[i].out_states)){mes_proc(); goto STOP;}
   if (!m_calloc(r->a_denom, mo->N)) {mes_proc(); goto STOP;}
-  r->b_num = matrix_d_alloc(mo->N, mo->M);
+  r->b_num = stat_matrix_d_alloc(mo->N, mo->M);
   if (!(r->b_num)) {mes_proc(); goto STOP;}
   if (!m_calloc(r->b_denom, mo->N)) {mes_proc(); goto STOP;}
   return(r);
@@ -72,7 +72,7 @@ static int reestimate_free(local_store_t **r, int N) {
     m_free((*r)->a_num[i]);
   m_free((*r)->a_num);
   m_free((*r)->a_denom);
-  matrix_d_free( &((*r)->b_num));
+  stat_matrix_d_free( &((*r)->b_num));
   m_free((*r)->b_denom);
   m_free(*r);
   return(0);
@@ -102,9 +102,9 @@ static int reestimate_alloc_matvek(double ***alpha, double ***beta,
 				   double **scale, int T, int N) {
 # define CUR_PROC "reestimate_alloc_matvek"
   int res = -1;
-  *alpha = matrix_d_alloc(T, N);
+  *alpha = stat_matrix_d_alloc(T, N);
   if (!(*alpha)) {mes_proc(); goto STOP;}
-  *beta = matrix_d_alloc(T, N);
+  *beta = stat_matrix_d_alloc(T, N);
   if (!(*beta)) {mes_proc(); goto STOP;}
   if (!m_calloc(*scale, T)) {mes_proc(); goto STOP;}
   res = 0;
@@ -117,8 +117,8 @@ STOP:
 static int reestimate_free_matvek(double **alpha, double **beta, 
 				  double *scale, int T) {
 # define CUR_PROC "reestimate_free_matvek"
-  matrix_d_free(&alpha);
-  matrix_d_free(&beta);
+  stat_matrix_d_free(&alpha);
+  stat_matrix_d_free(&beta);
   m_free(scale); 
   return(0);
 # undef CUR_PROC

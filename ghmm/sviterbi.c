@@ -38,7 +38,7 @@ static local_store_t *sviterbi_alloc(smodel *smo, int T) {
 #define CUR_PROC "sviterbi_alloc"
   local_store_t* v = NULL;
   if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
-  v->log_b = matrix_d_alloc(smo->N, T);
+  v->log_b = stat_matrix_d_alloc(smo->N, T);
   if (!(v->log_b)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi, smo->N)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi_new, smo->N)) {mes_proc(); goto STOP;}
@@ -57,7 +57,7 @@ static int sviterbi_free(local_store_t **v, int n, int T) {
 #define CUR_PROC "sviterbi_free"
   mes_check_ptr(v, return(-1));
   if( !*v ) return(0);
-  matrix_d_free( &((*v)->log_b));
+  stat_matrix_d_free( &((*v)->log_b));
   m_free((*v)->phi);
   m_free((*v)->phi_new);
   matrix_i_free( &((*v)->psi), T );

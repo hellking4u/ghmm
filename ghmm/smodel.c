@@ -397,20 +397,20 @@ smodel *smodel_read_block(scanner_t *s, int *multip){
 			   u_matrix)) {mes_proc(); goto STOP;}
   }
   if (a_3dmatrix)
-    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]));
+    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
   m_free(a_3dmatrix);
-  matrix_d_free(&c_matrix);
-  matrix_d_free(&mue_matrix);
-  matrix_d_free(&u_matrix);
+  matrix_d_free(&c_matrix, smo->N);
+  matrix_d_free(&mue_matrix, smo->N);
+  matrix_d_free(&u_matrix, smo->N);
   m_free(pi_vektor); m_free(fix_vektor);
   return(smo);
 STOP:
   if (a_3dmatrix) 
-    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]));
+    for (i = 0; i < smo->cos; i++) matrix_d_free(&(a_3dmatrix[i]), smo->N);
   m_free(a_3dmatrix);
-  matrix_d_free(&c_matrix);
-  matrix_d_free(&mue_matrix);
-  matrix_d_free(&u_matrix);
+  matrix_d_free(&c_matrix, smo->N);
+  matrix_d_free(&mue_matrix, smo->N);
+  matrix_d_free(&u_matrix, smo->N);
   m_free(pi_vektor); m_free(fix_vektor);
   smodel_free(&smo);
   return NULL;
@@ -427,8 +427,8 @@ int smodel_free(smodel **smo) {
   for (i = 0; i < (*smo)->N; i++) {
     m_free((*smo)->s[i].out_id);
     m_free((*smo)->s[i].in_id);
-    matrix_d_free(&((*smo)->s[i].out_a));
-    matrix_d_free(&((*smo)->s[i].in_a));
+    matrix_d_free(&((*smo)->s[i].out_a), (*smo)->cos);
+    matrix_d_free(&((*smo)->s[i].in_a), (*smo)->cos);
     m_free((*smo)->s[i].c);
     m_free((*smo)->s[i].mue);
     m_free((*smo)->s[i].u);

@@ -74,24 +74,24 @@ static local_store_t *sreestimate_alloc(const smodel *smo) {
   if (!m_calloc(r->pi_num, smo->N)) {mes_proc(); goto STOP;}
   if (!m_calloc(r->a_num, smo->N)) {mes_proc(); goto STOP;}
   for (i = 0; i < smo->N; i++) {
-    r->a_num[i] = matrix_d_alloc(smo->cos, smo->s[i].out_states);
+    r->a_num[i] = stat_matrix_d_alloc(smo->cos, smo->s[i].out_states);
     if (!r->a_num[i]) {mes_proc(); goto STOP;}
   }
-  r->a_denom = matrix_d_alloc(smo->N, smo->cos);
+  r->a_denom = stat_matrix_d_alloc(smo->N, smo->cos);
   if (!r->a_denom) {mes_proc(); goto STOP;}
   /***/
   if (!m_calloc(r->c_denom, smo->N)) {mes_proc(); goto STOP;}
-  r->c_num = matrix_d_alloc(smo->N, smo->M);
+  r->c_num = stat_matrix_d_alloc(smo->N, smo->M);
   if (!(r->c_num)) {mes_proc(); goto STOP;}
-  r->mue_num = matrix_d_alloc(smo->N, smo->M);
+  r->mue_num = stat_matrix_d_alloc(smo->N, smo->M);
   if (!(r->mue_num)) {mes_proc(); goto STOP;}
-  r->u_num = matrix_d_alloc(smo->N, smo->M);
+  r->u_num = stat_matrix_d_alloc(smo->N, smo->M);
   if (!(r->u_num)) {mes_proc(); goto STOP;}
-  r->mue_u_denom = matrix_d_alloc(smo->N, smo->M);
+  r->mue_u_denom = stat_matrix_d_alloc(smo->N, smo->M);
   if (!(r->mue_u_denom)) {mes_proc(); goto STOP;}
-  r->sum_gt_otot = matrix_d_alloc(smo->N, smo->M);
+  r->sum_gt_otot = stat_matrix_d_alloc(smo->N, smo->M);
   if (!(r->sum_gt_otot)) {mes_proc(); goto STOP;}
-  r->sum_gt_logb = matrix_d_alloc(smo->N, smo->M);
+  r->sum_gt_logb = stat_matrix_d_alloc(smo->N, smo->M);
   if (!(r->sum_gt_logb)) {mes_proc(); goto STOP;}
   return(r);
 STOP:
@@ -108,17 +108,17 @@ static int sreestimate_free(local_store_t **r, int N) {
   if( !*r ) return(0);
   m_free((*r)->pi_num);  
   for (i = 0; i < N; i++)
-    matrix_d_free( &((*r)->a_num[i]));
+    stat_matrix_d_free( &((*r)->a_num[i]));
   m_free((*r)->a_num);
-  matrix_d_free( &((*r)->a_denom));
+  stat_matrix_d_free( &((*r)->a_denom));
   /***/
   m_free((*r)->c_denom);
-  matrix_d_free( &((*r)->c_num) );
-  matrix_d_free( &((*r)->mue_num) );
-  matrix_d_free( &((*r)->u_num) );
-  matrix_d_free( &((*r)->mue_u_denom) );
-  matrix_d_free( &((*r)->sum_gt_otot) );
-  matrix_d_free( &((*r)->sum_gt_logb) );
+  stat_matrix_d_free( &((*r)->c_num) );
+  stat_matrix_d_free( &((*r)->mue_num) );
+  stat_matrix_d_free( &((*r)->u_num) );
+  stat_matrix_d_free( &((*r)->mue_u_denom) );
+  stat_matrix_d_free( &((*r)->sum_gt_otot) );
+  stat_matrix_d_free( &((*r)->sum_gt_logb) );
   m_free(*r);
   return(0);
 # undef CUR_PROC
@@ -156,15 +156,15 @@ static int sreestimate_alloc_matvek(double ***alpha, double ***beta,
 				    int T, int N, int M) {
 # define CUR_PROC "sreestimate_alloc_matvek"
   int t, res = -1;
-  *alpha = matrix_d_alloc(T, N);
+  *alpha = stat_matrix_d_alloc(T, N);
   if (!(*alpha)) {mes_proc(); goto STOP;}
-  *beta = matrix_d_alloc(T, N);
+  *beta = stat_matrix_d_alloc(T, N);
   if (!(*beta)) {mes_proc(); goto STOP;}
   if (!m_calloc(*scale, T)) {mes_proc(); goto STOP;}
   /* 3-dim. matrix for b[t][i][m] with m = 1..M(!): */
   if (!m_calloc(*b, T)) {mes_proc(); goto STOP;}
   for (t = 0; t < T; t++) {
-    (*b)[t] = matrix_d_alloc(N, M+1);
+    (*b)[t] = stat_matrix_d_alloc(N, M+1);
     if (!((*b)[t])) {mes_proc(); goto STOP;}
   }
   res = 0;
@@ -178,12 +178,12 @@ static int sreestimate_free_matvec(double **alpha,double **beta,double *scale,
 				   double ***b, int T, int N) {
 # define CUR_PROC "sreestimate_free_matvec"
   int t;
-  matrix_d_free(&alpha);
-  matrix_d_free(&beta);
+  stat_matrix_d_free(&alpha);
+  stat_matrix_d_free(&beta);
   m_free(scale); 
   if (!b) return(0);
   for (t = 0; t < T; t++)
-    matrix_d_free(&b[t]);
+    stat_matrix_d_free(&b[t]);
   m_free(b);
   return(0);
 # undef CUR_PROC

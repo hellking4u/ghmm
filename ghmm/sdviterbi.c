@@ -51,10 +51,10 @@ static local_store_t *viterbi_alloc(sdmodel *mo, int len) {
 
   if ( v->log_in_a = (double***) malloc(sizeof(double**)*mo->N )) {
     for (j = 0; j < mo->N; j++)
-      v->log_in_a[j] = matrix_d_alloc(mo->cos,  mo->s[j].in_states);
+      v->log_in_a[j] = stat_matrix_d_alloc(mo->cos,  mo->s[j].in_states);
   } else {mes_proc(); goto STOP;}
 
-  v->log_b = matrix_d_alloc(mo->N, len);
+  v->log_b = stat_matrix_d_alloc(mo->N, len);
   if (!(v->log_b)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi, mo->N)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi_new, mo->N)) {mes_proc(); goto STOP;}
@@ -80,9 +80,9 @@ static int viterbi_free(local_store_t **v, int n, int cos, int len) {
   mes_check_ptr(v, return(-1));
   if( !*v ) return(0);
   for (j = 0; j < n; j++)
-    matrix_d_free(&((*v)->log_in_a[j]));
+    stat_matrix_d_free(&((*v)->log_in_a[j]));
   m_free((*v)->log_in_a);
-  matrix_d_free( &((*v)->log_b));
+  stat_matrix_d_free( &((*v)->log_b));
   m_free((*v)->phi);
   m_free((*v)->phi_new);
   matrix_i_free( &((*v)->psi), len );

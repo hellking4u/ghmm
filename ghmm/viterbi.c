@@ -17,6 +17,7 @@ __copyright__
 #include <float.h>
 #include <math.h>
 
+/* matrices are allocated using stat_matrix_d_alloc */
 typedef struct local_store_t {
   double **log_in_a;
   double **log_b;
@@ -39,7 +40,7 @@ static local_store_t *viterbi_alloc(model *mo, int len) {
   if (!m_calloc(v->log_in_a, mo->N)) {mes_proc(); goto STOP;}
   for (j = 0; j < mo->N; j++)
     if (!m_calloc(v->log_in_a[j], mo->s[j].in_states)) {mes_proc(); goto STOP;}
-  v->log_b = matrix_d_alloc(mo->N, len);
+  v->log_b = stat_matrix_d_alloc(mo->N, len);
   if (!(v->log_b)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi, mo->N)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi_new, mo->N)) {mes_proc(); goto STOP;}
@@ -62,7 +63,7 @@ static int viterbi_free(local_store_t **v, int n, int len) {
   for (j = 0; j < n; j++)
     m_free((*v)->log_in_a[j]);
   m_free((*v)->log_in_a);
-  matrix_d_free( &((*v)->log_b));
+  stat_matrix_d_free( &((*v)->log_b));
   m_free((*v)->phi);
   m_free((*v)->phi_new);
   matrix_i_free( &((*v)->psi), len );
@@ -171,6 +172,7 @@ int *viterbi(model *mo, int *o, int len, double *log_p) {
       state_seq[t] = v->psi[t+1][state_seq[t+1]];
   }
 
+  viterbi_free(&v, mo->N, len);
   return(state_seq);
 STOP:
   /* Free the memory space */

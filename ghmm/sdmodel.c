@@ -152,9 +152,9 @@ int sdmodel_free(sdmodel **mo) {
       if (my_state->in_a)
       m_free(my_state->in_a);*/
     if (my_state->out_a)
-      matrix_d_free(&((*mo)->s[i].out_a));
+      matrix_d_free(&((*mo)->s[i].out_a), (*mo)->cos);
     if (my_state->in_a)
-      matrix_d_free(&((*mo)->s[i].in_a));    
+      matrix_d_free(&((*mo)->s[i].in_a), (*mo)->cos);    
     my_state->pi         = 0;
     my_state->b          = NULL;
     my_state->out_id     = NULL;  

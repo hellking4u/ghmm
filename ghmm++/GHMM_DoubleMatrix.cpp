@@ -35,7 +35,7 @@ GHMM_DoubleMatrix::GHMM_DoubleMatrix(int my_rows, int my_cols, double default_va
 
 GHMM_DoubleMatrix::~GHMM_DoubleMatrix() {
   if (c_matrix)
-    matrix_d_free(&c_matrix);
+    matrix_d_free(&c_matrix,rows);
 }
 
 
