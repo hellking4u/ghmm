@@ -71,6 +71,7 @@ __copyright__
 /**
    typedef density\_t fuer cmodel u. smodel.
 */
+/* FIXME gehoert nicht hier hin! */
 typedef enum {
   normal, 
   normal_pos, 
@@ -78,15 +79,11 @@ typedef enum {
   density_number
 } density_t;
 
-/* linke Grenze der Tilgungssymbole */
-/* #define MIN_TILG 5000 */
-#define MIN_TILG 0
-
 /**
   Linke Grenze fuer gestutzte NormalDichte
   */
 #define EPS_NDT  0.1
 
-/*@} (Doc++-Group: Konstanten) */
+/*@} (Doc++-Group: Constants) */
 
 #endif /* CONST_H */
