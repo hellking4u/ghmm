@@ -543,10 +543,12 @@ class HMMState:
 
         if not self.duration.useDefault:
             writeData(XMLDoc, node, 'duration', self.duration)
-           
+
         if not self.tiedto == '': # XXX tied emission
             writeData(XMLDoc, node, 'tiedto', self.tiedto)
-
+            self.emissions = self.itsHMM.state[int(self.tiedto)].emissions # XXX
+            # XXX should be a map: string -> state index
+            
         if self.order.useDefault:
             order = 0
         else:
