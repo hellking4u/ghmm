@@ -22,24 +22,25 @@ extern "C" {
 /*@{ (Doc++-Group: viterbi) */
 
 /**
-  Viterbi-Algorithmus. Berechnung des Viterbi-Pfades (bester Pfad durch den
-  Zustandsraum) und der Viterbi-Wahrscheinlichkeit zu einem gegebenen Modell
-  und einer gegebenen Sequenz.
-  @return Viterbi Pfad
-  @param mo:    Modell
-  @param o:     Sequenz
-  @param len:   Sequenzlaenge
-  @param log_p: Wahrscheinlichkeit der Sequenz im Viterbi-Pfad
+  Viterbi algorithm. Calculates the Viterbi path (the optimal path trough
+  the model) and the Viterbi probability to a given model and a given 
+  sequence.
+  @return Viterbi path
+  @param mo:    model
+  @param o:     sequence
+  @param len:   length of the sequence
+  @param log_p: probability of the sequence in the Viterbi path
   */
 int *viterbi(model *mo, int *o, int len, double *log_p);
 
 /**
-  Kontrollrechnung: logP zu gegebenem Zustandspfad (dies muss nicht
-  der Viterbi Pfad sein!), gegebener Sequenz und Modell..
-  @param mo:        Modell
-  @param o:         Sequenz
-  @param len:       Sequenzlaenge
-  @param state_seq: Zustandsfolge
+  Calculates the logarithmic probability to a given path through the 
+  states (does not have to be the Viterbi path), given sequence and
+  a model.
+  @param mo:        model
+  @param o:         sequence
+  @param len:       length of the sequence
+  @param state_seq: path through the states
   @return log P
   */
 double viterbi_logp(model *mo, int *o, int len, int *state_seq);
