@@ -20,10 +20,8 @@
 using namespace std;
 #endif
 
-
-
 int convert() {
-  int i, sqd_number;
+  int sqd_number;
   sequence_d_t ** sqd = NULL;
   string seq_file_name;
   cerr<<"convert sequences from file: "<<endl;
@@ -38,7 +36,6 @@ int convert() {
   
   cout<<"sqdnumber "<<sqd_number<<endl;
 
-  // sequence_d_print(stdout, sqd[i], 0);
   /* make ghmm++ objects and print in xml format */
   sequences_document output(sqd, sqd_number);
   output.write_sequences("/dev/stdout");
@@ -46,10 +43,8 @@ int convert() {
   return 0;
 }
 
-
 int main()
 {
-
   return convert();
 }
 

@@ -9,6 +9,7 @@ __copyright__
 *****************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ghmm/sequence.h>
 
 void sequence_alloc_print(void)

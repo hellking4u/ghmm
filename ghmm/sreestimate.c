@@ -464,13 +464,13 @@ static int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
       mes(MESCONTR,"O(%2d) can't be build from smodel smo!\n", k);
 #endif
       /* penalty costs */
-      *log_p += seq_w[k] * (double)PENALTY_LOGP; 
+      *log_p += seq_w[k] * (double)PENALTY_LOGP;
  
       continue;
     }
     else 
       /* weighted error function */
-      *log_p += log_p_k * seq_w[k];  
+      *log_p += log_p_k * seq_w[k];
     /* seq. is used for parameter estimation */
     valid_parameter++;
        
@@ -482,8 +482,8 @@ static int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
       r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i]; /* sum over all i */
       
       /* loop over t (time steps of seq.)  */
-      for (t = 0; t < T_k; t++) {	
-	c_t = 1/scale[t]; 
+      for (t = 0; t < T_k; t++) {
+	c_t = 1/scale[t];
 	if (t > 0) {
 	  osc = sequence_d_class(O[k], t - 1, &osum); /* dummy */
 	  /* A: starts at t=1 !!! */
@@ -500,13 +500,13 @@ static int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
 	    j_id = smo->s[i].in_id[j];
 	    sum_alpha_a_ji += alpha[t-1][j_id] * smo->s[i].in_a[osc][j];
 	  }
-	}
+	} /* if t>0 */
 	else {
 	  /* calculate sum(j=1..N){alpha[t-1][j]*a_jci}, which is used below
 	     for (t=1) = pi[i] (alpha[-1][i] not defined) !!! */
-	  sum_alpha_a_ji = smo->s[i].pi; 
-	}
-	/*=========falls state fix, continue;======================*/	
+	  sum_alpha_a_ji = smo->s[i].pi;
+	} /* if t>0 */
+	/* ========= if state fix, continue;====================== */
 	if (smo->s[i].fix)
 	  continue;
 	/* C-denominator: */

@@ -73,7 +73,8 @@ namespace std {
 	{
 	  /* parse pair vector and collect information into a map */
 	  double actual_weight=default_weight;
-	  for (XMLIO_ContentElementArrayElement<double,E>::iterator pos=XMLIO_ContentElementArrayElement<double,E>::begin();
+	  typename XMLIO_ContentElementArrayElement<double,E>::iterator pos;
+	  for (pos=XMLIO_ContentElementArrayElement<double,E>::begin();
 	       pos!=XMLIO_ContentElementArrayElement<double,E>::end();
 	       ++pos)
 	    {
@@ -108,7 +109,8 @@ namespace std {
       virtual void print() const
 	{
 	  cout<<toString()<<endl;
-	  for (map<E*,double>::const_iterator pos=map<E*,double>::begin();
+	  typename map<E*,double>::const_iterator pos;
+	  for (pos=map<E*,double>::begin();
 	       pos!=map<E*,double>::end();
 	       ++pos)
 	    {

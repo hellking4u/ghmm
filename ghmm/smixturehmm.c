@@ -24,8 +24,11 @@ __copyright__
 #include "const.h"
 #include "smap_classify.h"
 
-//double total_train_w = 0.0;
-//double total_test_w = 0.0;
+/* used in main and deactivated other functions */
+#if 0
+double total_train_w = 0.0;
+double total_test_w = 0.0;
+#endif
 
 #if 0 /* no main */
 /*============================================================================*/

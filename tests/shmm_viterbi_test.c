@@ -6,6 +6,7 @@
   $Id$
 *******************************************************************************/
 
+#include <string.h>
 #include <ghmm/smodel.h>
 #include <ghmm/sequence.h>
 #include <ghmm/sviterbi.h>
@@ -20,7 +21,7 @@ static int viterbi_test(char* argv[]) {
   FILE *outfile = NULL;
   sequence_d_t **sqd = NULL;
   smodel** smo = NULL;
-  char outfilename[256], infilename[256];
+  char outfilename[256];
   int smo_number, sqd_number, *state_seq = NULL, model, t, cnt = 0;
   long i, j;
   double log_p;
