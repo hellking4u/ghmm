@@ -653,6 +653,16 @@ class SequenceSet:
         for i in range(seqNumber):
             self.setSeq(seq.seq,i,self.__array[ seqIndixes[i] ]) 
             ghmmwrapper.set_arrayint(seq.seq_len,i,ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i]))
+            # Above doesnt copy seq_id or seq_label or seq_w
+            seq_id = int(ghmmwrapper.get_arrayd(self.cseq.seq_id, seqIndixes[i]))
+            ghmmwrapper.set_arrayd(seq.seq_id, i, seq_id)
+            seq_label = ghmmwrapper.get_arrayl(self.cseq.seq_label, i)
+            ghmmwrapper.set_arrayl(seq.seq_label, i, seq_label)
+            # XXX temp for GQL/ISMB to suppress |0| in SQD-file outputs
+            #seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
+            #ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
+             
+            
         seq.seq_number = seqNumber
         
         return SequenceSet(self.emissionDomain, seq)

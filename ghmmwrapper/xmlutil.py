@@ -50,7 +50,7 @@ import types
 import copy
 
 import sys 
-import HMMXML
+#import HMMXML
 
 import logging
 log = logging.getLogger("xmlutil.py")
