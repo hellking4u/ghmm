@@ -18,6 +18,7 @@ namespace std {
 #endif
 
 class GHMM_Emission;
+class GHMM_State;
 
 /** */
 class GHMM_Emission: public XMLIO_Element {
@@ -25,7 +26,7 @@ class GHMM_Emission: public XMLIO_Element {
  public:
 
   /** Constructor. */
-  GHMM_Emission();
+  GHMM_Emission(GHMM_State* my_state);
   /** Destructor. */
   virtual ~GHMM_Emission();
 
@@ -33,7 +34,9 @@ class GHMM_Emission: public XMLIO_Element {
   virtual const char* toString() const;
 
   /** */
-  void XMLIO_getCharacters(const string& characters);
+  virtual void XMLIO_finishedReading();
+  /** */
+  virtual void XMLIO_getCharacters(const string& characters);
   /** */
   virtual XMLIO_Element* XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs);
 
@@ -45,6 +48,14 @@ class GHMM_Emission: public XMLIO_Element {
   double weight;
   /** */
   density_t density;
+
+
+ private:
+
+  /** */
+  bool function_loaded;
+  /** Parent state. */
+  GHMM_State* state;
 };
 
 #ifdef HAVE_NAMESPACES

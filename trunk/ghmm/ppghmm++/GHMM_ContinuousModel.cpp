@@ -39,6 +39,14 @@ GHMM_ContinuousModel::GHMM_ContinuousModel(int N, int M, int cos, density_t dens
   c_model->density = density;
   c_model->prior   = prior;
   c_model->s       = (sstate*) malloc(sizeof(sstate) * c_model->N);
+
+  /* Create C++ wrapper for all states and fill C states with usefull 
+     information. */
+  int i;
+  for (i = 0; i < c_model->N; ++i) {
+    GHMM_State* state = new GHMM_State(this,i,&c_model->s[i]);
+    states.push_back(state);
+  }
 }
 
 
@@ -50,9 +58,11 @@ GHMM_ContinuousModel::~GHMM_ContinuousModel() {
   unsigned int i;
   for (i = 0; i < states.size(); ++i)
     SAFE_DELETE(states[i]);
+  states.clear();
 
   for (i = 0; i < transitions.size(); ++i)
     SAFE_DELETE(transitions[i]);
+  transitions.clear();
 }
 
 
@@ -61,9 +71,9 @@ const char* GHMM_ContinuousModel::toString() const {
 }
 
 
-sstate* GHMM_ContinuousModel::getState(int index) const {
+sstate* GHMM_ContinuousModel::getCState(int index) const {
   if (index >= c_model->N) {
-    fprintf(stderr,"GHMM_Model::getState(int):\n");
+    fprintf(stderr,"GHMM_ContinuousModel::getCState(int):\n");
     fprintf(stderr,"State no. %d does not exist. Model has %d states.\n",index,c_model->N);
     exit(1);
   }
@@ -98,7 +108,7 @@ int GHMM_ContinuousModel::reestimate_baum_welch(GHMM_Sequences* seq, double* log
 
 XMLIO_Element* GHMM_ContinuousModel::XMLIO_startTag(const string& tag, XMLIO_Attributes &attrs) {
   if (tag == "state") {
-    GHMM_State* ghmm_state = new GHMM_State(attrs);
+    GHMM_State* ghmm_state = new GHMM_State(this,states.size(),attrs);
     states.push_back(ghmm_state);
 
     state_by_id[ghmm_state->id] = states.size() - 1;
@@ -144,12 +154,32 @@ void GHMM_ContinuousModel::XMLIO_finishedReading() {
       fprintf(stderr,"Not all gaussian functions are equal.\nThis is not yet supported by the library.\n");
       exit(1);
     }
-  
+
+  /* fill up states. */
   for (i = 0; i < states.size(); ++i)
-    states[i]->fillState(this,&c_model->s[i]);
+    states[i]->fillState(&c_model->s[i]);
+
+  /* check whether sum of initial probs is 1. */
+  if (check() == -1) 
+    exit(1);
+
+  /* we dont need the transitions any more. */
+  for (i = 0; i < transitions.size(); ++i)
+    SAFE_DELETE(transitions[i]);
+  transitions.clear();
 }
 
 
 int GHMM_ContinuousModel::getStateID(const string& id) {
   return state_by_id[id];
+}
+
+
+int GHMM_ContinuousModel::check() {
+  return smodel_check(c_model);
+}
+
+
+int GHMM_ContinuousModel::getNumberOfTransitionMatrices() const {
+  return c_model->cos;
 }

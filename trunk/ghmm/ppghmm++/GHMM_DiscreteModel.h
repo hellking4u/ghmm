@@ -78,7 +78,7 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
      (That is, if the sum of the probabilities is 1).
      @return 0 for succes; -1 for error. 
   */
-  int check();
+  virtual int check();
   /**
      Copies a given model. Allocates the necessary memory.
      @return copy of the model
@@ -139,6 +139,8 @@ class GHMM_DiscreteModel: public GHMM_AbstractModel {
       @param seq_number:  number of sequences
   */
   GHMM_Sequences* generate_sequences(int seed, int global_len, long seq_number);
+  /** */
+  virtual int getNumberOfTransitionMatrices() const;
   /* Returns state with given index. */
   state* getState(int index) const;
   /**

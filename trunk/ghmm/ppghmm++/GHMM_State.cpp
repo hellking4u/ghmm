@@ -18,19 +18,38 @@ using namespace std;
 #endif
 
 
-GHMM_State::GHMM_State(XMLIO_Attributes& attrs) {
-  c_state  = NULL;
-  reading  = GHMM_STATE_NONE;
-  id       = attrs["id"];
-  emission = NULL;
+GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, XMLIO_Attributes& attrs) {
+  index        = my_index;
+  c_sstate     = NULL;
+  reading      = GHMM_STATE_NONE;
+  emission     = NULL;
+  parent_model = my_model;
+
+  /* by default take index as id. */
+  id = attrs["id"];
+  if (id == "") {
+    char mem[100];
+    snprintf(mem,sizeof(mem),"%d",my_index);
+    id = string(mem);
+  }
+}
+
+
+GHMM_State::GHMM_State(GHMM_AbstractModel* my_model, int my_index, sstate* my_state) {
+  index        = my_index;
+  c_sstate     = my_state;
+  reading      = GHMM_STATE_NONE;
+  emission     = NULL;
+  parent_model = my_model;
+  
+  /* take index as id. */
+  char mem[100];
+  snprintf(mem,sizeof(mem),"%d",my_index);
+  id = string(mem);
 }
 
 
 GHMM_State::~GHMM_State() {
-  if (c_state) {
-    state_clean(c_state);
-    free(c_state);
-  }
   SAFE_DELETE(emission);
 }
 
@@ -49,7 +68,7 @@ XMLIO_Element* GHMM_State::XMLIO_startTag(const string& tag, XMLIO_Attributes &a
 
   if (tag == "emission") {
     SAFE_DELETE(emission);
-    emission = new GHMM_Emission();
+    emission = new GHMM_Emission(this);
 
     return emission;
   }
@@ -79,8 +98,12 @@ void GHMM_State::XMLIO_getCharacters(const string& characters) {
 }
 
 
-void GHMM_State::fillState(GHMM_ContinuousModel* model, sstate* s) {
-  smodel* c_model = model->c_model;
+void GHMM_State::fillState(sstate* s) {
+  GHMM_ContinuousModel* model = dynamic_cast<GHMM_ContinuousModel*>(parent_model);
+  smodel* c_model             = model->c_model;
+
+  /* store current c representation of state. */
+  c_sstate = s;
 
   s->c   = (double*) malloc(sizeof(double) * c_model->M);
   s->mue = (double*) malloc(sizeof(double) * c_model->M);
@@ -107,7 +130,7 @@ void GHMM_State::fillState(GHMM_ContinuousModel* model, sstate* s) {
   }
 
   /* now fill with useful data. */
-  s->pi         = initial;
+  s->pi = initial;
 
   for (i = 0; i < out_edges.size(); ++i)
     s->out_id[i] = model->getStateID(out_edges[i]->target);
@@ -138,5 +161,101 @@ void GHMM_State::fillState(GHMM_ContinuousModel* model, sstate* s) {
     s->u[i]   = emission->variance;
   }
 
-  s->fix        = 0;
+  s->fix = 0;
+}
+
+
+void GHMM_State::XMLIO_finishedReading() {
+  if (!emission) {
+    fprintf(stderr,"state with id='%s' lacks emission element.\n",id.c_str());
+    exit(1);
+  }
+}
+
+
+void GHMM_State::changeOutEdge(int target, double prob) {
+  changeOutEdge(0,target,prob);
+}
+
+
+void GHMM_State::changeInEdge(int target, double prob) {
+  changeInEdge(0,target,prob);
+}
+
+
+void GHMM_State::changeOutEdge(int matrix_index, int target, double prob) {
+  if (prob == 0) {
+    removeOutEdge(target);
+    return;
+  }
+  
+  int i;
+  for (i = 0; i < c_sstate->out_states; ++i)
+    if (c_sstate->out_id[i] == target) {
+      c_sstate->out_a[matrix_index][i] = prob;
+      return;
+    }
+
+  /* create new state. */
+  c_sstate->out_states += 1;
+  c_sstate->out_id = (int*) realloc(c_sstate->out_a,sizeof(int) * c_sstate->out_states);
+  c_sstate->out_id[c_sstate->out_states - 1] = target;
+
+  for (i = 0; i < parent_model->getNumberOfTransitionMatrices(); ++i) {
+    c_sstate->out_a[i] = (double*) realloc(c_sstate->out_a,sizeof(double) * c_sstate->out_states);
+    c_sstate->out_a[i][c_sstate->out_states - 1]  = 0;
+  }
+  c_sstate->out_a[matrix_index][c_sstate->out_states - 1]  = prob;
+}
+
+
+void GHMM_State::removeOutEdge(int target) {
+  int i;
+  for (i = 0; i < c_sstate->out_states; ++i)
+    if (c_sstate->out_id[i] == target) {
+      c_sstate->out_id[i] = c_sstate->out_id[c_sstate->out_states - 1];
+      for (int m = 0; m < parent_model->getNumberOfTransitionMatrices(); ++m)
+	c_sstate->out_a[m][i]  = c_sstate->out_a[m][c_sstate->out_states - 1];
+      c_sstate->out_states -= 1;
+      return;
+    }
+}
+
+
+void GHMM_State::removeInEdge(int source) {
+  int i;
+  for (i = 0; i < c_sstate->in_states; ++i)
+    if (c_sstate->in_id[i] == source) {
+      c_sstate->in_id[i] = c_sstate->in_id[c_sstate->in_states - 1];
+      for (int m = 0; m < parent_model->getNumberOfTransitionMatrices(); ++m)
+	c_sstate->in_a[m][i]  = c_sstate->in_a[m][c_sstate->in_states - 1];
+      c_sstate->in_states -= 1;
+      return;
+    }
+}
+
+
+void GHMM_State::changeInEdge(int matrix_index, int source, double prob) {
+  if (prob == 0) {
+    removeInEdge(source);
+    return;
+  }
+  
+  int i;
+  for (i = 0; i < c_sstate->in_states; ++i)
+    if (c_sstate->in_id[i] == source) {
+      c_sstate->in_a[matrix_index][i] = prob;
+      return;
+    }
+
+  /* create new state. */
+  c_sstate->in_states += 1;
+  c_sstate->in_id = (int*) realloc(c_sstate->in_a,sizeof(int) * c_sstate->in_states);
+  c_sstate->in_id[c_sstate->in_states - 1] = source;
+
+  for (i = 0; i < parent_model->getNumberOfTransitionMatrices(); ++i) {
+    c_sstate->in_a[i] = (double*) realloc(c_sstate->in_a,sizeof(double) * c_sstate->in_states);
+    c_sstate->in_a[i][c_sstate->in_states - 1]  = 0;
+  }
+  c_sstate->in_a[matrix_index][c_sstate->in_states - 1]  = prob;
 }

@@ -9,6 +9,7 @@
 #define _GHMM_ABSTRACTMODEL_H 1
 
 #include <stdio.h>
+#include <vector>
 #include <xmlio/XMLIO_Element.h>
 
 #include <ppghmm++/begin_code.h>
@@ -18,6 +19,8 @@ namespace std {
 #endif
 
 class GHMM_AbstractModel;
+class GHMM_State;
+class GHMM_Transition;
 
 /** */
 class GHMM_AbstractModel: public XMLIO_Element {
@@ -32,11 +35,32 @@ class GHMM_AbstractModel: public XMLIO_Element {
   /** Returns name of class. */
   virtual const char* toString() const;
 
+  /** */
+  void addTransition(GHMM_Transition* transition);
+  /**
+     Tests if all standardization requirements of model are fulfilled. 
+     @return 0 for succes, -1 on error
+  */
+  virtual int check();
+  /** */
+  virtual int getNumberOfTransitionMatrices() const;
+  /* Returns state with given index. */
+  GHMM_State* getState(int index) const;
+  /* Returns state with given id. */
+  GHMM_State* getState(const string& id) const;
   /**
      Writes the model in matrix format.
      @param file: output file
   */
   virtual void print(FILE *file);
+
+
+ protected:
+
+  /** */
+  vector<GHMM_State*> states;
+  /** */
+  map<string,int> state_by_id;
 };
 
 #ifdef HAVE_NAMESPACES
