@@ -20,6 +20,7 @@ Usage: ghmm-config [OPTIONS]
 Options:
         [--prefix]
         [--exec-prefix]
+        [--lib-prefix]
         [--version]
         [--libs]
         [--cflags]
@@ -57,6 +58,9 @@ while test $# -gt 0; do
       ;;
     --libs)
       echo -L${prefix}/lib -lghmm @LIBS@
+      ;;
+    --lib-prefix)
+      echo ${prefix}/lib
       ;;
     --copyright)
       copyright
