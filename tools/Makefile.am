@@ -1,5 +1,5 @@
 #  author       : Achim Gaedke
-#  filename     : ghmm/tools/Makefile.am
+#  filename     : /zpr/bspk/src/hmm/ghmm/tools/Makefile.am
 #  created      : DATE: April 2001
 #  $Id$
 #
@@ -11,11 +11,12 @@ MAINTAINERCLEANFILES = Makefile.in
 
 BUILT_SOURCES = 
 INCLUDES = -I$(top_srcdir)
-bin_PROGRAMS = probdist cluster scluster
+bin_PROGRAMS = probdist cluster scluster smix_hmm
 
 probdist_SORUCES = probdist.c
 cluster_SOURCES  = cluster.c
 scluster_SOURCES = scluster.c
+smix_hmm_SOURCES = smix_hmm.c
 
 LDADD = $(top_builddir)/ghmm/libghmm.a
 bin_SCRIPTS = ghmm-config
