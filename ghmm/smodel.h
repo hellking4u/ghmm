@@ -123,7 +123,7 @@ smodel** smodel_read(char *filename, int *smo_number);
 smodel*  smodel_read_block(scanner_t *s, int *multip);
 
 /**
-   copies one smodel. Memory alloc is here.
+   Copies one smodel. Memory alloc is here.
    @return pointer to smodel copy
    @param smo   smodel to be copied  */
 smodel*  smodel_copy(const smodel *smo);
@@ -157,20 +157,22 @@ int     smodel_check_compatibility(smodel **smo, int smodel_number);
 double smodel_get_random_var(smodel *smo, int state, int m);
 
 
-
 /** 
-    Erzeugt zu einem gegebenen Modell zufaellige Sequenzen. Speicher fuer die 
-    Sequenzen und den Laengenvektor wird in der Fkt. selbst bereitgestellt.
-    Die Laenge der Sequenzen kann global vorgegeben werden (global_len > 0)
-    oder in der Funktion dadurch bestimmt werden, dass ein "final state"
-    erreicht wird (ein state, dessen Ausgangswahrscheinlichkeiten = 0 sind).
-    @return            Pointer auf ein Feld von Sequenzen (Allozierung)
-    @param smo         vorgegebenes Modell
-    @param seed        Initialisierungsvariable des Zufallsgenerators (int)
-    @param global_len  gewuenschte Sequenzlaenge (=0: autom. ueber final state)
-    @param seq_number  gewuenschte Anzahl von Sequenzen
-    @param label       label tag (more documentation needed)
-    @param Tmax        maximal sequence length (more documentation needed)
+    Produces sequences to a given model. All memory that is needed for the 
+    sequences is allocated inside the function. It is possible to define
+    the length of the sequences global (global_len > 0) or it can be set 
+    inside the function, when a final state in the model is reach (a state
+    with no output). If the model has no final state, the sequences will
+    have length MAX_SEQ_LEN.
+    @return             pointer to an array of sequences
+    @param smo:         model
+    @param seed:        initial parameter for the random value generator
+                        (an integer). If seed == 0, then the random value
+			generator is not initialized.
+    @param global_len:  length of sequences (=0: automatically via final states)
+    @param seq_number:  number of sequences
+    @param label:       label tag
+    @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
 */
 
 sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
@@ -337,9 +339,9 @@ int smodel_count_free_parameter(smodel **smo, int smo_number);
 */
 
 
-/** Intervall(a,b) mit  B(a) < 0.01, B(b) > 0.99
+/** Generates interval(a,b) with  B(a) < 0.01, B(b) > 0.99
     @param smo    continous HMM
-    @param state  vorgegebener Zustand
+    @param state  given state
     @param a      return-value: left side
     @param b      return-value: right side
 */
