@@ -150,7 +150,7 @@ static void __viterbi_silent( sdmodel *mo, int t, local_store_t *v, int *recent_
 	  for (i = 0; i < mo->s[k].in_states; i++) {
 	    // printf("\nBerrechnung von transclass von Zustand %d", mo->s[k].in_id[i]);
 	    if (mo->cos != 1){
-	      osc = mo->get_class(mo->N, recent_matchcount[mo->s[k].in_id[i]]);
+	      osc = mo->get_class(NULL, mo->N);
 	    }
 	    if ( v->phi[ mo->s[k].in_id[i] ] != +1 &&
 		 v->log_in_a[k][osc][i]      != +1) {
@@ -204,6 +204,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   int *countstates = NULL;
   int nr_of_countstates = 2*((mo->N - 5)/3);	// # of matchstates + deletestates
   int lastemState;
+  int *tmp_path;
 
   osc = 0;
 
@@ -283,7 +284,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
 	  // get_class of in state
 	  // printf("\nBerechnung von transclass fuer Zustand %d", mo->s[St].in_id[i]);
 	  if (mo->cos > 1){
-	    osc = mo->get_class(mo->N, former_matchcount[mo->s[St].in_id[i]]);
+	    osc = mo->get_class(NULL, mo->N);
 	  }
 	  if ( v->phi[ mo->s[St].in_id[i] ] != +1 &&
 	       v->log_in_a[St][osc][i]    != +1) {
@@ -383,7 +384,7 @@ int *sdviterbi( sdmodel *mo, int *o, int len, double *log_p)
   }
 
   /* COPY PATH */
-  int *tmp_path = state_seq;
+  tmp_path = state_seq;
   if ( mo->model_type != kSilentStates ) {
     state_seq = (int *) malloc( sizeof(int) * len );
     for(i=0, t=0; t < len_path && i < len; t++) {
