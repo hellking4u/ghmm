@@ -13,6 +13,10 @@ __copyright__
 
 #include <ghmm/smodel.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name smap functions */
 /*@{ */
 
@@ -24,6 +28,11 @@ int smap_classify(smodel **smo, double *result, int smo_number,
 /**
  */
 int smap_bayes(smodel **smo, double *result, int smo_number, double *O, int T);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 /*@} */
 

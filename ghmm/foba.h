@@ -14,6 +14,11 @@ __copyright__
 
 #include <ghmm/model.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name Forward-Backward-Algorithm 
    
    Forward-Backward-Algorithm for multiple integer
@@ -68,5 +73,10 @@ int foba_backward(model *mo, const int *O, int length, double **beta,
 int foba_logp(model *mo, const int *O, int len, double *log_p);
 
 /*@} (Doc++-Group: foba) */
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

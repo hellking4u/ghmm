@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<ghmm>
+Wunderschönes Hidden Markov Model
+
+<sequences type="int">
+<DiscretePD>
+ 1 <sequence><label>bla</label> 1 2 3 4 </sequence> </DiscretePD>
+</sequences>
+</ghmm>

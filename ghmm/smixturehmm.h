@@ -10,6 +10,11 @@ __copyright__
 
 #ifndef SMIXTUREHMM_H
 #define SMIXTUREHMM_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
 
@@ -59,6 +64,9 @@ void smixturehmm_print_header(FILE *file, char *argv[], int flag);
  */
 double *smixturehmm_avg_like(double **cp, sequence_d_t *sqd, 
 			     smodel **smo, int smo_number);
+#ifdef __cplusplus
+}
+#endif
 
 /*@} smixturehmm section */
 

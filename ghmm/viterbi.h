@@ -12,6 +12,10 @@ __copyright__
 #ifndef VITERBI_H
 #define VITERBI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <ghmm/model.h>
 
 /**@name Viterbi-Algorithmus */
@@ -39,6 +43,11 @@ int *viterbi(model *mo, int *o, int len, double *log_p);
   @return log P
   */
 double viterbi_logp(model *mo, int *o, int len, int *state_seq);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 

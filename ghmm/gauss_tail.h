@@ -12,6 +12,11 @@ __copyright__
 #ifndef GAUSS_TAIL_H
 #define GAUSS_TAIL_H
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
    @name some calculations concerning gaussian tail function
  */
@@ -29,6 +34,11 @@ double pmue_umin(double mue, double A, double B, double eps);
     @name Funktion zum Loesen der Nullstellengleichungen fuer abgeschnittenen Normaldichte 
 */
 double pmue_interpol(double mue, double A, double B, double eps);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 /*@} */
 #endif /* GAUSS_TAIL_H */

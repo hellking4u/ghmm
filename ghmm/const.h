@@ -68,16 +68,6 @@ __copyright__
 */
     
 #define PENALTY_LOGP -500.0
-/**
-   typedef density\_t fuer cmodel u. smodel.
-*/
-/* FIXME gehoert nicht hier hin! */
-typedef enum {
-  normal, 
-  normal_pos, 
-  normal_approx,
-  density_number
-} density_t;
 
 /**
   Linke Grenze fuer gestutzte NormalDichte

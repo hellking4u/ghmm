@@ -5,6 +5,7 @@
 #
 # __copyright__
 
+SUBDIRS=
 MAINTAINERCLEANFILES = Makefile.in
 
 #FIXME: expat config

@@ -13,6 +13,10 @@ __copyright__
 #include <ghmm/sequence.h>
 #include <ghmm/model.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  @name cluster
  */
@@ -63,5 +67,10 @@ long cluster_update_label(long *oldlabel, long *seq_label, long seq_number);
 void cluster_print_likelihood(FILE *outfile, cluster_t *cl);
 
 /*@} cluster documentation */
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* CLUSTER_H */

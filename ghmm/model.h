@@ -12,6 +12,10 @@ __copyright__
 #ifndef MODEL_H
 #define MODEL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
@@ -99,12 +103,22 @@ struct hmm_check_t{
 };
 typedef struct hmm_check_t hmm_check_t;
 
+#ifdef __cplusplus
+}
+#endif
+
+
 /*
   Wichtig: Include von sequence.h zur Vermeidung von Fehlern beim Uebersetzen
   erst an dieser Stelle. (sequence.h und model.h includen sich gegenseitig)
 */
 #include <ghmm/sequence.h>
 #include <ghmm/scanner.h>
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Speicher eines Modells freir\"aumen..
     @return Erfolgsstatus: 0 succes; -1 error
@@ -321,6 +335,10 @@ int model_direct_check_data(model_direct *mo_d, hmm_check_t *check);
                     Prints to stdout (yuk!)
 */
 double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

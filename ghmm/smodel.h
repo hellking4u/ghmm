@@ -11,6 +11,10 @@ __copyright__
 #ifndef SMODEL_H
 #define SMODEL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <ghmm/const.h>
 #include <ghmm/scanner.h>
 
@@ -24,6 +28,17 @@ __copyright__
     (COS is set to a value greater than 1). In the latter case
     a suitable (depending on the spezific application) function 
     sequence\_get\_class has to be defined */
+
+/**
+   typedef density\_t fuer cmodel u. smodel.
+*/
+typedef enum {
+  normal, 
+  normal_pos, 
+  normal_approx,
+  density_number
+} density_t;
+
 
 /** @name sstate
     Structure for one state.
@@ -329,6 +344,11 @@ int smodel_count_free_parameter(smodel **smo, int smo_number);
     @param b      return-value: right side
 */
 void smodel_get_interval_B(smodel *smo, int state, double *a, double *b);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
 

@@ -11,6 +11,9 @@ __copyright__
 #ifndef ROOT_FINDER_H
 #define ROOT_FINDER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
    @name root finder
  */
@@ -34,5 +37,9 @@ double zbrent_AB(double (*func)(double, double, double, double),
 		 double eps);
 
 /*@} */
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 

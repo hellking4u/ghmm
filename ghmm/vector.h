@@ -11,6 +11,10 @@ __copyright__
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 
 /**@name Vektor-Funktionen */
@@ -104,6 +108,10 @@ void vector_i_print(FILE *file, int *vector, int len,
   @param v       berechneter Vektor (Rueckgabe)
   */
 int vector_mat_times_vec(double ** A, double *x, int n, int m, double *v);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* VECTOR_H */

@@ -5,7 +5,7 @@
 #
 # __copyright__
 
-SUBDIRS = ghmm tools tests doc
+SUBDIRS = @SUBDIRS@
 
 MAINTAINERCLEANFILES = aclocal.m4 configure \
 	Makefile.in stamp-h.in config.h.in \

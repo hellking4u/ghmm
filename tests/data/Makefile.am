@@ -5,6 +5,7 @@
 #
 # __copyright__
 
+SUBDIRS=
 MAINTAINERCLEANFILES = Makefile.in
 EXTRA_DIST = test.smo test10.sqd test100.sqd viterbi.sh
 
