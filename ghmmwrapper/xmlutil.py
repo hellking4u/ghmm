@@ -390,11 +390,11 @@ class HMMState:
 	#print type(self.label)
 	
         self.index = nodeIndex # The node index in the underlying graph
-        self.id    = ValidatingString("None") # identification by the canvas, not always the same
+        self.id    = DefaultedInt() # identification by the canvas, not always the same
 	
-	self.state_class = DefaultedInt()
-	self.state_class.setDefault(0,'')
-	
+        self.state_class = PopupableInt(-1)
+        self.state_class.setPopup(itsHMM.hmmClass.code2name, itsHMM.hmmClass.name2code, 10)
+
         # XXX self.state_class.setPopup(itsHMM.hmmClass.name, itsHMM.hmmClass.name2code, 10)
 
 	self.order = DefaultedInt()
@@ -417,11 +417,12 @@ class HMMState:
         self.background = PopupableInt(-1)
         self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
 
-        self.editableAttr = ['label', 'initial', 'order', 'background']
+        self.editableAttr = ['label', 'state_class', 'initial', 'order', 'background']
         self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
-        
-    editableAttr = ['label', 'initial']
+
+    editableAttr = ['label', 'initial', 'order', 'background', 'tiedto', 'reading_frame']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
+    
     # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
     #
@@ -444,8 +445,8 @@ class HMMState:
         self.initial = typed_assign(self.initial, value)
 
     def fromDOM(self, XMLNode):
-
-        self.id = ValidatingString(XMLNode.attributes['id'].nodeValue.encode('ascii', 'replace'))
+        
+        self.id = typed_assign(self.id, int(XMLNode.attributes['id'].nodeValue)) # state's id
         
         self.index = self.itsHMM.G.AddVertex()
         
@@ -549,29 +550,30 @@ class HMMState:
            
         if not self.tiedto == '':
             writeData(XMLDoc, node, 'tiedto', self.tiedto)
-        else:
-            if self.order.useDefault:
-                order = 0
-            else:
-                order = self.order
+            self.emissions = self.itsHMM.state[self.itsHMM.id2index[int(self.tiedto)]].emissions # XXX            
 
-            # XXX Produce uniform emission probs, if we dont have the correct number of
-            # parameters
-            
-            size = self.itsHMM.hmmAlphabet.size()**(order+1)
-            if len(self.emissions) != size:
-                tmp = [1.0/self.itsHMM.hmmAlphabet.size()] * self.itsHMM.hmmAlphabet.size()
-                if order == 0:
-                    self.emissions = tmp
-                else:
-                    self.emissions = tmp * self.itsHMM.hmmAlphabet.size()**order
-                    
-                
-            if order > 0:
-                writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions,
-                                                                 self.itsHMM.hmmAlphabet.size()))
+        if self.order.useDefault:
+            order = 0
+        else:
+            order = self.order
+
+        # XXX Produce uniform emission probs, if we dont have the correct number of
+        # parameters
+
+        size = self.itsHMM.hmmAlphabet.size()**(order+1)
+        if len(self.emissions) != size:
+            tmp = [1.0/self.itsHMM.hmmAlphabet.size()] * self.itsHMM.hmmAlphabet.size()
+            if order == 0:
+                self.emissions = tmp
             else:
-                writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions))
+                self.emissions = tmp * self.itsHMM.hmmAlphabet.size()**order
+
+
+        if order > 0:
+            writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions,
+                                                             self.itsHMM.hmmAlphabet.size()))
+        else:
+            writeData(XMLDoc, node, 'emissions', csvFromList(self.emissions))
             
         XMLNode.appendChild(node)
 
@@ -639,14 +641,31 @@ class HMM:
         if XMLFileName != None:
             self.OpenXML(XMLFileName)
 
+    def Clear(self):
+        self.G.Clear()
+        self.Pi = {}
+        self.id2index = {}
+            
+        self.hmmAlphabet = DiscreteHMMAlphabet()
+        self.hmmClass    = HMMClass()
+        self.backgroundDistributions = NamedDistributions(self)
+        
+        self.editableAttr = {}
+        self.editableAttr['HMM'] = ['desc']
+        self.desc = ValidatingString()       
+        self.state = {}
+        self.DocumentName = "graphml"        
 
     def AddState(self, id, label='None'):
         state = HMMState(-1, self)
-        state.id = id
-        state.index = state.id
+        if self.id2index.keys() != []:
+            state.id = max(self.id2index.keys()) + 1
+        else:
+            state.id = 1
+        state.index = index
         self.id2index[state.id] = state.index
         self.state[state.index] = state # XXX Use canvas id
-        state.label = typed_assign(state.label, label)
+        state.label = typed_assign(state.label, state.id)
         self.G.labeling[state.index] = "%s" % (state.label)
         return state.index
         
@@ -659,9 +678,11 @@ class HMM:
     def fromDOM(self, XMLNode):
         
         # self.hmmClass.fromDOM(XMLNode.getElementsByTagName("hmm:class")[0]) 
-        for tag in XMLNode.getElementsByTagName("hmm:class"):
-            self.hmmClass.fromDOM(tag)
-
+        class_elements = XMLNode.getElementsByTagName("hmm:class")
+        if class_elements != []:
+            for tag in XMLNode.getElementsByTagName("hmm:class"):
+                self.hmmClass.fromDOM(tag)
+                
         # One "hmm:alphabet" XML element
         self.hmmAlphabet.fromDOM(XMLNode.getElementsByTagName("hmm:alphabet")[0]) 
         self.backgroundDistributions.fromDOM(XMLNode)
@@ -681,8 +702,8 @@ class HMM:
             self.G.edgeWeights[i] = EdgeWeight(self.G)
 
         for edge in edges:
-            i = self.id2index[edge.attributes['source'].nodeValue]
-            j = self.id2index[edge.attributes['target'].nodeValue]
+            i = self.id2index[int(edge.attributes['source'].nodeValue)]
+            j = self.id2index[int(edge.attributes['target'].nodeValue)]
 
             datas = edge.getElementsByTagName("data")
             for data in datas:
@@ -893,15 +914,18 @@ class HMM:
 	    # dom.unlink()
 
     def WriteXML(self, fileName):
-	self.modelCheck()   # raise exceptions here
-        doc = xml.dom.minidom.Document()
-        self.toDOM(doc, doc)
-        file = open(fileName, 'w')
-        # xml.dom.ext.PrettyPrint(doc, file)        
-        file.write(toprettyxml(doc)) # problem with white spaces
-        file.close()
-        doc.unlink()
-
+        try:
+            self.modelCheck()   # raise exceptions here
+            doc = xml.dom.minidom.Document()
+            self.toDOM(doc, doc)
+            file = open(fileName, 'w')
+            # xml.dom.ext.PrettyPrint(doc, file)        
+            file.write(toprettyxml(doc)) # problem with white spaces
+            file.close()
+            doc.unlink()
+        except HMMEdError:
+            print "HMMEdError: No file was written due to errors in the model."
+            
     def WriteGHMM(self, fileName):
 	self.modelCheck()   # raise exceptions here
         doc = xml.dom.minidom.Document()
