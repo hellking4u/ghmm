@@ -1,4 +1,7 @@
-# ghmm/doc/Makefile.am
+#  author       : Achim Gaedke
+#  filename     : ghmm/doc/Makefile.am
+#  created      : DATE: April 2001
+#  $Id$
 
 #******************  Doc++ *******************
 

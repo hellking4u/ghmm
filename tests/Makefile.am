@@ -1,10 +1,11 @@
-# $Name$
-# $Author$
-# $Date$, $Revision$"
+#  author       : Achim Gaedke
+#  filename     : ghmm/tests/Makefile.am
+#  created      : DATE: April 2001
+#  $Id$
 
 # tests and examples
 
-CFLAGS+=-I@top_srcdir@
+INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
 noinst_PROGRAMS = root_finder_test

@@ -1,3 +1,9 @@
+dnl author       : Achim Gaedke
+dnl filename     : ghmm/acinclude.m4
+dnl created      : DATE: 2001-04-04
+dnl $Id$
+
+
 # Configure path for the GNU Scientific Library
 # Christopher R. Gabriel <cgabriel@linux.it>, April 2000
 # Modified by Achim Gädke <achim.gaedke@zpr.uni-koeln.de> March 2001

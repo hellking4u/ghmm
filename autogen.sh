@@ -1,4 +1,9 @@
 #! /bin/sh
+#  author       : Achim Gaedke
+#  filename     : ghmm/autogen.sh
+#  created      : DATE: April 2001
+#  $Id$
+
 
 #makes aclocal.m4 from acinclude.m4 and other files
 aclocal
