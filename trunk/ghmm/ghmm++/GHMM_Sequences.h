@@ -82,6 +82,13 @@ class GHMM_Sequences: public XMLIO_Element {
   unsigned int getNumberOfSequences() const;
   /** Returns sequence as string. */
   string getSequence(int index) const;
+
+  /** Return true if sequences contain continuous emission */
+  bool isDoubleSequences();
+
+  /** Return true if sequences contain discrete alphabets */
+  bool isIntSequences();
+
   /**
      Make sure that the sequences only contain allowed symbols. 
      (between 0 and max\_symbol - 1)

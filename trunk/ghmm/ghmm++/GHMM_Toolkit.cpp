@@ -23,3 +23,10 @@ string GHMM_Toolkit::toString(int var) {
   sprintf(mem,"%d",var);
   return string(mem);
 }
+
+
+string GHMM_Toolkit::toString(double var) {
+  char mem[100];
+  sprintf(mem,"%g",var);
+  return string(mem);
+}

@@ -22,10 +22,10 @@ CCLD     = $(CC)   -lstdc++
 CXXLD    = $(CXX)  -lstdc++
 
 INCLUDES = -I$(top_srcdir) $(XMLIO_INCLUDES)
-LDADD    = $(top_builddir)/ghmm++/libghmm++.la $(top_builddir)/ghmm/libghmm.la
+LDADD    = $(top_builddir)/ghmm++/libghmm++.la $(top_builddir)/ghmm/.libs/libghmm.a
 EXTRA_DIST = nvs.xml nvs.mod nvs.sqd gene_hmm.gml
 
-noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence read_graphml testviterbi
+noinst_PROGRAMS = dna chmm generiere_nvs generiere_nvs_old_files coin_toss_test vector_test create_sequence read_graphml 
 # noinst_PROGRAMS = read_cxml
 
 coin_toss_test_SOURCES = coin_toss_test.cpp

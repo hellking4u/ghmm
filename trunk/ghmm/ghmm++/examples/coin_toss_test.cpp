@@ -20,6 +20,7 @@ int single_state_coin_toss() {
   /* initialise model with 1 state and 2 symbols */
   GHMM_DiscreteModel my_model(1,2);
 
+
   /* initialise this state */
   my_model.getState(0)->setInitialProbability(1.0);
   my_model.getState(0)->setOutputProbability(0,0.5);
@@ -27,8 +28,11 @@ int single_state_coin_toss() {
 
   my_model.setTransition(0,0,1.0);
 
+
   if (my_model.check() == -1)
     return 1;
+
+
 
   fprintf(stdout,"transition matrix:\n");
   my_model.A_print(stdout,""," ","\n");

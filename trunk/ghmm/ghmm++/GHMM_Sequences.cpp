@@ -64,7 +64,22 @@ GHMM_Sequences::GHMM_Sequences(GHMM_Sequence* sequence) {
 }
 
 
-GHMM_Sequences::GHMM_Sequences(sequence_t* seq) {
+bool GHMM_Sequences::isIntSequences() {
+  if (sequence_type == GHMM_DOUBLE) {
+    return false;
+  }
+  return true;
+}
+
+
+bool GHMM_Sequences::isDoubleSequences() {
+  if (sequence_type == GHMM_DOUBLE) {
+    return true;
+  }
+  return false;
+}
+
+GHMM_Sequences::GHMM_Sequences(sequence_t* seq) { 
   init_INT(NULL,seq);
 }
 
@@ -612,7 +627,7 @@ string GHMM_Sequences::getSequence(int index) const {
   string seq;
   unsigned int i;
 
-  if (c_i_sequences)
+  if (c_i_sequences) {
     for (i = 0; i < getLength(index); ++i)
       if (alphabet)
 	seq += alphabet->getSymbol(c_i_sequences->seq[index][i]);
@@ -620,12 +635,14 @@ string GHMM_Sequences::getSequence(int index) const {
 	if (i > 0) seq += " ";
 	seq += GHMM_Toolkit::toString(c_i_sequences->seq[index][i]);
       }
+  }
 
-  if (c_d_sequences)
+  if (c_d_sequences) {
     for (i = 0; i < getLength(index); ++i) {
       if (i > 0) seq += " ";
       seq += GHMM_Toolkit::toString(c_i_sequences->seq[index][i]);
     }
+  }
   
   return seq;
 }
