@@ -383,28 +383,29 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         emission = self.model.getEmission(1)
         self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
         self.assertEqual(self.model.cmodel.model_type,4)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),1)
+        self.assertEqual(self.model.getSilentFlag(1),1)
+        
         
         # removing silent state
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
         self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
         self.assertEqual(self.model.cmodel.model_type,4)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),0)
+        self.assertEqual(self.model.getSilentFlag(1),0)
         
         # removing last silent state
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         emission = self.model.getEmission(2)
         self.assertEqual(emission,[0.25,0.25,0.25,0.25])  
         self.assertEqual(self.model.cmodel.model_type,0)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,2),0)
+        self.assertEqual(self.model.getSilentFlag(2),0)
     
-        # insertin silent state
+        # inserting silent state
         self.model.setEmission(2,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(2)
         self.assertEqual(emission,[0.0,0.0,0.0,0.0])  
         self.assertEqual(self.model.cmodel.model_type,4)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,2),1)
+        self.assertEqual(self.model.getSilentFlag(2),1)
 
     
     def getModel(self):
@@ -438,12 +439,12 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
 
     def testbaumwelch(self):
-        # print"\ntestbaumwelch ",
+        print"\n**** testbaumwelch ",
         seq = self.model.sample(100,100,seed=3586662)
         self.model.baumWelch(seq,5,0.01)
         
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-        self.model.cmodel.model_type = 1
+        self.model.cmodel.model_type = 0
         ghmmwrapper.set_arrayint(self.model.cmodel.silent,2,0)
         self.model.baumWelch(seq,5,0.01)
         
@@ -488,10 +489,23 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         tbeta = [[4.7023258381970328e-08, 4.9049616680238656e-08, 0.0], [7.6476880486013323e-08, 6.4441989048444649e-08, 6.6750394439163752e-08], [8.8750912271283831e-08, 1.2605202032733066e-07, 7.7899391106213753e-08], [2.2011649936367936e-07, 7.3372166454559791e-08, 1.9293676580713878e-07], [1.6587541968363728e-07, 1.6284216085683634e-07, 0.0], [2.4289833862457832e-07, 2.384210962051186e-07, 2.1510070859124783e-07], [3.6006136297026356e-07, 3.5355497724012001e-07, 3.149099666605184e-07], [5.3239905136437518e-07, 5.2230051265933332e-07, 4.6706904583339767e-07], [7.8672756150767899e-07, 7.7355627164113784e-07, 6.8966832440908326e-07], [1.1663284814732837e-06, 1.1403771297198445e-06, 1.0226275022771564e-06], [1.714512214353699e-06, 1.6998533968533427e-06, 1.5032019384574995e-06], [2.5739016260687412e-06, 2.4652804933957476e-06, 2.2566986508042196e-06], [3.6664866296729512e-06, 3.824485370363713e-06, 3.2146265694123342e-06], [5.9362270415318522e-06, 5.0020643568148523e-06, 5.2046463209454594e-06], [6.8965796192940052e-06, 9.7951420679827902e-06, 6.046644019275137e-06], [1.7099966432088887e-05, 5.6999888106962961e-06, 1.4992564389769576e-05], [1.2807225714868792e-05, 1.2697725891613874e-05, 0.0], [1.90357833216616e-05, 1.82324548941977e-05, 1.6857301306648554e-05], [2.7183129465348012e-05, 2.8354523406566898e-05, 2.3774387573954338e-05], [4.398420608268567e-05, 3.7062569873039537e-05, 3.8586960502901783e-05], [5.110751220623913e-05, 7.2587481104513543e-05, 4.4802335690955294e-05], [0.00012671566938798117, 4.2238556462660399e-05, 0.00011110328740486767], [4.7070434823434923e-05, 9.4140869646869846e-05, 0.0], [0.00015207371250648203, 0.00030414742501296406, 0.00015690144941144974], [0.00035483866251512469, 0.00025908854723326563, 0.00050691237502160675], [0.00032265374981534008, 0.00064530749963068016, 0.00028161798612311482], [0.00086550594401837283, 0.00063195672102928807, 0.001075512499384467], [0.00078700200351784007, 0.0015740040070356801, 0.00068690947937966095], [0.0021111017999601578, 0.0042222035999203156, 0.0026233400117261336], [0.0049259041999070345, 0.0098518083998140691, 0.0070370059998671923], [0.011493776466449746, 0.022987552932899492, 0.016419680666356781], [0.026818811755049406, 0.029554356731528338, 0.038312588221499154], [0.047237233589054815, 0.034490678493595578, 0.04122950562635707], [0.042712271973826509, 0.085424543947653017, 0.037489867927821281], [0.11091827741152124, 0.12223204997326255, 0.14237423991275502], [0.19536557500155205, 0.1426478801598634, 0.17051858167217759], [0.17665106399716793, 0.35330212799433586, 0.15505204365202543], [0.45874009543404987, 0.45169198441535702, 0.58883687999055978], [0.68462986472880094, 0.66707525281267788, 0.59755723854134746], [1.0, 1.0, 0.87773059580615509]]
         self.assertEqual(beta,tbeta)
 
-    # XXX test for tied states
-    
+    def testtiedstated(self):
+        f = lambda x: round(x,15)
+        e1 = map(f,self.model.getEmission(0))
+        t = (-1,1,1)
+        self.model.setTieGroups(t)
 
-
+        self.model.updateTieGroups()
+        em2 = map(f,self.model.getEmission(2))
+        self.assertEqual(em2, [0.1, 0.0, 0.8, 0.1])
+        
+        self.model.setEmission(2,[0.2,0.2,0.2,0.4])
+        self.model.updateTieGroups()
+        em0 = map(f,self.model.getEmission(0))
+        self.assertEqual(em0, [0.0,0.5,0.5,0.0])
+        em2 = map(f,self.model.getEmission(2))
+        self.assertEqual(em2, [0.15, 0.1, 0.5, 0.25])
+        
 class BackgroundDistributionTests(unittest.TestCase):
     " Tests for background distributions "
 
@@ -516,8 +530,7 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.model.setBackground(self.bg,[0,-1,1])
         # deleting background
         del(self.bg)
-        bg2 = self.model.getBackground()
-        s = str(bg2)
+        s = str(self.model.background)
         self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
     def testapplybackground(self):
@@ -897,7 +910,10 @@ if __name__ == '__main__':
     unittest.main()
 
 
-suite = unittest.TestSuite()
+#suite = unittest.TestSuite()
+#suite.addTest(DiscreteEmissionHMMTests("testtiedstated"))
+#runner = unittest.TextTestRunner()
+#runner.run(suite)
 
 ################################################################
 #suite.addTest(AlphabetTests("testinternalexternal"))
