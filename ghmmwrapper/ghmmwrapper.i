@@ -377,6 +377,16 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 /*=============================================================================================
   =============================== model.c  ============================================== */
 
+/** @name background_distributions
+    A container for background distributions to be used in the reestimation. Model
+    has an ID (== index) into the arrays.
+*/
+struct background_distributions {
+  int n;		/* Number of distributions */
+  int* order;	/* Order of the respective distribution */	
+  double **b;  	/* The probabilities */ 
+};
+typedef struct background_distributions background_distributions;
 
 /** @name state
     The basic structure, keeps all parameters that belong to a state. 

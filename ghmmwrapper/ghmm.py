@@ -803,13 +803,35 @@ class HMMOpenFactory(HMMFactory):
     	    hmm_dom = xmlutil.HMM(fileName)
     	    emission_domain = hmm_dom.AlphabetType()
     	    if emission_domain == int:
-    		emission_domain = IntegerRange(0, hmm_dom.hmmAlphabet.size())
+                [alphabets, A, B, pi] = hmm_dom.buildMatrices()
+    		emission_domain = Alphabet(alphabets)
     		distribution = DiscreteDistribution(emission_domain)
     		# build adjacency list
-    		[A, B, pi] = hmm_dom.buildMatrices()
-    		#print A
-	    	#print B
-	    	#print pi
+    		print A
+	    	print B
+	    	print pi
+
+                # check for background distributions
+                (background_dist, orders) = hmm_dom.getBackgroundDist()
+                if len(background_dist.keys()) > 0:
+                    # if background distribution exists, set background distribution here
+                    cpt_background   = ghmmwrapper.background_distributions()
+                    cpt_background.n    = len(background_dist.keys())
+                    cpt_background.oder = ghmmwrapper.int_array(cpt_background.n)
+                    max_len    = max( map(lambda x: len(x), background_dist.values ))
+                    cpt_background.b = ghmmwrapper.double_2d_array(cpt_background.n, max_len)
+                    
+                    name2code = {}
+                    code = 0
+                    for name in background_dist.keys():
+                        name2code[name] = code
+                        code += 1
+                    for name in background_dist.keys():
+                        i = name2code[name]
+                        ghmmwrapper.set_arrayint(cpt_background.oder, i,orders[name])
+                        for j in range(len(background_dist[name])):
+                            ghmmwrapper.set_2d_arrayd(cpt_background.b,i,j, background_dist[j])
+                            
 	    	return HMMFromMatrices(emission_domain, distribution, A, B, pi)
 	    
         elif self.defaultFileType == GHMM_FILETYPE_SMO:

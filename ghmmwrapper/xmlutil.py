@@ -50,7 +50,7 @@ import types
 import copy
 
 import sys 
-#import HMMXML
+import HMMXML
 
 import logging
 log = logging.getLogger("xmlutil.py")
@@ -114,7 +114,8 @@ class NamedDistributions:
         self.code2name[self.maxCode] = name
         self.name2code[name] = self.maxCode
         self.maxCode += 1
-
+        print self.dist
+        
     def deleteDistribution(self, name):
         del self.dist[name]
         del self.order[name]
@@ -135,37 +136,30 @@ class NamedDistributions:
 
     def toDOM(self, XMLDoc, XMLNode):
         for name in self.dist.keys():
+            print "background: name = ", name, self.dist[name], self.order[name]
             background_elem = XMLDoc.createElement("hmm:background")
             background_elem.setAttribute('key', "%s" % name)
             background_elem.setAttribute('order', "%s" % self.order[name])
             if self.order[name] == 0:
                 contents = XMLDoc.createTextNode(csvFromList(self.dist[name]))
             else:
-                 contents = XMLDoc.createTextNode(csvFromList(self.dist[name],
-                                                              self.itsHMM.hmmAlphabet.size()))               
+                contents = XMLDoc.createTextNode(csvFromList(self.dist[name],
+                                                             self.itsHMM.hmmAlphabet.size()))               
             background_elem.appendChild(contents)
             XMLNode.appendChild(background_elem)
 
     def names(self):
         return self.dist.keys()
 
-    def add(self, name):
-        order = tkSimpleDialog.askinteger("Distribution %s" % name, "Order", initialvalue=0)
-        tmp = [1.0 / self.itsHMM.hmmAlphabet.size()] * self.itsHMM.hmmAlphabet.size()
-        p = tmp * (self.itsHMM.hmmAlphabet.size() ** order)
-        print "adding", name, order, p
-        self.addDistribution(name, order, p)
-
-    def delete(self, name):
-        self.deleteDistribution(name)
-        
+   
 
 class XMLElementWriter:
     
     def __init__(self):
         import string
         self._string = string
-
+        self.element_keys = ['id', 'hmm:low', 'hmm:high', 'hmm:type', 'for', 'gd:type', 'code', 'key', 'order', 'x', 'y', 'source', 'target']
+        
     def _write_data(self, writer, data):
         "Writes datachars to writer."
         replace = self._string.replace
@@ -192,7 +186,7 @@ class XMLElementWriter:
             # build attribute list
             a_names = []
             try:
-                for key in ['id', 'hmm:low', 'hmm:high', 'hmm:type', 'for', 'gd:type', 'code', 'key', 'x', 'y', 'source', 'target']:
+                for key in self.element_keys:
                     if ( XMLNode.getAttribute(key) != ""):
                         a_names.append( key )
                         a_names.sort()
@@ -255,10 +249,16 @@ class DOM_Map:
         self.name2code[name] = code
 
     def low(self):
-        return min(self.name.keys())
-
+        if len(self.name.keys()) > 0:
+            return min(self.name.keys())
+        else:
+            return 0
+                
     def high(self):
-        return max(self.name.keys())
+        if len(self.name.keys()) > 0:
+            return max(self.name.keys())
+        else:
+            return 0
     
     def fromDOM(self, XMLNode):
         pass
@@ -291,6 +291,22 @@ class DOM_Map:
     def buildList(self):
 	return self.name.keys()
      
+# -------------------------------------------
+#  Exceptions
+
+class HMMEdError(Exception):
+    def __init__(self, message):
+	print "\n\n Unknown error types. Please report \n\n"
+	
+class NotValidHMMType(HMMEdError):
+    def __init__(self,message):
+       print "\n\n Probabilities missing xception: " + str(message) + "\n"
+
+class AlphabetErrorType(HMMEdError):
+    def __init__(self,message):   
+        print "\n\n Alphabet exception: " + str(message) + "\n"
+	
+	
 class DiscreteHMMAlphabet(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
@@ -308,7 +324,18 @@ class DiscreteHMMAlphabet(DOM_Map):
     def toDOM(self, XMLDoc, XMLNode):
         hmmalphabet = XMLDoc.createElement("hmm:alphabet")
         hmmalphabet.setAttribute('hmm:type', 'discrete')
-        DOM_Map.toDOM(self, XMLDoc, hmmalphabet)
+	hmmalphabet.setAttribute('hmm:low', "%s" % self.low())
+        hmmalphabet.setAttribute('hmm:high', "%s" % self.high())
+        map = XMLDoc.createElement("map")  
+        for key in self.name.keys():
+            symbol = XMLDoc.createElement("symbol")
+            symbol.setAttribute('code', "%s" % key)
+            if self.hasDesc and self.desc[key] != "":
+                symbol.setAttribute('desc', "%s" % self.desc[key])
+            writeContents(XMLDoc, symbol, "%s" % self.name[key])
+            map.appendChild(symbol)
+        hmmalphabet.appendChild(map)
+	#  DOM_Map.toDOM(self, XMLDoc, hmmalphabet)
         XMLNode.appendChild(hmmalphabet)
 
     def toGHMM(self, XMLDoc, XMLNode):
@@ -318,23 +345,25 @@ class DiscreteHMMAlphabet(DOM_Map):
             alphabet.setAttribute('id', "%s" % key)
             hmmalphabet.appendChild(alphabet)
         XMLNode.appendChild(hmmalphabet)
-        
+      
+   
     def size(self):
         return len(self.name.keys())
     
     def buildList(self):
 	return self.name.keys()
+
+    def buildAlphabets(self, nrOfSymbols):
+	""" Only fixed to 5 symbols for the moment """ 
+	alphas = range(1, nrOfSymbols+1)
+	alphas = map( lambda x: 'a'+ str(x), alphas)
+	for code in range(1,nrOfSymbols+1):
+	    self.addCode( code, alphas[code-1], desc = None)
+ 
 	
 class HMMClass(DOM_Map):
     def __init__(self):
         DOM_Map.__init__(self)
-	self.size = 1
-
-    def low(self): #XXX
-	return 0
-    
-    def high(self):
-	return 0
     
     def fromDOM(self, XMLNode):
         """Take dom subtree representing a <hmm:class></hmm:class> element"""
@@ -346,6 +375,8 @@ class HMMClass(DOM_Map):
         DOM_Map.toDOM(self, XMLDoc, hmmclass)
         XMLNode.appendChild(hmmclass)
 
+    def size(self):
+        return len(self.name.keys())
             
 class HMMState:
 
@@ -357,7 +388,7 @@ class HMMState:
 	print type(self.label)
 	
         self.index = nodeIndex # The node index in the underlying graph
-        self.id    = nodeIndex # identification by the canvas, not always the same
+        self.id    = ValidatingString("None") # identification by the canvas, not always the same
 	
 	self.state_class = DefaultedInt()
 	self.state_class.setDefault(0,'')
@@ -384,10 +415,12 @@ class HMMState:
         self.background = PopupableInt(-1)
         self.background.setPopup(self.itsHMM.backgroundDistributions.code2name, self.itsHMM.backgroundDistributions.name2code, 10)
 
-
-    # editableAttr = ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
+        self.editableAttr = ['label', 'initial', 'order', 'background']
+        self.xmlAttr = self.editableAttr + ['ngeom', 'emissions']
+        
     editableAttr = ['label', 'initial']
     xmlAttr = editableAttr + ['ngeom', 'emissions']
+    # ['id', 'state_class', 'label', 'order', 'initial', 'tiedto', 'reading_frame', 'duration', 'background']
 
     #
     # Set_<Attribute> Methods: for integration with class editobj.Editor.set_value()
@@ -546,16 +579,20 @@ class HMMState:
         
         
 class HMM:    
-    def __init__(self, XMLFileName = None):
+    def __init__(self, XMLFileName = None, G = None):
 
         # self.itsEditor = itsEditor
- 	self.G = Graph()
-	self.G.directed = 1
-	self.G.euclidian = 0
-        self.G.simple = 0
-	self.Pi = {}
-        self.id2index = {}
+        if ( G is None ):
+            self.G = Graph()
+        else:
+            self.G = G
 
+        self.G.directed = 1
+        self.G.euclidian = 0
+        self.G.simple = 0
+        self.Pi = {}
+        self.id2index = {}
+            
         self.hmmAlphabet = DiscreteHMMAlphabet()
         self.hmmClass    = HMMClass()
         
@@ -574,11 +611,10 @@ class HMM:
 
     def AddState(self, id, label='None'):
         state = HMMState(-1, self)
-        state.index = self.G.AddVertex()
         state.id = id
+        state.index = state.id
         self.id2index[state.id] = state.index
-        self.state[state.id] = state # XXX Use canvas id
-        self.G.embedding[state.index] = Point2D(10.0,10.0)#
+        self.state[state.index] = state # XXX Use canvas id
         state.label = typed_assign(state.label, label)
         self.G.labeling[state.index] = "%s" % (state.label)
         return state.index
@@ -603,17 +639,16 @@ class HMM:
         for n in nodes:
             state = HMMState(-1, self)
             state.fromDOM(n)
-            i = state.index
-            self.state[i] = state
-            self.id2index[state.id] = i
-
-            self.G.embedding[i] = state.pos
-            self.G.labeling[i] = "%s\n%s" % (state.id, state.label) # XXX Hack Aaaargh!
+            self.state[state.index] = state # key must be string
+            self.id2index[state.id] = state.index
+            self.G.embedding[state.index] = state.pos
+            self.G.labeling[state.index] = "%s\n%s" % (state.id, state.label) # XXX Hack Aaaargh!
 
         edges = XMLNode.getElementsByTagName("edge")
         nr_classes = int(self.hmmClass.high()-self.hmmClass.low())+1
-        for i in range(nr_classes-1):
-            self.G.edgeWeights[i+1] = EdgeWeight(self.G)
+        for i in range(nr_classes):
+            self.G.edgeWeights[i] = EdgeWeight(self.G)
+
         for edge in edges:
             i = self.id2index[edge.attributes['source'].nodeValue]
             j = self.id2index[edge.attributes['target'].nodeValue]
@@ -630,12 +665,27 @@ class HMM:
                 for child in data.childNodes:
                     dataValue += child.nodeValue
                 p = listFromCSV(dataValue, types.FloatType)
-
-                self.G.AddEdge(i, j)        
+                self.G.AddEdge(i, j)
+                if len(p) == 1: # only one class
+                    for cl in range(nr_classes):
+                        p.append(0.0)
+                        
                 for cl in range(nr_classes):
                     self.G.edgeWeights[cl][(i,j)] = p[cl]
 
+    def modelCheck(self):
+	
+        # Compute sums of initial probabilities for renormalization 
+        initial_sum = 0.0
+        for s in self.state:
+            initial_sum = initial_sum + self.state[s].initial
 
+	if initial_sum == 0.0:
+	    raise NotValidHMMType("Initial state is not specified.")
+	    
+	if self.hmmAlphabet.size() == 0.0:
+	    raise AlphabetErrorType("Alphabet object is empty. You must create alphabet before saving.")
+	
     def toDOM(self, XMLDoc, XMLNode):
         graphml = XMLDoc.createElement("graphml")
         XMLNode.appendChild(graphml)
@@ -655,10 +705,10 @@ class HMM:
 
         # Compute sums of initial probabilities for renormalization 
         initial_sum = 0.0
-        for s in self.state:
+        for s in self.state.keys():
             initial_sum = initial_sum + self.state[s].initial
         
-        for s in self.state:
+        for s in self.state.keys():
             self.state[s].toDOM(XMLDoc, graph, initial_sum)
         
         # Compute sums of outgoing probabilities for renormalization of transition probabilities
@@ -668,7 +718,7 @@ class HMM:
         for v in self.G.vertices:
             out_sum[v] = [0.0]*nr_classes
 
-        for cl in range(nr_classes):
+        for cl in range(1): # XXX Assuming one transition class
             for e in self.G.Edges():
                 if self.G.edgeWeights[cl].has_key(e):
                     out_sum[e[0]][cl] = out_sum[e[0]][cl] + self.G.edgeWeights[cl][e]
@@ -679,7 +729,8 @@ class HMM:
             edge_elem.setAttribute('source', "%s" % self.state[e[0]].id)
             edge_elem.setAttribute('target', "%s" % self.state[e[1]].id)
             # writeData(XMLDoc, edge_elem, 'prob', self.G.edgeWeights[cl][e] / out_sum[e[0]])
-            for cl in range(nr_classes):
+            # XXX Assuming one transition class for cl in range(nr_classes):
+            for cl in range(1):
                 if self.G.edgeWeights[cl].has_key(e) and out_sum[e[0]][cl]:
                     transitions.append(self.G.edgeWeights[cl][e]/ out_sum[e[0]][cl])
                 else:
@@ -702,7 +753,13 @@ class HMM:
     
     def DistributionType(self):
 	pass
-    
+
+    def getBackgroundDist(self):
+        """ Return a pair of two dictionaries: (distribution, its orders):
+            a distribution is a list of real values of length N^(order+1).   
+        """        
+        return (self.backgroundDistributions.dist, self.backgroundDistributions.order)
+         
     def buildMatrices(self):    
 	""" return A, B, pi """
 	pi = []
@@ -731,7 +788,10 @@ class HMM:
 		myorder = orders[outid]
 		outprobs[myorder] = self.G.edgeWeights[0][(v,outid)]
 	    A.append(outprobs)
-	return [A, B, pi]
+
+        alphabets = self.hmmAlphabet.names.values() # list of alphabets
+	return [alphabets, A, B, pi]
+    
     
     def OpenXML(self, fileName):
         dom = xml.dom.minidom.parse(fileName)
@@ -750,6 +810,7 @@ class HMM:
 	    # dom.unlink()
 
     def WriteXML(self, fileName):
+	self.modelCheck()   # raise exceptions here
         doc = xml.dom.minidom.Document()
         self.toDOM(doc, doc)
         file = open(fileName, 'w')
@@ -759,6 +820,7 @@ class HMM:
         doc.unlink()
 
     def WriteGHMM(self, fileName):
+	self.modelCheck()   # raise exceptions here
         doc = xml.dom.minidom.Document()
         ghmm = doc.createElement("ghmm")
         doc.appendChild(ghmm)
