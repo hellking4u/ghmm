@@ -2,6 +2,9 @@
 <!DOCTYPE graph SYSTEM "graph.dtd">
 
 <graph>
+<sequence id="a" length="10" type="i">
+1 2 3 4 5 6 7 8 9 10
+</sequence>
 <!-- Erster Versuch, die ids der vertices sind strings -->
 <vertex id="a" name="a">
 <transitions><edge  id="edge:a" to="b" weight="10"/></transitions>

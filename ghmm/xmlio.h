@@ -19,6 +19,7 @@ __copyright__
 typedef enum {
   document_object,
   vertex_object,
+  sequence_object,
   default_object
 } object_handler_type;
 
