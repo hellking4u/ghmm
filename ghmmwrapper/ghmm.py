@@ -575,7 +575,31 @@ class SequenceSet:
 
         
 def SequenceSetOpen(emissionDomain, fileName):
-    return SequenceSet(emissionDomain, fileName)
+    """ Reads a sequence file with multiple sequence sets. 
+    
+    Returns a list of SequenceSet objects.
+    
+    """
+    
+    if emissionDomain.CDataType == "int":
+        readFile = ghmmwrapper.sequence_read
+        seqPtr = ghmmwrapper.get_seq_ptr
+    elif emissionDomain.CDataType == "double":
+        readFile = ghmmwrapper.sequence_d_read
+        seqPtr = ghmmwrapper.get_seq_d_ptr
+            
+    dArr = ghmmwrapper.int_array(1)
+        
+    structArray = readFile(fileName, dArr)
+    setNr = ghmmwrapper.get_arrayint(dArr,0)
+    
+    sequenceSets = []
+    for i in range(setNr):
+        seq = seqPtr(structArray,i)
+        sequenceSets.append(SequenceSet(emissionDomain, seq) )
+       
+    ghmmwrapper.freearray(dArr)    
+    return  sequenceSets
 
 
 
@@ -833,6 +857,10 @@ class HMM:
             
             Note: The implementation will not compute the full forward matrix (ToDo)
         """
+        
+        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
+            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
+        
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
         if self.emissionDomain.CDataType == "double":            
@@ -1009,6 +1037,9 @@ class HMM:
             object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
                     SequenceSet
         """
+
+        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
+            raise AttributeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)        
         
         if self.emissionDomain.CDataType == "int":
             getPtr = ghmmwrapper.get_row_pointer_int
@@ -1139,15 +1170,15 @@ class DiscreteEmissionHMM(HMM):
                 strout+=str(ghmmwrapper.get_arrayd(state.b,outp))+", "
             strout += "\nOutgoing transitions:"
             for i in range( state.out_states):
-                strout += "\ntransition to node " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i))
+                strout += "\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i))
             strout +=  "\nIngoing transitions:"
             for i in range(state.in_states):
-                strout +=  "\ntransition from node " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
+                strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
                 strout += "\nint fix:" + str(state.fix) + "\n"
-            #strout += "Silent states: \n"
-            #for k in range(hmm.N):
-            #strout += str(get_arrayint(self.model.silent,k)) + ", "
-            #strout += "\n"
+            strout += "Silent states: \n"
+            for k in range(hmm.N):
+                strout += str(get_arrayint(self.model.silent,k)) + ", "
+                strout += "\n"
         return strout
     
 
@@ -1219,23 +1250,19 @@ class GaussianEmissionHMM(HMM):
             mue = ""
             u =  ""
            
-            weight += str(ghmmwrapper.get_arrayd(state.c,0)) + ", "
-            mue += str(ghmmwrapper.get_arrayd(state.mue,0)) + ", "
-            u += str(ghmmwrapper.get_arrayd(state.u,0)) + ", "
+            weight += str(ghmmwrapper.get_arrayd(state.c,0)) 
+            mue += str(ghmmwrapper.get_arrayd(state.mue,0)) 
+            u += str(ghmmwrapper.get_arrayd(state.u,0)) 
            
             strout += "  mean: " + str(mue) + "\n"
             strout += "  variance: " + str(u) + "\n"
             strout += "\nOutgoing transitions:"
 
             for i in range( state.out_states):
-                strout += "\ntransition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) )
-                for j in range(hmm.cos):
-                    strout += "\n\tin class " + str(j) + " with probablity = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,j,i))
+                strout += "\ntransition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,0,i))
             strout +=  "\nIngoing transitions:"
             for i in range(state.in_states):
-                strout += "\ntransition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) )
-                for j in range(hmm.cos):
-                    strout += "\n\tin class "+str(j)+" with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,j,i))
+                strout += "\ntransition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,0,i))
             strout += "\nint fix:" + str(state.fix) + "\n"
         return strout
 
