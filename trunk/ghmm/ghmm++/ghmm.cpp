@@ -9,7 +9,10 @@
 #include "config.h"
 #endif
 
-#include "ghmm.h"
+#include <ghmm/rng.h>
+#include <ghmm/vector.h>
+#include <ghmm/sequence.h>
+#include "ghmm++/ghmm.h"
 #include <xmlio/XMLIO_IgnoreObject.h>
 
 #ifdef HAVE_NAMESPACES
@@ -19,8 +22,6 @@ using namespace std;
 ghmm::ghmm(const string& tag, XMLIO_Attributes &attributes)
 {
   /* do some initialisation */ 
-  hmm_model=NULL;
-  shmm_model=NULL;
   Initial=NULL;
   ghmm_Emissions=NULL;
   my_graph=NULL;
@@ -228,6 +229,8 @@ model* ghmm::create_model() const
   int state_counter=0;
   /* iterates over existing nodes */
   vector<gxl_node*>::const_iterator node_pos=my_graph->vector<gxl_node*>::begin();
+  /* for initial state possibilty normalization */
+  double initial_state_prob_sum=0;
   while (node_pos!=my_graph->vector<gxl_node*>::end())
     {
       const string& node_id=(*node_pos)->id;
@@ -250,6 +253,7 @@ model* ghmm::create_model() const
       else
 	this_state->pi=0;
 
+      initial_state_prob_sum+=this_state->pi;
 
       size_t array_pos; /* position in double array of state */
       set<int>::const_iterator tranisiton_pos; /* position in set of transitons */
@@ -277,7 +281,7 @@ model* ghmm::create_model() const
 	}
 
       /* transitions from_to */
-      /* adiascense list */
+      /* adjacent list */
       const set<int>& from_to_transition_idx=my_graph->get_from_to_transitions(node_id);
       this_state->out_states=from_to_transition_idx.size(); /* number of incoming states */
       this_state->out_id=(int*)malloc(sizeof(int)*this_state->out_states); /* id of incoming states */
@@ -297,6 +301,7 @@ model* ghmm::create_model() const
 	  ++tranisiton_pos;
 	  array_pos++;
 	}
+      vector_normalize(this_state->out_a,this_state->out_states);
 
       /* emission probabilities */
       this_state->b=(double*)calloc(sizeof(double),return_model->M);
@@ -321,6 +326,7 @@ model* ghmm::create_model() const
 		  if (emission_pos->content!=NULL)
 		      this_state->b[emission_prob_idx++]=*(emission_pos->content);
 		} /* for emission_pos */
+	      vector_normalize(this_state->b,return_model->M);
 	    }
 	} /* ghmm_Emissions!=NULL */
 
@@ -328,8 +334,35 @@ model* ghmm::create_model() const
       state_counter++;
     }
 
+  if (initial_state_prob_sum!=0)
+    for (int state_idx=0;state_idx<return_model->N;state_idx++)
+      return_model->s[state_idx].pi/=initial_state_prob_sum;
+
   return return_model;
 }
+
+sequences* ghmm::generate_sequences(int number, int length)
+{
+  model* my_model=create_model();
+  if (my_model==NULL)
+    return NULL;
+
+  model_print(stdout,my_model);
+  /* is it initialised before ? */
+  gsl_rng_init();
+  sequence_t* my_sequences=model_generate_sequences(my_model,0,length,number);
+  if (my_sequences==NULL)
+    {
+      model_free(&my_model);
+      return NULL;
+    }
+
+  sequence_print(stdout,my_sequences);
+  sequence_free(&my_sequences);
+  model_free(&my_model);
+  return NULL;
+}
+
 
 const string& ghmm::get_id() const
 {

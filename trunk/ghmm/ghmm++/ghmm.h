@@ -56,8 +56,14 @@ namespace std {
       /**
 	 creates a smodel structure from collected data.
 	 if data are not suitable, NULL is returned.
+	 not yet implemented
       */
       smodel* create_smodel() const;
+
+      /**
+	 generate sequences from model
+       */
+      sequences* generate_sequences(int number, int length);
 
       /**
        */
@@ -88,14 +94,6 @@ namespace std {
 	 id is mandatory for each object in gxl (!?)
        */
       string id;
-      /**
-	 saves a discrete hmm
-       */
-      model* hmm_model;
-      /**
-	 saves a continuous/switched hmm
-       */
-      smodel* shmm_model;
       /**
        */
       ghmm_graph* my_graph;
