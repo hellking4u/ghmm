@@ -1,6 +1,19 @@
-Achim Gaedke, 010430
+Achim Gaedke, 010501
 
+==============
+General notes:
+==============
+
+These sources are going to be compiled, packed into a library and installed
+on a local filesystem. That means, they are not recompiled for each program
+they are linked against. This is the main difference to the old hmm/src
+sources.
+
+
+
+=========================
 Some notes for CVS usage:
+=========================
 
 Prepare the soruce tree for configuration:
 ==========================================

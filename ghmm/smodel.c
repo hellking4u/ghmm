@@ -22,8 +22,6 @@ __copyright__
 #include "rng.h"
 #include "randvar.h"
 
-
-
 /*----------------------------------------------------------------------------*/
 static int smodel_state_alloc(sstate *state,
 			      int M,

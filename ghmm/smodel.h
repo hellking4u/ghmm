@@ -19,9 +19,9 @@ __copyright__
 
 /** Continuous HMM. Structures and function. 
     smodel includes continuous model with one transition matrix 
-    (COS  is set to 0) and an extension for
+    (COS  is set to 1) and an extension for
     models with several matrices
-    (COS is set to a positive integer values). In the latter case
+    (COS is set to a value greater than 1). In the latter case
     a suitable (depending on the spezific application) function 
     sequence\_get\_class has to be defined */
 
