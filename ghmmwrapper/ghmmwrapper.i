@@ -1317,3 +1317,31 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   void free_2darrayint(int **pt, int rows,int cols) {  matrix_i_free(&pt, rows); }
 
 %}
+
+
+/******************* typemap ********************************/
+
+%typemap(memberin) sequence_d_t * {
+  sequence_d_t *src_pt;
+  sequence_d_t *dest_pt;
+
+  dest_pt = (sequence_d_t *) malloc(sizeof(sequence_d_t));
+  src_pt  = $input;
+
+  dest_pt.seq        = src_pt.seq;
+  dest_pt.seq_len    = src_pt.seq_len;
+  dest_pt.seq_label  = src_pt.seq_label;
+  dest_pt.seq_id     = src_pt.seq_id;
+  dest_pt.seq_w      = src_pt.seq_w;
+  dest_pt.seq_number = src_pt.seq_number;
+  dest_pt.total_w    = src_pt.total_w;
+
+  $1 = dest_pt;
+}
+
+%typemap(check) double **{
+    if ($1 == 0) {
+      PyErr_SetString(PyExc_TypeError,"NULL Pointer not allowed");
+      return NULL;
+    }
+}
