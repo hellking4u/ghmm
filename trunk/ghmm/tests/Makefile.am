@@ -5,6 +5,8 @@
 #
 # __copyright__
 
+SUBDIRS = data
+
 # tests and examples
 
 AUTOMAKE_OPTIONS = dejagnu
