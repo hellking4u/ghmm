@@ -184,8 +184,8 @@ int gradescent_compute_expectations(model* mo, double** alpha, double** beta,
     for (i=0; i<mo->N; i++)
       foba_sum += alpha[t][i] * beta[t][i];
     if (EPS_PREC > fabs(foba_sum)) {
-      printf("gradescent_compute_expect: foba_sum (%g) smaller as EPS. t = %d.",
-	     foba_sum, t);
+      printf("gradescent_compute_expect: foba_sum (%g) smaller as EPS_PREC (%g). t = %d.\n",
+	     foba_sum, EPS_PREC, t);
       return -1;
     }
     
@@ -316,8 +316,8 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
       printf("backward error!\n"); goto FREE;}
     
     /* compute n matrices (no labels): */
-    gradescent_compute_expectations(mo, alpha, beta, scale, sq->seq[k], seq_len, m_b, m_a, m_pi);
-
+    if (-1 == gradescent_compute_expectations(mo, alpha, beta, scale, sq->seq[k], seq_len, m_b, m_a, m_pi))
+      printf("Error in sequence %d, length %d (no labels)\n", k, seq_len);
 
     /* calculate forward and backward variables with labels: */
     if (-1 == foba_label_forward(mo, sq->seq[k], sq->state_labels[k], seq_len,
@@ -328,7 +328,8 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
       printf("backward labels error!\n"); goto FREE;}
 
     /* compute m matrices (labels): */
-    gradescent_compute_expectations(mo, alpha, beta, scale, sq->seq[k], seq_len, m_b, m_a, m_pi);
+    if (-1 == gradescent_compute_expectations(mo, alpha, beta, scale, sq->seq[k], seq_len, m_b, m_a, m_pi))
+	printf("Error in sequence %d, length %d (with labels)\n", k, seq_len);
 
 
     /* reestimate model parameters: */
