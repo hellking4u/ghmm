@@ -1,11 +1,8 @@
-<<<<<<< acinclude.m4
 dnl author       : Achim Gaedke
 dnl filename     : ghmm/acinclude.m4
 dnl created      : DATE: 2001-04-04
 dnl $Id$
 
-=======
->>>>>>> 1.4
 # Configure path for the GNU Scientific Library
 # Christopher R. Gabriel <cgabriel@linux.it>, April 2000
 
