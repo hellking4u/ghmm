@@ -948,7 +948,7 @@ class HMM:
         for i in range(seqNumber):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             ret_val = self.forwardFunction(self.cmodel, seq,ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i), likelihood)
-            likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,1))
+            likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
             # XXX check ret_val
 
         ghmmwrapper.free_arrayd(likelihood)  
@@ -1364,7 +1364,7 @@ class GaussianEmissionHMM(HMM):
         #  self.getModelPtr = ghmmwrapper.get_model_ptr
 
     def loglikelihood_sqd(self, sequenceSet):
-        # XXX REMOVE soon XXX
+        # XXX REMOVE soon XXX. Currently needed in GLQQuery.py
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
 
             sequences can either be a SequenceSet or a EmissionSequence
