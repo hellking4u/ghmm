@@ -172,7 +172,7 @@ int *viterbi( model *mo, int *o, int len, double *log_p)
   int len_path  = mo->N*len;
   int lastemState;
   
-  printf("---- viterbi -----\n");
+  // printf("---- viterbi -----\n");
 
   if (mo->model_type == kSilentStates && 
       mo->silent != NULL && 
