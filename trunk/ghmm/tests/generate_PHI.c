@@ -3,11 +3,18 @@
 #include <stdio.h>
 
 /* bisection algorithm to explore precision*/
-double biggest_thats_different_from_1()
+double greatest_thats_different_from_1()
 {
   double low,up,half;
   low=0;
-  up=100;
+  up=10;
+  /* find start interval */
+  while (randvar_get_PHI(up)<1.0)
+    {
+      low=up;
+      up*=2;
+    }
+  /* shrink it */
   while (up-low>0.001)
     {
       half=(low+up)/2.0;
@@ -16,9 +23,34 @@ double biggest_thats_different_from_1()
       else
 	up=half;
     }
-  printf("%f: biggest int, for which is PHI different from 1.0\n",low);
+  printf("%f: greatest int, for which PHI is different from 1.0\n",low);
   return 0;
 }
+
+double least_thats_different_from_0()
+{
+  double low,up,half;
+  low=-10;
+  up=0;
+  /* find start interval */
+  while (randvar_get_PHI(low)>0.0)
+    {
+      up=low;
+      low*=2;
+    }
+  /* shrink it */
+  while (up-low>0.001)
+    {
+      half=(low+up)/2.0;
+      if (randvar_get_PHI(half)>0.0)
+	up=half;
+      else
+	low=half;
+    }
+  printf("%f: least int, for which PHI is different from 0.0\n",low);
+  return 0;
+}
+
 
 int print_PHI_table()
 {
@@ -39,6 +71,7 @@ int print_PHI_table()
 
 int main()
 {
-  (void)biggest_thats_different_from_1();
+  (void)greatest_thats_different_from_1();
+  (void)least_thats_different_from_0();
   return 0;
 }
