@@ -1035,7 +1035,7 @@ class HMMOpenFactory(HMMFactory):
                 # check for tied states
                 tied = hmm_dom.getTiedStates()
                 if len(tied) > 0:
-                    m.cmodel.model_type += 8 
+                    m.cmodel.model_type += 8  #kTiedEmissions
                     m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
                         
 	    	return m
@@ -2190,7 +2190,7 @@ class DiscreteEmissionHMM(HMM):
         self.cmodel.background_id = ghmmhelper.list2arrayint(stateBackground)
 
         # updating model type
-        self.cmodel.model_type += 64 
+        self.cmodel.model_type += 32 #kHasBackgroundDistributions
     
     def assignAllBackgrounds(self,stateBackground):
         """ Change all the assignments of background distributions to states.
@@ -2556,7 +2556,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 return (self.externalLabel(allLabels[0]), allLogs[0])
 
 
-    def gradientSearch(self, emissionsequences):
+    def gradientSearch(self, emissionsequences, eta=.1, steps=20):
         """ trains a model with given sequencesgradescentFunction using gradient descent
 
             emission_sequences can either be a SequenceSet or an EmissionSequence
@@ -2578,7 +2578,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         cmodelPTR = ghmmwrapper.discrime_modelarray_alloc(1)
         ghmmwrapper.discrime_modelarray_setptr(cmodelPTR, self.cmodel, 0)
-        error = self.gradientDescentFunction(cmodelPTR, emissionsequences.cseq)
+        error = self.gradientDescentFunction(cmodelPTR, emissionsequences.cseq, eta, steps)
 
         self.cmodel = ghmmwrapper.discrime_modelarray_getptr(cmodelPTR, 0)
         ghmmwrapper.discrime_modelarray_dealloc(cmodelPTR)
