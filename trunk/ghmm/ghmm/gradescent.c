@@ -234,8 +234,6 @@ double compute_performance(model* mo, sequence_t *sq) {
 #define CUR_PROC "compute_performance"
 
   int k, seq_len, success=1;
-  /* forward & backward variables w/ their scaling vector */
-  double **alpha, *scale;
   /* log P[O | lambda, labeling] as computed by the forward algorithm */
   double log_p;
   /* sum over log P (calculated by forward_label) for all sequences
@@ -247,25 +245,26 @@ double compute_performance(model* mo, sequence_t *sq) {
     success=0;
     seq_len = sq->seq_len[k];
 
-    /* allocate memory for the forward variables*/
-    alpha = stat_matrix_d_alloc(seq_len, mo->N);
-    if (!(alpha)) {mes_proc(); goto FREE;}
-    if (!m_calloc(scale, seq_len)) {mes_proc(); goto FREE;}
-
-    if (-1 != foba_label_forward(mo, sq->seq[k], sq->state_labels[k], seq_len,
-				 alpha, scale, &log_p)) {
+    if (-1 != foba_label_logp(mo, sq->seq[k], sq->state_labels[k], seq_len, &log_p)) {
       success = 1;
       log_p_sum += log_p;
+
+      if (-1 != foba_logp(mo, sq->seq[k], seq_len, &log_p))
+	log_p_sum -= log_p;
+      else {
+	printf("foba_forward error in sequence %d, length: %d\n", k, seq_len);
+	success = 0;
+      }
     }
     else
-      log_p_sum = 1.0;
-
-FREE:
-    stat_matrix_d_free(&alpha);
-    m_free(scale);
+      printf("foba_label_forward error in sequence %d, length: %d\n", k, seq_len);
   }
 
-  return log_p_sum;
+  /* return log_p_sum in success or +1.0 a probality of 0.0 on error */
+  if (success)
+    return log_p_sum;
+  else
+    return 1.0;
 #undef CUR_PROC
 }
 
@@ -455,8 +454,10 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
    @return            0/-1 success/error
    @param mo:         pointer to a model
    @param sq:         struct of annotated sequences
+   @param eta:        intial parameter eta (learning rate)
+   @param no_steps    number of training steps
  */
-int gradient_descent_nstep(model** mo, sequence_t* sq, double eta, int noSteps) {
+int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps) {
 #define CUR_PROC "gradient_descent_nstep"
 
   int runs=0;
@@ -467,7 +468,7 @@ int gradient_descent_nstep(model** mo, sequence_t* sq, double eta, int noSteps) 
   last = (model*)model_copy(*mo);
   last_perf = compute_performance(last, sq);
   
-  while (eta > EPS_PREC && runs < noSteps) {
+  while (eta > EPS_PREC && runs < no_steps) {
     runs++;
     if (-1==gradient_descent_onestep(*mo, sq, eta)) {
       model_free(&last); return -1;}
@@ -533,28 +534,6 @@ int gradient_descent_nstep(model** mo, sequence_t* sq, double eta, int noSteps) 
   
   model_free(&last);	 
   return 0;
-
-#undef CUR_PROC
-}
-
-/*----------------------------------------------------------------------------*/
-/**
-   Trains the model with a set of annotated sequences till convergence using
-   gradient descent.
-   Model must not have silent states. (checked in Python wrapper)
-   @return            0/-1 success/error
-   @param mo:         address of pointer to a model
-   @param sq:         struct of annotated sequences
- */
-int gradient_descent(model** mo, sequence_t* sq) {
-#define CUR_PROC "gradient_descent"
-
-  double eta;
-
-  eta = .76;
-  printf("ETA: %g!\n", eta);
-
-  return gradient_descent_nstep(mo, sq, eta, 100);
 
 #undef CUR_PROC
 }

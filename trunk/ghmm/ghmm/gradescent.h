@@ -45,28 +45,16 @@ double compute_performance(model* mo, sequence_t *sq);
 
 /*----------------------------------------------------------------------------*/
 /**
-   Trains the model with a set of annotated sequences until the training
-   converges using gradient descent.
-   Model must not have silent states. (checked in Python wrapper)
-   @return            0/-1 success/error
-   @param mo:         reference to a pointer to a model
-   @param sq:         struct of annotated sequences
-   @param eta:
- */
-int gradient_descent(model** mo, sequence_t *sq);
-
-
-/*----------------------------------------------------------------------------*/
-/**
-   Trains the model with a set of annotated sequences using gradient descent.
+   Trains the model with a set of annotated sequences till convergence using
+   gradient descent.
    Model must not have silent states. (checked in Python wrapper)
    @return            0/-1 success/error
    @param mo:         pointer to a model
    @param sq:         struct of annotated sequences
-   @param eta:        learning factor
+   @param eta:        intial parameter eta (learning rate)
+   @param no_steps    number of training steps
  */
-int gradient_descent_onestep(model* mo, sequence_t *sq, double eta);
-
+int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
 
 /*----------------------------------------------------------------------------*/
 /**
