@@ -783,7 +783,7 @@ void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator,
 } /* model_Pi_print */
 
 
-void model_to_sdmodel(const model *mo, const sdmodel *smo, int klass) {
+void model_to_sdmodel(const model *mo, sdmodel *smo, int klass) {
 #define CUR_PROC "model_to_sdmodel"
   int i,j,m, nachf, vorg;
 
@@ -806,6 +806,7 @@ void model_to_sdmodel(const model *mo, const sdmodel *smo, int klass) {
     smo->s[i].in_states = vorg;
   }
   smo->prior = mo->prior;
+#undef CUR_PROC
 }
 
 
@@ -864,6 +865,7 @@ STOP:
   m_free(m2->topo_order);
   model_free(&m2);
   return(NULL);
+#undef CUR_PROC
 }
 
 /*============================================================================*/

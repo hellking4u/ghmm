@@ -156,7 +156,7 @@ extern "C" {
   model*    sdmodel_to_model(const sdmodel *mo, int kclass);
 
   /** */
-  void      model_to_sdmodel(const model *mo, const sdmodel *smo, int klass);
+  void      model_to_sdmodel(const model *mo, sdmodel *smo, int klass);
 
   /**
      Writes a model in matrix format.
