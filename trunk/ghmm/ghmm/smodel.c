@@ -31,9 +31,6 @@ __copyright__
 #include "randvar.h"
 #include "string.h"
 
-/*############## TEST ################*/
-#include "/package/python/2.3.0/linux/include/python2.3/Python.h"
-
 /*----------------------------------------------------------------------------*/
 int smodel_state_alloc(sstate *state,
 			      int M,
