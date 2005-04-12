@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
-CFG=ghmm - Win32 Debug
+CFG=ghmm - Win32 Release
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,11 @@ CFG=ghmm - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "ghmm.mak" CFG="ghmm - Win32 Debug"
+!MESSAGE NMAKE /f "ghmm.mak" CFG="ghmm - Win32 Release"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "ghmm - Win32 Release" (based on "Win32 (x86) Static Library")
-!MESSAGE "ghmm - Win32 Debug" (based on "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
@@ -27,9 +26,6 @@ CFG=ghmm - Win32 Debug
 # PROP Scc_LocalPath ""
 CPP=cl.exe
 RSC=rc.exe
-
-!IF  "$(CFG)" == "ghmm - Win32 Release"
-
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
 # PROP BASE Output_Dir "Release"
@@ -50,36 +46,9 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
-
-!ELSEIF  "$(CFG)" == "ghmm - Win32 Debug"
-
-# PROP BASE Use_MFC 0
-# PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "Debug"
-# PROP BASE Intermediate_Dir "Debug"
-# PROP BASE Target_Dir ""
-# PROP Use_MFC 0
-# PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Debug"
-# PROP Intermediate_Dir "Debug"
-# PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\..\\" /I "..\..\..\gsl-1.0" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD BASE RSC /l 0x407 /d "_DEBUG"
-# ADD RSC /l 0x407 /d "_DEBUG"
-BSC32=bscmake.exe
-# ADD BASE BSC32 /nologo
-# ADD BSC32 /nologo
-LIB32=link.exe -lib
-# ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo
-
-!ENDIF 
-
 # Begin Target
 
 # Name "ghmm - Win32 Release"
-# Name "ghmm - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -89,11 +58,27 @@ SOURCE=..\..\ghmm\cluster.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ghmm\discrime.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\ghmm\foba.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\ghmm\gauss_tail.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\gradescent.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\kbest.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\kbestbasics.c
 # End Source File
 # Begin Source File
 
@@ -106,6 +91,10 @@ SOURCE=..\..\ghmm\mes.c
 # Begin Source File
 
 SOURCE=..\..\ghmm\model.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\modelutil.c
 # End Source File
 # Begin Source File
 
@@ -134,6 +123,18 @@ SOURCE=..\..\ghmm\scanner.c
 # Begin Source File
 
 SOURCE=..\..\ghmm\scluster.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\sdfoba.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\sdmodel.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\ghmm\sdviterbi.c
 # End Source File
 # Begin Source File
 
@@ -186,6 +187,10 @@ SOURCE=..\..\ghmm\cluster.h
 # Begin Source File
 
 SOURCE=..\..\ghmm\const.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\discrime.h
 # End Source File
 # Begin Source File
 
@@ -274,6 +279,10 @@ SOURCE=..\..\ghmm\vector.h
 # Begin Source File
 
 SOURCE=..\..\ghmm\viterbi.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\win_config.h
 # End Source File
 # End Group
 # End Target
