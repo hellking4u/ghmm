@@ -101,7 +101,7 @@ typedef struct local_store_t {
 int sreestimate_baum_welch(smosqd_t *cs);
 
 
-int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,int *T,  double **O, double *log_p, double *seq_w);
+static int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,int *T,  double **O, double *log_p, double *seq_w);
 
 #ifdef __cplusplus
 }
