@@ -138,8 +138,10 @@ extern "C" {
 #define m_bitinv( BitStr, Bit ) (((char*)(BitStr))[(Bit)>>3] ^= ~(1<<((Bit)&7)))
 #endif
 
+
+/* else { printf("WARNING: m_free on NULL pointer\n"); } */
 #ifndef m_free
-#define m_free( p )  if(p) { free(p); (p) = NULL; } else { printf("WARNING: m_free on NULL pointer\n"); }
+#define m_free( p )  if(p) { free(p); (p) = NULL; } 
 #endif
 
 #ifndef m_strlen
