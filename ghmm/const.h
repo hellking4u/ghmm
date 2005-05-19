@@ -72,7 +72,7 @@
 /**
   Maximum length of a sequence
   */
-#define MAX_SEQ_LEN 1000
+#define MAX_SEQ_LEN 100000
 /* #define MAX_SEQ_LEN      1000000 */
 
 /**
