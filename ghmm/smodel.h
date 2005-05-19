@@ -98,7 +98,7 @@ struct sstate {
   int fix;
 
   /**  array of flags for fixing mixture components in the reestimation
-        fix[i] = 1 means mu and sigma of component i are fixed.  **/
+        mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
   int *mixture_fix;
 };
 typedef struct sstate sstate;
