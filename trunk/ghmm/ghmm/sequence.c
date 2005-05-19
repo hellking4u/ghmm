@@ -446,7 +446,7 @@ sequence_t *sequence_calloc(long seq_number) {
   }
   if(!m_calloc(sq, 1)) {mes_proc(); goto STOP;}
   if(!m_calloc(sq->seq, seq_number)) {mes_proc(); goto STOP;}
-  if(!m_calloc(sq->states, seq_number)) {mes_proc(); goto STOP;}
+  //if(!m_calloc(sq->states, seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(sq->seq_len, seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(sq->seq_label, seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(sq->seq_id, seq_number)) {mes_proc(); goto STOP;}
@@ -537,7 +537,7 @@ int sequence_add(sequence_t *target, sequence_t *source) {
 
   int res = -1;
   int **old_seq       = target->seq;
-  int **old_seq_st    = target->states;
+  //int **old_seq_st    = target->states;
   int *old_seq_len    = target->seq_len;
   long *old_seq_label = target->seq_label;
   double *old_seq_id = target->seq_id;
@@ -549,7 +549,7 @@ int sequence_add(sequence_t *target, sequence_t *source) {
   target->total_w += source->total_w;
 
   if(!m_calloc(target->seq, target->seq_number)) {mes_proc(); goto STOP;}
-  if(!m_calloc(target->states, target->seq_number)) {mes_proc(); goto STOP;}
+  //if(!m_calloc(target->states, target->seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(target->seq_len, target->seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(target->seq_label, target->seq_number)) {mes_proc(); goto STOP;}
   if(!m_calloc(target->seq_id, target->seq_number)) {mes_proc(); goto STOP;}
@@ -557,7 +557,7 @@ int sequence_add(sequence_t *target, sequence_t *source) {
 
   for (i = 0; i < old_seq_number; i++) {
     target->seq[i] = old_seq[i];
-    target->states[i] = old_seq_st[i];
+    //target->states[i] = old_seq_st[i];
     target->seq_len[i] = old_seq_len[i];
     target->seq_label[i] = old_seq_label[i];
     target->seq_id[i] = old_seq_id[i];
@@ -571,20 +571,21 @@ int sequence_add(sequence_t *target, sequence_t *source) {
     sequence_copy(target->seq[i+old_seq_number], source->seq[i], 
 		  source->seq_len[i]);
 
-    if(!m_calloc(target->states[i+old_seq_number], source->seq_len[i])) 
-      {mes_proc(); goto STOP;}
+    /*if(!m_calloc(target->states[i+old_seq_number], source->seq_len[i])) 
+      {mes_proc(); goto STOP;} */
 
-    /*sequence_copy(target->states[i+old_seq_number], source->states[i], 
-      source->seq_len[i]);*/
+    /* sequence_copy(target->states[i+old_seq_number], source->states[i], 
+      source->seq_len[i]); */
 
     target->seq_len[i+old_seq_number] = source->seq_len[i];
     target->seq_label[i+old_seq_number] = source->seq_label[i];
     target->seq_id[i+old_seq_number] = source->seq_id[i];
     target->seq_w[i+old_seq_number] = source->seq_w[i];
   } 
- 
-  /*m_free(old_seq);
-    m_free(old_seq_st);*/
+
+  
+  m_free(old_seq);
+  //m_free(old_seq_st);
   m_free(old_seq_len);
   m_free(old_seq_label);
   m_free(old_seq_id);
@@ -848,7 +849,7 @@ void sequence_clean(sequence_t *sq) {
   m_free(sq->seq_label);
   m_free(sq->seq_id);
   m_free(sq->seq_w);
-  m_free(sq->states);
+ // m_free(sq->states);
   sq->seq_number = 0;
   sq->total_w = 0.0;
 } /* sequence_clean */
@@ -871,18 +872,24 @@ int sequence_free(sequence_t **sq) {
   mes_check_ptr(sq, return(-1));
   if( !*sq ) return(0);
   matrix_i_free(&(*sq)->seq, (*sq)->seq_number);
-  /* The allocation of state must be fixed */
+
+    /* The allocation of state must be fixed */
   /*** Added attribute to the sequence_t
   if (&(*sq)->states) { 
     matrix_i_free(&(*sq)->states, (*sq)->seq_number);
    }
   ***/
+  
   m_free((*sq)->seq);
   m_free((*sq)->seq_len);
   m_free((*sq)->seq_label);
   m_free((*sq)->seq_id);
   m_free((*sq)->seq_w);
-  m_free((*sq)->states);
+  
+  if ((*sq) -> states ){
+    m_free((*sq)->states); 
+  }
+  
   m_free(*sq);
   return 0;
 # undef CUR_PROC

@@ -53,8 +53,11 @@ struct sequence_t {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
   int **seq;
-  /** matrix of state ids  */
+
+  /** matrix of state ids, can be used to save the viterbi path during sequence generation.
+   ATTENTION: is NOT allocated by sequence_calloc  */
   int **states;
+  
   /** array of sequence length */
   int *seq_len;
   /**  array of sequence labels */
