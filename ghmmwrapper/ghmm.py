@@ -1436,11 +1436,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      ]
                 
                 cmodel = ghmmwrapper.new_smodel()
-                print "A=",A
-                
                 cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
-                print "M=",cmodel.M
-                
                 cmodel.prior = -1 # Unused
                 
                 # determining number of transition classes
@@ -1448,16 +1444,14 @@ class HMMFromMatricesFactory(HMMFactory):
                 if type(A[0][0]) == list:
                     cos = len(A)
                     cmodel.N = len(A[0])
-                    print "N=",cmodel.N
                     # allocating class switching context
                     ghmmwrapper.smodel_class_change_alloc(cmodel)
+                    
                 else: 
                     cos = 1
                     cmodel.N = len(A)
                     A = [A]
                     
-                print "cos =",cos
-                
                 cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
                 
                 states = ghmmwrapper.arraysstate(cmodel.N)

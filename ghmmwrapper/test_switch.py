@@ -37,17 +37,30 @@ import ghmm
 import ghmmwrapper
 import ghmmhelper
 
-A2 = [
-      [[0.0,1.0,0.0],[0.0,0.0,1.0],[1.0,0.0,0.0]],
-      [[1.0,0.0,0.0],[1.0,0.0,0.0],[1.0,0.0,0.0]]
-     ]
-B2 = [[0.0,0.000001],[1.0,0.000001], [2.0,0.000001]]
+ # Interpretation of B matrix for the mixture case (Example with three states and two components each):
+                #  B = [ 
+                #      [ ["mu11","mu12"],["sig11","sig12"],["w11","w12"]   ],
+                #      [  ["mu21","mu22"],["sig21","sig22"],["w21","w22"]  ],
+                #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
+                #      ]
+                
+A2 = [ [[0.0,1.0,0.0],[0.0,0.0,1.0],[1.0,0.0,0.0]],
+      [[1.0,0.0,0.0],[1.0,0.0,0.0],[1.0,0.0,0.0]] ]
+     
+B2 = [ [[0.0,0.000001],[0.4,0.4],[0.5,0.5]],
+    [[1.0,0.000001],[0.3,0.3],[0.5,0.5]],
+     [[2.0,0.000001],[0.8,0.8],[0.5,0.5]] ]
+
+
 pi2 = [1.0,0.0,0.0]
-model2 = ghmm.HMMFromMatrices(ghmm.Float(),ghmm.GaussianDistribution(ghmm.Float), A2, B2, pi2)
+model2 = ghmm.HMMFromMatrices(ghmm.Float(),ghmm.GaussianMixtureDistribution(ghmm.Float), A2, B2, pi2)
 
 ghmmwrapper.smodel_class_change_alloc(model2.cmodel)
-ghmmwrapper.setPythonSwitching(model2.cmodel,"class_change","getClass")
-#ghmmwrapper.setSwitchingFunction(model2.cmodel)
+
+#ghmmwrapper.setPythonSwitching(model2.cmodel,"class_change","getClass")
+ghmmwrapper.setSwitchingFunction(model2.cmodel)
 
 #print model2
 seq = model2.sample(2,30)
+
+model2.write("test_switch.smo")
