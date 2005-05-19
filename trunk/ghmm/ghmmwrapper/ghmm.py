@@ -145,6 +145,9 @@ import copy
 from os import path
 from math import log,ceil
 
+
+print "*** I'm the ghmm in /amd/rindt/1/home/abt_vin/georgi/hmm/ghmm/ghmmwrapper ***"
+
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
@@ -446,7 +449,8 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbol = ghmmwrapper.set_2d_arrayint
-            self.cleanFunction = ghmmwrapper.sequence_clean
+            self.freeFunction = ghmmwrapper.call_sequence_free
+            self.addSeqFunction = ghmmwrapper.sequence_add
 
             #create a sequence_t with state_labels, if the appropiate parameters are set
             if (isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None )):
@@ -517,7 +521,8 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbol = ghmmwrapper.set_2d_arrayd
-            self.cleanFunction = ghmmwrapper.sequence_d_clean
+            self.freeFunction = ghmmwrapper.call_sequence_d_free
+            self.addSeqFunction = ghmmwrapper.sequence_d_add
 
             if isinstance(sequenceInput, list):
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
@@ -547,8 +552,8 @@ class EmissionSequence:
 
     def __del__(self):
         "Deallocation of C sequence struct."
-        #print "__del__ EmissionSequence " + str(self.cseq)
-        self.cleanFunction(self.cseq)
+        print "__del__ EmissionSequence " + str(self.cseq)
+        self.freeFunction( self.cseq)
         self.cseq = None
 
     def __len__(self):
@@ -611,7 +616,13 @@ class EmissionSequence:
 
     def sequenceSet(self):
         """ Return a one-element SequenceSet with this sequence."""
-        return SequenceSet(self.emissionDomain, self.cseq)
+        
+        # in order to copy the sequence in 'self', we first create an empty SequenceSet and then
+        # add 'self'
+        seqSet = SequenceSet(self.emissionDomain, [])
+        self.addSeqFunction(seqSet.cseq,self.cseq)
+        del(self)
+        return seqSet
 
     def write(self,fileName):
         "Writes the EmissionSequence into file 'fileName'."
@@ -643,7 +654,7 @@ class SequenceSet:
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
             self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within an int**
-            self.cleanFunction = ghmmwrapper.sequence_clean
+            self.freeFunction = ghmmwrapper.call_sequence_free
             self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbolSingle = ghmmwrapper.set_arrayint
@@ -728,7 +739,7 @@ class SequenceSet:
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
             self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign a double* to a position within a double**
-            self.cleanFunction = ghmmwrapper.sequence_d_clean
+            self.freeFunction = ghmmwrapper.call_sequence_d_free
             self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbolSingle = ghmmwrapper.set_arrayd
@@ -774,8 +785,8 @@ class SequenceSet:
     def __del__(self):
         "Deallocation of C sequence struct."
         
-        # print "** SequenceSet.__del__ " + str(self.cseq)
-        self.cleanFunction(self.cseq)
+        print "** SequenceSet.__del__ " + str(self.cseq)
+        self.freeFunction(self.cseq)
         self.cseq = None
     
     def __str__(self):
@@ -1426,7 +1437,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 
                 cmodel = ghmmwrapper.new_smodel()
                 cmodel.N = len(A)
-                cmodel.M = len(B[0][0]) # Number of mixture componenent for emission distribution
+                cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
                 cmodel.prior = -1 # Unused
                 
                 # determining number of transition classes

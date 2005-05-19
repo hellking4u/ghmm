@@ -177,7 +177,8 @@ struct sequence_t {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
   int **seq;
-  /** matrix of state ids  */
+  /** matrix of state ids, can be used to save the viterbi path during sequence generation.
+   ATTENTION: is NOT allocated by sequence_calloc  */
   int **states;
   /** array of sequence length */
   int *seq_len;
@@ -391,6 +392,15 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
     sequence_d_print(file_name,seq, disc);
     fclose(file_name);
   }	  
+
+
+  void call_sequence_free(sequence_t *sq ) {sequence_free(&sq);}  
+  void call_sequence_d_free(sequence_d_t *sq ) {sequence_d_free(&sq);}  
+    
+ /*   sequence_t *copy_sequence_t(sequence_t *source){
+      cp_seq = sequence_calloc(source->seq_number);
+      
+   }        */
 
    
 %}
@@ -1175,7 +1185,7 @@ struct class_change_context{
     int (*get_class)(struct smodel*,double*,int,int);
     
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
- //   void* user_data;
+    void* user_data;
 };
 typedef struct class_change_context class_change_context;
 
