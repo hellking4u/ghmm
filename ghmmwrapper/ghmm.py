@@ -1436,17 +1436,28 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      ]
                 
                 cmodel = ghmmwrapper.new_smodel()
-                cmodel.N = len(A)
+                print "A=",A
+                
                 cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
+                print "M=",cmodel.M
+                
                 cmodel.prior = -1 # Unused
                 
                 # determining number of transition classes
                 cos = 0
                 if type(A[0][0]) == list:
                     cos = len(A)
+                    cmodel.N = len(A[0])
+                    print "N=",cmodel.N
+                    # allocating class switching context
+                    ghmmwrapper.smodel_class_change_alloc(cmodel)
                 else: 
                     cos = 1
+                    cmodel.N = len(A)
                     A = [A]
+                    
+                print "cos =",cos
+                
                 cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
                 
                 states = ghmmwrapper.arraysstate(cmodel.N)
@@ -2056,7 +2067,7 @@ class DiscreteEmissionHMM(HMM):
             strout += "\n\nState number "+ str(k) +":"
             strout += "\nState order: " + str(state.order)
             strout += "\nInitial probability: " + str(state.pi)
-            #strout += "\nsilent state: " + str(get_arrayint(self.model.silent,k))
+            #strout += "\nsilent state: " + str(get_arrayint(self.cmodel.silent,k))
             strout += "\nOutput probabilites: "
             for outp in range(hmm.M**(state.order+1)):
                 strout+=str(ghmmwrapper.get_arrayd(state.b,outp))
@@ -2283,7 +2294,7 @@ class DiscreteEmissionHMM(HMM):
     def removeTiegroups(self):
         ghmmwrapper.free_arrayi(self.cmodel.tied_to)
         self.cmodel.tied_to = None
-        self.model.cmodel.model_type -= 8
+        self.cmodel.cmodel.model_type -= 8
     
     def getTieGroups(self):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
