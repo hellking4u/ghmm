@@ -770,14 +770,6 @@ class StateLabelHMMTests(unittest.TestCase):
         self.assertEqual(path,(['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'], -35.735009627142446)) 
 
 
-#AssertionError: (
-#['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'], -39.893892710502115) != 
-#['fst', 'scd', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'fst', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd'], -34.98861793206369)
-
-#fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'], -35.735009627142446) 
-#fst', 'scd', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'fst', 'thr', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd', 'fst', 'scd'], -34.988617932063683)
-
-                
     def testgradientdescent(self):
         A2 = [[0.3,0.2,0.5],[0.1,0.8,0.1],[0.1,0.4,0.5]]
         B2 = [[0.4,0.2,0.2,0.2],[0.4,0.2,0.2,0.2],
@@ -955,7 +947,7 @@ class XMLIOTests(unittest.TestCase):
     def testWriteReadXML(self):
         """
         Test writing from matrices to XML.
-        Ignored attributes: tiedto and background.
+        Ignored attributes: tied_to and background.
         """
         self.model.toXML('./discrete.xml')
         model2 = ghmm.HMMOpenXML('./discrete.xml')
@@ -963,22 +955,38 @@ class XMLIOTests(unittest.TestCase):
         self.label_model.toXML('./model_label.xml')
         model3 = ghmm.HMMOpenXML('./model_label.xml')
 
+
+# Run ALL tests
 if __name__ == '__main__':
     unittest.main()
 
 
-#suite = unittest.TestSuite()
-#suite.addTest(DiscreteEmissionHMMTests("testtiedstated"))
-#runner = unittest.TextTestRunner()
-#runner.run(suite)
+# Individual test suites for each of the different classes
+suiteAlphabet = unittest.makeSuite(AlphabetTests,'test')
+suiteEmissionSequence = unittest.makeSuite(EmissionSequenceTests,'test')
+suiteSequenceSet = unittest.makeSuite(SequenceSetTests,'test')
+suiteDiscreteEmissionHMM = unittest.makeSuite(DiscreteEmissionHMMTests,'test')
+suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'test')
+suiteStateLabelHMM = unittest.makeSuite(StateLabelHMMTests,'test')
+suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
+suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
+suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 
-################################################################
-#suite.addTest(AlphabetTests("testinternalexternal"))
-#suite.addTest(AlphabetTests("testinternalexternalSequence"))
-#suite.addTest(AlphabetTests("testlen"))
+# Call to individual test suites, uncomment to activate as needed.
 #runner = unittest.TextTestRunner()
-# runner.run(suite)
-################################################################
+#runner.run(suiteAlphabet)
+#runner.run(suiteSequenceSet)
+#runner.run(suiteDiscreteEmissionHMM)
+#runner.run(suiteBackgroundDistribution)
+#runner.run(suiteStateLabelHMM)
+#runner.run(suiteGaussianEmissionHMM)
+#runner.run(suiteGaussianMixtureHMM)
+#runner.run(suiteXMLIO)
+
+
+
+
+
 
 
 

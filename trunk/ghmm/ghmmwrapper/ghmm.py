@@ -146,7 +146,7 @@ from os import path
 from math import log,ceil
 
 
-print "*** I'm the ghmm in /amd/rindt/1/home/abt_vin/georgi/hmm/ghmm/ghmmwrapper ***"
+#print "*** I'm the ghmm in /amd/rindt/1/home/abt_vin/georgi/hmm/ghmm/ghmmwrapper ***"
 
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
@@ -785,7 +785,7 @@ class SequenceSet:
     def __del__(self):
         "Deallocation of C sequence struct."
         
-        print "** SequenceSet.__del__ " + str(self.cseq)
+        print "__del__ SequenceSet " + str(self.cseq)
         self.freeFunction(self.cseq)
         self.cseq = None
     
@@ -1541,7 +1541,7 @@ class BackgroundDistribution:
             raise TypeError, "Input type "+str(type(bgInput)) +" not recognized."    
 
     def __del__(self):
-        print "** Freeing ", self.cbackground
+        print "__del__ BackgroundDistribution " + str(self.cbackground)
         ghmmwrapper.model_free_background_distributions(self.cbackground)
         self.cbackground = None
     
@@ -1612,7 +1612,7 @@ class HMM:
 
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-        #print "HMM.__del__", self.cmodel
+        print "__del__ HMM" + str(self.cmodel)
         self.freeFunction(self.cmodel)
         self.cmodel = None
 
@@ -2045,6 +2045,7 @@ class DiscreteEmissionHMM(HMM):
         self.distanceFunction = ghmmwrapper.model_prob_distance
     
     def __del__(self):
+        print "__del__ DiscreteEmissionHMM" + str(self.cmodel)
         if self.cmodel.tied_to is not None:
             self.removeTiegroups()
         HMM.__del__(self)
@@ -2288,7 +2289,7 @@ class DiscreteEmissionHMM(HMM):
     def removeTiegroups(self):
         ghmmwrapper.free_arrayi(self.cmodel.tied_to)
         self.cmodel.tied_to = None
-        self.cmodel.cmodel.model_type -= 8
+        self.cmodel.model_type -= 8
     
     def getTieGroups(self):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
@@ -2371,9 +2372,9 @@ class DiscreteEmissionHMM(HMM):
 
         try:
             tiedlist = self.getTieGroups()
-        except:
+        except AssertionError:
             print "Ignore tied groups\n"
-            print "\"self.cmodel.tiedto\" not defined"
+            print "\"self.cmodel.tied_to\" not defined"
             
         for i in xrange(self.cmodel.N):
             cstate = self.getStatePtr(self.cmodel.s,i)
