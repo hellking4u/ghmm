@@ -2571,12 +2571,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
             allLogs = []
             allLabels = []
-            seq_todo = seqNumber
-            print " "
+
             for i in range(seqNumber):
-                if seqNumber > 1:
-                    print seq_todo
-                    seq_todo -= 1
                 seq = emissionSequences.getPtr(emissionSequences.cseq.seq, i)
                 seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
 
