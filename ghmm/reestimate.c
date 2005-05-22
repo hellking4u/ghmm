@@ -74,12 +74,16 @@ static local_store_t *reestimate_alloc(const model *mo) {
   for (i = 0; i < mo->N; i++)
     if (!m_calloc(r->a_num[i], mo->s[i].out_states)){mes_proc(); goto STOP;}
   if (!m_calloc(r->a_denom, mo->N)) {mes_proc(); goto STOP;}
-  //hier muss mehr platz:
-  //r->b_num = stat_matrix_d_alloc(mo->N, mo->M);
-  r->b_num = stat_matrix_d_alloc(mo->N, model_ipow(mo, mo->M,mo->maxorder+1));
-  if (!(r->b_num)) {mes_proc(); goto STOP;}
-  r->b_denom = stat_matrix_d_alloc(mo->N, model_ipow(mo, mo->M, mo->maxorder));
-  if (!(r->b_denom)) {mes_proc(); goto STOP;}
+  
+  if (!m_malloc(r->b_num, mo->N)) {mes_proc(); goto STOP;}
+  for (i=0; i<mo->N; i++)
+    if (!m_calloc(r->b_num[i], model_ipow(mo, mo->M, mo->s[i].order+1)))
+      {mes_proc(); goto STOP;}
+  if (!m_malloc(r->b_denom, mo->N)) {mes_proc(); goto STOP;}
+  for (i=0; i<mo->N; i++)
+    if (!m_calloc(r->b_denom[i], model_ipow(mo, mo->M, mo->s[i].order)))
+      {mes_proc(); goto STOP;}
+
   return(r);
  STOP:
   reestimate_free(&r, mo->N);
@@ -92,14 +96,24 @@ static int reestimate_free(local_store_t **r, int N) {
 # define CUR_PROC "reestimate_free"
   int i;
   mes_check_ptr(r, return(-1));
-  if( !*r ) return(0);
-  m_free((*r)->pi_num);  
-  for (i = 0; i < N; i++)
-    m_free((*r)->a_num[i]);
+  if (!*r) return(0);
+  m_free((*r)->pi_num);
+
+  if ((*r)->a_num)
+    for (i=0; i<N; i++)
+      m_free((*r)->a_num[i]);
   m_free((*r)->a_num);
   m_free((*r)->a_denom);
-  stat_matrix_d_free( &((*r)->b_num));
-  stat_matrix_d_free( &((*r)->b_denom));
+
+  if ((*r)->b_num)
+    for (i=0; i<N; i++)
+      m_free((*r)->b_num[i]);
+  m_free((*r)->b_num);
+  if ((*r)->b_denom)
+    for (i=0; i<N; i++)
+      m_free((*r)->b_denom[i]);
+  m_free((*r)->b_denom);
+
   m_free(*r);
   return(0);
 # undef CUR_PROC
