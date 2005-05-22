@@ -48,93 +48,50 @@
 #include "ghmm.h"
 
 /*----------------------------------------------------------------------------*/
-/** allocates memory for m and n matrices: */
-int gradient_descent_galloc(model* mo, double*** m_b, double*** n_b,
-			    double** m_a, double** n_a, double** m_pi,
-			    double** n_pi) {
-#define CUR_PROC "gradient_descent_galloc"
-  
+void gradient_descent_gfree(double** matrix_b, double* matrix_a,
+			    double* matrix_pi, int N) {
+#define CUR_PROC "gradient_descent_gfree"
+
   int i;
-  int success = 1;
 
-  /* first allocate memory for m_b and n_b: */
-  *m_b = (double**)malloc(sizeof(double*)*mo->N);
-  if (!*m_b) success = 0;
-  for (i=0; i<mo->N && success; i++) {
-    (*m_b)[i] = (double*)calloc(model_ipow(mo, mo->M, mo->s[i].order+1),
-				sizeof(double));
-    if (!(*m_b)[i]) success = 0;
-  }
-  *n_b = (double**)malloc(sizeof(double*)*mo->N);
-  if (!*n_b) success = 0;
-  for (i=0; i<mo->N && success; i++) {
-    (*n_b)[i] = (double*)calloc(model_ipow(mo, mo->M, mo->s[i].order+1),
-				sizeof(double));
-    if (!(*n_b)[i]) success = 0;
-  }
-  
-  /* m_a(i,j) = m_a[i*mo->N+j] */
-  *m_a = (double*)calloc(mo->N*mo->N, sizeof(double));
-  if (!*m_a) success = 0;
-  *n_a = (double*)calloc(mo->N*mo->N, sizeof(double));
-  if (!*n_a) success = 0;
-  
-  /* allocate memory for m_pi and n_pi */
-  *m_pi = (double*)calloc(mo->N, sizeof(double));
-  if (!*m_pi) success = 0;
-  *n_pi = (double*)calloc(mo->N, sizeof(double));
-  if (!*n_pi) success = 0;
-
-  if (!success) {
-    if (!*m_b) return -1;
-    for (i=0; i<mo->N && (*m_b)[i]; i++) {
-      free((*m_b)[i]);
+  if (matrix_b)
+    for (i=0; i<N; i++) {
+      m_free(matrix_b[i]);
     }
-    free(*m_b);
+  m_free(matrix_b);
 
-    if (!*n_b) return -1;
-    for (i=0; i<mo->N && (*n_b)[i]; i++) {
-      free((*n_b)[i]);
-    }
-    free(*n_b);
-
-    if (!*m_a) return -1;
-    free(*m_a);
-    if (!*n_a) return -1;
-    free(*n_a);
-    if (!*m_pi) return -1;
-    free(*m_pi);
-    if (!*n_pi) return -1;
-    free(*n_pi);
-
-    return -1;
-  }
-  return 0;
+  m_free(matrix_a);
+  m_free(matrix_pi);
 
 #undef CUR_PROC
 }
 
 
 /*----------------------------------------------------------------------------*/
-void gradient_descent_gfree(double** m_b, double** n_b, double* m_a,
-			    double* n_a, double* m_pi, double* n_pi, int N) {
-#define CUR_PROC "gradient_descent_gfree"
-
+/** allocates memory for m and n matrices: */
+int gradient_descent_galloc(double*** matrix_b, double** matrix_a,
+			    double** matrix_pi, model *mo) {
+#define CUR_PROC "gradient_descent_galloc"
+  
   int i;
 
-  for (i=0; i<N; i++) {
-    free(m_b[i]);
-  }
-  free(m_b);
+  /* first allocate memory for matrix_b */
+  if (!m_malloc(*matrix_b, mo->N)) {mes_proc(); goto STOP;}
+  for (i=0; i<mo->N; i++)
+    if (!m_calloc((*matrix_b)[i], model_ipow(mo, mo->M, mo->s[i].order+1)))
+      {mes_proc(); goto STOP;}
+  
+  /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
+  if (!m_calloc(*matrix_a, mo->N*mo->N)) {mes_proc(); goto STOP;}
+  
+  /* allocate memory for matrix_pi */
+  if (!m_calloc(*matrix_pi, mo->N)) {mes_proc(); goto STOP;}
 
-  for (i=0; i<N; i++) {
-    free(n_b[i]);
-  }
-  free(n_b);
-  free(m_a);
-  free(n_a);
-  free(m_pi);
-  free(n_pi);
+  return 0;
+
+ STOP:
+  gradient_descent_gfree(*matrix_b, *matrix_a, *matrix_pi, mo->N);
+  return -1;
 
 #undef CUR_PROC
 }
@@ -299,8 +256,8 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
   double log_p;
 
   /* allocate memory for the parameters used for reestimation */
-  if (-1 == gradient_descent_galloc(mo, &m_b, &n_b, &m_a, &n_a, &m_pi, &n_pi))
-    return -1;
+  if (-1 == gradient_descent_galloc(&m_b, &m_a, &m_pi, mo)) return -1;
+  if (-1 == gradient_descent_galloc(&n_b, &n_a, &n_pi, mo)) return -1;
     
   /* loop over all sequences */
   for (k=0; k < sq->seq_number; k++) {
@@ -443,7 +400,8 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
     reestimate_free_matvek(alpha, beta, scale, seq_len);
   }
   
-  gradient_descent_gfree(m_b, n_b, m_a, n_a, m_pi, n_pi, mo->N);
+  gradient_descent_gfree(m_b, m_a, m_pi, mo->N);
+  gradient_descent_gfree(n_b, n_a, n_pi, mo->N);
 
   return 0;
 
