@@ -397,13 +397,13 @@ static int reestimate_one_step(model *mo, local_store_t *r,
     if ( reestimate_alloc_matvek(&alpha, &beta, &scale, T_k, mo->N) == -1 )
       {mes_proc(); goto STOP;}
     if (foba_forward(mo, O[k], T_k, alpha, scale, &log_p_k) == -1)
-      {mes_proc(); goto STOP;}
+      {mes_proc(); goto FREE;}
 
     if (log_p_k != +1) { /* O[k] can be generated */
       *log_p += log_p_k;
       valid = 1;
       if (foba_backward(mo, O[k], T_k, beta, scale) == -1)
-	{ mes_proc(); goto STOP;}
+	{ mes_proc(); goto FREE;}
       
       /* loop over all states */
       for (i = 0; i < mo->N; i++) {
@@ -428,7 +428,6 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 		  * beta[t+1][j_id]
 		  * (1.0 / scale[t+1]) );  /* c[t] = 1/scale[t] */
 	    }
-
 	  }
 	}
 
@@ -475,9 +474,7 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 	    /* r->b_denom[i][hist] *= ((double) mo->M); ??? */
 	  }
 	}
-
       } /* for (i = 0 i < mo->N i++) { */
-
     } /* if (log_p_k != +1) */
     else {
       printf("O(%2d) can't be built from model mo!\n", k);
@@ -504,6 +501,8 @@ static int reestimate_one_step(model *mo, local_store_t *r,
   }
 
   res = 0;
+ FREE:
+    reestimate_free_matvek(alpha, beta, scale, T_k);
  STOP:
   return(res);
 # undef CUR_PROC
@@ -654,18 +653,17 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     if ( reestimate_alloc_matvek(&alpha, &beta, &scale, T_k, mo->N) == -1 )
       {mes_proc(); goto STOP;}
     if (foba_label_forward(mo, O[k], label[k], T_k, alpha, scale, &log_p_k)
-	== -1) {mes_proc(); goto STOP;}
+	== -1) {mes_proc(); goto FREE;}
 
     if (log_p_k != +1) { /* O[k] can be generated */
       *log_p += log_p_k;
       valid = 1;
       if (foba_label_backward(mo, O[k], label[k], T_k, beta, scale, &log_p_k)
-	  == -1) { mes_proc(); goto STOP;}
+	  == -1) { mes_proc(); goto FREE;}
 
       /* loop over all states */
       for (i = 0; i < mo->N; i++) {
 	/* Pi */
-	//hier:
 	bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
@@ -723,7 +721,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     } /* if (log_p_k != +1) */
     else {
       printf("O(%2d) can't be built from model mo!\n", k);
-    } 
+    }
 
     reestimate_free_matvek(alpha, beta, scale, T_k);
 
@@ -744,6 +742,8 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
   }
 
   res = 0;
+ FREE:
+  reestimate_free_matvek(alpha, beta, scale, T_k);
  STOP:
   return(res);
 # undef CUR_PROC
