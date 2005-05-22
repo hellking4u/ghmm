@@ -255,14 +255,16 @@ void reestimate_update_tie_groups(model *mo) {
 static int reestimate_setlambda(local_store_t *r, model *mo) {
 # define CUR_PROC "reestimate_setlambda"
   int res = -1;
-  int h, i, j, m, l, j_id, positive, bi_len;
+  int h, i, j, m, l, j_id, positive;
   double factor, p_i;
   int hist, col, size;
+
   mes_check_0(r->pi_denom, goto STOP); 
-  for (i = 0; i < mo->N; i++) {
+
+  for (i=0; i < mo->N; i++) {
     /* Pi */
-    bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
     mo->s[i].pi =  r->pi_num[i] / r->pi_denom;
+
     /* A */
     /* note: denom. might be 0; never reached state? */
     p_i = 0.0;
@@ -322,16 +324,19 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
     /* B */
     size = model_ipow(mo, mo->M, mo->s[i].order);
     for (hist=0; hist<size; hist++) {
-      if (r->b_denom[i][hist] < EPS_PREC)
+      if (r->b_denom[i][hist] == 0.0 && mo->model_type & kHigherOrderEmissions)
+	/* in higher order models we probably don't see all possible
+	   emission_histories. So some denumerators are zero. skip'em. */
+	continue;
+      else if (r->b_denom[i][hist] < EPS_PREC)
 	factor = 0.0;
       else
 	factor = ( 1.0 / r->b_denom[i][hist] );
 
       positive = 0;
-    /* hier:
-	 /* TEST: denom. < numerator */
+      /* TEST: denom. < numerator */
       col = hist*mo->M;
-      for (m = col; m < col + mo->M; m++) {
+      for (m=col; m < col + mo->M; m++) {
 	if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -EPS_PREC) {
 	  char *str = mprintf(NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
 			      r->b_num[i][m], r->b_denom[i][hist]);
@@ -340,7 +345,6 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
 	}
 
 	mo->s[i].b[m] = r->b_num[i][m] * factor;
-
 	if (mo->s[i].b[m] >= EPS_PREC) positive = 1;
       }
 
@@ -623,16 +627,14 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
 				     int **label, double *log_p, double *seq_w)
 {
 # define CUR_PROC "reestimate_one_step_label"
-  int res = -1;
-  int k, i, j, m, t, j_id, valid, bi_len;
-  int e_index;
+
+  int k, i, j, m, t, j_id;
+  int e_index, T_k, valid=0;
   double **alpha = NULL;
   double **beta = NULL;
   double *scale = NULL;
-  int T_k;
   double gamma;
   double log_p_k;
-  int first, hist, col, size;
 
   /* first set maxorder to zero if model_type & kHigherOrderEmissions is FALSE 
      
@@ -643,7 +645,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     mo->maxorder = 0;
 
   *log_p = 0.0;
-  valid = 0;
+
   /* loop over all sequences */
   for (k = 0; k < seq_number; k++) {
     mo->emission_history=0;
@@ -652,75 +654,66 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     /* initialization of  matrices and vector depends on T_k */
     if ( reestimate_alloc_matvek(&alpha, &beta, &scale, T_k, mo->N) == -1 )
       {mes_proc(); goto STOP;}
+
     if (foba_label_forward(mo, O[k], label[k], T_k, alpha, scale, &log_p_k)
 	== -1) {mes_proc(); goto FREE;}
 
     if (log_p_k != +1) { /* O[k] can be generated */
       *log_p += log_p_k;
-      valid = 1;
+      valid=1;
+
       if (foba_label_backward(mo, O[k], label[k], T_k, beta, scale, &log_p_k)
 	  == -1) { mes_proc(); goto FREE;}
 
       /* loop over all states */
-      for (i = 0; i < mo->N; i++) {
+      for (i=0; i < mo->N; i++) {
 	/* Pi */
-	bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
-	/* A */
+
 	for (t=0; t<T_k-1; t++) {
+	  /* B */
+	  if ( !(mo->s[i].fix) && (mo->s[i].label == label[k][t])) {
+	    e_index = get_emission_index(mo, i, O[k][t], t);
+	    if (e_index != -1) {
+	      gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
+	      r->b_num[i][e_index] += gamma;
+	      r->b_denom[i][e_index/(mo->M)] += gamma;
+	    }
+	  }
 	  update_emission_history(mo, O[k][t]);
+
+	  /* A */
 	  r->a_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i];
-	  for (j = 0; j < mo->s[i].out_states; j++) {
-	    j_id = mo->s[i].out_id[j]; /* aufpassen! */
+	  for (j=0; j < mo->s[i].out_states; j++) {
+	    j_id = mo->s[i].out_id[j];
+	    if (label[k][t+1] != mo->s[j_id].label)
+	      continue;
 	    e_index = get_emission_index(mo,j_id,O[k][t+1],t+1);
-	    if (e_index != -1 &&
-		label[k][t+1]==mo->s[j_id].label ){
-
-	      r->a_num[i][j] +=
-		( seq_w[k] * alpha[t][i]
-		  * mo->s[i].out_a[j]
-		  * mo->s[j_id].b[e_index]
-		  * beta[t+1][j_id]
-		  * (1.0 / scale[t+1]) );  /* c[t] = 1/scale[t] */
-	    }
-
+	    if (e_index != -1)
+	      r->a_num[i][j] += (seq_w[k] * alpha[t][i] * mo->s[i].out_a[j] *
+				 mo->s[j_id].b[e_index] * beta[t+1][j_id] *
+				 (1.0 / scale[t+1]));
 	  }
 	}
-	/* ========= if state fix, continue;====================== */
-	if (mo->s[i].fix)
-	  continue;
-	/* B */
-
-	size = model_ipow(mo, mo->M, mo->s[i].order);
-	for (hist=0; hist<size; hist++) {
-	  first = hist*mo->M;
-	  for (m=first;  m<first+mo->M; m++) {
-	    for (t=0; t<T_k; t++) {
-	      if (get_emission_index(mo, i, O[k][t], t) == m &&
-		  label[k][t]==mo->s[i].label) {
-		gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
-		r->b_num[i][m] += gamma;
-		r->b_denom[i][hist] += gamma;
-	      }
-	      update_emission_history(mo, O[k][t]);
-	    }
-	  }
-	   
-	  if (r->b_denom[i][hist] < EPS_PREC) {
-	    /* XXX Must be background distribution */
-	    for (m = first;  m < first + mo->M; m++) r->b_num[i][m] = 1.0;
-	    r->b_denom[i][hist] = (double) mo->M;
-	  } else {
-	    /* r->b_denom[i][hist] *= ((double) mo->M); ??? */
+	/* B: last iteration for t==T_k-1 */
+	t==T_k-1;
+	if (!(mo->s[i].fix) && (mo->s[i].label == label[k][t])) {
+	  e_index = get_emission_index(mo, i, O[k][t], t);
+	  if (e_index != -1) {
+	    gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
+	    r->b_num[i][e_index] += gamma;
+	    r->b_denom[i][e_index/(mo->M)] += gamma;
 	  }
 	}
-
-      } /* for (i = 0 i < mo->N i++) { */
-
-    } /* if (log_p_k != +1) */
+      }
+    }
     else {
-      printf("O(%2d) can't be built from model mo!\n", k);
+      char *str = mprintf(NULL, 0, 
+			  "warning: sequence %d can't be built from model\n",
+			  k);
+      mes_prot(str);
+      m_free(str);
     }
 
     reestimate_free_matvek(alpha, beta, scale, T_k);
@@ -731,9 +724,8 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     /* new parameter lambda: set directly in model */
     if ( reestimate_setlambda(r, mo) == -1 ) { mes_proc(); goto STOP; }
     printf("---- reestimate: after normalization ----\n");
-/*     printf("Emission:\n"); */
-/*     model_B_print(stdout, mo, "\t", " ", "\n"); */
-
+    /*     printf("Emission:\n"); */
+    /*     model_B_print(stdout, mo, "\t", " ", "\n"); */
     /* only test: */
     /*    if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
   }
@@ -741,11 +733,11 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     *log_p = +1;
   }
 
-  res = 0;
+return(0);
  FREE:
   reestimate_free_matvek(alpha, beta, scale, T_k);
  STOP:
-  return(res);
+  return(-1);
 # undef CUR_PROC
 } /* reestimate_one_step_label */
 
