@@ -385,7 +385,7 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 			       double *log_p, double *seq_w) {
 # define CUR_PROC "reestimate_one_step"
   int res = -1;
-  int k, i, j, m, t, j_id, valid, bi_len;
+  int k, i, j, m, t, j_id, valid;
   int e_index;
   double **alpha = NULL;
   double **beta = NULL;
@@ -393,7 +393,6 @@ static int reestimate_one_step(model *mo, local_store_t *r,
   int T_k;
   double gamma;
   double log_p_k;
-  int first, hist, col, size;
 
   /* first set maxorder to zero if model_type & kHigherOrderEmissions is FALSE 
      
@@ -423,79 +422,48 @@ static int reestimate_one_step(model *mo, local_store_t *r,
 	{ mes_proc(); goto FREE;}
       
       /* loop over all states */
-      for (i = 0; i < mo->N; i++) {
+      for (i=0; i < mo->N; i++) {
 	/* Pi */
-	//hier:
-	bi_len = model_ipow(mo, mo->M, mo->s[i].order+1);
 	r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
 	r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
 
-	/* A */
 	for (t=0; t<T_k-1; t++) {
+	  /* B */
+	  if (!mo->s[i].fix) {
+	    e_index = get_emission_index(mo, i, O[k][t], t);
+	    if (e_index != -1) {
+	      gamma = seq_w[k] * alpha[t][i] * beta[t][i];
+	      r->b_num[i][e_index] += gamma;
+	      r->b_denom[i][e_index/(mo->M)] += gamma;
+	    }
+	  }
 	  update_emission_history(mo, O[k][t]);
-	  r->a_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i];
-	  for (j = 0; j < mo->s[i].out_states; j++) {
-	    j_id = mo->s[i].out_id[j]; /* aufpassen! */
+
+	  /* A */
+	  r->a_denom[i] += (seq_w[k] * alpha[t][i] * beta[t][i]);
+	  for (j=0; j < mo->s[i].out_states; j++) {
+	    j_id = mo->s[i].out_id[j];
 	    e_index = get_emission_index(mo,j_id,O[k][t+1],t+1);
-	    if (e_index != -1){
-	      r->a_num[i][j] +=
-		( seq_w[k] * alpha[t][i]
-		  * mo->s[i].out_a[j]
-		  * mo->s[j_id].b[e_index]
-		  * beta[t+1][j_id]
-		  * (1.0 / scale[t+1]) );  /* c[t] = 1/scale[t] */
-	    }
+	    if (e_index != -1)
+	      r->a_num[i][j] += (seq_w[k] * alpha[t][i] * mo->s[i].out_a[j]
+				 * mo->s[j_id].b[e_index] * beta[t+1][j_id]
+				 * (1.0 / scale[t+1])); /* c[t] = 1/scale[t] */
 	  }
 	}
-
-	/* ========= if state fix, continue;====================== */
-	if (mo->s[i].fix)
-	  continue;
-
-	/* B */
-	/*compute gamma first*/
-	/*for (t = 0; t < T_k; t++){
-	  gammasum = 0.0;
-	  for (s = 0; s < mo->N; s++){
-	  gammasum += seq_w[k] * alpha[t][i] * beta[t][i];
-	  }
-	  if( gammasum < EPS_PREC)     gamma[t] = 0.0;
-	  else gamma[t] = (seq_w[k] * alpha[t][i] * beta[t][i]) / gammasum;
-	  }
-	*/
-
-	/* XXX TODO correct higher emissions*/
-	size = model_ipow(mo, mo->M, mo->s[i].order);
-	for (hist=0; hist<size; hist++) {
-	  first = hist*mo->M;
-	  for (m=first;  m<first+mo->M; m++) {
-	    for (t=0; t<T_k; t++) {
-	      if ( get_emission_index(mo, i, O[k][t], t) == m ) {
-		gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
-		if (gamma < EPS_PREC) {
-		  gamma = seq_w[k]/((double)(mo->M));
-		  /* XXX Must be background distribution */
-		} 
-		r->b_num[i][m] += gamma;
-		r->b_denom[i][hist] += gamma;
-	      }
-	      update_emission_history(mo, O[k][t]);
-	    }
-	  }
-	   
-	  if (r->b_denom[i][hist] < EPS_PREC) {
-	    /* XXX Must be background distribution */
-	    for (m = first;  m < first + mo->M; m++) r->b_num[i][m] = 1.0;
-	    r->b_denom[i][hist] = (double) mo->M;
-	  } else {
-	    /* r->b_denom[i][hist] *= ((double) mo->M); ??? */
+	/* B: last iteration for t==T_k-1 */
+	t==T_k-1;
+	if (!mo->s[i].fix) {
+	  e_index = get_emission_index(mo, i, O[k][t], t);
+	  if (e_index != -1) {
+	    gamma = seq_w[k] * alpha[t][i] * beta[t][i];
+	    r->b_num[i][e_index] += gamma;
+	    r->b_denom[i][e_index/(mo->M)] += gamma;
 	  }
 	}
-      } /* for (i = 0 i < mo->N i++) { */
+      }
     } /* if (log_p_k != +1) */
-    else {
-      printf("O(%2d) can't be built from model mo!\n", k);
-    }
+    else
+      printf("O(%d) can't be built from model mo!\n", k);
 
     reestimate_free_matvek(alpha, beta, scale, T_k);
 
