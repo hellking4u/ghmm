@@ -123,22 +123,21 @@ static int reestimate_free(local_store_t **r, int N) {
 static int reestimate_init(local_store_t *r, const model *mo) {
 # define CUR_PROC "reestimate_init"
 
-  int i, j, m, size, b_len;
-
-  size = model_ipow(mo, mo->M, mo->maxorder);
-  b_len = size*mo->M;
+  int i, j, m, size;
 
   r->pi_denom = 0.0;
 
-  for (i = 0; i < mo->N; i++) {
+  for (i=0; i < mo->N; i++) {
     r->pi_num[i] = 0.0;
     r->a_denom[i] = 0.0;
     for (j = 0; j < mo->s[i].out_states; j++)
       r->a_num[i][j] = 0.0;
-    //mehr platz
+    
+    size = model_ipow(mo, mo->M, mo->s[i].order);
     for (m=0; m<size; m++)
       r->b_denom[i][m] = 0.0;
-    for (m=0; m<b_len; m++)
+    size *= mo->M;
+    for (m=0; m<size; m++)
       r->b_num[i][m] = 0.0;
   }
   return(0);
@@ -364,8 +363,8 @@ static int reestimate_setlambda(local_store_t *r, model *mo) {
 
       if (!positive) {
 	char *str = 
-	  mprintf(NULL, 0, "All numerator b[%d][m] == 0 (denom = %.4f)!\n", 
-		  i, r->b_denom[i][hist]);
+	  mprintf(NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n", 
+		  i, col, col+mo->M, r->b_denom[i][hist]);
 	mes_prot(str);
 	m_free(str);
       }      
@@ -690,7 +689,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
 	  if ( !(mo->s[i].fix) && (mo->s[i].label == label[k][t])) {
 	    e_index = get_emission_index(mo, i, O[k][t], t);
 	    if (e_index != -1) {
-	      gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
+	      gamma = seq_w[k] * alpha[t][i] * beta[t][i];
 	      r->b_num[i][e_index] += gamma;
 	      r->b_denom[i][e_index/(mo->M)] += gamma;
 	    }
@@ -715,7 +714,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
 	if (!(mo->s[i].fix) && (mo->s[i].label == label[k][t])) {
 	  e_index = get_emission_index(mo, i, O[k][t], t);
 	  if (e_index != -1) {
-	    gamma = (seq_w[k] * alpha[t][i] * beta[t][i] );
+	    gamma = seq_w[k] * alpha[t][i] * beta[t][i];
 	    r->b_num[i][e_index] += gamma;
 	    r->b_denom[i][e_index/(mo->M)] += gamma;
 	  }
@@ -747,7 +746,7 @@ static int reestimate_one_step_label(model *mo, local_store_t *r,
     *log_p = +1;
   }
 
-return(0);
+  return(0);
  FREE:
   reestimate_free_matvek(alpha, beta, scale, T_k);
  STOP:
