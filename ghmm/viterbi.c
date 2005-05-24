@@ -77,7 +77,7 @@ static local_store_t *viterbi_alloc(model *mo, int len) {
   if (!(v->log_b)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi, mo->N)) {mes_proc(); goto STOP;}
   if (!m_calloc(v->phi_new, mo->N)) {mes_proc(); goto STOP;}
-  v->psi = matrix_i_alloc(len, mo->N);
+  v->psi = stat_matrix_i_alloc(len, mo->N);
   if (!(v->psi)) {mes_proc(); goto STOP;}
 
   v->topo_order_length = 0;
@@ -103,7 +103,8 @@ static int viterbi_free(local_store_t **v, int n, int len) {
   matrix_d_free( &((*v)->log_b), n );
   m_free((*v)->phi);
   m_free((*v)->phi_new);
-  matrix_i_free( &((*v)->psi), len );
+  //matrix_i_free( &((*v)->psi), len );
+  stat_matrix_i_free( &((*v)->psi));
   m_free((*v)->topo_order);
   m_free(*v);
   return(0);
