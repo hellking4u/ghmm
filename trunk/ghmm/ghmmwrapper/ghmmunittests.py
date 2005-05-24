@@ -204,6 +204,7 @@ class EmissionSequenceTests(unittest.TestCase):
 class SequenceSetTests(unittest.TestCase):
     
     def setUp(self):
+        #print "----------------- Setting up... ---------"
         self.i_alph = ghmm.IntegerRange(0,7)
         self.d_alph = ghmm.Float()
         self.l_domain = ghmm.LabelDomain(['E','R','T'])
@@ -225,6 +226,14 @@ class SequenceSetTests(unittest.TestCase):
         self.l_seq  = ghmm.SequenceSet(ghmm.DNA, self.seqList,labelDomain=self.l_domain,labelInput= self.labelList)
 
 
+    def tearDown(self):
+        #print "*** Tearing down..."
+        pass    
+        #del self.i_seq
+        #del self.d_seq
+        #del self.l_seq
+            
+    
     def testlabelseqset(self):
         self.assertEqual(len(self.l_seq), 5)
 
@@ -254,7 +263,7 @@ class SequenceSetTests(unittest.TestCase):
 
     
     def testprint(self):
-        # print"\ntestprint ",
+        #print"\n----------------- testprint "
         s = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111"
         self.assertEqual(str(self.i_seq),s)
 
@@ -265,7 +274,7 @@ class SequenceSetTests(unittest.TestCase):
 
        
     def testattributes(self):
-        # print"\ntestattributes ",
+        #print"\n----------------- testattributes "
         self.assertEqual(len(self.i_seq),5)
         self.assertEqual(self.i_seq.sequenceLength(1),3)
         
@@ -273,7 +282,7 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(self.d_seq.sequenceLength(4),6)
      
     def testgetitem(self):
-        # print"\ntestgetitem ",
+        #print"\n----------------- testgetitem ",
         s = self.i_seq[2]
         self.assertEqual(len(s),8)
         
@@ -282,7 +291,7 @@ class SequenceSetTests(unittest.TestCase):
         
     
     def testweightaccess(self):
-        # print"\ntestweightaccess ",
+        #print"\n----------------- testweightaccess "
         w = self.i_seq.getWeight(4)
         self.assertEqual(w,1.0)
         self.i_seq.setWeight(4,4.0)
@@ -298,7 +307,7 @@ class SequenceSetTests(unittest.TestCase):
 
     def testmerge(self):
         """Merging two SequenceSets   """
-        # print"\ntestmerge ",
+        #print"\n************************************ testmerge "
         wrong = 4  # wrong argument type to merge
         self.assertRaises(TypeError,self.i_seq.merge,wrong)
 
@@ -308,6 +317,8 @@ class SequenceSetTests(unittest.TestCase):
         s = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111\nSeq 5, length 6, weight 1.0:\n140453\nSeq 6, length 4, weight 1.0:\n1230"
         self.assertEqual(str(self.i_seq),s)
 
+        print self.i_seq
+
         d_mseq = ghmm.SequenceSet(self.d_alph,[ [7.5,4.0,1.2],[0.4,0.93,3.3,2.54] ])    
         self.d_seq.merge(d_mseq)
         self.assertEqual(len(self.d_seq),7)
@@ -316,7 +327,7 @@ class SequenceSetTests(unittest.TestCase):
         
     
     def testgetsubset(self):
-        # print"\ntestgetsubset ",
+        #print"\n----------------- testgetsubset "
         i_subseq = self.i_seq.getSubset([2,1,3])
         s = "\nNumber of sequences: 3\nSeq 0, length 8, weight 1.0:\n43221111\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 5, weight 1.0:\n00021"
         self.assertEqual(str(i_subseq),s)
@@ -330,12 +341,13 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(d_subseq.sequenceLength(0),5)
         
     def testwrite(self):
-       # print"\ntestwrite ",
+       #print"\n-----------------testwrite "
        self.i_seq.write("ghmmunittests_testwrite.seq") 
        self.d_seq.write("ghmmunittests_testwrite.seq") 
 
        
     def testlabelaccess(self):
+       #print "\n ----------------- testlabelaccess"
        self.i_seq.getSeqLabel(2)   
        l = self.d_seq.getSeqLabel(3)
        self.assertEqual(l,-1)
@@ -349,7 +361,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         
         self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
-        self.pi = [1.0,0,0]
+        self.pi = [1.0,0.0,0.0]
         self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi)
                        
     def testaccessfunctions(self):
@@ -474,7 +486,8 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         
     def testfoba(self):
         
-        # print"\ntestfoba ",
+        print"\ntestfoba "
+        print self.model
         seq = self.model.sampleSingle(40)
         (alpha,scale) = self.model.forward(seq)
         
@@ -881,8 +894,10 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.pi = [1.0,0.0,0.0]
         
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
+        print "** GaussianMixtureHMMTests **"
 
     def testcomponentfixing(self):
+        print "testcomponentfixing"
         f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,0,0])
         self.model.setMixtureFix(0,[0,1,0])    
@@ -895,7 +910,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         # XXX check mu,v,u
 
     def testtomatrices(self):
-        # print"\ntesttomatrices ",
+        print"\ntesttomatrices "
         tA,tB,tpi = self.model.toMatrices()
         
         self.assertEqual(self.A,tA)
@@ -904,13 +919,13 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         
         
     def testsample(self):
-        # print"\ntestsample ",
+        print"\ntestsample "
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
         
 
 class XMLIOTests(unittest.TestCase):
-
+    
     def setUp(self):        
         self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
@@ -937,6 +952,8 @@ class XMLIOTests(unittest.TestCase):
         for i in range(slength):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
         self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelDomain=self.l_domain,labelInput=self.labels)
+        print "** XMLIOTests **"
+        print self.tSeq
 
     def testReadHMMed(self):
         model = ghmm.HMMOpenXML('multexon-4.xml')
