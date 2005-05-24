@@ -146,7 +146,7 @@ from os import path
 from math import log,ceil
 
 
-#print "*** I'm the ghmm in /amd/rindt/1/home/abt_vin/georgi/hmm/ghmm/ghmmwrapper ***"
+print "*** I'm the ghmm in /amd/rindt/1/home/abt_vin/georgi/hmm/ghmm/ghmmwrapper ***"
 
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
@@ -550,9 +550,11 @@ class EmissionSequence:
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
+        #print "__init__ EmissionSequence: ",self.cseq
+
     def __del__(self):
         "Deallocation of C sequence struct."
-        print "__del__ EmissionSequence " + str(self.cseq)
+        #print "__del__ EmissionSequence " + str(self.cseq)
         self.freeFunction( self.cseq)
         self.cseq = None
 
@@ -653,6 +655,8 @@ class SequenceSet:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
+            self.allocSingleSeq = ghmmwrapper.int_array
+            self.copySingleSeq = ghmmwrapper.sequence_copy
             self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within an int**
             self.freeFunction = ghmmwrapper.call_sequence_free
             self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
@@ -738,6 +742,8 @@ class SequenceSet:
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
+            self.allocSingleSeq = ghmmwrapper.double_array
+            self.copySingleSeq = ghmmwrapper.sequence_d_copy
             self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign a double* to a position within a double**
             self.freeFunction = ghmmwrapper.call_sequence_d_free
             self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
@@ -781,11 +787,14 @@ class SequenceSet:
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
+        #print "__init__ SequenceSet: ",self.cseq
+        #print self
+
 
     def __del__(self):
         "Deallocation of C sequence struct."
         
-        print "__del__ SequenceSet " + str(self.cseq)
+        #print "__del__ SequenceSet " + str(self.cseq)
         self.freeFunction(self.cseq)
         self.cseq = None
     
@@ -849,7 +858,8 @@ class SequenceSet:
 
     def getSeqLabel(self,index):
         if (self.emissionDomain.CDataType != "double"):
-            print "WARNING: Discrete sequences do not support sequence labels."
+            #print "WARNING: Discrete sequences do not support sequence labels."
+            return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
         else:
             return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
 
@@ -899,7 +909,7 @@ class SequenceSet:
         """
         seqNumber = len(seqIndixes)
         seq = self.sequenceAllocationFunction(seqNumber)
-        seq.seq = self.emptySeq(seqNumber)
+        #seq.seq = self.emptySeq(seqNumber)
         
         # checking for state labels in the source C sequence struct
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
@@ -909,9 +919,17 @@ class SequenceSet:
             seq.state_labels_len = ghmmwrapper.int_array(seqNumber)
 
         for i in range(seqNumber):
+
+            # allocate new sinlge sequence and copy values from `self`
+            len_i = ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i])
+            print len_i
+            seq_i = self.allocSingleSeq(len_i)
+            source_i = self.getPtr(self.cseq.seq, seqIndixes[i])
+            self.copySingleSeq(seq_i,source_i,len_i)
+            self.setSeq(seq.seq,i,seq_i)
             
-            self.setSeq(seq.seq,i,self.__array[ seqIndixes[i] ])
-            ghmmwrapper.set_arrayint(seq.seq_len,i,ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i]))
+            
+            ghmmwrapper.set_arrayint(seq.seq_len,i,len_i)
             
             # Above doesnt copy seq_id or seq_label or seq_w
             seq_id = int(ghmmwrapper.get_arrayd(self.cseq.seq_id, seqIndixes[i]))
@@ -923,6 +941,7 @@ class SequenceSet:
             ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)
              
             # setting labels if appropriate
+            # XXX needs to be real copy! XXX
             if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
                 self.setSeq(seq.state_labels,i, ghmmwrapper.get_col_pointer_int( self.cseq.state_labels,seqIndixes[i] ) )
                 ghmmwrapper.set_arrayint(seq.state_labels_len,i,ghmmwrapper.get_arrayint(self.cseq.state_labels_len, seqIndixes[i]) )            
@@ -1541,7 +1560,7 @@ class BackgroundDistribution:
             raise TypeError, "Input type "+str(type(bgInput)) +" not recognized."    
 
     def __del__(self):
-        print "__del__ BackgroundDistribution " + str(self.cbackground)
+        #print "__del__ BackgroundDistribution " + str(self.cbackground)
         ghmmwrapper.model_free_background_distributions(self.cbackground)
         self.cbackground = None
     
@@ -1612,7 +1631,7 @@ class HMM:
 
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
-        print "__del__ HMM" + str(self.cmodel)
+        #print "__del__ HMM" + str(self.cmodel)
         self.freeFunction(self.cmodel)
         self.cmodel = None
 
@@ -2045,7 +2064,7 @@ class DiscreteEmissionHMM(HMM):
         self.distanceFunction = ghmmwrapper.model_prob_distance
     
     def __del__(self):
-        print "__del__ DiscreteEmissionHMM" + str(self.cmodel)
+        #print "__del__ DiscreteEmissionHMM" + str(self.cmodel)
         if self.cmodel.tied_to is not None:
             self.removeTiegroups()
         HMM.__del__(self)
