@@ -131,10 +131,16 @@ int** model_DFS(model *c_model)
 
   colors=(int*)calloc(c_model->N,sizeof(int));
   parents=(int*)calloc(c_model->N,sizeof(int));
-  edge_classes=(int**)calloc(c_model->N,sizeof(int*));
-  for(i=0; i < c_model->N; i++) {
-    edge_classes[i]=(int*)calloc(c_model->N,sizeof(int));
-  }
+  
+  //edge_classes=(int**)calloc(c_model->N,sizeof(int*));
+  //for(i=0; i < c_model->N; i++) {
+  //  edge_classes[i]=(int*)calloc(c_model->N,sizeof(int));
+  //}
+
+  
+  edge_classes = stat_matrix_i_alloc(c_model->N, c_model->N);
+  
+  
   for(i=0; i < c_model->N; i++) {
     if ( c_model->s[i].pi == 1.0) initials=i; /* assuming only one initial state */
     colors[i]=WHITE;
@@ -206,7 +212,7 @@ static void __topological_sort( model *c_model, local_store_topo *v, int** edge_
 void model_topo_ordering(model *mo)
 {
 #define CUR_PROC "model_topo_ordering"
-  int i;
+  int i,j;
   local_store_topo *v;
   int **edge_cls;
 
@@ -222,13 +228,20 @@ void model_topo_ordering(model *mo)
     mo->topo_order[i] = v->topo_order[i];
   }
   
-  /* fprintf(stderr,"Ordering silent states....\n\t");
+  /*fprintf(stderr,"Ordering silent states....\n\t");
   for(i=0; i < mo->topo_order_length; i++) {
     fprintf(stderr, "%d, ", mo->topo_order[i]);
   }
   fprintf(stderr,"\n\n");  */
-  
-  matrix_i_free(&edge_cls, mo->N);
+ 
+  for(i=0; i < mo->N; i++) { 
+    for(j=0; j < mo->N; j++) {
+        fprintf(stderr,"edge_cls[%d][%d]=%d\n",i,j,edge_cls[i][j]);           
+    }
+  }           
+
+  /* XXX TEST XXX */
+  stat_matrix_i_free(&edge_cls, mo->N);
   topo_free(&v, mo->N, 1);
 STOP:
  i = 0;
