@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "mes.h"
+#include "mprintf.h"
 #include "model.h"
 #include "kbestbasics.h"
 #include "kbest.h"
@@ -90,6 +91,7 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
   int exists, g_nr;
   int* states_wlabel;
   int* label_max_out;
+  char* str;
 
   /* logarithmized transition matrix A, log(a(i,j)) => log_a[i*N+j],
        1.0 for zero probability */
@@ -141,6 +143,7 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
   hP = h[0];
   for (i=0; i < mo->N; i++) {
     if (mo->s[i].pi > KBEST_EPS) {
+      /* printf("Found State %d with initial probability %f\n", i, mo->s[i].pi); */
       exists = 0;
       while (hP != NULL) {
 	if (hP->hyp_c == mo->s[i].label) {
@@ -149,7 +152,6 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
 	  hP->gamma_id[g_nr] = i;
 	  hP->gamma_a[g_nr]  = log(mo->s[i].pi) + log(mo->s[i].b[get_emission_index(mo,i,o_seq[0],0)]);
 	  hP->gamma_states   = g_nr+1;
-	  /*hlist_add_gamma_entry(hP, i, log(mo->s[i].pi) + log(mo->s[i].b[get_emission_index(mo,i,o_seq[0],0)]));*/
 	  exists = 1;
 	  break;
 	}
@@ -163,7 +165,6 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
 	h[0]->gamma_id[0]  = i;
 	h[0]->gamma_a[0]   = log(mo->s[i].pi) + log(mo->s[i].b[get_emission_index(mo,i,o_seq[0],0)]);
 	h[0]->gamma_states = 1; 
-	/*hlist_add_gamma_entry(h[0], i, log(mo->s[i].pi) + log(mo->s[i].b[get_emission_index(mo,i,o_seq[0],0)]));*/
 	h[0]->chosen = 1;
       }
       hP = h[0];
@@ -209,8 +210,16 @@ int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p) {
 	hP->gamma_a[i] = logGammaSum(log_a[i_id], &mo->s[i_id], hP->parent);
 	b_index=get_emission_index (mo, i_id, o_seq[t], t);
 	if (b_index<0) {
-	  mes_prot("invalid emission index! kbest failed\n");
-	  exit(1);
+	  hP->gamma_a[i] = 1.0;
+	  if (mo->s[i_id].order>t)
+	    continue;
+	  else {
+	    str = mprintf(NULL, 0,
+			  "i_id: %d, o_seq[%d]=%d\ninvalid emission index!\n",
+			  i_id, t, o_seq[t]);
+	    mes_prot(str);
+	    m_free(str);
+	  }
 	}
 	else 
 	  hP->gamma_a[i] += log(mo->s[i_id].b[b_index]);
