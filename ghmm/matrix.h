@@ -88,6 +88,23 @@ double** stat_matrix_d_alloc(int n, int m);
 int stat_matrix_d_free(double ***matrix);
 
 /**
+  Allocation of a static int matrix with a single malloc. 
+  @return pointer to a matrix
+  @param rows: number of rows
+  @param columns: number of columns
+  */
+int** stat_matrix_i_alloc(int n, int m);
+
+/**
+  Free the memory of a static int matrix.
+  @return 0 for succes; -1 for error
+  @param  matrix: matrix to free
+  @param  rows: number of rows
+  */
+int stat_matrix_i_free(int ***matrix);
+
+
+/**
   Allocation of a integer matrix.
   @return pointer to a matrix
   @param rows: number of rows
