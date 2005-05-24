@@ -100,6 +100,9 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels,
 
     /* extend the current hypothesis and add all states which may have probability greater null */
     for (i=0; i<hP->gamma_states; i++) {
+      /* skip impossible states */
+      if (hP->gamma_a[i] == 1.0)
+	continue;
       i_id = hP->gamma_id[i];
       for (j=0; j<mo->s[i_id].out_states; j++) {
 	j_id = mo->s[i_id].out_id[j];
@@ -187,7 +190,7 @@ inline double logGammaSum(double* log_a, state* s, hypoList* parent) {
       logP[j] = 1.0;
     else {
       logP[j] = log_a[j] + parent->gamma_a[k];
-      if (max==1.0 || logP[j]>max) {
+      if (max==1.0 || (logP[j]>max && logP[j]!=1.0)) {
 	max = logP[j];
 	argmax=j;
       }
@@ -227,7 +230,7 @@ inline double logSum(double* a, int N) {
 
   /* find maximum value in a: */
   for (i=0; i<N; i++)
-    if (a[i]<KBEST_EPS && (max==1.0 || a[i]>max)) {
+    if (max==1.0 || (a[i]>max && a[i]!=1.0)) {
       max=a[i];
       argmax=i;
     }
@@ -235,7 +238,7 @@ inline double logSum(double* a, int N) {
   /* calculate max+log(1+sum[i!=argmax; exp(a[i]-max)])  */
   result = 1.0;
   for (i=0; i<N; i++) {
-    if (a[i]<KBEST_EPS && i!= argmax) result+= exp(a[i]-max);
+    if (a[i]!=1.0 && i!= argmax) result+= exp(a[i]-max);
   }
   result=log(result);
   result+=max;
