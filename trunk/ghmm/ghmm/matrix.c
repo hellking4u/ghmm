@@ -158,6 +158,42 @@ int stat_matrix_d_free(double ***matrix) {
 #undef CUR_PROC
 }
 
+/*============================================================================*/
+
+/* allocation of matrices with fixed dimensions  */
+int** stat_matrix_i_alloc(int n, int m) {
+#define CUR_PROC "stat_matrix_i_alloc"
+  int i, j;
+  int **A;
+  int *tmp;
+  
+  if (!m_calloc(A,  n * sizeof(int*) +  n * m * sizeof(int)) ){
+	mes_proc(); 
+	goto STOP;
+  }
+  
+  tmp = (int*)(A + n);
+  for (i = 0; i < n; i++) {
+    A[i] = tmp;
+    tmp += m;
+  }
+  return A;
+STOP:
+  stat_matrix_i_free(&A);
+  return NULL;
+#undef CUR_PROC
+}
+
+
+int stat_matrix_i_free(int ***matrix) {
+#define CUR_PROC "stat_matrix_i_free"
+  mes_check_ptr(matrix, return(-1));
+  if ( !*matrix) return(0);
+  free(*matrix);
+  return 0;
+#undef CUR_PROC
+}
+
 
 /*============================================================================*/
 
@@ -238,8 +274,9 @@ int matrix_i_free(int ***matrix, long zeilen) {
   long i;
   mes_check_ptr(matrix, return(-1));
   if ( !*matrix ) return(0);
-  for (i = 0; i < zeilen; i++) 
-    m_free((*matrix)[i]);
+  for (i = 0; i < zeilen; i++) {
+      m_free((*matrix)[i]);
+  }    
   m_free(*matrix);
   return (0);
 # undef CUR_PROC
