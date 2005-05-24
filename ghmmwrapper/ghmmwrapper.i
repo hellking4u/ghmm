@@ -279,6 +279,17 @@ void sequence_print(FILE *file, sequence_t *sequence);
   */
 void sequence_copy(int *target, int *source, int len);
 
+
+/**
+  copy one double sequence. Memory for target has to be allocated outside.
+  @param target  target sequence
+  @param source source sequence
+  @param len     length of source sequence
+  */
+void sequence_d_copy(double *target, double *source, int len);
+
+
+
 /**
    Reads one or several arrays of double sequences. 
    Calls sequence\_read\_alloc, where reading
@@ -395,7 +406,7 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 
 
   void call_sequence_free(sequence_t *sq ) {sequence_free(&sq);}  
-  void call_sequence_d_free(sequence_d_t *sq ) {sequence_d_free(&sq);}  
+  void call_sequence_d_free(sequence_d_t *sq ){sequence_d_free(&sq);}  
     
  /*   sequence_t *copy_sequence_t(sequence_t *source){
       cp_seq = sequence_calloc(source->seq_number);
