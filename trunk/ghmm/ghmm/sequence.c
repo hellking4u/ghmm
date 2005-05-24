@@ -869,9 +869,20 @@ void sequence_d_clean(sequence_d_t *sqd) {
 /*============================================================================*/
 int sequence_free(sequence_t **sq) {
 # define CUR_PROC "sequence_free"
+  //int i,j;
+    
   mes_check_ptr(sq, return(-1));
   if( !*sq ) return(0);
-  matrix_i_free(&(*sq)->seq, (*sq)->seq_number);
+  
+  /*for (i= 0;i<(*sq)->seq_number;i++){
+    for (j= 0;j<(*sq)->seq_len[i];j++){
+      printf("seq[%d][%d] = %d\n",i,j,(*sq)->seq[i][j]);
+    }  
+  } */
+  
+  if (matrix_i_free(&(*sq)->seq, (*sq)->seq_number) == -1){
+    printf("Error in sequence_free !\n");
+  }    
 
     /* The allocation of state must be fixed */
   /*** Added attribute to the sequence_t
@@ -886,10 +897,19 @@ int sequence_free(sequence_t **sq) {
   m_free((*sq)->seq_id);
   m_free((*sq)->seq_w);
   
-  if ((*sq) -> states ){
-    m_free((*sq)->states); 
+  if ((*sq)->states ){
+    matrix_i_free(&(*sq)->states, (*sq)->seq_number);
+    //m_free((*sq)->states); 
   }
-  
+
+
+  if ((*sq)->state_labels ){
+    matrix_i_free(&(*sq)->state_labels, (*sq)->seq_number);
+    m_free((*sq)->state_labels_len);
+    
+    //m_free((*sq)->states); 
+  }
+
   m_free(*sq);
   return 0;
 # undef CUR_PROC
