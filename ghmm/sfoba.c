@@ -117,7 +117,7 @@ int sfoba_forward(smodel *smo, double *O, int T, double ***b,
         printf("ERROR: get_class not initialized\n");
         return(-1);
       }
-      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
       osc = smo->class_change->get_class(smo,O,smo->class_change->k,t);
     }
     
@@ -161,7 +161,7 @@ int sfoba_forward(smodel *smo, double *O, int T, double ***b,
           printf("ERROR: get_class not initialized\n");
           return(-1);
         }
-        printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+        /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
         osc = smo->class_change->get_class(smo,O,smo->class_change->k,t);
       }
 
@@ -220,7 +220,7 @@ int sfoba_backward(smodel *smo, double *O, int T, double ***b,
       printf("ERROR: get_class not initialized\n");
       goto STOP;
     }
-    printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+    /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
     osc = smo->class_change->get_class(smo,O,smo->class_change->k,T-1);
   }
 
@@ -261,7 +261,7 @@ int sfoba_backward(smodel *smo, double *O, int T, double ***b,
         printf("ERROR: get_class not initialized\n");
         goto STOP;
       }
-      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
       osc = smo->class_change->get_class(smo,O,smo->class_change->k,t);
     }
   }

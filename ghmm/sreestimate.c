@@ -531,7 +531,7 @@ int sreestimate_one_step(smodel *smo, local_store_t *r, int seq_number,
             printf("ERROR: get_class not initialized\n");
             goto STOP;
           }
-          printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+          /* XXX printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
           osc = smo->class_change->get_class(smo,O[k],k,t-1);
         }
       

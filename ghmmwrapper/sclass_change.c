@@ -45,7 +45,7 @@ int cp_class_change( smodel *smo, double* seq, int k, int t) {
   int res;
   
   if((t%2) == 0){
-  //if(t < 500){
+    /*if(t < 500){*/
       res= 0;
   }
   else {
@@ -116,7 +116,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
 
    /* parsing the result from Python to C data type */
    class = PyInt_AsLong(pValue);
-   printf("C: The returned class is %d\n",class);
+   /*printf("C: The returned class is %d\n",class);*/
      
    /* cleaning up */
    Py_DECREF(pArgs); 
