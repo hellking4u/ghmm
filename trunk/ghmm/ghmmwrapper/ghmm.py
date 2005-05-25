@@ -146,8 +146,6 @@ from os import path
 from math import log,ceil
 
 
-print "*** I'm the ghmm in /amd/rindt/1/home/abt_vin/georgi/hmm/ghmm/ghmmwrapper ***"
-
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
@@ -577,16 +575,10 @@ class EmissionSequence:
             raise IndexError    
     
     def getSeqLabel(self):
-        if (self.emissionDomain.CDataType != "double"):
-            print "WARNING: Discrete sequences do not support sequence labels."
-        else:
-            return ghmmwrapper.get_arrayl(self.cseq.seq_label,0)
+        return ghmmwrapper.get_arrayl(self.cseq.seq_label,0)
 
     def setSeqLabel(self,value):
-        if (self.emissionDomain.CDataType != "double"):
-            print "WARNING: Discrete sequences do not support sequence labels."
-        else:     
-            ghmmwrapper.set_arrayl(self.cseq.seq_label,0,value)
+        ghmmwrapper.set_arrayl(self.cseq.seq_label,0,value)
     
     def getStateLabel(self):
         """ Returns the labeling of the sequence in internal representation"""
@@ -922,7 +914,6 @@ class SequenceSet:
 
             # allocate new sinlge sequence and copy values from `self`
             len_i = ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i])
-            print len_i
             seq_i = self.allocSingleSeq(len_i)
             source_i = self.getPtr(self.cseq.seq, seqIndixes[i])
             self.copySingleSeq(seq_i,source_i,len_i)
