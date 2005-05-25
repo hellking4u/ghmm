@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.3F
+#!/usr/bin/env python2.3
 ################################################################################
 #
 #       This file is part of the General Hidden Markov Model Library,
