@@ -1233,17 +1233,20 @@ class HMMOpenFactory(HMMFactory):
             # M        number of mixture components
             # density  component type
             # cos      number of state transition classes
-            if cos == 1 and M == 1 and density == 0:
+            if M == 1 and density == 0:
                 emission_domain = Float()
                 distribution = GaussianDistribution
                 hmm_class = GaussianEmissionHMM            
                 return (hmm_class, emission_domain, distribution)
 
-            elif cos == 1 and M > 1 and density == 0:
+            elif  M > 1 and density == 0:
                 emission_domain = Float()
                 distribution = GaussianMixtureDistribution
                 hmm_class = GaussianMixtureHMM
                 return (hmm_class, emission_domain, distribution)
+
+            else:
+                raise TypeError, "Model type can not be determined."
 
         return (None, None, None)
             
