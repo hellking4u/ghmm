@@ -141,10 +141,11 @@ import modhmmer
 import re
 import StringIO
 import copy
-
 from os import path
 from math import log,ceil
+import sys
 
+#print "*** I'm the ghmm in "+ str(path.abspath(path.dirname(sys.argv[0]))) + " ***"
 
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
@@ -437,9 +438,16 @@ class EmissionSequence:
         domain where the emission orginated from.
     """
 
-    def __init__(self, emissionDomain, sequenceInput, labelDomain = None, labelInput = None):
+    def __init__(self, emissionDomain, sequenceInput, labelDomain = None, labelInput = None, ParentSequenceSet=None):
 
         self.emissionDomain = emissionDomain
+
+        if ParentSequenceSet is not None:
+            # optional reference to a parent equenceSet. Is needed for reference counting with respect to SequenceSet.__getitem__
+            assert isinstance(ParentSequenceSet,SequenceSet), "Error: Invalid reference. Only SequenceSet is valid."    
+            self.ParentSequenceSet = ParentSequenceSet
+        else:
+            self.ParentSequenceSet = None
 
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
 
@@ -552,9 +560,13 @@ class EmissionSequence:
 
     def __del__(self):
         "Deallocation of C sequence struct."
-        #print "__del__ EmissionSequence " + str(self.cseq)
-        self.freeFunction( self.cseq)
-        self.cseq = None
+        if self.ParentSequenceSet is not None:
+            #print "__del__ EmissionSequence " + str(self.cseq)
+            self.freeFunction( self.cseq)
+            self.cseq = None
+        # if a parent SequenceSet exits, we only delete the reference
+        else:
+            self.ParentSequenceSet = None
 
     def __len__(self):
         "Returns the length of the sequence."
@@ -842,11 +854,11 @@ class SequenceSet:
         
         """
         seq = self.sequenceAllocationFunction(1)
-        seq.seq = self.castPtr(self.__array[index]) # int* -> int** reference
+        seqPtr = self.getPtr(self.cseq.seq,index)
+        seq.seq = self.castPtr(seqPtr)  
         ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
         seq.seq_number = 1
-
-        return EmissionSequence(self.emissionDomain, seq)        
+        return EmissionSequence(self.emissionDomain, seq,ParentSequenceSet=self)        
 
     def getSeqLabel(self,index):
         if (self.emissionDomain.CDataType != "double"):
@@ -912,12 +924,13 @@ class SequenceSet:
 
         for i in range(seqNumber):
 
-            # allocate new sinlge sequence and copy values from `self`
             len_i = ghmmwrapper.get_arrayint(self.cseq.seq_len,seqIndixes[i])
-            seq_i = self.allocSingleSeq(len_i)
-            source_i = self.getPtr(self.cseq.seq, seqIndixes[i])
-            self.copySingleSeq(seq_i,source_i,len_i)
-            self.setSeq(seq.seq,i,seq_i)
+            
+            #seq_i = self.allocSingleSeq(len_i)
+            #source_i = self.getPtr(self.cseq.seq, seqIndixes[i])
+            #self.copySingleSeq(seq_i,source_i,len_i)
+            
+            self.setSeq(seq.seq,i,self.__array[seqIndixes[i]])
             
             
             ghmmwrapper.set_arrayint(seq.seq_len,i,len_i)
@@ -939,7 +952,7 @@ class SequenceSet:
 
         seq.seq_number = seqNumber
         
-        return SequenceSet(self.emissionDomain, seq)
+        return SequenceSetSubset(self.emissionDomain, seq,self)
         
     def write(self,fileName):
         "Writes (appends) the SequenceSet into file 'fileName'."
@@ -949,6 +962,26 @@ class SequenceSet:
             ghmmwrapper.call_sequence_print(fileName, self.cseq)
         if self.emissionDomain.CDataType == "double":    
             ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)
+
+class SequenceSetSubset(SequenceSet):
+    """ 
+    SequenceSetSubset contains a subset of the sequences from a SequenceSet object.
+    On the C side only the references are used.
+    """
+    def __init__(self, emissionDomain, sequenceSetInput, ParentSequenceSet , labelDomain = None, labelInput = None):
+        # reference on the parent SequenceSet object
+        self.ParentSequenceSet =  ParentSequenceSet
+        SequenceSet.__init__(self, emissionDomain, sequenceSetInput, labelDomain, labelInput)
+        
+    
+    def __del__(self):
+        """ Since we do not want to deallocate the sequence memory, the destructor has to be
+            overloaded.
+        
+        """
+        # remove reference on parent SequenceSet object
+        self.ParentSequenceSet = None
+    
 
 
 def SequenceSetOpen(emissionDomain, fileName):
