@@ -176,7 +176,10 @@ class EmissionSequenceTests(unittest.TestCase):
         self.assertEqual(w2,2.0)
 
     def testlabelaccess(self):
-        self.i_seq.getSeqLabel()   
+        self.i_seq.setSeqLabel(8)
+        l = self.i_seq.getSeqLabel()   
+        self.assertEqual(l,8)
+        
         l = self.d_seq.getSeqLabel()
         self.assertEqual(l,-1)
         self.d_seq.setSeqLabel(5)
