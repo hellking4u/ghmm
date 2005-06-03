@@ -43,6 +43,7 @@
 #include <assert.h>
 #include "modelutil.h"
 #include "mprintf.h"
+#include "foba.h"
 
 static int foba_initforward(model *mo, double *alpha_1, int symb, 
 			    double *scale) {
@@ -269,7 +270,8 @@ int foba_descale(double **alpha, double *scale, int t, int n, double **newalpha)
   }	
 } */
   
-int foba_backward(model *mo, const int *O, int len, double **beta, double *scale) {
+int foba_backward(model *mo, const int *O, int len, double **beta,
+		  const double *scale) {
 # define CUR_PROC "foba_backward"
   double *beta_tmp, sum;
   int i, j, j_id, t, k, id;
