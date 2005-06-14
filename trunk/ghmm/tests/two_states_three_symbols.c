@@ -52,7 +52,7 @@ int my_model()
   sequence_t* my_output;
 
   /* flags indicating whether a state is silent */
-  int silent_array[2] =  {0,0}; 
+  //int silent_array[2] =  {0,0}; 
   
   /* initialise state 0 */
   /* start probability for this state */
@@ -72,7 +72,10 @@ int my_model()
   model_states[0].in_a=trans_prob_0_state_rev;
   /* should emission probabilities be changed during reestimation? 1: no, else: yes*/
   model_states[0].fix=0;
-
+  /* state label */
+  model_states[0].label=0;
+  model_states[0].order = 0;
+  
   /* initialise state 1 */
   /* same meaning as above */
   model_states[1].pi = 0.5;
@@ -84,16 +87,23 @@ int my_model()
   model_states[1].in_id=trans_id_0_state;
   model_states[1].in_a=trans_prob_1_state_rev;
   model_states[1].fix=0;
-
-  /* initialise model */
+  model_states[1].label=1;
+  model_states[1].order = 0;
+  
+    /* initialise model */
   my_model.N=2; /* number of states, dimension of model.s */
   my_model.M=3; /* number of symbols, dimension of states.b */
   my_model.s=model_states; /* array of states */
   my_model.prior=-1; /* probability of this model, used in a model array */
 
-  my_model.silent = silent_array;
+  //my_model.silent = silent_array;
+  int pow_look[2] = {1,3};
+  my_model.pow_lookup = pow_look;
+  my_model.maxorder = 0;
+  my_model.model_type =0;
   
-  /* consistency check */
+  
+    /* consistency check */
   fprintf(stdout,"checking model:\n");
   if (model_check(&my_model))
     {
@@ -114,7 +124,7 @@ int my_model()
 				     100, /* no of sequences */
 		  			 100); /* maxT */ 
   fprintf(stdout,"Done\n");
-  sequence_print(stdout,my_output);
+  //sequence_print(stdout,my_output);
 
   /* slight change of emission probabilities in state 0 */
   symbols_0_state[0] = 0.6;
