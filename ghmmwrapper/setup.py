@@ -61,6 +61,7 @@ print "ghmmprefix " ,ghmmprefix
 print "swiglib ", swiglib
 print "swiglib_path ",swiglib_path
 print "ghmmlib_path ", ghmmlib_path
+print "gslprefix",gslprefix
 print "**************************"
 
 
@@ -86,7 +87,7 @@ setup(name="ghmmwrapper",
                                ['sclass_change.c',
                                 'gql.c', 'ghmmwrapper_wrap.c'],
                                include_dirs = [ghmmprefix + '/include', gslprefix + '/include'],
-                               library_dirs = [ghmmlib_path ,swiglib_path],
+                               library_dirs = [ghmmlib_path ,swiglib_path,gslprefix + '/lib'],
                                libraries = ['gsl','stdc++','gsl','gslcblas','m','ghmm',
                                'swigpy' ] 
                                )
