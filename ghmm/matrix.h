@@ -328,6 +328,16 @@ int matrix_det_symposdef(double **a, int dim, double *det);
 */
 void matrix_d_copy(double **src, double **target, int rows, int cols);
 
+/**
+  Checks whether a quadratic double matrix is stochastic
+  @return 0/1 flag for true/false
+  @param  double NxN matrix to be checked
+  @param  matrix dimension N (matrix must be quadaratic)
+  */
+int matrix_d_check_stochasticity(double **matrix, int N);
+
+
+
 #ifdef __cplusplus
 }
 #endif
