@@ -638,7 +638,7 @@ int model_check(const model* mo) {
     /* Sum the a[i][j]'s : normalized out transitions */
     for (j = 0; j < mo->s[i].out_states; j++) {
       sum += mo->s[i].out_a[j];
-      /* printf("    out_a[%d][%d] = %8.5f\n", i,j, mo->s[i].out_a[j]); */
+       printf("    out_a[%d][%d] = %8.5f\n", i,j, mo->s[i].out_a[j]); 
     }
     if ( fabs(sum - 1.0) >= EPS_PREC ) { 
       char *str = mprintf(NULL, 0, "sum out_a[j] = %.2f != 1.0 (state %d)\n", 

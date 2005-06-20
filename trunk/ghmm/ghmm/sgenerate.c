@@ -200,7 +200,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
           printf("ERROR: get_class not initialized\n");
           goto STOP;
         }
-        printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+        //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
         class = smo->class_change->get_class(smo,sq->seq[n],n,t);
       } 
             
@@ -218,7 +218,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
            printf("ERROR: get_class not initialized\n");
            goto STOP;
          }
-         printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+         //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
          class = smo->class_change->get_class(smo,sq->seq[n],n,t);
        } 
          
@@ -284,7 +284,7 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
           printf("ERROR: get_class not initialized\n");
           goto STOP;
         }
-        printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+        //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
         class = smo->class_change->get_class(smo,sq->seq[n],n,t);
       } 
       
@@ -388,7 +388,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
         printf("ERROR: get_class not initialized\n");
         goto STOP;
       }
-      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
       class = smo->class_change->get_class(smo,O,0,t); /*XXX No sequence number */
     } 
       
@@ -462,7 +462,7 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
         printf("ERROR: get_class not initialized\n");
         goto STOP;
       }
-      printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
+      //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);
       class = smo->class_change->get_class(smo,new_O,0,t); /* XXX sequence number ? */
     } 
     
