@@ -45,7 +45,7 @@
 #include "mprintf.h"
 #include "foba.h"
 
-static int foba_initforward(model *mo, double *alpha_1, int symb, 
+int foba_initforward(model *mo, double *alpha_1, int symb, 
 			    double *scale) {
 # define CUR_PROC "foba_initforward"
   int res = -1;
@@ -106,7 +106,7 @@ static int foba_initforward(model *mo, double *alpha_1, int symb,
 /*----------------------------------------------------------------------------*/
 
 /** modified by Casillux to improve performance */
-static double foba_stepforward(state *s, double *alpha_t, const double b_symb) {
+double foba_stepforward(state *s, double *alpha_t, const double b_symb) {
   int i, id;
   double value = 0.0;
 
