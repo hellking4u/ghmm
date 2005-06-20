@@ -121,9 +121,9 @@ int foba_label_backward(model* mo, const int* O, const int* label, int len, doub
 
 
 
-static int foba_initforward(model *mo, double *alpha_1, int symb, 
+int foba_initforward(model *mo, double *alpha_1, int symb, 
 			    double *scale);
-static double foba_stepforward(state *s, double *alpha_t, const double b_symb);
+double foba_stepforward(state *s, double *alpha_t, const double b_symb);
 
 /*@} (Doc++-Group: foba) */
 
