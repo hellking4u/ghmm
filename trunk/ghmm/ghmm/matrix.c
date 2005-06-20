@@ -166,8 +166,7 @@ int** stat_matrix_i_alloc(int n, int m) {
   int i, j;
   int **A;
   int *tmp;
-  
-  if (!m_calloc(A,  n * sizeof(int*) +  n * m * sizeof(int)) ){
+  if (!(A=mes_calloc(n * sizeof(*A) +  n * m * sizeof(**A)))) {
 	mes_proc(); 
 	goto STOP;
   }
@@ -567,4 +566,29 @@ void matrix_d_copy(double **src, double **target, int rows, int cols) {
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       target [ i ][ j ] = src [ i ][ j ];
+}
+
+/*============================================================================*/
+/**
+  Checks whether a quadratic double matrix is stochastic
+  @return 0/1 flag for true/false
+  @param  double NxN matrix to be checked
+  @param  matrix dimension N (matrix must be quadaratic)
+  */
+int matrix_d_check_stochasticity(double **matrix, int N){
+  int i,j;
+  double row_sum;
+  int stochastic = 1;
+  
+  for (i = 0; i < N; i++){   
+    row_sum = 0.0;
+    for (j = 0; j < N; j++){
+      row_sum = row_sum + matrix[i][j];
+    }
+    if (row_sum != 1.0){
+      stochastic = 0;
+      break;  
+    }  
+  }      
+  return(stochastic);
 }
