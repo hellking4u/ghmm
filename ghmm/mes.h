@@ -56,7 +56,7 @@ extern "C" {
 
 #define MES_FLAG_TIME        1
 #define MES_FLAG_WIN         4
-#define MES_FLAG_FILE       16 
+#define MES_FLAG_FILE       16
 #define MES_FLAG_FILE_WIN   ( MES_FLAG_FILE | MES_FLAG_WIN )
 #define MES_FLAG_TIME_WIN   ( MES_FLAG_TIME | MES_FLAG_FILE | MES_FLAG_WIN )
 
@@ -79,11 +79,11 @@ extern "C" {
 #if defined(_WIN32)
 #  define getthreadid()  GetCurrentThreadId()
 #  define getprocessid() GetCurrentProcessId()
-#else 
+#else
 #  include <unistd.h>
 #  define getthreadid()  1
 #  define getprocessid() 1
-#endif /* defined(WIN32) */
+#endif                          /* defined(WIN32) */
 
 
 /* end stuff from sys.h */
@@ -141,12 +141,12 @@ extern "C" {
 
 /* else { printf("WARNING: m_free on NULL pointer\n"); } */
 #ifndef m_free
-#define m_free( p )  if(p) { free(p); (p) = NULL; } 
+#define m_free( p )  if(p) { free(p); (p) = NULL; }
 #endif
 
 #ifndef m_strlen
 #define m_strlen( src, cnt ) ( (src) ? ( (cnt<0) ? strlen(src) : cnt) : -1 )
-#endif 
+#endif
 
 #ifndef m_align
 #define m_align( a, n ) ( ((n)&&((a)%(n))) ? ((a)+(n)-((a)%(n))) : (a) )
@@ -172,23 +172,23 @@ extern "C" {
 #define m_realloc(ptr,entries) \
   mes_realloc( (void**)&(ptr), sizeof(*(ptr))*(entries) )
 #endif
-  
+
 #ifndef m_malloc
 #define m_malloc(ptr, entries) (ptr = mes_malloc( sizeof(*(ptr))*(entries)))
 #endif
-  
+
 #ifndef m_calloc
 #define m_calloc(ptr, entries) (ptr = mes_calloc( sizeof(*(ptr))*(entries)))
 #endif
-  
+
 #ifndef m_memset
 #define m_memset(dst, c, entries) memset( (dst), (c), sizeof(*(dst))*(entries))
 #endif
-  
+
 #ifndef m_memcpy
 #define m_memcpy(dst, src, entries) memcpy((dst),(src),sizeof(*(dst))*(entries))
 #endif
-  
+
 #ifndef m_fclose
 #define m_fclose( fp ) \
   if((fp) && (fp) - stdout) { fclose(fp); (fp) = NULL; } else
@@ -210,156 +210,158 @@ extern "C" {
 /* end of things from stdmacro.h */
 
   /**
-   */  
+   */
 #define mes_check_ptr(arg, call) \
   if (!(arg)) { mes_err( #arg, MES_0_PTR, MES_PROC_INFO ); call; }
   /**
-   */  
+   */
 #define mes_check_bnd( arg, bnd, call ) \
   if((arg) > (bnd)){ mes_err( #arg, MES_BIG_ARG, MES_PROC_INFO ); call;} else
   /**
-   */  
+   */
 #define mes_check_0( arg, call ) \
   if(!(arg)) { mes_err( #arg, MES_0_ARG, MES_PROC_INFO ); call;} else
   /**
-   */  
+   */
 #define mes_check_neg( arg, call ) \
   if((arg)<0){ mes_err( #arg, MES_NEG_ARG, MES_PROC_INFO );call;} else
   /**
-   */  
+   */
 #define mes_check_expr( arg, call ) \
   if(!(arg)){ mes_err( #arg, MES_FALSE_ARG, MES_PROC_INFO );call;} else
-  
-  
+
+
   /**
-   */  
+   */
 #define mes_file( txt )     mes_smart( MES_FLAG_FILE, txt, -1 )
   /**
-   */  
+   */
 #define mes_file_win( txt ) mes_smart( MES_FLAG_FILE_WIN, txt, -1 )
   /**
-   */  
+   */
 #define mes_win( txt )      mes_smart( MES_FLAG_WIN, txt, -1 )
-  
+
   /**
-   */  
+   */
 #define mes_proc()      mes( MES_PROT, NULL )
   /**
-   */  
+   */
 #define mes_prot( txt ) mes( MES_PROT_TIME, txt )
 
   /**
    */
-char* mes_get_std_path( void );
+  char *mes_get_std_path (void);
 
   /**
    */
-void  mes( int flags, int line, char* xproc, char* proc, char* format, ... );
+  void mes (int flags, int line, char *xproc, char *proc, char *format, ...);
   /**
    */
-void  mes_smart( int flags,const char* txt, int bytes );
+  void mes_smart (int flags, const char *txt, int bytes);
   /**
    */
-int   mes_ability( int on );
+  int mes_ability (int on);
   /**
    */
-void  mes_err( char* txt, int error_nr, char* proc_info );
+  void mes_err (char *txt, int error_nr, char *proc_info);
   /**
    */
-void  mes_exit( void );
+  void mes_exit (void);
   /**
    */
-void  mes_fformat( char* txt, char* filename, int line, char* proc_info );
+  void mes_fformat (char *txt, char *filename, int line, char *proc_info);
   /**
    */
-void  mes_init( char* logfile, void(*winfct)(const char*), int argc, char* argv[] );
+  void mes_init (char *logfile, void (*winfct) (const char *), int argc,
+                 char *argv[]);
   /**
    */
-void  mes_init_args( int argc, char*argv[]);
+  void mes_init_args (int argc, char *argv[]);
   /**
    */
-void  mes_init_logfile( char*file_name );
+  void mes_init_logfile (char *file_name);
   /**
    */
-void  mes_init_winfct( void(*win_fct)(const char*) );
+  void mes_init_winfct (void (*win_fct) (const char *));
   /**
    */
-int   mes_insert( FILE* fp, char src, int cnt );
+  int mes_insert (FILE * fp, char src, int cnt);
   /**
    */
-void  mes_time( void );
+  void mes_time (void);
   /**
    */
-void  mes_va( int flags,int line,char*xproc,char*proc,char*format,va_list args);
+  void mes_va (int flags, int line, char *xproc, char *proc, char *format,
+               va_list args);
   /**
    */
-int   mes_win_ability( int on );
+  int mes_win_ability (int on);
 
   /**
    */
-void* mes_calloc( int bytes );
+  void *mes_calloc (int bytes);
   /**
    */
-int   mes_copy( char *oldname, char *newname );
+  int mes_copy (char *oldname, char *newname);
   /**
    */
-int   mes_fgetc( FILE*fp );
+  int mes_fgetc (FILE * fp);
   /**
    */
-int   mes_fflush( FILE* fp );
+  int mes_fflush (FILE * fp);
   /**
    */
-FILE* mes_fopen(const char* filename, char* attribute_string );
+  FILE *mes_fopen (const char *filename, char *attribute_string);
   /**
    */
-int   mes_fprintf( FILE* fp, char* format, ... );
+  int mes_fprintf (FILE * fp, char *format, ...);
   /**
    */
-int   mes_fputc( FILE*fp, char chr );
+  int mes_fputc (FILE * fp, char chr);
   /**
    */
-int   mes_fputs( FILE*fp, char* str );
+  int mes_fputs (FILE * fp, char *str);
   /**
    */
-int   mes_fread( FILE* fp, void* mem, int bytes );
+  int mes_fread (FILE * fp, void *mem, int bytes);
   /**
    */
-int   mes_fread_quiet( FILE* fp, void* mem, int bytes );
+  int mes_fread_quiet (FILE * fp, void *mem, int bytes);
   /**
    */
-int   mes_fseek( FILE*fp, long offset, int fromwhere );
+  int mes_fseek (FILE * fp, long offset, int fromwhere);
 #ifdef WIN32
   /**
    */
-int mes_fseek64( FILE *fp, unsigned int uoff, unsigned int loff, int fromwhere );
+  int mes_fseek64 (FILE * fp, unsigned int uoff, unsigned int loff,
+                   int fromwhere);
 #endif
   /**
    */
-int   mes_ftell( FILE* fp );
+  int mes_ftell (FILE * fp);
   /**
    */
-int   mes_fwrite( FILE* fp, void* mem, int bytes );
+  int mes_fwrite (FILE * fp, void *mem, int bytes);
   /**
    */
-void* mes_malloc( int bytes );
+  void *mes_malloc (int bytes);
   /**
    */
-int   mes_move( char* oldname, char* newname );
+  int mes_move (char *oldname, char *newname);
   /**
    */
-int   mes_realloc( void** mem, int bytes );
+  int mes_realloc (void **mem, int bytes);
   /**
    */
-int   mes_remove( char* filename );
+  int mes_remove (char *filename);
   /**
    */
-int   mes_rename( char* oldname, char* newname );
+  int mes_rename (char *oldname, char *newname);
   /**
    */
-FILE* mes_tmpfile( void );
+  FILE *mes_tmpfile (void);
 
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
-
-#endif /* MES_H */
+#endif                          /* MES_H */

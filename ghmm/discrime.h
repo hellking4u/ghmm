@@ -42,17 +42,18 @@
 extern "C" {
 #endif
 
-model** discrime_modelarray_alloc(int size);
-void discrime_modelarray_dealloc(model** mos);
+  model **discrime_modelarray_alloc (int size);
+  void discrime_modelarray_dealloc (model ** mos);
 
-void discrime_modelarray_setptr(model** mos, model* mo, int pos);
-model* discrime_modelarray_getptr(model** mos, int pos);
+  void discrime_modelarray_setptr (model ** mos, model * mo, int pos);
+  model *discrime_modelarray_getptr (model ** mos, int pos);
 
-sequence_t** discrime_seqarray_alloc(int size);
-void discrime_seqarray_dealloc(sequence_t** seqs);
+  sequence_t **discrime_seqarray_alloc (int size);
+  void discrime_seqarray_dealloc (sequence_t ** seqs);
 
-void discrime_seqarray_setptr(sequence_t** seqs, sequence_t* seq, int pos);
-sequence_t* discrime_seqarray_getptr(sequence_t** seqs, int pos);
+  void discrime_seqarray_setptr (sequence_t ** seqs, sequence_t * seq,
+                                 int pos);
+  sequence_t *discrime_seqarray_getptr (sequence_t ** seqs, int pos);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -66,7 +67,8 @@ sequence_t* discrime_seqarray_getptr(sequence_t** seqs, int pos);
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-extern int discriminative(model** mo, sequence_t** sqs, int noC, int gradient);
+  extern int discriminative (model ** mo, sequence_t ** sqs, int noC,
+                             int gradient);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -77,13 +79,13 @@ extern int discriminative(model** mo, sequence_t** sqs, int noC, int gradient);
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
 */
-double discrime_compute_performance(model** mo, sequence_t** sqs, int noC);
+  double discrime_compute_performance (model ** mo, sequence_t ** sqs,
+                                       int noC);
 
-void discrime_print_statistics(model** mo, sequence_t** sqs, int noC,
-			       int* falseP, int* falseN);
+  void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
+                                  int *falseP, int *falseN);
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

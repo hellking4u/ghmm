@@ -44,28 +44,29 @@ extern "C" {
 
 /* threshold probability (logarithmized) */
 #define KBEST_THRESHOLD -3.50655789732
-           /* log(0.03) => threshold: 3% of most probable partial hypothesis */
+  /* log(0.03) => threshold: 3% of most probable partial hypothesis */
 #define KBEST_EPS 1E-15
 
 /** Data type for linked list of hypotheses
     Stores the actual label, a link to the parent hypothesis, a counter of the
     links to this hypothesis and the gamma values */
-typedef struct hypo_List {
-  int hyp_c;
-  int refcount;
-  int chosen;
-  int gamma_states;
-  double* gamma_a;
-  int* gamma_id;
-  struct hypo_List* next;
-  struct hypo_List* parent;
-} hypoList;
+  typedef struct hypo_List {
+    int hyp_c;
+    int refcount;
+    int chosen;
+    int gamma_states;
+    double *gamma_a;
+    int *gamma_id;
+    struct hypo_List *next;
+    struct hypo_List *parent;
+  } hypoList;
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
-inline void hlist_insertElem(hypoList** plist, int newhyp, hypoList* parlist);
+  inline void hlist_insertElem (hypoList ** plist, int newhyp,
+                                hypoList * parlist);
 
 /* removes hypothesis at position indicated by pointer plist from the list */
-inline void hlist_removeElem(hypoList** plist);
+  inline void hlist_removeElem (hypoList ** plist);
 
 
 /**
@@ -80,7 +81,8 @@ inline void hlist_removeElem(hypoList** plist);
    @param nr_s:       number states which have assigned the index aa label
    @param max_out:    maximum number of out_states over all states with the index aa label
  */
-int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_s, int* max_out);
+  int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
+                     int *nr_s, int *max_out);
 
 
 /**
@@ -91,7 +93,7 @@ int hlist_propFwd(model* mo, hypoList* h, hypoList** hplus, int labels, int* nr_
    @param s:          state whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
-inline double logGammaSum(double* log_a, state* s, hypoList* parent);
+  inline double logGammaSum (double *log_a, state * s, hypoList * parent);
 
 
 /**
@@ -101,10 +103,9 @@ inline double logGammaSum(double* log_a, state* s, hypoList* parent);
    @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
    @param N:          length of a
 */
-inline double logSum(double* a, int N);
+  inline double logSum (double *a, int N);
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

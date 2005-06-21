@@ -57,7 +57,7 @@ extern "C" {
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
-int *viterbi(model *mo, int *o, int len, double *log_p);
+  int *viterbi (model * mo, int *o, int len, double *log_p);
 
 /**
   Calculates the logarithmic probability to a given path through the 
@@ -69,13 +69,10 @@ int *viterbi(model *mo, int *o, int len, double *log_p);
   @param state_seq: path through the states
   @return log P
   */
-double viterbi_logp(model *mo, int *o, int len, int *state_seq);
+  double viterbi_logp (model * mo, int *o, int len, int *state_seq);
 
 #ifdef __cplusplus
 }
 #endif
-
-
 #endif
-
 /*@} (Doc++-Group: viterbi) */

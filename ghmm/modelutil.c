@@ -34,82 +34,97 @@
 *
 *******************************************************************************/
 
-typedef enum eDFSCOLORS {GRAY=0, BLACK=1, WHITE=2, NONE=-1} DFSCOLORS;
+typedef enum eDFSCOLORS { GRAY = 0, BLACK = 1, WHITE = 2, NONE =
+    -1 } DFSCOLORS;
 
 #include "mes.h"
 #include "ghmm.h"
 #include "model.h"
 
 typedef struct local_store_topo {
-  int     *topo_order;
-  int     topo_order_length;
-  int     *queue;
-  int     head, tail;
+  int *topo_order;
+  int topo_order_length;
+  int *queue;
+  int head, tail;
 } local_store_topo;
- 
-static local_store_topo *topo_alloc(model *mo, int len);
-static int topo_free(local_store_topo **v, int n, int len);
+
+static local_store_topo *topo_alloc (model * mo, int len);
+static int topo_free (local_store_topo ** v, int n, int len);
 
 
 /*----------------------------------------------------------------------------*/
-static local_store_topo *topo_alloc(model *mo, int len) {
+static local_store_topo *topo_alloc (model * mo, int len)
+{
 #define CUR_PROC "sdtopo_alloc"
-  local_store_topo* v = NULL;
+  local_store_topo *v = NULL;
   int j;
 
-  if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
-  if (!m_calloc(v->queue, mo->N)) {mes_proc(); goto STOP;}
+  if (!m_calloc (v, 1)) {
+    mes_proc ();
+    goto STOP;
+  }
+  if (!m_calloc (v->queue, mo->N)) {
+    mes_proc ();
+    goto STOP;
+  }
 
   v->topo_order_length = 0;
-  v->head =0; /* initialize static queue (array implementation) */
-  v->tail =0;
-  if (!m_calloc(v->topo_order, mo->N)) {mes_proc(); goto STOP;}
+  v->head = 0;                  /* initialize static queue (array implementation) */
+  v->tail = 0;
+  if (!m_calloc (v->topo_order, mo->N)) {
+    mes_proc ();
+    goto STOP;
+  }
 
-  return(v);
+  return (v);
 STOP:
-  topo_free(&v, mo->N, len);
-  return(NULL);
+  topo_free (&v, mo->N, len);
+  return (NULL);
 #undef CUR_PROC
-} 
+}
 
 
 /*----------------------------------------------------------------------------*/
-static int topo_free(local_store_topo **v, int n, int len) {
+static int topo_free (local_store_topo ** v, int n, int len)
+{
 #define CUR_PROC "sdviterbi_free"
   int j;
-  mes_check_ptr(v, return(-1));
-  if( !*v ) return(0);
-  (*v)->head=0; (*v)->tail=0;
-  m_free((*v)->topo_order);
-  m_free((*v)->queue);
-  m_free(*v);
-  return(0);
+  mes_check_ptr (v, return (-1));
+  if (!*v)
+    return (0);
+  (*v)->head = 0;
+  (*v)->tail = 0;
+  m_free ((*v)->topo_order);
+  m_free ((*v)->queue);
+  m_free (*v);
+  return (0);
 #undef CUR_PROC
-} 
+}
 
 /*---------------------------------------------------------------------------*/
 /*
  * Implementation of DFSVisit with recursion (WS)
  *
  */
-static void model_DFSVisit(model *c_model, int nodev, int *timevisit, int *parents, int *colors, int **edge_classes)
+static void model_DFSVisit (model * c_model, int nodev, int *timevisit,
+                            int *parents, int *colors, int **edge_classes)
 {
 #define CUR_PROC "DFSVisit"
-  int i,w;
-  colors[nodev]=GRAY;
+  int i, w;
+  colors[nodev] = GRAY;
   ++(*timevisit);
-  for(i=0; i < c_model->s[nodev].out_states; i++) { 
-    w=c_model->s[nodev].out_id[i]; // Explore edge (v,w)
-    if ( edge_classes[nodev][w] == NONE ) { // First exploration
+  for (i = 0; i < c_model->s[nodev].out_states; i++) {
+    w = c_model->s[nodev].out_id[i];    // Explore edge (v,w)
+    if (edge_classes[nodev][w] == NONE) {       // First exploration
       edge_classes[nodev][w] = colors[w];
       /*fprintf(stderr, " %d edge (%s, %s)\n", (int) colors[w], c_model->s[nodev].label, c_model->s[w].label); */
     }
-    if ( colors[w] == WHITE ) {
-      parents[w]=nodev;
-      model_DFSVisit(c_model, w, timevisit, parents, colors, edge_classes);
-    } 
+    if (colors[w] == WHITE) {
+      parents[w] = nodev;
+      model_DFSVisit (c_model, w, timevisit, parents, colors, edge_classes);
+    }
   }
-  colors[nodev]=BLACK; // finished  
+  colors[nodev] = BLACK;        // finished  
   ++(*timevisit);
 #undef CUR_PROC
 }
@@ -120,62 +135,65 @@ static void model_DFSVisit(model *c_model, int nodev, int *timevisit, int *paren
     GRAY EDGE  => edges that form cycles which must be removed 
                   before running topological sort
 */
-int** model_DFS(model *c_model)
+int **model_DFS (model * c_model)
 {
 #define CUR_PROC "model_DFS"
-  int i,j,initials;
-  int timevisit=0;
+  int i, j, initials;
+  int timevisit = 0;
   int *colors;
   int *parents;
-  int **edge_classes; 
+  int **edge_classes;
 
-  colors=(int*)calloc(c_model->N,sizeof(int));
-  parents=(int*)calloc(c_model->N,sizeof(int));
-  
+  colors = (int *) calloc (c_model->N, sizeof (int));
+  parents = (int *) calloc (c_model->N, sizeof (int));
+
   //edge_classes=(int**)calloc(c_model->N,sizeof(int*));
   //for(i=0; i < c_model->N; i++) {
   //  edge_classes[i]=(int*)calloc(c_model->N,sizeof(int));
   //}
 
-  
-  edge_classes = stat_matrix_i_alloc(c_model->N, c_model->N);
-  
-  
-  for(i=0; i < c_model->N; i++) {
-    if ( c_model->s[i].pi == 1.0) initials=i; /* assuming only one initial state */
-    colors[i]=WHITE;
-    parents[i]=-1;
-    for(j=0; j < c_model->N; j++) {
+
+  edge_classes = stat_matrix_i_alloc (c_model->N, c_model->N);
+
+
+  for (i = 0; i < c_model->N; i++) {
+    if (c_model->s[i].pi == 1.0)
+      initials = i;             /* assuming only one initial state */
+    colors[i] = WHITE;
+    parents[i] = -1;
+    for (j = 0; j < c_model->N; j++) {
       edge_classes[i][j] = NONE;
     }
   }
-  
-  model_DFSVisit(c_model, initials, &timevisit,parents, colors, edge_classes);
-  for(i=0; i < c_model->N; i++) { /* handle subtrees */
-    if ( colors[i] == WHITE ) {
-      model_DFSVisit(c_model, i, &timevisit,parents, colors, edge_classes);
+
+  model_DFSVisit (c_model, initials, &timevisit, parents, colors,
+                  edge_classes);
+  for (i = 0; i < c_model->N; i++) {    /* handle subtrees */
+    if (colors[i] == WHITE) {
+      model_DFSVisit (c_model, i, &timevisit, parents, colors, edge_classes);
     }
   }
 
-  m_free(colors);
-  m_free(parents);
+  m_free (colors);
+  m_free (parents);
   return edge_classes;
 STOP:
   return NULL;
-#undef CUR_PROC 
+#undef CUR_PROC
 }
 
-static void __topological_sort( model *c_model, local_store_topo *v, int** edge_classes)
+static void __topological_sort (model * c_model, local_store_topo * v,
+                                int **edge_classes)
 {
-  int i,j;
+  int i, j;
   int nodeu, nodew, dels_cnt;
-  int *indegrees = (int*) calloc(c_model->N,sizeof(int));
- 
-  for(i=0; i < c_model->N; i++) {
-    indegrees[i]=c_model->s[i].in_states;
+  int *indegrees = (int *) calloc (c_model->N, sizeof (int));
+
+  for (i = 0; i < c_model->N; i++) {
+    indegrees[i] = c_model->s[i].in_states;
   }
-  for(i=0; i < c_model->N; i++) { /* don't consider back edges in top sort */
-    for(j=0; j < c_model->N; j++) {
+  for (i = 0; i < c_model->N; i++) {    /* don't consider back edges in top sort */
+    for (j = 0; j < c_model->N; j++) {
       if (edge_classes[i][j] == GRAY) {
         indegrees[j]--;
         /* fprintf(stderr, "BACK edge (%s, %s)\n", c_model->s[i].label, c_model->s[j].label); */
@@ -183,67 +201,74 @@ static void __topological_sort( model *c_model, local_store_topo *v, int** edge_
     }
   }
   /* Create a queue q and enqueue all nodes of indegree 0. */
-  v->head=0;  v->tail=0;
-  for(i=0; i < c_model->N; i++) {
-    if ( indegrees[i] == 0 ) v->queue[v->tail++]=i;
+  v->head = 0;
+  v->tail = 0;
+  for (i = 0; i < c_model->N; i++) {
+    if (indegrees[i] == 0)
+      v->queue[v->tail++] = i;
   }
-  dels_cnt=0;
-  while( v->head != v->tail ) {
-    nodeu=v->queue[v->head++]; /* dequeue */
+  dels_cnt = 0;
+  while (v->head != v->tail) {
+    nodeu = v->queue[v->head++];        /* dequeue */
     if (c_model->silent[nodeu]) {
-      v->topo_order[dels_cnt++]=nodeu; /* append it to the list */
+      v->topo_order[dels_cnt++] = nodeu;        /* append it to the list */
       /* printf("Silent state: %s\n", c_model->s[nodeu].label); */
     }
-    for(i=0; i < c_model->s[nodeu].out_states; i++) {
-      nodew=c_model->s[nodeu].out_id[i];
-      if ( edge_classes[nodeu][nodew] != GRAY ) {
+    for (i = 0; i < c_model->s[nodeu].out_states; i++) {
+      nodew = c_model->s[nodeu].out_id[i];
+      if (edge_classes[nodeu][nodew] != GRAY) {
         indegrees[nodew]--;
-        if (nodew != nodeu && indegrees[nodew]==0) {
-          v->queue[v->tail++]=nodew; /* enqueue */
+        if (nodew != nodeu && indegrees[nodew] == 0) {
+          v->queue[v->tail++] = nodew;  /* enqueue */
         }
       }
     }
   }
-  v->topo_order_length=dels_cnt;
-  free(indegrees); 
+  v->topo_order_length = dels_cnt;
+  free (indegrees);
 }
 
 /*----------------------------------------------------------------------------*/
-void model_topo_ordering(model *mo)
+void model_topo_ordering (model * mo)
 {
 #define CUR_PROC "model_topo_ordering"
-  int i,j;
+  int i, j;
   local_store_topo *v;
   int **edge_cls;
 
-  v = topo_alloc(mo, 1);
-  if (!v) { mes_proc(); goto STOP; }
- 
-  edge_cls=model_DFS( mo);
-  __topological_sort( mo, v, edge_cls );
-  mo->topo_order_length=v->topo_order_length;
-  if (!m_calloc(mo->topo_order, mo->topo_order_length)) {mes_proc(); goto STOP;}
- 
-  for(i=0; i < v->topo_order_length; i++) {
+  v = topo_alloc (mo, 1);
+  if (!v) {
+    mes_proc ();
+    goto STOP;
+  }
+
+  edge_cls = model_DFS (mo);
+  __topological_sort (mo, v, edge_cls);
+  mo->topo_order_length = v->topo_order_length;
+  if (!m_calloc (mo->topo_order, mo->topo_order_length)) {
+    mes_proc ();
+    goto STOP;
+  }
+
+  for (i = 0; i < v->topo_order_length; i++) {
     mo->topo_order[i] = v->topo_order[i];
   }
-  
-  /*fprintf(stderr,"Ordering silent states....\n\t");
-  for(i=0; i < mo->topo_order_length; i++) {
-    fprintf(stderr, "%d, ", mo->topo_order[i]);
-  }
-  fprintf(stderr,"\n\n");  */
- 
-  for(i=0; i < mo->N; i++) { 
-    for(j=0; j < mo->N; j++) {
-        fprintf(stderr,"edge_cls[%d][%d]=%d\n",i,j,edge_cls[i][j]);           
-    }
-  }           
 
-  /* XXX TEST XXX */
-  stat_matrix_i_free(&edge_cls, mo->N);
-  topo_free(&v, mo->N, 1);
+  /*fprintf(stderr,"Ordering silent states....\n\t");
+     for(i=0; i < mo->topo_order_length; i++) {
+     fprintf(stderr, "%d, ", mo->topo_order[i]);
+     }
+     fprintf(stderr,"\n\n");  
+
+     for(i=0; i < mo->N; i++) { 
+     for(j=0; j < mo->N; j++) {
+     fprintf(stderr,"edge_cls[%d][%d]=%d\n",i,j,edge_cls[i][j]);           
+     }
+     } */
+
+  stat_matrix_i_free (&edge_cls, mo->N);
+  topo_free (&v, mo->N, 1);
 STOP:
- i = 0;
- #undef CUR_PROC
+  i = 0;
+#undef CUR_PROC
 }

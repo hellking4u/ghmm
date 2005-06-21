@@ -52,47 +52,45 @@ extern "C" {
 
 /**
  */
-int smixturehmm_cluster(FILE *outfile, double **cp, sequence_d_t *sqd, 
-			smodel **smo, int smo_number);
+  int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
+                           smodel ** smo, int smo_number);
 
 /**
  */
-double smixturehmm_like(smodel **smo, int  smo_number, sequence_d_t *sqd_test,
-			long *errors);
+  double smixturehmm_like (smodel ** smo, int smo_number,
+                           sequence_d_t * sqd_test, long *errors);
 
 /**
  */
-int smixturehmm_init(double **cp, sequence_d_t *sqd, smodel **smo,
-			      int smo_number, int mode);
+  int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
+                        int smo_number, int mode);
 
 /**
  */
-int smixturehmm_calc_priors(double **cp, sequence_d_t *sqd, smodel **smo,
-			    int smo_number);
+  int smixturehmm_calc_priors (double **cp, sequence_d_t * sqd, smodel ** smo,
+                               int smo_number);
 
 /**
  */
-int smixturehmm_calc_cp(double **cp, sequence_d_t *sqd, smodel **smo, 
-			int smo_number, double *total_train_w);
+  int smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
+                           int smo_number, double *total_train_w);
 
 /**
 */
-void smixture_calc_logp(double **logp, int **error, sequence_d_t *sqd, 
-			smodel **smo,  int smo_number);
+  void smixture_calc_logp (double **logp, int **error, sequence_d_t * sqd,
+                           smodel ** smo, int smo_number);
 
 /**
  */
-void smixturehmm_print_header(FILE *file, char *argv[], int flag);
+  void smixturehmm_print_header (FILE * file, char *argv[], int flag);
 
 
 /**
  */
-double *smixturehmm_avg_like(double **cp, sequence_d_t *sqd, 
-			     smodel **smo, int smo_number);
+  double *smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
+                                smodel ** smo, int smo_number);
 #ifdef __cplusplus
 }
 #endif
-
 /*@} smixturehmm section */
-
-#endif /* SMIXTUREHMM_H */
+#endif                          /* SMIXTUREHMM_H */

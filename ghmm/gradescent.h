@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 /*----------------------------------------------------------------------------*/
-double compute_performance(model* mo, sequence_t *sq);
+  double compute_performance (model * mo, sequence_t * sq);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -54,7 +54,8 @@ double compute_performance(model* mo, sequence_t *sq);
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
+  int gradient_descent (model ** mo, sequence_t * sq, double eta,
+                        int no_steps);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -72,15 +73,14 @@ int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
  */
-int gradescent_compute_expectations(model* mo, double** alpha, double** beta,
-				     double* scale,
-				     int* seq, int seq_len, double** matrix_b,
-				     double* matrix_a, double* vec_pi);
+  int gradescent_compute_expectations (model * mo, double **alpha,
+                                       double **beta, double *scale, int *seq,
+                                       int seq_len, double **matrix_b,
+                                       double *matrix_a, double *vec_pi);
 
 
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

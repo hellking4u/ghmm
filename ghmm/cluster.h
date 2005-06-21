@@ -51,22 +51,22 @@ extern "C" {
 
 /**
  */
-struct cluster_t{
+  struct cluster_t {
   /** 
     Vector of HMM-Model pointers */
-  model **mo;
+    model **mo;
   /** 
     Vector of sequence_t pointers: for saving the sequence data
     that belongs to the models
   */
-  sequence_t **mo_seq;
+    sequence_t **mo_seq;
   /** 
     Number of models read in */
-  int mo_number;
-};
+    int mo_number;
+  };
 /**
 */
-typedef struct cluster_t cluster_t;
+  typedef struct cluster_t cluster_t;
 
 /**
    Writess out the final models.
@@ -76,8 +76,8 @@ typedef struct cluster_t cluster_t;
    @param outfile output file
    @param out_filename name of the output file
  */
-int cluster_out(cluster_t *cl, sequence_t *sq, FILE *outfile,
-		    char *out_filename);
+  int cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
+                   char *out_filename);
 
 /**
    Prevents that empty models are sent out (no associated seqences) by 
@@ -89,7 +89,8 @@ int cluster_out(cluster_t *cl, sequence_t *sq, FILE *outfile,
    @param seq_number number of sequences
    @param mo_number number of models
  */
-int cluster_avoid_empty_model(long *seq_label, long seq_number, int mo_number);
+  int cluster_avoid_empty_model (long *seq_label, long seq_number,
+                                 int mo_number);
 
 /**
    Makes a cluster and reestimates the HMMs.
@@ -98,7 +99,7 @@ int cluster_avoid_empty_model(long *seq_label, long seq_number, int mo_number);
    @param mo_file file of initial models
    @param out_file output file
  */
-int cluster_hmm(char *seq_file, char *mo_file, char *out_file);
+  int cluster_hmm (char *seq_file, char *mo_file, char *out_file);
 
 /**
    Updates the cluster with additional sequences.
@@ -106,7 +107,7 @@ int cluster_hmm(char *seq_file, char *mo_file, char *out_file);
    @param cl cluster to update
    @param sq sequences to update the cluster with
  */
-int cluster_update(cluster_t *cl, sequence_t *sq);
+  int cluster_update (cluster_t * cl, sequence_t * sq);
 
 /**
    Updates a label
@@ -115,20 +116,19 @@ int cluster_update(cluster_t *cl, sequence_t *sq);
    @param up to date label for comparison
    @param seq_number number of sequences
  */
-long cluster_update_label(long *oldlabel, long *seq_label, long seq_number);
+  long cluster_update_label (long *oldlabel, long *seq_label,
+                             long seq_number);
 
 /**
    Prints out the likelihood values for the cluster.
    @param outfile output file
    @param cl cluster of models and sequences
  */
-void cluster_print_likelihood(FILE *outfile, cluster_t *cl);
+  void cluster_print_likelihood (FILE * outfile, cluster_t * cl);
 
 /*@} cluster documentation */
 
 #ifdef __cplusplus
 }
 #endif
-
-
-#endif /* CLUSTER_H */
+#endif                          /* CLUSTER_H */

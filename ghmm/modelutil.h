@@ -43,10 +43,9 @@
 extern "C" {
 #endif
 
-void model_topo_ordering(model *mo);
+  void model_topo_ordering (model * mo);
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

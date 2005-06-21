@@ -57,14 +57,12 @@ extern "C" {
    @param eps 3rd extra parameter
    @return root
  */
-double zbrent_AB(double (*func)(double, double, double, double),
-		 double x1, double x2, double tol, double A, double B, 
-		 double eps);
+  double zbrent_AB (double (*func) (double, double, double, double),
+                    double x1, double x2, double tol, double A, double B,
+                    double eps);
 
 /*@} */
 #ifdef __cplusplus
 }
 #endif
-
 #endif
-

@@ -48,61 +48,57 @@
 #include "time.h"
 
 /* The global RNG */
-GHMM_RNG * RNG;
+GHMM_RNG *RNG;
 
 #ifndef DO_WITH_GSL
 
 ghmm_rng_state rng_state;
 char rng_name[] = "random";
 
-void ghmm_rng_set(GHMM_RNG * r, unsigned long int seed)
+void ghmm_rng_set (GHMM_RNG * r, unsigned long int seed)
 {
-  srandom(seed);
-}
- 
-double ghmm_rng_uniform (GHMM_RNG * r)
-{
-  return ((double) random())/(RAND_MAX + 1.0);
+  srandom (seed);
 }
 
-const char * ghmm_rng_name (GHMM_RNG * r)
+double ghmm_rng_uniform (GHMM_RNG * r)
+{
+  return ((double) random ()) / (RAND_MAX + 1.0);
+}
+
+const char *ghmm_rng_name (GHMM_RNG * r)
 {
   return rng_name;
 }
 
-void ghmm_rng_init(void)
+void ghmm_rng_init (void)
 {
-  initstate(1, rng_state, sizeof(ghmm_rng_state));
+  initstate (1, rng_state, sizeof (ghmm_rng_state));
   RNG = rng_state;
 }
 
 #else
 
-void ghmm_rng_init(void)
+void ghmm_rng_init (void)
 {
-   gsl_rng_env_setup();
-   RNG = gsl_rng_alloc(gsl_rng_default);
+  gsl_rng_env_setup ();
+  RNG = gsl_rng_alloc (gsl_rng_default);
 }
 
 #endif
 
-void ghmm_rng_timeseed(GHMM_RNG * r)
+void ghmm_rng_timeseed (GHMM_RNG * r)
 {
-  unsigned long tm; /* Time seed */
+  unsigned long tm;             /* Time seed */
   unsigned int timeseed;
-  
-  timeseed = time(NULL);
-  srand(timeseed);
-  tm = rand();
-  GHMM_RNG_SET(r, tm);
+
+  timeseed = time (NULL);
+  srand (timeseed);
+  tm = rand ();
+  GHMM_RNG_SET (r, tm);
   //printf("# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(r), tm);  
-  fflush(stdout);
+  fflush (stdout);
 }
 
 
 
 /* End of: rng.c */
-
-
-
-

@@ -62,8 +62,8 @@ extern "C" {
    @param O sequence
    @param T length of the sequence
  */
-int smap_classify(smodel **smo, double *result, int smo_number, 
-		   double *O, int T);
+  int smap_classify (smodel ** smo, double *result, int smo_number,
+                     double *O, int T);
 
 /**
    Alternative to MAPCA (smap_classify); calculate p[m] directly using 
@@ -76,13 +76,11 @@ int smap_classify(smodel **smo, double *result, int smo_number,
    @param O sequence
    @param T length of the sequence
  */
-int smap_bayes(smodel **smo, double *result, int smo_number, double *O, int T);
+  int smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
+                  int T);
 
 #ifdef __cplusplus
 }
 #endif
-
-
 /*@} */
-
-#endif /* SMAP_CLASSIFY_H */
+#endif                          /* SMAP_CLASSIFY_H */
