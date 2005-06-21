@@ -69,8 +69,8 @@ extern "C" {
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int foba_forward(model *mo, const int *O, int length, double **alpha, 
-		 double *scale, double *log_p);
+  int foba_forward (model * mo, const int *O, int length, double **alpha,
+                    double *scale, double *log_p);
 
 /** 
   Backward-Algorithm. 
@@ -83,8 +83,8 @@ int foba_forward(model *mo, const int *O, int length, double **alpha,
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-int foba_backward(model *mo, const int *O, int length, double **beta, 
-		  const double *scale);
+  int foba_backward (model * mo, const int *O, int length, double **beta,
+                     const double *scale);
 
 /**
   Calculation of  log( P(O|lambda) ). 
@@ -97,7 +97,7 @@ int foba_backward(model *mo, const int *O, int length, double **beta,
   @param log\_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int foba_logp(model *mo, const int *O, int len, double *log_p);
+  int foba_logp (model * mo, const int *O, int len, double *log_p);
 
 
 /** Forward-Algorithm (lean version).
@@ -108,28 +108,29 @@ int foba_logp(model *mo, const int *O, int len, double *log_p);
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int foba_forward_lean(model *mo, const int *O, int len, double *log_p); 
+  int foba_forward_lean (model * mo, const int *O, int len, double *log_p);
 
 
 /* Labeled HMMs */
 
-int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
-int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
+  int foba_label_forward (model * mo, const int *O, const int *label, int len,
+                          double **alpha, double *scale, double *log_p);
+  int foba_label_logp (model * mo, const int *O, const int *label, int len,
+                       double *log_p);
 
 
-int foba_label_backward(model* mo, const int* O, const int* label, int len, double** beta, double* scale, double* log_p);
+  int foba_label_backward (model * mo, const int *O, const int *label,
+                           int len, double **beta, double *scale,
+                           double *log_p);
 
 
 
-int foba_initforward(model *mo, double *alpha_1, int symb, 
-			    double *scale);
-double foba_stepforward(state *s, double *alpha_t, const double b_symb);
+  int foba_initforward (model * mo, double *alpha_1, int symb, double *scale);
+  double foba_stepforward (state * s, double *alpha_t, const double b_symb);
 
 /*@} (Doc++-Group: foba) */
 
 #ifdef __cplusplus
 }
 #endif
-
-
 #endif
