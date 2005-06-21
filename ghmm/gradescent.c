@@ -48,20 +48,21 @@
 #include "ghmm.h"
 
 /*----------------------------------------------------------------------------*/
-void gradient_descent_gfree(double** matrix_b, double* matrix_a,
-			    double* matrix_pi, int N) {
+void gradient_descent_gfree (double **matrix_b, double *matrix_a,
+                             double *matrix_pi, int N)
+{
 #define CUR_PROC "gradient_descent_gfree"
 
   int i;
 
   if (matrix_b)
-    for (i=0; i<N; i++) {
-      m_free(matrix_b[i]);
+    for (i = 0; i < N; i++) {
+      m_free (matrix_b[i]);
     }
-  m_free(matrix_b);
+  m_free (matrix_b);
 
-  m_free(matrix_a);
-  m_free(matrix_pi);
+  m_free (matrix_a);
+  m_free (matrix_pi);
 
 #undef CUR_PROC
 }
@@ -69,28 +70,41 @@ void gradient_descent_gfree(double** matrix_b, double* matrix_a,
 
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
-int gradient_descent_galloc(double*** matrix_b, double** matrix_a,
-			    double** matrix_pi, model *mo) {
+int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
+                             double **matrix_pi, model * mo)
+{
 #define CUR_PROC "gradient_descent_galloc"
-  
+
   int i;
 
   /* first allocate memory for matrix_b */
-  if (!m_malloc(*matrix_b, mo->N)) {mes_proc(); goto STOP;}
-  for (i=0; i<mo->N; i++)
-    if (!m_calloc((*matrix_b)[i], model_ipow(mo, mo->M, mo->s[i].order+1)))
-      {mes_proc(); goto STOP;}
-  
+  if (!m_malloc (*matrix_b, mo->N)) {
+    mes_proc ();
+    goto STOP;
+  }
+  for (i = 0; i < mo->N; i++)
+    if (!m_calloc
+        ((*matrix_b)[i], model_ipow (mo, mo->M, mo->s[i].order + 1))) {
+      mes_proc ();
+      goto STOP;
+    }
+
   /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
-  if (!m_calloc(*matrix_a, mo->N*mo->N)) {mes_proc(); goto STOP;}
-  
+  if (!m_calloc (*matrix_a, mo->N * mo->N)) {
+    mes_proc ();
+    goto STOP;
+  }
+
   /* allocate memory for matrix_pi */
-  if (!m_calloc(*matrix_pi, mo->N)) {mes_proc(); goto STOP;}
+  if (!m_calloc (*matrix_pi, mo->N)) {
+    mes_proc ();
+    goto STOP;
+  }
 
   return 0;
 
- STOP:
-  gradient_descent_gfree(*matrix_b, *matrix_a, *matrix_pi, mo->N);
+STOP:
+  gradient_descent_gfree (*matrix_b, *matrix_a, *matrix_pi, mo->N);
   return -1;
 
 #undef CUR_PROC
@@ -113,10 +127,11 @@ int gradient_descent_galloc(double*** matrix_b, double** matrix_a,
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
  */
-int gradescent_compute_expectations(model* mo, double** alpha, double** beta,
-				     double* scale,
-				     int* seq, int seq_len, double** matrix_b,
-				     double* matrix_a, double* vec_pi) {
+int gradescent_compute_expectations (model * mo, double **alpha,
+                                     double **beta, double *scale, int *seq,
+                                     int seq_len, double **matrix_b,
+                                     double *matrix_a, double *vec_pi)
+{
 #define CUR_PROC "gradescent_compute_expectations"
 
   int h, i, j, t;
@@ -125,59 +140,60 @@ int gradescent_compute_expectations(model* mo, double** alpha, double** beta,
 
   double gamma, xi;
   double foba_sum;
-    
-  /* initialise matrices with zeros*/
-  for (i=0; i < mo->N; i++) {
-    for (j=0; j < mo->N; j++)
-      matrix_a[i*mo->N + j] = 0;
-    size = model_ipow(mo, mo->M, mo->s[i].order+1);
-    for (h=0; h<size; h++)
+
+  /* initialise matrices with zeros */
+  for (i = 0; i < mo->N; i++) {
+    for (j = 0; j < mo->N; j++)
+      matrix_a[i * mo->N + j] = 0;
+    size = model_ipow (mo, mo->M, mo->s[i].order + 1);
+    for (h = 0; h < size; h++)
       matrix_b[i][h] = 0;
   }
 
-  for (t=0; t<seq_len; t++) {
+  for (t = 0; t < seq_len; t++) {
 
     /* sum products of forward and backward variables over all states: */
     foba_sum = 0.0;
-    for (i=0; i<mo->N; i++)
+    for (i = 0; i < mo->N; i++)
       foba_sum += alpha[t][i] * beta[t][i];
-    if (EPS_PREC > fabs(foba_sum)) {
-      printf("gradescent_compute_expect: foba_sum (%g) smaller as EPS_PREC (%g). t = %d.\n",
-	     foba_sum, EPS_PREC, t);
+    if (EPS_PREC > fabs (foba_sum)) {
+      printf
+        ("gradescent_compute_expect: foba_sum (%g) smaller as EPS_PREC (%g). t = %d.\n",
+         foba_sum, EPS_PREC, t);
       return -1;
     }
-    
-    for (i=0; i < mo->N; i++) {
+
+    for (i = 0; i < mo->N; i++) {
 
       /* compute gamma implicit */
       gamma = alpha[t][i] * beta[t][i] / foba_sum;
 
       /* n_pi is easiest: n_pi(i) = gamma(0,i) */
-      if (0==t)
-	vec_pi[i] = gamma;
+      if (0 == t)
+        vec_pi[i] = gamma;
 
       /* n_b(i,c) = sum[t, hist(t)=c | gamma(t,i)] / sum[t | gamma(t,i)] */
-      e_index = get_emission_index(mo, i, seq[t], t);
+      e_index = get_emission_index (mo, i, seq[t], t);
       if (-1 != e_index)
-	matrix_b[i][e_index] += gamma;
+        matrix_b[i][e_index] += gamma;
     }
 
     /* updating history, xi needs the right e_index for the next state */
-    update_emission_history(mo, seq[t]);
-    
-    for (i=0; i < mo->N; i++) {
+    update_emission_history (mo, seq[t]);
+
+    for (i = 0; i < mo->N; i++) {
       /* n_a(i,j) = sum[t=0..T-2 | xi(t,i,j)] / sum[t=0..T-2 | gamma(t,i)] */
       /* compute xi only till the state before the last */
-      for (j=0; (j<mo->s[i].out_states) && (t<seq_len-1); j++) {
-	j_id = mo->s[i].out_id[j];
-	
-	/* compute xi implicit */
-	e_index = get_emission_index(mo, j_id, seq[t+1], t+1);
-	if (e_index != -1)
-	  xi = alpha[t][i] * beta[t+1][j_id] * mo->s[i].out_a[j]
-	    * mo->s[j_id].b[e_index] / (scale[t+1]*foba_sum);
-	
-	matrix_a[i*mo->N + j_id] += xi;
+      for (j = 0; (j < mo->s[i].out_states) && (t < seq_len - 1); j++) {
+        j_id = mo->s[i].out_id[j];
+
+        /* compute xi implicit */
+        e_index = get_emission_index (mo, j_id, seq[t + 1], t + 1);
+        if (e_index != -1)
+          xi = alpha[t][i] * beta[t + 1][j_id] * mo->s[i].out_a[j]
+            * mo->s[j_id].b[e_index] / (scale[t + 1] * foba_sum);
+
+        matrix_a[i * mo->N + j_id] += xi;
       }
     }
   }
@@ -188,34 +204,39 @@ int gradescent_compute_expectations(model* mo, double** alpha, double** beta,
 
 
 /*----------------------------------------------------------------------------*/
-double compute_performance(model* mo, sequence_t *sq) {
+double compute_performance (model * mo, sequence_t * sq)
+{
 #define CUR_PROC "compute_performance"
 
-  int k, seq_len, success=1;
+  int k, seq_len, success = 1;
   /* log P[O | lambda, labeling] as computed by the forward algorithm */
   double log_p;
   /* sum over log P (calculated by forward_label) for all sequences
      used to compute the performance of the training */
   double log_p_sum = 0.0;
-  
+
   /* loop over all sequences */
-  for (k=0; k < sq->seq_number && success; k++) {
-    success=0;
+  for (k = 0; k < sq->seq_number && success; k++) {
+    success = 0;
     seq_len = sq->seq_len[k];
 
-    if (-1 != foba_label_logp(mo, sq->seq[k], sq->state_labels[k], seq_len, &log_p)) {
+    if (-1 !=
+        foba_label_logp (mo, sq->seq[k], sq->state_labels[k], seq_len,
+                         &log_p)) {
       success = 1;
       log_p_sum += log_p;
 
-      if (-1 != foba_logp(mo, sq->seq[k], seq_len, &log_p))
-	log_p_sum -= log_p;
+      if (-1 != foba_logp (mo, sq->seq[k], seq_len, &log_p))
+        log_p_sum -= log_p;
       else {
-	printf("foba_forward error in sequence %d, length: %d\n", k, seq_len);
-	success = 0;
+        printf ("foba_forward error in sequence %d, length: %d\n", k,
+                seq_len);
+        success = 0;
       }
     }
     else
-      printf("foba_label_forward error in sequence %d, length: %d\n", k, seq_len);
+      printf ("foba_label_forward error in sequence %d, length: %d\n", k,
+              seq_len);
   }
 
   /* return log_p_sum in success or +1.0 a probality of 0.0 on error */
@@ -236,7 +257,8 @@ double compute_performance(model* mo, sequence_t *sq) {
    @param sq:         struct of annotated sequences
    @param eta:        training parameter for gradient descent
  */
-int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
+int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
+{
 #define CUR_PROC "gradient_descent_onestep"
 
   int g, h, i, j, k;
@@ -256,52 +278,68 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
   double log_p;
 
   /* allocate memory for the parameters used for reestimation */
-  if (-1 == gradient_descent_galloc(&m_b, &m_a, &m_pi, mo)) return -1;
-  if (-1 == gradient_descent_galloc(&n_b, &n_a, &n_pi, mo)) return -1;
-    
+  if (-1 == gradient_descent_galloc (&m_b, &m_a, &m_pi, mo))
+    return -1;
+  if (-1 == gradient_descent_galloc (&n_b, &n_a, &n_pi, mo))
+    return -1;
+
   /* loop over all sequences */
-  for (k=0; k < sq->seq_number; k++) {
+  for (k = 0; k < sq->seq_number; k++) {
     seq_len = sq->seq_len[k];
 
-    if (-1 == reestimate_alloc_matvek(&alpha, &beta, &scale, seq_len, mo->N))
+    if (-1 == reestimate_alloc_matvek (&alpha, &beta, &scale, seq_len, mo->N))
       continue;
 
     /* calculate forward and backward variables without labels: */
-    if (-1 == foba_forward(mo, sq->seq[k], seq_len, alpha, scale, &log_p)){
-      printf("forward error!\n"); goto FREE;}
+    if (-1 == foba_forward (mo, sq->seq[k], seq_len, alpha, scale, &log_p)) {
+      printf ("forward error!\n");
+      goto FREE;
+    }
 
-    if (-1 == foba_backward(mo, sq->seq[k], seq_len, beta, scale)){
-      printf("backward error!\n"); goto FREE;}
-    
+    if (-1 == foba_backward (mo, sq->seq[k], seq_len, beta, scale)) {
+      printf ("backward error!\n");
+      goto FREE;
+    }
+
     /* compute n matrices (no labels): */
-    if (-1 == gradescent_compute_expectations(mo, alpha, beta, scale, sq->seq[k], seq_len, m_b, m_a, m_pi))
-      printf("Error in sequence %d, length %d (no labels)\n", k, seq_len);
+    if (-1 ==
+        gradescent_compute_expectations (mo, alpha, beta, scale, sq->seq[k],
+                                         seq_len, m_b, m_a, m_pi))
+      printf ("Error in sequence %d, length %d (no labels)\n", k, seq_len);
 
     /* calculate forward and backward variables with labels: */
-    if (-1 == foba_label_forward(mo, sq->seq[k], sq->state_labels[k], seq_len,
-				 alpha, scale, &log_p)){
-      printf("forward labels error!\n"); goto FREE;}
-    if (-1 == foba_label_backward(mo, sq->seq[k], sq->state_labels[k], seq_len,
-				  beta, scale, &log_p)){
-      printf("backward labels error!\n"); goto FREE;}
+    if (-1 ==
+        foba_label_forward (mo, sq->seq[k], sq->state_labels[k], seq_len,
+                            alpha, scale, &log_p)) {
+      printf ("forward labels error!\n");
+      goto FREE;
+    }
+    if (-1 ==
+        foba_label_backward (mo, sq->seq[k], sq->state_labels[k], seq_len,
+                             beta, scale, &log_p)) {
+      printf ("backward labels error!\n");
+      goto FREE;
+    }
 
     /* compute m matrices (labels): */
-    if (-1 == gradescent_compute_expectations(mo, alpha, beta, scale, sq->seq[k], seq_len, m_b, m_a, m_pi))
-	printf("Error in sequence %d, length %d (with labels)\n", k, seq_len);
+    if (-1 ==
+        gradescent_compute_expectations (mo, alpha, beta, scale, sq->seq[k],
+                                         seq_len, m_b, m_a, m_pi))
+      printf ("Error in sequence %d, length %d (with labels)\n", k, seq_len);
 
 
     /* reestimate model parameters: */
     /* PI */
     pi_sum = 0;
     /*  update */
-    for (i=0; i < mo->N; i++) {
+    for (i = 0; i < mo->N; i++) {
 
       if (mo->s[i].pi > 0.0) {
-	gradient = eta * (m_pi[i] - n_pi[i]);
-	if (mo->s[i].pi + gradient > EPS_PREC)
-	  mo->s[i].pi += gradient;
-	else
-	  mo->s[i].pi = EPS_PREC;
+        gradient = eta * (m_pi[i] - n_pi[i]);
+        if (mo->s[i].pi + gradient > EPS_PREC)
+          mo->s[i].pi += gradient;
+        else
+          mo->s[i].pi = EPS_PREC;
       }
 
       /* sum over new PI vector */
@@ -309,99 +347,101 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
     }
     if (pi_sum < EPS_PREC) {
       /* never get here */
-      fprintf(stderr, "Training ruined the model. You lose.\n");
+      fprintf (stderr, "Training ruined the model. You lose.\n");
       k = sq->seq_number;
       goto FREE;
     }
     /*  normalise */
-    for (i=0; i < mo->N; i++)
+    for (i = 0; i < mo->N; i++)
       mo->s[i].pi /= pi_sum;
 
     /* A */
-    for (i=0; i < mo->N; i++) {
+    for (i = 0; i < mo->N; i++) {
       a_row_sum = 0;
       /* update */
-      for (j=0; j < mo->s[i].out_states; j++) {
-	j_id = mo->s[i].out_id[j];
-	
-	gradient = eta*(m_a[i*mo->N + j_id] - n_a[i*mo->N + j_id])/(seq_len-1);
-	if (mo->s[i].out_a[j] + gradient > EPS_PREC)
-	  mo->s[i].out_a[j] += gradient;
-	else
-	  mo->s[i].out_a[j] = EPS_PREC;
+      for (j = 0; j < mo->s[i].out_states; j++) {
+        j_id = mo->s[i].out_id[j];
 
-	/* sum over rows of new A matrix */
-	a_row_sum += mo->s[i].out_a[j];
+        gradient =
+          eta * (m_a[i * mo->N + j_id] - n_a[i * mo->N + j_id]) / (seq_len -
+                                                                   1);
+        if (mo->s[i].out_a[j] + gradient > EPS_PREC)
+          mo->s[i].out_a[j] += gradient;
+        else
+          mo->s[i].out_a[j] = EPS_PREC;
+
+        /* sum over rows of new A matrix */
+        a_row_sum += mo->s[i].out_a[j];
       }
 
       if (a_row_sum < EPS_PREC) {
-	/* never get here */
-	fprintf(stderr, "Training ruined the model. You lose.\n");
-	k = sq->seq_number;
-	goto FREE;
+        /* never get here */
+        fprintf (stderr, "Training ruined the model. You lose.\n");
+        k = sq->seq_number;
+        goto FREE;
       }
       /* normalise */
-      for (j=0; j < mo->s[i].out_states; j++) {
-	mo->s[i].out_a[j] /= a_row_sum;
+      for (j = 0; j < mo->s[i].out_states; j++) {
+        mo->s[i].out_a[j] /= a_row_sum;
 
-	/* mirror out_a to corresponding in_a */
-	j_id = mo->s[i].out_id[j];
-	for (g=0; g < mo->s[j_id].in_states; g++)
-	  if (i == mo->s[j_id].in_id[g]) {
-	    mo->s[j_id].in_a[g] = mo->s[i].out_a[j];
-	    break;
-	  }
+        /* mirror out_a to corresponding in_a */
+        j_id = mo->s[i].out_id[j];
+        for (g = 0; g < mo->s[j_id].in_states; g++)
+          if (i == mo->s[j_id].in_id[g]) {
+            mo->s[j_id].in_a[g] = mo->s[i].out_a[j];
+            break;
+          }
       }
     }
 
     /* B */
-    for (i=0; i < mo->N; i++) {
+    for (i = 0; i < mo->N; i++) {
 
       /* don't update fix states */
       if (mo->s[i].fix)
-	continue;
+        continue;
 
       /* update */
-      size = model_ipow(mo, mo->M, mo->s[i].order);
-      for (h=0; h<size; h++) {
-	b_block_sum = 0;
-	for (g=0; g < mo->M; g++) {
-	  hist = h * mo->M + g;
-	  gradient = eta * (m_b[i][hist] - n_b[i][hist]) / seq_len;
-	  /* printf("gradient[%d][%d] = %g, m_b = %g, n_b = %g\n"
-	     , i, hist, gradient, m_b[i][hist], n_b[i][hist]); */
-	  if (gradient + mo->s[i].b[hist] > EPS_PREC)
-	    mo->s[i].b[hist] += gradient;
-	  else
-	    mo->s[i].b[hist] = EPS_PREC;
+      size = model_ipow (mo, mo->M, mo->s[i].order);
+      for (h = 0; h < size; h++) {
+        b_block_sum = 0;
+        for (g = 0; g < mo->M; g++) {
+          hist = h * mo->M + g;
+          gradient = eta * (m_b[i][hist] - n_b[i][hist]) / seq_len;
+          /* printf("gradient[%d][%d] = %g, m_b = %g, n_b = %g\n"
+             , i, hist, gradient, m_b[i][hist], n_b[i][hist]); */
+          if (gradient + mo->s[i].b[hist] > EPS_PREC)
+            mo->s[i].b[hist] += gradient;
+          else
+            mo->s[i].b[hist] = EPS_PREC;
 
-	  /* sum over M-length blocks of new B matrix */
-	  b_block_sum += mo->s[i].b[hist];
-	}
-	if (b_block_sum < EPS_PREC) {
-	  /* never get here */
-	  fprintf(stderr, "Training ruined the model. You lose.\n");
-	  k = sq->seq_number;
-	  goto FREE;
-	}
-	/* normalise */
-	for (g=0; g < mo->M; g++) {
-	  hist = h * mo->M + g;
-	  mo->s[i].b[hist] /= b_block_sum;
-	}
+          /* sum over M-length blocks of new B matrix */
+          b_block_sum += mo->s[i].b[hist];
+        }
+        if (b_block_sum < EPS_PREC) {
+          /* never get here */
+          fprintf (stderr, "Training ruined the model. You lose.\n");
+          k = sq->seq_number;
+          goto FREE;
+        }
+        /* normalise */
+        for (g = 0; g < mo->M; g++) {
+          hist = h * mo->M + g;
+          mo->s[i].b[hist] /= b_block_sum;
+        }
       }
     }
 
     /* restore "tied_to" property */
     if (mo->model_type & kTiedEmissions)
-      reestimate_update_tie_groups(mo);
-    
+      reestimate_update_tie_groups (mo);
+
   FREE:
-    reestimate_free_matvek(alpha, beta, scale, seq_len);
+    reestimate_free_matvek (alpha, beta, scale, seq_len);
   }
-  
-  gradient_descent_gfree(m_b, m_a, m_pi, mo->N);
-  gradient_descent_gfree(n_b, n_a, n_pi, mo->N);
+
+  gradient_descent_gfree (m_b, m_a, m_pi, mo->N);
+  gradient_descent_gfree (n_b, n_a, n_pi, mo->N);
 
   return 0;
 
@@ -420,82 +460,87 @@ int gradient_descent_onestep (model* mo, sequence_t* sq, double eta) {
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps) {
+int gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps)
+{
 #define CUR_PROC "gradient_descent_nstep"
 
-  int runs=0;
+  int runs = 0;
   int i;
   double cur_perf, last_perf;
-  model* last;
+  model *last;
 
-  last = (model*)model_copy(*mo);
-  last_perf = compute_performance(last, sq);
-  
+  last = (model *) model_copy (*mo);
+  last_perf = compute_performance (last, sq);
+
   while (eta > EPS_PREC && runs < no_steps) {
     runs++;
-    if (-1==gradient_descent_onestep(*mo, sq, eta)) {
-      model_free(&last); return -1;}
-    cur_perf = compute_performance(*mo, sq);
+    if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
+      model_free (&last);
+      return -1;
+    }
+    cur_perf = compute_performance (*mo, sq);
 
     if (last_perf < cur_perf) {
       /* if model is degenerated, lower eta and try again */
       if (cur_perf > 0.0) {
-	printf("current performance = %g\n", cur_perf);
-	model_free(mo);
-	*mo = (model*)model_copy(last);
-	eta *= .5;
+        printf ("current performance = %g\n", cur_perf);
+        model_free (mo);
+        *mo = (model *) model_copy (last);
+        eta *= .5;
       }
       else {
-	/* Improvement insignificant, assume convergence */
-	if (fabs(last_perf-cur_perf) < cur_perf*(-1e-8)) {
-	  model_free(&last);
-	  printf("convergence after %d steps.\n", runs);
-	  return 0;
-	}
-	
-	if (runs<175 || 0==runs%50)
-	  printf("Performance: %g\t improvement: %g\t step %d\n", cur_perf,
-		 cur_perf-last_perf, runs);
+        /* Improvement insignificant, assume convergence */
+        if (fabs (last_perf - cur_perf) < cur_perf * (-1e-8)) {
+          model_free (&last);
+          printf ("convergence after %d steps.\n", runs);
+          return 0;
+        }
 
-	/* significant improvement, next iteration */
-	model_free(&last);
-	last = (model*)model_copy(*mo);
-	last_perf = cur_perf;
-	eta *= 1.07;
+        if (runs < 175 || 0 == runs % 50)
+          printf ("Performance: %g\t improvement: %g\t step %d\n", cur_perf,
+                  cur_perf - last_perf, runs);
+
+        /* significant improvement, next iteration */
+        model_free (&last);
+        last = (model *) model_copy (*mo);
+        last_perf = cur_perf;
+        eta *= 1.07;
       }
     }
     /* no improvement */
     else {
 
-      if (runs<175 || 0==runs%50)
-	printf("Performance: %g\t !IMPROVEMENT: %g\t step %d\n", cur_perf,
-	       cur_perf-last_perf, runs);
+      if (runs < 175 || 0 == runs % 50)
+        printf ("Performance: %g\t !IMPROVEMENT: %g\t step %d\n", cur_perf,
+                cur_perf - last_perf, runs);
 
       /* try another training step */
       runs++;
       eta *= .85;
-      if (-1==gradient_descent_onestep(*mo, sq, eta)) {
-	model_free(&last); return -1;}
-      cur_perf = compute_performance(*mo, sq);
-      printf("Performance: %g\t ?Improvement: %g\t step %d\n", cur_perf,
-	     cur_perf-last_perf, runs);
+      if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
+        model_free (&last);
+        return -1;
+      }
+      cur_perf = compute_performance (*mo, sq);
+      printf ("Performance: %g\t ?Improvement: %g\t step %d\n", cur_perf,
+              cur_perf - last_perf, runs);
       /* improvement, save and proceed with next iteration */
       if (last_perf < cur_perf && cur_perf < 0.0) {
-	model_free(&last);
-	last = (model*)model_copy(*mo);
-	last_perf = cur_perf;
+        model_free (&last);
+        last = (model *) model_copy (*mo);
+        last_perf = cur_perf;
       }
       /* still no improvement, revert to saved model */
       else {
-	runs--;
-	model_free(mo);
-	*mo = (model*)model_copy(last);
-	eta *= .9;
+        runs--;
+        model_free (mo);
+        *mo = (model *) model_copy (last);
+        eta *= .9;
       }
     }
   }
-  
-  model_free(&last);	 
+
+  model_free (&last);
   return 0;
 
 #undef CUR_PROC
