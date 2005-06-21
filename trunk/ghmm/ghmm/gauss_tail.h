@@ -50,21 +50,19 @@ extern "C" {
 /*@{ */
 /**
  */
-double pmue(double mue, double A, double B, double eps);
+  double pmue (double mue, double A, double B, double eps);
 
 /**
  */
-double pmue_umin(double mue, double A, double B, double eps);
+  double pmue_umin (double mue, double A, double B, double eps);
 
 /** 
     @name Function to find the roots of the truncated normal density function.
 */
-double pmue_interpol(double mue, double A, double B, double eps);
+  double pmue_interpol (double mue, double A, double B, double eps);
 
 #ifdef __cplusplus
 }
 #endif
-
-
 /*@} */
-#endif /* GAUSS_TAIL_H */
+#endif                          /* GAUSS_TAIL_H */

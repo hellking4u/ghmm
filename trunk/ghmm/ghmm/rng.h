@@ -68,7 +68,7 @@ typedef gsl_rng GHMM_RNG;
 
 /**
  */
-extern GHMM_RNG * RNG;
+extern GHMM_RNG *RNG;
 
 
 #ifdef __cplusplus
@@ -77,22 +77,20 @@ extern "C" {
 
 /**
  */
-void ghmm_rng_init(void);
+  void ghmm_rng_init (void);
 
 /**
  */
-void ghmm_rng_timeseed(GHMM_RNG * r);
+  void ghmm_rng_timeseed (GHMM_RNG * r);
 
 
 #ifndef DO_WITH_GSL
-void  ghmm_rng_set(GHMM_RNG * aState, unsigned long int seed);
-double ghmm_rng_uniform (GHMM_RNG * r);
-const char *ghmm_rng_name (GHMM_RNG * r);
+  void ghmm_rng_set (GHMM_RNG * aState, unsigned long int seed);
+  double ghmm_rng_uniform (GHMM_RNG * r);
+  const char *ghmm_rng_name (GHMM_RNG * r);
 #endif
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* RNG_H */
-
+#endif                          /* RNG_H */

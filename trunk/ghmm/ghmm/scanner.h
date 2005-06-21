@@ -38,7 +38,7 @@
 
 #include <stdio.h>
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -52,103 +52,103 @@ extern "C" {
 
 /*
  */
-typedef struct scanner_t {
+  typedef struct scanner_t {
   /** Input file with parameters */
-  FILE* fp;              
+    FILE *fp;
   /** Name of the input file */
-  char* filename;        
+    char *filename;
   /** Current line */
-  int   line;            
+    int line;
   /** Position in the current text line          */
-  int   pos;             
+    int pos;
   /** Maximal length of the identifier           */
-  int   idlen;           
+    int idlen;
   /** Identifier                                 */
-  char* id;              
+    char *id;
   /** Maximal length of the text line            */
-  int   txtlen;          
+    int txtlen;
   /** Contains the current line text (used for error message) */
-  char* txt;             
+    char *txt;
   /** Current char                               */
-  char  c;               
+    char c;
   /** Current char is escaped by '\'             */
-  char  esc;             
+    char esc;
   /** err == 0 : OK                              */
-  char  err;             
+    char err;
   /** eof == 1 : end of file reached             */
-  char  eof;             
-  
+    char eof;
+
   /** Is set after the first use of length units */
-  int   resolution_used; 
+    int resolution_used;
   /** x-size of one dot in inch;                 */
-  float x_resolution;    
+    float x_resolution;
   /** y-size of one dot in inch;                 */
-  float y_resolution;    
+    float y_resolution;
 
-  float x_scale;
-  float y_scale;
-} scanner_t;
-
-  /**
-   */
-scanner_t* scanner_alloc(const char* filename );
-  /**
-   */
-int        scanner_consume( scanner_t* s, char ch );
-  /**
-   */
-int        scanner_consume_block( scanner_t* s );
-  /**
-   */
-int        scanner_error( scanner_t* s, char* message );
-  /**
-   */
-int        scanner_free( scanner_t** s );
-  /**
-   */
-int        scanner_free_array( int* len, void***arr );
+    float x_scale;
+    float y_scale;
+  } scanner_t;
 
   /**
    */
-void*      scanner_get_array( scanner_t* s, int*len, char* type );
+  scanner_t *scanner_alloc (const char *filename);
   /**
    */
-double     scanner_get_double( scanner_t* s );
+  int scanner_consume (scanner_t * s, char ch);
   /**
    */
-double     scanner_get_edouble( scanner_t* s );
+  int scanner_consume_block (scanner_t * s);
   /**
    */
-int        scanner_get_id( scanner_t* s );
+  int scanner_error (scanner_t * s, char *message);
   /**
    */
-int        scanner_get_int( scanner_t* s );
+  int scanner_free (scanner_t ** s);
   /**
    */
-int        scanner_get_name( scanner_t* s );
+  int scanner_free_array (int *len, void ***arr);
+
   /**
    */
-char*      scanner_get_path( scanner_t* s );
+  void *scanner_get_array (scanner_t * s, int *len, char *type);
   /**
    */
-char*      scanner_get_str( scanner_t* s, int* len, int cmode );
+  double scanner_get_double (scanner_t * s);
   /**
    */
-double**   scanner_get_d_matrix(scanner_t* s, int*rows, int*cols);
+  double scanner_get_edouble (scanner_t * s);
+  /**
+   */
+  int scanner_get_id (scanner_t * s);
+  /**
+   */
+  int scanner_get_int (scanner_t * s);
+  /**
+   */
+  int scanner_get_name (scanner_t * s);
+  /**
+   */
+  char *scanner_get_path (scanner_t * s);
+  /**
+   */
+  char *scanner_get_str (scanner_t * s, int *len, int cmode);
+  /**
+   */
+  double **scanner_get_d_matrix (scanner_t * s, int *rows, int *cols);
 
 /**************************/
   /**
    */
-int        scanner_get_index(scanner_t* s, int n);
+  int scanner_get_index (scanner_t * s, int n);
   /**
    */
-int        scanner_get_length_x(scanner_t* s);
+  int scanner_get_length_x (scanner_t * s);
   /**
    */
-int        scanner_get_length_y(scanner_t* s);
+  int scanner_get_length_y (scanner_t * s);
   /**
    */
-double     scanner_get_resolution(scanner_t* s);
+  double scanner_get_resolution (scanner_t * s);
 
   /**
    */
@@ -188,8 +188,7 @@ double     scanner_get_resolution(scanner_t* s);
 
   /*@} scanner section */
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
-
-#endif /* SCANNER_H */
+#endif                          /* SCANNER_H */

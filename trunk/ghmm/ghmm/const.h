@@ -91,7 +91,7 @@
 /**
    A value that is put in for log_p in the calculation of
    the objective function if sfoba_logp returns -1 (error).
-*/   
+*/
 #define PENALTY_LOGP -500.0
 
 /**

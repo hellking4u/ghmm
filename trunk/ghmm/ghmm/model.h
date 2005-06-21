@@ -48,91 +48,86 @@ extern "C" {
     has an ID (== index) to be used for the arrays background_distributions.order
     and background_distributions.b
 */
-struct background_distributions {
+  struct background_distributions {
   /** Number of distributions */
-  int n;
+    int n;
   /** Number of symbols in alphabet */
-  int m;
+    int m;
   /** Order of the respective distribution */
-  int* order;
-  /** The probabilities */ 
-  double **b;
-};
-typedef struct background_distributions background_distributions;
+    int *order;
+  /** The probabilities */
+    double **b;
+  };
+  typedef struct background_distributions background_distributions;
 
 
 /** @name state
     The basic structure, keeps all parameters that belong to a state. 
 */
-struct state {
-  /** Initial probability */ 
-  double pi;
+  struct state {
+  /** Initial probability */
+    double pi;
   /** Output probability */
-  double *b;
-  int order;
-  
-  /** IDs of the following states */ 
-  int *out_id;  
-  /** IDs of the previous states */    
-  int *in_id;
+    double *b;
+    int order;
 
-  /** transition probs to successor states. */
-  double *out_a; 
-  /** transition probs from predecessor states. */ 
-  double *in_a;
+  /** IDs of the following states */
+    int *out_id;
+  /** IDs of the previous states */
+    int *in_id;
 
-  /** Transition probability to a successor 
-      double *out_a; */
-  /** Transition probablity to a precursor 
-      double *in_a;*/
+  /** transition probabilities to successor states. */
+    double *out_a;
+  /** transition probabilities from predecessor states. */
+    double *in_a;
 
-  /** Number of successor states */     
-  int out_states; 
+  /** Number of successor states */
+    int out_states;
   /** Number of precursor states */
-  int in_states;  
+    int in_states;
   /** if fix == 1 --> b stays fix during the training */
-  int fix;
+    int fix;
 
-  int label;
-    
-};
-typedef struct state state;
+    int label;
+
+  };
+  typedef struct state state;
 
 /** @name model
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct model {
+  struct model {
   /** Number of states */
-  int N;
-  /** Number of outputs */   
-  int M;   
+    int N;
+  /** Number of outputs */
+    int M;
   /** Vector of the states */
-  state *s; 
+    state *s;
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
       distributions*/
-  double prior;
+    double prior;
 
-  /* contains a arbitrary name for the model */
-  char* name;
-  
+    /* contains a arbitrary name for the model */
+    char *name;
+
    /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
-  int model_type;
+    int model_type;
 
   /** Flag variables for each state indicating whether it is emitting
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
-  int* silent; /*AS*/
-
+    int *silent;
+      /*AS*/
   /** Int variable for the maximum level of higher order emissions */
-  int maxorder;
+    int maxorder;
   /** saves the history of emissions as int, 
       the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
       see ...*/
-  int emission_history;
+    int emission_history;
 
   /** Flag variables for each state indicating whether the states emissions
       are tied to another state. Groups of tied states are represented
@@ -145,8 +140,8 @@ struct model {
       tied_to[t] == s        : t is tied to state s
 
       Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
-  int* tied_to; 
-  
+    int *tied_to;
+
   /** Note: State store order information of the emissions.
       Classic HMMS have emission order 0, that is the emission probability
       is conditioned only on the state emitting the symbol.
@@ -158,7 +153,7 @@ struct model {
       set state.order.
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
-  
+
   /** background_distributions is a pointer to a
       background_distributions structure, which holds (essentially) an
       array of background distributions (which are just vectors of floating
@@ -170,85 +165,81 @@ struct model {
 
 
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
-  int *background_id;
-  background_distributions* bp;
+    int *background_id;
+    background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
    */
-  int* topo_order; 
-  int  topo_order_length;
+    int *topo_order;
+    int topo_order_length;
 
   /** pow_lookup is a array of precomputed powers
 
       It contains in the i-th entry M (alphabet size) to the power of i
       The last entry is maxorder+1
   */
-  int *pow_lookup;
+    int *pow_lookup;
 
-};
-typedef struct model model;
+  };
+  typedef struct model model;
 
 
 /** @name model_direct
     The complete HMM. Keeps the model parameters in a matrix form. 
 */
-struct model_direct {
+  struct model_direct {
   /** Number of states */
-  int N;
-  /** Number of outputs */  
-  int M;
+    int N;
+  /** Number of outputs */
+    int M;
   /** Prior for the a priori probability for the model.
       Gets the value -1 if no prior defined. */
-  double prior;
+    double prior;
   /** Transition matrix  */
-  double **A;
+    double **A;
   /** Output matrix */
-  double **B;
+    double **B;
   /** Initial matrix */
-  double* Pi;
+    double *Pi;
   /** A vector to know the states where the output should not be trained.
       Default value is 0 for all states. */
-  int *fix_state;
+    int *fix_state;
 
-  /* XXX additional struct members not addedd here; model_direct is 
-     depreciated anyways. Not used by C++ interface */
+    /* XXX additional struct members not addedd here; model_direct is 
+       depreciated anyways. Not used by C++ interface */
 
-};
-typedef struct model_direct model_direct;
+  };
+  typedef struct model_direct model_direct;
 
 /** @name hmm_check_t
     Checks the consistence of the model
   */
-struct hmm_check_t {
+  struct hmm_check_t {
   /** Number of rows in the A matrix */
-  int r_a;
+    int r_a;
   /** Number of columns in the A matrix */
-  int c_a;
+    int c_a;
   /** Number of rows in the B matrix */
-  int r_b;
+    int r_b;
   /** Number of columns in the B matrix */
-  int c_b;
+    int c_b;
   /** Length of the phi vector */
-  int len_pi;
+    int len_pi;
   /** Length of the fix vector */
-  int len_fix;
-};
-typedef struct hmm_check_t hmm_check_t;
+    int len_fix;
+  };
+  typedef struct hmm_check_t hmm_check_t;
 
 #ifdef __cplusplus
 }
 #endif
-
-
 /*
   Important: The inclusion of sequence.h ist not done before this point in
   order to avoid error by compiling.
 */
 #include <ghmm/sequence.h>
 #include <ghmm/scanner.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -258,12 +249,12 @@ extern "C" {
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
     uses if appropiate lookup table from struct model */
-inline int model_ipow(const model* mo, int x, unsigned int n);
+  inline int model_ipow (const model * mo, int x, unsigned int n);
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
     @param mo:  pointer to a model */
-int     model_free(model **mo);
+  int model_free (model ** mo);
 
 /**
    Reads in ASCII data to initialize an array of models. Memory allocation for
@@ -271,7 +262,7 @@ int     model_free(model **mo);
    @return array of pointers to the models
    @param filename:   the ASCII input file
    @param mo_number:  filled with number of models read */
-model** model_read(char *filename, int *mo_number);
+  model **model_read (char *filename, int *mo_number);
 
 /**
    Reads in a model, where the model parameters are explicit given in
@@ -280,7 +271,7 @@ model** model_read(char *filename, int *mo_number);
    @param s:       scanner
    @param multip:  multiplicity; gives how many copies should 
    be made of the model */
-model*  model_direct_read(scanner_t *s, int *multip);
+  model *model_direct_read (scanner_t * s, int *multip);
 
 /**
    Produces simple left-right models given sequences. 
@@ -290,7 +281,7 @@ model*  model_direct_read(scanner_t *s, int *multip);
    @return vector of models
    @param s:          scanner
    @param new_models: number of models to produce */
-model **model_from_sequence_ascii(scanner_t *s, long *mo_number);
+  model **model_from_sequence_ascii (scanner_t * s, long *mo_number);
 
 /** 
     Produces simple left-right models given sequences. The sequences
@@ -298,27 +289,27 @@ model **model_from_sequence_ascii(scanner_t *s, long *mo_number);
     @return vector of models
     @param s:          scanner
     @param new_models: number of models to produce */
-model **model_from_sequence(sequence_t *sq, long *mo_number);
+  model **model_from_sequence (sequence_t * sq, long *mo_number);
 
 /**
    Copies a given model. Allocates the necessary memory.
    @return copy of the model
    @param mo:  model to copy */
-model*  model_copy(const model *mo);
+  model *model_copy (const model * mo);
 
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
    @return 0 for succes; -1 for error
    @param mo:  model to test */
-int     model_check(const model* mo);
+  int model_check (const model * mo);
 
 /**
    Tests if number of states and number of outputs in the models match.
    @return 0 for succes; -1 for error
    @param mo:           vector of models
    @param model_number: numbr of models */
-int     model_check_compatibility(model **mo, int model_number);
+  int model_check_compatibility (model ** mo, int model_number);
 
 /**
    Produces a model, which generates the given sequence with probability 1.
@@ -330,8 +321,8 @@ int     model_check_compatibility(model **mo, int model_number);
    @param seq_len:  length of the sequence
    @param anz_symb: number of symbols in the sequence
 */
-model*  model_generate_from_sequence(const int *seq, int seq_len, 
-				     int anz_symb);
+  model *model_generate_from_sequence (const int *seq, int seq_len,
+                                       int anz_symb);
 
 /** 
     Produces sequences to a given model. All memory that is needed for the 
@@ -348,8 +339,8 @@ model*  model_generate_from_sequence(const int *seq, int seq_len,
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
-				     long seq_number,int Tmax);
+  sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
+                                        long seq_number, int Tmax);
 
 /**
    Calculates the sum log( P( O | lambda ) ).
@@ -358,7 +349,7 @@ sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
    @param mo model
    @param sq sequences       
 */
-double model_likelihood(model *mo, sequence_t *sq);
+  double model_likelihood (model * mo, sequence_t * sq);
 
 
 /**
@@ -370,14 +361,14 @@ double model_likelihood(model *mo, sequence_t *sq);
     @param prob probabilitys
     
 */
-void model_set_transition(model *mo, int i, int j, double prob);
+  void model_set_transition (model * mo, int i, int j, double prob);
 
 /**
    Writes a model in matrix format.
    @param file: output file
    @param mo:   model
 */
-void model_print(FILE *file, model *mo); 
+  void model_print (FILE * file, model * mo);
 
 /**
    Writes transition matrix of a model.
@@ -387,8 +378,8 @@ void model_print(FILE *file, model *mo);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void model_A_print(FILE *file, model *mo, char *tab, char *separator, 
-		   char *ending);
+  void model_A_print (FILE * file, model * mo, char *tab, char *separator,
+                      char *ending);
 /**
    Writes output matrix of a model.
    @param file: output file
@@ -397,8 +388,8 @@ void model_A_print(FILE *file, model *mo, char *tab, char *separator,
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void model_B_print(FILE *file, model *mo, char *tab, char *separator, 
-		   char *ending);
+  void model_B_print (FILE * file, model * mo, char *tab, char *separator,
+                      char *ending);
 /**
    Writes initial allocation vector of a matrix.
    @param file: output file
@@ -407,8 +398,8 @@ void model_B_print(FILE *file, model *mo, char *tab, char *separator,
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void model_Pi_print(FILE *file, model *mo, char *tab, char *separator, 
-		    char *ending);
+  void model_Pi_print (FILE * file, model * mo, char *tab, char *separator,
+                       char *ending);
 /**
    Writes fix vector of a matrix.
    @param file: output file
@@ -417,8 +408,8 @@ void model_Pi_print(FILE *file, model *mo, char *tab, char *separator,
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void model_fix_print(FILE *file, model *mo, char *tab, char *separator, 
-		     char *ending);
+  void model_fix_print (FILE * file, model * mo, char *tab, char *separator,
+                        char *ending);
 /**
    Writes transposed transition matrix of a model.
    @param file: output file
@@ -427,8 +418,8 @@ void model_fix_print(FILE *file, model *mo, char *tab, char *separator,
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void model_A_print_transp(FILE *file, model *mo, char *tab, char *separator, 
-			  char *ending);
+  void model_A_print_transp (FILE * file, model * mo, char *tab,
+                             char *separator, char *ending);
 /**
    Writes transposed output matrix of a model.
    @param file: output file
@@ -436,9 +427,9 @@ void model_A_print_transp(FILE *file, model *mo, char *tab, char *separator,
    @param tab:  format: leading Tabs
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
-*/   
-void model_B_print_transp(FILE *file, model *mo, char *tab, char *separator, 
-			  char *ending);
+*/
+  void model_B_print_transp (FILE * file, model * mo, char *tab,
+                             char *separator, char *ending);
 
 /**
    Writes transposed initial allocation vector of a matrix.
@@ -448,7 +439,8 @@ void model_B_print_transp(FILE *file, model *mo, char *tab, char *separator,
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-void model_Pi_print_transp(FILE *file, model *mo, char *tab, char *ending);
+  void model_Pi_print_transp (FILE * file, model * mo, char *tab,
+                              char *ending);
 
 /**
    Writes a HMM in matrix format. The input model must be of type
@@ -457,7 +449,7 @@ void model_Pi_print_transp(FILE *file, model *mo, char *tab, char *ending);
    @param mo_d:   model of type model_direct
    @param multip: number of copies to write
 */
-void model_direct_print(FILE *file, model_direct *mo_d, int multip);
+  void model_direct_print (FILE * file, model_direct * mo_d, int multip);
 
 /** 
     Writes the parameters of a model sorted by states. 
@@ -465,7 +457,7 @@ void model_direct_print(FILE *file, model_direct *mo_d, int multip);
     @param file: output file
     @param mo:   model
 */
-void model_states_print(FILE *file, model *mo); 
+  void model_states_print (FILE * file, model * mo);
 
 /** 
     Frees all memory from a model, sets the pointers to NULL and 
@@ -473,7 +465,7 @@ void model_states_print(FILE *file, model *mo);
     @param mo_d  HMM structure (\Ref{struct model_direct})
     @param check Check structure (\Ref{struct hmm_check_t})
 */
-void model_direct_clean(model_direct *mo_d, hmm_check_t *check); 
+  void model_direct_clean (model_direct * mo_d, hmm_check_t * check);
 
 /** 
     Tests compatibility of the model components.
@@ -481,7 +473,7 @@ void model_direct_clean(model_direct *mo_d, hmm_check_t *check);
     @param mo_d  HMM structure  (\Ref{struct model_direct})
     @param check Check structure  (\Ref{struct hmm_check_t})
 */
-int model_direct_check_data(model_direct *mo_d, hmm_check_t *check); 
+  int model_direct_check_data (model_direct * mo_d, hmm_check_t * check);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -494,7 +486,8 @@ int model_direct_check_data(model_direct *mo_d, hmm_check_t *check);
     @param verbose  flag, whether to monitor distance in 40 steps.
                     Prints to stdout (yuk!)
 */
-double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
+  double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
+                              int verbose);
 
 /** 
     Frees all memory from a state, sets the pointers to NULL and 
@@ -502,10 +495,12 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
     @author Peter Pipenbacher
     @param my_state  state to clean (\Ref{struct state})
 */
-void state_clean(state *my_state); 
+  void state_clean (state * my_state);
 
 
-sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
+  sequence_t *model_label_generate_sequences (model * mo, int seed,
+                                              int global_len, long seq_number,
+                                              int Tmax);
 
 
 /** 
@@ -516,8 +511,8 @@ sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, 
 	@param   j:  state id 
 	@param obs:  integer observation to be updated with
 	@param   t:  position of obs in sequence (time)
-*/ 
-inline int get_emission_index (model* mo, int j , int obs, int t );
+*/
+  inline int get_emission_index (model * mo, int j, int obs, int t);
 
 /**
 	Updates emission history of model mo, discarding the oldest and 'adding' the
@@ -525,7 +520,7 @@ inline int get_emission_index (model* mo, int j , int obs, int t );
 	@param  mo:  model to be updated
 	@param obs:  integer observation to be updated with
 */
-inline void update_emission_history(model* mo, int obs);
+  inline void update_emission_history (model * mo, int obs);
 
 /**
 	Updates emission history of model mo for backward algorithm by 'adding'
@@ -535,7 +530,7 @@ inline void update_emission_history(model* mo, int obs);
 	@param  mo:  model to be updated
 	@param obs:  integer observation to be updated with
 */
-inline void update_emission_history_front(model* mo, int obs);
+  inline void update_emission_history_front (model * mo, int obs);
 
 
 /**
@@ -545,7 +540,7 @@ inline void update_emission_history_front(model* mo, int obs);
     @return 0 if normalization went through
     @param mo: model to be normalized
 */
-int model_normalize(model* mo);
+  int model_normalize (model * mo);
 
 /**
    Add a specific level of noise to the model parameters
@@ -555,7 +550,7 @@ int model_normalize(model* mo);
                         a noise level of 0.0 doesn't change the model
    @param seed :        seed for ramdom number generator
 */
-int model_add_noise(model* mo, double level, int seed);
+  int model_add_noise (model * mo, double level, int seed);
 
 
 /** 
@@ -568,7 +563,7 @@ int model_add_noise(model* mo, double level, int seed);
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-int model_apply_duration(model* mo, int cur, int times);
+  int model_apply_duration (model * mo, int cur, int times);
 
 
 /**
@@ -580,7 +575,7 @@ int model_apply_duration(model* mo, int cur, int times);
    @param background_weight:   a parameter controlling the weight given to the
                                background. Note, should be between 0 and 1.
 */
-int model_apply_background(model *mo, double* background_weight);
+  int model_apply_background (model * mo, double *background_weight);
 
 
 /** 
@@ -593,10 +588,14 @@ int model_apply_background(model *mo, double* background_weight);
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-background_distributions *model_alloc_background_distributions(int n,int m, int *orders, double **B);
+  background_distributions *model_alloc_background_distributions (int n,
+                                                                  int m,
+                                                                  int *orders,
+                                                                  double **B);
 
-background_distributions *model_copy_background_distributions(background_distributions *bg);
-int model_free_background_distributions(background_distributions *bg);
+  background_distributions
+    *model_copy_background_distributions (background_distributions * bg);
+  int model_free_background_distributions (background_distributions * bg);
 
 /**
    Calculates the background distribution for a sequence_t
@@ -609,7 +608,7 @@ int model_free_background_distributions(background_distributions *bg);
    @param sq  : a pointer to a sequence_t struct
    
 */
-int model_get_uniform_background(model* mo, sequence_t* sq);
+  int model_get_uniform_background (model * mo, sequence_t * sq);
 
 
 /**
@@ -618,7 +617,7 @@ int model_get_uniform_background(model* mo, sequence_t* sq);
    @return copy of the state
    @param my_state:  state to copy */
 #if 0
-  state* state_copy(state *my_state);
+  state *state_copy (state * my_state);
 #endif
 
 /**
@@ -627,14 +626,11 @@ int model_get_uniform_background(model* mo, sequence_t* sq);
    @param source:  state to copy
    @param dest:    destination */
 #if 0
-  void state_copy_to(state *source, state* dest);
+  void state_copy_to (state * source, state * dest);
 #endif
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif
-
-
 /*@} (Doc++-Group: model) */

@@ -53,5 +53,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif // SDFOBA_H
+#endif                          // SDFOBA_H

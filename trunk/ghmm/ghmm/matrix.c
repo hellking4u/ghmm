@@ -51,109 +51,123 @@
 #include "randvar.h"
 #include "mes.h"
 
-static void lrdecomp(int dim, double **a, double *p);
-static void lyequalsb(double **a, double *b, double *p, int dim, double *y);
-static void ltranspxequalsy(double **a, double *y, double *p, int dim, 
-			    double *x);
+static void lrdecomp (int dim, double **a, double *p);
+static void lyequalsb (double **a, double *b, double *p, int dim, double *y);
+static void ltranspxequalsy (double **a, double *y, double *p, int dim,
+                             double *x);
 
 /*============================================================================*/
 
-int matrix_d_read(scanner_t *s, double **matrix, int max_zeile, int max_spalte){
+int matrix_d_read (scanner_t * s, double **matrix, int max_zeile,
+                   int max_spalte)
+{
 #define CUR_PROC "matrix_d_read"
-  int len =0, zeile = 0;
-  scanner_consume(s, '{'); if (s->err) return(-1);
-  while( !s->eof && !s->err && s->c - '}') {
+  int len = 0, zeile = 0;
+  scanner_consume (s, '{');
+  if (s->err)
+    return (-1);
+  while (!s->eof && !s->err && s->c - '}') {
     if (zeile >= max_zeile) {
-      scanner_error(s, "too many rows in matrix");
-      return(-1);
-    } 
-    /* Memory allocation takes place in scanner_get_double_earray */
-    matrix[zeile] = scanner_get_double_earray(s, &len);
-    if (len != max_spalte) {
-      scanner_error(s, "wrong number of elements in matrix");
-      return(-1);
+      scanner_error (s, "too many rows in matrix");
+      return (-1);
     }
-    scanner_consume(s, ';'); 
+    /* Memory allocation takes place in scanner_get_double_earray */
+    matrix[zeile] = scanner_get_double_earray (s, &len);
+    if (len != max_spalte) {
+      scanner_error (s, "wrong number of elements in matrix");
+      return (-1);
+    }
+    scanner_consume (s, ';');
     if (s->err) {
-      scanner_error(s, "missing ';' or wrong number of columns");
-      return(-1);
+      scanner_error (s, "missing ';' or wrong number of columns");
+      return (-1);
     }
     zeile++;
   }
-  scanner_consume(s, '}'); if (s->err) return(-1);
-  if (zeile < max_zeile){
-    scanner_error(s, "rows missing in matrix");
-    return(-1);
-  } 
-  return(0);  
+  scanner_consume (s, '}');
+  if (s->err)
+    return (-1);
+  if (zeile < max_zeile) {
+    scanner_error (s, "rows missing in matrix");
+    return (-1);
+  }
+  return (0);
 #undef CUR_PROC
-} /* matrix_d_read */
+}                               /* matrix_d_read */
 
 /*============================================================================*/
 
-int matrix_i_read(scanner_t *s, int **matrix, int max_zeile, int max_spalte) {
-#define CUR_PROC "matrix_i_read" 
-  int len =0, zeile = 0;
-  scanner_consume(s, '{'); if (s->err) return(-1);
-  while( !s->eof && !s->err && s->c - '}') {
+int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
+{
+#define CUR_PROC "matrix_i_read"
+  int len = 0, zeile = 0;
+  scanner_consume (s, '{');
+  if (s->err)
+    return (-1);
+  while (!s->eof && !s->err && s->c - '}') {
     if (zeile >= max_zeile) {
-      scanner_error(s, "too many rows in matrix");
-      return(-1);
-    } 
-    /* Memory allocation takes place in scanner_get_int_array */
-    matrix[zeile] = scanner_get_int_array(s, &len);
-    if (len != max_spalte) {
-      scanner_error(s, "wrong number of elements in matrix");
-      return(-1);
+      scanner_error (s, "too many rows in matrix");
+      return (-1);
     }
-    scanner_consume(s, ';'); 
+    /* Memory allocation takes place in scanner_get_int_array */
+    matrix[zeile] = scanner_get_int_array (s, &len);
+    if (len != max_spalte) {
+      scanner_error (s, "wrong number of elements in matrix");
+      return (-1);
+    }
+    scanner_consume (s, ';');
     if (s->err) {
-      scanner_error(s, "missing ';' or wrong number of columns");
-      return(-1);
+      scanner_error (s, "missing ';' or wrong number of columns");
+      return (-1);
     }
     zeile++;
   }
-  scanner_consume(s, '}'); if (s->err) return(-1);
-  if (zeile < max_zeile){
-    scanner_error(s, "rows missing in matrix");
-    return(-1);
-  } 
-  return(0);  
+  scanner_consume (s, '}');
+  if (s->err)
+    return (-1);
+  if (zeile < max_zeile) {
+    scanner_error (s, "rows missing in matrix");
+    return (-1);
+  }
+  return (0);
 #undef CUR_PROC
-} /* matrix_i_read */
+}                               /* matrix_i_read */
 
 /*============================================================================*/
 
 /* allocation of matrices with fixed dimensions  */
-double** stat_matrix_d_alloc(int n, int m) {
+double **stat_matrix_d_alloc (int n, int m)
+{
 #define CUR_PROC "stat_matrix_d_alloc"
   int i, j;
   double **A;
   double *tmp;
-  
-  if (!(A=mes_calloc(n * sizeof(*A) +  n * m * sizeof(**A)))) {
-	mes_proc(); 
-	goto STOP;
+
+  if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) {
+    mes_proc ();
+    goto STOP;
   }
-  
-  tmp = (double*)(A + n);
+
+  tmp = (double *) (A + n);
   for (i = 0; i < n; i++) {
     A[i] = tmp;
     tmp += m;
   }
   return A;
 STOP:
-  stat_matrix_d_free(&A);
+  stat_matrix_d_free (&A);
   return NULL;
 #undef CUR_PROC
 }
 
 
-int stat_matrix_d_free(double ***matrix) {
+int stat_matrix_d_free (double ***matrix)
+{
 #define CUR_PROC "stat_matrix_d_free"
-  mes_check_ptr(matrix, return(-1));
-  if ( !*matrix) return(0);
-  free(*matrix);
+  mes_check_ptr (matrix, return (-1));
+  if (!*matrix)
+    return (0);
+  free (*matrix);
   return 0;
 #undef CUR_PROC
 }
@@ -161,34 +175,37 @@ int stat_matrix_d_free(double ***matrix) {
 /*============================================================================*/
 
 /* allocation of matrices with fixed dimensions  */
-int** stat_matrix_i_alloc(int n, int m) {
+int **stat_matrix_i_alloc (int n, int m)
+{
 #define CUR_PROC "stat_matrix_i_alloc"
   int i, j;
   int **A;
   int *tmp;
-  if (!(A=mes_calloc(n * sizeof(*A) +  n * m * sizeof(**A)))) {
-	mes_proc(); 
-	goto STOP;
+  if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) {
+    mes_proc ();
+    goto STOP;
   }
-  
-  tmp = (int*)(A + n);
+
+  tmp = (int *) (A + n);
   for (i = 0; i < n; i++) {
     A[i] = tmp;
     tmp += m;
   }
   return A;
 STOP:
-  stat_matrix_i_free(&A);
+  stat_matrix_i_free (&A);
   return NULL;
 #undef CUR_PROC
 }
 
 
-int stat_matrix_i_free(int ***matrix) {
+int stat_matrix_i_free (int ***matrix)
+{
 #define CUR_PROC "stat_matrix_i_free"
-  mes_check_ptr(matrix, return(-1));
-  if ( !*matrix) return(0);
-  free(*matrix);
+  mes_check_ptr (matrix, return (-1));
+  if (!*matrix)
+    return (0);
+  free (*matrix);
   return 0;
 #undef CUR_PROC
 }
@@ -197,35 +214,44 @@ int stat_matrix_i_free(int ***matrix) {
 /*============================================================================*/
 
 
-double** matrix_d_alloc(int zeilen, int spalten) {
+double **matrix_d_alloc (int zeilen, int spalten)
+{
 #define CUR_PROC "matrix_d_alloc"
   double **matrix;
   int i;
-  
+
   //printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);
-  
-  if (!m_calloc(matrix, zeilen)) {mes_proc(); goto STOP;}
+
+  if (!m_calloc (matrix, zeilen)) {
+    mes_proc ();
+    goto STOP;
+  }
   for (i = 0; i < zeilen; i++)
-    if (!m_calloc(matrix[i], spalten)) {mes_proc(); goto STOP;}
+    if (!m_calloc (matrix[i], spalten)) {
+      mes_proc ();
+      goto STOP;
+    }
   return matrix;
 STOP:
-  matrix_d_free(&matrix, zeilen);
+  matrix_d_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
-} /* matrix_d_alloc */
+}                               /* matrix_d_alloc */
 
 
-int matrix_d_free(double ***matrix, long zeilen) {
+int matrix_d_free (double ***matrix, long zeilen)
+{
 # define CUR_PROC "matrix_d_free"
   long i;
-  mes_check_ptr(matrix, return(-1));
-  if ( !*matrix) return(0);
-  for (i = zeilen - 1; i >=  0; i--) 
-    m_free((*matrix)[i]);
-  m_free(*matrix);
+  mes_check_ptr (matrix, return (-1));
+  if (!*matrix)
+    return (0);
+  for (i = zeilen - 1; i >= 0; i--)
+    m_free ((*matrix)[i]);
+  m_free (*matrix);
   return (0);
 # undef CUR_PROC
-} /* matrix_d_free */
+}                               /* matrix_d_free */
 
 
 
@@ -233,116 +259,141 @@ int matrix_d_free(double ***matrix, long zeilen) {
 
 
 
-double** matrix_d_alloc_copy(int zeilen, int spalten, double **copymatrix) {
+double **matrix_d_alloc_copy (int zeilen, int spalten, double **copymatrix)
+{
 #define CUR_PROC "matrix_d_alloc_copy"
   double **matrix;
   int i, j;
-  if (!m_calloc(matrix, zeilen)) {mes_proc(); goto STOP;}
+  if (!m_calloc (matrix, zeilen)) {
+    mes_proc ();
+    goto STOP;
+  }
   for (i = 0; i < zeilen; i++) {
-    if (!m_calloc(matrix[i], spalten)) {mes_proc(); goto STOP;}
+    if (!m_calloc (matrix[i], spalten)) {
+      mes_proc ();
+      goto STOP;
+    }
     for (j = 0; j < spalten; j++)
       matrix[i][j] = copymatrix[i][j];
   }
   return matrix;
 STOP:
-  matrix_d_free(&matrix, zeilen);
+  matrix_d_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
-} /* matrix_d_alloc_copy */
+}                               /* matrix_d_alloc_copy */
 
 /*============================================================================*/
 
-int** matrix_i_alloc(int zeilen, int spalten) {
+int **matrix_i_alloc (int zeilen, int spalten)
+{
 #define CUR_PROC "matrix_i_alloc"
   int **matrix;
   int i;
-  if (!m_calloc(matrix, zeilen)) {mes_proc(); goto STOP;}
+  if (!m_calloc (matrix, zeilen)) {
+    mes_proc ();
+    goto STOP;
+  }
   for (i = 0; i < zeilen; i++)
-    if (!m_calloc(matrix[i], spalten)) {mes_proc(); goto STOP;}
+    if (!m_calloc (matrix[i], spalten)) {
+      mes_proc ();
+      goto STOP;
+    }
   return matrix;
 STOP:
-  matrix_i_free(&matrix, zeilen);
+  matrix_i_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
-} /* matrix_i_alloc */
+}                               /* matrix_i_alloc */
 
 /*============================================================================*/
 
-int matrix_i_free(int ***matrix, long zeilen) {
+int matrix_i_free (int ***matrix, long zeilen)
+{
 # define CUR_PROC "matrix_i_free"
   long i;
-  mes_check_ptr(matrix, return(-1));
-  if ( !*matrix ) return(0);
+  mes_check_ptr (matrix, return (-1));
+  if (!*matrix)
+    return (0);
   for (i = 0; i < zeilen; i++) {
-      m_free((*matrix)[i]);
-  }    
-  m_free(*matrix);
+    m_free ((*matrix)[i]);
+  }
+  m_free (*matrix);
   return (0);
 # undef CUR_PROC
-} /* matrix_i_free */
+}                               /* matrix_i_free */
 
 /*============================================================================*/
 
-void matrix_d_print(FILE *file, double **matrix, int zeilen, int spalten, 
-		    char *tab, char *separator, char *ending) {
+void matrix_d_print (FILE * file, double **matrix, int zeilen, int spalten,
+                     char *tab, char *separator, char *ending)
+{
   int i;
   for (i = 0; i < zeilen; i++)
-    vector_d_print(file, matrix[i], spalten, tab, separator, ending);
-} /* matrix_d_print */
+    vector_d_print (file, matrix[i], spalten, tab, separator, ending);
+}                               /* matrix_d_print */
 
 /*============================================================================*/
 
-void matrix_d_print_prec(FILE *file, double **matrix, int zeilen, int spalten, 
-			 int width, int prec, char *tab, char *separator, 
-			 char *ending) {
+void matrix_d_print_prec (FILE * file, double **matrix, int zeilen,
+                          int spalten, int width, int prec, char *tab,
+                          char *separator, char *ending)
+{
   int i;
   for (i = 0; i < zeilen; i++)
-    vector_d_print_prec(file, matrix[i], spalten, width, prec, 
-			tab, separator, ending);
-} /* matrix_d_print_prec */
+    vector_d_print_prec (file, matrix[i], spalten, width, prec,
+                         tab, separator, ending);
+}                               /* matrix_d_print_prec */
 
 /*============================================================================*/
 
-void matrix_i_print(FILE *file, int **matrix, int zeilen, int spalten,
-		    char *tab, char *separator, char *ending) {
+void matrix_i_print (FILE * file, int **matrix, int zeilen, int spalten,
+                     char *tab, char *separator, char *ending)
+{
   int i;
   for (i = 0; i < zeilen; i++)
-    vector_i_print(file, matrix[i], spalten, tab, separator, ending);
-} /* matrix_i_print */
+    vector_i_print (file, matrix[i], spalten, tab, separator, ending);
+}                               /* matrix_i_print */
 
 
 /*============================================================================*/
-int matrix_d_notzero_columns(double **matrix, int row, int max_col) {
+int matrix_d_notzero_columns (double **matrix, int row, int max_col)
+{
   int i, count = 0;
-  for (i =0; i < max_col; i++)
-    if (matrix[row][i]) count++;
+  for (i = 0; i < max_col; i++)
+    if (matrix[row][i])
+      count++;
   return count;
-} /* matrix_d_notzero_columns */
+}                               /* matrix_d_notzero_columns */
 
 /*============================================================================*/
-int matrix_d_notzero_rows(double **matrix, int col, int max_row) {
+int matrix_d_notzero_rows (double **matrix, int col, int max_row)
+{
   int i, count = 0;
-  for (i =0; i < max_row; i++)
-    if (matrix[i][col]) count++;
+  for (i = 0; i < max_row; i++)
+    if (matrix[i][col])
+      count++;
   return count;
-} /* matrix_d__notzero_rows */
+}                               /* matrix_d__notzero_rows */
 
 /*============================================================================*/
-/* Scales the row vectors of a matrix to have the sum 1 */ 
-int matrix_d_normalize(double **matrix, int rows, int cols) {
+/* Scales the row vectors of a matrix to have the sum 1 */
+int matrix_d_normalize (double **matrix, int rows, int cols)
+{
 #define CUR_PROC "matrix_d_normalize"
   int i;
   for (i = 0; i < rows; i++)
-    if (vector_normalize(matrix[i], cols) == -1)
-      mes(MES_WIN, "WARNING: sum row[%d] == 0!\n", i);
-      /* return (-1); */
+    if (vector_normalize (matrix[i], cols) == -1)
+      mes (MES_WIN, "WARNING: sum row[%d] == 0!\n", i);
+  /* return (-1); */
   return 0;
 #undef CUR_PROC
-} /* matrix_d_normalize */
+}                               /* matrix_d_normalize */
 
 /*============================================================================*/
-void matrix_d_random_values(double **matrix, int rows, int cols,
-			    double min, double max) {
+void matrix_d_random_values (double **matrix, int rows, int cols,
+                             double min, double max)
+{
   int i, j;
   double interval;
   if (max < min) {
@@ -352,17 +403,18 @@ void matrix_d_random_values(double **matrix, int rows, int cols,
   interval = max - min;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
-      matrix[i][j] = min + GHMM_RNG_UNIFORM(RNG)*interval;
-} /* matrix_d_random_values */
+      matrix[i][j] = min + GHMM_RNG_UNIFORM (RNG) * interval;
+}                               /* matrix_d_random_values */
 
 /*============================================================================*/
 /* Fixed value for final state */
-void matrix_d_random_const_values(double **matrix, int rows, int cols,
-				  double min, double max, double c) {
+void matrix_d_random_const_values (double **matrix, int rows, int cols,
+                                   double min, double max, double c)
+{
   int i, j;
   double interval;
   if (rows < 1) {
-    mes(MES_WIN, "WARNING: rows = %d not allowed\n", rows);
+    mes (MES_WIN, "WARNING: rows = %d not allowed\n", rows);
     return;
   }
   if (max < min) {
@@ -372,55 +424,65 @@ void matrix_d_random_const_values(double **matrix, int rows, int cols,
   interval = max - min;
   for (i = 0; i < rows - 1; i++)
     for (j = 0; j < cols; j++)
-      matrix[i][j] = min + GHMM_RNG_UNIFORM(RNG)*interval;
+      matrix[i][j] = min + GHMM_RNG_UNIFORM (RNG) * interval;
   for (j = 0; j < cols; j++)
     matrix[rows - 1][j] = c;
-} /* matrix_d_random_const_values */
+}                               /* matrix_d_random_const_values */
 
 
 /*============================================================================*/
-void matrix_d_const_values(double **matrix, int rows, int cols, double c) {
+void matrix_d_const_values (double **matrix, int rows, int cols, double c)
+{
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       matrix[i][j] = c;
-} /* matrix_d_const_values */
+}                               /* matrix_d_const_values */
 
 /*============================================================================*/
-void matrix_d_random_left_right(double **matrix, int rows, int cols) {
+void matrix_d_random_left_right (double **matrix, int rows, int cols)
+{
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
-      if (j == i || j == i+1) 
-	matrix[i][j] = GHMM_RNG_UNIFORM(RNG);
+      if (j == i || j == i + 1)
+        matrix[i][j] = GHMM_RNG_UNIFORM (RNG);
       else
-	matrix[i][j] = 0.0;
-} /* matrix_d_random_values */
+        matrix[i][j] = 0.0;
+}                               /* matrix_d_random_values */
 
 /*============================================================================*/
-void matrix_d_left_right_strict(double **matrix, int rows, int cols) {
+void matrix_d_left_right_strict (double **matrix, int rows, int cols)
+{
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
-      if (j == i+1)
-	matrix[i][j] = 1.0;
+      if (j == i + 1)
+        matrix[i][j] = 1.0;
       else
-	matrix[i][j] = 0.0;
-} /* matrix_d_left_right_strict */
+        matrix[i][j] = 0.0;
+}                               /* matrix_d_left_right_strict */
 
 /*============================================================================*/
-int matrix_d_gaussrows_values(double **matrix, int rows, int cols,
-			    double **mue, double u) {
+int matrix_d_gaussrows_values (double **matrix, int rows, int cols,
+                               double **mue, double u)
+{
 # define CUR_PROC "matrix_gaussrows_values"
   int res = -1;
   double *mean;
   int i, j;
-  if (u <= 0.0) {mes_prot("sigma^2 <= 0.0 not allowed\n"); goto STOP;}
+  if (u <= 0.0) {
+    mes_prot ("sigma^2 <= 0.0 not allowed\n");
+    goto STOP;
+  }
   if (*mue == NULL) {
     /* for each row, a random mean value mean[i] in (0, cols-1) */
-    if (!m_calloc(mean, rows)) {mes_proc(); goto STOP;}
+    if (!m_calloc (mean, rows)) {
+      mes_proc ();
+      goto STOP;
+    }
     for (i = 0; i < rows; i++)
-      mean[i] = GHMM_RNG_UNIFORM(RNG) * (cols-1);
+      mean[i] = GHMM_RNG_UNIFORM (RNG) * (cols - 1);
     /* for (i = 0; i < rows; i++) printf("%6.4f ", mean[i]); printf("\n"); */
     *mue = mean;
   }
@@ -430,47 +492,53 @@ int matrix_d_gaussrows_values(double **matrix, int rows, int cols,
   for (i = 0; i < rows; i++) {
     /* Gauss-distribution around the mean value for each state. */
     for (j = 0; j < cols; j++) {
-      matrix[i][j] = randvar_normal_density((double)j, mean[i], u);
-      if (matrix[i][j] == -1) {mes_proc(); goto STOP;}
+      matrix[i][j] = randvar_normal_density ((double) j, mean[i], u);
+      if (matrix[i][j] == -1) {
+        mes_proc ();
+        goto STOP;
+      }
       /* To avoid zero: (Cheap version!!) */
       if (matrix[i][j] < 0.0001)
-	matrix[i][j] = 0.0001; /* The Output has only 4 significant digits! */
+        matrix[i][j] = 0.0001;  /* The Output has only 4 significant digits! */
     }
   }
   res = 0;
 STOP:
-  return(res);
+  return (res);
 # undef CUR_PROC
-} /* matrix_gaussrows_values */
+}                               /* matrix_gaussrows_values */
 
 /*============================================================================*/
-void matrix_d_const_preserve_struct(double **matrix, int rows, int cols,
-				    double c) {
+void matrix_d_const_preserve_struct (double **matrix, int rows, int cols,
+                                     double c)
+{
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++) {
       if (matrix[i][j] != 0)
-	matrix[i][j] = c;
+        matrix[i][j] = c;
     }
-} /* matrix_d_const_preserve_struct */
+}                               /* matrix_d_const_preserve_struct */
 
 /*============================================================================*/
-void matrix_d_random_preserve_struct(double **matrix, int rows, int cols) {
+void matrix_d_random_preserve_struct (double **matrix, int rows, int cols)
+{
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++) {
       if (matrix[i][j] != 0)
-	matrix[i][j] = GHMM_RNG_UNIFORM(RNG);
+        matrix[i][j] = GHMM_RNG_UNIFORM (RNG);
     }
-} /* matrix_d_random_preserve_struct */
+}                               /* matrix_d_random_preserve_struct */
 
 /*============================================================================*/
-void matrix_d_transpose(double **A, int rows, int cols, double **A_T) {
+void matrix_d_transpose (double **A, int rows, int cols, double **A_T)
+{
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       A_T[j][i] = A[i][j];
-} /* matrix_d_transpose */
+}                               /* matrix_d_transpose */
 
 
 /*----------------------------------------------------------------------------*/
@@ -478,94 +546,110 @@ void matrix_d_transpose(double **A, int rows, int cols, double **A_T) {
    the diagonal, L (= lower triangular marix) is stored in A. The Diagonal is 
    stored in a vector p. 
 */
-static void lrdecomp(int dim, double **a, double *p) {
-  int k,i,j;
+static void lrdecomp (int dim, double **a, double *p)
+{
+  int k, i, j;
   double x;
   for (i = 0; i < dim; i++) {
     for (j = i; j < dim; j++) {
       x = a[i][j];
-      for (k = i-1; k >= 0; k--)
-	x = x - a[j][k]*a[i][k];
-      if (i == j){
-	if (x < DBL_MIN) mes(MES_WIN, "FEHLER: Pivotel.<=0!");
-	p[i] = 1 / sqrt(x);
+      for (k = i - 1; k >= 0; k--)
+        x = x - a[j][k] * a[i][k];
+      if (i == j) {
+        if (x < DBL_MIN)
+          mes (MES_WIN, "FEHLER: Pivotel.<=0!");
+        p[i] = 1 / sqrt (x);
       }
-      else 
-	a[j][i] = x*p[i];
+      else
+        a[j][i] = x * p[i];
     }
   }
 }
 
 /*----------------------------------------------------------------------------*/
 /* Solves L*y=b, L is a lower triangular matrix stored in A, p=1/diagonal elements. */
-static void lyequalsb(double **a, double *b, double *p, int dim, double *y) {
-  int k,j;
+static void lyequalsb (double **a, double *b, double *p, int dim, double *y)
+{
+  int k, j;
   for (k = 0; k < dim; k++) {
     y[k] = b[k];
     for (j = 0; j < k; j++)
-      y[k] = y[k] - a[k][j]*y[j];
-    y[k] = y[k]*p[k];
+      y[k] = y[k] - a[k][j] * y[j];
+    y[k] = y[k] * p[k];
   }
 }
 
 /*----------------------------------------------------------------------------*/
 /* Solves L-T*x=y, L-T an upper triangular matrix, BUT saved in A as L! */
-static void ltranspxequalsy(double **a, double *y, double *p, int dim, 
-			    double *x) {
-  int k,j;
-  for (k = dim-1; k >= 0; k--) {
+static void ltranspxequalsy (double **a, double *y, double *p, int dim,
+                             double *x)
+{
+  int k, j;
+  for (k = dim - 1; k >= 0; k--) {
     x[k] = y[k];
-    for (j = k+1; j < dim; j++)
-      x[k] = x[k] - a[j][k]*x[j];
-    x[k] = x[k]*p[k];
+    for (j = k + 1; j < dim; j++)
+      x[k] = x[k] - a[j][k] * x[j];
+    x[k] = x[k] * p[k];
   }
 }
 
 
 /*============================================================================*/
 /* Solves a linear equation system for a symmetric, positiv definite matrix. */
-int matrix_cholesky(double **a, double *b, int dim, double *x) {
+int matrix_cholesky (double **a, double *b, int dim, double *x)
+{
 #define CUR_PROC "matrix_cholesky"
   int res = -1;
-  double *p, *y;  
-  if (!m_calloc(p, dim)) {mes_proc(); goto STOP;}
-  if (!m_calloc(y, dim)) {mes_proc(); goto STOP;}
-  lrdecomp(dim,a,p);
-  lyequalsb(a,b,p,dim,y);
-  ltranspxequalsy(a,y,p,dim,x);
+  double *p, *y;
+  if (!m_calloc (p, dim)) {
+    mes_proc ();
+    goto STOP;
+  }
+  if (!m_calloc (y, dim)) {
+    mes_proc ();
+    goto STOP;
+  }
+  lrdecomp (dim, a, p);
+  lyequalsb (a, b, p, dim, y);
+  ltranspxequalsy (a, y, p, dim, x);
   res = 0;
 STOP:
-  return(res);
+  return (res);
 #undef CUR_PROC
 }
 
 /* Finds the determinant of a symetric, positiv definit matrix. */
-int matrix_det_symposdef(double **a, int dim, double *det) {
+int matrix_det_symposdef (double **a, int dim, double *det)
+{
 #define CUR_PROC "matrix_det_symposdef"
   int res = -1;
   int i;
-  double *p, r;  
-  if (!m_calloc(p, dim)) {mes_proc(); goto STOP;}
-  lrdecomp(dim,a,p);
+  double *p, r;
+  if (!m_calloc (p, dim)) {
+    mes_proc ();
+    goto STOP;
+  }
+  lrdecomp (dim, a, p);
   *det = 1.0;
   for (i = 0; i < dim; i++) {
-    r = 1/p[i];
-    *det *= (r*r);
+    r = 1 / p[i];
+    *det *= (r * r);
   }
   res = 0;
 STOP:
-  return(res);
+  return (res);
 #undef CUR_PROC
 }
 
 /*============================================================================*/
 /* Copies a matrix, the memory allocations must to be done outside! */
-void matrix_d_copy(double **src, double **target, int rows, int cols) {
+void matrix_d_copy (double **src, double **target, int rows, int cols)
+{
   int i, j;
 
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
-      target [ i ][ j ] = src [ i ][ j ];
+      target[i][j] = src[i][j];
 }
 
 /*============================================================================*/
@@ -575,20 +659,21 @@ void matrix_d_copy(double **src, double **target, int rows, int cols) {
   @param  double NxN matrix to be checked
   @param  matrix dimension N (matrix must be quadaratic)
   */
-int matrix_d_check_stochasticity(double **matrix, int N){
-  int i,j;
+int matrix_d_check_stochasticity (double **matrix, int N)
+{
+  int i, j;
   double row_sum;
   int stochastic = 1;
-  
-  for (i = 0; i < N; i++){   
+
+  for (i = 0; i < N; i++) {
     row_sum = 0.0;
-    for (j = 0; j < N; j++){
+    for (j = 0; j < N; j++) {
       row_sum = row_sum + matrix[i][j];
     }
-    if (row_sum != 1.0){
+    if (row_sum != 1.0) {
       stochastic = 0;
-      break;  
-    }  
-  }      
-  return(stochastic);
+      break;
+    }
+  }
+  return (stochastic);
 }

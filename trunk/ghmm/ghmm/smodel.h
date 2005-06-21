@@ -58,112 +58,112 @@ extern "C" {
 /**
    typedef density\_t fuer cmodel u. smodel.
 */
-typedef enum {
-  normal, 
-  normal_pos, 
-  normal_approx,
-  density_number
-} density_t;
+  typedef enum {
+    normal,
+    normal_pos,
+    normal_approx,
+    density_number
+  } density_t;
 
 
 /** @name sstate
     Structure for one state.
 */
-struct sstate {
-  /** initial prob. */ 
-  double pi;
-  /** IDs of successor states */ 
-  int *out_id;  
+  struct sstate {
+  /** initial prob. */
+    double pi;
+  /** IDs of successor states */
+    int *out_id;
   /** IDs of predecessor states */
-  int *in_id;
+    int *in_id;
   /** transition probs to successor states. It is a
    matrix in case of mult. transition matrices (COS > 1)*/
-  double **out_a; 
+    double **out_a;
   /** transition probs from predecessor states. It is a
-   matrix in case of mult. transition matrices (COS > 1) */ 
-  double **in_a;
-  /** number of  successor states */     
-  int out_states; 
-  /** number of  predecessor states */  
-  int in_states;    
+   matrix in case of mult. transition matrices (COS > 1) */
+    double **in_a;
+  /** number of  successor states */
+    int out_states;
+  /** number of  predecessor states */
+    int in_states;
   /** weight vector for output function components */
-  double *c;
+    double *c;
   /** mean vector for output functions (normal density and truncated normal
       density */
-  double *mue;
+    double *mue;
   /** variance vector for output functions */
-  double *u;
+    double *u;
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
-  int fix;
+    int fix;
 
   /**  array of flags for fixing mixture components in the reestimation
         mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
-  int *mixture_fix;
-};
-typedef struct sstate sstate;
+    int *mixture_fix;
+  };
+  typedef struct sstate sstate;
 
-struct smodel;
+  struct smodel;
 
-struct class_change_context{
+  struct class_change_context {
 
     /* Names of class change module/function (for python callback) */
-    char* python_module;
-    char* python_function;
-    
-    /* index of current sequence */ 
+    char *python_module;
+    char *python_function;
+
+    /* index of current sequence */
     int k;
 
     /** pointer to class function */
-    int (*get_class)(struct smodel*,double*,int,int);
-    
-    
+    int (*get_class) (struct smodel *, double *, int, int);
+
+
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
-    void* user_data;
-    
-};
-typedef struct class_change_context class_change_context;
+    void *user_data;
+
+  };
+  typedef struct class_change_context class_change_context;
 
 /** @name smodel
     continous HMM    
 */
-struct smodel{
+  struct smodel {
   /** Number of states */
-  int N;
+    int N;
   /** Number of output densities per state */
-  int M;
+    int M;
   /** smodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
-  int cos;
+    int cos;
   /** Flag for density function. 0: normal density, 1: truncated normal 
       density, 2: approximated normal density */
-  density_t density;
+    density_t density;
   /** prior for a priori prob. of the model. -1 means no prior specified (all
       models have equal prob. a priori. */
-  double prior;
+    double prior;
   /** All states of the model. Transition probs are part of the states. */
-  sstate *s; 
- 
-  /* pointer to a class_change_context struct necessary for multiple transition
-   classes */
-  class_change_context *class_change;  
-  
- };
-typedef struct smodel smodel;
+    sstate *s;
+
+    /* pointer to a class_change_context struct necessary for multiple transition
+       classes */
+    class_change_context *class_change;
+
+  };
+  typedef struct smodel smodel;
 
 
 
 /* don't include this earlier: in sequence.h smodel has to be known */
 #include <ghmm/sequence.h>
 
-int smodel_class_change_alloc(smodel *smo);
+  int smodel_class_change_alloc (smodel * smo);
 
 
 /** Free memory smodel 
     @return 0: success, -1: error
     @param smo  pointer pointer of smodel */
-int     smodel_free(smodel **smo);
+  int smodel_free (smodel ** smo);
 
 /** Reads an ascii file with specifications for one or more smodels.
     All parameters in matrix or vector form.
@@ -173,7 +173,7 @@ int     smodel_free(smodel **smo);
    @return vector of read smodels
    @param filename   input ascii file
    @param smo_number  number of smodels to read*/
-smodel** smodel_read(const char *filename, int *smo_number);
+  smodel **smodel_read (const char *filename, int *smo_number);
 
 /** Reads one smodel block. It is possible to generate multiple
     identical copies of the model read. Memory allocation is here.
@@ -181,13 +181,13 @@ smodel** smodel_read(const char *filename, int *smo_number);
    @param s        scanner for reading
    @param multip   number ob identical copies
 */
-smodel*  smodel_read_block(scanner_t *s, int *multip);
+  smodel *smodel_read_block (scanner_t * s, int *multip);
 
 /**
    Copies one smodel. Memory alloc is here.
    @return pointer to smodel copy
    @param smo   smodel to be copied  */
-smodel*  smodel_copy(const smodel *smo);
+  smodel *smodel_copy (const smodel * smo);
 
 /**
    Checks if smodel is well definded. E.g. sum pi = 1, only positive values 
@@ -195,7 +195,7 @@ smodel*  smodel_copy(const smodel *smo);
    @return 0 if smodel is ok, -1 for error
    @param smo   smodel for  checking
 */
-int     smodel_check(const smodel* smo);
+  int smodel_check (const smodel * smo);
 
 /**
    For a vector of smodels: check that the number of states and the number
@@ -204,7 +204,7 @@ int     smodel_check(const smodel* smo);
    @param smo    vector of smodels for checking
    @param smodel_number  number of smodels
  */
-int     smodel_check_compatibility(smodel **smo, int smodel_number);
+  int smodel_check_compatibility (smodel ** smo, int smodel_number);
 
 /**
    Generates random symbol.
@@ -215,7 +215,7 @@ int     smodel_check_compatibility(smodel **smo, int smodel_number);
    @param state    state
    @param m         index of output component
 */
-double smodel_get_random_var(smodel *smo, int state, int m);
+  double smodel_get_random_var (smodel * smo, int state, int m);
 
 
 /** 
@@ -236,8 +236,9 @@ double smodel_get_random_var(smodel *smo, int state, int m);
     @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
 */
 
-sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
-					long seq_number, long label, int Tmax);
+  sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
+                                           int global_len, long seq_number,
+                                           long label, int Tmax);
 
 /** 
     Computes sum over all sequence of
@@ -248,7 +249,7 @@ sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
    @param sqd    sequence struct
    @param log\_p  evaluated log likelihood
 */
-int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
+  int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p);
 
 /** 
     Computes log likelihood for all sequence of
@@ -259,21 +260,22 @@ int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
    @param sqd    sequence struct
    @param log\_p array of evaluated likelihoods
 */
-int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps);
+  int smodel_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
+                                     double *log_ps);
 
 /**
    Prints one smodel in matrix form.
    @param file     output file
    @param smo   smodel
 */
-void smodel_print(FILE *file, smodel *smo); 
+  void smodel_print (FILE * file, smodel * smo);
 
 /**
    Prints one smodel with only one transition Matrix A (=Ak\_0).
    @param file     output file
    @param smo   smodel
 */
-void smodel_print_oneA(FILE *file, smodel *smo);
+  void smodel_print_oneA (FILE * file, smodel * smo);
 
 /**
    Prints transition matrix of specified class.
@@ -284,8 +286,8 @@ void smodel_print_oneA(FILE *file, smodel *smo);
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-void smodel_Ak_print(FILE *file, smodel *smo, int k, char *tab,
-		     char *separator, char *ending);
+  void smodel_Ak_print (FILE * file, smodel * smo, int k, char *tab,
+                        char *separator, char *ending);
 
 /**
    Prints weight matrix of output functions of an smodel.
@@ -295,8 +297,8 @@ void smodel_Ak_print(FILE *file, smodel *smo, int k, char *tab,
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-void smodel_C_print(FILE *file, smodel *smo, char *tab, char *separator, 
-		    char *ending);
+  void smodel_C_print (FILE * file, smodel * smo, char *tab, char *separator,
+                       char *ending);
 
 /**
    Prints mean matrix of output functions of an smodel.
@@ -306,8 +308,8 @@ void smodel_C_print(FILE *file, smodel *smo, char *tab, char *separator,
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-void smodel_Mue_print(FILE *file, smodel *smo, char *tab, char *separator, 
-		      char *ending);
+  void smodel_Mue_print (FILE * file, smodel * smo, char *tab,
+                         char *separator, char *ending);
 /**
    Prints variance matrix of output functions of an smodel.
    @param file       output file
@@ -316,8 +318,8 @@ void smodel_Mue_print(FILE *file, smodel *smo, char *tab, char *separator,
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-void smodel_U_print(FILE *file, smodel *smo, char *tab, char *separator, 
-			char *ending);
+  void smodel_U_print (FILE * file, smodel * smo, char *tab, char *separator,
+                       char *ending);
 /**
    Prints initial prob vector of an smodel.
    @param file       output file
@@ -326,8 +328,8 @@ void smodel_U_print(FILE *file, smodel *smo, char *tab, char *separator,
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-void smodel_Pi_print(FILE *file, smodel *smo, char *tab, char *separator, 
-		     char *ending);
+  void smodel_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
+                        char *ending);
 /**
    Prints vector of fix\_states.
    @param file       output file
@@ -336,8 +338,8 @@ void smodel_Pi_print(FILE *file, smodel *smo, char *tab, char *separator,
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-void smodel_fix_print(FILE *file, smodel *smo, char *tab, char *separator, 
-		     char *ending);
+  void smodel_fix_print (FILE * file, smodel * smo, char *tab,
+                         char *separator, char *ending);
 
 /** Computes the density of one symbol (omega) in a given state and a 
     given output component
@@ -347,7 +349,7 @@ void smodel_fix_print(FILE *file, smodel *smo, char *tab, char *separator,
     @param m output component
     @param omega given symbol
 */
-double smodel_calc_cmbm(smodel *smo, int state, int m, double omega);
+  double smodel_calc_cmbm (smodel * smo, int state, int m, double omega);
 
 /** Computes the density of one symbol (omega) in a given state (sums over
     all output components
@@ -356,7 +358,7 @@ double smodel_calc_cmbm(smodel *smo, int state, int m, double omega);
     @param state state 
     @param omega given symbol
 */
-double smodel_calc_b(smodel *smo, int state, double omega);
+  double smodel_calc_b (smodel * smo, int state, double omega);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -369,8 +371,8 @@ double smodel_calc_b(smodel *smo, int state, double omega);
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, 
-			    int verbose);
+  double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
+                               int symmetric, int verbose);
 
 /** 
     Computes value of distribution function for a given symbol omega, a given
@@ -381,7 +383,7 @@ double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric,
     @param m      component
     @param omega symbol
 */
-double smodel_calc_cmBm(smodel *smo, int state, int m, double omega);
+  double smodel_calc_cmBm (smodel * smo, int state, int m, double omega);
 
 /** 
     Computes value of distribution function for a given symbol omega and
@@ -391,7 +393,7 @@ double smodel_calc_cmBm(smodel *smo, int state, int m, double omega);
     @param state  state
     @param omega symbol
 */
-double smodel_calc_B(smodel *smo, int state, double omega);
+  double smodel_calc_B (smodel * smo, int state, double omega);
 
 /** Computes the number of free parameters in an array of
    smodels. E.g. if the number of parameter from pi is N - 1.
@@ -401,7 +403,7 @@ double smodel_calc_B(smodel *smo, int state, double omega);
    @param smo smodel
    @param smo\_number number of smodels
 */
-int smodel_count_free_parameter(smodel **smo, int smo_number);
+  int smodel_count_free_parameter (smodel ** smo, int smo_number);
 
 
 /*============================================================================*/
@@ -417,17 +419,12 @@ int smodel_count_free_parameter(smodel **smo, int smo_number);
     @param a      return-value: left side
     @param b      return-value: right side
 */
-void smodel_get_interval_B(smodel *smo, int state, double *a, double *b);
+  void smodel_get_interval_B (smodel * smo, int state, double *a, double *b);
 
 
 
 #ifdef __cplusplus
 }
 #endif
-
-
 #endif
-
 /*@} (Doc++-Group: smodel) */
-
-

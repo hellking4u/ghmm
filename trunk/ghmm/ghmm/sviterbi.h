@@ -63,17 +63,12 @@ extern "C" {
   @param T       sequence length
   @param log_p   log(p) of the sequence using the vitberbi path
   */
-int *sviterbi(smodel *smo, double *o, int T, double *log_p);
+  int *sviterbi (smodel * smo, double *o, int T, double *log_p);
 
-/* #endif */ /* __EXPERIMENTAL__ == 3 */
+/* #endif *//* __EXPERIMENTAL__ == 3 */
 
 #ifdef __cplusplus
 }
 #endif
-
-
 #endif
-
 /*@} (Doc++-Group: cviterbi) */
-
-

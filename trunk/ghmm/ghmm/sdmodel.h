@@ -46,97 +46,93 @@ extern "C" {
 /** @name state
     The basic structure, keeps all parameters that belong to a state. 
 */
-struct sdstate {
-  /** Initial probability */ 
-  double pi;
+  struct sdstate {
+  /** Initial probability */
+    double pi;
   /** Output probability */
-  double *b;
-  /** ID of the following state */ 
-  int *out_id;  
-  /** ID of the previous state */    
-  int *in_id;
+    double *b;
+  /** ID of the following state */
+    int *out_id;
+  /** ID of the previous state */
+    int *in_id;
 
   /** transition probs to successor states. It is a
    matrix in case of mult. transition matrices (COS > 1)*/
-  double **out_a; 
+    double **out_a;
   /** transition probs from predecessor states. It is a
-   matrix in case of mult. transition matrices (COS > 1) */ 
-  double **in_a;
+   matrix in case of mult. transition matrices (COS > 1) */
+    double **in_a;
 
   /** Transition probability to a successor 
       double *out_a; */
   /** Transition probablity to a precursor 
       double *in_a;*/
 
-  /** Number of successor states */     
-  int out_states; 
+  /** Number of successor states */
+    int out_states;
   /** Number of precursor states */
-  int in_states;  
+    int in_states;
   /** if fix == 1 --> b stays fix during the training */
-  int fix;
-  char *label;
-  /* XXX Specific variable for ProfileHMM to count the number of
-     match states. Not elegant solution.
-     WS: if 1 then counts me, 0 don't count me */
-  int countme; 
-};
-typedef struct sdstate sdstate;
+    int fix;
+    char *label;
+    /* XXX Specific variable for ProfileHMM to count the number of
+       match states. Not elegant solution.
+       WS: if 1 then counts me, 0 don't count me */
+    int countme;
+  };
+  typedef struct sdstate sdstate;
 
 /** @name model
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct sdmodel {
+  struct sdmodel {
   /** Number of states */
-  int N;
-  /** Number of outputs */   
-  int M;   
+    int N;
+  /** Number of outputs */
+    int M;
  /** smodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
-  int cos;
+    int cos;
   /** Vector of the states */
-  sdstate *s; 
+    sdstate *s;
   /** Prior for the a priori probability for the model.
       A value of -1 indicates that no prior is defined. */
-  double prior;
+    double prior;
 
   /** Contains bit flags for various model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
 
   /** pointer to class function   */
-  int (*get_class)(int*,int);
-      
-  /*int (*get_class)(const double*,int,double*);*/
+    int (*get_class) (int *, int);
+
+    /*int (*get_class)(const double*,int,double*); */
 
   /** Contains bit flags for various model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
-  int model_type;
-  
+    int model_type;
+
   /** Flag variables for each state indicating whether it is emitting
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
-  int* silent; /*AS*/
-  int  topo_order_length; /*WR*/
-  int* topo_order;        /*WR*/
-};
-typedef struct sdmodel sdmodel;
+    int *silent;
+      /*AS*/ int topo_order_length;
+      /*WR*/ int *topo_order;
+    /*WR*/};
+  typedef struct sdmodel sdmodel;
 
 
 #ifdef __cplusplus
 }
 #endif
-
-
 /*
   Important: The inclusion of sequence.h ist not done before this point in
   order to avoid error by compiling.
 */
 #include <ghmm/sequence.h>
 #include <ghmm/scanner.h>
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -145,9 +141,9 @@ extern "C" {
   /** Frees the memory of a model.
       @return 0 for succes; -1 for error
       @param mo:  pointer to a model */
-  int     sdmodel_free(sdmodel **mo);
+  int sdmodel_free (sdmodel ** mo);
 
-  int     sdmodel_initSilentStates(sdmodel *mo);
+  int sdmodel_initSilentStates (sdmodel * mo);
 
   /** 
       Produces sequences to a given model. All memory that is needed for the 
@@ -166,28 +162,29 @@ extern "C" {
 	  @param T_max:  maximal number of consecutive silent states in model (used to
 	  identify silent circles).
   */
-  sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
-					 long seq_number, int Tmax);
+  sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
+                                          int global_len, long seq_number,
+                                          int Tmax);
 
 
   /**
      Copies a given model. Allocates the necessary memory.
      @return copy of the model
      @param mo:  model to copy */
-  sdmodel*  sdmodel_copy(const sdmodel *mo);
+  sdmodel *sdmodel_copy (const sdmodel * mo);
 
   /** Utility for converting between single discrete model and switching model */
-  model*    sdmodel_to_model(const sdmodel *mo, int kclass);
+  model *sdmodel_to_model (const sdmodel * mo, int kclass);
 
   /** */
-  void      model_to_sdmodel(const model *mo, sdmodel *smo, int klass);
+  void model_to_sdmodel (const model * mo, sdmodel * smo, int klass);
 
   /**
      Writes a model in matrix format.
      @param file: output file
      @param mo:   model
   */
-  void sdmodel_print(FILE *file, sdmodel *mo); 
+  void sdmodel_print (FILE * file, sdmodel * mo);
 
 
   /**
@@ -198,8 +195,8 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void sdmodel_Ak_print(FILE *file, sdmodel *mo, int k, char *tab, char *separator, 
-			char *ending);
+  void sdmodel_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
+                         char *separator, char *ending);
   /**
      Writes output matrix of a model.
      @param file: output file
@@ -208,8 +205,8 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void sdmodel_B_print(FILE *file, sdmodel *mo, char *tab, char *separator, 
-		       char *ending);
+  void sdmodel_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+                        char *ending);
 
   /**
      Writes initial allocation vector of a matrix.
@@ -219,8 +216,8 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void sdmodel_Pi_print(FILE *file, sdmodel *mo, char *tab, char *separator, 
-			char *ending);
+  void sdmodel_Pi_print (FILE * file, sdmodel * mo, char *tab,
+                         char *separator, char *ending);
 
   /*============================================================================*/
   /** sdviterbi is working for switching discrete model
@@ -228,9 +225,9 @@ extern "C" {
    *============================================================================
    **/
 
-  void sdmodel_topo_ordering(sdmodel *mo);
+  void sdmodel_topo_ordering (sdmodel * mo);
 
-  int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
+  int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p);
 
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
@@ -243,8 +240,8 @@ extern "C" {
       @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
       @return 0 for success, -1 for error
   */
-  int sdfoba_forward(sdmodel *mo, const int *O, int len, double **alpha, 
-		     double *scale, double *log_p);
+  int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
+                      double *scale, double *log_p);
 
 
   /** Descale
@@ -256,8 +253,9 @@ extern "C" {
       @param newalpha: unscaled alpha matrix
       @return 0 for success, -1 for error
   */
-  int sdfoba_descale(double **alpha, double *scale, int t, int n, double **newalpha);
-  
+  int sdfoba_descale (double **alpha, double *scale, int t, int n,
+                      double **newalpha);
+
 
 /**
    Calculates the sum log( P( O | lambda ) ).
@@ -266,7 +264,7 @@ extern "C" {
    @param mo model
    @param sq sequences       
 */
-double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
+  double sdmodel_likelihood (sdmodel * mo, sequence_t * sq);
 
 
 /** 
@@ -275,13 +273,11 @@ double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
     @param file: output file
     @param mo:   model
 */
-  void sdmodel_states_print(FILE *file, sdmodel *mo); 
+  void sdmodel_states_print (FILE * file, sdmodel * mo);
 
-  
+
 #ifdef __cplusplus
 }
 #endif
-
 #endif
-
 /*@} (Doc++-Group: model) */

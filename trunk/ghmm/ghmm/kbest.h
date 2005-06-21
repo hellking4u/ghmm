@@ -52,10 +52,9 @@ extern "C" {
    @param k:          number of hypotheses to keep for each state
    @param log_p:      variable reference to store the log prob. of the labeling
  */
-int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p);
+  int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p);
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif

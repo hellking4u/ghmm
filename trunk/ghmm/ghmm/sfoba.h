@@ -52,7 +52,7 @@ extern "C" {
                 Applications in Speech Recognition"', Proceedings of the IEEE,
 	77, no 2, 1989, pp 257--285
 */
-	
+
 
 /** Forward-Algorithm.
   Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
@@ -65,8 +65,8 @@ extern "C" {
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int sfoba_forward(smodel *smo, double *O, int T, double ***b, 
-		  double **alpha, double *scale, double *log_p);
+  int sfoba_forward (smodel * smo, double *O, int T, double ***b,
+                     double **alpha, double *scale, double *log_p);
 
 /** 
   Backward-Algorithm. 
@@ -80,8 +80,8 @@ int sfoba_forward(smodel *smo, double *O, int T, double ***b,
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-int sfoba_backward(smodel *smo, double *O, int T, double ***b,
-		   double **beta, const double *scale);
+  int sfoba_backward (smodel * smo, double *O, int T, double ***b,
+                      double **beta, const double *scale);
 
 /**
   Calculation of  log( P(O|lambda) ). 
@@ -94,14 +94,11 @@ int sfoba_backward(smodel *smo, double *O, int T, double ***b,
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int sfoba_logp(smodel *smo, double *O, int T, double *log_p);
+  int sfoba_logp (smodel * smo, double *O, int T, double *log_p);
 
 
 #ifdef __cplusplus
 }
 #endif
-
-
 /*@} (Doc++-Group: sfoba) */
-
 #endif

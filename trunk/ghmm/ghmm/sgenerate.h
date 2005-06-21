@@ -55,12 +55,12 @@ extern "C" {
  Help "modus" for sgenerate_extensions.
 */
 
-typedef enum {
-  viterbi_viterbi,
-  viterbi_all,
-  all_viterbi,
-  all_all
-} sgeneration_mode_t;
+  typedef enum {
+    viterbi_viterbi,
+    viterbi_all,
+    all_viterbi,
+    all_all
+  } sgeneration_mode_t;
 
 /**
    Makes part sequences longer given a model. There are some different possibilities
@@ -81,9 +81,9 @@ typedef enum {
    @param global_len:  wanted length of sequences (=0: automatically over final states)
    @param mode:        which method to use for the generator
  */
-sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short, 
-				   int seed, int global_len,
-				   sgeneration_mode_t mode);
+  sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
+                                      int seed, int global_len,
+                                      sgeneration_mode_t mode);
 
 
 /** 
@@ -96,9 +96,9 @@ sequence_d_t *sgenerate_extensions(smodel *smo, sequence_d_t *sqd_short,
     @param alpha:
     @param mode:
 */
-double *sgenerate_single_ext(smodel *smo, double *O, const int len, 
-			     int *new_len, double **alpha,
-			     sgeneration_mode_t mode);
+  double *sgenerate_single_ext (smodel * smo, double *O, const int len,
+                                int *new_len, double **alpha,
+                                sgeneration_mode_t mode);
 
 
 /** Generate a single next value based on a trained model and on a seq of
@@ -108,13 +108,11 @@ double *sgenerate_single_ext(smodel *smo, double *O, const int len,
    @param O:          given sequence 
    @param len:        length of sequence
 */
-double sgenerate_next_value(smodel *smo, double *O, const int len);
+  double sgenerate_next_value (smodel * smo, double *O, const int len);
 
 /*@} sgenerate section */
 
 #ifdef __cplusplus
 }
 #endif
-
-
-#endif /* SGENERATE_H */
+#endif                          /* SGENERATE_H */
