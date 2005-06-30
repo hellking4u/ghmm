@@ -543,7 +543,8 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
   int T_k = 0, T_k_max = 0;
   double c_t, sum_alpha_a_ji, gamma, gamma_ct, f_im, quot;
   double log_p_k, osum = 0.0;
-
+  double contrib_t;
+  
   *log_p = 0.0;
   valid_parameter = valid_logp = 0;
 
@@ -586,6 +587,15 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
       continue;
     }
     else
+
+    /* matrix_d_print(FILE * file, double **matrix, int rows, int columns,
+                       char *tab, char *separator, char *ending);   */
+   /* printf("\n\nalpha:\n");
+    matrix_d_print(stdout,alpha,T_k,smo->N,"\t", ",", ";");   
+    printf("\n\nbeta:\n");
+    matrix_d_print(stdout,beta,T_k,smo->N,"\t", ",", ";");           
+    printf("\n\n");         */
+        
       /* weighted error function */
       *log_p += log_p_k * seq_w[k];
     /* seq. is used for parameter estimation */
@@ -603,7 +613,6 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
         c_t = 1 / scale[t];
         if (t > 0) {
 
-          //osc = sequence_d_class(O[k], t - 1, &osum); /* dummy */
           if (smo->cos == 1) {
             osc = 0;
           }
@@ -612,22 +621,38 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
               printf ("ERROR: get_class not initialized\n");
               goto STOP;
             }
-            /* XXX printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
+
             osc = smo->class_change->get_class (smo, O[k], k, t - 1);
+            //printf("osc=%d : cos = %d, k = %d, t = %d, state=%d\n",osc,smo->cos,smo->class_change->k,t,i); 
           }
 
 
           /* A: starts at t=1 !!! */
-          r->a_denom[i][osc] += seq_w[k] * alpha[t - 1][i] * beta[t - 1][i];
           for (j = 0; j < smo->s[i].out_states; j++) {
             j_id = smo->s[i].out_id[j];
-            r->a_num[i][osc][j] += (seq_w[k] * alpha[t - 1][i] * smo->s[i].out_a[osc][j] * b[t][j_id][smo->M] * beta[t][j_id] * c_t);   /* c[t] = 1/scale[t] */
+            
+           contrib_t = (seq_w[k] * alpha[t - 1][i] * smo->s[i].out_a[osc][j] *
+                                    b[t][j_id][smo->M] * beta[t][j_id] * c_t);   /*  c[t] = 1/scale[t] */
+            
+            r->a_num[i][osc][j] += contrib_t;
+            
+            /*printf("r->a_num[%d][%d][%d] += (alpha[%d][%d] * smo->s[%d].out_a[%d][%d] * b[%d]%d][%d] * beta[%d][%d] * c_t = %f * %f * %f * %f * %f = %f\n",                    
+                    i,osc,j,t-1,i,i,osc,j,t,j_id,smo->M,t,j_id,alpha[t - 1][i], smo->s[i].out_a[osc][j],
+                                   b[t][j_id][smo->M], beta[t][j_id], c_t,r->a_num[i][osc][j]); */
+
+            
+            r->a_denom[i][osc] += contrib_t;
+            
+            /*printf("r->a_denom[%d][%d] += %f\n",i,osc,r->a_denom[i][osc]);   */
+            
           }
+
+
           /* calculate sum (j=1..N){alp[t-1][j]*a_jc(t-1)i} */
           sum_alpha_a_ji = 0.0;
           for (j = 0; j < smo->s[i].in_states; j++) {
             j_id = smo->s[i].in_id[j];
-            sum_alpha_a_ji += alpha[t - 1][j_id] * smo->s[i].in_a[osc][j];
+            sum_alpha_a_ji += alpha[t-1][j_id] * smo->s[i].in_a[osc][j];
           }
         }                       /* if t>0 */
         else {
@@ -686,7 +711,6 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
     smo->class_change->k = -1;
   }
 
-  sreestimate_free_matvec (alpha, beta, scale, b, T_k_max, smo->N);
 
   if (valid_parameter) {
     /* new parameter lambda: set directly in model */
@@ -695,13 +719,47 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
       return (-1);
     }
     /* only test : */
-    /* if (smodel_check(smo) == -1) { mes_proc(); goto STOP; } */
+
+    
+     /*printf("scale:\n");
+     for(t=0;t<T[0];t++){
+         printf("%f, ",scale[t]);
+     }
+     printf("\n\n"); 
+
+     for(osc =0;osc<smo->cos;osc++) {
+         for(i=0;i<smo->N;i++){
+           for(j=0;j<smo->N;j++){
+              printf("osc= %d, i = %d, j= %d : %f / %f = %f\n",osc,i,j,r->a_num[i][osc][j],
+                      r->a_denom[i][osc],(r->a_num[i][osc][j] / r->a_denom[i][osc]));
+           }
+         }
+     } */
+   
+     //smodel_print(stdout,smo);
+         
+    if (smodel_check(smo) == -1) { 
+        mes_proc(); 
+        printf("Model invalid !\n\n");
+        
+       
+        goto STOP; 
+        
+    } 
+    else {
+        printf("Model is ok.\n");
+    }     
+        
+    
   }
   else {                        /* NO sequence can be build from smodel smo! */
     /* diskret:  *log_p = +1; */
     mes (MES_WIN, " NO sequence can be build from smodel smo!\n");
     return (-1);
   }
+
+  sreestimate_free_matvec (alpha, beta, scale, b, T_k_max, smo->N);
+
   return (valid_logp);
   /*  return(valid_parameter); */
 STOP:
