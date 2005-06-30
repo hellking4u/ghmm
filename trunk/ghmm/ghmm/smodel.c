@@ -802,23 +802,27 @@ STOP:
 int smodel_check (const smodel * smo)
 {
 # define CUR_PROC "smodel_check"
-  int res = -1;
+  int valid = 1;
   double sum;
   int i, k, j;
   /* sum  Pi[i] == 1 ? */
   sum = 0.0;
+  
+
   for (i = 0; i < smo->N; i++) {
     sum += smo->s[i].pi;
   }
   if (fabs (sum - 1.0) >= EPS_PREC) {
     mes_prot ("sum Pi[i] != 1.0\n");
-    goto STOP;
+    valid = -1;
+    /*goto STOP; */
   }
   /* only 0/1 in fix? */
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].fix != 0 && smo->s[i].fix != 1) {
       mes_prot ("in vector fix_state only 0/1 values!\n");
-      goto STOP;
+      valid = -1;
+      /*goto STOP;*/
     }
   }
   for (i = 0; i < smo->N; i++) {
@@ -835,11 +839,11 @@ int smodel_check (const smodel * smo)
       }
       if (fabs (sum - 1.0) >= EPS_PREC) {
         char *str =
-          mprintf (NULL, 0, "sum out_a[j] = %.2f != 1.0 (state %d)\n", sum,
-                   i);
+          mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
         mes_prot (str);
         m_free (str);
-        goto STOP;
+        valid = -1;
+        /*goto STOP; */
       }
     }
     /* sum c[j] */
@@ -851,13 +855,14 @@ int smodel_check (const smodel * smo)
         mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
-      goto STOP;
+      valid = -1;            
+      /* goto STOP; */
     }
     /* check mue, u ? */
   }
-  res = 0;
+
 STOP:
-  return (res);
+  return (valid);
 # undef CUR_PROC
 }                               /* smodel_check */
 
