@@ -1299,7 +1299,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
   double last_perf, cur_perf;
   int last_cer, cur_cer;
 
-  double lambda;
+  double lambda=0.0;
 
   double noiselevel = 0.0667;
 
@@ -1350,8 +1350,8 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
     if (gradient)
       lambda = .3;
 
-    while ((last_perf < cur_perf || cur_cer < last_cer) && step++ < 75
-           || firstrun) {
+    while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < 75
+           || firstrun)) {
       if (firstrun)
         firstrun = 0;
       else

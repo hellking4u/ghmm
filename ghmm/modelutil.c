@@ -40,6 +40,7 @@ typedef enum eDFSCOLORS { GRAY = 0, BLACK = 1, WHITE = 2, NONE =
 #include "mes.h"
 #include "ghmm.h"
 #include "model.h"
+#include "matrix.h"
 
 typedef struct local_store_topo {
   int *topo_order;
@@ -57,7 +58,6 @@ static local_store_topo *topo_alloc (model * mo, int len)
 {
 #define CUR_PROC "sdtopo_alloc"
   local_store_topo *v = NULL;
-  int j;
 
   if (!m_calloc (v, 1)) {
     mes_proc ();
@@ -88,7 +88,7 @@ STOP:
 static int topo_free (local_store_topo ** v, int n, int len)
 {
 #define CUR_PROC "sdviterbi_free"
-  int j;
+
   mes_check_ptr (v, return (-1));
   if (!*v)
     return (0);
@@ -232,7 +232,7 @@ static void __topological_sort (model * c_model, local_store_topo * v,
 void model_topo_ordering (model * mo)
 {
 #define CUR_PROC "model_topo_ordering"
-  int i, j;
+  int i;
   local_store_topo *v;
   int **edge_cls;
 
@@ -266,7 +266,7 @@ void model_topo_ordering (model * mo)
      }
      } */
 
-  stat_matrix_i_free (&edge_cls, mo->N);
+  stat_matrix_i_free (&edge_cls);
   topo_free (&v, mo->N, 1);
 STOP:
   i = 0;

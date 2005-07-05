@@ -56,6 +56,7 @@
 #include "string.h"
 #include "ghmm.h"
 #include "modelutil.h"
+#include "vector.h"
 
 #define  __EPS 10e-6
 
@@ -630,7 +631,7 @@ int model_free (model ** mo)
 int model_free_background_distributions (background_distributions * bg)
 {
 #define CUR_PROC "model_free_background_distributions"
-  int i;
+
   if (bg->order)
     m_free (bg->order);
   if (bg->b)
@@ -1033,7 +1034,7 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   /* An end state is characterized by not having an output probabiliy. */
 
   sequence_t *sq = NULL;
-  int i, j, m, temp, index;
+  int i, j, m;
   double p, sum;
   int len = global_len;
   /* int silent_len = 0; */
@@ -1827,7 +1828,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   /* An end state is characterized by not having an output probabiliy. */
 
   sequence_t *sq = NULL;
-  int i, j, m, temp, index, transition_impossible, j_id;
+  int i, j, m, transition_impossible, j_id;
   double p, sum;
   int len = global_len;
   /*int silent_len = 0; */
@@ -2099,11 +2100,8 @@ int model_normalize (model * mo)
 {
 #define CUR_PROC "model_normalize"
 
-  int i, j, res, m, first, j_id, i_id;
+  int i, j, m, j_id, i_id=0, res=0;
   int size = 1;
-  double sum;
-
-  res = 0;
 
   for (i = 0; i < mo->N; i++) {
 
@@ -2532,9 +2530,9 @@ int model_get_uniform_background (model * mo, sequence_t * sq)
 {
 # define CUR_PROC "get_background"
 
-  int h, i, j, m, n, t;
+  int h, i, j, m, t, n=0;
   int e_index, size;
-  double sum;
+  double sum=0.0;
 
   if (!(mo->model_type & kHasBackgroundDistributions)) {
     mes_prot ("Error: Model has no background distribution");

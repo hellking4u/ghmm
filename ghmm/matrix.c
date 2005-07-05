@@ -139,12 +139,11 @@ int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
 double **stat_matrix_d_alloc (int n, int m)
 {
 #define CUR_PROC "stat_matrix_d_alloc"
-  int i, j;
+  int i;
   double **A;
   double *tmp;
 
   if (!(A = mes_calloc (n * sizeof (double*) + n * m * sizeof (double)))) {
-    /*if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) {*/
     mes_proc ();
     goto STOP;
   }
@@ -179,7 +178,7 @@ int stat_matrix_d_free (double ***matrix)
 int **stat_matrix_i_alloc (int n, int m)
 {
 #define CUR_PROC "stat_matrix_i_alloc"
-  int i, j;
+  int i;
   int **A;
   int *tmp;
   if (!(A = mes_calloc (n * sizeof(int*) + n * m * sizeof (int)))) {

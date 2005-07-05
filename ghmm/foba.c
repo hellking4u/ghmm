@@ -481,30 +481,21 @@ int foba_forward_lean (model * mo, const int *O, int len, double *log_p)
 {
 # define CUR_PROC "foba_forward_lean"
   int res = -1;
-  int i, t, id, k, e_index;
+  int i, t, id, e_index;
   double c_t;
   double log_scale_sum = 0.0;
   double non_silent_salpha_sum = 0.0;
   double salpha_log = 0.0;
 
-  double *alpha_last_col;
-  double *alpha_curr_col;
+  double *alpha_last_col=NULL;
+  double *alpha_curr_col=NULL;
   double *switching_tmp;
-  double *scale;
+  double *scale=NULL;
 
   /* Allocating */
-  if (!m_calloc (alpha_last_col, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (alpha_curr_col, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (scale, len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  if (!m_calloc (alpha_last_col, mo->N)) {mes_proc (); goto STOP;}
+  if (!m_calloc (alpha_curr_col, mo->N)) {mes_proc (); goto STOP;}
+  if (!m_calloc (scale, len)) {mes_proc (); goto STOP;}
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/
@@ -875,30 +866,21 @@ int foba_label_forward_lean (model * mo, const int *O, const int *label,
 {
 # define CUR_PROC "foba_label_forward_lean"
   int res = -1;
-  int i, t, id, k, e_index;
+  int i, t, id, e_index;
   double c_t;
   double log_scale_sum = 0.0;
   double non_silent_salpha_sum = 0.0;
   double salpha_log = 0.0;
 
-  double *alpha_last_col;
-  double *alpha_curr_col;
-  double *switching_tmp;
-  double *scale;
+  double *alpha_last_col=NULL;
+  double *alpha_curr_col=NULL;
+  double *switching_tmp=NULL;
+  double *scale=NULL;
 
   /* Allocating */
-  if (!m_calloc (alpha_last_col, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (alpha_curr_col, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (scale, len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  if (!m_calloc (alpha_last_col, mo->N)) {mes_proc (); goto STOP;}
+  if (!m_calloc (alpha_curr_col, mo->N)) {mes_proc (); goto STOP;}
+  if (!m_calloc (scale, len)) {mes_proc (); goto STOP;}
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/

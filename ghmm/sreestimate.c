@@ -530,7 +530,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
+static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
                           int *T, double **O, double *log_p, double *seq_w)
 {
 # define CUR_PROC "sreestimate_one_step"
