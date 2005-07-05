@@ -1784,7 +1784,7 @@ void state_clean (state * my_state)
 
   return new_state;
 
-  }*//* state_copy */
+  }*/** state_copy */*/
 
 /*============================================================================*/
 
@@ -1808,7 +1808,7 @@ void state_clean (state * my_state)
 
   dest->in_a       = malloc(xxx);
   memcpy(dest->in_a,source->in_a,xxx);
-  }*//* state_copy_to */
+  }*/** state_copy_to */*/
 
 
  /*==========================Labeled HMMS ================================*/

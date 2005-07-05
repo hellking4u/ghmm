@@ -611,7 +611,7 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 
       /* iterate over non-silent states */
       for (i = 0; i < mo->N; i++) {
-        // printf("  akt_ state %d\n",i);
+        /* printf("  akt_ state %d\n",i);*/
 
         e_index = get_emission_index (mo, i, O[t], t);
         if (e_index != -1) {
@@ -703,10 +703,10 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
       goto STOP;
     }
 
-    //if (n == 1)
-    //printf("%8.5f (-log_p input model)\n", -log_p); /* */
-    //else
-    //printf("%8.5f (-log_p)\n", -log_p); /* */
+    /*if (n == 1)*/
+    /*printf("%8.5f (-log_p input model)\n", -log_p); /* */*/
+    /*else*/
+    /*printf("%8.5f (-log_p)\n", -log_p); /* */*/
 
     if (log_p == +1) {
       printf
@@ -733,7 +733,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
 
     /* stop iterations? */
     if (diff < fabs ((double) likelihood_delta * log_p)) {
-      //printf("Convergence after %d steps\n", n); 
+      /*printf("Convergence after %d steps\n", n); */
 
       break;
     }
@@ -760,7 +760,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
   }
   if (!valid)
     log_p = +1;
-  //printf("%8.5f (-log_p optimized model)\n", -log_p);
+  /*printf("%8.5f (-log_p optimized model)\n", -log_p);*/
 
   /* check new parameter for plausibility */
   /* if (model_check(mo) == -1) { mes_proc(); goto STOP; } */

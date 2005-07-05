@@ -1,7 +1,8 @@
 /*******************************************************************************
 *
 *       This file is part of the General Hidden Markov Model Library,
-*       GHMM version __VERSION__, see http://ghmm.org
+*       GHMM version __VERSION__, see http:/*ghmm.org
+*/
 *
 *       Filename: ghmm/ghmm/root_finder.c
 *       Authors:  Achim Gaedke

@@ -114,8 +114,8 @@ static void model_DFSVisit (model * c_model, int nodev, int *timevisit,
   colors[nodev] = GRAY;
   ++(*timevisit);
   for (i = 0; i < c_model->s[nodev].out_states; i++) {
-    w = c_model->s[nodev].out_id[i];    // Explore edge (v,w)
-    if (edge_classes[nodev][w] == NONE) {       // First exploration
+    w = c_model->s[nodev].out_id[i];    /* Explore edge (v,w)*/
+    if (edge_classes[nodev][w] == NONE) {       /* First exploration*/
       edge_classes[nodev][w] = colors[w];
       /*fprintf(stderr, " %d edge (%s, %s)\n", (int) colors[w], c_model->s[nodev].label, c_model->s[w].label); */
     }
@@ -124,7 +124,7 @@ static void model_DFSVisit (model * c_model, int nodev, int *timevisit,
       model_DFSVisit (c_model, w, timevisit, parents, colors, edge_classes);
     }
   }
-  colors[nodev] = BLACK;        // finished  
+  colors[nodev] = BLACK;        /* finished  */
   ++(*timevisit);
 #undef CUR_PROC
 }
@@ -147,10 +147,10 @@ int **model_DFS (model * c_model)
   colors = (int *) calloc (c_model->N, sizeof (int));
   parents = (int *) calloc (c_model->N, sizeof (int));
 
-  //edge_classes=(int**)calloc(c_model->N,sizeof(int*));
-  //for(i=0; i < c_model->N; i++) {
-  //  edge_classes[i]=(int*)calloc(c_model->N,sizeof(int));
-  //}
+  /*edge_classes=(int**)calloc(c_model->N,sizeof(int*));*/
+  /*for(i=0; i < c_model->N; i++) {*/
+  /*  edge_classes[i]=(int*)calloc(c_model->N,sizeof(int));*/
+  /*}*/
 
 
   edge_classes = stat_matrix_i_alloc (c_model->N, c_model->N);

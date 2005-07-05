@@ -95,7 +95,7 @@ void ghmm_rng_timeseed (GHMM_RNG * r)
   srand (timeseed);
   tm = rand ();
   GHMM_RNG_SET (r, tm);
-  //printf("# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(r), tm);  
+  /*printf("# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(r), tm);  */
   fflush (stdout);
 }
 

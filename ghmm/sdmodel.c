@@ -118,11 +118,11 @@ double sdmodel_likelihood (sdmodel * mo, sequence_t * sq)
       log_p += log_p_i;
       found = 1;
     }
-    //    else {
-    //  char *str =
-    //   mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);
-    //  mes_prot(str);
-    //}
+    /*    else {*/
+    /*  char *str =*/
+    /*   mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);*/
+    /*  mes_prot(str);*/
+    /*}*/
   }
   if (!found)
     log_p = +1.0;
@@ -393,7 +393,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
     /* The first symbol chooses the start class */
     class = mo->get_class (sq->seq[n], state);
-    //class = sequence_d_class(&dummy, 0, &osum); /*  dummy function */
+    /*class = sequence_d_class(&dummy, 0, &osum); /*  dummy function */*/
     while (state < len) {
 
       /* Get a new state */
@@ -451,7 +451,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
       /* Decide the class for the next step */
       class = mo->get_class (sq->seq[n], state);
-      //class = sequence_d_class(&dummy, state, &osum); /* dummy */
+      /*class = sequence_d_class(&dummy, state, &osum); /* dummy */*/
       up = 0;
       state++;
     }                           /* while (state < len) , global_len depends on the data */
@@ -551,7 +551,7 @@ STOP:
  * be initialized by calling ghmm_rng_init().
  *
  */
-//returns the extended sequence struct with state matrix
+/*returns the extended sequence struct with state matrix*/
 sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
                                         int global_len, long seq_number,
                                         int Tmax)
@@ -692,12 +692,12 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
              first, sweep down to zero; if still no success, sweep up to
              COS - 1. If still no success --> Repudiate the sequence. */
           if (trans_class > 0 && up == 0) {
-            //trans_class--;
+            /*trans_class--;*/
             continue;
           }
           else {
             if (trans_class < mo->cos - 1) {
-              //trans_class++;          // as it is not dependent on time!
+              /*trans_class++;          // as it is not dependent on time!*/
               up = 1;
               continue;
             }
@@ -746,7 +746,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
       }
 
       /* Decide the class for the next step */
-      //trans_class = mo->get_class(sq->seq[n],state);
+      /*trans_class = mo->get_class(sq->seq[n],state);*/
       up = 0;
       obsLength++;
 
@@ -1041,7 +1041,7 @@ STOP:
 
   return new_state;
 
-  }*//* state_copy */
+  }*/** state_copy */*/
 
 /*============================================================================*/
 
@@ -1065,7 +1065,7 @@ STOP:
 
   dest->in_a       = malloc(xxx);
   memcpy(dest->in_a,source->in_a,xxx);
-  }*//* state_copy_to */
+  }*/** state_copy_to */*/
 
 
 /*===================== E n d   o f  f i l e  "model.c"       ===============*/

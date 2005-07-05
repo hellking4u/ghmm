@@ -143,11 +143,12 @@ double **stat_matrix_d_alloc (int n, int m)
   double **A;
   double *tmp;
 
-  if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) {
+  if (!(A = mes_calloc (n * sizeof (double*) + n * m * sizeof (double)))) {
+    /*if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) {*/
     mes_proc ();
     goto STOP;
   }
-
+  
   tmp = (double *) (A + n);
   for (i = 0; i < n; i++) {
     A[i] = tmp;
@@ -181,7 +182,7 @@ int **stat_matrix_i_alloc (int n, int m)
   int i, j;
   int **A;
   int *tmp;
-  if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) {
+  if (!(A = mes_calloc (n * sizeof(int*) + n * m * sizeof (int)))) {
     mes_proc ();
     goto STOP;
   }
@@ -220,7 +221,7 @@ double **matrix_d_alloc (int zeilen, int spalten)
   double **matrix;
   int i;
 
-  //printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);
+  /*printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);*/
 
   if (!m_calloc (matrix, zeilen)) {
     mes_proc ();

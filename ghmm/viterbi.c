@@ -130,7 +130,7 @@ static int viterbi_free (local_store_t ** v, int n, int len)
   matrix_d_free (&((*v)->log_b), n);
   m_free ((*v)->phi);
   m_free ((*v)->phi_new);
-  //matrix_i_free( &((*v)->psi), len );
+  /*matrix_i_free( &((*v)->psi), len );*/
   stat_matrix_i_free (&((*v)->psi));
   m_free ((*v)->topo_order);
   m_free (*v);
@@ -226,7 +226,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   int len_path = mo->N * len;
   int lastemState;
 
-  // printf("---- viterbi -----\n");
+  /* printf("---- viterbi -----\n");*/
 
   if (mo->model_type == kSilentStates &&
       mo->silent != NULL && mo->topo_order == NULL) {
@@ -276,7 +276,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
-    //int osc = mo->get_class(mo->N,t);
+    /*int osc = mo->get_class(mo->N,t);*/
 
     for (j = 0; j < mo->N; j++) {
 /** initialization of phi, psi **/
@@ -302,7 +302,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
             }
           }
           else {;
-          }                     // fprintf(stderr, " %d --> %d = %f, \n", i,St,v->log_in_a[St][i]);
+          }                     /* fprintf(stderr, " %d --> %d = %f, \n", i,St,v->log_in_a[St][i]);*/
         }
 
         /* No maximum found (that is, state never reached)
@@ -320,10 +320,10 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
     /* First now replace the old phi with the new phi */
     for (j = 0; j < mo->N; j++) {
       v->phi[j] = v->phi_new[j];
-      //printf("\npsi[%d],%d, phi, %f\n", t, v->psi[t][j], v->phi[j]); 
+      /*printf("\npsi[%d],%d, phi, %f\n", t, v->psi[t][j], v->phi[j]); */
     }
 
-    //last_osc = osc; /* save last transition class */
+    /*last_osc = osc; /* save last transition class */*/
 
     if (mo->model_type == kSilentStates) {
       __viterbi_silent (mo, t, v);

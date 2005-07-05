@@ -1004,7 +1004,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
       class = 0;
     }
     else {
-      //printf("1: cos = %d, k = %d, t = %d\n",smo->cos,n,state);
+      /*printf("1: cos = %d, k = %d, t = %d\n",smo->cos,n,state);*/
 
       if (!smo->class_change->get_class) {
         printf ("ERROR: get_class not initialized\n");
@@ -1088,7 +1088,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
         class = 0;
       }
       else {
-        //printf("2: cos = %d, k = %d, t = %d\n",smo->cos,n,state);
+        /*printf("2: cos = %d, k = %d, t = %d\n",smo->cos,n,state);*/
         if (!smo->class_change->get_class) {
           printf ("ERROR: get_class not initialized\n");
           return (NULL);
@@ -1490,7 +1490,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
 
     seq0 = smodel_generate_sequences (smo1, 0, maxT + 1, 1, 0, maxT + 1);
 
-    //sequence_d_print(stdout,seq0,0);
+    /*sequence_d_print(stdout,seq0,0);*/
 
     if (seq0->seq_len[0] < maxT) {      /* There is an absorbing state */
 
@@ -1562,7 +1562,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
           goto STOP;
         }
 
-        //printf("1/%d *(%f - %f)\n",t,p0,p);
+        /*printf("1/%d *(%f - %f)\n",t,p0,p);*/
 
         d = 1.0 / t * (p0 - p);
 
@@ -1604,7 +1604,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
           goto STOP;
         }
 
-        //printf("1/%d *(%f - %f)\n",t,p0,p);
+        /*printf("1/%d *(%f - %f)\n",t,p0,p);*/
 
         d = 1.0 / t * (p0 - p);
 
@@ -1762,15 +1762,15 @@ int smodel_test_callback(int pos){
    int class;
    PyObject *pName, *pModule, *pDict, *pFunc, *pArgs, *pValue;
     
-   //Py_Initialize();      // Init Python Interpreter
+   /*Py_Initialize();      // Init Python Interpreter*/
    
-   //PyRun_SimpleString("import sys\n");
-   //PyRun_SimpleString("sys.stdout.write('Hello from an embedded Python Script\\n')\n"); 
+   /*PyRun_SimpleString("import sys\n");*/
+   /*PyRun_SimpleString("sys.stdout.write('Hello from an embedded Python Script\\n')\n"); */
 
    
    printf("C: Importing Python module ... ");
    pName = PyString_FromString(ModuleName);
-   pModule = PyImport_Import(pName);       // Import module
+   pModule = PyImport_Import(pName);       /* Import module*/
    pDict = PyModule_GetDict(pModule);
    printf("done.\n");    
     
@@ -1781,13 +1781,13 @@ int smodel_test_callback(int pos){
    pValue = PyInt_FromLong(pos);
 
    PyTuple_SetItem(pArgs, 0, pValue); 
-   pValue = PyObject_CallObject(pFunc, pArgs); // Calling Python 
+   pValue = PyObject_CallObject(pFunc, pArgs); /* Calling Python */
 
    /* parsing the result from Python to C data type
    class = PyInt_AsLong(pValue);
    printf("C: The returned class is %d\n",class);
      
-   //Py_Finalize();         
+   /*Py_Finalize();         */
    
    return class; 
  

@@ -49,12 +49,12 @@ static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,
   int class = 0;
   double c_0;
   scale[0] = 0.0;
-  //iterate over non-silent states
+  /*iterate over non-silent states*/
   for (i = 0; i < mo->N; i++) {
     if (!(mo->silent[i])) {
       if (symb != mo->M) {
         alpha_1[i] = mo->s[i].pi * mo->s[i].b[symb];
-        //      printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);
+        /*      printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);*/
       }
 
       else {
@@ -64,19 +64,19 @@ static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,
 
     }
   }
-  //iterate over silent states
+  /*iterate over silent states*/
   for (i = 0; i < mo->topo_order_length; i++) {
     id = mo->topo_order[i];
     alpha_1[id] = mo->s[id].pi;
-    //      printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id]);
+    /*      printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id]);*/
     for (j = 0; j < mo->s[id].in_states; j++) {
       in_id = mo->s[id].in_id[j];
       alpha_1[id] += mo->s[id].in_a[class][j] * alpha_1[in_id];
     }
-    //      printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id]);
+    /*      printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id]);*/
     scale[0] += alpha_1[id];
   }
-  //  printf("\n%f\n",scale[0]);
+  /*  printf("\n%f\n",scale[0]);*/
   if (scale[0] >= EPS_PREC) {
     c_0 = 1 / scale[0];
     for (i = 0; i < mo->N; i++)
@@ -97,7 +97,7 @@ static double sdfoba_stepforward (sdstate * s, double *alpha_t,
 
   for (i = 0; i < s->in_states; i++) {
     id = s->in_id[i];
-    //    printf("state:\t%s, instate:\t%d, prob:\t%f\n", s->label, id, s->in_a[class][i]);
+    /*    printf("state:\t%s, instate:\t%d, prob:\t%f\n", s->label, id, s->in_a[class][i]);*/
     value += s->in_a[class][i] * alpha_t[id];
   }
   value *= b_symb;
@@ -129,11 +129,11 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
     *log_p = -log (1 / scale[0]);
     for (t = 1; t < len; t++) {
       scale[t] = 0.0;
-      //      printf("\nStep t=%i mit len=%i, O[i]=%i\n",t,len,O[t]);
+      /*      printf("\nStep t=%i mit len=%i, O[i]=%i\n",t,len,O[t]);*/
       if (mo->cos > 1)
         class = mo->get_class (mo->N, t - 1);
-      //iterate over non-silent states
-      //printf("\nnach Class\n");
+      /*iterate over non-silent states*/
+      /*printf("\nnach Class\n");*/
       for (i = 0; i < mo->N; i++) {
         if (mo->model_type != kSilentStates || !(mo->silent[i])) {
           if (O[t] != mo->M) {
@@ -145,40 +145,40 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
           alpha[t][i] =
             sdfoba_stepforward (&mo->s[i], alpha[t - 1], dblems, class);
 
-          //           printf("alpha[%i][%i] = %f\n", t, i, alpha[t][i]);
+          /*           printf("alpha[%i][%i] = %f\n", t, i, alpha[t][i]);*/
           scale[t] += alpha[t][i];
-          //printf("\nalpha[%d][%d] = %e, scale[%d] = %e", t,i, alpha[t][i], t, scale[t]);
+          /*printf("\nalpha[%d][%d] = %e, scale[%d] = %e", t,i, alpha[t][i], t, scale[t]);*/
 
-          //printf("scale[%i] = %f\n", t, scale[t]);
+          /*printf("scale[%i] = %f\n", t, scale[t]);*/
         }
       }
-      //printf("\nvor silent states\n");
-      //iterate over silent state
+      /*printf("\nvor silent states\n");*/
+      /*iterate over silent state*/
       if (mo->model_type == kSilentStates) {
         for (i = 0; i < mo->topo_order_length; i++) {
-          //printf("\nget id\n");
+          /*printf("\nget id\n");*/
           id = mo->topo_order[i];
-          //printf("\nin stepforward\n");
+          /*printf("\nin stepforward\n");*/
           alpha[t][id] = sdfoba_stepforward (&mo->s[id], alpha[t], 1, class);
-          //   printf("alpha[%i][%i] = %f\n", t, id, alpha[t][id]);
-          //printf("\nnach stepforward\n");
+          /*   printf("alpha[%i][%i] = %f\n", t, id, alpha[t][id]);*/
+          /*printf("\nnach stepforward\n");*/
           scale[t] += alpha[t][id];
-          //printf("\nalpha[%d][%d] = %e, scale[%d] = %e", t,id, alpha[t][id], t, scale[t]);
-          //printf("silent state: %d\n", id);
+          /*printf("\nalpha[%d][%d] = %e, scale[%d] = %e", t,id, alpha[t][id], t, scale[t]);*/
+          /*printf("silent state: %d\n", id);*/
         }
       }
-      //printf("\nnach silent states\n");
+      /*printf("\nnach silent states\n");*/
       if (scale[t] < EPS_PREC) {
-        //char *str = 
+        /*char *str = */
         printf ("numerically questionable: ");
-        //mes_prot(str);
-        //printf("\neps = %e\n", EPS_PREC);
-        //printf("\nscale kleiner als eps HUHU, Zeit t = %d, scale = %e\n", t, scale[t]);
-        //printf("\nlabel: %s, char: %d, ems: %f\n", mo->s[92].label,O[t], mo->s[4].b[O[t]]);
-        //vector_d_print(stdout, alpha[t],mo->N, "\t", " ", "\n");
+        /*mes_prot(str);*/
+        /*printf("\neps = %e\n", EPS_PREC);*/
+        /*printf("\nscale kleiner als eps HUHU, Zeit t = %d, scale = %e\n", t, scale[t]);*/
+        /*printf("\nlabel: %s, char: %d, ems: %f\n", mo->s[92].label,O[t], mo->s[4].b[O[t]]);*/
+        /*vector_d_print(stdout, alpha[t],mo->N, "\t", " ", "\n");*/
         /* O-string  can't be generated by hmm */
-        //      *log_p = +1.0;
-        //break;
+        /*      *log_p = +1.0;*/
+        /*break;*/
       }
       c_t = 1 / scale[t];
       for (i = 0; i < mo->N; i++)
@@ -201,27 +201,27 @@ static int sdfobau_initforward (sdmodel * mo, double *alpha_1, int symb,
   int class = 0;
   double c_0;
   scale[0] = 0.0;
-  //iterate over non-silent states
+  /*iterate over non-silent states*/
   for (i = 0; i < mo->N; i++) {
     if (!(mo->silent[i])) {
       alpha_1[i] = mo->s[i].pi * mo->s[i].b[symb];
-      //printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);
+      /*printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);*/
       scale[0] += alpha_1[i];
     }
   }
-  //iterate over silent states
+  /*iterate over silent states*/
   for (i = 0; i < mo->topo_order_length; i++) {
     id = mo->topo_order[i];
     alpha_1[id] = mo->s[id].pi;
-    //printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id]);
+    /*printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id]);*/
     for (j = 0; j < mo->s[id].in_states; j++) {
       in_id = mo->s[id].in_id[j];
       alpha_1[id] += mo->s[id].in_a[class][j] * alpha_1[in_id];
-      //printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id]);
+      /*printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id]);*/
     }
-    //scale[0] += alpha_1[id];
+    /*scale[0] += alpha_1[id];*/
   }
-  //printf("\n%f\n",scale[0]);
+  /*printf("\n%f\n",scale[0]);*/
   if (scale[0] >= EPS_PREC) {
     c_0 = 1 / scale[0];
     for (i = 0; i < mo->N; i++)
@@ -256,7 +256,7 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
       scale[t] = 0.0;
       if (mo->cos > 1)
         class = mo->get_class (mo->N, t - 1);
-      //iterate over non-silent states
+      /*iterate over non-silent states*/
       for (i = 0; i < mo->N; i++) {
         if (mo->model_type != kSilentStates || !(mo->silent[i])) {
           alpha[t][i] =
@@ -265,12 +265,12 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
           scale[t] += alpha[t][i];
         }
       }
-      //iterate over silent state       
+      /*iterate over silent state       */
       if (mo->model_type == kSilentStates) {
         for (i = 0; i < mo->topo_order_length; i++) {
           id = mo->topo_order[i];
           alpha[t][id] = sdfoba_stepforward (&mo->s[id], alpha[t], 1, class);
-          //scale[t] += alpha[t][id];
+          /*scale[t] += alpha[t][id];*/
         }
       }
       if (scale[t] < EPS_PREC) {
@@ -297,21 +297,21 @@ int sdfoba_descale (double **alpha, double *scale, int t, int n,
 {
 # define CUR_PROC "sdfoba_descale"
   int i, j, k;
-  //printf("\nAngekommen, t=%i, n=%i\n",t,n);
+  /*printf("\nAngekommen, t=%i, n=%i\n",t,n);*/
   for (i = 0; i < t; i++) {
-    //printf("i=%i\n",i);
+    /*printf("i=%i\n",i);*/
     for (j = 0; j < n; j++) {
-      //printf("\tj=%i\n",j);
+      /*printf("\tj=%i\n",j);*/
       newalpha[i][j] = alpha[i][j];
-      //newalpha[i][j] *= scale[j];
-      //printf(".");
+      /*newalpha[i][j] *= scale[j];*/
+      /*printf(".");*/
       for (k = 0; k <= i; k++) {
-        //printf(",");
+        /*printf(",");*/
         newalpha[i][j] *= scale[k];
       }
     }
   }
-  //printf("\ndescale geschafft\n");
+  /*printf("\ndescale geschafft\n");*/
   return 0;
 # undef CUR_PROC
 }                               /* sdfoba_descale */
@@ -344,7 +344,7 @@ int sdfoba_backward (sdmodel * mo, const int *O, int len, double **beta,
       sum = 0.0;
       for (j = 0; j < mo->s[i].out_states; j++) {
         j_id = mo->s[i].out_id[j];
-        //sum += mo->s[i].out_a[j] * mo->s[j_id].b[O[t+1]] * beta_tmp[j_id];
+        /*sum += mo->s[i].out_a[j] * mo->s[j_id].b[O[t+1]] * beta_tmp[j_id];*/
       }
       beta[t][i] = sum;
     }

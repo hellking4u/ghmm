@@ -480,7 +480,7 @@ double discrime_compute_performance (model ** mo, sequence_t ** sqs, int noC)
         if (0 != temp)
           printf ("foba_logp error in sequence[%d][%d] under model %d (%g)\n",
                   k, l, m, logp[m]);
-        //printf("foba_logp sequence[%d][%d] under model %d (%g)\n", k, l, m, logp[m]);
+        /*printf("foba_logp sequence[%d][%d] under model %d (%g)\n", k, l, m, logp[m]);*/
       }
 
       max = 1.0;
@@ -1151,7 +1151,7 @@ void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
     }
     if (self < other)
       lfactor *= self / other;
-    //printf("PI[%d]: %g - %g = %g \t %g\n", k, self, other, self-other, lfactor);
+    /*printf("PI[%d]: %g - %g = %g \t %g\n", k, self, other, self-other, lfactor);*/
 
     /* A */
     for (j = 0; j < mo->s[i].out_states; j++) {
@@ -1171,7 +1171,7 @@ void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
       }
       if (self < other)
         lfactor *= self / other;
-      //printf(" A[%d]: %g - %g = %g \t %g\n", k, self, other, self-other, lfactor);
+      /*printf(" A[%d]: %g - %g = %g \t %g\n", k, self, other, self-other, lfactor);*/
     }
 
     /* B */
@@ -1193,7 +1193,7 @@ void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
         }
         if (self < other)
           lfactor *= self / other;
-        //printf(" B[%d]: %g - %g = %g \t %g\n", k, self, other, self-other, lfactor);
+        /*printf(" B[%d]: %g - %g = %g \t %g\n", k, self, other, self-other, lfactor);*/
       }
     }
   }

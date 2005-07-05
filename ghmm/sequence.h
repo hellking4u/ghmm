@@ -388,7 +388,7 @@ extern "C" {
    @return currently always 0
  */
   int sequence_d_class (const double *O, int index, double *osum);
-//int sequence_d_class(const sequence_d_t *sqd, const int seq_number, int index, double *osum, );
+  /*int sequence_d_class(const sequence_d_t *sqd, const int seq_number, int index, double *osum, );*/
 
 /** Divides randomly a given array of double sequences into two sets. 
     Useful if a training and test set is needed. Memory allocation is done 

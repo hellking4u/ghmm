@@ -149,12 +149,12 @@ static void Viterbi_precompute (sdmodel * mo, int *o, int len,
 
   /* Precomputing the log(a_ij) */
 
-  //for (j = 0; j < mo->N; j++)
-  // for (i = 0; i < mo->s[j].in_states; i++)
-  //  if ( mo->s[j].in_a[i] == 0.0 )   /* DBL_EPSILON ? */
-  //log_in_a[j][i] = +1; /* Not used any further in the calculations */
-  //  else
-  //log_in_a[j][i] = log( mo->s[j].in_a[i] );
+  /*for (j = 0; j < mo->N; j++)*/
+  /* for (i = 0; i < mo->s[j].in_states; i++)*/
+  /*  if ( mo->s[j].in_a[i] == 0.0 )   /* DBL_EPSILON ? */*/
+  /*log_in_a[j][i] = +1; /* Not used any further in the calculations */*/
+  /*  else*/
+  /*log_in_a[j][i] = log( mo->s[j].in_a[i] );*/
 
 
   for (j = 0; j < mo->N; j++) {
@@ -197,7 +197,7 @@ static void __viterbi_silent (sdmodel * mo, int t, local_store_t * v,
       max_value = -DBL_MAX;
       v->psi[t][k] = -1;
       for (i = 0; i < mo->s[k].in_states; i++) {
-        // printf("\nBerrechnung von transclass von Zustand %d", mo->s[k].in_id[i]);
+        /* printf("\nBerrechnung von transclass von Zustand %d", mo->s[k].in_id[i]);*/
         if (mo->cos != 1) {
           osc = mo->get_class (NULL, mo->N);
         }
@@ -251,7 +251,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   int *recent_matchcount = NULL;
   int *tmp_matchcount = NULL;
   int *countstates = NULL;
-  int nr_of_countstates = 2 * ((mo->N - 5) / 3);        // # of matchstates + deletestates
+  int nr_of_countstates = 2 * ((mo->N - 5) / 3);        /* # of matchstates + deletestates*/
   int lastemState;
   int *tmp_path;
 
@@ -330,7 +330,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
-    //int osc = mo->get_class(mo->N,t);
+    /*int osc = mo->get_class(mo->N,t);*/
 
     for (j = 0; j < mo->N; j++) {
 /** initialization of phi, psi **/
@@ -348,8 +348,8 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
         max_value = -DBL_MAX;
         v->psi[t][St] = -1;
         for (i = 0; i < mo->s[St].in_states; i++) {
-          // get_class of in state
-          // printf("\nBerechnung von transclass fuer Zustand %d", mo->s[St].in_id[i]);
+          /* get_class of in state*/
+          /* printf("\nBerechnung von transclass fuer Zustand %d", mo->s[St].in_id[i]);*/
           if (mo->cos > 1) {
             osc = mo->get_class (NULL, mo->N);
           }
@@ -362,7 +362,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
             }
           }
           else {
-            // fprintf(stderr, " %d --> %d = %f, \n", i,St,v->log_in_a[St][osc][i]);
+            /* fprintf(stderr, " %d --> %d = %f, \n", i,St,v->log_in_a[St][osc][i]);*/
           }
         }
 
