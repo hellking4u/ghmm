@@ -62,11 +62,11 @@ extern "C" {
   } hypoList;
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
-  inline void hlist_insertElem (hypoList ** plist, int newhyp,
+   void hlist_insertElem (hypoList ** plist, int newhyp,
                                 hypoList * parlist);
 
 /* removes hypothesis at position indicated by pointer plist from the list */
-  inline void hlist_removeElem (hypoList ** plist);
+   void hlist_removeElem (hypoList ** plist);
 
 
 /**
@@ -93,7 +93,7 @@ extern "C" {
    @param s:          state whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
-  inline double logGammaSum (double *log_a, state * s, hypoList * parent);
+   double logGammaSum (double *log_a, state * s, hypoList * parent);
 
 
 /**
@@ -103,7 +103,7 @@ extern "C" {
    @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
    @param N:          length of a
 */
-  inline double logSum (double *a, int N);
+   double logSum (double *a, int N);
 
 #ifdef __cplusplus
 }
