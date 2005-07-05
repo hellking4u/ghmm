@@ -42,7 +42,7 @@
 #include "kbestbasics.h"
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
-inline void hlist_insertElem (hypoList ** plist, int newhyp,
+ void hlist_insertElem (hypoList ** plist, int newhyp,
                               hypoList * parlist)
 {
 #define CUR_PROC "hlist_insertElem"
@@ -68,7 +68,7 @@ STOP:
 
 /* removes hypothesis at position indicated by pointer plist from the list
    removes recursively parent hypothesis with refcount==0 */
-inline void hlist_removeElem (hypoList ** plist)
+ void hlist_removeElem (hypoList ** plist)
 {
 #define CUR_PROC "hlist_removeElem"
   hypoList *tempPtr = (*plist)->next;
@@ -185,7 +185,7 @@ STOP:
    @param s:          state whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
-inline double logGammaSum (double *log_a, state * s, hypoList * parent)
+ double logGammaSum (double *log_a, state * s, hypoList * parent)
 {
 #define CUR_PROC "logGammaSum"
   double result;
@@ -248,7 +248,7 @@ STOP:
    @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
    @param N:          length of a
 */
-inline double logSum (double *a, int N)
+ double logSum (double *a, int N)
 {
 #define CUR_PROC "logSum"
   int i;
