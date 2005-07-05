@@ -36,6 +36,8 @@ int single_state_coin_toss()
   int trans_id_single_state[1]={0};
   sequence_t* my_output;
   int silent_array[2] =  {0}; 
+
+  my_model.model_type = 0;
   /* initialise this state */
   single_state.pi = 1.0;
   single_state.b=symbols_single_state;
@@ -62,6 +64,7 @@ int single_state_coin_toss()
   my_output=model_generate_sequences(&my_model,0,10,10,100);
   sequence_print(stdout,my_output);
 
+  sequence_free(&my_output);
   return 0;
 }
 
@@ -92,6 +95,7 @@ int two_states_coin_toss()
   /* flags indicating whether a state is silent */
   int silent_array[2] =  {0,0}; 
 
+  my_model.model_type = 0;
   /* initialise head state */
   model_states[0].pi = 0.5;
   model_states[0].b=symbols_head_state;
@@ -176,6 +180,8 @@ int two_states_coin_toss()
   fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */
+  sequence_free(&my_output);
+  free(viterbi_path);
   stat_matrix_d_free(&forward_alpha);
   return 0;
 }
