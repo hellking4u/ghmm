@@ -277,6 +277,14 @@ class Alphabet(EmissionDomain):
         strout += "Internal: " + str(range(len(self))) + "\n"
         return strout
     
+    def __eq__(self,alph):
+        if not isinstance(alph,Alphabet):
+            return False
+        else:    
+            if self.listOfCharacters == alph.listOfCharacters and self.index == alph.index and self.CDataType==alph.CDataType:
+                return True
+            else:
+                return False    
 
     def __len__(self):
         return len(self.listOfCharacters)
@@ -560,13 +568,16 @@ class EmissionSequence:
 
     def __del__(self):
         "Deallocation of C sequence struct."
+        
+        #print "__del__ EmissionSequence " + str(self.cseq)
+        # if a parent SequenceSet exits, we only delete the reference
         if self.ParentSequenceSet is not None:
             #print "__del__ EmissionSequence " + str(self.cseq)
+            self.ParentSequenceSet = None
+        # otherwise the memory is freed        
+        else:
             self.freeFunction( self.cseq)
             self.cseq = None
-        # if a parent SequenceSet exits, we only delete the reference
-        else:
-            self.ParentSequenceSet = None
 
     def __len__(self):
         "Returns the length of the sequence."
@@ -583,7 +594,6 @@ class EmissionSequence:
         if index < len(self):
             return self.getSymbol(self.cseq.seq, 0, index)
         else:
-
             raise IndexError    
     
     def getSeqLabel(self):
@@ -798,7 +808,7 @@ class SequenceSet:
     def __del__(self):
         "Deallocation of C sequence struct."
         
-        #print "__del__ SequenceSet " + str(self.cseq)
+        print "__del__ SequenceSet " + str(self.cseq)
         self.freeFunction(self.cseq)
         self.cseq = None
     
@@ -853,6 +863,10 @@ class SequenceSet:
         sequence 'index'.
         
         """
+        # check the index for correct range
+        if index >= self.cseq.seq_number:
+            raise IndexError
+        
         seq = self.sequenceAllocationFunction(1)
         seqPtr = self.getPtr(self.cseq.seq,index)
         seq.seq = self.castPtr(seqPtr)  
@@ -918,7 +932,7 @@ class SequenceSet:
         # checking for state labels in the source C sequence struct
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
             
-            print "found labels !"
+            #print "found labels !"
             seq.state_labels = ghmmwrapper.int_2d_array_nocols(seqNumber)
             seq.state_labels_len = ghmmwrapper.int_array(seqNumber)
 
@@ -1291,6 +1305,8 @@ def readMultipleHMMERModels(fileName):
 class HMMFromMatricesFactory(HMMFactory):
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None):
         if isinstance(emissionDomain,Alphabet):
+            
+            assert emissionDomain == distribution.alphabet, "emissionDomain and distribution must be compatible"
             
             # checking matrix dimensions and argument validation, only some obvious errors are checked
             if not len(A) == len(A[0]):
@@ -2471,7 +2487,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         self.backwardBetaLabelFunction = ghmmwrapper.foba_label_backward
         self.kbestFunction = ghmmwrapper.kbest        
         self.gradientDescentFunction = ghmmwrapper.gradient_descent
-        self.cmodel.state_label = ghmmwrapper.int_array(self.N)
+        #self.cmodel.state_label = ghmmwrapper.int_array(self.N) # XXX ???
 
     def __str__(self):
         hmm = self.cmodel
@@ -3196,7 +3212,7 @@ class GaussianEmissionHMM(HMM):
         """
         
         if not isinstance(trainingSequences, SequenceSet) and not isinstance(trainingSequences, EmissionSequence):
-            raise TypeError, "baumWelch requires a SequenceSet object."
+            raise TypeError, "baumWelch requires a SequenceSet or EmissionSequence object."
         
         assert self.emissionDomain.CDataType == "double", "Continous sequence needed."
         
@@ -3322,16 +3338,16 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             strout += "  pdf component weights : " + str(weight) + "\n"
             strout += "  mean vector: " + str(mue) + "\n"
             strout += "  variance vector: " + str(u) + "\n"
-            strout += "\nOutgoing transitions:"
 
-            for i in range( state.out_states):
-                strout += "\ntransition to node " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) +" with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.out_a,0,i))
+            for c in range(self.cmodel.cos):
+                strout += "\n  Class : " + str(c)                
+                strout += "\n    Outgoing transitions:"
+                for i in range( state.out_states):
+                    strout += "\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i))
+                strout +=  "\n    Ingoing transitions:"
+                for i in range(state.in_states):
+                    strout += "\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i))
 
-
-            strout +=  "\nIngoing transitions:"
-
-            for i in range(state.in_states):
-                strout += "\ntransition from node " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probablity = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,0,i))
 
             strout += "\nint fix:" + str(state.fix) + "\n"
         return strout
