@@ -51,6 +51,8 @@ int my_model()
   double trans_prob_1_state_rev[2]={0.1,0.9};
   sequence_t* my_output;
 
+  int pow_look[2] = {1,3};
+
   /* flags indicating whether a state is silent */
   /*int silent_array[2] =  {0,0};*/
   
@@ -97,7 +99,6 @@ int my_model()
   my_model.prior=-1; /* probability of this model, used in a model array */
 
   /*my_model.silent = silent_array;*/
-  int pow_look[2] = {1,3};
   my_model.pow_lookup = pow_look;
   my_model.maxorder = 0;
   my_model.model_type =0;

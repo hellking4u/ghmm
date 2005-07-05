@@ -43,6 +43,7 @@
 #endif
 
 #include <math.h>
+#include <string.h>
 #ifdef HAVE_LIBPTHREAD
 # include <pthread.h>
 #endif /* HAVE_LIBPTHREAD */

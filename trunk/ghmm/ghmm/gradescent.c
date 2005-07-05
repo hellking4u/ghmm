@@ -188,6 +188,7 @@ int gradescent_compute_expectations (model * mo, double **alpha,
         j_id = mo->s[i].out_id[j];
 
         /* compute xi implicit */
+	xi = 0;
         e_index = get_emission_index (mo, j_id, seq[t + 1], t + 1);
         if (e_index != -1)
           xi = alpha[t][i] * beta[t + 1][j_id] * mo->s[i].out_a[j]
@@ -465,7 +466,6 @@ int gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps)
 #define CUR_PROC "gradient_descent_nstep"
 
   int runs = 0;
-  int i;
   double cur_perf, last_perf;
   model *last;
 

@@ -41,9 +41,10 @@
 #include <math.h>
 #include <assert.h>
 
-#include <ghmm/ghmm.h>
-#include <ghmm/matrix.h>
-#include <ghmm/sdmodel.h>
+#include "ghmm.h"
+#include "matrix.h"
+#include "sdmodel.h"
+#include "modelutil.h"
 
 typedef struct local_store_t {
   double **log_in_a;
@@ -143,8 +144,7 @@ static void Viterbi_precompute (model * mo, int *o, int len,
                                 local_store_t * v)
 {
 #define CUR_PROC "viterbi_precompute"
-  int i, j, k, t;
-  double log_p = +1;
+  int i, j, t;
 
   /* Precomputing the log(a_ij) */
 
@@ -218,17 +218,15 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
 
   int *state_seq = NULL;
   int t, j, i, k, St;
-  int topocount = 0;
+  int osc;
   double value, max_value;
-  double sum, osum = 0.0;
-  double dummy = 0.0;
   local_store_t *v;
   int len_path = mo->N * len;
   int lastemState;
 
   /* printf("---- viterbi -----\n");*/
 
-  if (mo->model_type == kSilentStates &&
+  if (mo->model_type & kSilentStates &&
       mo->silent != NULL && mo->topo_order == NULL) {
     model_topo_ordering (mo);   /* Should we call it here ???? */
   }
@@ -257,8 +255,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
     else
       v->phi[j] = log (mo->s[j].pi) + v->log_b[j][0];
   }
-  if (mo->model_type == kSilentStates) {        /* could go into silent state at t=0 */
-    int osc;
+  if (mo->model_type & kSilentStates) {        /* could go into silent state at t=0 */
     __viterbi_silent (mo, t = 0, v);
   }
   /*for (j = 0; j < mo->N; j++)
@@ -411,7 +408,7 @@ STOP:
 double viterbi_logp (model * mo, int *o, int len, int *state_seq)
 {
 #define CUR_PROC "viterbi_logp"
-  int t, i, j, id;
+
   double log_p = 0.0;
   int *vpath;
 
