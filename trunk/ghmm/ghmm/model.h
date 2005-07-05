@@ -249,7 +249,7 @@ extern "C" {
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
     uses if appropiate lookup table from struct model */
-  inline int model_ipow (const model * mo, int x, unsigned int n);
+   int model_ipow (const model * mo, int x, unsigned int n);
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -512,7 +512,7 @@ extern "C" {
 	@param obs:  integer observation to be updated with
 	@param   t:  position of obs in sequence (time)
 */
-  inline int get_emission_index (model * mo, int j, int obs, int t);
+   int get_emission_index (model * mo, int j, int obs, int t);
 
 /**
 	Updates emission history of model mo, discarding the oldest and 'adding' the
@@ -520,7 +520,7 @@ extern "C" {
 	@param  mo:  model to be updated
 	@param obs:  integer observation to be updated with
 */
-  inline void update_emission_history (model * mo, int obs);
+   void update_emission_history (model * mo, int obs);
 
 /**
 	Updates emission history of model mo for backward algorithm by 'adding'
@@ -530,7 +530,7 @@ extern "C" {
 	@param  mo:  model to be updated
 	@param obs:  integer observation to be updated with
 */
-  inline void update_emission_history_front (model * mo, int obs);
+   void update_emission_history_front (model * mo, int obs);
 
 
 /**
