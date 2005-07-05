@@ -52,7 +52,7 @@ int my_model()
   sequence_t* my_output;
 
   /* flags indicating whether a state is silent */
-  //int silent_array[2] =  {0,0}; 
+  /*int silent_array[2] =  {0,0};*/
   
   /* initialise state 0 */
   /* start probability for this state */
@@ -96,7 +96,7 @@ int my_model()
   my_model.s=model_states; /* array of states */
   my_model.prior=-1; /* probability of this model, used in a model array */
 
-  //my_model.silent = silent_array;
+  /*my_model.silent = silent_array;*/
   int pow_look[2] = {1,3};
   my_model.pow_lookup = pow_look;
   my_model.maxorder = 0;
@@ -124,7 +124,7 @@ int my_model()
 				     100, /* no of sequences */
 		  			 100); /* maxT */ 
   fprintf(stdout,"Done\n");
-  //sequence_print(stdout,my_output);
+  /*sequence_print(stdout,my_output);*/
 
   /* slight change of emission probabilities in state 0 */
   symbols_0_state[0] = 0.6;
