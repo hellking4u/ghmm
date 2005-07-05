@@ -83,7 +83,7 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
 
 
 /*----------------------------------------------------------------------------*/
-inline int model_ipow (const model * mo, int x, unsigned int n)
+ int model_ipow (const model * mo, int x, unsigned int n)
 {
 #define CUR_PROC "model_ipow"
   int result = 1;
@@ -980,7 +980,7 @@ STOP:
 
 /*===========================================================================*/
 
-inline int get_random_output (model * mo, int i, int position)
+ int get_random_output (model * mo, int i, int position)
 {
 
   int m, e_index;
@@ -2057,7 +2057,7 @@ STOP:
 
 /*----------------------------------------------------------------------------*/
 /** gets correct index for emission array b of state j */
-inline int get_emission_index (model * mo, int j, int obs, int t)
+ int get_emission_index (model * mo, int j, int obs, int t)
 {
   if (!(mo->model_type & kHigherOrderEmissions))
     return (obs);
@@ -2068,7 +2068,7 @@ inline int get_emission_index (model * mo, int j, int obs, int t)
 }
 
 /** updates emission history */
-inline void update_emission_history (model * mo, int obs)
+ void update_emission_history (model * mo, int obs)
 {
   /* left-shift the history, truncate to history length and
      add the last observation */
@@ -2078,7 +2078,7 @@ inline void update_emission_history (model * mo, int obs)
 }
 
 /** updates emission history for backward algorithm*/
-inline void update_emission_history_front (model * mo, int obs)
+ void update_emission_history_front (model * mo, int obs)
 {
   /*removes the most significant position (right-shift) and add the last seen
      observation (left-shifted with the length of history) */
