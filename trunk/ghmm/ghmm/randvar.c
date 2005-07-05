@@ -382,7 +382,7 @@ double randvar_get_1overa (double x, double mean, double u)
       goto STOP;
     }
     else
-      a = 1 / phi_z;            /* PHI between 0.5 and 1 *//*??? between 0.5 and 0 ! */
+      a = 1 / phi_z;            /* PHI between 0.5 and 1 */**??? between 0.5 and 0 ! */*/
   }
   else {
     a = 1 - phi_z;

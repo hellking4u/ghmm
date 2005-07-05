@@ -546,7 +546,7 @@ sequence_d_t *sequence_d_calloc (long seq_number)
 {
 #define CUR_PROC "sequence_dcalloc"
   int i;
-  //printf("*** sequence_d_t *sequence_d_calloc, nr: %d\n",seq_number);
+  /*printf("*** sequence_d_t *sequence_d_calloc, nr: %d\n",seq_number);*/
   sequence_d_t *sqd = NULL;
   if (seq_number > MAX_SEQ_NUMBER) {
     char *str = mprintf (NULL, 0,
@@ -618,7 +618,7 @@ sequence_t *sequence_calloc (long seq_number)
     mes_proc ();
     goto STOP;
   }
-  //if(!m_calloc(sq->states, seq_number)) {mes_proc(); goto STOP;}
+  /*if(!m_calloc(sq->states, seq_number)) {mes_proc(); goto STOP;}*/
   if (!m_calloc (sq->seq_len, seq_number)) {
     mes_proc ();
     goto STOP;
@@ -738,7 +738,7 @@ int sequence_add (sequence_t * target, sequence_t * source)
 
   int res = -1;
   int **old_seq = target->seq;
-  //int **old_seq_st    = target->states;
+  /*int **old_seq_st    = target->states;*/
   int *old_seq_len = target->seq_len;
   long *old_seq_label = target->seq_label;
   double *old_seq_id = target->seq_id;
@@ -753,7 +753,7 @@ int sequence_add (sequence_t * target, sequence_t * source)
     mes_proc ();
     goto STOP;
   }
-  //if(!m_calloc(target->states, target->seq_number)) {mes_proc(); goto STOP;}
+  /*if(!m_calloc(target->states, target->seq_number)) {mes_proc(); goto STOP;}*/
   if (!m_calloc (target->seq_len, target->seq_number)) {
     mes_proc ();
     goto STOP;
@@ -773,7 +773,7 @@ int sequence_add (sequence_t * target, sequence_t * source)
 
   for (i = 0; i < old_seq_number; i++) {
     target->seq[i] = old_seq[i];
-    //target->states[i] = old_seq_st[i];
+    /*target->states[i] = old_seq_st[i];*/
     target->seq_len[i] = old_seq_len[i];
     target->seq_label[i] = old_seq_label[i];
     target->seq_id[i] = old_seq_id[i];
@@ -803,7 +803,7 @@ int sequence_add (sequence_t * target, sequence_t * source)
 
 
   m_free (old_seq);
-  //m_free(old_seq_st);
+  /*m_free(old_seq_st);*/
   m_free (old_seq_len);
   m_free (old_seq_label);
   m_free (old_seq_id);
@@ -1092,7 +1092,7 @@ void sequence_clean (sequence_t * sq)
   m_free (sq->seq_label);
   m_free (sq->seq_id);
   m_free (sq->seq_w);
-  // m_free(sq->states);
+  /* m_free(sq->states);*/
   sq->seq_number = 0;
   sq->total_w = 0.0;
 }                               /* sequence_clean */
@@ -1114,7 +1114,7 @@ void sequence_d_clean (sequence_d_t * sqd)
 int sequence_free (sequence_t ** sq)
 {
 # define CUR_PROC "sequence_free"
-  //int i,j;
+  /*int i,j;*/
 
   mes_check_ptr (sq, return (-1));
   if (!*sq)
@@ -1145,7 +1145,7 @@ int sequence_free (sequence_t ** sq)
 
   if ((*sq)->states) {
     matrix_i_free (&(*sq)->states, (*sq)->seq_number);
-    //m_free((*sq)->states); 
+    /*m_free((*sq)->states); */
   }
 
 
@@ -1153,7 +1153,7 @@ int sequence_free (sequence_t ** sq)
     matrix_i_free (&(*sq)->state_labels, (*sq)->seq_number);
     m_free ((*sq)->state_labels_len);
 
-    //m_free((*sq)->states); 
+    /*m_free((*sq)->states); */
   }
 
   m_free (*sq);
@@ -1170,7 +1170,7 @@ int sequence_d_free (sequence_d_t ** sqd)
   if (!*sqd)
     return (0);
 
-  // sequence_d_print(stdout,*sqd,0);
+  /* sequence_d_print(stdout,*sqd,0);*/
 
   matrix_d_free (&(*sqd)->seq, (*sqd)->seq_number);
   m_free ((*sqd)->seq_len);

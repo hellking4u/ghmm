@@ -405,7 +405,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 
       /* if fixed continue to next component */
       if (smo->s[i].mixture_fix[m] == 1) {
-        //printf("state %d, component %d is fixed !\n",i,m);
+        /*printf("state %d, component %d is fixed !\n",i,m);*/
         fix_w = fix_w - smo->s[i].c[m];
         fix_flag = 1;           /* we have to normalize weights -> fix flag is set to one */
         continue;
@@ -623,7 +623,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
             }
 
             osc = smo->class_change->get_class (smo, O[k], k, t - 1);
-            //printf("osc=%d : cos = %d, k = %d, t = %d, state=%d\n",osc,smo->cos,smo->class_change->k,t,i); 
+            /*printf("osc=%d : cos = %d, k = %d, t = %d, state=%d\n",osc,smo->cos,smo->class_change->k,t,i); */
           }
 
 
@@ -736,7 +736,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
          }
      } */
    
-     //smodel_print(stdout,smo);
+     /*smodel_print(stdout,smo);*/
          
     if (smodel_check(smo) == -1) { 
         mes_proc(); 
@@ -802,7 +802,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
   max_iter_bw = m_min (MAX_ITER_BW, cs->max_iter);
   eps_iter_bw = m_max (EPS_ITER_BW, cs->eps);
 
-  //printf("  *** sreestimate_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );
+  /*printf("  *** sreestimate_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );*/
 
   while (n <= max_iter_bw) {
     valid = sreestimate_one_step (cs->smo, r, cs->sqd->seq_number,

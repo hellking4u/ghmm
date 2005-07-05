@@ -1,7 +1,8 @@
 /*******************************************************************************
 *
 *       This file is part of the General Hidden Markov Model Library,
-*       GHMM version __VERSION__, see http://ghmm.org
+*       GHMM version __VERSION__, see http:/*ghmm.org
+*/
 *
 *       Filename: ghmm/ghmm/scluster.c
 *       Authors:  Bernhard Knab
@@ -789,13 +790,20 @@ FILE * out_model = NULL;
        i, cl->smo_seq[i]->seq_number, 
        cl->smo_seq[i]->total_w);
        
-       //for (k = 0; k < sqd->seq_number; k++) {
-       //if (sqd->seq_label[k] == i) {
-       // fuer Wetterdaten: Numerierung von 1 - .. 
-       //fprintf(outfile, "\t%4d\t|%.0f|\t", k+1, sqd->seq_w[k]);
-       //vector_d_print(outfile, sqd->seq[k], sqd->seq_len[k]," "," ","");
-       //}     
-       //}
+       /*for (k = 0; k < sqd->seq_number; k++) {
+*/
+       /*if (sqd->seq_label[k] == i) {
+*/
+       /* fuer Wetterdaten: Numerierung von 1 - .. 
+*/
+       /*fprintf(outfile, "\t%4d\t|%.0f|\t", k+1, sqd->seq_w[k]);
+*/
+       /*vector_d_print(outfile, sqd->seq[k], sqd->seq_len[k]," "," ","");
+*/
+       /*}     
+*/
+       /*}
+*/
        
        fprintf(outfile, "(%ld sequences)\n\n", cl->seq_counter[i]);
        }
@@ -1277,7 +1285,8 @@ void scluster_prob (smosqd_t * cs)
 int i;
   
 
-    //printf("seq_num = %d\n", cs->sqd->seq_number);
+    /*printf("seq_num = %d\n", cs->sqd->seq_number);
+*/
     
 for (i = 0; i < cs->sqd->seq_number; i++)
     
