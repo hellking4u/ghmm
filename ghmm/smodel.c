@@ -1755,14 +1755,15 @@ double smodel_ifunc (smodel * smo, int state, double c, double x)
   return (fabs (smodel_calc_B (smo, state, x) - c));
 }
 
-/*============================ TEST =========================================
+/*============================ TEST =========================================*/
+#ifdef XXX
 int smodel_test_callback(int pos){
    char* ModuleName = "class_change";
    char* FunctionName = "getClass";
    int class;
    PyObject *pName, *pModule, *pDict, *pFunc, *pArgs, *pValue;
     
-   /*Py_Initialize();      // Init Python Interpreter*/
+   /*Py_Initialize();*/      /* Init Python Interpreter*/
    
    /*PyRun_SimpleString("import sys\n");*/
    /*PyRun_SimpleString("sys.stdout.write('Hello from an embedded Python Script\\n')\n"); */
@@ -1792,4 +1793,4 @@ int smodel_test_callback(int pos){
    return class; 
  
 }
- */
+#endif

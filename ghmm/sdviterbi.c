@@ -151,8 +151,8 @@ static void Viterbi_precompute (sdmodel * mo, int *o, int len,
 
   /*for (j = 0; j < mo->N; j++)*/
   /* for (i = 0; i < mo->s[j].in_states; i++)*/
-  /*  if ( mo->s[j].in_a[i] == 0.0 )   /* DBL_EPSILON ? */*/
-  /*log_in_a[j][i] = +1; /* Not used any further in the calculations */*/
+  /*  if ( mo->s[j].in_a[i] == 0.0 )   */ /* DBL_EPSILON ? */
+  /*log_in_a[j][i] = +1; */ /* Not used any further in the calculations */
   /*  else*/
   /*log_in_a[j][i] = log( mo->s[j].in_a[i] );*/
 
