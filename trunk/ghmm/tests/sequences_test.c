@@ -27,6 +27,8 @@ void sequence_alloc_print(void)
     seq_array->seq[0][i]=1;
 
   sequence_print_xml(stdout,seq_array);
+
+  sequence_free(&seq_array);
 }
 
 int main()

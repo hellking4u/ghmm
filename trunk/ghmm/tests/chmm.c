@@ -62,7 +62,7 @@ int single_state_continuous()
   my_model.density=0; /* normal distributions */
   my_model.prior=-1; /* a priori probability */
   my_model.s=&single_state; /* states array*/
-
+ 
 #if 0
   /* print model */
   smodel_print(stdout,&my_model);
@@ -122,15 +122,16 @@ int single_state_continuous()
     close(descriptor);
     unlink(filename_buffer);
     sequence_d_free(&new_output);
-    while(model_counter>0)
+    /*while(model_counter>0)
       {
 	smodel_free(&(model_array[model_counter-1]));
 	model_counter-=1;
-      }
+	}*/
+    smodel_free(model_array);
+   
   }
 
   sequence_d_free(&my_output);
-
   return 0;
 }
 

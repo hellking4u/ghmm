@@ -139,6 +139,8 @@ int my_model()
   fprintf(stdout,"Done\nthe result is:\n");
   model_print(stdout,&my_model);
 
+  sequence_free(&my_output);
+
   return 0;
 }
 
