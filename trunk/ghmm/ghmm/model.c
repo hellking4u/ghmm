@@ -641,8 +641,11 @@ int model_free_background_distributions (background_distributions * bg)
 #undef CUR_PROC
 }
 
-/*===========================================================================
+/*===========================================================================*/
 
+
+/* XXX What the fuck is this? */
+#ifdef XXX
 int model_free(model **mo) {
 #define CUR_PROC "sdmodel_free"
   state *my_state;
@@ -663,8 +666,9 @@ int model_free(model **mo) {
     if (my_state->in_a)
       m_free(my_state->in_a);
     
-	/*if (my_state->out_a)
-	  matrix_d_free(&((*mo)->s[i].out_a), (*mo)->cos);
+    /* XXX commented out ???? */
+    if (my_state->out_a)
+      matrix_d_free(&((*mo)->s[i].out_a), (*mo)->cos);
     if (my_state->in_a)
       matrix_d_free(&((*mo)->s[i].in_a), (*mo)->cos); 
     
@@ -685,6 +689,7 @@ int model_free(model **mo) {
   return(0);
 #undef CUR_PROC
 } /* model_free */
+#endif
 
 /*============================================================================*/
 model *model_copy (const model * mo)
@@ -1784,7 +1789,7 @@ void state_clean (state * my_state)
 
   return new_state;
 
-  }*/** state_copy */*/
+  }*/ /* state_copy */
 
 /*============================================================================*/
 
@@ -1808,7 +1813,7 @@ void state_clean (state * my_state)
 
   dest->in_a       = malloc(xxx);
   memcpy(dest->in_a,source->in_a,xxx);
-  }*/** state_copy_to */*/
+  }*/ /* state_copy_to */
 
 
  /*==========================Labeled HMMS ================================*/

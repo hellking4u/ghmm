@@ -704,9 +704,9 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
     }
 
     /*if (n == 1)*/
-    /*printf("%8.5f (-log_p input model)\n", -log_p); /* */*/
+    /*printf("%8.5f (-log_p input model)\n", -log_p); */
     /*else*/
-    /*printf("%8.5f (-log_p)\n", -log_p); /* */*/
+    /*printf("%8.5f (-log_p)\n", -log_p); */
 
     if (log_p == +1) {
       printf

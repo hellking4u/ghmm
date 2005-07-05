@@ -323,7 +323,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
       /*printf("\npsi[%d],%d, phi, %f\n", t, v->psi[t][j], v->phi[j]); */
     }
 
-    /*last_osc = osc; /* save last transition class */*/
+    /*last_osc = osc; *//* save last transition class */
 
     if (mo->model_type == kSilentStates) {
       __viterbi_silent (mo, t, v);

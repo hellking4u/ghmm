@@ -393,7 +393,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
     /* The first symbol chooses the start class */
     class = mo->get_class (sq->seq[n], state);
-    /*class = sequence_d_class(&dummy, 0, &osum); /*  dummy function */*/
+    /*class = sequence_d_class(&dummy, 0, &osum); */ /*  dummy function */
     while (state < len) {
 
       /* Get a new state */
@@ -451,7 +451,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
       /* Decide the class for the next step */
       class = mo->get_class (sq->seq[n], state);
-      /*class = sequence_d_class(&dummy, state, &osum); /* dummy */*/
+      /*class = sequence_d_class(&dummy, state, &osum); */ /* dummy */
       up = 0;
       state++;
     }                           /* while (state < len) , global_len depends on the data */
@@ -1041,7 +1041,7 @@ STOP:
 
   return new_state;
 
-  }*/** state_copy */*/
+  }*/ /* state_copy */
 
 /*============================================================================*/
 
@@ -1065,7 +1065,7 @@ STOP:
 
   dest->in_a       = malloc(xxx);
   memcpy(dest->in_a,source->in_a,xxx);
-  }*/** state_copy_to */*/
+  }*/ /* state_copy_to */
 
 
 /*===================== E n d   o f  f i l e  "model.c"       ===============*/

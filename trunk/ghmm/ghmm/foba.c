@@ -271,7 +271,7 @@ int foba_descale (double **alpha, double *scale, int t, int n,
   for (i = 0; i < mo->N; i++) {
     sum = 0.0;
     for (j = 0; j < mo->s[i].out_states; j++) {
-	   sum += mo->s[i].out_a[j] * mo->s[j_id].b[symb]; /* TEST */
+	   sum += mo->s[i].out_a[j] * mo->s[j_id].b[symb];
     }
 	beta_1[i] = sum;
   }	
