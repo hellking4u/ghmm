@@ -338,6 +338,7 @@ sequence_d_t **sequence_d_read (const char *filename, int *sqd_number)
       goto STOP;
   }
   scanner_free (&s);
+
   return sequence;
 STOP:
   scanner_free (&s);
@@ -345,6 +346,8 @@ STOP:
     sequence_d_free (&(sequence[i]));
   m_free (sequence);
   *sqd_number = 0;
+  
+  
   return NULL;
 #undef CUR_PROC
 }                               /* sequence_d_read */
@@ -1126,6 +1129,7 @@ int sequence_free (sequence_t ** sq)
      }  
      } */
 
+  /* matrix_i_free also takes care of  (*sq)->seq */
   if (matrix_i_free (&(*sq)->seq, (*sq)->seq_number) == -1) {
     printf ("Error in sequence_free !\n");
   }
@@ -1137,7 +1141,6 @@ int sequence_free (sequence_t ** sq)
    }
   ***/
 
-  m_free ((*sq)->seq);
   m_free ((*sq)->seq_len);
   m_free ((*sq)->seq_label);
   m_free ((*sq)->seq_id);
