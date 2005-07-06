@@ -299,8 +299,9 @@ void reestimate_update_tie_groups (model * mo)
           }
         }
       }
-      printf ("i = %d\n", i);
-      /* updating emissions */
+      /*printf ("i = %d\n", i); */
+      
+        /* updating emissions */
       if (nr > 1.0) {
         for (j = i; j < mo->N; j++) {
           /* states within one tie group are required to have the same order */
@@ -479,7 +480,7 @@ static int reestimate_one_step (model * mo, local_store_t * r,
     /* initialization of  matrices and vector depends on T_k */
     if (reestimate_alloc_matvek (&alpha, &beta, &scale, T_k, mo->N) == -1) {
       mes_proc ();
-      goto STOP;
+      goto FREE;
     }
     if (foba_forward (mo, O[k], T_k, alpha, scale, &log_p_k) == -1) {
       mes_proc ();
@@ -538,6 +539,8 @@ static int reestimate_one_step (model * mo, local_store_t * r,
     else
       printf ("O(%d) can't be built from model mo!\n", k);
 
+    printf("k=%d\n",k);
+    
     reestimate_free_matvek (alpha, beta, scale, T_k);
 
   }                             /* for (k = 0; k < seq_number; k++) */
@@ -549,7 +552,7 @@ static int reestimate_one_step (model * mo, local_store_t * r,
       mes_proc ();
       goto STOP;
     }
-    printf ("---- reestimate: after normalization ----\n");
+    /* printf ("---- reestimate: after normalization ----\n"); */
     /*
        printf("Emission:\n");
        model_B_print(stdout, mo, "\t", " ", "\n");
@@ -565,10 +568,13 @@ static int reestimate_one_step (model * mo, local_store_t * r,
   }
 
   res = 0;
-FREE:
-  reestimate_free_matvek (alpha, beta, scale, T_k);
+
+
 STOP:
-  return (res);
+   return (res);
+FREE:
+   reestimate_free_matvek (alpha, beta, scale, T_k);
+   return (res);
 # undef CUR_PROC
 }                               /* reestimate_one_step */
 
@@ -944,7 +950,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
     /* initialization of  matrices and vector depends on T_k */
     if (reestimate_alloc_matvek (&alpha, &beta, &scale, T_k, mo->N) == -1) {
       mes_proc ();
-      goto STOP;
+      goto FREE;
     }
 
     if (foba_label_forward (mo, O[k], label[k], T_k, alpha, scale, &log_p_k)
@@ -1024,7 +1030,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
       mes_proc ();
       goto STOP;
     }
-    printf ("---- reestimate: after normalization ----\n");
+    /* printf ("---- reestimate: after normalization ----\n"); */
     /*     printf("Emission:\n"); */
     /*     model_B_print(stdout, mo, "\t", " ", "\n"); */
     /* only test: */
@@ -1035,6 +1041,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
   }
 
   return (0);
+
 FREE:
   reestimate_free_matvek (alpha, beta, scale, T_k);
 STOP:
