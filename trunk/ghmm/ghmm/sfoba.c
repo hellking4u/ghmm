@@ -53,16 +53,18 @@ static int sfoba_initforward (smodel * smo, double *alpha_1, double omega,
   int i;
   double c_0;
   scale[0] = 0.0;
-  if (b == NULL)
+  if (b == NULL){
     for (i = 0; i < smo->N; i++) {
       alpha_1[i] = smo->s[i].pi * smodel_calc_b (smo, i, omega);
       scale[0] += alpha_1[i];
     }
-  else
+  }
+  else {
     for (i = 0; i < smo->N; i++) {
       alpha_1[i] = smo->s[i].pi * b[i][smo->M];
       scale[0] += alpha_1[i];
     }
+  }
   if (scale[0] > DBL_MIN) {     /* >= EPS_PREC */
     c_0 = 1 / scale[0];
     for (i = 0; i < smo->N; i++)
@@ -153,8 +155,6 @@ int sfoba_forward (smodel * smo, double *O, int T, double ***b,
         alpha[t][i] *= c_t;
       /* summation of log(c[t]) for calculation of log( P(O|lambda) ) */
       *log_p -= log (c_t);
-
-      /*osc = sequence_d_class(O, t, &osum); */
 
       if (smo->cos == 1) {
         osc = 0;
