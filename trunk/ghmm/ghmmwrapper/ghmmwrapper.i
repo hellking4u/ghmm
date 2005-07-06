@@ -51,6 +51,7 @@
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
 #include "sclass_change.h"
+#include <randvar.h>
 %}
 
 %include carrays.i
@@ -1632,6 +1633,21 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
   }	  
   		
 %}	
+
+/*=============================================================================================
+  =============================== randvar.c  ============================================== */
+
+/**
+   Calculates the one dimensional density function phi( mean, u ) for the
+   normal distribution at point x.
+   @return       function value
+   @param x:      point value
+   @param mean:   mean value for the normal distribution
+   @param u:      variance for the normal distribution ($\sigma^2$)
+   */
+extern double randvar_normal_density (double x, double mean, double u);
+
+
 
 /*=============================================================================================
   =============================== miscellanous functions ====================================== */
