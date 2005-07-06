@@ -539,8 +539,6 @@ static int reestimate_one_step (model * mo, local_store_t * r,
     else
       printf ("O(%d) can't be built from model mo!\n", k);
 
-    printf("k=%d\n",k);
-    
     reestimate_free_matvek (alpha, beta, scale, T_k);
 
   }                             /* for (k = 0; k < seq_number; k++) */
