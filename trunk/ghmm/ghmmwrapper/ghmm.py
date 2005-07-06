@@ -2928,6 +2928,14 @@ class GaussianEmissionHMM(HMM):
         s = self.getStatePtr(self.cmodel.s,state)        
         s.mixture_fix = ghmmhelper.list2arrayint(flags)
     
+    def getStateFix(self,state):
+        s = self.getStatePtr(self.cmodel.s,state)
+        return s.fix
+        
+    def setStateFix(self, state ,flag):    
+        s = self.getStatePtr(self.cmodel.s,state)
+        s.fix = flag
+    
     def __str__(self):
         hmm = self.cmodel
         strout = "\nHMM Overview:"
