@@ -600,8 +600,7 @@ int model_free (model ** mo)
 #define CUR_PROC "model_free"
   int i;
   mes_check_ptr (mo, return (-1));
-  if (!*mo)
-    return (0);
+
   for (i = 0; i < (*mo)->N; i++)
     state_clean (&(*mo)->s[i]);
 
@@ -613,9 +612,6 @@ int model_free (model ** mo)
   if ((*mo)->tied_to)
     m_free ((*mo)->tied_to);
 
-  /*if ((*mo) -> emission_order) Moved to state
-     m_free((*mo)->emission_order); */
-
   if ((*mo)->topo_order)
     m_free ((*mo)->topo_order);
 
@@ -625,7 +621,7 @@ int model_free (model ** mo)
   m_free (*mo);
   return (0);
 #undef CUR_PROC
-}                               /* model_free */
+}  /* model_free */
 
 
 int model_free_background_distributions (background_distributions * bg)
@@ -838,7 +834,7 @@ int model_check (const model * mo)
     /* Sum the a[i][j]'s : normalized out transitions */
     for (j = 0; j < mo->s[i].out_states; j++) {
       sum += mo->s[i].out_a[j];
-      printf ("    out_a[%d][%d] = %8.5f\n", i, j, mo->s[i].out_a[j]);
+      /* printf ("    out_a[%d][%d] = %8.5f\n", i, j, mo->s[i].out_a[j]); */
     }
     if (fabs (sum - 1.0) >= EPS_PREC) {
       char *str = mprintf (NULL, 0, "sum out_a[j] = %.2f != 1.0 (state %d)\n",
