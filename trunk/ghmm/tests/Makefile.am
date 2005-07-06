@@ -23,7 +23,16 @@ INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
 # in progress: test_sdfoba nullmodel ciscreen test_sdmodel 
-noinst_PROGRAMS = root_finder_test coin_toss_test two_states_three_symbols chmm shmm_viterbi_test generate_PHI test_gsl_ran_gaussian_tail sequences_test sequences_old_format 
+noinst_PROGRAMS = root_finder_test \
+                  coin_toss_test \
+                  two_states_three_symbols \
+                  chmm \
+                  shmm_viterbi_test \
+                  generate_PHI \
+                  test_gsl_ran_gaussian_tail \
+                  sequences_test \
+                  sequences_old_format \
+                  label_higher_order_test
 
 LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 
@@ -49,13 +58,3 @@ dist-hook:
 	  fi; \
 	done ; \
 	rm -f $$TMPFILE
-
-
-
-
-
-
-
-
-
-

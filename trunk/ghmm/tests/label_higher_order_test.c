@@ -17,7 +17,7 @@
 #include <ghmm/model.h>
 #include <ghmm/viterbi.h>
 #include <ghmm/reestimate.h>
-#include <ghmm/train.h>
+#include <ghmm/gradescent.h>
 
 #include <ghmm/matrix.h>
 #include <ghmm/vector.h>
@@ -33,8 +33,7 @@ void generateModel(model *mo, int noStates) {
   int *silent_array;
 
   /*allocate memory for states and array of silent flags*/
-  states = (state*)malloc(sizeof(state)*noStates);
-  if (states==NULL) {fprintf(stderr, "Null Pointer in malloc(state).\n");}
+  if (!(m_malloc(states, noStates))) {fprintf(stderr, "Null Pointer in malloc(state).\n");}
   silent_array = (int*)malloc(sizeof(int)*noStates);
 
   /* initialize all states as none silent*/
@@ -42,14 +41,22 @@ void generateModel(model *mo, int noStates) {
     silent_array[i] = 0;
   }
  
-  mo->N = noStates; 
+  mo->N = noStates;
   mo->M = 4;
   mo->maxorder = noStates-1;
   mo->prior = -1;
   /* Model has Higher order Emissions and labeled states*/
   mo->model_type =  kLabeledStates;
+  if (mo->maxorder>0)
+    mo->model_type += kHigherOrderEmissions;
   /* kHigherOrderEmissions + kHasBackgroundDistributions*/
-  
+
+  /* allocate memory for pow look-up table and fill it */
+  if (!(m_malloc(mo->pow_lookup, mo->maxorder+1))) {fprintf(stderr, "Null Pointer in malloc (pow_lookup).\n");}
+  mo->pow_lookup[0] = 1;
+  for (i=1; i<mo->maxorder+1; i++)
+    mo->pow_lookup[i] =  mo->pow_lookup[i-1] * mo->M;
+
   /*initialize states*/
   for (i=0; i < mo->N; i++) {
     states[i].pi = (0==i ? 1.0:0.0);
@@ -116,67 +123,31 @@ void generateModel(model *mo, int noStates) {
   printf("\n");
 }
 
-void freeModel(model *mo) {
-
-  int i, j;
-  model_print(stdout, mo);
-
-  mo->s[1].in_a[0] = 0.7;
-  mo->s[1].in_a[1] = 0.3;
-
-  printf("%x\n", mo->s[1].b);
-  printf("%x\n", mo->s[1].in_id);
-  printf("%x\n", mo->s[1].in_a);
-  printf("%x\n", mo->s[1].out_id);
-  printf("%x\n", mo->s[1].out_a);
-  
-  for (i=mo->N-1; i>=0; i--) {
-    fprintf(stderr, "processing state %d ..\t", i);
-    free(mo->s[i].b);
-    fprintf(stderr, "s[%d].b freeed\t ", i);
-    free(mo->s[i].in_id);
-    fprintf(stderr, "s[%d].in_id\t freeed\t ", i);
-    free(mo->s[i].in_a);
-    fprintf(stderr, "s[%d].in_a freeed\t ", i);
-    free(mo->s[i].out_id);
-    fprintf(stderr, "s[%d].out_id\t freeed\t ", i);
-    free(mo->s[i].out_a);
-    fprintf(stderr, "... freeed\n");
-  }
-  fprintf(stderr, "all states freeed\n");
-  
-  free(mo->silent);
-  free(mo->s);
-
-  free(mo);
-  printf("freeed model\n");
-}
-
 
 void testBaumwelch(){
 
   int i, error, tl,z,z1,z2;
   double log_p,first_prob1,first_prob2, first_prob;
-	double *proba;
+  double *proba;
   int *path;
-	int* real_path;
+  int* real_path;
   int *path1;
-	int* real_path1;
+  int* real_path1;
   int *path2;
-	int* real_path2;
+  int* real_path2;
   model *mo = NULL;
   sequence_t *my_output, *your_output;
   int seqlen = 1000;
-	tl = 150;
+  tl = 150;
 
   mo = malloc(sizeof(model));
   if (mo==NULL) {fprintf(stderr,"Null Pointer in malloc(model).\n");}
   real_path = malloc(seqlen*sizeof(double));
-	if(!real_path){ printf("real_path hat kein platz gekriegt\n");}
+  if(!real_path){ printf("real_path hat kein platz gekriegt\n");}
   real_path1 = malloc(seqlen*sizeof(double));
-	if(!real_path1){ printf("real_path hat kein platz gekriegt\n");}
+  if(!real_path1){ printf("real_path hat kein platz gekriegt\n");}
   real_path2 = malloc(seqlen*sizeof(double));
-	if(!real_path2){ printf("real_path hat kein platz gekriegt\n");}
+  if(!real_path2){ printf("real_path hat kein platz gekriegt\n");}
   /* generate a model with variable number of states*/
   generateModel(mo, 5);
 
@@ -196,26 +167,26 @@ void testBaumwelch(){
   z1=0;
   z2=0;
   for (i=0; i<(my_output->seq_len[0]*mo->N); i++){
-  if (path1[i] != -1) {
+    if (path1[i] != -1) {
       real_path1[z1]=path1[i];
-	  z1++;
+      z1++;
       printf("%d", path1[i]);
-  }
-  else printf("hallo");
+    }
+    else printf("hallo");
 
-  if (path2[i] != -1) {
+    if (path2[i] != -1) {
       real_path2[z2]=path2[i];
-	  z2++;
-	  printf("%d", path2[i]);
-  }
-  else printf("hallo");
+      z2++;
+      printf("%d", path2[i]);
+    }
+    else printf("hallo");
 
-  if (path[i] != -1) {
+    if (path[i] != -1) {
       real_path[z]=path[i];
-	  z++;
-	  printf("%d", path[i]);
-  }
-  else printf("hallo");
+      z++;
+      printf("%d", path[i]);
+    }
+    else printf("hallo");
   }
   printf("\n");
   printf("log-prob: %g\n",first_prob);
@@ -223,27 +194,19 @@ void testBaumwelch(){
   my_output->state_labels[1]=real_path1;
   my_output->state_labels[2]=real_path2;
 
-	for (i=0;i<seqlen;i++)
-	  printf("realpath[%i]=%i",i,real_path[i]);
-	proba = malloc(sizeof(double)*tl);
+  for (i=0;i<seqlen;i++)
+    printf("realpath[%i]=%i",i,real_path[i]);
+  proba = malloc(sizeof(double)*tl);
 
-  printf("No of Sequences = %d",my_output->seq_number);
+  printf("No of Sequences = %d", my_output->seq_number);
 
-	for (i=0; i<tl; i++) {
+  your_output = model_label_generate_sequences(mo, 0, seqlen, 1, seqlen);
+  error = gradient_descent(&mo, your_output, .02, i);
+  path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &log_p);
+  free(path);
 
-	  your_output = model_label_generate_sequences(mo, 0, seqlen, 1, seqlen);
-	  error = cgradientD(mo, your_output, &log_p, i);
-		path = viterbi(mo, my_output->seq[0], my_output->seq_len[0], &proba[i]);
-	  free(path);
-		printf("log-prob after %d training: %g\n", i, proba[i]);
-  }
-
-	printf("log-prob before training: %g\n", first_prob);
-  for (i=0; i<tl; i++) {
-    printf("log-prob after %d training: %g\n", i, proba[i]);
-	}
   /*reestimate_baum_welch_label(mo, my_output);*/
-  //reestimate_baum_welch(mo, my_output);
+  /*reestimate_baum_welch(mo, my_output);*/
 
   /*reruns viterbi to check the training*/
   printf("run viterbi second\n");
@@ -256,7 +219,7 @@ void testBaumwelch(){
 
 
   /* freeing memory */
-  freeModel(mo);
+  model_free(&mo);
   free(path);
   /*printf("sequence_free success: %d\n", */sequence_free(&my_output)/*)*/;
   free(my_output);
@@ -268,4 +231,5 @@ int main(){
   ghmm_rng_init();
   testBaumwelch();
 
+  return 0;
 }
