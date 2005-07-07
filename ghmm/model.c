@@ -254,8 +254,11 @@ model **model_read (char *filename, int *mo_number)
     if (s->err)
       goto STOP;
   }                             /* while(!s->err && !s->eof) */
+  
+  scanner_free(&s);
   return mo;
 STOP:
+  scanner_free(&s);
   return NULL;
 #undef CUR_PROC
 }                               /* model_read */
@@ -604,20 +607,21 @@ int model_free (model ** mo)
   for (i = 0; i < (*mo)->N; i++)
     state_clean (&(*mo)->s[i]);
 
-  if ((*mo)->s)
+  if ((*mo)->s){
     m_free ((*mo)->s);
-  if ((*mo)->silent)
+  }
+  if ((*mo)->silent){
     m_free ((*mo)->silent);
-
-  if ((*mo)->tied_to)
+  }
+  if ((*mo)->tied_to) {
     m_free ((*mo)->tied_to);
-
-  if ((*mo)->topo_order)
+  }
+  if ((*mo)->topo_order){
     m_free ((*mo)->topo_order);
-
-  if ((*mo)->pow_lookup)
+  }
+  if ((*mo)->pow_lookup){
     m_free ((*mo)->pow_lookup);
-
+  }
   m_free (*mo);
   return (0);
 #undef CUR_PROC
@@ -628,10 +632,12 @@ int model_free_background_distributions (background_distributions * bg)
 {
 #define CUR_PROC "model_free_background_distributions"
 
-  if (bg->order)
+  if (bg->order){
     m_free (bg->order);
-  if (bg->b)
+  }
+  if (bg->b){
     matrix_d_free (&(bg->b), bg->n);
+  }
   m_free (bg);
 
   return (0);
@@ -1170,7 +1176,7 @@ double model_likelihood (model * mo, sequence_t * sq)
 {
 # define CUR_PROC "model_likelihood"
   double log_p_i, log_p;
-  int found, i, j;
+  int found, i;
 
   /* printf("***  model_likelihood:\n"); */
 
@@ -1482,11 +1488,13 @@ void model_direct_clean (model_direct * mo_d, hmm_check_t * check)
       m_free (mo_d->B[i]);
     m_free (mo_d->B);
   }
-  if (mo_d->Pi)
+  if (mo_d->Pi){
     m_free (mo_d->Pi);
-  if (mo_d->fix_state)
+  }
+  if (mo_d->fix_state){
     m_free (mo_d->fix_state);
-
+  }
+  
   mo_d->A = mo_d->B = NULL;
   mo_d->Pi = NULL;
   mo_d->fix_state = NULL;
@@ -1746,24 +1754,22 @@ STOP:
 void state_clean (state * my_state)
 {
 #define CUR_PROC "state_clean"
-  if (!my_state)
-    return;
 
-  if (my_state->b)
+  if (my_state->b){
     m_free (my_state->b);
-
-  if (my_state->out_id)
+  }
+  if (my_state->out_id){
     m_free (my_state->out_id);
-
-  if (my_state->in_id)
+  }
+  if (my_state->in_id){
     m_free (my_state->in_id);
-
-  if (my_state->out_a)
+  }
+  if (my_state->out_a){
     m_free (my_state->out_a);
-
-  if (my_state->in_a)
+  }
+  if (my_state->in_a){
     m_free (my_state->in_a);
-
+  }
   my_state->pi = 0;
   my_state->b = NULL;
   my_state->out_id = NULL;
