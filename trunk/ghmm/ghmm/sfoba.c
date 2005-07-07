@@ -96,7 +96,7 @@ int sfoba_forward (smodel * smo, double *O, int T, double ***b,
 # define CUR_PROC "sfoba_forward"
   int res = -1;
   int i, t = 0, osc = 0;
-  double c_t, osum = 0.0;
+  double c_t;
 
   /* calculate alpha and scale for t = 0 */
   if (b == NULL)
@@ -111,9 +111,6 @@ int sfoba_forward (smodel * smo, double *O, int T, double ***b,
   else {
     *log_p = -log (1 / scale[0]);
 
-
-    /* dummy function, returns 0 at the moment 
-       osc = sequence_d_class(O, 0, &osum);  */
     if (smo->cos == 1) {
       osc = 0;
     }
@@ -189,8 +186,8 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
                     double **beta, const double *scale)
 {
 # define CUR_PROC "sfoba_backward"
-  double *beta_tmp, sum, c_t, osum;
-  int i, j, j_id, t, osc, t2;
+  double *beta_tmp, sum, c_t;
+  int i, j, j_id, t, osc;
   int res = -1;
   if (!m_calloc (beta_tmp, smo->N)) {
     mes_proc ();
@@ -217,8 +214,6 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
   /* Backward Step for t = T-2, ..., 0 */
   /* beta_tmp: Vector for storage of scaled beta in one time step */
 
-  /* for (t = 0; t < T-1; t++) 
-     osc = sequence_d_class(O, t, &osum); */
   if (smo->cos == 1) {
     osc = 0;
   }
@@ -227,8 +222,8 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
       printf ("ERROR: get_class not initialized\n");
       goto STOP;
     }
-    /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
-    osc = smo->class_change->get_class (smo, O, smo->class_change->k, T - 1);
+     osc = smo->class_change->get_class (smo, O, smo->class_change->k, T - 2);
+     /* printf("osc(%d) = %d\n",T-2,osc);  */
   }
 
 
@@ -250,16 +245,18 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
           j_id = smo->s[i].out_id[j];
           sum +=
             smo->s[i].out_a[osc][j] * b[t + 1][j_id][smo->M] * beta_tmp[j_id];
+          
+            /*printf("  smo->s[%d].out_a[%d][%d] * b[%d] * beta_tmp[%d] = %f * %f *
+            %f\n",i,osc,j,t+1,j_id,smo->s[i].out_a[osc][j], b[t + 1][j_id][smo->M], beta_tmp[j_id]); */
+          
         }
         beta[t][i] = sum;
+        /* printf(" ->   beta[%d][%d] = %f\n",t,i,beta[t][i]); */
       }
     c_t = 1 / scale[t];
     for (i = 0; i < smo->N; i++)
       beta_tmp[i] = beta[t][i] * c_t;
 
-
-    /* for (t2 = 0; t2 < t; t2++)
-       osc = sequence_d_class(O, t2, &osum); */
 
     if (smo->cos == 1) {
       osc = 0;
@@ -269,8 +266,11 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
         printf ("ERROR: get_class not initialized\n");
         goto STOP;
       }
-      /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
-      osc = smo->class_change->get_class (smo, O, smo->class_change->k, t);
+      /* if t=1 the next iteration will be the last */        
+      if (t >= 1){
+        osc = smo->class_change->get_class (smo, O, smo->class_change->k, t-1);
+        /* printf("osc(%d) = %d\n",t-1,osc);  */
+      }
     }
   }
   res = 0;
