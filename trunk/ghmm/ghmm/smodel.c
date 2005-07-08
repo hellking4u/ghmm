@@ -253,11 +253,15 @@ smodel **smodel_read (const char *filename, int *smo_number)
   /*if (smodel_check_compatibility(smo, *smo_number) == -1) {
      mes_proc(); goto STOP;
      } */
+
+  scanner_free (&s);             
   return smo;
+  
 STOP:
-  return NULL;
+    scanner_free (&s);
+    return NULL;
 #undef CUR_PROC
-}                               /* smodel_read */
+}    /* smodel_read */
 
 
 /*============================================================================*/
@@ -684,11 +688,16 @@ int smodel_free (smodel ** smo)
 #define CUR_PROC "smodel_free"
   int i;
   mes_check_ptr (smo, return (-1));
-  if (!*smo)
-    return (0);
   for (i = 0; i < (*smo)->N; i++) {
-    m_free ((*smo)->s[i].out_id);
-    m_free ((*smo)->s[i].in_id);
+    
+    /* if there are no out_states field was never allocated */ 
+    if ((*smo)->s[i].out_states > 0){
+      m_free ((*smo)->s[i].out_id);
+    }  
+    /* if there are no in_states field was never allocated */ 
+    if ((*smo)->s[i].in_states > 0){
+      m_free ((*smo)->s[i].in_id);
+    }  
     matrix_d_free (&((*smo)->s[i].out_a), (*smo)->cos);
     matrix_d_free (&((*smo)->s[i].in_a), (*smo)->cos);
     m_free ((*smo)->s[i].c);
@@ -861,7 +870,9 @@ int smodel_check (const smodel * smo)
     /* check mue, u ? */
   }
 
-STOP:
+/* for lazy-evaluation-like model checking
+   uncomment 'goto STOP' statements and 'STOP:' line  */  
+/* STOP: */
   return (valid);
 # undef CUR_PROC
 }                               /* smodel_check */
@@ -929,7 +940,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
 
   sequence_d_t *sq = NULL;
   int state, n, i, j, m, reject_os, reject_tmax, badseq, class;
-  double p, sum, osum = 0.0;
+  double p, sum;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
 
   sq = sequence_d_calloc (seq_number);
@@ -1786,7 +1797,7 @@ int smodel_test_callback(int pos){
 
    /* parsing the result from Python to C data type
    class = PyInt_AsLong(pValue);
-   printf("C: The returned class is %d\n",class);
+   printf("C: The returned class is %d\n",class); */
      
    /*Py_Finalize();         */
    
