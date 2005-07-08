@@ -598,11 +598,11 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
     }
     else
 
-    printf("\n\nalpha:\n");
+    /* printf("\n\nalpha:\n");
     matrix_d_print(stdout,alpha,T_k,smo->N,"\t", ",", ";");   
     printf("\n\nbeta:\n");
     matrix_d_print(stdout,beta,T_k,smo->N,"\t", ",", ";");           
-    printf("\n\n");         
+    printf("\n\n");    */
         
       /* weighted error function */
       *log_p += log_p_k * seq_w[k];
@@ -644,14 +644,14 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
             
             r->a_num[i][osc][j] += contrib_t;
             
-            printf("r->a_num[%d][%d][%d] += (alpha[%d][%d] * smo->s[%d].out_a[%d][%d] * b[%d]%d][%d] * beta[%d][%d] * c_t = %f * %f * %f * %f * %f = %f\n",                    
+            /* printf("r->a_num[%d][%d][%d] += (alpha[%d][%d] * smo->s[%d].out_a[%d][%d] * b[%d]%d][%d] * beta[%d][%d] * c_t = %f * %f * %f * %f * %f = %f\n",                    
                     i,osc,j,t-1,i,i,osc,j,t,j_id,smo->M,t,j_id,alpha[t - 1][i], smo->s[i].out_a[osc][j],
-                                   b[t][j_id][smo->M], beta[t][j_id], c_t,r->a_num[i][osc][j]); 
+                                   b[t][j_id][smo->M], beta[t][j_id], c_t,r->a_num[i][osc][j]);  */
 
             
             r->a_denom[i][osc] += contrib_t;
             
-            printf("r->a_denom[%d][%d] += %f\n",i,osc,r->a_denom[i][osc]);  
+            /* printf("r->a_denom[%d][%d] += %f\n",i,osc,r->a_denom[i][osc]);   */
             
           }
 
@@ -729,7 +729,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
     /* only test : */
 
     
-     printf("scale:\n");
+    /* printf("scale:\n");
      for(t=0;t<T[0];t++){
          printf("%f, ",scale[t]);
      }
@@ -742,9 +742,9 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
                       r->a_denom[i][osc],(r->a_num[i][osc][j] / r->a_denom[i][osc]));
            }
          }
-     } 
+     }  
    
-    smodel_print(stdout,smo);
+    smodel_print(stdout,smo); */
 
     
     if (smodel_check(smo) == -1) { 
@@ -755,9 +755,9 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
         goto STOP; 
         
     } 
-    else {
+    /* else {
         printf("Model is ok.\n");
-    }     
+    }  */   
         
     
   }
