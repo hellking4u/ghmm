@@ -310,7 +310,9 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
     for (osc = 0; osc < smo->cos; osc++) {
       /* note: denom. might be 0; never reached state? */
       a_denom_pos = 1;
+
       if (r->a_denom[i][osc] <= DBL_MIN) {
+                  
         a_denom_pos = 0;
 #if MCI
         if (smo->s[i].out_states > 0) {
@@ -347,9 +349,17 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
         }
         else if (a_denom_pos)
           smo->s[i].out_a[osc][j] = r->a_num[i][osc][j] * a_factor_i;
-        else
-          smo->s[i].out_a[osc][j] = 0.0;
-
+        else {
+          /* if(smo->s[i].out_states == 1 &&  smo->s[i].out_id[0]==i) {
+            printf("%d is an absorbing end state -> don't change transitions !\n",i);
+          }   */          
+#if MCI
+          mes (MESCONTR, "state %d has no observed outgoing transitions, parameters will not be reestimated. \n", i );   
+#endif
+          continue;                    
+          /* smo->s[i].out_a[osc][j] = 0.0; */
+        }
+          
         if (r->a_num[i][osc][j] > 0.0)  /* >= EPS_PREC ? */
           a_num_pos = 1;
 
@@ -378,7 +388,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
              "all numerators a[%d][%d][j]==0 (denom. = %.4f, P(in)=%.4f)!\n",
              i, osc, r->a_denom[i][osc], p_i);
 #endif
-    }                           /* osc-loop */
+    }   /* osc-loop */
 
 
     /* C, Mue und U */
@@ -530,7 +540,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
+int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
                           int *T, double **O, double *log_p, double *seq_w)
 {
 # define CUR_PROC "sreestimate_one_step"
@@ -542,7 +552,7 @@ static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number
   double ***b = NULL;
   int T_k = 0, T_k_max = 0;
   double c_t, sum_alpha_a_ji, gamma, gamma_ct, f_im, quot;
-  double log_p_k, osum = 0.0;
+  double log_p_k;
   double contrib_t;
   
   *log_p = 0.0;
@@ -588,13 +598,11 @@ static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number
     }
     else
 
-    /* matrix_d_print(FILE * file, double **matrix, int rows, int columns,
-                       char *tab, char *separator, char *ending);   */
-   /* printf("\n\nalpha:\n");
+    printf("\n\nalpha:\n");
     matrix_d_print(stdout,alpha,T_k,smo->N,"\t", ",", ";");   
     printf("\n\nbeta:\n");
     matrix_d_print(stdout,beta,T_k,smo->N,"\t", ",", ";");           
-    printf("\n\n");         */
+    printf("\n\n");         
         
       /* weighted error function */
       *log_p += log_p_k * seq_w[k];
@@ -636,14 +644,14 @@ static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number
             
             r->a_num[i][osc][j] += contrib_t;
             
-            /*printf("r->a_num[%d][%d][%d] += (alpha[%d][%d] * smo->s[%d].out_a[%d][%d] * b[%d]%d][%d] * beta[%d][%d] * c_t = %f * %f * %f * %f * %f = %f\n",                    
+            printf("r->a_num[%d][%d][%d] += (alpha[%d][%d] * smo->s[%d].out_a[%d][%d] * b[%d]%d][%d] * beta[%d][%d] * c_t = %f * %f * %f * %f * %f = %f\n",                    
                     i,osc,j,t-1,i,i,osc,j,t,j_id,smo->M,t,j_id,alpha[t - 1][i], smo->s[i].out_a[osc][j],
-                                   b[t][j_id][smo->M], beta[t][j_id], c_t,r->a_num[i][osc][j]); */
+                                   b[t][j_id][smo->M], beta[t][j_id], c_t,r->a_num[i][osc][j]); 
 
             
             r->a_denom[i][osc] += contrib_t;
             
-            /*printf("r->a_denom[%d][%d] += %f\n",i,osc,r->a_denom[i][osc]);   */
+            printf("r->a_denom[%d][%d] += %f\n",i,osc,r->a_denom[i][osc]);  
             
           }
 
@@ -721,7 +729,7 @@ static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number
     /* only test : */
 
     
-     /*printf("scale:\n");
+     printf("scale:\n");
      for(t=0;t<T[0];t++){
          printf("%f, ",scale[t]);
      }
@@ -734,10 +742,11 @@ static int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number
                       r->a_denom[i][osc],(r->a_num[i][osc][j] / r->a_denom[i][osc]));
            }
          }
-     } */
+     } 
    
-     /*smodel_print(stdout,smo);*/
-         
+    smodel_print(stdout,smo);
+
+    
     if (smodel_check(smo) == -1) { 
         mes_proc(); 
         printf("Model invalid !\n\n");
