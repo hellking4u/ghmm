@@ -3114,6 +3114,7 @@ class GaussianEmissionHMM(HMM):
         return likelihoodList
 
 
+    
     def viterbi(self, emissionSequences):
         """ Compute the Viterbi-path for each sequence in emissionSequences
 
@@ -3319,7 +3320,54 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         ghmmwrapper.set_arrayd(state.mue, comp, float(mu))  # GHMM C is german: mue instead of mu
         ghmmwrapper.set_arrayd(state.u, comp, float(sigma))
         ghmmwrapper.set_arrayd(state.c, comp, float(weight))
+	
+    def getEmissionProbability(self,value,st):
+        prob = 0.0
+	state = ghmmwrapper.get_sstate(self.cmodel, st)
+        for outp in range(self.M):
+            weight = ghmmwrapper.get_arrayd(state.c,outp)
+            mue = ghmmwrapper.get_arrayd(state.mue,outp)
+            u = ghmmwrapper.get_arrayd(state.u,outp)
+	    prob = prob + weight *ghmmwrapper.randvar_normal_density(value,mue,u)
+	    #print weight, mue, u, value, prob, st
+	return prob
+      
 
+    def logprob(self, emissionSequence, stateSequence):
+        """ log P[ emissionSequence, stateSequence| m] """
+        
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+                        		
+        state = self.getStatePtr( self.cmodel.s, stateSequence[0] )
+        emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
+        
+	if (emissionProb == 0): # zero ??? or some small constant?
+            raise SequenceCannotBeBuild, "first symbol " + str(emissionSequence[0]) + " not emitted by state " + str(stateSequence[0])
+                        
+        logP = log(state.pi * emissionProb )
+        
+        #symbolIndex = 1
+
+        try:        
+            for i in range(len(emissionSequence)-1):
+                cur_state = self.getStatePtr( self.cmodel.s, stateSequence[i] )
+                next_state = self.getStatePtr( self.cmodel.s, stateSequence[i+1] )
+		
+		for j in range(cur_state.out_states):
+                    out_id = ghmmwrapper.get_arrayint(cur_state.out_id,j)
+                    if out_id == stateSequence[i+1]:
+                        emissionProb = self.getEmissionProbability(emissionSequence[i+1],out_id)
+                        #symbolIndex += 1
+                        if emissionProb == 0:
+                            raise SequenceCannotBeBuild, "symbol " + str(emissionSequence[i+1]) + " not emitted by state "+ str(stateSequence[i+1])
+			#print j, cur_state.out_a, ghmmwrapper.get_2d_arrayd(cur_state.out_a,0,j)
+                        logP += log( ghmmwrapper.get_2d_arrayd(cur_state.out_a,0,j) * emissionProb)
+                        break
+        except IndexError:
+            pass
+        return logP     
+    
     def __str__(self):
         "defines string representation"
         hmm = self.cmodel
