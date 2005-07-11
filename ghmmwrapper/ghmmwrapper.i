@@ -51,7 +51,7 @@
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
 #include "sclass_change.h"
-#include <randvar.h>
+#include <ghmm/randvar.h>
 %}
 
 %include carrays.i
