@@ -309,6 +309,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
   int h, i, j, m, l, j_id, positive;
   double factor, p_i;
   int hist, col, size;
+  char *str;
 
   mes_check_0 (r->pi_denom, goto STOP);
 
@@ -324,7 +325,6 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
         p_i += mo->s[i].in_a[h];
       }
       if (p_i == 0) {
-        char *str;
         if (mo->s[i].in_states == 0)
           str = mprintf (NULL, 0,
                          " State %d can't be reached (no in_states)\n", i);
@@ -364,8 +364,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
     }
 
     /*if (!positive) {
-       char *str = 
-       mprintf(NULL, 0, 
+       str = mprintf(NULL, 0, 
        "All numerator a[%d][j] == 0 (denom=%.4f, P(in)=%.4f)!\n", 
        i, r->a_denom[i], p_i);
        mes_prot(str);
@@ -394,9 +393,8 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       col = hist * mo->M;
       for (m = col; m < col + mo->M; m++) {
         if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -EPS_PREC) {
-          char *str =
-            mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
-                     r->b_num[i][m], r->b_denom[i][hist]);
+          str = mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
+			 r->b_num[i][m], r->b_denom[i][hist]);
           mes_prot (str);
           m_free (str);
         }
@@ -407,9 +405,8 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       }
 
       if (!positive) {
-        char *str =
-          mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
-                   i, col, col + mo->M, r->b_denom[i][hist]);
+        str = mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
+		       i, col, col + mo->M, r->b_denom[i][hist]);
         mes_prot (str);
         m_free (str);
       }
@@ -800,6 +797,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
   int res = -1;
+  char *str;
 
   /* local store for all iterations */
   r = reestimate_alloc (mo);
@@ -816,8 +814,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
 
     if (reestimate_one_step (mo, r, sq->seq_number, sq->seq_len, sq->seq,
                              &log_p, sq->seq_w) == -1) {
-      char *str =
-        mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
+      str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -837,15 +834,13 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
     diff = log_p - log_p_old;
     /* error in convergence ? */
     if (diff < -EPS_PREC) {
-      char *str =
-        mprintf (NULL, 0, "No convergence: log P < log P-old! (n = %d)\n", n);
+      str = mprintf (NULL, 0, "No convergence: log P < log P-old! (n=%d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
     }
     else if (log_p > EPS_PREC) {
-      char *str =
-        mprintf (NULL, 0, "No convergence: log P > 0! (n = %d)\n", n);
+      str = mprintf (NULL, 0, "No convergence: log P > 0! (n=%d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -912,6 +907,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
   double *scale = NULL;
   double gamma;
   double log_p_k;
+  char *str;
 
   /* first set maxorder to zero if model_type & kHigherOrderEmissions is FALSE 
 
@@ -994,9 +990,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
       }
     }
     else {
-      char *str = mprintf (NULL, 0,
-                           "warning: sequence %d can't be built from model\n",
-                           k);
+      str = mprintf (NULL, 0, "warning: sequence %d can't be built from model\n", k);
       mes_prot (str);
       m_free (str);
     }
@@ -1048,6 +1042,7 @@ int reestimate_baum_welch_nstep_label (model * mo, sequence_t * sq,
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
   int res = -1;
+  char *str;
 
   /* local store for all iterations */
   r = reestimate_alloc (mo);
@@ -1065,8 +1060,7 @@ int reestimate_baum_welch_nstep_label (model * mo, sequence_t * sq,
     if (reestimate_one_step_label
         (mo, r, sq->seq_number, sq->seq_len, sq->seq, sq->state_labels,
          &log_p, sq->seq_w) == -1) {
-      char *str =
-        mprintf (NULL, 0, "reestimate_one_step_label false (%d.step)\n", n);
+      str = mprintf (NULL, 0, "reestimate_one_step_label false (%d.step)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -1086,15 +1080,13 @@ int reestimate_baum_welch_nstep_label (model * mo, sequence_t * sq,
     diff = log_p - log_p_old;
     /* error in convergence ? */
     if (diff < -EPS_PREC) {
-      char *str =
-        mprintf (NULL, 0, "No convergence: log P < log P-old! (n = %d)\n", n);
+      str = mprintf (NULL, 0, "No convergence: log P < log P-old! (n = %d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
     }
     else if (log_p > EPS_PREC) {
-      char *str =
-        mprintf (NULL, 0, "No convergence: log P > 0! (n = %d)\n", n);
+      str = mprintf (NULL, 0, "No convergence: log P > 0! (n = %d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
