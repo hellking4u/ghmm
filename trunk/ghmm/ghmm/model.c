@@ -988,19 +988,17 @@ STOP:
 
 /*===========================================================================*/
 
- int get_random_output (model * mo, int i, int position)
+ static int get_random_output (model * mo, int i, int position)
 {
-
+#define CUR_PROC "get_random_output"
   int m, e_index;
-  double p, sum;
-
+  double p, sum=0.0;
 
   p = GHMM_RNG_UNIFORM (RNG);
-  sum = 0.0;
 
   for (m = 0; m < mo->M; m++) {
     /* get the right index for higher order emission models */
-    e_index = get_emission_index (mo, i, m, position);
+    e_index = get_emission_index(mo, i, m, position);
 
     /* get the probability, exit, if the index is -1 */
     if (-1 != e_index) {
@@ -1012,7 +1010,7 @@ STOP:
       fprintf (stderr,
                "ERROR: State has order %d, but in the history are only %d emissions.\n",
                mo->s[i].order, position);
-      exit (1);
+      return -1;
     }
   }
 
@@ -1020,10 +1018,11 @@ STOP:
     fprintf (stderr,
              "ERROR: no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n",
              sum, p);
-    exit (1);
+    return -1;
   }
 
   return (m);
+#undef CUR_PROC
 }                               /* get_random_output */
 
 /*============================================================================*/
@@ -1045,10 +1044,7 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   int state = 0;
 
   sq = sequence_calloc (seq_number);
-  if (!sq) {
-    mes_proc ();
-    goto STOP;
-  }
+  if (!sq) {mes_proc (); goto STOP;}
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
        an end state, the konstant MAX_SEQ_LEN is used. */
@@ -1057,6 +1053,9 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   if (seed > 0) {
     GHMM_RNG_SET (RNG, seed);
   }
+
+  /* initialize the emission history */
+  mo->emission_history = 0;
 
   while (n < seq_number) {
     /* printf("sequenz n = %d\n",n);
@@ -1865,6 +1864,8 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
     GHMM_RNG_SET (RNG, seed);
   }
 
+  /* initialize the emission history */
+  mo->emission_history = 0;
 
   while (n < seq_number) {
     /* printf("sequenz n = %d\n",n);
@@ -2067,12 +2068,15 @@ STOP:
 /** gets correct index for emission array b of state j */
  int get_emission_index (model * mo, int j, int obs, int t)
 {
+  int retval;
   if (!(mo->model_type & kHigherOrderEmissions))
     return (obs);
   if (mo->s[j].order > t)
-    return -1;
-  return (mo->emission_history * mo->M) % mo->pow_lookup[mo->s[j].order + 1] +
-    obs;
+    retval = -1;
+  else
+    retval = (mo->emission_history * mo->M) % mo->pow_lookup[mo->s[j].order + 1] + obs;
+
+  return retval;
 }
 
 /** updates emission history */
