@@ -83,46 +83,22 @@ static local_store_t *reestimate_alloc (const model * mo)
 # define CUR_PROC "reestimate_alloc"
   int i;
   local_store_t *r = NULL;
-  if (!m_calloc (r, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (r->pi_num, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (r->a_num, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  for (i = 0; i < mo->N; i++)
-    if (!m_calloc (r->a_num[i], mo->s[i].out_states)) {
-      mes_proc ();
-      goto STOP;
-    }
-  if (!m_calloc (r->a_denom, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  if (!m_calloc (r, 1)) {mes_proc (); goto STOP;}
 
-  if (!m_malloc (r->b_num, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  if (!m_calloc (r->pi_num, mo->N)) {mes_proc (); goto STOP;}
+  if (!m_calloc (r->a_num, mo->N)) {mes_proc (); goto STOP;}
   for (i = 0; i < mo->N; i++)
-    if (!m_calloc (r->b_num[i], model_ipow (mo, mo->M, mo->s[i].order + 1))) {
-      mes_proc ();
-      goto STOP;
-    }
-  if (!m_malloc (r->b_denom, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+    if (!m_calloc (r->a_num[i], mo->s[i].out_states)) {mes_proc (); goto STOP;}
+  if (!m_calloc (r->a_denom, mo->N)) {mes_proc (); goto STOP;}
+
+  if (!m_malloc (r->b_num, mo->N)) {mes_proc (); goto STOP;}
   for (i = 0; i < mo->N; i++)
-    if (!m_calloc (r->b_denom[i], model_ipow (mo, mo->M, mo->s[i].order))) {
-      mes_proc ();
-      goto STOP;
-    }
+    if (!m_calloc (r->b_num[i], model_ipow(mo, mo->M, mo->s[i].order + 1)))
+      {mes_proc (); goto STOP;}
+  if (!m_malloc (r->b_denom, mo->N)) {mes_proc (); goto STOP;}
+  for (i = 0; i < mo->N; i++)
+    if (!m_calloc (r->b_denom[i], model_ipow (mo, mo->M, mo->s[i].order)))
+      {mes_proc (); goto STOP;}
 
   return (r);
 STOP:
@@ -141,19 +117,24 @@ static int reestimate_free (local_store_t ** r, int N)
     return (0);
   m_free ((*r)->pi_num);
 
-  if ((*r)->a_num)
-    for (i = 0; i < N; i++)
+  if ((*r)->a_num) {
+    for (i=0; i<N; i++)
       m_free ((*r)->a_num[i]);
+  }
   m_free ((*r)->a_num);
+
   m_free ((*r)->a_denom);
 
-  if ((*r)->b_num)
-    for (i = 0; i < N; i++)
+  if ((*r)->b_num) {
+    for (i=0; i<N; i++)
       m_free ((*r)->b_num[i]);
+  }
   m_free ((*r)->b_num);
-  if ((*r)->b_denom)
-    for (i = 0; i < N; i++)
+
+  if ((*r)->b_denom) {
+    for (i=0; i<N; i++)
       m_free ((*r)->b_denom[i]);
+  }
   m_free ((*r)->b_denom);
 
   m_free (*r);
@@ -214,8 +195,7 @@ STOP:
 }                               /* reestimate_alloc_matvek */
 
 /*----------------------------------------------------------------------------*/
-int reestimate_free_matvek (double **alpha, double **beta, double *scale,
-                            int T)
+int reestimate_free_matvek (double **alpha, double **beta, double *scale, int T)
 {
 # define CUR_PROC "reestimate_free_matvek"
   stat_matrix_d_free (&alpha);
@@ -319,9 +299,7 @@ void reestimate_update_tie_groups (model * mo)
 STOP:
   m_free (new_emissions);
 #undef CUR_PROC
-}
-
-/* reestimate_update_tie_groups */
+}           /* reestimate_update_tie_groups */
 
 /*----------------------------------------------------------------------------*/
 static int reestimate_setlambda (local_store_t * r, model * mo)
@@ -447,9 +425,9 @@ STOP:
 }                               /* reestimate_setlambda */
 
 /*----------------------------------------------------------------------------*/
-static int reestimate_one_step (model * mo, local_store_t * r,
-                                int seq_number, int *seq_length, int **O,
-                                double *log_p, double *seq_w)
+static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
+				int *seq_length, int **O, double *log_p,
+				double *seq_w)
 {
 # define CUR_PROC "reestimate_one_step"
   int res = -1;
@@ -585,57 +563,37 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 # define CUR_PROC "reestimate_one_step_lean"
   int res = -1;
   int i, t, k, e_index, len;
-  int m, j, j_id, k_id, l, s, h;
-  int *tlt, tlt_size=0, *elt, elt_size=0;
-  int* O;
+  int m, j, j_id, g, g_id, l, s, h;
+  int * O;
   double c_t;
   
-  double* alpha_last_col;
-  double* alpha_curr_col;
-  double* switching_tmp;
+  double * alpha_last_col;
+  double * alpha_curr_col;
+  double * switching_tmp;
   double scale, old_scale, scalingf;
-  double* t_est, *ot_est, *summands;
-  double* e_est, *oe_est;
-  double* p_est, *op_est;
+  double * summands;
+  local_store_t * * curr_est, * * last_est, * * switch_lst; 
 
-  /* Allocating */
-  if (!m_calloc (alpha_last_col, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (alpha_curr_col, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  /* allocating memory for two columns of alpha matrix */
+  if (!m_calloc (alpha_last_col, mo->N)) {mes_proc (); goto STOP;}
+  if (!m_calloc (alpha_curr_col, mo->N)) {mes_proc (); goto STOP;}
 
-  /* enumerate all transitions */
-  if (!m_calloc(tlt, mo->N)) {mes_proc(); goto STOP;}
-  for (i=0; i<mo->N; i++) {
-    tlt[i] = tlt_size;
-    tlt_size += mo->s[i].out_states;
-  }
+  /* allocating 2*N local_store_t */
+  if (!m_calloc (last_est, mo->N)) {mes_proc (); goto STOP;}
+  for (i=0; i<mo->N; i++)
+    last_est[i] = reestimate_alloc(mo);
+  if (!m_calloc (curr_est, mo->N)) {mes_proc (); goto STOP;}
+  for (i=0; i<mo->N; i++)
+    curr_est[i] = reestimate_alloc(mo);
 
-  /* enumerate all emissions */
-  if (!m_calloc(elt, mo->N)) {mes_proc(); goto STOP;}
-  for (i=0; i<mo->N; i++) {
-    elt[i] = elt_size;
-    elt_size += model_ipow(mo, mo->M, mo->s[i].order+1);
-  }
 
-  /* temporary array to hold logarithmized summands for sums over probabilities */
-  if (!m_calloc(summands, m_max(mo->N,model_ipow(mo,mo->M,mo->maxorder+1))+1)) {
-    mes_proc(); goto STOP;}
+  /* temporary array to hold logarithmized summands
+     for sums over probabilities */
+  if (!m_calloc(summands, m_max(mo->N,model_ipow(mo,mo->M,mo->maxorder+1))+1))
+    {mes_proc(); goto STOP;}
 
-  /* holds estimates over paths */
-  if (!m_calloc(t_est,  mo->N*tlt_size)) {mes_proc(); goto STOP;}
-  if (!m_calloc(ot_est, mo->N*tlt_size)) {mes_proc(); goto STOP;}
-  if (!m_calloc(e_est,  mo->N*elt_size)) {mes_proc(); goto STOP;}
-  if (!m_calloc(oe_est, mo->N*elt_size)) {mes_proc(); goto STOP;}
-  if (!m_calloc(p_est,  mo->N*mo->N))    {mes_proc(); goto STOP;}
-  if (!m_calloc(op_est, mo->N*mo->N))    {mes_proc(); goto STOP;}
- 
 
-  for (k = 0; k < seq_number; k++) {
+  for (k=0; k<seq_number; k++) {
     len = seq_length[k];
     O = seqs[k];
    
@@ -683,56 +641,33 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
       for (m=0; m<mo->N; m++) {
 	for (i=0; i<mo->N; i++) {
 
-	  /* computes estimates for the numerator of transition probabilities*/
+	  /* computes estimates for the numerator of transition probabilities */
 	  for (j=0; j<mo->s[i].out_states; j++) {
 	    j_id = mo->s[i].out_id[j];
 
-	    for (k=0; k<mo->s[j_id].in_states; k++) {
-	      k_id = mo->s[j_id].out_id[k];
-	      e_index = get_emission_index(mo, k_id, O[t], t);
-	      summands[k] = ot_est[(tlt[i]+j)*mo->N + m]
-		* mo->s[j_id].in_a[k] * mo->s[k_id].b[e_index]
-		* scalingf; /* scales all summands with the current */
+	    for (g=0; g<mo->s[j_id].in_states; g++) {
+	      g_id = mo->s[j_id].out_id[g];
+	      e_index = get_emission_index(mo, g_id, O[t], t);
+	       /* scales all summands with the current */
+	      summands[g] = last_est[m]->a_num[i][j] * mo->s[j_id].in_a[g]
+		* mo->s[g_id].b[e_index] * scalingf;
 	    }
 	    if (j_id == m) {
 	      e_index = get_emission_index(mo, j_id, O[t], t);
-	      summands[++k] = alpha_last_col[i] /* alpha is scaled. no other scaling necessary */
-		* mo->s[i].out_a[j_id] * mo->s[j_id].b[e_index];
-	    }
-	    t_est[(tlt[i]+j)*mo->N + m] = nologSum(summands, k);
-	  }
-
-	  /* computes estimates for the numerator of emmission probabilities*/
-	  for (h=0; h<model_ipow(mo,mo->M, mo->s[i].order); h++) {
-	    for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
-	      for (k=0; k<mo->s[m].in_states; k++) {
-		k_id = mo->s[m].out_id[k];
-		e_index = get_emission_index(mo, k_id, O[t], t);
-		summands[k] = oe_est[(elt[i]+s)*mo->N + m]
-		  * mo->s[m].in_a[k] * mo->s[k_id].b[e_index]
-		  * scalingf; /* scales all summands with the last scaling factor of the alphas */
-	      }
-	      e_est[(elt[i]+s)*mo->N + m] = nologSum(summands, k);
-	    }
-	  }
-	  e_index = get_emission_index(mo, m, O[t], t);
-	  if (i == m) {
-	    for (l=0; l<mo->s[m].out_states; l++)
-	      if (mo->s[m].out_id[l] == m)
-		break;
-	    if (l<mo->s[m].out_states)
 	      /* alpha is scaled. no other scaling necessary */
-	      e_est[(elt[i]+s)*mo->N + m] += alpha_last_col[i]
-		* mo->s[m].out_a[l] * mo->s[m].b[e_index];
+	      summands[g++] = alpha_last_col[i] * mo->s[i].out_a[j_id]
+		* mo->s[j_id].b[e_index];
+	    }
+	    curr_est[m]->a_num[i][j] = nologSum(summands, g);
 	  }
-	  
-	  /* computes denominator for both probabilities */	  
-	  for (k=0; k<mo->s[m].in_states; k++) {
-	    k_id = mo->s[m].out_id[k];
+#ifdef calculate_denominators_extra
+	  /* computes denominator of transition probabilities */	  
+	  for (g=0; g<mo->s[m].in_states; g++) {
+	    g_id = mo->s[m].in_id[g];
 	    e_index = get_emission_index(mo, m, O[t], t);
-	    summands[k] = op_est[i*mo->N + k]
-	      * mo->s[m].in_a[k] * mo->s[m].b[e_index]
-		* scalingf; /* scales all summands with the current */
+	    /* scales all summands with the current factor */
+	    summands[g] = last_est[m]->a_denom[i] * mo->s[m].in_a[g]
+	      * mo->s[m].b[e_index] * scalingf;
 	  }
 	  if (i == m) {
 	    for (l=0; l<mo->s[i].out_states; l++)
@@ -740,36 +675,82 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 		break;
 	    if (l<mo->s[i].out_states) {
 	      e_index = get_emission_index(mo, i, O[t], t);
-	      summands[++k] = alpha_last_col[i] /* alpha is scaled. no other scaling necessary */
-		* mo->s[i].out_a[l] * mo->s[i].b[e_index];
+	      /* alpha is scaled. no other scaling necessary */
+	      summands[++g] = alpha_last_col[i] 
+		* mo->s[i].out_a[l] * mo->s[m].b[e_index];
 	    }
 	  }
-	  p_est[i*mo->N + m] = nologSum(summands, k);
+	  curr_est[m]->a_denom[i] = nologSum(summands, g);
+#endif
+
+	  /* computes estimates for the numerator of emmission probabilities*/
+	  for (h=0; h<model_ipow(mo,mo->M, mo->s[i].order); h++)
+	    for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
+	      for (g=0; g<mo->s[m].in_states; g++) {
+		g_id = mo->s[m].out_id[g];
+		e_index = get_emission_index(mo, g_id, O[t], t);
+		/* scales all summands with the last scaling factor
+		   of alpha */
+		summands[g] = last_est[m]->b_num[i][s] * mo->s[m].in_a[g]
+		  * mo->s[g_id].b[e_index] * scalingf;
+	      }
+	      curr_est[m]->b_num[i][s] = nologSum(summands, g);
+	    }
+
+	  e_index = get_emission_index(mo, m, O[t], t);
+	  if (i == m) {
+	    for (l=0; l<mo->s[m].out_states; l++)
+	      if (mo->s[m].out_id[l] == m)
+		break;
+	    if (l<mo->s[m].out_states)
+	      /* alpha is scaled. no other scaling necessary */
+	      curr_est[m]->b_num[i][e_index] += alpha_last_col[i]
+		* mo->s[m].out_a[l] * mo->s[m].b[e_index];
+	  }
+	  
 	}
       }
 
-      /* switching pointers of alpha_curr_col and alpha_last_col
-	 don't set alpha_curr_col[i] to zero since its overwritten */
-      switching_tmp = alpha_last_col; alpha_last_col = alpha_curr_col; alpha_curr_col = switching_tmp;
+      /* switching pointers of alpha_curr_col and alpha_last_col */
+      switching_tmp  = alpha_last_col;
+      alpha_last_col = alpha_curr_col;
+      alpha_curr_col = switching_tmp;
 
-      switching_tmp = ot_est; ot_est = t_est; t_est = switching_tmp;
-      switching_tmp = oe_est; oe_est = e_est; e_est = switching_tmp;
-      switching_tmp = op_est; op_est = p_est; p_est = switching_tmp;  
+      switch_lst = last_est;
+      last_est   = curr_est;
+      curr_est   = switch_lst;
     }
 
-    /* filling the usual reestimate arrays by summing over the last row */
+    /* filling the usual reestimate arrays by summing all states */
     for (m=0; m<mo->N; m++) {
+      curr_est[m]->pi_denom = 0;
       for (i=0; i<mo->N; i++) {
-	for (j=0; j<mo->s[i].out_states; j++)
-	  r->a_num[i][j] += t_est[(tlt[i]+j)*mo->N + m];
-	r->a_denom[i] += p_est[i*mo->N + m];
+	/* PI */
+	/* XXX calculate the estimates for pi numerator */
+	curr_est[m]->pi_num[i] = mo->s[i].pi;
+	r->pi_num[i] += seq_w[k] * curr_est[m]->pi_num[i];
+	curr_est[m]->pi_denom += curr_est[m]->pi_num[i];
+
+	/* A */
+	curr_est[m]->a_denom[i] = 0;
+	for (j=0; j<mo->s[i].out_states; j++) {
+	  r->a_num[i][j] += seq_w[k] * curr_est[m]->a_num[i][j];
+	  curr_est[m]->a_denom[i] += curr_est[m]->a_num[i][j];
+	}
+	r->a_denom[i] += seq_w[k] * curr_est[m]->a_denom[i];
 	
+	/* B */
 	for (h=0; h < model_ipow(mo,mo->M, mo->s[i].order); h++) {
-	  r->b_denom[i][h] = p_est[i*mo->N + m];
-	  for (s=h*mo->M; s<h*mo->M+mo->M; s++)
-	    r->b_num[i][s] = e_est[(elt[i]+s)*mo->N + m];
+	  curr_est[m]->b_denom[i][h] = 0;
+	  for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
+	    r->b_num[i][s] += seq_w[k] * curr_est[m]->b_num[i][s];
+	    curr_est[m]->b_denom[i][h] += curr_est[m]->b_num[i][s];
+	  }
+	  r->b_denom[i][h] += seq_w[k] * curr_est[m]->b_denom[i][h];
 	}
       }
+      /* PI */
+      r->pi_denom += seq_w[k] * curr_est[m]->pi_denom;
     }
     
   }
@@ -780,18 +761,20 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
     res = 0;
 
 STOP:
-  /* Deallocation */
+  /* deallocation */
+  if (last_est)
+    for (i=0; i<mo->N; i++)
+      reestimate_free(&(last_est[i]), mo->N);
+  m_free(last_est);
+
+  if (curr_est)
+    for (i=0; i<mo->N; i++)
+      reestimate_free(&(curr_est[i]), mo->N);
+  m_free(curr_est);
+
   m_free(alpha_last_col);
   m_free(alpha_curr_col);
   m_free(summands);
-  m_free(tlt);
-  m_free(elt);
-  m_free(ot_est);
-  m_free(t_est);
-  m_free(oe_est);
-  m_free(e_est);
-  m_free(op_est);
-  m_free(p_est);
 
   return res;  
 #undef CUR_PROC
