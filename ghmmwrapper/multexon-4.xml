@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<graphml>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:gd="gdnamespace" xmlns:hmm="http://www.ghmm.org/xml/" >
   <key for="node" gd:type="HigherDiscreteProbDist" id="emissions"/>
   <hmm:class hmm:high="10" hmm:low="0">
     <map>
