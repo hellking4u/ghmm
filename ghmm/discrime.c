@@ -36,7 +36,6 @@
 
 #include <float.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include <math.h>
 #include "ghmm.h"
@@ -52,29 +51,38 @@
 #define TRIM(o, n) ((1-LAMBDA)*(o) + LAMBDA*(n))
 
 /* forward declaration */
-int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
                      double ******matrix_b, double *****matrix_a,
                      double *****matrix_pi, long double ***omega,
                      long double ****omegati, double ****log_p);
 
-void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
                      double *****matrix_b, double ****matrix_a,
                      double ****matrix_pi, long double **omega,
                      long double ***omegati, double ***log_p);
 
-void discrime_trim_gradient (double *old, double *new, int length);
+static void discrime_trim_gradient (double *new, int length);
 
 double discrime_lambda = 0.0;
 double discrime_alpha = 1.0;
 
-model **discrime_modelarray_alloc (int size)
+model * * discrime_modelarray_alloc (int size)
 {
-  return calloc (size, sizeof (model *));
+#define CUR_PROC "discrime_modelarray_alloc"
+  model * * retval;
+
+  if (!m_calloc(retval, size)) {mes_proc(); goto STOP;}
+
+STOP:
+  return retval;
+#undef CUR_PROC
 }
 
 void discrime_modelarray_dealloc (model ** mos)
 {
-  free (mos);
+#define CUR_PROC "discrime_modelarray_dealloc"
+  m_free (mos);
+#undef CUR_PROC
 }
 void discrime_modelarray_setptr (model ** mos, model * mo, int pos)
 {
@@ -85,14 +93,23 @@ model *discrime_modelarray_getptr (model ** mos, int pos)
   return mos[pos];
 }
 
-sequence_t **discrime_seqarray_alloc (int size)
+sequence_t * * discrime_seqarray_alloc (int size)
 {
-  return calloc (size, sizeof (sequence_t *));
+#define CUR_PROC "discrime_seqarray_alloc"
+  sequence_t * * retval;
+
+  if (!m_calloc(retval, size)) {mes_proc(); goto STOP;}
+
+STOP:
+  return retval;
+#undef CUR_PROC
 }
 
 void discrime_seqarray_dealloc (sequence_t ** seqs)
 {
-  free (seqs);
+#define CUR_PROC "discrime_seqarray_dealloc"
+  m_free (seqs);
+#undef CUR_PROC
 }
 void discrime_seqarray_setptr (sequence_t ** seqs, sequence_t * seq, int pos)
 {
@@ -105,7 +122,7 @@ sequence_t *discrime_seqarray_getptr (sequence_t ** seqs, int pos)
 
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
-int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
                      double ******matrix_b, double *****matrix_a,
                      double *****matrix_pi, long double ***omega,
                      long double ****omegati, double ****log_p)
@@ -249,7 +266,7 @@ STOP:
 
 /*----------------------------------------------------------------------------*/
 /** frees memory for expectation matrices for all classes & training sequences*/
-void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
                      double *****matrix_b, double ****matrix_a,
                      double ****matrix_pi, long double **omega,
                      long double ***omegati, double ***log_p)
@@ -315,7 +332,7 @@ void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-int discrime_calculate_omega (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_calculate_omega (model ** mo, sequence_t ** sqs, int noC,
                               long double **omega, long double ***omegati,
                               double ***log_p)
 {
@@ -382,7 +399,7 @@ int discrime_calculate_omega (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
                          double *****expect_b, double ****expect_a,
                          double ****expect_pi, double ***log_p)
 {
@@ -519,7 +536,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
                                 int *falseP, int *falseN)
 {
 #define CUR_PROC "discrime_print_statistics"
@@ -575,7 +592,7 @@ void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_trim_gradient (double *old, double *new, int length)
+static void discrime_trim_gradient (double *new, int length)
 {
 #define CUR_PROC "discrime_trim_gradient"
 
@@ -614,7 +631,7 @@ void discrime_trim_gradient (double *old, double *new, int length)
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC,
                                   int class, double ****expect_pi,
                                   long double **omega, long double ***omegati)
 {
@@ -661,7 +678,7 @@ void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC,
   }
 
   /* change paramters to fit into valid parameter range */
-  discrime_trim_gradient (pi_old, pi_new, mo[class]->N);
+  discrime_trim_gradient (pi_new, mo[class]->N);
 
   /* update parameters */
   for (i = 0; i < mo[class]->N; i++) {
@@ -680,7 +697,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
                                  int class, double ****expect_a,
                                  long double **omega, long double ***omegati)
 {
@@ -736,7 +753,7 @@ void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
     }
 
     /* change paramters to fit into valid parameter range */
-    discrime_trim_gradient (a_old, a_new, mo[class]->s[i].out_states);
+    discrime_trim_gradient (a_new, mo[class]->s[i].out_states);
 
     /* update parameter */
     for (j = 0; j < mo[class]->s[i].out_states; j++) {
@@ -764,7 +781,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
                                  int class, double *****expect_b,
                                  long double **omega, long double ***omegati)
 {
@@ -819,7 +836,7 @@ void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
       }
 
       /* change paramters to fit into valid parameter range */
-      discrime_trim_gradient (b_old, b_new, mo[0]->M);
+      discrime_trim_gradient (b_new, mo[0]->M);
 
       for (h = hist; h < hist + mo[class]->M; h++) {
         /* update parameters */
@@ -840,7 +857,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_update_pi_closed (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_pi_closed (model ** mo, sequence_t ** sqs, int noC,
                                 int class, double lfactor,
                                 double ****expect_pi, long double **omega,
                                 long double ***omegati)
@@ -924,7 +941,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_update_a_closed (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_a_closed (model ** mo, sequence_t ** sqs, int noC,
                                int class, double lfactor, double ****expect_a,
                                long double **omega, long double ***omegati)
 {
@@ -1033,7 +1050,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_update_b_closed (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_b_closed (model ** mo, sequence_t ** sqs, int noC,
                                int class, double lfactor,
                                double *****expect_b, long double **omega,
                                long double ***omegati)
@@ -1121,7 +1138,7 @@ STOP:
 
 
 /*----------------------------------------------------------------------------*/
-void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
+static void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
                            double lfactor, double ****expect_pi,
                            double ****expect_a, double *****expect_b,
                            long double **omega, long double ***omegati)
@@ -1206,7 +1223,7 @@ void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
 
 
 /*----------------------------------------------------------------------------*/
-int discrime_onestep (model ** mo, sequence_t ** sqs, int noC, int grad,
+static int discrime_onestep (model ** mo, sequence_t ** sqs, int noC, int grad,
                       int class)
 {
 #define CUR_PROC "driscrime_onestep"
