@@ -59,7 +59,6 @@ extern "C" {
 /**
    Trains two or more models to opimise the discrimination between the
    classes in the trainingset.
-   The models must have the same topology. (checked)
    @return                 0/-1 success/error
    @param mo:              array of pointers to some models
    @param sqs:             array of annotated sequence sets
@@ -67,8 +66,7 @@ extern "C" {
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-  extern int discriminative (model ** mo, sequence_t ** sqs, int noC,
-                             int gradient);
+  int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -82,8 +80,6 @@ extern "C" {
   double discrime_compute_performance (model ** mo, sequence_t ** sqs,
                                        int noC);
 
-  void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
-                                  int *falseP, int *falseN);
 
 #ifdef __cplusplus
 }
