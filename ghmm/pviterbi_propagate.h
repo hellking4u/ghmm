@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 #include "pmodel.h"
-#include "mysequence.h"
+#include "psequence.h"
 #include "linkedlist.h"
 
 /*------------        Here comes the Propagate stuff          ------------- */

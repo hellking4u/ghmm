@@ -36,7 +36,8 @@
 #ifndef PMODEL_H
 #define PMODEL_H
 #include "model.h" 
-#include "mysequence.h"
+#include "psequence.h"
+
 struct pmodel;
 
 struct pclass_change_context{

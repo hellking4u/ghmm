@@ -45,7 +45,7 @@
 #include <ghmm/ghmm.h>
 #include <ghmm/matrix.h>
 #include <ghmm/pmodel.h>
-#include "mysequence.h"
+#include "psequence.h"
 #include "linkedlist.h"
 #include "pviterbi.h"
 
