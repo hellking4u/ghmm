@@ -1,4 +1,4 @@
-#include "mysequence.h"
+#include "psequence.h"
 #include <stdlib.h>
 #include "mes.h"
 #include "matrix.h"

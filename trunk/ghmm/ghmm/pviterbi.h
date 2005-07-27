@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 #include "pmodel.h"
-#include "mysequence.h"
+#include "psequence.h"
 #include "linkedlist.h"
 
 typedef struct plocal_store_t {
