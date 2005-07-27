@@ -46,7 +46,7 @@ libghmm_la_SOURCES= foba.c foba.h \
                   model.c model.h\
                   modelutil.c modelutil.h \
                   cluster.c cluster.h \
-		          scluster.c scluster.h \
+                  scluster.c scluster.h \
                   root_finder.c root_finder.h \
                   reestimate.c reestimate.h \
                   randvar.c randvar.h \
@@ -56,8 +56,10 @@ libghmm_la_SOURCES= foba.c foba.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
                   sviterbi.c sviterbi.h \
-                  smodel.c smodel.h sdmodel.c sdmodel.h \
-		          sdviterbi.c sdfoba.c sdfoba.h \
+                  smodel.c smodel.h \
+                  sdmodel.c sdmodel.h \
+                  sdviterbi.c \
+                  sdfoba.c sdfoba.h \
                   ghmm.h \
                   sreestimate.c sreestimate.h \
                   sgenerate.c sgenerate.h \
@@ -72,48 +74,42 @@ libghmm_la_SOURCES= foba.c foba.h \
                   kbest.c kbest.h \
                   gradescent.c gradescent.h \
                   discrime.c discrime.h \
-		  mysequence.c mysequence.h \
+		  psequence.c psequence.h \
 		  pmodel.c pmodel.h \
 		  linkedlist.c linkedlist.h \
 		  pviterbi.c pviterbi.h \
 		  pviterbi_propagate.c pviterbi_propagate.h
-                                 
+
 
 pkginclude_HEADERS = ghmm.h \
 		  foba.h \
-                  matrix.h \
                   model.h \
                   cluster.h \
                   scluster.h \
                   root_finder.h \
                   reestimate.h \
-                  randvar.h \
-                  rng.h \
                   sequence.h \
-                  vector.h \
                   viterbi.h \
                   sfoba.h \
                   sviterbi.h \
                   smodel.h \
-		  sdmodel.h sdfoba.h \
+		  sdmodel.h \
+                  sdfoba.h \
                   sreestimate.h \
                   sgenerate.h \
                   smixturehmm.h \
-                  const.h \
-                  mes.h \
-                  mprintf.h \
                   scanner.h \
                   gauss_tail.h \
                   smap_classify.h \
                   kbest.h \
                   gradescent.h \
                   discrime.h \
-		  mysequence.h \
+		  psequence.h \
 		  pmodel.h \
 		  linkedlist.h \
 		  pviterbi.h \
 		  pviterbi_propagate.h
-                  
+
 # must be eleminated...
 pkgdata_DATA = PHI_001_20.dat
 EXTRA_DIST= PHI_001_20.dat
