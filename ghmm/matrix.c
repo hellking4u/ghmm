@@ -49,7 +49,7 @@
 #include "model.h"
 #include "rng.h"
 #include "randvar.h"
-#include "mes.h"
+#include <ghmm/mes.h>
 
 static void lrdecomp (int dim, double **a, double *p);
 static void lyequalsb (double **a, double *b, double *p, int dim, double *y);
@@ -239,8 +239,44 @@ STOP:
 }                               /* matrix_d_alloc */
 
 
-int matrix_d_free (double ***matrix, long zeilen)
-{
+double *** matrix3d_d_alloc(int i, int j, int k) {
+#define CUR_PROC "matrix3d_d_alloc"
+  double *** matrix;
+  int a, b;
+  
+  //printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);
+  
+  if (!m_calloc(matrix, i)) {mes_proc(); goto STOP;}
+  for (a = 0; a < i; a++) {
+    if (!m_calloc(matrix[a], j)) {mes_proc(); goto STOP;}
+    for (b=0; b<j; b++) {
+      if (!m_calloc(matrix[a][b], k)) {mes_proc(); goto STOP;}
+    }
+  }
+  return matrix;
+STOP:
+  matrix3d_d_free(&matrix, i, j);
+  return NULL;
+#undef CUR_PROC
+} /* matrix3d_d_alloc */
+
+/** gets a pointer on a 3d matrix and rows and cols **/
+int matrix3d_d_free(double **** matrix, int i, int j) {
+# define CUR_PROC "matrix3d_d_free"
+  int a,b;
+  mes_check_ptr(matrix, return(-1));
+  if ( !*matrix) return(0);
+  for (a = i - 1; a >=  0; a--) {
+    for (b=j-1; b>=0; b--)
+      m_free((*matrix)[a][b]);
+    m_free((*matrix)[a]);
+  }
+  m_free(*matrix);
+  return (0);
+# undef CUR_PROC
+} /* matrix3d_d_free */
+
+int matrix_d_free(double ***matrix, long zeilen) {
 # define CUR_PROC "matrix_d_free"
   long i;
   mes_check_ptr (matrix, return (-1));
@@ -324,10 +360,45 @@ int matrix_i_free (int ***matrix, long zeilen)
 }                               /* matrix_i_free */
 
 /*============================================================================*/
+/*============================================================================*/
 
-void matrix_d_print (FILE * file, double **matrix, int zeilen, int spalten,
-                     char *tab, char *separator, char *ending)
-{
+int*** matrix3d_i_alloc(int zeilen, int spalten, int hoehe) {
+#define CUR_PROC "matrix_i_alloc"
+  int ***matrix;
+  int i, j;
+  if (!m_calloc(matrix, zeilen)) {mes_proc(); goto STOP;}
+  for (i = 0; i < zeilen; i++) {
+    if (!m_calloc(matrix[i], spalten)) {mes_proc(); goto STOP;}
+    for (j=0; j < spalten; j++)
+      if (!m_calloc(matrix[i][j], hoehe)) {mes_proc(); goto STOP;}
+  }
+  return matrix;
+STOP:
+  matrix3d_i_free(&matrix, zeilen, spalten);
+  return NULL;
+#undef CUR_PROC
+} /* matrix3d_i_alloc */
+
+/*============================================================================*/
+
+int matrix3d_i_free(int **** matrix, int zeilen, int spalten) {
+# define CUR_PROC "matrix_i_free"
+  long i, j;
+  mes_check_ptr(matrix, return(-1));
+  if ( !*matrix ) return(0);
+  for (i = zeilen - 1; i >= 0; i--) {
+    for (j=spalten - 1; j >= 0; j--) 
+      m_free((*matrix)[i][j]);
+    m_free((*matrix)[i]);
+  }
+  m_free(*matrix);
+  return (0);
+# undef CUR_PROC
+} /* matrix3d_i_free */
+
+/*============================================================================*/
+void matrix_d_print(FILE *file, double **matrix, int zeilen, int spalten, 
+		    char *tab, char *separator, char *ending) {
   int i;
   for (i = 0; i < zeilen; i++)
     vector_d_print (file, matrix[i], spalten, tab, separator, ending);
