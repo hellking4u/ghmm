@@ -244,7 +244,7 @@ double *** matrix3d_d_alloc(int i, int j, int k) {
   double *** matrix;
   int a, b;
   
-  //printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);
+  /* printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten); */
   
   if (!m_calloc(matrix, i)) {mes_proc(); goto STOP;}
   for (a = 0; a < i; a++) {
