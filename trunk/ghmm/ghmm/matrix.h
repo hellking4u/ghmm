@@ -54,6 +54,19 @@ extern "C" {
   */
   double **matrix_d_alloc (int n, int m);
 
+
+/**
+  Allocation of a 3 dimensional double matrix. 
+  @return pointer to a matrix
+  @param rows: number of rows
+  @param columns: number of columns
+  @param height: 3rd dimension
+  */
+double *** matrix3d_d_alloc(int i, int j, int k);
+int matrix3d_d_free(double **** matrix, int i, int j);
+
+int *** matrix3d_i_alloc(int i, int j, int k);
+int matrix3d_i_free(int **** matrix, int i, int j);
 /**
   Copying and allocation of a double matrix.
   @return pointer to a matrix

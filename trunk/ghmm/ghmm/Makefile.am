@@ -71,7 +71,12 @@ libghmm_la_SOURCES= foba.c foba.h \
                   kbestbasics.c kbestbasics.h \
                   kbest.c kbest.h \
                   gradescent.c gradescent.h \
-                  discrime.c discrime.h
+                  discrime.c discrime.h \
+		  mysequence.c mysequence.h \
+		  pmodel.c pmodel.h \
+		  linkedlist.c linkedlist.h \
+		  pviterbi.c pviterbi.h \
+		  pviterbi_propagate.c pviterbi_propagate.h
                                  
 
 pkginclude_HEADERS = ghmm.h \
@@ -102,7 +107,12 @@ pkginclude_HEADERS = ghmm.h \
                   smap_classify.h \
                   kbest.h \
                   gradescent.h \
-                  discrime.h
+                  discrime.h \
+		  mysequence.h \
+		  pmodel.h \
+		  linkedlist.h \
+		  pviterbi.h \
+		  pviterbi_propagate.h
                   
 # must be eleminated...
 pkgdata_DATA = PHI_001_20.dat
