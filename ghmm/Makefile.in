@@ -96,8 +96,8 @@ am_libghmm_la_OBJECTS = foba.lo matrix.lo model.lo modelutil.lo \
 	smodel.lo sdmodel.lo sdviterbi.lo sdfoba.lo sreestimate.lo \
 	sgenerate.lo smixturehmm.lo mes.lo mprintf.lo scanner.lo \
 	gauss_tail.lo smap_classify.lo kbestbasics.lo kbest.lo \
-	gradescent.lo discrime.lo mysequence.lo pmodel.lo \
-	linkedlist.lo pviterbi.lo pviterbi_propagate.lo
+	gradescent.lo discrime.lo psequence.lo pmodel.lo linkedlist.lo \
+	pviterbi.lo pviterbi_propagate.lo
 libghmm_la_OBJECTS = $(am_libghmm_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -110,7 +110,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/linkedlist.Plo ./$(DEPDIR)/matrix.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/mes.Plo ./$(DEPDIR)/model.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/modelutil.Plo ./$(DEPDIR)/mprintf.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/mysequence.Plo ./$(DEPDIR)/pmodel.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/pmodel.Plo ./$(DEPDIR)/psequence.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/pviterbi.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/pviterbi_propagate.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/randvar.Plo ./$(DEPDIR)/reestimate.Plo \
@@ -268,7 +268,7 @@ libghmm_la_SOURCES = foba.c foba.h \
                   model.c model.h\
                   modelutil.c modelutil.h \
                   cluster.c cluster.h \
-		          scluster.c scluster.h \
+                  scluster.c scluster.h \
                   root_finder.c root_finder.h \
                   reestimate.c reestimate.h \
                   randvar.c randvar.h \
@@ -278,8 +278,10 @@ libghmm_la_SOURCES = foba.c foba.h \
                   viterbi.c viterbi.h \
                   sfoba.c sfoba.h \
                   sviterbi.c sviterbi.h \
-                  smodel.c smodel.h sdmodel.c sdmodel.h \
-		          sdviterbi.c sdfoba.c sdfoba.h \
+                  smodel.c smodel.h \
+                  sdmodel.c sdmodel.h \
+                  sdviterbi.c \
+                  sdfoba.c sdfoba.h \
                   ghmm.h \
                   sreestimate.c sreestimate.h \
                   sgenerate.c sgenerate.h \
@@ -294,7 +296,7 @@ libghmm_la_SOURCES = foba.c foba.h \
                   kbest.c kbest.h \
                   gradescent.c gradescent.h \
                   discrime.c discrime.h \
-		  mysequence.c mysequence.h \
+		  psequence.c psequence.h \
 		  pmodel.c pmodel.h \
 		  linkedlist.c linkedlist.h \
 		  pviterbi.c pviterbi.h \
@@ -302,34 +304,28 @@ libghmm_la_SOURCES = foba.c foba.h \
 
 pkginclude_HEADERS = ghmm.h \
 		  foba.h \
-                  matrix.h \
                   model.h \
                   cluster.h \
                   scluster.h \
                   root_finder.h \
                   reestimate.h \
-                  randvar.h \
-                  rng.h \
                   sequence.h \
-                  vector.h \
                   viterbi.h \
                   sfoba.h \
                   sviterbi.h \
                   smodel.h \
-		  sdmodel.h sdfoba.h \
+		  sdmodel.h \
+                  sdfoba.h \
                   sreestimate.h \
                   sgenerate.h \
                   smixturehmm.h \
-                  const.h \
-                  mes.h \
-                  mprintf.h \
                   scanner.h \
                   gauss_tail.h \
                   smap_classify.h \
                   kbest.h \
                   gradescent.h \
                   discrime.h \
-		  mysequence.h \
+		  psequence.h \
 		  pmodel.h \
 		  linkedlist.h \
 		  pviterbi.h \
@@ -422,8 +418,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modelutil.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mprintf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mysequence.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pmodel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/psequence.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pviterbi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pviterbi_propagate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/randvar.Plo@am__quote@
