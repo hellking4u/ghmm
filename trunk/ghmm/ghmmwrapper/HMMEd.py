@@ -216,28 +216,8 @@ class HMMClass( xmlutil.HMMClass ):
 class HMM (xmlutil.HMM):
 
     def __init__(self, itsEditor, graph, XMLFileName = None):
+        xmlutil.HMM.__init__(self, XMLFileName, graph)
         self.itsEditor = itsEditor
- 	self.G = graph
-	self.G.directed = 1
-	self.G.euclidian = 0
-        self.G.simple = 0
-	self.Pi = {}
-        self.id2index = {}
-
-        self.hmmAlphabet = DiscreteHMMAlphabet()
-        self.hmmClass    = HMMClass()
-        
-        self.editableAttr = {}
-        self.editableAttr['HMM'] = ['desc']
-        self.desc = ValidatingString()       
-
-        self.state = {}
-
-        self.backgroundDistributions = NamedDistributions(self)
-
-        self.DocumentName = "graphml"
-        if XMLFileName != None:
-            self.OpenXML(XMLFileName)
 
     def Clear(self):
         xmlutil.HMM.Clear(self)                  # base class clear!
