@@ -147,6 +147,15 @@ import sys
 
 #print "*** I'm the ghmm in "+ str(path.abspath(path.dirname(sys.argv[0]))) + " ***"
 
+# very handy function for debugging:
+import sys
+
+verbose_level = 1
+
+def verbose(message, level=1):
+    if (level <= verbose_level):
+        print >> sys.stderr, message
+
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
@@ -261,13 +270,30 @@ class Alphabet(EmissionDomain):
 
     """
     def __init__(self, listOfCharacters):
-        """ Creates an alphabet out of a listOfCharacters """
+        """
+        Creates an alphabet out of a listOfCharacters
+        @param listOfCharacters: a list of strings (single characters most of
+        the time), ints, or other objects that can be used as dictionary keys
+        for a mapping of the external sequences to the internal representation
+        
+        Note: Alphabets should be considered as imutable. That means the
+        listOfCharacters and the mapping should never be touched after
+        construction.
+        """
         self.listOfCharacters = listOfCharacters
+        self._lengthOfCharacters = -1
         self.index = {} # Which index belongs to which character
         i = 0
         for c in self.listOfCharacters:
+            if (self._lengthOfCharacters != None and type(c) == type("hallo")):
+                if (self._lengthOfCharacters == -1):
+                    self._lengthOfCharacters = len(c)
+                elif (len(c) != self._lengthOfCharacters):
+                    self._lengthOfCharacters = None                    
             self.index[c] = i
             i += 1
+        if (self._lengthOfCharacters == -1):
+            self._lengthOfCharacters = None
         self.CDataType = "int" # flag indicating which C data type should be used
 
     def __str__(self):
@@ -288,7 +314,11 @@ class Alphabet(EmissionDomain):
 
     def __len__(self):
         return len(self.listOfCharacters)
-        
+
+    def __hash__(self):
+        # defining hash and eq is not recommended for mutable types.
+        # => listOfCharacters should be considered imutable
+        return id(self)
 
     def size(self):
         """ Deprecated """
@@ -320,9 +350,14 @@ class Alphabet(EmissionDomain):
         """ Given an internal representation return the
             external representation
 
+            Note: the internal code -1 always represents a gap character '-'
+
             Raises KeyError
         """
-        if internal < 0 or len(self.listOfCharacters) <= internal:
+        # this is a gap
+        if internal == -1:
+            return "-"
+        if internal < -1 or len(self.listOfCharacters) < internal:
             raise KeyError, "Internal symbol "+str(internal)+" not recognized."
         return self.listOfCharacters[internal]
 
@@ -342,6 +377,13 @@ class Alphabet(EmissionDomain):
         """
         return emission in self.listOfCharacters
 
+    def getExternalCharacterLength(self):
+        """
+        If all external characters are of the same length the length is
+        returned. Otherwise None.
+        @return: length of the external characters or None
+        """
+        return self._lengthOfCharacters
 
 
 DNA = Alphabet(['a','c','g','t'])
@@ -361,6 +403,14 @@ class Float(EmissionDomain):
 
     def __init__(self):
         self.CDataType = "double" # flag indicating which C data type should be used
+
+    def __eq__(self, other):
+        return isinstance(other, Float)
+
+    def __hash__(self):
+        # defining hash and eq is not recommended for mutable types.
+        # for float it is fine because it is kind of state less
+        return id(self)
 
     def isAdmissable(self, emission):
         """ Check whether emission is admissable (contained in) the domain
@@ -808,7 +858,7 @@ class SequenceSet:
     def __del__(self):
         "Deallocation of C sequence struct."
         
-        print "__del__ SequenceSet " + str(self.cseq)
+        # print "__del__ SequenceSet " + str(self.cseq)
         self.freeFunction(self.cseq)
         self.cseq = None
     
@@ -1064,6 +1114,7 @@ class HMMOpenFactory(HMMFactory):
     	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
     	    hmm_dom = xmlutil.HMM(fileName)
     	    emission_domain = hmm_dom.AlphabetType()
+            
     	    if emission_domain == int:
                 [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
 
@@ -1073,6 +1124,7 @@ class HMMOpenFactory(HMMFactory):
 
                 # check for background distributions
                 (background_dist, orders, code2name) = hmm_dom.getBackgroundDist()
+                # (background_dist, orders) = hmm_dom.getBackgroundDist()
                 bg_list = []
                 # if background distribution exists, set background distribution here
                 if background_dist != {}:
@@ -2423,8 +2475,10 @@ class DiscreteEmissionHMM(HMM):
         hmm_dom.hmmClass.addCode(0, "C1", xmlutil.ValidatingString("Switching class"))
 
         alphabet = self.emissionDomain
+        # adapted to the pair HMM xmlutil with multiple alphabets
+        hmm_dom.hmmAlphabets[0] = xmlutil.DiscreteHMMAlphabet()
         for c in alphabet.listOfCharacters:
-            hmm_dom.hmmAlphabet.addCode(alphabet.index[c], c)
+            hmm_dom.hmmAlphabets[0].addCode(alphabet.index[c], c)
 
         if backgroundobj != None:
              (n,orders,b) = backgroundobj.tolist()
@@ -3492,5 +3546,730 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
 
     return retval
         
-       
+########## Here comes all the Pair HMM stuff ##########
+class DiscretePairDistribution(DiscreteDistribution):
+    """
+    A DiscreteDistribution over TWO Alphabets: The discrete distribution
+    is parameterized by the vector of probabilities.
+    To get the index of the vector that corresponds to a pair of characters
+    use the getPairIndex method.
+
+    """
+
+    def __init__(self, alphabetX, alphabetY, offsetX, offsetY):
+        """
+        construct a new DiscretePairDistribution
+        @param alphabetX: Alphabet object for sequence X
+        @param alphabetY: Alphabet object for sequence Y
+        @param offsetX: number of characters the alphabet of sequence X
+        consumes at a time
+        @param offsetX: number of characters the alphabet of sequence Y
+        consumes at a time
+        """
+        self.alphabetX = alphabetX
+        self.alphabetY = alphabetY
+        self.offsetX = offsetX
+        self.offsetY = offsetY
+        self.prob_vector = None
+        self.pairIndexFunction = ghmmwrapper.pair
+
+    def getPairIndex(self, charX, charY):
+        """
+        get the index of a pair of two characters in the probability vector
+        (if you use the int representation both values must be ints)
+        @param charX: character chain or int representation
+        @param charY: character chain or int representation
+        @return: the index of the pair in the probability vector
+        """
+        if (not (type(charX) == type(1) and type(charY) == type(1))):
+            if (charX == "-"):
+                intX = 0 # check this!
+            else:
+                intX = self.alphabetX.internal(charX)
+            if (charY == "-"):
+                intY = 0 # check this!
+            else:
+                intY = self.alphabetY.internal(charY)
+        else:
+            intX = charX
+            intY = charY
+        return self.pairIndexFunction(intX, intY,
+                                      len(self.alphabetX),
+                                      self.offsetX, self.offsetY)
+
+    def setPairProbability(self, charX, charY, probability):
+        """
+        set the probability of the [air charX and charY to probability
+        @param charX: character chain or int representation
+        @param charY: character chain or int representation
+        @param probability: probability (0<=float<=1)
+        """
+        self.prob_vector[self.getPairIndex(charX, charY)] = probability
+
+    def getEmptyProbabilityVector(self):
+        """
+        get an empty probability vector for this distribution (filled with 0.0)
+        @return: list of floats
+        """
+        length = self.pairIndexFunction(len(self.alphabetX) - 1,
+                                        len(self.alphabetY) - 1,
+                                        len(self.alphabetX),
+                                        self.offsetX, self.offsetY) + 1
+        return [0.0 for i in range(length)]
+
+    def getCounts(self, sequenceX, sequenceY):
+        """
+        extract the pair counts for aligned sequences sequenceX and sequenceY
+        @param sequenceX: string for sequence X
+        @param sequenceY: strinf for sequence Y
+        @return: a list of counts
+        """
+        counts = self.getEmptyProbabilityVector()
+        if (self.offsetX != 0 and self.offsetY != 0):
+            assert len(sequenceX) / self.offsetX == len(sequenceY) / self.offsetY
+            for i in range(len(sequenceX) / self.offsetX):
+                charX = sequenceX[i*self.offsetX:(i+1)*self.offsetX]
+                charY = sequenceY[i*self.offsetY:(i+1)*self.offsetY]
+                counts[self.getPairIndex(charX, charY)] += 1
+            return counts
+        elif (self.offsetX == 0 and self.offsetY == 0):
+            print "Silent states (offsetX==0 and offsetY==0) not supported"
+            return counts
+        elif (self.offsetX == 0):
+            charX = "-"
+            for i in range(len(sequenceY) / self.offsetY):
+                charY = sequenceY[i*self.offsetY:(i+1)*self.offsetY]
+                counts[self.getPairIndex(charX, charY)] += 1
+            return counts
+        elif (self.offsetY == 0):
+            charY = "-"
+            for i in range(len(sequenceX) / self.offsetX):
+                charX = sequenceX[i*self.offsetX:(i+1)*self.offsetX]
+                counts[self.getPairIndex(charX, charY)] += 1
+            return counts
+
+class ComplexEmissionSequence:
+    """
+    A complex emission sequence holds the encoded representations of one
+    single sequence. The encoding is done by the emissionDomains. It also links
+    to the underlying C-structure.
+
+    Note: ComplexEmissionSequence has to be considered imutable for the moment.
+    There are no means to manipulate the sequence positions yet.
+    """
+
+    def __init__(self, emissionDomains, sequenceInputs, labelDomain = None, labelInput = None):
+        """
+        @param emissionDomains: a list of EmissionDomain objects corresponding
+        to the list of sequenceInputs
+        @param sequenceInputs: a list of sequences of the same length (e.g.
+        nucleotides and double values) that will be encoded
+        by the corresponding EmissionDomain """
+        assert len(emissionDomains) == len(sequenceInputs)
+        assert len(sequenceInputs) > 0
+        self.length = len(sequenceInputs[0])
+        for sequenceInput in sequenceInputs:
+            assert self.length == len(sequenceInput)
+            
+        self.discreteDomains = []
+        self.discreteInputs = []
+        self.continuousDomains = []
+        self.continuousInputs = []
+        for i in range(len(emissionDomains)):
+            if emissionDomains[i].CDataType == "int":
+                self.discreteDomains.append(emissionDomains[i])
+                self.discreteInputs.append(sequenceInputs[i])
+            if emissionDomains[i].CDataType == "double":
+                self.continuousDomains.append(emissionDomains[i])
+                self.continuousInputs.append(sequenceInputs[i])
+                
+        # necessary C functions for accessing the mysequence struct
+        self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
+        self.getSymbol = ghmmwrapper.get_2d_arrayint
+        self.setSymbol = ghmmwrapper.set_2d_arrayint
+        self.cleanFunction = ghmmwrapper.free_mysequence
+        self.setDiscreteSequenceFunction = ghmmwrapper.set_discrete_mysequence
+        self.setContinuousSequenceFunction = ghmmwrapper.set_continuous_mysequence
+        self.getDiscreteSequenceFunction = ghmmwrapper.get_discrete_mysequence
+        self.getContinuousSequenceFunction = ghmmwrapper.get_continuous_mysequence
+        self.cseq = ghmmwrapper.init_mysequence(self.length,
+                                                len(self.discreteDomains),
+                                                len(self.continuousDomains))
         
+        for i in range(len(self.discreteInputs)):
+            internalInput = []
+            offset = self.discreteDomains[i].getExternalCharacterLength()
+            if (offset == None):
+                internalInput = self.discreteDomains[i].internalSequence(self.discreteInputs[i])
+            else:
+                if (type(self.discreteInputs[i]) == type([])):
+                    # we have string sequences with equally large characters so
+                    # we can join the list representation
+                    self.discreteInputs[i] = ("").join(self.discreteInputs[i])
+                    
+                for j in range(offset - 1):
+                    internalInput.append(-1) # put -1 at the start
+                for j in range(offset-1, len(self.discreteInputs[i])):
+                    internalInput.append(self.discreteDomains[i].internal(
+                        self.discreteInputs[i][j-(offset-1):j+1]))
+            pointerDiscrete = self.getDiscreteSequenceFunction(self.cseq, i)
+            for j in range(len(self)):
+                ghmmwrapper.set_arrayint(pointerDiscrete, j, internalInput[j])
+            # self.setDiscreteSequenceFunction(self.cseq, i, seq)
+
+        for i in range(len(self.continuousInputs)):
+            seq = [float(x) for x in self.continuousInputs[i]]
+            seq = ghmmhelper.list2arrayd(seq)
+            pointerContinuous = self.getContinuousSequenceFunction(self.cseq,i)
+            for j in range(len(self)):
+                ghmmwrapper.set_arrayd(pointerContinuous, j, self.continuousInputs[i][j])
+            # self.setContinuousSequenceFunction(self.cseq, i, seq)
+
+    def __del__(self):
+        """
+        Deallocation of C sequence struct.
+        """
+        clean = self.cleanFunction(self.cseq, len(self.discreteDomains),
+                                   len(self.continuousDomains))
+        if (clean == -1):
+            print "could not clean"
+        self.cseq = None
+
+    def __len__(self):
+        """
+        @return: the length of the sequence.
+        """
+        return self.length
+
+    def getInternalDiscreteSequence(self, index):
+        """
+        access the underlying C structure and return the internal
+        representation of the discrete sequence number 'index'
+        @param index: number of the discrete sequence
+        @return: a python list of ints
+        """
+        int_pointer = self.getDiscreteSequenceFunction(self.cseq, index)
+        internal = ghmmhelper.arrayint2list(int_pointer, len(self))
+        int_pointer = None
+        return internal
+    
+    def getInternalContinuousSequence(self, index):
+        """
+        access the underlying C structure and return the internal
+        representation of the continuous sequence number 'index'
+        @param index: number of the continuous sequence
+        @return: a python list of floats
+        """
+        d_pointer = self.getContinuousSequenceFunction(self.cseq, index)
+        internal = ghmmhelper.arrayd2list(d_pointer, len(self))
+        d_pointer = None
+        return internal
+    
+    def getDiscreteSequence(self, index):
+        """
+        get the 'index'th discrete sequence as it has been given at the input
+        @param index: number of the discrete sequence
+        @return: a python sequence
+        """
+        return self.discreteInputs[index]
+
+    def __getitem__(self, key):
+        """
+        get a slice of the complex emission sequence
+        @param key: either int (makes no big sense) or slice object
+        @return: a new ComplexEmissionSequence containing a slice of the
+        original
+        """
+        domains = []
+        for domain in self.discreteDomains:
+            domains.append(domain)
+        for domain in self.continuousDomains:
+            domains.append(domain)
+        slicedInput = []
+        for input in self.discreteInputs:
+            slicedInput.append(input[key])
+        for input in self.continuousInputs:
+            slicedInput.append(input[key])
+        return ComplexEmissionSequence(domains, slicedInput)
+
+    def __str__(self):
+        """
+        string representation. Access the underlying C-structure and return
+        the sequence in all it's encodings (can be quite long)
+        @return: string representation
+        """
+        s = ("ComplexEmissionSequence (len=%i, discrete=%i, continuous=%i)\n"%
+             (self.cseq.length, len(self.discreteDomains),
+              len(self.continuousDomains)))
+        for i in range(len(self.discreteDomains)):
+            s += ("").join([str(self.discreteDomains[i].external(x))
+                            for x in self.getInternalDiscreteSequence(i)])
+            s += "\n"
+        for i in range(len(self.continuousDomains)):
+            s += (",").join([str(self.continuousDomains[i].external(x))
+                            for x in self.getInternalContinuousSequence(i)])
+            s += "\n"
+        return s
+
+        
+class PairHMM(HMM):
+    """
+    Pair HMMs with discrete emissions over multiple alphabets.
+    Optional features: continuous values for transition classes
+    """
+    def __init__(self, emissionDomains, distribution, cmodel):
+        """
+        create a new PairHMM object (this should only be done using the
+        factory: e.g model = PairHMMOpenXML(modelfile) )
+        @param emissionDomains: list of EmissionDomain objects
+        @param distribution: (not used) inherited from HMM
+        @param cmodel: a swig pointer on the underlying C structure
+        """
+        HMM.__init__(self, emissionDomains[0], distribution, cmodel)
+        self.emissionDomains = emissionDomains
+        self.alphabetSizes = []
+        for domain in self.emissionDomains:
+            if (isinstance(domain, Alphabet)):
+                self.alphabetSizes.append(len(domain))
+        self.silent = 0  # flag indicating whether the model type does include silent states
+
+        self.maxSize = 10000
+        self.model_type = self.cmodel.model_type  # model type
+        self.background = None
+        
+        # Assignment of the C function names to be used with this model type
+        self.freeFunction = ghmmwrapper.pmodel_free
+        # self.samplingFunction = ghmmwrapper.model_generate_sequences
+        self.viterbiFunction = ghmmwrapper.pviterbi
+        self.viterbiPropagateFunction = ghmmwrapper.pviterbi_propagate
+        self.viterbiPropagateSegmentFunction = ghmmwrapper. pviterbi_propagate_segment
+        # self.forwardFunction = ghmmwrapper.foba_forward_lean
+        # self.forwardAlphaFunction = ghmmwrapper.foba_forward      
+        # self.backwardBetaFunction = ghmmwrapper.foba_backward
+        self.getStatePtr = ghmmwrapper.get_pstateptr 
+        self.fileWriteFunction = ghmmwrapper.call_model_print
+        self.getModelPtr = ghmmwrapper.get_model_ptr
+        self.castModelPtr = ghmmwrapper.cast_model_ptr
+        # self.distanceFunction = ghmmwrapper.model_prob_distance
+        self.logPFunction = ghmmwrapper.pviterbi_logp
+        self.states = {}
+
+    def __str__(self):
+        """
+        string representation (more for debuging) shows the contents of the C
+        structure pmodel
+        @return: string representation
+        """
+        hmm = self.cmodel
+        strout = "\nGHMM Model\n"
+        strout += "Name: " + str(self.cmodel.name)
+        strout += "\nModelflags: "+ self.printtypes(self.cmodel.model_type)
+        strout += "\nNumber of states: "+ str(hmm.N)
+        strout += "\nSize of Alphabet: "+ str(hmm.M)
+        for k in range(hmm.N):
+            state = ghmmwrapper.get_pstateptr(hmm.s, k)
+            strout += "\n\nState number "+ str(k) +":"
+            #strout += "\nState order: " + str(state.order)
+            strout += "\nInitial probability: " + str(state.pi)
+            #strout += "\nsilent state: " + str(get_arrayint(self.model.silent,k))
+            strout += "\nOutput probabilites: "
+            #strout += str(ghmmwrapper.get_arrayd(state.b,outp))
+            strout += "\n"
+
+            strout += "\nOutgoing transitions:"
+            for i in range( state.out_states):
+                strout += "\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i))
+            strout +=  "\nIngoing transitions:"
+            for i in range(state.in_states):
+                strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
+                strout += "\nint fix:" + str(state.fix) + "\n"
+        strout += "\nSilent states: \n"
+        for k in range(hmm.N):
+            strout += str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", "
+        strout += "\n"
+        return strout
+
+    def viterbi(self, complexEmissionSequenceX, complexEmissionSequenceY):
+        """
+        run the naive implementation of the Viterbi algorithm and
+        return the viterbi path and the log probability of the path
+        @param complexEmissionSequenceX: sequence X encoded as ComplexEmissionSequence
+        @param complexEmissionSequenceY: sequence Y encoded as ComplexEmissionSequence
+        @return: (path, log_p)
+        """
+        # get a pointer on a double and a int to get return values by reference
+        log_p_ptr = ghmmwrapper.double_array(1)
+        length_ptr = ghmmwrapper.int_array(1)
+        # call log_p and length will be passed by reference
+        cpath = self.viterbiFunction(self.cmodel,
+                                    complexEmissionSequenceX.cseq,
+                                    complexEmissionSequenceY.cseq,
+                                    log_p_ptr, length_ptr)
+        # get the values from the pointers
+        log_p = ghmmwrapper.get_arrayd(log_p_ptr, 0)
+        length = ghmmwrapper.get_arrayint(length_ptr, 0)
+        path = [ghmmwrapper.get_arrayint(cpath, x) for x in range(length)]
+        # free the memory
+        ghmmwrapper.free_arrayd(log_p_ptr)
+        ghmmwrapper.free_arrayi(length_ptr)
+        ghmmwrapper.free_arrayi(cpath)
+        return (path, log_p)
+    
+    def viterbiPropagate(self, complexEmissionSequenceX, complexEmissionSequenceY, startX=None, startY=None, stopX=None, stopY=None, startState=None, startLogp=None, stopState=None, stopLogp=None):
+        """
+        run the linear space implementation of the Viterbi algorithm and
+        return the viterbi path and the log probability of the path
+        @param complexEmissionSequenceX: sequence X encoded as ComplexEmissionSequence
+        @param complexEmissionSequenceY: sequence Y encoded as ComplexEmissionSequence
+        Optional parameters to run the algorithm only on a segment:
+        @param startX: start index in X
+        @param startY: start index in Y
+        @param stopX: stop index in X
+        @param stopY: stop index in Y
+        @param startState: start the path in this state
+        @param stopState: path ends in this state
+        @param startLogp: initialize the start state with this log probability
+        @param stopLogp: if known this is the logp of the partial path
+        @return: (path, log_p)
+        """
+        # get a pointer on a double and a int to get return values by reference
+        log_p_ptr = ghmmwrapper.double_array(1)
+        length_ptr = ghmmwrapper.int_array(1)
+        # call log_p and length will be passed by reference
+        if (not (startX and startY and stopX and stopY and startState and stopState and startLogp)):
+            cpath = self.viterbiPropagateFunction(
+                self.cmodel,
+                complexEmissionSequenceX.cseq,
+                complexEmissionSequenceY.cseq,
+                log_p_ptr, length_ptr,
+                self.maxSize)
+        else:
+            if (stopLogp == None):
+                stopLogp = 0
+            cpath = self.viterbiPropagateSegmentFunction(
+                self.cmodel,
+                complexEmissionSequenceX.cseq,
+                complexEmissionSequenceY.cseq,
+                log_p_ptr, length_ptr, self.maxSize,
+                startX, startY, stopX, stopY, startState, stopState,
+                startLogp, stopLogp)
+          
+        # get the values from the pointers
+        log_p = ghmmwrapper.get_arrayd(log_p_ptr, 0)
+        length = ghmmwrapper.get_arrayint(length_ptr, 0)
+        path = [ghmmwrapper.get_arrayint(cpath, x) for x in range(length)]
+        # free the memory
+        ghmmwrapper.free_arrayd(log_p_ptr)
+        ghmmwrapper.free_arrayi(length_ptr)
+        ghmmwrapper.free_arrayi(cpath)
+        return (path, log_p)
+
+    def logP(self, complexEmissionSequenceX, complexEmissionSequenceY, path):
+        """
+        compute the log probability of two sequences X and Y and a path
+        @param complexEmissionSequenceX: sequence X encoded as
+        ComplexEmissionSequence
+        @param EmissionSequenceEmissionSequenceY: sequence Y encoded as
+        ComplexEmissionSequence
+        @param path: the state path
+        @return: log probability
+        """
+        cpath = ghmmhelper.list2arrayint(path)
+        logP = self.logPFunction(self.cmodel, complexEmissionSequenceX.cseq,
+                                 complexEmissionSequenceY.cseq,
+                                 cpath, len(path))
+        ghmmwrapper.free_arrayi(cpath)
+        return logP
+
+    def addEmissionDomains(self, emissionDomains):
+        """
+        add additional EmissionDomains that are not specified in the XML file.
+        This is used to add information for the transition classes.
+        @param emissionDomains: a list of EmissionDomain objects
+        """
+        self.emissionDomains.extend(emissionDomains)
+        discreteDomains = []
+        continuousDomains = []
+        for i in range(len(emissionDomains)):
+            if emissionDomains[i].CDataType == "int":
+                discreteDomains.append(emissionDomains[i])
+                self.alphabetSizes.append(len(emissionDomains[i]))
+            if emissionDomains[i].CDataType == "double":
+                continuousDomains.append(emissionDomains[i])
+                
+        self.cmodel.number_of_alphabets += len(discreteDomains)
+        self.cmodel.size_of_alphabet = ghmmhelper.list2arrayint(self.alphabetSizes)
+
+        self.cmodel.number_of_d_seqs += len(continuousDomains)
+
+    def checkEmissions(self, eps=0.0000000000001):
+        """
+        checks the sum of emission probabilities in all states
+        @param eps: precision (if the sum is > 1 - eps it passes)
+        @return: 1 if the emission of all states sum to one, 0 otherwise
+        """
+        allok = 1
+        for state in self.states:
+            emissionSum = sum(state.emissions)
+            if (abs(1 - emissionSum) > eps):
+                verbose("Emissions in state %s (%s) do not sum to 1 (%s)" % (state.id, state.label, emissionSum))
+                allok = 0
+        return allok
+
+    def checkTransitions(self, eps=0.0000000000001):
+        """
+        checks the sum of outgoing transition probabilities for all states
+        @param eps: precision (if the sum is > 1 - eps it passes)
+        @return: 1 if the transitions of all states sum to one, 0 otherwise
+        """
+        allok = 1
+        # from build matrices in xmlutil:
+        orders = {}
+	k = 0 # C style index
+	for s in self.states: # ordering from XML
+	    orders[s.index] = k
+	    k = k + 1
+        
+        for state in self.states:
+            for tclass in range(state.kclasses):
+                outSum = 0.0
+                c_state = ghmmwrapper.get_pstateptr(self.cmodel.s,
+                                                    orders[state.index])
+                for out in range(c_state.out_states):
+                    outSum += ghmmwrapper.get_2d_arrayd(c_state.out_a,
+                                                        out, tclass)
+            
+                if (abs(1 - outSum) > eps):
+                    verbose("Outgoing transitions in state %s (%s) do not sum to 1 (%s) for class %s" % (state.id, state.label, outSum, tclass))
+                    allok = 0
+        return allok
+            
+class PairHMMOpenFactory(HMMOpenFactory):
+    """
+    factory to create PairHMM objects from XML files
+    """
+    def __call__(self, fileName_file_or_dom, modelIndex = None):
+        """
+        a call to the factory loads a model from a file specified by the
+        filename or from a file object or from a XML Document object and
+        initializes the model on the C side (libghmm).
+        @param fileName_file_or_dom: load the model from a file specified by
+        a filename, a file object or a XML Document object
+        @param modelIndex: not used (inherited from HMMOpenFactory)
+        @return: PairHMM object 
+        """
+        import xml.dom.minidom
+        if not (isinstance(fileName_file_or_dom, StringIO.StringIO) or
+                isinstance(fileName_file_or_dom, xml.dom.minidom.Document)):
+            if not path.exists(fileName_file_or_dom):
+                raise IOError, 'File ' + str(fileName_file_or_dom) + ' not found.'
+
+        hmm_dom = xmlutil.HMM(fileName_file_or_dom)
+        if (not hmm_dom.modelType == "pairHMM"):
+            raise InvalidModelParameters, "Model type specified in the XML file (%s) is not pairHMM" % hmm_dom.modelType
+        # obviously it's a pair HMM
+        [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
+        if not len(A) == len(A[0]):
+            raise InvalidModelParameters, "A is not quadratic."
+        if not len(pi) == len(A):
+            raise InvalidModelParameters,  "Length of pi does not match length of A."
+        if not len(A) == len(B):
+            raise InvalidModelParameters, " Different number of entries in A and B."
+
+        cmodel = ghmmwrapper.init_pmodel()
+        cmodel.N = len(A)
+        cmodel.M = -1 # no use anymore len(emissionDomain)
+        cmodel.prior = -1 # No prior by default
+        
+        # tie groups are deactivated by default
+        cmodel.tied_to = None
+        
+        # assign model identifier (if specified)
+        if hmm_dom.name != None:
+            cmodel.name = hmm_dom.name
+        else:
+            cmodel.name = 'Unused'
+
+        alphabets = hmm_dom.getAlphabets()
+        cmodel.number_of_alphabets = len(alphabets.keys())
+        sizes = [alphabets[alphabet].size() for alphabet in alphabets.keys()]
+        cmodel.size_of_alphabet = ghmmhelper.list2arrayint(sizes)
+
+        # set number of d_seqs to zero. If you want to use them you have to
+        # set them manually
+        cmodel.number_of_d_seqs = 0
+
+        # c array of states allocated
+        cstates = ghmmwrapper.arraypstate(cmodel.N)
+        # python list of states from xml
+        pystates = hmm_dom.state.values()
+
+        silent_flag = 0
+        silent_states = []
+
+        maxOffsetX = 0
+        maxOffsetY = 0
+        
+        transitionClassFlag = 0
+        maxTransitionIndexDiscrete = len(alphabets.keys())
+        maxTransitionIndexContinuous = 0
+        
+        # from build matrices in xmlutil:
+        orders = {}
+	k = 0 # C style index
+	for s in pystates: # ordering from XML
+	    orders[s.index] = k
+	    k = k + 1
+            
+        #initialize states
+        for i in range(cmodel.N):
+            cstate = ghmmwrapper.get_pstateptr(cstates,i)
+            pystate = pystates[i]
+            size = pystate.itsHMM.hmmAlphabets[pystate.alphabet_id].size()
+            if (pystate.offsetX != 0 and pystate.offsetY != 0):
+                size = size**2
+            if (len(B[i]) != size):
+                raise InvalidModelParameters("in state %s len(emissions) = %i size should be %i" % (pystate.id, len(B[i]), size))
+            cstate.b = ghmmhelper.list2arrayd(B[i])
+            cstate.pi = pi[i]
+            if (pi[i] != 0):
+                cstate.log_pi = log(pi[i])
+            else:
+                cstate.log_pi = 1
+
+            cstate.alphabet = pystate.alphabet_id
+            cstate.offset_x = pystate.offsetX
+            cstate.offset_y = pystate.offsetY
+            cstate.kclasses = pystate.kclasses
+            
+            if (pystate.offsetX > maxOffsetX):
+                maxOffsetX = pystate.offsetX
+            if (pystate.offsetY > maxOffsetY):
+                maxOffsetY = pystate.offsetY
+                
+            if (sum(B[i]) == 0 ): 
+                silent_states.append(1)
+                silent_flag = 4
+            else:
+                silent_states.append(0)
+
+                # transition probability
+                # cstate.out_states, cstate.out_id, out_a = ghmmhelper.extract_out(A[i])                
+                v = pystate.index
+                #print "C state index: %i pystate index: %i order: %i" % (i, v, orders[v])
+                outprobs = []
+                for j in range(len(hmm_dom.G.OutNeighbors(v))):
+                    outprobs.append([0.0] * pystate.kclasses)
+                myoutid = []
+                j = 0                
+                for outid in hmm_dom.G.OutNeighbors(v):
+                    myorder = orders[outid]
+                    myoutid.append(myorder)
+                    for tclass in range(pystate.kclasses):
+                        outprobs[j][tclass] = hmm_dom.G.edgeWeights[tclass][(v,outid)]
+                    j += 1
+                cstate.out_states = len(myoutid)
+                cstate.out_id = ghmmhelper.list2arrayint(myoutid)
+                (cstate.out_a, col_len) = ghmmhelper.list2matrixd(outprobs)
+                #set "in" probabilities
+                # A_col_i = map( lambda x: x[i], A)
+                # Numarray use A[,:i]
+                # cstate.in_states, cstate.in_id, cstate.in_a = ghmmhelper.extract_out(A_col_i)
+                inprobs = []
+                for inid in hmm_dom.G.InNeighbors(v):
+                    myorder = orders[inid]
+                    # for every class in source
+                    inprobs.append([0.0] * pystates[myorder].kclasses)
+                myinid = []
+                j = 0
+                for inid in hmm_dom.G.InNeighbors(v):
+                    myorder = orders[inid]
+                    myinid.append(myorder)
+                    # for every transition class of the source state add a prob
+                    for tclass in range(pystates[myorder].kclasses):
+                        inprobs[j][tclass] = hmm_dom.G.edgeWeights[tclass][(inid,v)]
+                    j += 1
+                    
+                j = 0
+                #for inid in myinid:
+                #    print "Transitions (%i, %i)" % (inid ,i)
+                #    print inprobs[j]
+                #    j += 1
+                    
+                cstate.in_states = len(myinid)
+                cstate.in_id = ghmmhelper.list2arrayint(myinid)
+                (cstate.in_a, col_len) = ghmmhelper.list2matrixd(inprobs)
+                #fix probabilities by reestimation, else 0
+                cstate.fix = 0
+
+                # set the class determination function
+                cstate.class_change = ghmmwrapper.init_pclass_change_context()
+                if (pystate.transitionFunction != -1):
+                    transitionClassFlag = 1
+                    tf = hmm_dom.transitionFunctions[pystate.transitionFunction]
+                    # for the moment: do not use the offsets because they
+                    # add the risk of segmentation faults at the ends of
+                    # the loops or neccessitate index checks at every query
+                    # which is not desirable because the transition
+                    # functions are used in every iteration. Instead use
+                    # shifted input values!
+                    if (tf.type == "lt_sum"):
+                        ghmmwrapper.set_to_lt_sum(
+                            cstate.class_change,
+                            int(tf.paramDict["seq_index"]),
+                            float(tf.paramDict["threshold"]),
+                            0, # int(tf.paramDict["offset_x"]),
+                            0) # int(tf.paramDict["offset_y"]))
+                        maxTransitionIndexContinuous = max(
+                            int(tf.paramDict["seq_index"]),
+                            maxTransitionIndexContinuous)
+                    elif (tf.type == "gt_sum"):
+                        ghmmwrapper.set_to_gt_sum(
+                            cstate.class_change,
+                            int(tf.paramDict["seq_index"]),
+                            float(tf.paramDict["threshold"]),
+                            0, # int(tf.paramDict["offset_x"]),
+                            0) # int(tf.paramDict["offset_y"]))
+                        maxTransitionIndexContinuous = max(
+                            int(tf.paramDict["seq_index"]),
+                            maxTransitionIndexContinuous)
+                    elif (tf.type == "boolean_and"):
+                        ghmmwrapper.set_to_boolean_and(
+                            cstate.class_change,
+                            int(tf.paramDict["seq_index"]),
+                            0, # int(tf.paramDict["offset_x"]),
+                            0) # int(tf.paramDict["offset_y"]))
+                        maxTransitionIndexDiscrete = max(
+                            int(tf.paramDict["seq_index"]),
+                            maxTransitionIndexDiscrete)
+                    elif (tf.type == "boolean_or"):
+                        ghmmwrapper.set_to_boolean_or(
+                            cstate.class_change,
+                            int(tf.paramDict["seq_index"]),
+                            0, # int(tf.paramDict["offset_x"]),
+                            0) # int(tf.paramDict["offset_y"]))
+                        maxTransitionIndexDiscrete = max(
+                            int(tf.paramDict["seq_index"]),
+                            maxTransitionIndexDiscrete)
+                else:
+                    ghmmwrapper.set_to_default_transition_class(cstate.class_change)
+
+        cmodel.s = cstates
+
+        cmodel.max_offset_x = maxOffsetX
+        cmodel.max_offset_y = maxOffsetY
+        
+        cmodel.model_type += silent_flag
+        cmodel.silent = ghmmhelper.list2arrayint(silent_states)        
+        distribution = DiscreteDistribution(DNA)
+        emissionDomains = [Alphabet(hmm_dom.hmmAlphabets[alphabet].name.values()) for alphabet in alphabets]
+        model = PairHMM(emissionDomains, distribution, cmodel)
+        model.states = pystates
+        model.transitionFunctions = hmm_dom.transitionFunctions
+        model.usesTransitionClasses = transitionClassFlag
+        model.alphabetSizes = sizes
+        model.maxTransitionIndexContinuous = maxTransitionIndexContinuous
+        model.maxTransitionIndexDiscrete = maxTransitionIndexDiscrete
+        return model
+
+PairHMMOpenXML = PairHMMOpenFactory()

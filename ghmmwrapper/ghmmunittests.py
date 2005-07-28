@@ -77,8 +77,8 @@ class AlphabetTests(unittest.TestCase):
         self.assertRaises(KeyError, self.dnaAlphabet.internal, '')
 
         self.assertRaises(KeyError, self.dnaAlphabet.internal, 'x')
-
-        self.assertRaises(KeyError, self.dnaAlphabet.external, -1)
+        # remove this assertion because -1 now represents a gap '-'
+        # self.assertRaises(KeyError, self.dnaAlphabet.external, -1)
         
         self.assertRaises(KeyError, self.dnaAlphabet.external, len(self.dna) + 1)
     
@@ -974,6 +974,46 @@ class XMLIOTests(unittest.TestCase):
 
         self.label_model.toXML('./model_label.xml')
         model3 = ghmm.HMMOpenXML('./model_label.xml')
+
+########### PAIR HMM TESTS ##############
+
+class ComplexEmissionSequenceTests(unittest.TestCase):
+    
+    def setUp(self):
+        i_alph = ghmm.IntegerRange(0,5)
+        d_alph = ghmm.Float()
+        self.seq = ghmm.ComplexEmissionSequence([i_alph, ghmm.DNA, d_alph],
+                                                [[1,2,0,0,0,3,4],
+                                                 ['a','t','g','c','t','g','c'],
+                                                 [1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3]])
+        
+    def testprint(self):
+        # print"\ntestprint ",
+        s = ("ComplexEmissionSequence (len=7, discrete=2, continuous=1)\n" +
+             "1200034\n" +
+             "atgctgc\n" +
+             "1.3,2.1,0.8,0.1,0.03,3.6,43.3\n")
+
+        self.assertEqual(str(self.seq),s)
+        
+        
+    def testattributes(self):
+        # print"\ntestattributes ", 
+        self.assertEqual(self.seq.cseq.number_of_alphabets,2)
+        self.assertEqual(self.seq.cseq.number_of_d_seqs,1)    
+        self.assertEqual(self.seq.cseq.length,7)    
+        self.assertEqual(len(self.seq),7)    
+    
+    def testitemaccess(self):
+        # print"\ntestitemaccess ",
+        b = self.seq.getInternalDiscreteSequence(0)
+        self.assertEqual(b[5], 3)    
+        
+        b2 = self.seq.getInternalContinuousSequence(0)
+        self.assertEqual(b2[1],2.1)    
+
+    def testerrors(self):
+        pass
 
 
 # Run ALL tests
