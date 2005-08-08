@@ -641,7 +641,7 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 	    if (j_id == m) {
 	      e_index = get_emission_index(mo, j_id, O[t], t);
 	      /* alpha is scaled. no other scaling necessary */
-	      summands[g++] = alpha_last_col[i] * mo->s[i].out_a[j_id]
+	      summands[g++] = alpha_last_col[i] * mo->s[i].out_a[j]
 		* mo->s[j_id].b[e_index];
 	    }
 	    curr_est[m]->a_num[i][j] = nologSum(summands, g);
