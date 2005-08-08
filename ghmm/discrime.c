@@ -1209,7 +1209,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
 #define CUR_PROC "driscriminative"
 
   double last_perf, cur_perf;
-  int last_cer, cur_cer;
+  int retval=-1, last_cer, cur_cer;
 
   double lambda=0.0;
 
@@ -1217,7 +1217,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
 
   int fp, fn, totalseqs = 0, totalsyms = 0;
 
-  int *falseP, *falseN;
+  int *falseP=NULL, *falseN=NULL;
 
   int i, k, step, firstrun;
 
@@ -1304,11 +1304,12 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
     cur_cer = last_cer;
   }
 
+  retval = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (falseP);
   m_free (falseN);
 
-  return 0;
+  return retval;
 
 #undef CUR_PROC
 }
