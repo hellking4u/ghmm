@@ -119,12 +119,7 @@ int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
           hlist_insertElem (hplus, c, hP);
           created[c] = *hplus;
           /* initiallize gamma-array with safe size (number of states */
-          if (!m_malloc
-              ((*hplus)->gamma_id,
-               m_min (nr_s[c], hP->gamma_states * max_out[hP->hyp_c]))) {
-            mes_proc ();
-            goto STOP;
-          }
+          ARRAY_MALLOC ((*hplus)->gamma_id, m_min (nr_s[c], hP->gamma_states * max_out[hP->hyp_c]));
           (*hplus)->gamma_id[0] = j_id;
           (*hplus)->gamma_states = 1;
           newHyps++;
