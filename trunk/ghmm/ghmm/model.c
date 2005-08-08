@@ -90,7 +90,7 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
 #define CUR_PROC "model_ipow"
   int result = 1;
 
-  if (mo->pow_lookup && mo->M == x && n <= mo->maxorder + 1)
+  if (mo->pow_lookup && (mo->M == x) && ((int)n <= mo->maxorder + 1))
     return mo->pow_lookup[n];
   else {
     while (n != 0) {
@@ -254,10 +254,8 @@ model *model_direct_read (scanner_t * s, int *multip)
   int *fix_vector = NULL;
   m_read = n_read = a_read = b_read = pi_read = prior_read = fix_read = 0;
   *multip = 1;                  /* default */
-  if (!(m_calloc (mo, 1))) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo, 1);
+
   scanner_consume (s, '{');
   if (s->err)
     goto STOP;
@@ -762,8 +760,7 @@ int model_check (const model * mo)
   for (i = 0; i < mo->N; i++) {
     sum = 0.0;
     if (mo->s[i].out_states == 0) {
-      char *str =
-        mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
+      str = mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
       mes_prot (str);
     }
     /* Sum the a[i][j]'s : normalized out transitions */
@@ -772,7 +769,7 @@ int model_check (const model * mo)
       /* printf ("    out_a[%d][%d] = %8.5f\n", i, j, mo->s[i].out_a[j]); */
     }
     if (fabs (sum - 1.0) >= EPS_PREC) {
-      char *str = mprintf (NULL, 0, "sum out_a[j] = %.2f != 1.0 (state %d)\n",
+      str = mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n",
                            sum, i);
       mes_prot (str);
       m_free (str);
@@ -1096,6 +1093,7 @@ double model_likelihood (model * mo, sequence_t * sq)
 # define CUR_PROC "model_likelihood"
   double log_p_i, log_p;
   int found, i;
+  char *str;
 
   /* printf("***  model_likelihood:\n"); */
 
@@ -1122,7 +1120,7 @@ double model_likelihood (model * mo, sequence_t * sq)
       found = 1;
     }
     else {
-      char *str = mprintf (NULL, 0, "sequence[%d] can't be build.\n", i);
+      str = mprintf (NULL, 0, "sequence[%d] can't be build.\n", i);
       mes_prot (str);
     }
   }
@@ -2001,6 +1999,7 @@ int model_normalize (model * mo)
 
   int i, j, m, j_id, i_id=0, res=0;
   int size = 1;
+  char *str;
 
   for (i = 0; i < mo->N; i++) {
 
@@ -2022,7 +2021,7 @@ int model_normalize (model * mo)
         }
       }
       if (i_id == mo->s[j_id].in_states) {
-        char *str = mprintf (NULL, 0, "Outgoing transition from state %d to \
+        str = mprintf (NULL, 0, "Outgoing transition from state %d to \
            state %d has no corresponding incoming transition.\n", i, j_id);
         mes_prot (str);
         return -1;
@@ -2291,9 +2290,10 @@ background_distributions *model_alloc_background_distributions (int n, int m,
                                                                 double **B)
 {
 #define CUR_PROC "model_alloc_background_distributions"
-  background_distributions *ptbackground =
-    (background_distributions *) calloc (1,
-                                         sizeof (background_distributions));
+  background_distributions *ptbackground;
+
+  ARRAY_CALLOC (ptbackground, 1);
+
   ptbackground->n = n;
   ptbackground->m = m;
   if (orders != NULL && B != NULL) {
@@ -2305,6 +2305,8 @@ background_distributions *model_alloc_background_distributions (int n, int m,
     return NULL;
   }
   return ptbackground;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return NULL;
 #undef CUR_PROC
 }
 
