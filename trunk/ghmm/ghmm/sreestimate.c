@@ -47,6 +47,7 @@
 #include "gauss_tail.h"
 #include "const.h"
 #include "root_finder.h"
+#include <ghmm/internal.h>
 
 /* switch: turn off (0)  MESCONTR and MESINFO */
 #define MCI 1
@@ -83,19 +84,10 @@ static local_store_t *sreestimate_alloc (const smodel * smo)
 # define CUR_PROC "sreestimate_alloc"
   int i;
   local_store_t *r = NULL;
-  if (!m_calloc (r, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (r, 1);
   r->cos = smo->cos;
-  if (!m_calloc (r->pi_num, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (r->a_num, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (r->pi_num, smo->N);
+  ARRAY_CALLOC (r->a_num, smo->N);
   for (i = 0; i < smo->N; i++) {
     r->a_num[i] = stat_matrix_d_alloc (smo->cos, smo->s[i].out_states);
     if (!r->a_num[i]) {
@@ -109,10 +101,7 @@ static local_store_t *sreestimate_alloc (const smodel * smo)
     goto STOP;
   }
   /***/
-  if (!m_calloc (r->c_denom, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (r->c_denom, smo->N);
   r->c_num = stat_matrix_d_alloc (smo->N, smo->M);
   if (!(r->c_num)) {
     mes_proc ();
@@ -144,7 +133,7 @@ static local_store_t *sreestimate_alloc (const smodel * smo)
     goto STOP;
   }
   return (r);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sreestimate_free (&r, smo->N);
   return 0;
 # undef CUR_PROC
@@ -220,15 +209,9 @@ static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (*scale, T)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*scale, T);
   /* 3-dim. matrix for b[t][i][m] with m = 1..M(!): */
-  if (!m_calloc (*b, T)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*b, T);
   for (t = 0; t < T; t++) {
     (*b)[t] = stat_matrix_d_alloc (N, M + 1);
     if (!((*b)[t])) {
@@ -237,7 +220,7 @@ static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
     }
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* sreestimate_alloc_matvek */
@@ -533,7 +516,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 
   }                             /* for (i = 0 .. < smo->N)  */
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* sreestimate_setlambda */
@@ -771,7 +754,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
 
   return (valid_logp);
   /*  return(valid_parameter); */
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
   sreestimate_free_matvec (alpha, beta, scale, b, T_k, smo->N);
   return (res);
@@ -884,7 +867,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
   /*  if (smodel_check(mo) == -1) { mes_proc(); goto STOP; } */
   sreestimate_free (&r, cs->smo->N);
   return (0);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sreestimate_free (&r, cs->smo->N);
   return (-1);
 # undef CUR_PROC

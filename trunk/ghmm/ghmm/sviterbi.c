@@ -46,6 +46,7 @@
 
 #include <float.h>
 #include <math.h>
+#include <ghmm/internal.h>
 #include "sviterbi.h"
 #include "matrix.h"
 #include "smodel.h"
@@ -66,30 +67,21 @@ static local_store_t *sviterbi_alloc (smodel * smo, int T)
 {
 #define CUR_PROC "sviterbi_alloc"
   local_store_t *v = NULL;
-  if (!m_calloc (v, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v, 1);
   v->log_b = stat_matrix_d_alloc (smo->N, T);
   if (!(v->log_b)) {
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (v->phi, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (v->phi_new, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->phi, smo->N);
+  ARRAY_CALLOC (v->phi_new, smo->N);
   v->psi = matrix_i_alloc (T, smo->N);
   if (!(v->psi)) {
     mes_proc ();
     goto STOP;
   }
   return (v);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sviterbi_free (&v, smo->N, T);
   return (NULL);
 #undef CUR_PROC
@@ -153,10 +145,7 @@ int *sviterbi (smodel * smo, double *O, int T, double *log_p)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (state_seq, T)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state_seq, T);
   /* Precomputing of log(bj(ot)) */
   sviterbi_precompute (smo, O, T, v);
 
@@ -240,7 +229,7 @@ int *sviterbi (smodel * smo, double *O, int T, double *log_p)
   sviterbi_free (&v, smo->N, T);
   return (state_seq);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Free the memory space... */
   sviterbi_free (&v, smo->N, T);
   m_free (state_seq);

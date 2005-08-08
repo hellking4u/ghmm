@@ -45,6 +45,7 @@
 #include "matrix.h"
 #include "sdmodel.h"
 #include "modelutil.h"
+#include <ghmm/internal.h>
 
 typedef struct local_store_t {
   double **log_in_a;
@@ -66,22 +67,13 @@ static local_store_t *viterbi_alloc (model * mo, int len)
 #define CUR_PROC "sdviterbi_alloc"
   local_store_t *v = NULL;
   int j;
-  if (!m_calloc (v, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v, 1);
 
   /* Allocate the log_in_a's -> individal lenghts */
 
-  if (!m_calloc (v->log_in_a, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->log_in_a, mo->N);
   for (j = 0; j < mo->N; j++) {
-    if (!m_calloc (v->log_in_a[j], mo->s[j].in_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (v->log_in_a[j], mo->s[j].in_states);
   }
 
   v->log_b = matrix_d_alloc (mo->N, len);
@@ -89,14 +81,8 @@ static local_store_t *viterbi_alloc (model * mo, int len)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (v->phi, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (v->phi_new, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->phi, mo->N);
+  ARRAY_CALLOC (v->phi_new, mo->N);
   v->psi = stat_matrix_i_alloc (len, mo->N);
   if (!(v->psi)) {
     mes_proc ();
@@ -104,13 +90,10 @@ static local_store_t *viterbi_alloc (model * mo, int len)
   }
 
   v->topo_order_length = 0;
-  if (!m_calloc (v->topo_order, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->topo_order, mo->N);
 
   return (v);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   viterbi_free (&v, mo->N, len);
   return (NULL);
 #undef CUR_PROC
@@ -237,10 +220,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (state_seq, len_path)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state_seq, len_path);
   for (i = 0; i < len_path; i++) {
     state_seq[i] = -1;
   }
@@ -394,7 +374,7 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   /* Free the memory space */
   viterbi_free (&v, mo->N, len);
   return (state_seq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Free the memory space */
   viterbi_free (&v, mo->N, len);
   m_free (state_seq);

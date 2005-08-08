@@ -57,6 +57,7 @@
 #include "ghmm.h"
 #include "modelutil.h"
 #include "vector.h"
+#include <ghmm/internal.h>
 
 #define  __EPS 10e-6
 
@@ -109,32 +110,17 @@ static int model_state_alloc (state * state, int M, int in_states,
 {
 # define CUR_PROC "model_state_alloc"
   int res = -1;
-  if (!m_calloc (state->b, M)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state->b, M);
   if (out_states > 0) {
-    if (!m_calloc (state->out_id, out_states)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (state->out_a, out_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (state->out_id, out_states);
+    ARRAY_CALLOC (state->out_a, out_states);
   }
   if (in_states > 0) {
-    if (!m_calloc (state->in_id, in_states)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (state->in_a, in_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (state->in_id, in_states);
+    ARRAY_CALLOC (state->in_a, in_states);
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* model_state_alloc */
@@ -204,10 +190,7 @@ model **model_read (char *filename, int *mo_number)
     if (!strcmp (s->id, "HMM") || !strcmp (s->id, "hmm")) {
       (*mo_number)++;
       /* more mem */
-      if (m_realloc (mo, *mo_number)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (mo, *mo_number);
       mo[*mo_number - 1] = model_direct_read (s, (int *) &new_models);
       if (!mo[*mo_number - 1]) {
         mes_proc ();
@@ -216,10 +199,7 @@ model **model_read (char *filename, int *mo_number)
       /* Copies the model, that has already been read. */
       if (new_models > 1) {
         /* "-1" because mo_number++ has already been done. */
-        if (m_realloc (mo, *mo_number - 1 + new_models)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (mo, *mo_number - 1 + new_models);
         for (j = 1; j < new_models; j++) {
           mo[*mo_number] = model_copy (mo[*mo_number - 1]);
           if (!mo[*mo_number]) {
@@ -233,10 +213,7 @@ model **model_read (char *filename, int *mo_number)
     else if (!strcmp (s->id, "HMM_SEQ")) {
       model **tmp_mo = NULL;
       tmp_mo = model_from_sequence_ascii (s, &new_models);
-      if (m_realloc (mo, (*mo_number + new_models))) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (mo, (*mo_number + new_models));
       for (j = 0; j < new_models; j++) {
         if (!tmp_mo[j]) {
           mes_proc ();
@@ -257,7 +234,7 @@ model **model_read (char *filename, int *mo_number)
   
   scanner_free(&s);
   return mo;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free(&s);
   return NULL;
 #undef CUR_PROC
@@ -317,10 +294,7 @@ model *model_direct_read (scanner_t * s, int *multip)
         goto STOP;
       }
       mo->N = scanner_get_int (s);
-      if (!m_calloc (mo->s, mo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (mo->s, mo->N);
       n_read = 1;
     }
     else if (!strcmp (s->id, "A")) {    /*Transition probability */
@@ -332,10 +306,7 @@ model *model_direct_read (scanner_t * s, int *multip)
         scanner_error (s, "identifier A twice");
         goto STOP;
       }
-      if (!m_calloc (a_matrix, mo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (a_matrix, mo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, a_matrix, mo->N, mo->N)) {
@@ -358,10 +329,7 @@ model *model_direct_read (scanner_t * s, int *multip)
         scanner_error (s, "identifier B twice");
         goto STOP;
       }
-      if (!m_calloc (b_matrix, mo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (b_matrix, mo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, b_matrix, mo->N, mo->M)) {
@@ -503,7 +471,7 @@ model *model_direct_read (scanner_t * s, int *multip)
   matrix_d_free (&b_matrix, mo->N);
   m_free (pi_vector);
   return (mo);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&a_matrix, mo->N);
   matrix_d_free (&b_matrix, mo->N);
   m_free (pi_vector);
@@ -520,17 +488,14 @@ model **model_from_sequence (sequence_t * sq, long *mo_number)
   long i;
   int max_symb;
   model **mo = NULL;
-  if (!m_calloc (mo, sq->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo, sq->seq_number);
   max_symb = sequence_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
     mo[i] = model_generate_from_sequence (sq->seq[i], sq->seq_len[i],
                                           max_symb + 1);
   *mo_number = sq->seq_number;
   return mo;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   for (i = 0; i < *mo_number; i++)
     model_free (&(mo[i]));
   return NULL;
@@ -575,10 +540,7 @@ model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
   if (s->err)
     goto STOP;
 
-  if (!m_calloc (mo, sq->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo, sq->seq_number);
   /* The biggest symbol that occurs */
   max_symb = sequence_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
@@ -588,7 +550,7 @@ model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
   *mo_number = sq->seq_number;
   sequence_free (&sq);
   return mo;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   for (i = 0; i < *mo_number; i++)
     model_free (&(mo[i]));
@@ -700,67 +662,34 @@ model *model_copy (const model * mo)
 # define CUR_PROC "model_copy"
   int i, j, nachf, vorg, m, size;
   model *m2 = NULL;
-  if (!m_calloc (m2, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (m2->s, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (m2->silent, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (m2, 1);
+  ARRAY_CALLOC (m2->s, mo->N);
+  ARRAY_CALLOC (m2->silent, mo->N);
   if (mo->model_type & kTiedEmissions) {
-    if (!m_calloc (m2->tied_to, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->tied_to, mo->N);
   }
   else
     m2->tied_to = NULL;
 
   if (mo->model_type & kHasBackgroundDistributions) {
-    if (!m_calloc (m2->background_id, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->background_id, mo->N);
     m2->bp = mo->bp;
   }
   else
     m2->background_id = NULL;
-
-  if (!m_malloc (m2->pow_lookup, mo->maxorder + 2)) {
-    mes_proc ();
-    goto STOP;
-  }
-
+  
+  ARRAY_MALLOC (m2->pow_lookup, mo->maxorder + 2);
+  
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
-
-    if (!m_calloc (m2->s[i].out_id, nachf)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].out_a, nachf)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].in_id, vorg)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].in_a, vorg)) {
-      mes_proc ();
-      goto STOP;
-    }
+    
+    ARRAY_CALLOC (m2->s[i].out_id, nachf);
+    ARRAY_CALLOC (m2->s[i].out_a, nachf);
+    ARRAY_CALLOC (m2->s[i].in_id, vorg);
+    ARRAY_CALLOC (m2->s[i].in_a, vorg);
     /* allocate enough memory for higher order states */
-    if (!m_calloc (m2->s[i].b, model_ipow (mo, mo->M, mo->s[i].order + 1))) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->s[i].b, model_ipow (mo, mo->M, mo->s[i].order + 1));
 
     /* copy the values */
     for (j = 0; j < nachf; j++) {
@@ -802,7 +731,7 @@ model *model_copy (const model * mo)
   /* not necessary but the history is at least initialised */
   m2->emission_history = mo->emission_history;
   return (m2);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   model_free (&m2);
   return (NULL);
 # undef CUR_PROC
@@ -863,7 +792,7 @@ int model_check (const model * mo)
   }
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* model_check */
@@ -906,20 +835,14 @@ model *model_generate_from_sequence (const int *seq, int seq_len,
   int i;
   model *mo = NULL;
   state *s = NULL;
-  if (!m_calloc (mo, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo, 1);
   mo->N = seq_len;
   mo->M = anz_symb;
   /* All models generated from sequences have to be LeftRight-models */
   mo->model_type = kLeftRight;
 
   /* Allocate memory for all vectors */
-  if (!m_calloc (mo->s, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo->s, mo->N);
   for (i = 0; i < mo->N; i++) {
     if (i == 0) {               /* Initial state */
       if (model_state_alloc (mo->s, mo->M, 0, 1)) {
@@ -979,7 +902,7 @@ model *model_generate_from_sequence (const int *seq, int seq_len,
     goto STOP;
   }
   return mo;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   model_free (&mo);
   return NULL;
 #undef CUR_PROC
@@ -1062,10 +985,7 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
        printf("incomplete_seq: %d\n",incomplete_seq); */
 
     if (incomplete_seq == 0) {
-      if (!m_calloc (sq->seq[n], len)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (sq->seq[n], len);
       state = 0;
     }
 
@@ -1163,7 +1083,7 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   }                             /* while( n < seq_number ) */
 
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return (NULL);
 # undef CUR_PROC
@@ -1209,7 +1129,7 @@ double model_likelihood (model * mo, sequence_t * sq)
   if (!found)
     log_p = +1.0;
   return (log_p);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 # undef CUR_PROC
 }                               /* model_likelihood */
@@ -1355,10 +1275,7 @@ void model_A_print_transp (FILE * file, model * mo, char *tab,
   int i, j;
   int *out_state;
 
-  if (!m_calloc (out_state, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (out_state, mo->N);
   for (i = 0; i < mo->N; i++)
     out_state[i] = 0;
 
@@ -1380,7 +1297,7 @@ void model_A_print_transp (FILE * file, model * mo, char *tab,
     }
     fprintf (file, "%s\n", ending);
   }
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (out_state);
   return;
 # undef CUR_PROC
@@ -1574,10 +1491,7 @@ double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
   else                          /* else just one */
     step_width = maxT;
 
-  if (!m_calloc (d1, steps)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (d1, steps);
 
   mo1 = m0;
   mo2 = m;
@@ -1740,7 +1654,7 @@ double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
   free (d1);
   return d;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&seq0);
   free (d1);
   return (0.0);
@@ -1846,14 +1760,8 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   }
 
   /* allocating additional fields for the labels in the sequence_t struct */
-  if (!m_calloc (sq->state_labels, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sq->state_labels_len, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sq->state_labels, seq_number);
+  ARRAY_CALLOC (sq->state_labels_len, seq_number);
 
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
@@ -1872,26 +1780,17 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
        printf("incomplete_seq: %d\n",incomplete_seq);
      */
     if (incomplete_seq == 0) {
-      if (!m_calloc (sq->seq[n], len)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (sq->seq[n], len);
 
       if (mo->model_type & kSilentStates) {
 
         /* printf("Model has silent states.\n"); */
         /* for silent models we have to allocate for the maximal possible number of lables */
-        if (!m_calloc (sq->state_labels[n], len * mo->N)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC (sq->state_labels[n], len * mo->N);
       }
       else {
         /* printf("Model has no silent states.\n"); */
-        if (!m_calloc (sq->state_labels[n], len)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC (sq->state_labels[n], len);
       }
       label_index = 0;
       state = 0;
@@ -1948,10 +1847,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
 
       if (mo->model_type & kSilentStates) {
         printf ("reallocating\n");
-        if (m_realloc (sq->state_labels[n], sq->state_labels_len[n])) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
       }
 
       incomplete_seq = 0;
@@ -2044,10 +1940,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
 
         if (mo->model_type & kSilentStates) {
           printf ("reallocating\n");
-          if (m_realloc (sq->state_labels[n], sq->state_labels_len[n])) {
-            mes_proc ();
-            goto STOP;
-          }
+          ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
         }
 
         sq->seq_len[n] = state;
@@ -2057,7 +1950,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   }                             /* while( n < seq_number ) */
 
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return (NULL);
 # undef CUR_PROC
@@ -2185,22 +2078,10 @@ int model_add_transition (state * s, int start, int dest, double prob)
   int i;
 
   /* resize the arrays */
-  if (m_realloc (s[dest].in_id, s[dest].in_states + 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (s[dest].in_a, s[dest].in_states + 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (s[start].out_id, s[start].out_states + 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (s[start].out_a, s[start].out_states + 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_REALLOC (s[dest].in_id, s[dest].in_states + 1);
+  ARRAY_REALLOC (s[dest].in_a, s[dest].in_states + 1);
+  ARRAY_REALLOC (s[start].out_id, s[start].out_states + 1);
+  ARRAY_REALLOC (s[start].out_a, s[start].out_states + 1);
 
   s[dest].in_states += 1;
   s[start].out_states += 1;
@@ -2231,7 +2112,7 @@ int model_add_transition (state * s, int start, int dest, double prob)
     }
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 #undef CUR_PROC
 }
@@ -2272,25 +2153,13 @@ int model_del_transition (state * s, int start, int dest)
   s[start].out_states -= 1;
 
   /* free memory */
-  if (m_realloc (s[dest].in_id, s[dest].in_states)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (s[dest].in_a, s[dest].in_states)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (s[start].out_id, s[start].out_states)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (s[start].out_a, s[start].out_states)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_REALLOC (s[dest].in_id, s[dest].in_states);
+  ARRAY_REALLOC (s[dest].in_a, s[dest].in_states);
+  ARRAY_REALLOC (s[start].out_id, s[start].out_states);
+  ARRAY_REALLOC (s[start].out_a, s[start].out_states);
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 #undef CUR_PROC
 }
@@ -2320,30 +2189,15 @@ int model_apply_duration (model * mo, int cur, int times)
   last = mo->N;
   mo->N += times - 1;
 
-  if (m_realloc (mo->s, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_REALLOC (mo->s, mo->N);
   if (mo->model_type & kSilentStates) {
-    if (m_realloc (mo->silent, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (m_realloc (mo->topo_order, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (mo->silent, mo->N);
+    ARRAY_REALLOC (mo->topo_order, mo->N);
   }
   if (mo->model_type & kTiedEmissions)
-    if (m_realloc (mo->tied_to, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (mo->tied_to, mo->N);
   if (mo->model_type & kHasBackgroundDistributions)
-    if (m_realloc (mo->background_id, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (mo->background_id, mo->N);
 
   size = model_ipow (mo, mo->M, mo->s[cur].order + 1);
   for (i = last; i < mo->N; i++) {
@@ -2359,10 +2213,7 @@ int model_apply_duration (model * mo, int cur, int times)
     mo->s[i].out_id = NULL;
     mo->s[i].out_states = 0;
 
-    if (!m_malloc (mo->s[i].b, size)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_MALLOC (mo->s[i].b, size);
     for (j = 0; j < size; j++)
       mo->s[i].b[j] = mo->s[cur].b[j];
 
@@ -2404,7 +2255,7 @@ int model_apply_duration (model * mo, int cur, int times)
     goto STOP;
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Fail hard if these realloc fail. They shouldn't because we have the memory
      and try only to clean up! */
   if (m_realloc (mo->s, last)) {
@@ -2467,22 +2318,13 @@ background_distributions
   int *new_order;
   double **new_b;
 
-  if (!m_malloc (new_order, bg->n)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (new_b, bg->n)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (new_order, bg->n);
+  ARRAY_CALLOC (new_b, bg->n);
 
   for (i = 0; i < bg->n; i++) {
     new_order[i] = bg->order[i];
     b_i_len = pow (bg->m, bg->order[i] + 1);
-    if (!m_calloc (new_b[i], b_i_len)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (new_b[i], b_i_len);
     for (j = 0; j < b_i_len; j++) {
       new_b[i][j] = bg->b[i][j];
     }
@@ -2491,7 +2333,7 @@ background_distributions
   return model_alloc_background_distributions (bg->n, bg->m, new_order,
                                                new_b);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
   return NULL;
 
@@ -2546,10 +2388,7 @@ int model_get_uniform_background (model * mo, sequence_t * sq)
   }
 
   mo->bp = NULL;
-  if (!m_malloc (mo->background_id, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (mo->background_id, mo->N);
 
   /* create a background distribution for each state */
   for (i = 0; i < mo->N; i++) {
@@ -2557,14 +2396,8 @@ int model_get_uniform_background (model * mo, sequence_t * sq)
   }
 
   /* allocate */
-  if (!m_calloc (mo->bp, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (mo->bp->order, mo->maxorder)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo->bp, 1);
+  ARRAY_CALLOC (mo->bp->order, mo->maxorder);
 
   /* set number of distributions */
   mo->bp->n = mo->maxorder;
@@ -2575,17 +2408,10 @@ int model_get_uniform_background (model * mo, sequence_t * sq)
       mo->bp->order[mo->background_id[i]] = mo->s[i].order;
 
   /* allocate and initialize br->b with zeros */
-  if (!m_calloc (mo->bp->b, mo->bp->n)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo->bp->b, mo->bp->n);
 
   for (i = 0; i < mo->bp->n; i++)
-    if (!m_malloc
-        (mo->bp->b[i], model_ipow (mo, mo->M, mo->bp->order[i] + 1))) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_MALLOC (mo->bp->b[i], model_ipow (mo, mo->M, mo->bp->order[i] + 1));
 
   for (i = 0; i < mo->bp->n; i++) {
 
@@ -2625,7 +2451,7 @@ int model_get_uniform_background (model * mo, sequence_t * sq)
 
   return 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
   return -1;

@@ -41,6 +41,7 @@ typedef enum eDFSCOLORS { GRAY = 0, BLACK = 1, WHITE = 2, NONE =
 #include "ghmm.h"
 #include "model.h"
 #include "matrix.h"
+#include <ghmm/internal.h>
 
 typedef struct local_store_topo {
   int *topo_order;
@@ -59,25 +60,16 @@ static local_store_topo *topo_alloc (model * mo, int len)
 #define CUR_PROC "sdtopo_alloc"
   local_store_topo *v = NULL;
 
-  if (!m_calloc (v, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (v->queue, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v, 1);
+  ARRAY_CALLOC (v->queue, mo->N);
 
   v->topo_order_length = 0;
   v->head = 0;                  /* initialize static queue (array implementation) */
   v->tail = 0;
-  if (!m_calloc (v->topo_order, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->topo_order, mo->N);
 
   return (v);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   topo_free (&v, mo->N, len);
   return (NULL);
 #undef CUR_PROC
@@ -177,7 +169,7 @@ int **model_DFS (model * c_model)
   m_free (colors);
   m_free (parents);
   return edge_classes;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }
@@ -245,10 +237,7 @@ void model_topo_ordering (model * mo)
   edge_cls = model_DFS (mo);
   __topological_sort (mo, v, edge_cls);
   mo->topo_order_length = v->topo_order_length;
-  if (!m_calloc (mo->topo_order, mo->topo_order_length)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mo->topo_order, mo->topo_order_length);
 
   for (i = 0; i < v->topo_order_length; i++) {
     mo->topo_order[i] = v->topo_order[i];
@@ -268,7 +257,7 @@ void model_topo_ordering (model * mo)
 
   stat_matrix_i_free (&edge_cls);
   topo_free (&v, mo->N, 1);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   i = 0;
 #undef CUR_PROC
 }

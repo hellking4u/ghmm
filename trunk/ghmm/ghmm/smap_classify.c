@@ -41,6 +41,7 @@
 #include "const.h"
 #include "matrix.h"
 #include "smap_classify.h"
+#include <ghmm/internal.h>
 
 typedef struct local_store_t {
   double ***alpha;
@@ -59,14 +60,8 @@ static local_store_t *smap_classify_alloc (int mo_number, int states, int T)
 #define CUR_PROC "smap_classify_alloc"
   int i;
   local_store_t *map = NULL;
-  if (!m_calloc (map, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (map->alpha, mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (map, 1);
+  ARRAY_CALLOC (map->alpha, mo_number);
   for (i = 0; i < mo_number; i++) {
     map->alpha[i] = matrix_d_alloc (T, states);
     if (!map->alpha[i]) {
@@ -89,24 +84,12 @@ static local_store_t *smap_classify_alloc (int mo_number, int states, int T)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (map->prob, mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (map->alpha_1, mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (map->error, mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (map->prior, mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (map->prob, mo_number);
+  ARRAY_CALLOC (map->alpha_1, mo_number);
+  ARRAY_CALLOC (map->error, mo_number);
+  ARRAY_CALLOC (map->prior, mo_number);
   return map;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }
@@ -238,7 +221,7 @@ int smap_classify (smodel ** smo, double *result, int smo_number,
     }
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   smap_classify_free (&map, smo_number, T);
   return max_model;
 
@@ -270,18 +253,9 @@ int smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
   for (m = 0; m < smo_number; m++)
     result[m] = 0;
 
-  if (!m_calloc (prior, smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (log_p, smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (error, smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (prior, smo_number);
+  ARRAY_CALLOC (log_p, smo_number);
+  ARRAY_CALLOC (error, smo_number);
 
   if (smo == NULL || smo_number <= 0 || O == NULL || T < 0) {
     mes_proc ();
@@ -347,7 +321,7 @@ int smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
         printf ("%f %.4f %.4f;  ", log_p[m], prior[m], p_von_O);
     printf ("\n");
   }
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
   m_free (prior);
   m_free (log_p);

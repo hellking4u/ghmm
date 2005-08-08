@@ -58,6 +58,7 @@
 #include "vector.h"
 #include "rng.h"
 #include "string.h"
+#include <ghmm/internal.h>
 
 /*============================================================================*/
 sequence_t **sequence_read (const char *filename, int *sq_number)
@@ -82,10 +83,7 @@ sequence_t **sequence_read (const char *filename, int *sq_number)
     if (!strcmp (s->id, "SEQ")) {
       (*sq_number)++;
       /* more mem */
-      if (m_realloc (sequence, *sq_number)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (sequence, *sq_number);
       sequence[*sq_number - 1] = sequence_read_alloc (s);
       if (!sequence[*sq_number - 1]) {
         mes_proc ();
@@ -104,7 +102,7 @@ sequence_t **sequence_read (const char *filename, int *sq_number)
   scanner_free (&s);
   return sequence;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   for (i = 0; i < *sq_number; i++)
     sequence_free (&(sequence[i]));
   m_free (sequence);
@@ -120,10 +118,7 @@ sequence_t *sequence_read_alloc (scanner_t * s)
   int symbols = 0, lexWord = 0;
   sequence_t *sq = NULL;
   int seq_len_lex = 0;
-  if (!m_calloc (sq, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sq, 1);
   scanner_consume (s, '{');
   if (s->err)
     goto STOP;
@@ -141,26 +136,11 @@ sequence_t *sequence_read_alloc (scanner_t * s)
       sq->total_w = 0.0;
       while (!s->eof && !s->err && s->c - '}') {
         /* another sequence --> realloc */
-        if (m_realloc (sq->seq, sq->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sq->seq_len, sq->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sq->seq_label, sq->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sq->seq_id, sq->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sq->seq_w, sq->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (sq->seq, sq->seq_number + 1);
+        ARRAY_REALLOC (sq->seq_len, sq->seq_number + 1);
+        ARRAY_REALLOC (sq->seq_label, sq->seq_number + 1);
+        ARRAY_REALLOC (sq->seq_id, sq->seq_number + 1);
+        ARRAY_REALLOC (sq->seq_w, sq->seq_number + 1);
         /* Label and ID */
         /* default */
         sq->seq_label[sq->seq_number] = -1;
@@ -289,7 +269,7 @@ sequence_t *sequence_read_alloc (scanner_t * s)
   if (s->err)
     goto STOP;
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return (NULL);
 #undef CUR_PROC
@@ -319,10 +299,7 @@ sequence_d_t **sequence_d_read (const char *filename, int *sqd_number)
     if (!strcmp (s->id, "SEQD")) {
       (*sqd_number)++;
       /* more mem */
-      if (m_realloc (sequence, *sqd_number)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (sequence, *sqd_number);
       sequence[*sqd_number - 1] = sequence_d_read_alloc (s);
       if (!sequence[*sqd_number - 1]) {
         mes_proc ();
@@ -340,7 +317,7 @@ sequence_d_t **sequence_d_read (const char *filename, int *sqd_number)
   scanner_free (&s);
 
   return sequence;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free (&s);
   for (i = 0; i < *sqd_number; i++)
     sequence_d_free (&(sequence[i]));
@@ -357,10 +334,7 @@ sequence_d_t *sequence_d_read_alloc (scanner_t * s)
 {
 #define CUR_PROC "sequence_d_read_alloc"
   sequence_d_t *sqd = NULL;
-  if (!m_calloc (sqd, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sqd, 1);
   scanner_consume (s, '{');
   if (s->err)
     goto STOP;
@@ -378,26 +352,11 @@ sequence_d_t *sequence_d_read_alloc (scanner_t * s)
       sqd->total_w = 0.0;
       while (!s->eof && !s->err && s->c - '}') {
         /* another sequence --> realloc */
-        if (m_realloc (sqd->seq, sqd->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sqd->seq_len, sqd->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sqd->seq_label, sqd->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sqd->seq_id, sqd->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (sqd->seq_w, sqd->seq_number + 1)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (sqd->seq, sqd->seq_number + 1);
+        ARRAY_REALLOC (sqd->seq_len, sqd->seq_number + 1);
+        ARRAY_REALLOC (sqd->seq_label, sqd->seq_number + 1);
+        ARRAY_REALLOC (sqd->seq_id, sqd->seq_number + 1);
+        ARRAY_REALLOC (sqd->seq_w, sqd->seq_number + 1);
         /* Label and ID and weight */
         /* default */
         sqd->seq_label[sqd->seq_number] = -1;
@@ -478,7 +437,7 @@ sequence_d_t *sequence_d_read_alloc (scanner_t * s)
   if (s->err)
     goto STOP;
   return (sqd);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_d_free (&sqd);
   return (NULL);
 #undef CUR_PROC
@@ -504,10 +463,7 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
     mes_prot ("Error: trunc_ratio not valid\n");
     goto STOP;
   }
-  if (!m_calloc (sq, sqd_fields)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sq, sqd_fields);
 
   ghmm_rng_init ();
   GHMM_RNG_SET (RNG, seed);
@@ -516,10 +472,7 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
     sq[i] = sequence_d_calloc (sqd_in[i]->seq_number);
     sq[i]->total_w = sqd_in[i]->total_w;
     for (j = 0; j < sqd_in[i]->seq_number; j++) {
-      if (!m_calloc (sq[i]->seq[j], sqd_in[i]->seq_len[j])) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (sq[i]->seq[j], sqd_in[i]->seq_len[j]);
       /* length of truncated seq. */
       if (trunc_ratio == -1)
         trunc_len = 0;
@@ -527,10 +480,7 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
         trunc_len = (int) ceil ((sqd_in[i]->seq_len[j] *
                                  (1 - trunc_ratio * GHMM_RNG_UNIFORM (RNG))));
       sequence_d_copy (sq[i]->seq[j], sqd_in[i]->seq[j], trunc_len);
-      if (m_realloc (sq[i]->seq[j], trunc_len)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (sq[i]->seq[j], trunc_len);
       sq[i]->seq_len[j] = trunc_len;
       sq[i]->seq_label[j] = sqd_in[i]->seq_label[j];
       sq[i]->seq_id[j] = sqd_in[i]->seq_id[j];
@@ -539,7 +489,7 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
   }                             /* for all sqd_fields */
 
   return sq;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }
@@ -559,30 +509,12 @@ sequence_d_t *sequence_d_calloc (long seq_number)
     m_free (str);
     goto STOP;
   }
-  if (!m_calloc (sqd, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sqd->seq, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sqd->seq_len, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sqd->seq_label, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sqd->seq_id, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sqd->seq_w, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sqd, 1);
+  ARRAY_CALLOC (sqd->seq, seq_number);
+  ARRAY_CALLOC (sqd->seq_len, seq_number);
+  ARRAY_CALLOC (sqd->seq_label, seq_number);
+  ARRAY_CALLOC (sqd->seq_id, seq_number);
+  ARRAY_CALLOC (sqd->seq_w, seq_number);
   sqd->seq_number = seq_number;
 
   sqd->total_w = 0.0;
@@ -593,7 +525,7 @@ sequence_d_t *sequence_d_calloc (long seq_number)
   }
 
   return sqd;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_d_free (&sqd);
   return NULL;
 #undef CUR_PROC
@@ -613,31 +545,13 @@ sequence_t *sequence_calloc (long seq_number)
     m_free (str);
     goto STOP;
   }
-  if (!m_calloc (sq, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sq->seq, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  /*if(!m_calloc(sq->states, seq_number)) {mes_proc(); goto STOP;}*/
-  if (!m_calloc (sq->seq_len, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sq->seq_label, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sq->seq_id, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sq->seq_w, seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sq, 1);
+  ARRAY_CALLOC (sq->seq, seq_number);
+  /*ARRAY_CALLOC (sq->states, seq_number);*/
+  ARRAY_CALLOC (sq->seq_len, seq_number);
+  ARRAY_CALLOC (sq->seq_label, seq_number);
+  ARRAY_CALLOC (sq->seq_id, seq_number);
+  ARRAY_CALLOC (sq->seq_w, seq_number);
   sq->seq_number = seq_number;
   for (i = 0; i < seq_number; i++) {
     sq->seq_label[i] = -1;
@@ -645,7 +559,7 @@ sequence_t *sequence_calloc (long seq_number)
     sq->seq_w[i] = 1;
   }
   return sq;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return NULL;
 #undef CUR_PROC
@@ -673,18 +587,12 @@ sequence_t *sequence_lexWords (int n, int M)
     goto STOP;
   }
   for (i = 0; i < seq_number; i++) {
-    if (!m_calloc (sq->seq[i], n)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sq->seq[i], n);
     sq->seq_len[i] = n;
     sq->seq_id[i] = i;
   }
 
-  if (!m_calloc (seq, n)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (seq, n);
   while (!(j < 0)) {
     sequence_copy (sq->seq[cnt], seq, n);
     j = n - 1;
@@ -697,7 +605,7 @@ sequence_t *sequence_lexWords (int n, int M)
   }
   m_free (seq);
   return sq;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return NULL;
 # undef CUR_PROC
@@ -752,27 +660,12 @@ int sequence_add (sequence_t * target, sequence_t * source)
   target->seq_number = old_seq_number + source->seq_number;
   target->total_w += source->total_w;
 
-  if (!m_calloc (target->seq, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  /*if(!m_calloc(target->states, target->seq_number)) {mes_proc(); goto STOP;}*/
-  if (!m_calloc (target->seq_len, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_label, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_id, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_w, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (target->seq, target->seq_number);
+  /*ARRAY_CALLOC (target->states, target->seq_number);*/
+  ARRAY_CALLOC (target->seq_len, target->seq_number);
+  ARRAY_CALLOC (target->seq_label, target->seq_number);
+  ARRAY_CALLOC (target->seq_id, target->seq_number);
+  ARRAY_CALLOC (target->seq_w, target->seq_number);
 
   for (i = 0; i < old_seq_number; i++) {
     target->seq[i] = old_seq[i];
@@ -784,16 +677,12 @@ int sequence_add (sequence_t * target, sequence_t * source)
   }
 
   for (i = 0; i < (target->seq_number - old_seq_number); i++) {
-    if (!m_calloc (target->seq[i + old_seq_number], source->seq_len[i])) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (target->seq[i + old_seq_number], source->seq_len[i]);
 
     sequence_copy (target->seq[i + old_seq_number], source->seq[i],
                    source->seq_len[i]);
 
-    /*if(!m_calloc(target->states[i+old_seq_number], source->seq_len[i])) 
-       {mes_proc(); goto STOP;} */
+    /*ARRAY_CALLOC (target->states[i+old_seq_number], source->seq_len[i]); */
 
     /* sequence_copy(target->states[i+old_seq_number], source->states[i], 
        source->seq_len[i]); */
@@ -812,7 +701,7 @@ int sequence_add (sequence_t * target, sequence_t * source)
   m_free (old_seq_id);
   m_free (old_seq_w);
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return res;
 #undef CUR_PROC
 }
@@ -835,26 +724,11 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
   target->seq_number = old_seq_number + source->seq_number;
   target->total_w += source->total_w;
 
-  if (!m_calloc (target->seq, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_len, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_label, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_id, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (target->seq_w, target->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (target->seq, target->seq_number);
+  ARRAY_CALLOC (target->seq_len, target->seq_number);
+  ARRAY_CALLOC (target->seq_label, target->seq_number);
+  ARRAY_CALLOC (target->seq_id, target->seq_number);
+  ARRAY_CALLOC (target->seq_w, target->seq_number);
 
   for (i = 0; i < old_seq_number; i++) {
     target->seq[i] = old_seq[i];
@@ -865,10 +739,7 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
   }
 
   for (i = 0; i < (target->seq_number - old_seq_number); i++) {
-    if (!m_calloc (target->seq[i + old_seq_number], source->seq_len[i])) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (target->seq[i + old_seq_number], source->seq_len[i]);
 
     sequence_d_copy (target->seq[i + old_seq_number], source->seq[i],
                      source->seq_len[i]);
@@ -885,7 +756,7 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
   m_free (old_seq_w);
   res = 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return res;
 #undef CUR_PROC
 }
@@ -1196,10 +1067,7 @@ sequence_d_t *sequence_d_create_from_sq (const sequence_t * sq)
     goto STOP;
   }
   for (j = 0; j < sq->seq_number; j++) {
-    if (!m_calloc (sqd->seq[j], sq->seq_len[j])) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sqd->seq[j], sq->seq_len[j]);
     for (i = 0; i < sq->seq_len[j]; i++)
       sqd->seq[j][i] = (double) (sq->seq[j][i]);
     sqd->seq_len[j] = sq->seq_len[j];
@@ -1210,7 +1078,7 @@ sequence_d_t *sequence_d_create_from_sq (const sequence_t * sq)
   sqd->seq_number = sq->seq_number;
   sqd->total_w = sq->total_w;
   return (sqd);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_d_free (&sqd);
   return NULL;
 #undef CUR_PROC
@@ -1227,10 +1095,7 @@ sequence_t *sequence_create_from_sqd (const sequence_d_t * sqd)
     goto STOP;
   }
   for (j = 0; j < sqd->seq_number; j++) {
-    if (!m_calloc (sq->seq[j], sqd->seq_len[j])) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sq->seq[j], sqd->seq_len[j]);
     for (i = 0; i < sqd->seq_len[j]; i++) {
       sq->seq[j][i] = m_int (fabs (sqd->seq[j][i]));
     }
@@ -1242,7 +1107,7 @@ sequence_t *sequence_create_from_sqd (const sequence_d_t * sqd)
   sq->seq_number = sqd->seq_number;
   sq->total_w = sqd->total_w;
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return NULL;
 #undef CUR_PROC
@@ -1284,10 +1149,7 @@ sequence_d_t *sequence_d_mean (const sequence_d_t * sqd)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (out_sqd->seq[0], max_len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (out_sqd->seq[0], max_len);
   out_sqd->seq_len[0] = max_len;
 
   for (i = 0; i < sqd->seq_number; i++)
@@ -1298,7 +1160,7 @@ sequence_d_t *sequence_d_mean (const sequence_d_t * sqd)
     out_sqd->seq[0][j] /= sqd->seq_number;
 
   return out_sqd;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_d_free (&out_sqd);
   return NULL;
 # undef CUR_PROC
@@ -1319,14 +1181,8 @@ double **sequence_d_scatter_matrix (const sequence_d_t * sqd, int *dim)
   }
 
   /* Mean over all sequences. Individual counts for each dimension */
-  if (!m_calloc (mean, *dim)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (count, *dim)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (mean, *dim);
+  ARRAY_CALLOC (count, *dim);
   for (i = 0; i < sqd->seq_number; i++) {
     for (l = 0; l < sqd->seq_len[i]; l++) {
       mean[l] += sqd->seq[i][l];
@@ -1354,7 +1210,7 @@ double **sequence_d_scatter_matrix (const sequence_d_t * sqd, int *dim)
     }
   }
   return W;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&W, *dim);
   return NULL;
 # undef CUR_PROC
@@ -1396,26 +1252,11 @@ int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
   /* waste of memory but avoids to many reallocations */
   sqd_dummy = sqd_train;
   for (i = 0; i < 2; i++) {
-    if (!m_calloc (sqd_dummy->seq, total_seqs)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sqd_dummy->seq_len, total_seqs)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sqd_dummy->seq_label, total_seqs)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sqd_dummy->seq_id, total_seqs)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sqd_dummy->seq_w, total_seqs)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sqd_dummy->seq, total_seqs);
+    ARRAY_CALLOC (sqd_dummy->seq_len, total_seqs);
+    ARRAY_CALLOC (sqd_dummy->seq_label, total_seqs);
+    ARRAY_CALLOC (sqd_dummy->seq_id, total_seqs);
+    ARRAY_CALLOC (sqd_dummy->seq_w, total_seqs);
     sqd_dummy->seq_number = 0;
     sqd_dummy = sqd_test;
   }
@@ -1427,10 +1268,7 @@ int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
     else
       sqd_dummy = sqd_test;
     cur_number = sqd_dummy->seq_number;
-    if (!m_calloc (sqd_dummy->seq[cur_number], sqd->seq_len[i])) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sqd_dummy->seq[cur_number], sqd->seq_len[i]);
     /* copy all entries */
     sequence_d_copy_all (sqd_dummy, cur_number, sqd, i);
     sqd_dummy->seq_number++;
@@ -1439,31 +1277,16 @@ int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
   /* reallocs */
   sqd_dummy = sqd_train;
   for (i = 0; i < 2; i++) {
-    if (m_realloc (sqd_dummy->seq, sqd_dummy->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (m_realloc (sqd_dummy->seq_len, sqd_dummy->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (m_realloc (sqd_dummy->seq_label, sqd_dummy->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (m_realloc (sqd_dummy->seq_id, sqd_dummy->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (m_realloc (sqd_dummy->seq_w, sqd_dummy->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (sqd_dummy->seq, sqd_dummy->seq_number);
+    ARRAY_REALLOC (sqd_dummy->seq_len, sqd_dummy->seq_number);
+    ARRAY_REALLOC (sqd_dummy->seq_label, sqd_dummy->seq_number);
+    ARRAY_REALLOC (sqd_dummy->seq_id, sqd_dummy->seq_number);
+    ARRAY_REALLOC (sqd_dummy->seq_w, sqd_dummy->seq_number);
     sqd_dummy = sqd_test;
   }
   return 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 #undef CUR_PROC
 }

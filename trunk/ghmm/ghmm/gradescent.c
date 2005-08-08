@@ -46,6 +46,7 @@
 #include "reestimate.h"
 #include "gradescent.h"
 #include "ghmm.h"
+#include <ghmm/internal.h>
 
 /*----------------------------------------------------------------------------*/
 void gradient_descent_gfree (double **matrix_b, double *matrix_a,
@@ -78,32 +79,19 @@ int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
   int i;
 
   /* first allocate memory for matrix_b */
-  if (!m_malloc (*matrix_b, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (*matrix_b, mo->N);
   for (i = 0; i < mo->N; i++)
-    if (!m_calloc
-        ((*matrix_b)[i], model_ipow (mo, mo->M, mo->s[i].order + 1))) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*matrix_b)[i], model_ipow (mo, mo->M, mo->s[i].order + 1));
 
   /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
-  if (!m_calloc (*matrix_a, mo->N * mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*matrix_a, mo->N * mo->N);
 
   /* allocate memory for matrix_pi */
-  if (!m_calloc (*matrix_pi, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*matrix_pi, mo->N);
 
   return 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   gradient_descent_gfree (*matrix_b, *matrix_a, *matrix_pi, mo->N);
   return -1;
 

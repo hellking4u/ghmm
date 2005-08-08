@@ -46,6 +46,7 @@
 #include "math.h"
 #include "ghmm.h"
 #include "kbestbasics.h"
+#include <ghmm/internal.h>
 
 typedef struct local_store_t {
   double *pi_num;
@@ -83,25 +84,23 @@ static local_store_t *reestimate_alloc (const model * mo)
 # define CUR_PROC "reestimate_alloc"
   int i;
   local_store_t *r = NULL;
-  if (!m_calloc (r, 1)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (r, 1);
 
-  if (!m_calloc (r->pi_num, mo->N)) {mes_proc (); goto STOP;}
-  if (!m_calloc (r->a_num, mo->N)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (r->pi_num, mo->N);
+  ARRAY_CALLOC (r->a_num, mo->N);
   for (i = 0; i < mo->N; i++)
-    if (!m_calloc (r->a_num[i], mo->s[i].out_states)) {mes_proc (); goto STOP;}
-  if (!m_calloc (r->a_denom, mo->N)) {mes_proc (); goto STOP;}
+    ARRAY_CALLOC (r->a_num[i], mo->s[i].out_states);
+  ARRAY_CALLOC (r->a_denom, mo->N);
 
-  if (!m_malloc (r->b_num, mo->N)) {mes_proc (); goto STOP;}
+  ARRAY_MALLOC (r->b_num, mo->N);
   for (i = 0; i < mo->N; i++)
-    if (!m_calloc (r->b_num[i], model_ipow(mo, mo->M, mo->s[i].order + 1)))
-      {mes_proc (); goto STOP;}
-  if (!m_malloc (r->b_denom, mo->N)) {mes_proc (); goto STOP;}
+    ARRAY_CALLOC (r->b_num[i], model_ipow(mo, mo->M, mo->s[i].order + 1));
+  ARRAY_MALLOC (r->b_denom, mo->N);
   for (i = 0; i < mo->N; i++)
-    if (!m_calloc (r->b_denom[i], model_ipow (mo, mo->M, mo->s[i].order)))
-      {mes_proc (); goto STOP;}
+    ARRAY_CALLOC (r->b_denom[i], model_ipow (mo, mo->M, mo->s[i].order));
 
   return (r);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
   return (NULL);
 # undef CUR_PROC
@@ -184,12 +183,9 @@ int reestimate_alloc_matvek (double ***alpha, double ***beta, double **scale,
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (*scale, T)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*scale, T);
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* reestimate_alloc_matvek */
@@ -225,17 +221,11 @@ void reestimate_update_tie_groups (model * mo)
 
   if (mo->model_type & kHigherOrderEmissions) {
     /*  printf("reestimate_update_tie_groups: Allocating for higher order states\n"); */
-    if (!m_malloc (new_emissions, model_ipow (mo, mo->M, mo->maxorder + 1))) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_MALLOC (new_emissions, model_ipow (mo, mo->M, mo->maxorder + 1));
   }
   else {
     /* printf("reestimate_update_tie_groups: No higher order states\n"); */
-    if (!m_malloc (new_emissions, mo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_MALLOC (new_emissions, mo->M);
   }
 
   for (i = 0; i < mo->N; i++) {
@@ -296,7 +286,7 @@ void reestimate_update_tie_groups (model * mo)
     }
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (new_emissions);
 #undef CUR_PROC
 }           /* reestimate_update_tie_groups */
@@ -416,7 +406,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
   res = 0;
   if (mo->model_type & kTiedEmissions)
     reestimate_update_tie_groups (mo);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* reestimate_setlambda */
@@ -543,7 +533,7 @@ static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
   res = 0;
 
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    return (res);
 FREE:
    reestimate_free_matvek (alpha, beta, scale, T_k);
@@ -572,22 +562,21 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
   local_store_t * * curr_est, * * last_est, * * switch_lst; 
 
   /* allocating memory for two columns of alpha matrix */
-  if (!m_calloc (alpha_last_col, mo->N)) {mes_proc (); goto STOP;}
-  if (!m_calloc (alpha_curr_col, mo->N)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (alpha_last_col, mo->N);
+  ARRAY_CALLOC (alpha_curr_col, mo->N);
 
   /* allocating 2*N local_store_t */
-  if (!m_calloc (last_est, mo->N)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (last_est, mo->N);
   for (i=0; i<mo->N; i++)
     last_est[i] = reestimate_alloc(mo);
-  if (!m_calloc (curr_est, mo->N)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (curr_est, mo->N);
   for (i=0; i<mo->N; i++)
     curr_est[i] = reestimate_alloc(mo);
 
 
   /* temporary array to hold logarithmized summands
      for sums over probabilities */
-  if (!m_calloc(summands, m_max(mo->N,model_ipow(mo,mo->M,mo->maxorder+1))+1))
-    {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (summands, m_max(mo->N,model_ipow(mo,mo->M,mo->maxorder+1))+1);
 
 
   for (k=0; k<seq_number; k++) {
@@ -757,7 +746,7 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
   else
     res = 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* deallocation */
   if (last_est)
     for (i=0; i<mo->N; i++)
@@ -812,7 +801,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
   /* main loop Baum-Welch-Alg. */
   while (n <= max_step) {
 
-    if (reestimate_one_step (mo, r, sq->seq_number, sq->seq_len, sq->seq,
+    if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq,
                              &log_p, sq->seq_w) == -1) {
       str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
       mes_prot (str);
@@ -881,7 +870,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
   /* if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
   res = 1;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
   return res;
 # undef CUR_PROC
@@ -1019,7 +1008,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
 
 FREE:
   reestimate_free_matvek (alpha, beta, scale, T_k);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (-1);
 # undef CUR_PROC
 }                               /* reestimate_one_step_label */
@@ -1129,7 +1118,7 @@ int reestimate_baum_welch_nstep_label (model * mo, sequence_t * sq,
   /* if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
   res = 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
   return res;
 # undef CUR_PROC

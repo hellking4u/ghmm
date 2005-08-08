@@ -41,6 +41,7 @@
 #include "mprintf.h"
 #include "mes.h"
 #include "scanner.h"
+#include <ghmm/internal.h>
 
 #define SCANNER_TYPE_CHAR     1
 #define SCANNER_TYPE_INT      2
@@ -388,10 +389,7 @@ scanner_t *scanner_alloc (const char *filename)
   scanner_t *s = NULL;
 
   mes_check_ptr (filename, return (NULL));
-  if (!m_calloc (s, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (s, 1);
 
   s->txtlen = 256;
   s->idlen = 256;
@@ -429,7 +427,7 @@ scanner_t *scanner_alloc (const char *filename)
   if (scanner_skipspace (s))
     goto STOP;
   return (s);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free (&s);
   return (NULL);
 #undef CUR_PROC
@@ -577,10 +575,7 @@ char *scanner_get_str (scanner_t * s, int *len, int cmode)
     scanner_error (s, "string expected");
     goto STOP;
   }
-  if (!m_malloc (val, maxlen)) {
-    scanner_error (s, "Not enough memory to read string");
-    goto STOP;
-  }
+  ARRAY_MALLOC (val, maxlen);
 
   while (!s->eof && s->c == '"') {
     if (cmode) {
@@ -597,10 +592,7 @@ char *scanner_get_str (scanner_t * s, int *len, int cmode)
         goto STOP;
       }
       if (i + 1 == maxlen) {
-        if (m_realloc (val, maxlen + 128)) {
-          scanner_error (s, "Not enough memory to read string");
-          goto STOP;
-        }
+        ARRAY_REALLOC (val, maxlen + 128);
         maxlen += 128;
       }
       if (s->c || len)
@@ -621,15 +613,12 @@ char *scanner_get_str (scanner_t * s, int *len, int cmode)
       goto STOP;
   }
   val[i++] = 0;
-  if (m_realloc (val, i)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_REALLOC (val, i);
   if (len)
     *len = i;
   return (val);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (val);
   return (NULL);
 # undef CUR_PROC
@@ -976,7 +965,7 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
 
   return (val);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (val);
   if (len)
     *len = 0;
@@ -1125,7 +1114,7 @@ int scanner_tst (void)
   }
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free (&s);
   m_free (char_arr);
   m_free (int_arr);
@@ -1163,10 +1152,7 @@ double **scanner_get_d_matrix (scanner_t * s, int *rows, int *cols)
   *rows = *cols = 0;
   while (!s->eof && !s->err && s->c - '}') {
     (*rows)++;
-    if (m_realloc (matrix, *rows)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (matrix, *rows);
     matrix[*rows - 1] = scanner_get_double_array (s, &local_cols);
     scanner_consume (s, ';');
     if (s->err)
@@ -1179,7 +1165,7 @@ double **scanner_get_d_matrix (scanner_t * s, int *rows, int *cols)
     *cols = local_cols;
   }                             /* while ... */
   return matrix;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free_d_matrix (&matrix, *rows);
   return NULL;
 #undef CUR_PROC

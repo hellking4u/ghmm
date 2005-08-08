@@ -48,6 +48,7 @@
 #include "psequence.h"
 #include "linkedlist.h"
 #include "pviterbi.h"
+#include <ghmm/internal.h>
 
 
 
@@ -57,40 +58,37 @@ plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y) {
 #define CUR_PROC "pviterbi_alloc"
   plocal_store_t* v = NULL;
   int i, j;
-  if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v, 1);
   v->mo = mo;
   v->len_y = len_y;
   v->len_x = len_x;
   /* Allocate the log_in_a's -> individal lenghts */
-  if (!m_calloc(v->log_in_a, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->log_in_a, mo->N);
   /* first index of log_in_a: target state */
   for (j = 0; j < mo->N; j++){ 
     /* second index: source state */
-    if (!m_calloc(v->log_in_a[j], mo->s[j].in_states)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (v->log_in_a[j], mo->s[j].in_states);
     for (i=0; i<mo->s[j].in_states; i++) {
       /* third index: transition classes of source state */
-      if (!m_calloc(v->log_in_a[j][i], mo->s[mo->s[j].in_id[i]].kclasses)) {
-	mes_proc(); goto STOP;}
+      ARRAY_CALLOC (v->log_in_a[j][i], mo->s[mo->s[j].in_id[i]].kclasses);
     }
   }
-  if (!m_calloc(v->log_b, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->log_b, mo->N);
   for (j=0; j<mo->N; j++) {
-    if (!m_calloc(v->log_b[j], emission_table_size(mo, j) + 1)) {
-       mes_proc(); goto STOP; 
-    }
+    ARRAY_CALLOC (v->log_b[j], emission_table_size(mo, j) + 1);
   }
   if (!(v->log_b)) {mes_proc(); goto STOP;}
   v->phi = matrix3d_d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->phi)) {mes_proc(); goto STOP;}
-  if (!m_calloc(v->phi_new, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->phi_new, mo->N);
   v->psi = matrix3d_i_alloc(len_x + mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->psi)) {mes_proc(); goto STOP;}
 
   v->topo_order_length = 0;
-  if (!m_calloc(v->topo_order, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->topo_order, mo->N);
 
   return(v);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   pviterbi_free((&v), mo->N, len_x, len_y, mo->max_offset_x, mo->max_offset_y);
   return(NULL);
 #undef CUR_PROC
@@ -675,7 +673,7 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
 /*     if (state_seq[t] >= 0) fprintf(stderr, " %d ",  state_seq[t]); */
 /*   fprintf(stderr, "\n Freeing ... \n");  */
   return (state_seq);
- STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Free the memory space */
   pviterbi_free(&pv, mo->N, X->length, Y->length, mo->max_offset_x, 
 		mo->max_offset_y);

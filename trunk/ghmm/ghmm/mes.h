@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ghmm/internal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -173,11 +174,11 @@ extern "C" {
 #endif
 
 #ifndef m_malloc
-#define m_malloc(ptr, entries) (ptr = mes_malloc( sizeof(*(ptr))*(entries)))
+#define m_malloc(ptr, entries) (ptr = mes_malloc_depr( sizeof(*(ptr))*(entries)))
 #endif
 
 #ifndef m_calloc
-#define m_calloc(ptr, entries) (ptr = mes_calloc( sizeof(*(ptr))*(entries)))
+#define m_calloc(ptr, entries) (ptr = mes_calloc_depr( sizeof(*(ptr))*(entries)))
 #endif
 
 #ifndef m_memset
@@ -299,6 +300,9 @@ extern "C" {
   /**
    */
   void *mes_calloc (int bytes);
+  /* The macros m_[cm]alloc(ptr, entries) are dprecated,
+     use ARRAY_[CM]ALLOC(ptr, entries) instead */
+  DECLARE_DEPRECATED void *mes_calloc_depr (int bytes);
   /**
    */
   int mes_copy (char *oldname, char *newname);
@@ -344,6 +348,9 @@ extern "C" {
   /**
    */
   void *mes_malloc (int bytes);
+  /* The macros m_[cm]alloc(ptr, entries) are dprecated,
+     use ARRAY_[CM]ALLOC(ptr, entries) instead */
+  DECLARE_DEPRECATED void *mes_malloc_depr (int bytes);
   /**
    */
   int mes_move (char *oldname, char *newname);

@@ -50,6 +50,7 @@
 #include "rng.h"
 #include "randvar.h"
 #include <ghmm/mes.h>
+#include <ghmm/internal.h>
 
 static void lrdecomp (int dim, double **a, double *p);
 static void lyequalsb (double **a, double *b, double *p, int dim, double *y);
@@ -222,17 +223,11 @@ double **matrix_d_alloc (int zeilen, int spalten)
 
   /*printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);*/
 
-  if (!m_calloc (matrix, zeilen)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (matrix, zeilen);
   for (i = 0; i < zeilen; i++)
-    if (!m_calloc (matrix[i], spalten)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (matrix[i], spalten);
   return matrix;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
@@ -246,15 +241,15 @@ double *** matrix3d_d_alloc(int i, int j, int k) {
   
   /* printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten); */
   
-  if (!m_calloc(matrix, i)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (matrix, i);
   for (a = 0; a < i; a++) {
-    if (!m_calloc(matrix[a], j)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (matrix[a], j);
     for (b=0; b<j; b++) {
-      if (!m_calloc(matrix[a][b], k)) {mes_proc(); goto STOP;}
+      ARRAY_CALLOC (matrix[a][b], k);
     }
   }
   return matrix;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix3d_d_free(&matrix, i, j);
   return NULL;
 #undef CUR_PROC
@@ -300,20 +295,14 @@ double **matrix_d_alloc_copy (int zeilen, int spalten, double **copymatrix)
 #define CUR_PROC "matrix_d_alloc_copy"
   double **matrix;
   int i, j;
-  if (!m_calloc (matrix, zeilen)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (matrix, zeilen);
   for (i = 0; i < zeilen; i++) {
-    if (!m_calloc (matrix[i], spalten)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (matrix[i], spalten);
     for (j = 0; j < spalten; j++)
       matrix[i][j] = copymatrix[i][j];
   }
   return matrix;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
@@ -326,17 +315,11 @@ int **matrix_i_alloc (int zeilen, int spalten)
 #define CUR_PROC "matrix_i_alloc"
   int **matrix;
   int i;
-  if (!m_calloc (matrix, zeilen)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (matrix, zeilen);
   for (i = 0; i < zeilen; i++)
-    if (!m_calloc (matrix[i], spalten)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (matrix[i], spalten);
   return matrix;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_i_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
@@ -366,14 +349,14 @@ int*** matrix3d_i_alloc(int zeilen, int spalten, int hoehe) {
 #define CUR_PROC "matrix_i_alloc"
   int ***matrix;
   int i, j;
-  if (!m_calloc(matrix, zeilen)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (matrix, zeilen);
   for (i = 0; i < zeilen; i++) {
-    if (!m_calloc(matrix[i], spalten)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (matrix[i], spalten);
     for (j=0; j < spalten; j++)
-      if (!m_calloc(matrix[i][j], hoehe)) {mes_proc(); goto STOP;}
+      ARRAY_CALLOC (matrix[i][j], hoehe);
   }
   return matrix;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix3d_i_free(&matrix, zeilen, spalten);
   return NULL;
 #undef CUR_PROC
@@ -548,10 +531,7 @@ int matrix_d_gaussrows_values (double **matrix, int rows, int cols,
   }
   if (*mue == NULL) {
     /* for each row, a random mean value mean[i] in (0, cols-1) */
-    if (!m_calloc (mean, rows)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (mean, rows);
     for (i = 0; i < rows; i++)
       mean[i] = GHMM_RNG_UNIFORM (RNG) * (cols - 1);
     /* for (i = 0; i < rows; i++) printf("%6.4f ", mean[i]); printf("\n"); */
@@ -574,7 +554,7 @@ int matrix_d_gaussrows_values (double **matrix, int rows, int cols,
     }
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* matrix_gaussrows_values */
@@ -672,19 +652,13 @@ int matrix_cholesky (double **a, double *b, int dim, double *x)
 #define CUR_PROC "matrix_cholesky"
   int res = -1;
   double *p, *y;
-  if (!m_calloc (p, dim)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (y, dim)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (p, dim);
+  ARRAY_CALLOC (y, dim);
   lrdecomp (dim, a, p);
   lyequalsb (a, b, p, dim, y);
   ltranspxequalsy (a, y, p, dim, x);
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 #undef CUR_PROC
 }
@@ -696,10 +670,7 @@ int matrix_det_symposdef (double **a, int dim, double *det)
   int res = -1;
   int i;
   double *p, r;
-  if (!m_calloc (p, dim)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (p, dim);
   lrdecomp (dim, a, p);
   *det = 1.0;
   for (i = 0; i < dim; i++) {
@@ -707,7 +678,7 @@ int matrix_det_symposdef (double **a, int dim, double *det)
     *det *= (r * r);
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 #undef CUR_PROC
 }

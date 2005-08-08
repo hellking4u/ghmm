@@ -58,6 +58,7 @@
 #include "mprintf.h"
 #include "string.h"
 #include "ghmm.h"
+#include <ghmm/internal.h>
 
 #define  __EPS 10e-6
 
@@ -67,16 +68,10 @@ static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
 {
 #define CUR_PROC "sdmodel_state_alloc"
   int res = -1;
-  if (!m_calloc (state->b, M)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state->b, M);
 
   if (out_states > 0) {
-    if (!m_calloc (state->out_id, out_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (state->out_id, out_states);
     state->out_a = matrix_d_alloc (cos, out_states);
     if (!state->out_a) {
       mes_proc ();
@@ -84,10 +79,7 @@ static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
     }
   }
   if (in_states > 0) {
-    if (!m_calloc (state->in_id, in_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (state->in_id, in_states);
     state->in_a = matrix_d_alloc (cos, in_states);
     if (!state->in_a) {
       mes_proc ();
@@ -96,7 +88,7 @@ static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
   }
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 #undef CUR_PROC
 }                               /* model_state_alloc */
@@ -230,32 +222,17 @@ sdmodel *sdmodel_copy (const sdmodel * mo)
 # define CUR_PROC "sdmodel_copy"
   int i, j, k, nachf, vorg, m;
   sdmodel *m2 = NULL;
-  if (!m_calloc (m2, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (m2->s, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (m2, 1);
+  ARRAY_CALLOC (m2->s, mo->N);
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
-    if (!m_calloc (m2->s[i].out_id, nachf)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->s[i].out_id, nachf);
     m2->s[i].out_a = matrix_d_alloc (mo->cos, nachf);
-    if (!m_calloc (m2->s[i].in_id, vorg)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->s[i].in_id, vorg);
     m2->s[i].in_a = matrix_d_alloc (mo->cos, vorg);
 
-    if (!m_calloc (m2->s[i].b, mo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->s[i].b, mo->M);
     /* Copy the values */
 
     for (j = 0; j < nachf; j++) {
@@ -288,18 +265,12 @@ sdmodel *sdmodel_copy (const sdmodel * mo)
   m2->model_type = mo->model_type;
   if (mo->model_type == kSilentStates) {
     assert (mo->silent != NULL);
-    if (!m_calloc (m2->silent, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->silent, mo->N);
     for (i = 0; i < mo->N; i++) {
       m2->silent[i] = mo->silent[i];
     }
     if (mo->topo_order_length > 0) {
-      if (!m_calloc (m2->topo_order, mo->topo_order_length)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (m2->topo_order, mo->topo_order_length);
       for (i = 0; i < mo->topo_order_length; i++) {
         m2->topo_order[i] = mo->topo_order[i];
       }
@@ -309,7 +280,7 @@ sdmodel *sdmodel_copy (const sdmodel * mo)
     m2->get_class = mo->get_class;
   }
   return (m2);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sdmodel_free (&m2);
   return (NULL);
 # undef CUR_PROC
@@ -366,10 +337,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
     /* Test: A new seed for each sequence */
     /*   ghmm_rng_timeseed(RNG); */
     stillbadseq = badseq = 0;
-    if (!m_calloc (sq->seq[n], len)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sq->seq[n], len);
 
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
@@ -471,10 +439,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
     }
     else {
       if (state < len)
-        if (m_realloc (sq->seq[n], state)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (sq->seq[n], state);
       sq->seq_len[n] = state;
       /* sq->seq_label[n] = label; */
       /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
@@ -498,7 +463,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
     printf ("%d sequences rejected (Tmax, %d)!\n", reject_tmax, Tmax);
 
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_free (&sq);
   return (NULL);
 # undef CUR_PROC
@@ -513,10 +478,7 @@ int sdmodel_initSilentStates (sdmodel * mo)
   double sum;
   int *__silents;
 
-  if (!m_calloc (__silents, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (__silents, mo->N);
 
   for (i = 0; i < mo->N; i++) {
     for (m = 0, sum = 0; m < mo->M; m++) {
@@ -540,7 +502,7 @@ int sdmodel_initSilentStates (sdmodel * mo)
     m_free (__silents);
   }
   return (nSilentStates);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (0);
 #undef CUR_PROC
 }
@@ -598,14 +560,8 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
     /*   ghmm_rng_timeseed(RNG); */
     stillbadseq = badseq = 0;
     matchcount = 0;
-    if (!m_calloc (sq->seq[n], len)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sq->states[n], len)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sq->seq[n], len);
+    ARRAY_CALLOC (sq->states[n], len);
 
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
@@ -778,14 +734,8 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
         }
         else {
           if (state < len) {
-            if (m_realloc (sq->seq[n], state)) {
-              mes_proc ();
-              goto STOP;
-            }
-            if (m_realloc (sq->states[n], state)) {
-              mes_proc ();
-              goto STOP;
-            }
+            ARRAY_REALLOC (sq->seq[n], state);
+            ARRAY_REALLOC (sq->states[n], state);
           }
           sq->seq_len[n] = state;
           /* sq->seq_label[n] = label; */
@@ -815,7 +765,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
 
 
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
   sequence_free (&sq);
   return (NULL);
@@ -952,37 +902,16 @@ model *sdmodel_to_model (const sdmodel * mo, int kclass)
    */
   int i, j, nachf, vorg, m;
   model *m2 = NULL;
-  if (!m_calloc (m2, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (m2->s, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (m2, 1);
+  ARRAY_CALLOC (m2->s, mo->N);
   for (i = 0; i < mo->N; i++) {
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
-    if (!m_calloc (m2->s[i].out_id, nachf)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].out_a, nachf)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].in_id, vorg)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].in_a, vorg)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (m2->s[i].b, mo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->s[i].out_id, nachf);
+    ARRAY_CALLOC (m2->s[i].out_a, nachf);
+    ARRAY_CALLOC (m2->s[i].in_id, vorg);
+    ARRAY_CALLOC (m2->s[i].in_a, vorg);
+    ARRAY_CALLOC (m2->s[i].b, mo->M);
     /* Copy the values */
     for (j = 0; j < nachf; j++) {
       m2->s[i].out_a[j] = mo->s[i].out_a[kclass][j];
@@ -1005,24 +934,18 @@ model *sdmodel_to_model (const sdmodel * mo, int kclass)
   m2->model_type = mo->model_type;
   if (mo->model_type == kSilentStates) {
     assert (mo->silent != NULL);
-    if (!m_calloc (m2->silent, mo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->silent, mo->N);
     for (i = 0; i < m2->N; i++) {
       m2->silent[i] = mo->silent[i];
     }
     m2->topo_order_length = mo->topo_order_length;
-    if (!m_calloc (m2->topo_order, mo->topo_order_length)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (m2->topo_order, mo->topo_order_length);
     for (i = 0; i < m2->topo_order_length; i++) {
       m2->topo_order[i] = mo->topo_order[i];
     }
   }
   return (m2);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (m2->silent);
   m_free (m2->topo_order);
   model_free (&m2);

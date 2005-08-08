@@ -56,6 +56,7 @@
 #include "rng.h"
 #include "randvar.h"
 #include "string.h"
+#include <ghmm/internal.h>
 
 /*----------------------------------------------------------------------------*/
 int smodel_state_alloc (sstate * state,
@@ -64,23 +65,11 @@ int smodel_state_alloc (sstate * state,
 # define CUR_PROC "smodel_state_alloc"
   int res = -1;
   int i;
-  if (!m_calloc (state->c, M)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (state->mue, M)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (state->u, M)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state->c, M);
+  ARRAY_CALLOC (state->mue, M);
+  ARRAY_CALLOC (state->u, M);
 
-  if (!m_calloc (state->mixture_fix, M)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state->mixture_fix, M);
 
   /* mixture component fixing deactivated by default */
   for (i = 0; i < M; i++) {
@@ -88,10 +77,7 @@ int smodel_state_alloc (sstate * state,
   }
 
   if (out_states > 0) {
-    if (!m_calloc (state->out_id, out_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (state->out_id, out_states);
     state->out_a = matrix_d_alloc (cos, out_states);
     if (!state->out_a) {
       mes_proc ();
@@ -99,10 +85,7 @@ int smodel_state_alloc (sstate * state,
     }
   }
   if (in_states > 0) {
-    if (!m_calloc (state->in_id, in_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (state->in_id, in_states);
     state->in_a = matrix_d_alloc (cos, in_states);
     if (!state->in_a) {
       mes_proc ();
@@ -110,7 +93,7 @@ int smodel_state_alloc (sstate * state,
     }
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* smodel_state_alloc */
@@ -120,17 +103,14 @@ int smodel_class_change_alloc (smodel * smo)
 {
 #define CUR_PROC "smodel_class_change_alloc"
   class_change_context *c = NULL;
-  if (!m_calloc (c, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (c, 1);
 
   c->k = -1;
   c->get_class = NULL;
 
   smo->class_change = c;
   return (0);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (-1);
 # undef CUR_PROC
 }
@@ -216,10 +196,7 @@ smodel **smodel_read (const char *filename, int *smo_number)
     if (!strcmp (s->id, "SHMM") || !strcmp (s->id, "shmm")) {
       (*smo_number)++;
       /* more mem */
-      if (m_realloc (smo, *smo_number)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (smo, *smo_number);
       smo[*smo_number - 1] = smodel_read_block (s, (int *) &new_models);
       if (!smo[*smo_number - 1]) {
         mes_proc ();
@@ -228,10 +205,7 @@ smodel **smodel_read (const char *filename, int *smo_number)
       /* copy smodel */
       if (new_models > 1) {
         /* "-1" due to  (*smo_number)++ from above  */
-        if (m_realloc (smo, *smo_number - 1 + new_models)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (smo, *smo_number - 1 + new_models);
         for (j = 1; j < new_models; j++) {
           smo[*smo_number] = smodel_copy (smo[*smo_number - 1]);
           if (!smo[*smo_number]) {
@@ -257,7 +231,7 @@ smodel **smodel_read (const char *filename, int *smo_number)
   scanner_free (&s);             
   return smo;
   
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
     scanner_free (&s);
     return NULL;
 #undef CUR_PROC
@@ -320,10 +294,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         goto STOP;
       }
       smo->N = scanner_get_int (s);
-      if (!m_calloc (smo->s, smo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (smo->s, smo->N);
       n_read = 1;
     }
     else if (!strcmp (s->id, "density")) {      /* which density function? */
@@ -440,10 +411,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "Identifier A twice");
         goto STOP;
       }
-      if (!m_calloc (a_matrix, smo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (a_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, a_matrix, smo->N, smo->N)) {
@@ -457,10 +425,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         goto STOP;
       }
       /* copy transition matrix to all transition classes */
-      if (!m_calloc (a_3dmatrix, smo->cos)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (a_3dmatrix, smo->cos);
       a_3dmatrix[0] = a_matrix;
       for (i = 1; i < smo->cos; i++) {
         a_3dmatrix[i] = matrix_d_alloc_copy (smo->N, smo->N, a_matrix);
@@ -484,15 +449,9 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "identifier A twice");
         goto STOP;
       }
-      if (!m_calloc (a_3dmatrix, smo->cos)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (a_3dmatrix, smo->cos);
       for (osc = 0; osc < smo->cos; osc++) {
-        if (!m_calloc (a_3dmatrix[osc], smo->N)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC (a_3dmatrix[osc], smo->N);
         scanner_get_name (s);
         if (!strcmp (s->id, "matrix")) {
           if (matrix_d_read (s, a_3dmatrix[osc], smo->N, smo->N)) {
@@ -530,10 +489,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "identifier C twice");
         goto STOP;
       }
-      if (!m_calloc (c_matrix, smo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (c_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, c_matrix, smo->N, smo->M)) {
@@ -556,10 +512,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "identifier Mue twice");
         goto STOP;
       }
-      if (!m_calloc (mue_matrix, smo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (mue_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, mue_matrix, smo->N, smo->M)) {
@@ -582,10 +535,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "identifier U twice");
         goto STOP;
       }
-      if (!m_calloc (u_matrix, smo->N)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (u_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, u_matrix, smo->N, smo->M)) {
@@ -622,10 +572,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
     smo->prior = -1;
   /* default for fix is 0 */
   if (fix_read == 0) {
-    if (!m_calloc (fix_vektor, smo->N)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (fix_vektor, smo->N);
     for (i = 0; i < smo->N; i++)
       fix_vektor[i] = 0;
   }
@@ -666,7 +613,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
   m_free (pi_vektor);
   m_free (fix_vektor);
   return (smo);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   if (a_3dmatrix)
     for (i = 0; i < smo->cos; i++)
       matrix_d_free (&(a_3dmatrix[i]), smo->N);
@@ -727,51 +674,27 @@ smodel *smodel_copy (const smodel * smo)
 # define CUR_PROC "smodel_copy"
   int i, k, j, nachf, vorg, m;
   smodel *sm2 = NULL;
-  if (!m_calloc (sm2, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (sm2->s, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (sm2, 1);
+  ARRAY_CALLOC (sm2->s, smo->N);
   for (i = 0; i < smo->N; i++) {
     nachf = smo->s[i].out_states;
     vorg = smo->s[i].in_states;
-    if (!m_calloc (sm2->s[i].out_id, nachf)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sm2->s[i].out_id, nachf);
     sm2->s[i].out_a = matrix_d_alloc (smo->cos, nachf);
     if (!sm2->s[i].out_a) {
       mes_proc ();
       goto STOP;
     }
-    if (!m_calloc (sm2->s[i].in_id, vorg)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sm2->s[i].in_id, vorg);
     sm2->s[i].in_a = matrix_d_alloc (smo->cos, vorg);
     if (!sm2->s[i].in_a) {
       mes_proc ();
       goto STOP;
     }
-    if (!m_calloc (sm2->s[i].c, smo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sm2->s[i].mue, smo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sm2->s[i].u, smo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (!m_calloc (sm2->s[i].mixture_fix, smo->M)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sm2->s[i].c, smo->M);
+    ARRAY_CALLOC (sm2->s[i].mue, smo->M);
+    ARRAY_CALLOC (sm2->s[i].u, smo->M);
+    ARRAY_CALLOC (sm2->s[i].mixture_fix, smo->M);
     /* copy values */
     for (j = 0; j < nachf; j++) {
       for (k = 0; k < smo->cos; k++)
@@ -800,7 +723,7 @@ smodel *smodel_copy (const smodel * smo)
   sm2->density = smo->density;
   sm2->prior = smo->prior;
   return (sm2);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   smodel_free (&sm2);
   return (NULL);
 # undef CUR_PROC
@@ -976,10 +899,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
     /* Test: A new seed for each sequence */
     /*   ghmm_rng_timeseed(RNG); */
     stillbadseq = badseq = 0;
-    if (!m_calloc (sq->seq[n], len)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sq->seq[n], len);
 
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
@@ -1127,10 +1047,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
     else {
       if (state < len)
 
-        if (m_realloc (sq->seq[n], state)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_REALLOC (sq->seq[n], state);
       sq->seq_len[n] = state;
       sq->seq_label[n] = label;
       /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
@@ -1156,7 +1073,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
   printf ("End of smodel_generate_sequences.\n");
 
   return (sq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_d_free (&sq);
   return (NULL);
 # undef CUR_PROC
@@ -1206,7 +1123,7 @@ int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p)
   if (smo->cos > 1) {
     smo->class_change->k = -1;
   }
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* smodel_likelihood */
@@ -1253,7 +1170,7 @@ int smodel_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
 
   /* return number of "matched" sequences */
   return res;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 }
 
@@ -1489,10 +1406,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
   else                          /* else just one */
     step_width = maxT;
 
-  if (!m_calloc (d1, steps)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (d1, steps);
 
   smo1 = cm0;
   smo2 = cm;
@@ -1650,7 +1564,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
 
   return d;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sequence_d_free (&seq0);
   return (-1.0);
 #undef CUR_PROC
