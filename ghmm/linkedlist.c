@@ -83,10 +83,10 @@ void i_list_print(i_list * list) {
 
 int * i_list_to_array(i_list * list) {
 #define CUR_PROC "i_list_to_array"
-  int * array;
-  ARRAY_CALLOC (array, list->length);
-  i_el * el;
   int counter = 0;
+  int * array;
+  i_el * el;
+  ARRAY_CALLOC (array, list->length);
   el = list->first;
   while(el != NULL) {
     array[counter] = el->val;
@@ -103,6 +103,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 i_list * init_i_list() {
 #define CUR_PROC "init_i_list"
   i_list * list;
+
   ARRAY_CALLOC (list, 1);
   list->first = NULL;
   list->last = NULL;
@@ -118,10 +119,10 @@ i_el * init_i_el(int val) {
 #define CUR_PROC "init_i_el"
   i_el * el;
   ARRAY_CALLOC (el, 1);
-  if (!el) {mes_proc(); goto STOP;}
   el->next = NULL;
   el->val = val;
   return el;
+
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   free(el);
   return NULL;
@@ -137,4 +138,5 @@ int free_i_list(i_list * list) {
     free(el);
     el = next;
   }
+  return 0;
 }
