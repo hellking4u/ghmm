@@ -39,7 +39,7 @@
 #include <ghmm/internal.h>
 
 
-static int pstate_alloc(pstate *state, int M, int in_states, int out_states) {
+int pstate_alloc(pstate *state, int M, int in_states, int out_states) {
 # define CUR_PROC "pstate_alloc"
   int res = -1;
   ARRAY_CALLOC (state->b, M);
@@ -94,20 +94,26 @@ void pstate_clean(pstate *my_state) {
 
 /* use this to allocate the memory for a pmodel and set the pointers to NULL */
 pmodel * init_pmodel() {
+#define CUR_PROC "init_pmodel"
   pmodel * mo;
-  mo = (pmodel*)calloc(1, sizeof(pmodel));
-  if (!mo)
-    return NULL;
+  ARRAY_CALLOC (mo, 1);
+
   return mo;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return NULL;
+#undef CUR_PROC
 }
 
 pclass_change_context * init_pclass_change_context() {
 #define CUR_PROC "init_pclass_change_context"
   pclass_change_context * pccc;
-  if (!m_calloc(pccc, 1)) {mes_proc(); return NULL;}
+  ARRAY_CALLOC (pccc, 1);
+
   pccc->get_class = &default_transition_class;
   pccc->user_data = NULL;
   return pccc;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return NULL;
 #undef CUR_PROC
 }
 
@@ -170,12 +176,13 @@ int emission_table_size(pmodel* mo, int state_index) {
 }
  
 void print_pstate(pstate * s) {
+  int i;
+
   printf("offset x: %i\n", s->offset_x);
   printf("offset y: %i\n", s->offset_y);
   printf("alphabet: %i\n", s->alphabet);
   printf("kclasses: %i\n", s->kclasses);
   printf("in_state: %i\n", s->in_states);
-  int i;
   for (i=0; i<s->in_states; i++)
     printf("%i ", s->in_id[i]);
   printf("\n");
@@ -183,11 +190,12 @@ void print_pstate(pstate * s) {
 }
  
 void print_pmodel(pmodel* mo) {
+  int i;
+
   printf("Pair HMM model\n");
   printf("max offset x: %i\n", mo->max_offset_x);
   printf("max offset y: %i\n", mo->max_offset_y);
   printf("Number of states: %i\n", mo->N);
-  int i;
   for (i=0; i<mo->N; i++) {
     printf("State %i:\n", i);
     print_pstate(&(mo->s[i]));

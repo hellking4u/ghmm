@@ -201,7 +201,7 @@ struct pmodel {
 };
 typedef struct pmodel pmodel;
 
-static int pstate_alloc(pstate *state, int M, int in_states, int out_states);
+int pstate_alloc(pstate *state, int M, int in_states, int out_states);
 
 pmodel * init_pmodel();
 
