@@ -252,10 +252,8 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
   m_read = n_read = pi_read = a_read = c_read = mue_read = u_read
     = density_read = prior_read = fix_read = cos_read = 0;
   *multip = 1;                  /* default */
-  if (!(m_calloc (smo, 1))) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (smo, 1);
+
   scanner_consume (s, '{');
   if (s->err)
     goto STOP;
