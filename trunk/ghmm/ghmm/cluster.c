@@ -244,11 +244,10 @@ int cluster_avoid_empty_model (long *seq_label, long seq_number,
   long *counter;
   char error = 1, change = 0;
   int iter = 0;
+
   /* Initialization */
-  if (!m_calloc (counter, mo_number)) {
-    mes_proc ();
-    return (-1);
-  }
+  ARRAY_CALLOC (counter, mo_number);
+
   for (i = 0; i < mo_number; i++)
     counter[i] = 0;
   for (i = 0; i < seq_number; i++)
@@ -282,6 +281,8 @@ int cluster_avoid_empty_model (long *seq_label, long seq_number,
       }
     }
   }                             /* while */
+
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   if (error)
     return (-1);
   else
