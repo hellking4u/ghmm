@@ -675,6 +675,7 @@ void *mes_malloc (int bytes)
              bytes);
   return (NULL);
 }                               /* mes_malloc */
+void * mes_malloc_depr (int bytes) {return mes_malloc (bytes);}
 
 /*============================================================================*/
 void *mes_calloc (int bytes)
@@ -691,7 +692,7 @@ void *mes_calloc (int bytes)
              bytes);
   return (NULL);
 }                               /* mes_calloc */
-
+void * mes_calloc_depr (int bytes) {return mes_calloc (bytes);}
 
 /*============================================================================*/
 int mes_realloc (void **mem, int bytes)
