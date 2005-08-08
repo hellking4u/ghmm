@@ -49,13 +49,14 @@
 #include "linkedlist.h"
 #include "pviterbi.h"
 #include "pviterbi_propagate.h"
+#include <ghmm/internal.h>
 
 /*------------        Here comes the Propagate stuff          ------------- */
 
 cell * init_cell(int x, int y, int state, int previous_state, double log_p, double log_a) {
 #define CUR_PROC "init_cell"
   cell * mcell;
-  if (!m_calloc(mcell, 1)) { mes_proc(); goto STOP; }
+  ARRAY_CALLOC (mcell, 1);
   /* printf("Alloc cell: %i\n", sizeof(*mcell)); */
   mcell->x = x;
   mcell->y = y;
@@ -64,7 +65,7 @@ cell * init_cell(int x, int y, int state, int previous_state, double log_p, doub
   mcell->log_p = log_p;
   mcell->log_a = log_a;
   return mcell;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return(NULL);
 #undef CUR_PROC
 }
@@ -87,47 +88,44 @@ plocal_propagate_store_t * pviterbi_propagate_alloc(pmodel *mo, int len_y) {
 #define CUR_PROC "pviterbi_propagate_alloc"
   plocal_propagate_store_t* v = NULL;
   int i, j, k;
-  if (!m_calloc(v, 1)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v, 1);
 
   v->mo = mo;
   v->len_y = len_y;
   /* Allocate the log_in_a's -> individal lenghts */
-  if (!m_calloc(v->log_in_a, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->log_in_a, mo->N);
   /* first index of log_in_a: target state */
   for (j = 0; j < mo->N; j++){ 
     /* second index: source state */
-    if (!m_calloc(v->log_in_a[j], mo->s[j].in_states)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (v->log_in_a[j], mo->s[j].in_states);
     for (i=0; i<mo->s[j].in_states; i++) {
       /* third index: transition classes of source state */
-      if (!m_calloc(v->log_in_a[j][i], mo->s[mo->s[j].in_id[i]].kclasses)) {
-	mes_proc(); goto STOP;}
+      ARRAY_CALLOC (v->log_in_a[j][i], mo->s[mo->s[j].in_id[i]].kclasses);
     }
   }
 
-  if (!m_calloc(v->log_b, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->log_b, mo->N);
   for (j=0; j<mo->N; j++) {
-    if (!m_calloc(v->log_b[j], emission_table_size(mo, j) + 1)) {
-      mes_proc(); goto STOP;
-    }
+    ARRAY_CALLOC (v->log_b[j], emission_table_size(mo, j) + 1);
   }
   if (!(v->log_b)) {mes_proc(); goto STOP;}
   v->phi = matrix3d_d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->phi)) {mes_proc(); goto STOP;}
-  if (!m_calloc(v->phi_new, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->phi_new, mo->N);
   if (!m_calloc(v->end_of_first, mo->max_offset_x + 1)){mes_proc(); goto STOP;}
   for (j=0; j<mo->max_offset_x + 1; j++) {
-    if (!m_calloc(v->end_of_first[j], len_y + mo->max_offset_y + 1)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (v->end_of_first[j], len_y + mo->max_offset_y + 1);
     for (i=0; i<len_y + mo->max_offset_y + 1; i++) {
-      if (!m_calloc(v->end_of_first[j][i], mo->N)) {mes_proc(); goto STOP;}
+      ARRAY_CALLOC (v->end_of_first[j][i], mo->N);
       for (k=0; k<mo->N; k++)
 	v->end_of_first[j][i][k] = NULL;
-	/*if (!m_calloc(v->end_of_first[j][i][k], 1)) {mes_proc(); goto STOP;}*/
+	/*ARRAY_CALLOC (v->end_of_first[j][i][k], 1);*/
     }
   }
   v->topo_order_length = 0;
-  if (!m_calloc(v->topo_order, mo->N)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->topo_order, mo->N);
   return(v);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   pviterbi_propagate_free(&v, mo->N, mo->max_offset_x, mo->max_offset_y, len_y);
   return(NULL);
 #undef CUR_PROC
@@ -337,7 +335,7 @@ int * pviterbi_propagate(pmodel *mo, mysequence * X, mysequence * Y, double *log
   return pviterbi_propagate_recursion(mo, X, Y, log_p, path_length, 
 				      NULL, NULL,
 				      max_size, pv);
- STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Free the memory space */
   pviterbi_propagate_free(&pv, mo->N, mo->max_offset_x, mo->max_offset_y, Y->length);
   return NULL;
@@ -528,7 +526,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
       path_seq[length1 + i] = path2[i];
     return path_seq;
   }
- STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }
@@ -920,7 +918,7 @@ cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell 
     *log_p = max_value;
   }
   return middle;
- STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Free the memory space */
   
   return NULL;

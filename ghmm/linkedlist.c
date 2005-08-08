@@ -1,6 +1,43 @@
+/*******************************************************************************
+*
+*       This file is part of the General Hidden Markov Model Library,
+*       GHMM version __VERSION__, see http://ghmm.org
+*
+*       Filename: ghmm/ghmm/linkedlist.c
+*       Authors:  Matthias Heinig
+*
+*       Copyright (C) 1998-2004 Alexander Schliep
+*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+*                               Berlin
+*
+*       Contact: schliep@ghmm.org
+*
+*       This library is free software; you can redistribute it and/or
+*       modify it under the terms of the GNU Library General Public
+*       License as published by the Free Software Foundation; either
+*       version 2 of the License, or (at your option) any later version.
+*
+*       This library is distributed in the hope that it will be useful,
+*       but WITHOUT ANY WARRANTY; without even the implied warranty of
+*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*       Library General Public License for more details.
+*
+*       You should have received a copy of the GNU Library General Public
+*       License along with this library; if not, write to the Free
+*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*
+*       This file is version $Revision$
+*                       from $Date$
+*             last change by $Author$.
+*
+*******************************************************************************/
+
 #include "linkedlist.h"
 #include <stdlib.h>
 #include "mes.h"
+#include <ghmm/internal.h>
 
 void i_list_append(i_list * list, int val){
   i_el * last;
@@ -47,7 +84,7 @@ void i_list_print(i_list * list) {
 int * i_list_to_array(i_list * list) {
 #define CUR_PROC "i_list_to_array"
   int * array;
-  if (!m_calloc(array, list->length)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (array, list->length);
   i_el * el;
   int counter = 0;
   el = list->first;
@@ -57,8 +94,8 @@ int * i_list_to_array(i_list * list) {
     counter++;
   }
   return array;
-STOP:
-  free(array);
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  m_free(array);
   return NULL;
 #undef CUR_PROC
 }
@@ -66,13 +103,12 @@ STOP:
 i_list * init_i_list() {
 #define CUR_PROC "init_i_list"
   i_list * list;
-  list = m_calloc(list, 1);
-  if (!list) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (list, 1);
   list->first = NULL;
   list->last = NULL;
   list->length = 0;
   return list;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   free_i_list(list);
   return NULL;
 #undef CUR_PROC
@@ -81,12 +117,12 @@ STOP:
 i_el * init_i_el(int val) {
 #define CUR_PROC "init_i_el"
   i_el * el;
-  el = m_calloc(el, 1);
+  ARRAY_CALLOC (el, 1);
   if (!el) {mes_proc(); goto STOP;}
   el->next = NULL;
   el->val = val;
   return el;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   free(el);
   return NULL;
 #undef CUR_PROC
@@ -102,4 +138,3 @@ int free_i_list(i_list * list) {
     el = next;
   }
 }
-

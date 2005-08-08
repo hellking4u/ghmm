@@ -46,6 +46,7 @@
 #include "reestimate.h"
 #include "gradescent.h"
 #include "discrime.h"
+#include <ghmm/internal.h>
 
 #define LAMBDA 0.14
 #define TRIM(o, n) ((1-LAMBDA)*(o) + LAMBDA*(n))
@@ -71,9 +72,9 @@ model * * discrime_modelarray_alloc (int size)
 #define CUR_PROC "discrime_modelarray_alloc"
   model * * retval;
 
-  if (!m_calloc(retval, size)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (retval, size);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return retval;
 #undef CUR_PROC
 }
@@ -98,9 +99,9 @@ sequence_t * * discrime_seqarray_alloc (int size)
 #define CUR_PROC "discrime_seqarray_alloc"
   sequence_t * * retval;
 
-  if (!m_calloc(retval, size)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (retval, size);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return retval;
 #undef CUR_PROC
 }
@@ -132,131 +133,66 @@ static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
   int i, k, l, m;
 
   /* first allocate memory for matrix_b: */
-  if (!m_calloc (*matrix_b, noC)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*matrix_b, noC);
   for (k = 0; k < noC; k++) {
-    if (!m_calloc ((*matrix_b)[k], sqs[k]->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*matrix_b)[k], sqs[k]->seq_number);
     for (l = 0; l < sqs[k]->seq_number; l++) {
-      if (!m_calloc ((*matrix_b)[k][l], noC)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC ((*matrix_b)[k][l], noC);
       for (m = 0; m < noC; m++) {
-        if (!m_calloc ((*matrix_b)[k][l][m], mo[m]->N)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC ((*matrix_b)[k][l][m], mo[m]->N);
         for (i = 0; i < mo[m]->N; i++)
-          if (!m_calloc
-              ((*matrix_b)[k][l][m][i],
-               (int) pow (mo[m]->M, mo[m]->s[i].order + 1))) {
-            mes_proc ();
-            goto STOP;
-          }
+          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], model_ipow (mo[m], mo[m]->M, mo[m]->s[i].order + 1));
       }
     }
   }
 
   /* matrix_a(k,l,i,j) = matrix_a[k][l][i*mo->N + j] */
-  if (!m_calloc (*matrix_a, noC)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*matrix_a, noC);
   for (k = 0; k < noC; k++) {
-    if (!m_calloc ((*matrix_a)[k], sqs[k]->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*matrix_a)[k], sqs[k]->seq_number);
     for (l = 0; l < sqs[k]->seq_number; l++) {
-      if (!m_calloc ((*matrix_a)[k][l], noC)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC ((*matrix_a)[k][l], noC);
       for (m = 0; m < noC; m++)
-        if (!m_calloc ((*matrix_a)[k][l][m], mo[m]->N * mo[m]->N)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC ((*matrix_a)[k][l][m], mo[m]->N * mo[m]->N);
     }
   }
 
   /* allocate memory for matrix_pi */
-  if (!m_calloc (*matrix_pi, noC)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*matrix_pi, noC);
   for (k = 0; k < noC; k++) {
-    if (!m_calloc ((*matrix_pi)[k], sqs[k]->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*matrix_pi)[k], sqs[k]->seq_number);
     for (l = 0; l < sqs[k]->seq_number; l++) {
-      if (!m_calloc ((*matrix_pi)[k][l], noC)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC ((*matrix_pi)[k][l], noC);
       for (m = 0; m < noC; m++)
-        if (!m_calloc ((*matrix_pi)[k][l][m], mo[m]->N)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC ((*matrix_pi)[k][l][m], mo[m]->N);
     }
   }
 
   /* allocate memory for matrices of likelihoods 
      log_p[k][l][m] =
      log_prob of l-th sequence of k-th class under the m-th model */
-  if (!m_calloc (*log_p, noC)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*log_p, noC);
   for (k = 0; k < noC; k++) {
-    if (!m_calloc ((*log_p)[k], sqs[k]->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*log_p)[k], sqs[k]->seq_number);
     for (l = 0; l < sqs[k]->seq_number; l++)
-      if (!m_calloc ((*log_p)[k][l], noC)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC ((*log_p)[k][l], noC);
   }
 
   /* allocate memory for outer derivatives */
-  if (!m_calloc (*omega, noC)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*omega, noC);
   for (k = 0; k < noC; k++)
-    if (!m_calloc ((*omega)[k], sqs[k]->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*omega)[k], sqs[k]->seq_number);
 
   /* allocate memory for omega tilde. NB: size(omega)*noC == size(omegati) */
-  if (!m_calloc (*omegati, noC)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (*omegati, noC);
   for (k = 0; k < noC; k++) {
-    if (!m_calloc ((*omegati)[k], sqs[k]->seq_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC ((*omegati)[k], sqs[k]->seq_number);
     for (l = 0; l < sqs[k]->seq_number; l++)
-      if (!m_calloc ((*omegati)[k][l], noC)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC ((*omegati)[k][l], noC);
   }
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   discrime_gfree (mo, sqs, noC, *matrix_b, *matrix_a, *matrix_pi,
                   *omega, *omegati, *log_p);
   return -1;
@@ -479,11 +415,7 @@ double discrime_compute_performance (model ** mo, sequence_t ** sqs, int noC)
 
   sequence_t *sq;
 
-  if (!m_calloc (logp, noC)) {
-    printf ("error\n");
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (logp, noC);
 
   /* iterate over all classes */
   for (k = 0; k < noC; k++) {
@@ -529,7 +461,7 @@ double discrime_compute_performance (model ** mo, sequence_t ** sqs, int noC)
     }
   }
   m_free (logp);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return performance;
 #undef CUR_PROC
 }
@@ -547,9 +479,7 @@ static void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
 
   sequence_t *sq;
 
-  if (!m_calloc (logp, noC)) {
-    mes_proc ();
-  }
+  ARRAY_CALLOC (logp, noC);
 
   for (k = 0; k < noC; k++) {
     falseP[k] = 0;
@@ -585,6 +515,7 @@ static void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
     }
     printf ("%d false negatives in class %d.\n", falseN[k], k);
   }
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (logp);
   return;
 #undef CUR_PROC
@@ -646,14 +577,8 @@ static void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC
 
   sequence_t *sq = NULL;
 
-  if (!m_calloc (pi_old, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (pi_new, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (pi_old, mo[class]->N);
+  ARRAY_CALLOC (pi_new, mo[class]->N);
 
   /* itarate over alls state of the current model */
   for (i = 0; i < mo[class]->N; i++) {
@@ -688,7 +613,7 @@ static void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC
     mo[class]->s[i].pi = pi_new[i];
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (pi_old);
   m_free (pi_new);
   return;
@@ -714,14 +639,8 @@ static void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
 
   sequence_t *sq = NULL;
 
-  if (!m_calloc (a_old, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (a_new, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (a_old, mo[class]->N);
+  ARRAY_CALLOC (a_new, mo[class]->N);
 
   /* updating current class */
   /* itarate over all states of the current model */
@@ -772,7 +691,7 @@ static void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
     }
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (a_old);
   m_free (a_new);
   return;
@@ -796,14 +715,8 @@ static void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
 
   double sum;
 
-  if (!m_calloc (b_old, mo[class]->M)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (b_new, mo[class]->M)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (b_old, mo[class]->M);
+  ARRAY_CALLOC (b_new, mo[class]->M);
 
   /* updating current class */
 
@@ -848,7 +761,7 @@ static void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
     }
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (b_old);
   m_free (b_new);
   return;
@@ -873,14 +786,8 @@ static void discrime_update_pi_closed (model ** mo, sequence_t ** sqs, int noC,
 
   sequence_t *sq = NULL;
 
-  if (!m_calloc (pi_old, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (pi_new, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (pi_old, mo[class]->N);
+  ARRAY_CALLOC (pi_new, mo[class]->N);
 
   /* updating current class (all or only specified) */
 
@@ -932,7 +839,7 @@ static void discrime_update_pi_closed (model ** mo, sequence_t ** sqs, int noC,
     mo[class]->s[i].pi = TRIM (pi_old[i], pi_new[i]);
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (pi_old);
   m_free (pi_new);
   return;
@@ -958,14 +865,8 @@ static void discrime_update_a_closed (model ** mo, sequence_t ** sqs, int noC,
 
   sequence_t *sq = NULL;
 
-  if (!m_calloc (a_old, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (a_new, mo[class]->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (a_old, mo[class]->N);
+  ARRAY_CALLOC (a_new, mo[class]->N);
 
   /* updating current class (all or only specified) */
 
@@ -1041,7 +942,7 @@ static void discrime_update_a_closed (model ** mo, sequence_t ** sqs, int noC,
     }
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (a_old);
   m_free (a_new);
   return;
@@ -1066,14 +967,8 @@ static void discrime_update_b_closed (model ** mo, sequence_t ** sqs, int noC,
 
   double sum, lagrangian;
 
-  if (!m_calloc (b_old, mo[class]->M)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (b_new, mo[class]->M)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (b_old, mo[class]->M);
+  ARRAY_CALLOC (b_new, mo[class]->M);
 
   /* itarate over alls state of the k-th model */
   for (i = 0; i < mo[class]->N; i++) {
@@ -1129,7 +1024,7 @@ static void discrime_update_b_closed (model ** mo, sequence_t ** sqs, int noC,
     }
   }
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (b_old);
   m_free (b_new);
   return;
@@ -1328,15 +1223,8 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
 
   model *last;
 
-  if (!m_calloc (falseP, noC)) {
-    mes_proc ();
-    return -1;
-  }
-  if (!m_calloc (falseN, noC)) {
-    mes_proc ();
-    m_free (falseP);
-    return -1;
-  }
+  ARRAY_CALLOC (falseP, noC);
+  ARRAY_CALLOC (falseN, noC);
 
   for (i = 0; i < noC; i++) {
     totalseqs += sqs[i]->seq_number;
@@ -1416,6 +1304,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
     cur_cer = last_cer;
   }
 
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (falseP);
   m_free (falseN);
 

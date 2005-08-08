@@ -1,20 +1,58 @@
+/*******************************************************************************
+*
+*       This file is part of the General Hidden Markov Model Library,
+*       GHMM version __VERSION__, see http://ghmm.org
+*
+*       Filename: ghmm/ghmm/pmodel.c
+*       Authors:  Matthias Heinig
+*
+*       Copyright (C) 1998-2004 Alexander Schliep
+*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+*                               Berlin
+*
+*       Contact: schliep@ghmm.org
+*
+*       This library is free software; you can redistribute it and/or
+*       modify it under the terms of the GNU Library General Public
+*       License as published by the Free Software Foundation; either
+*       version 2 of the License, or (at your option) any later version.
+*
+*       This library is distributed in the hope that it will be useful,
+*       but WITHOUT ANY WARRANTY; without even the implied warranty of
+*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*       Library General Public License for more details.
+*
+*       You should have received a copy of the GNU Library General Public
+*       License along with this library; if not, write to the Free
+*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*
+*       This file is version $Revision$
+*                       from $Date$
+*             last change by $Author$.
+*
+*******************************************************************************/
+
 #include "pmodel.h"
 #include "mes.h"
+#include <ghmm/internal.h>
+
 
 static int pstate_alloc(pstate *state, int M, int in_states, int out_states) {
 # define CUR_PROC "pstate_alloc"
   int res = -1;
-  if(!m_calloc(state->b, M)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (state->b, M);
   if (out_states > 0) {
-    if(!m_calloc(state->out_id, out_states)) {mes_proc(); goto STOP;}
-    if(!m_calloc(state->out_a, out_states)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (state->out_id, out_states);
+    ARRAY_CALLOC (state->out_a, out_states);
   }
   if (in_states > 0) {
-    if(!m_calloc(state->in_id, in_states)) {mes_proc(); goto STOP;}
-    if(!m_calloc(state->in_a, in_states)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (state->in_id, in_states);
+    ARRAY_CALLOC (state->in_a, in_states);
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return(res);
 # undef CUR_PROC
 } /* model_state_alloc */

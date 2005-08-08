@@ -41,6 +41,7 @@
 #include "model.h"
 #include "kbestbasics.h"
 #include "kbest.h"
+#include <ghmm/internal.h>
 
 
 /**
@@ -57,20 +58,14 @@ double **kbest_buildLogMatrix (state * s, int N)
   double **log_a;               /* log(a(i,j)) => log_a[i*N+j] */
 
   /* create & initialize matrix: */
-  if (!m_malloc (log_a, N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (log_a, N);
   for (i = 0; i < N; i++) {
-    if (!m_malloc (log_a[i], s[i].in_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_MALLOC (log_a[i], s[i].in_states);
     for (j = 0; j < s[i].in_states; j++)
       log_a[i][j] = log (s[i].in_a[j]);
   }
   return log_a;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes_prot ("kbest_buildLogMatrix failed\n");
   exit (1);
 #undef CUR_PROC
@@ -126,24 +121,15 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   if (seq_len <= 0 || k <= 0)
     return NULL;
 
-  if (!m_calloc (h, seq_len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (h, seq_len);
 
   /** 1. Initialization (extend empty hypothesis to #labels hypotheses of
          length 1): */
 
   /* get number of labels (= maximum label + 1)
      and number of states with those labels */
-  if (!m_calloc (states_wlabel, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (label_max_out, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (states_wlabel, mo->N);
+  ARRAY_CALLOC (label_max_out, mo->N);
   for (i = 0; i < mo->N; i++) {
     c = mo->s[i].label;
     states_wlabel[c]++;
@@ -154,14 +140,8 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   }
   /* add one to the maximum label to get the number of labels */
   no_labels++;
-  if (m_realloc (states_wlabel, no_labels)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (m_realloc (label_max_out, no_labels)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_REALLOC (states_wlabel, no_labels);
+  ARRAY_REALLOC (label_max_out, no_labels);
 
   /* initialize h: */
   hP = h[0];
@@ -187,14 +167,8 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
       if (!exists) {
         hlist_insertElem (&(h[0]), mo->s[i].label, NULL);
         /* initiallize gamma-array with safe size (number of states) and add the first entry */
-        if (!m_malloc (h[0]->gamma_a, states_wlabel[mo->s[i].label])) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (!m_malloc (h[0]->gamma_id, states_wlabel[mo->s[i].label])) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_MALLOC (h[0]->gamma_a, states_wlabel[mo->s[i].label]);
+        ARRAY_MALLOC (h[0]->gamma_id, states_wlabel[mo->s[i].label]);
         h[0]->gamma_id[0] = i;
         h[0]->gamma_a[0] =
           log (mo->s[i].pi) +
@@ -208,14 +182,8 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   /* reallocating the gamma list to the real size */
   hP = h[0];
   while (hP != NULL) {
-    if (m_realloc (hP->gamma_a, hP->gamma_states)) {
-      mes_proc ();
-      goto STOP;
-    }
-    if (m_realloc (hP->gamma_id, hP->gamma_states)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (hP->gamma_a, hP->gamma_states);
+    ARRAY_REALLOC (hP->gamma_id, hP->gamma_states);
     hP = hP->next;
   }
 
@@ -223,14 +191,8 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   log_a = kbest_buildLogMatrix (mo->s, mo->N);
 
   /* initialize temporary arrays: */
-  if (!m_malloc (maxima, mo->N * k)) {
-    mes_proc ();
-    goto STOP;
-  }                             /* for each state save k */
-  if (!m_malloc (argmaxs, mo->N * k)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (maxima, mo->N * k);                             /* for each state save k */
+  ARRAY_MALLOC (argmaxs, mo->N * k);
 
 
   /*------ Main loop: Cycle through the sequence: ------*/
@@ -366,10 +328,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   /* found a valid path? */
   if (*log_p < KBEST_EPS) {
     /* yes: extract chosen hypothesis: */
-    if (!m_malloc (hypothesis, seq_len)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_MALLOC (hypothesis, seq_len);
     for (i = seq_len - 1; i >= 0; i--) {
       hypothesis[i] = argmax->hyp_c;
       argmax = argmax->parent;
@@ -385,7 +344,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
     hlist_removeElem (&hP);
   free (h);
   return hypothesis;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes_prot ("kbest failed\n");
   exit (1);
 #undef CUR_PROC

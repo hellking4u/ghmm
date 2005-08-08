@@ -42,6 +42,7 @@
 #include "const.h"
 #include "matrix.h"
 #include "randvar.h"
+#include <ghmm/internal.h>
 
 
 
@@ -189,10 +190,7 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
   double *beta_tmp, sum, c_t;
   int i, j, j_id, t, osc;
   int res = -1;
-  if (!m_calloc (beta_tmp, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (beta_tmp, smo->N);
 
   for (t = 0; t < T; t++) {
     /* try differenent bounds here in case of problems 
@@ -274,7 +272,7 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
     }
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
@@ -292,10 +290,7 @@ int sfoba_logp (smodel * smo, double *O, int T, double *log_p)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (scale, T)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (scale, T);
   /* run forward alg. */
   if (sfoba_forward (smo, O, T, NULL, alpha, scale, log_p) == -1) {
     /* mes_proc(); */
@@ -303,7 +298,7 @@ int sfoba_logp (smodel * smo, double *O, int T, double *log_p)
   }
   res = 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   stat_matrix_d_free (&alpha);
   m_free (scale);
   return (res);

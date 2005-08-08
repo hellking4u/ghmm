@@ -40,6 +40,7 @@
 #include "const.h"
 #include "matrix.h"
 #include "mes.h"
+#include <ghmm/internal.h>
 
 static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,
                                double *scale)
@@ -325,10 +326,7 @@ int sdfoba_backward (sdmodel * mo, const int *O, int len, double **beta,
   double *beta_tmp, sum;
   int i, j, j_id, t;
   int res = -1;
-  if (!m_calloc (beta_tmp, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (beta_tmp, mo->N);
   for (t = 0; t < len; t++)
     mes_check_0 (scale[t], goto STOP);
   /* initialize */
@@ -352,7 +350,7 @@ int sdfoba_backward (sdmodel * mo, const int *O, int len, double **beta,
       beta_tmp[i] = beta[t][i] / scale[t];
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
@@ -370,10 +368,7 @@ int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (scale, len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (scale, len);
   /* run foba_forward */
   if (sdfoba_forward (mo, O, len, alpha, scale, log_p) == -1) {
     mes_proc ();
@@ -383,7 +378,7 @@ int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p)
   matrix_d_free (&alpha, len);
   m_free (scale);
   return (res);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&alpha, len);
   m_free (scale);
   return (res);

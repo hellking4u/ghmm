@@ -44,6 +44,7 @@
 #include "modelutil.h"
 #include "mprintf.h"
 #include "foba.h"
+#include <ghmm/internal.h>
 
 int foba_initforward (model * mo, double *alpha_1, int symb, double *scale)
 {
@@ -288,10 +289,7 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
   /* int beta_out=0; */
   double emission;
 
-  if (!m_calloc (beta_tmp, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (beta_tmp, mo->N);
   for (t = 0; t < len; t++)
     mes_check_0 (scale[t], goto STOP);
 
@@ -437,7 +435,7 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
   /* printf("betas out of [.01 100]: %d (%f %)\n", beta_out, (float)beta_out/(mo->N*len)); */
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
@@ -456,10 +454,7 @@ int foba_logp (model * mo, const int *O, int len, double *log_p)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (scale, len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (scale, len);
   /* run foba_forward */
   if (foba_forward (mo, O, len, alpha, scale, log_p) == -1) {
     mes_proc ();
@@ -468,7 +463,7 @@ int foba_logp (model * mo, const int *O, int len, double *log_p)
 
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   stat_matrix_d_free (&alpha);
   m_free (scale);
   return (res);
@@ -493,9 +488,9 @@ int foba_forward_lean (model * mo, const int *O, int len, double *log_p)
   double *scale=NULL;
 
   /* Allocating */
-  if (!m_calloc (alpha_last_col, mo->N)) {mes_proc (); goto STOP;}
-  if (!m_calloc (alpha_curr_col, mo->N)) {mes_proc (); goto STOP;}
-  if (!m_calloc (scale, len)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (alpha_last_col, mo->N);
+  ARRAY_CALLOC (alpha_curr_col, mo->N);
+  ARRAY_CALLOC (scale, len);
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/
@@ -584,7 +579,7 @@ int foba_forward_lean (model * mo, const int *O, int len, double *log_p)
   else
     res = 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Deallocation */
   m_free (alpha_last_col);
   m_free (alpha_curr_col);
@@ -751,10 +746,7 @@ int foba_label_logp (model * mo, const int *O, const int *label, int len,
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (scale, len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (scale, len);
   /* run foba_forward */
   if (foba_label_forward (mo, O, label, len, alpha, scale, log_p) == -1) {
     mes_proc ();
@@ -762,7 +754,7 @@ int foba_label_logp (model * mo, const int *O, const int *label, int len,
   }
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   stat_matrix_d_free (&alpha);
   m_free (scale);
   return (res);
@@ -783,10 +775,7 @@ int foba_label_backward (model * mo, const int *O, const int *label, int len,
   /* int beta_out=0; */
   double emission;
 
-  if (!m_calloc (beta_tmp, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (beta_tmp, mo->N);
   for (t = 0; t < len; t++)
     mes_check_0 (scale[t], goto STOP);
 
@@ -853,7 +842,7 @@ int foba_label_backward (model * mo, const int *O, const int *label, int len,
   /* printf("labeled betas out of [.01 100]: %d (%f %)\n", beta_out, (float)beta_out/(mo->N*len)); */
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
@@ -878,9 +867,9 @@ int foba_label_forward_lean (model * mo, const int *O, const int *label,
   double *scale=NULL;
 
   /* Allocating */
-  if (!m_calloc (alpha_last_col, mo->N)) {mes_proc (); goto STOP;}
-  if (!m_calloc (alpha_curr_col, mo->N)) {mes_proc (); goto STOP;}
-  if (!m_calloc (scale, len)) {mes_proc (); goto STOP;}
+  ARRAY_CALLOC (alpha_last_col, mo->N);
+  ARRAY_CALLOC (alpha_curr_col, mo->N);
+  ARRAY_CALLOC (scale, len);
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/
@@ -970,7 +959,7 @@ int foba_label_forward_lean (model * mo, const int *O, const int *label,
   else
     res = 0;
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Deallocation */
   m_free (alpha_last_col);
   m_free (alpha_curr_col);

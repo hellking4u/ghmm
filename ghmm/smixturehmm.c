@@ -57,6 +57,7 @@
 #include "sequence.h"
 #include "const.h"
 #include "smap_classify.h"
+#include <ghmm/internal.h>
 
 /* used in main and deactivated other functions */
 #if 0
@@ -157,10 +158,7 @@ int main (int argc, char *argv[])
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (smo, total_smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (smo, total_smo_number);
   if (total_smo_number < max_smo) {
     str = mprintf (NULL, 0,
                    "Need %d initial models, read only %d from model file\n",
@@ -199,14 +197,8 @@ int main (int argc, char *argv[])
       /*==================INIT========================================*/
 
       /* divide into train and test seqs. */
-      if (!m_calloc (sqd_train, 1)) {
-        mes_proc ();
-        goto STOP;
-      }
-      if (!m_calloc (sqd_test, 1)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_CALLOC (sqd_train, 1);
+      ARRAY_CALLOC (sqd_test, 1);
       if (sequence_d_partition (sqd, sqd_train, sqd_test, train_ratio) == -1) {
         str =
           mprintf (NULL, 0, "Error partitioning seqs, (model %d, iter %d)\n",
@@ -372,7 +364,7 @@ int main (int argc, char *argv[])
     fclose (smofile);
   exitcode = 0;
   /*------------------------------------------------------------------------*/
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes (MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode);
   mes_exit ();
   return (exitcode);
@@ -394,20 +386,14 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
   double model_weight, log_p, sum = 0.0;
   smosqd_t *smo_sqd;            /* this structure is used by sreestimate() */
 
-  if (!m_calloc (smo_sqd, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (smo_sqd, 1);
   /*  smo_sqd->max_iter = MAX_ITER_BW; */
   smo_sqd->max_iter = 10;
   smo_sqd->eps = EPS_ITER_BW;
   smo_sqd->logp = &log_p;
   smo_sqd->sqd = sqd;
 
-  if (!m_calloc (save_w, sqd->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (save_w, sqd->seq_number);
   for (i = 0; i < sqd->seq_number; i++) {
     save_w[i] = sqd->seq_w[i];
     total_train_w += save_w[i];
@@ -466,7 +452,7 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
   m_free (smo_sqd);
   m_free (save_w);
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (smo_sqd);
   m_free (save_w);
   return -1;
@@ -529,10 +515,7 @@ int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
   /* another possibility: make partition with best model from smap_bayes... */
   /* 3. cp = 1 for best model, cp = 0 for other models */
   else if (mode == 3) {
-    if (!m_calloc (result, smo_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (result, smo_number);
     for (i = 0; i < sqd->seq_number; i++) {
       bm = smap_bayes (smo, result, smo_number, sqd->seq[i], sqd->seq_len[i]);
       if (bm == -1) {
@@ -560,7 +543,7 @@ int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
   }
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 
 #undef CUR_PROC
@@ -590,7 +573,7 @@ int smixturehmm_calc_priors (double **cp, sequence_d_t * sqd, smodel ** smo,
   }
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 #undef CUR_PROC
 }                               /* smixturehmm_calc_priors */
@@ -630,7 +613,7 @@ int smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
       *total_train_w += sqd->seq_w[i];
 
   return 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 #undef CUR_PROC
 }                               /* smixturehmm_calc_cp */
@@ -712,10 +695,7 @@ double *smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
   int i, k;
   double num = 0.0, denom = 0.0, log_p = 0.0;
 
-  if (!m_calloc (avg_like, smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (avg_like, smo_number);
 
   for (k = 0; k < smo_number; k++) {
     num = denom = 0.0;
@@ -732,7 +712,7 @@ double *smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
   }                             /* for models k ... */
 
   return avg_like;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* smixturehmm_avg_like */

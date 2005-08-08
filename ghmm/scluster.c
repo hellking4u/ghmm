@@ -63,6 +63,7 @@
 #include "matrix.h"
 #include "vector.h"
 #include "smap_classify.h"
+#include <ghmm/internal.h>
   
 #ifdef HAVE_LIBPTHREAD
 /* switch for parallel mode: (1) = sequential, (0) = parallel */ 
@@ -152,28 +153,13 @@ int scluster_hmm (char *argv[])
     fprintf (stdout, "(Random start partition...)\n");
     scluster_random_labels (sqd, cl.smo_number);
   }
-  if (!m_calloc (oldlabel, sqd->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (oldlabel, sqd->seq_number);
   for (i = 0; i < sqd->seq_number; i++)
     oldlabel[i] = (-1);
-  if (!m_calloc (cl.smo_seq, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (cl.seq_counter, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (cl.smo_Z_MD, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (cl.smo_Z_MAW, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (cl.smo_seq, cl.smo_number);
+  ARRAY_CALLOC (cl.seq_counter, cl.smo_number);
+  ARRAY_CALLOC (cl.smo_Z_MD, cl.smo_number);
+  ARRAY_CALLOC (cl.smo_Z_MAW, cl.smo_number);
   all_log_p = matrix_d_alloc (cl.smo_number, (int) sqd->seq_number);
   if (!all_log_p) {
     mes_proc ();
@@ -183,10 +169,7 @@ int scluster_hmm (char *argv[])
     /*if (smodel_check_compatibility(cl.smo, cl.smo_number)) { 
        mes_proc(); goto STOP; 
        } */ 
-    if (!m_calloc (smo_changed, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+    ARRAY_CALLOC (smo_changed, cl.smo_number);
   for (i = 0; i < cl.smo_number; i++) {
     cl.smo_seq[i] = NULL;
     smo_changed[i] = 1;
@@ -200,26 +183,17 @@ int scluster_hmm (char *argv[])
   /*--------for parallel mode  --------------------*/ 
 #if POUT == 0
     /* id for threads */ 
-    if (!m_calloc (tid, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+    ARRAY_CALLOC (tid, cl.smo_number);
   
 #endif  /* POUT */
     /* data structure for  threads */ 
-    if (!m_calloc (cs, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+    ARRAY_CALLOC (cs, cl.smo_number);
   for (i = 0; i < cl.smo_number; i++)
     cs[i].smo = cl.smo[i];
   
     /* return values for each thread */ 
 #if POUT == 0
-    if (!m_calloc (return_value, cl.smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+    ARRAY_CALLOC (return_value, cl.smo_number);
   
 #endif  /* POUT */
 #ifdef HAVE_LIBPTHREAD
@@ -494,7 +468,7 @@ int scluster_hmm (char *argv[])
   
 /*--------------------------------------------------------------------------*/ 
     res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #if POUT == 0
     pthread_attr_destroy (&Attribute);
   
@@ -723,10 +697,7 @@ int scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
     if (sqd->seq_number < 2 || cl->smo_number < 2)
     return (0);
   if (CLASSIFY == 1)
-    if (!m_calloc (result, cl->smo_number)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (result, cl->smo_number);
   while (error && iter < 100) {
     iter++;
     error = 0;
@@ -898,10 +869,7 @@ int scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
 #define CUR_PROC "scluster_log_aposteriori"
   double *result = NULL;
   int best_smo = -1;
-  if (!m_calloc (result, cl->smo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (result, cl->smo_number);
   best_smo =
     smap_bayes (cl->smo, result, cl->smo_number, sqd->seq[seq_id],
                 sqd->seq_len[seq_id]);

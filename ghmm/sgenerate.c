@@ -54,6 +54,7 @@
 #include "sfoba.h"
 #include "matrix.h"
 #include "rng.h"
+#include <ghmm/internal.h>
 
 
 /*============================================================================*/
@@ -103,29 +104,20 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (initial_distribution, smo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (initial_distribution, smo->N);
   /* is needed in cfoba_forward() */
   alpha = matrix_d_alloc (max_short_len, smo->N);
   if (!alpha) {
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (scale, max_short_len)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (scale, max_short_len);
   ghmm_rng_init ();
   GHMM_RNG_SET (RNG, seed);
 
   /*---------------main loop over all seqs-------------------------------*/
   for (n = 0; n < sqd_short->seq_number; n++) {
-    if (!m_calloc (sq->seq[n], len)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_CALLOC (sq->seq[n], len);
     short_len = sqd_short->seq_len[n];
     if (len < short_len) {
       mes_prot ("Error: given sequence is too long\n");
@@ -319,10 +311,7 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
       t++;
     }                           /* while (t < len) */
     if (t < len)
-      if (m_realloc (sq->seq[n], t)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (sq->seq[n], t);
     sq->seq_len[n] = t;
 
   }                             /* for n .. < seq_number */
@@ -330,7 +319,7 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
   matrix_d_free (&alpha, max_short_len);
   m_free (scale);
   return sq;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&alpha, max_short_len);
   sequence_d_free (&sq);
   return (NULL);
@@ -357,18 +346,9 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
     mes_prot ("Error: sequence with zero or negativ length\n");
     goto STOP;
   }
-  if (!m_calloc (new_O, (int) MAX_SEQ_LEN)) {
-    mes_prot ("calloc new_O\n");
-    goto STOP;
-  }
-  if (!m_calloc (scale, len)) {
-    mes_prot ("calloc scale\n");
-    goto STOP;
-  }
-  if (!m_calloc (initial_distribution, smo->N)) {
-    mes_prot ("initial_distribution\n");
-    goto STOP;
-  }
+  ARRAY_CALLOC (new_O, (int) MAX_SEQ_LEN);
+  ARRAY_CALLOC (scale, len);
+  ARRAY_CALLOC (initial_distribution, smo->N);
   sequence_d_copy (new_O, O, len);
   *new_len = len;
   /* Initial Distribution ???
@@ -376,10 +356,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
   if (mode == all_all || mode == all_viterbi) {
     if (sfoba_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
       mes_prot ("error from sfoba_forward, unable to extend\n");
-      if (m_realloc (new_O, *new_len)) {
-        mes_proc ();
-        goto STOP;
-      }
+      ARRAY_REALLOC (new_O, *new_len);
       return new_O;
     }
     sum = 0.0;
@@ -515,10 +492,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
     up = 0;
   }                             /* while (t < MAX_SEQ_LEN) */
   if (t < (int) MAX_SEQ_LEN)
-    if (m_realloc (new_O, t)) {
-      mes_proc ();
-      goto STOP;
-    }
+    ARRAY_REALLOC (new_O, t);
 
   *new_len = t;
 
@@ -527,7 +501,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
   m_free (initial_distribution);
 
   return new_O;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (new_O);
   m_free (scale);
   m_free (initial_distribution);
@@ -562,10 +536,7 @@ double sgenerate_next_value (smodel * smo, double *O, const int len)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (scale, len)) {
-    mes_prot ("calloc scale\n");
-    goto STOP;
-  }
+  ARRAY_CALLOC (scale, len);
   if (sfoba_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
     mes_prot ("error from sfoba_forward\n");
     goto STOP;
@@ -644,7 +615,7 @@ double sgenerate_next_value (smodel * smo, double *O, const int len)
   /* random variable from density function */
   res = smodel_get_random_var (smo, i, m);
 
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&alpha, len);
   m_free (scale);
   return res;

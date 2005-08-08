@@ -44,6 +44,7 @@
 #include <ghmm/ghmm.h>
 #include <ghmm/matrix.h>
 #include <ghmm/sdmodel.h>
+#include <ghmm/internal.h>
 
 typedef enum DFSFLAG { DONE, NOTVISITED, VISITED } DFSFLAG;
 
@@ -68,10 +69,7 @@ static local_store_t *sdviterbi_alloc (sdmodel * mo, int len)
 #define CUR_PROC "sdviterbi_alloc"
   local_store_t *v = NULL;
   int j;
-  if (!m_calloc (v, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v, 1);
 
   /* Allocate the log_in_a's -> individal lenghts */
 
@@ -89,14 +87,8 @@ static local_store_t *sdviterbi_alloc (sdmodel * mo, int len)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (v->phi, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (v->phi_new, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->phi, mo->N);
+  ARRAY_CALLOC (v->phi_new, mo->N);
   v->psi = matrix_i_alloc (len, mo->N);
   if (!(v->psi)) {
     mes_proc ();
@@ -104,13 +96,10 @@ static local_store_t *sdviterbi_alloc (sdmodel * mo, int len)
   }
 
   v->topo_order_length = 0;
-  if (!m_calloc (v->topo_order, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (v->topo_order, mo->N);
 
   return (v);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sdviterbi_free (&v, mo->N, mo->cos, len);
   return (NULL);
 #undef CUR_PROC
@@ -271,32 +260,20 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (state_seq, len_path)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (state_seq, len_path);
   for (i = 0; i < len_path; i++) {
     state_seq[i] = -1;
   }
 
-  if (!m_calloc (former_matchcount, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!m_calloc (recent_matchcount, mo->N)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (former_matchcount, mo->N);
+  ARRAY_CALLOC (recent_matchcount, mo->N);
   /*We always start outside of the circle, no way to get in in t=0 => matchcounts = 0 */
   for (i = 0; i < mo->N; i++) {
     former_matchcount[i] = 0;
     recent_matchcount[i] = 0;
   }
 
-  if (!m_calloc (countstates, nr_of_countstates)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (countstates, nr_of_countstates);
   for (i = 0; i < nr_of_countstates / 2; i++) {
     /* 5th state is first matchstate, then come all other matchstates and afterwards all deletestates
        so we have a list of states that inkrement the counter of how long we have been in the circle
@@ -471,7 +448,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   m_free (countstates);
   sdviterbi_free (&v, mo->N, mo->cos, len);
   return (state_seq);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Free the memory space */
   sdviterbi_free (&v, mo->N, mo->cos, len);
   m_free (state_seq);

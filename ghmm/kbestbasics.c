@@ -40,6 +40,7 @@
 #include "mes.h"
 #include "model.h"
 #include "kbestbasics.h"
+#include <ghmm/internal.h>
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
  void hlist_insertElem (hypoList ** plist, int newhyp,
@@ -48,10 +49,7 @@
 #define CUR_PROC "hlist_insertElem"
   hypoList *newlist;
 
-  if (!m_calloc (newlist, 1)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (newlist, 1);
   newlist->hyp_c = newhyp;
   if (parlist)
     parlist->refcount += 1;
@@ -60,7 +58,7 @@
 
   *plist = newlist;
   return;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes_prot ("hlist_insertElem failed\n");
   exit (1);
 #undef CUR_PROC
@@ -97,10 +95,7 @@ int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
   hypoList *hP = h;
   hypoList **created;
 
-  if (!m_malloc (created, labels)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (created, labels);
 
   /* extend the all hypotheses with the labels of out_states of all states in the hypotesis */
   while (hP != NULL) {
@@ -152,14 +147,8 @@ int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
     /* reallocating gamma-array to the correct size */
     for (c = 0; c < labels; c++) {
       if (created[c]) {
-        if (!m_calloc (created[c]->gamma_a, created[c]->gamma_states)) {
-          mes_proc ();
-          goto STOP;
-        }
-        if (m_realloc (created[c]->gamma_id, created[c]->gamma_states)) {
-          mes_proc ();
-          goto STOP;
-        }
+        ARRAY_CALLOC (created[c]->gamma_a, created[c]->gamma_states);
+        ARRAY_REALLOC (created[c]->gamma_id, created[c]->gamma_states);
         created[c] = NULL;
       }
     }
@@ -170,7 +159,7 @@ int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
   /* printf("Created %d new Hypotheses.\n", newHyps); */
   free (created);
   return (no_oldHyps);
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes_prot ("hlist_propFwd failed\n");
   exit (1);
 #undef CUR_PROC
@@ -200,10 +189,7 @@ STOP:
       if (parent->gamma_id[0] == s->in_id[j])
         return parent->gamma_a[0] + log_a[j];
 
-  if (!m_malloc (logP, s->in_states)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (logP, s->in_states);
 
   /* calculate logs of a[k,l]*gamma[k,hi] as sums of logs and find maximum: */
   for (j = 0; j < s->in_states; j++) {
@@ -234,7 +220,7 @@ STOP:
 
   free (logP);
   return result;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes_prot ("logGammaSum failed\n");
   exit (1);
 #undef CUR_PROC

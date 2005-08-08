@@ -53,6 +53,7 @@
 #include "foba.h"
 #include "const.h"
 #include "matrix.h"
+#include <ghmm/internal.h>
 
 /*============================================================================*/
 int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
@@ -91,16 +92,10 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
     mes_proc ();
     goto STOP;
   }
-  if (!m_calloc (oldlabel, sq->seq_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (oldlabel, sq->seq_number);
   for (i = 0; i < sq->seq_number; i++)
     oldlabel[i] = (-1);
-  if (!m_calloc (cl.mo_seq, cl.mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (cl.mo_seq, cl.mo_number);
   for (i = 0; i < cl.mo_number; i++)
     cl.mo_seq[i] = NULL;
   if (model_check_compatibility (cl.mo, cl.mo_number)) {
@@ -176,7 +171,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   }
 
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* ...noch div. free! */
   if (outfile)
     fclose (outfile);
@@ -191,10 +186,7 @@ int cluster_update (cluster_t * cl, sequence_t * sq)
   int i, res = -1;
   long *seq_counter;
   sequence_t *seq_t;
-  if (!m_calloc (seq_counter, cl->mo_number)) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_CALLOC (seq_counter, cl->mo_number);
   /* Fix the number of associated sequences */
   for (i = 0; i < sq->seq_number; i++)
     seq_counter[sq->seq_label[i]]++;
@@ -218,7 +210,7 @@ int cluster_update (cluster_t * cl, sequence_t * sq)
     seq_t->seq_number++;
   }
   res = 0;
-STOP:
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (seq_counter);
   return (res);
 # undef CUR_PROC
