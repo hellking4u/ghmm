@@ -112,7 +112,7 @@ plocal_propagate_store_t * pviterbi_propagate_alloc(pmodel *mo, int len_y) {
   v->phi = matrix3d_d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->phi)) {mes_proc(); goto STOP;}
   ARRAY_CALLOC (v->phi_new, mo->N);
-  if (!m_calloc(v->end_of_first, mo->max_offset_x + 1)){mes_proc(); goto STOP;}
+  ARRAY_CALLOC (v->end_of_first, mo->max_offset_x + 1);
   for (j=0; j<mo->max_offset_x + 1; j++) {
     ARRAY_CALLOC (v->end_of_first[j], len_y + mo->max_offset_y + 1);
     for (i=0; i<len_y + mo->max_offset_y + 1; i++) {
@@ -385,7 +385,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
 	   start_x, stop_x, start_y, stop_y); 
 #endif
     if (start != NULL) {
-      m_calloc(original_pi, mo->N);
+      ARRAY_CALLOC (original_pi, mo->N);
       /* save original pi and set all to zero */
       for (i=0; i<mo->N; i++) {
 	original_pi[i] = mo->s[i].log_pi;
@@ -422,7 +422,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
     /* if this is not the very first path segment starting at zero:
        temporarily change the initial probabability to go into state k+1 */
     if (start != NULL) {
-      m_calloc(original_pi, mo->N);
+      ARRAY_CALLOC(original_pi, mo->N);
       /* save original pi and set all to zero */
       for (i=0; i<mo->N; i++) {
 	original_pi[i] = mo->s[i].log_pi;
@@ -445,7 +445,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
     if (!middle) {
       fprintf(stderr, "(%i, %i)->(%i, %i) No middle found!\n", 
 	      start_x, start_y, stop_x, stop_y);
-      m_calloc(path_seq, 1);
+      ARRAY_CALLOC(path_seq, 1);
       path_seq[0] = -1;
       *path_length = 1;
       *log_p = 1;
@@ -460,7 +460,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
 #endif
     /* check if there is a path */
     if (step_log_p == 1) {
-      m_calloc(path_seq, 1);
+      ARRAY_CALLOC(path_seq, 1);
       path_seq[0] = -1;
       *path_length = 1;
       *log_p = 1;
@@ -480,7 +480,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
 					       max_size, pv);
     /* check the paths */
     if (log_p1 == 1 || log_p2 == 1) {
-      m_calloc(path_seq, 1);
+      ARRAY_CALLOC (path_seq, 1);
       path_seq[0] = -1;
       *path_length = 1;
       *log_p = 1;
@@ -518,8 +518,8 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
     printf("]\n");
 #endif
 	
-    m_calloc(path_seq, *path_length);
-    if (!path_seq) { mes_proc(); goto STOP; }
+    ARRAY_CALLOC (path_seq, *path_length);
+
     for (i=0; i<length1; i++)
       path_seq[i] = path1[i];
     for (i=0; i<length2; i++)
