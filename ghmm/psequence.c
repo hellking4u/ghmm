@@ -42,22 +42,27 @@
 
 mysequence * init_mysequence(int length, int number_of_alphabets, int number_of_d_seqs) {
 #define CUR_PROC "init_mysequence"
-  int i;
   mysequence * seq;
-  seq = (mysequence*)malloc(sizeof(mysequence));
-  if (!seq) {mes_proc(); goto STOP;}
+
+  ARRAY_MALLOC (seq, 1);
+
   seq->length = length;
   seq->number_of_alphabets = number_of_alphabets;
   seq->number_of_d_seqs = number_of_d_seqs;
   seq->seq = NULL;
   seq->d_value = NULL;
-  if (number_of_alphabets > 0) 
+  if (number_of_alphabets > 0) {
     seq->seq = matrix_i_alloc(number_of_alphabets, length); 
-  if (number_of_d_seqs > 0)
+    if (!(seq->seq)) goto STOP;
+  }
+  if (number_of_d_seqs > 0) {
     seq->d_value = matrix_d_alloc(number_of_d_seqs, length);
+    if (!(seq->d_value)) goto STOP;
+  }
+
   return seq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  free_mysequence(seq);
+  free_mysequence(seq, number_of_alphabets, number_of_d_seqs);
   return NULL;
 #undef CUR_PROC
 }
@@ -99,14 +104,15 @@ double * get_continuous_mysequence(mysequence * seq_pointer, int index){
 }
 
 mysequence * slice_mysequence(mysequence * seq_pointer, int start, int stop){
+  int i, j;
+  mysequence * slice;
+
   if (stop > seq_pointer->length) {
     fprintf(stderr, "Slice: sequence index (%i) out of bounds (%i)\n", 
 	    stop, seq_pointer->length);
   }
-  mysequence * slice = init_mysequence(stop - start, 
-				       seq_pointer->number_of_alphabets,
-				       seq_pointer->number_of_d_seqs);
-  int i, j;
+  slice = init_mysequence(stop - start, seq_pointer->number_of_alphabets,
+			  seq_pointer->number_of_d_seqs);
   for (i=start; i<stop; i++){
     for (j=0; j<slice->number_of_alphabets; j++)
       slice->seq[j][i-start] = seq_pointer->seq[j][i];

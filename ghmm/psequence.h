@@ -17,6 +17,8 @@ typedef struct mysequence mysequence;
 
 mysequence * init_mysequence(int length, int number_of_alphabets, int number_of_d_seqs);
 
+int free_mysequence(mysequence * seq, int number_of_alphabets, int number_of_d_seqs);
+
 void set_discrete_mysequence(mysequence * seq_pointer, int index, int * int_seq);
 
 int * get_discrete_mysequence(mysequence * seq_pointer, int index);
