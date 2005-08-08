@@ -123,9 +123,11 @@ int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offse
 
 void print_pviterbi_store(plocal_store_t * pv) {
   int j, k;
+  pmodel * mo;
+
   printf("Local store for pair HMM viterbi algorithm\n");
   printf("Log in a:\n");
-  pmodel * mo = pv->mo;
+  mo = pv->mo;
   for (j = 0; j < mo->N; j++){
     printf("state %i in states %i\n", j, mo->s[j].in_states);
     for (k=0; k<mo->s[j].in_states; k++)
@@ -236,13 +238,16 @@ double log_b(plocal_store_t * pv, int state, int emission) {
 }
 
 void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
+  int osc, emission;
+  int u, v, j, i, k, St, off_x, off_y, current_state_index, y;
+  double log_in_a_ij;
+  double value, max_value, previous_prob, log_b_i, log_b_j;  
   /* printf("pviterbi init\n"); */
   pmodel * mo = pv->mo;
   double (*log_in_a)(plocal_store_t*, int, int, mysequence*, mysequence*, 
 		     int, int);
   log_in_a = &sget_log_in_a;
-  int u, v, j, i, k, St, off_x, off_y, current_state_index, y;
-  double value, max_value, previous_prob, log_b_i, log_b_j;  
+
   /* Initialize the lookback matrix (for positions [-offsetX,0], [0, len_y]*/
   for (off_x=0; off_x<mo->max_offset_x + 1; off_x++)
     for (y=0; y<Y->length + mo->max_offset_y + 1; y++)
@@ -250,7 +255,7 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
 	pv->phi[off_x][y][j] = +1;
       }
     if ( mo->model_type == kSilentStates ) { /* could go into silent state at t=0 */
-    int osc;
+
     /*p__viterbi_silent( mo, t=0, v);*/
   }
   /*for (j = 0; j < mo->N; j++)
@@ -292,7 +297,7 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
 	      /* look back in the phi matrix at the offsets */
 	      previous_prob = get_phi(pv, u, v, mo->s[i].offset_x, 
 				      mo->s[i].offset_y, mo->s[i].in_id[j]);
-	      double log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
+	      log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
 	      if ( previous_prob != +1 && log_in_a_ij != +1) {
 		value = previous_prob + log_in_a_ij;
 		if (value > max_value) {
@@ -304,7 +309,7 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
 		{;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	    }
 #ifdef DEBUG
-	    int emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
+	    emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
 				get_char_mysequence(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y);
@@ -445,9 +450,9 @@ int get_psi(plocal_store_t * pv, int x, int y, int state) {
 }
 
 int *pviterbi_test(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length) {
+  plocal_store_t *pv;
   printf("---- viterbi test -----\n");
   /*print_pmodel(mo);*/
-  plocal_store_t *pv;
   pv = pviterbi_alloc(mo, X->length, Y->length);
   printf("try free within pviterbi_test\n");
   pviterbi_free(&pv, mo->N, X->length, Y->length, mo->max_offset_x , 
@@ -464,23 +469,23 @@ int *pviterbi(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *pa
 int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, int start_traceback_with)
 {
 #define CUR_PROC "pviterbi"
-  /* printf("---- viterbi -----\n"); */
-  int *state_seq = NULL;
-  i_list * state_list;
-  state_list = init_i_list();
   int u, v, j, i, k, St, off_x, off_y, current_state_index, y;
   int topocount = 0;
   double value, max_value, previous_prob;  
   double sum, osum = 0.0;
   double dummy = 0.0;
   plocal_store_t *pv;
+  int *state_seq = NULL;
+  int lastemState, emission;
+  pstate s_j;
+  double log_b_j, log_b_i, log_in_a_ij;
   double (*log_in_a)(plocal_store_t*, int, int, mysequence*, mysequence*, 
 		     int, int);
+  /* printf("---- viterbi -----\n"); */
+  i_list * state_list;
+  state_list = init_i_list();
   log_in_a = &sget_log_in_a;
   /* int len_path  = mo->N*len; the length of the path is not known apriori */
-  int lastemState;
-  pstate s_j;
-  double log_b_j, log_b_i;
 
 /*   if (mo->model_type == kSilentStates &&  */
 /*       mo->silent != NULL &&  */
@@ -519,7 +524,7 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
 	  for (j = 0; j < mo->s[i].in_states; j++) {
 	    /* look back in the phi matrix at the offsets */
 	    previous_prob = get_phi(pv, u, v, mo->s[i].offset_x, mo->s[i].offset_y, mo->s[i].in_id[j]);
-	    double log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
+	    log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
 	    if ( previous_prob != +1 && log_in_a_ij != +1) {
 	      value = previous_prob + log_in_a_ij;
 	      if (value > max_value) {
@@ -531,7 +536,7 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 
-	  int emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
+	  emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
 			      get_char_mysequence(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
