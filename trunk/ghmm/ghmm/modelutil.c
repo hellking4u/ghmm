@@ -79,7 +79,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*----------------------------------------------------------------------------*/
 static int topo_free (local_store_topo ** v, int n, int len)
 {
-#define CUR_PROC "sdviterbi_free"
+#define CUR_PROC "topo_free"
 
   mes_check_ptr (v, return (-1));
   if (!*v)
@@ -130,14 +130,14 @@ static void model_DFSVisit (model * c_model, int nodev, int *timevisit,
 int **model_DFS (model * c_model)
 {
 #define CUR_PROC "model_DFS"
-  int i, j, initials;
+  int i, j, initials=0;
   int timevisit = 0;
   int *colors;
   int *parents;
-  int **edge_classes;
+  int **edge_classes=NULL;
 
-  colors = (int *) calloc (c_model->N, sizeof (int));
-  parents = (int *) calloc (c_model->N, sizeof (int));
+  ARRAY_CALLOC (colors, c_model->N);
+  ARRAY_CALLOC (parents, c_model->N);
 
   /*edge_classes=(int**)calloc(c_model->N,sizeof(int*));*/
   /*for(i=0; i < c_model->N; i++) {*/
@@ -166,11 +166,10 @@ int **model_DFS (model * c_model)
     }
   }
 
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (colors);
   m_free (parents);
   return edge_classes;
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  return NULL;
 #undef CUR_PROC
 }
 
