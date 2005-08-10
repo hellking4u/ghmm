@@ -201,7 +201,6 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
 
   int *state_seq = NULL;
   int t, j, i, k, St;
-  int osc;
   double value, max_value;
   local_store_t *v;
   int len_path = mo->N * len;
@@ -253,8 +252,6 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
-    /*int osc = mo->get_class(mo->N,t);*/
-
     for (j = 0; j < mo->N; j++) {
 /** initialization of phi, psi **/
       v->phi_new[j] = +1;
@@ -299,9 +296,6 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
       v->phi[j] = v->phi_new[j];
       /*printf("\npsi[%d],%d, phi, %f\n", t, v->psi[t][j], v->phi[j]); */
     }
-
-    /*last_osc = osc; *//* save last transition class */
-
     if (mo->model_type == kSilentStates) {
       __viterbi_silent (mo, t, v);
     }                           /* complete time step for silent states */

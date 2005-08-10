@@ -137,7 +137,7 @@ int *sviterbi (smodel * smo, double *O, int T, double *log_p)
 #define CUR_PROC "sviterbi"
   int *state_seq = NULL;
   int t, j, i, osc;
-  double value, max_value, osum = 0.0;
+  double value, max_value;
   local_store_t *v;
 
   v = sviterbi_alloc (smo, T);
@@ -159,8 +159,6 @@ int *sviterbi (smodel * smo, double *O, int T, double *log_p)
 
   /* Recursion */
   for (t = 1; t < T; t++) {
-    /*osc = sequence_d_class(O, t - 1, &osum); */ /* dummy */
-
     if (smo->cos == 1) {
       osc = 0;
     }

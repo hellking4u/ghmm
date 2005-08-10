@@ -83,7 +83,7 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
   int tilgphase = 0;
 #endif
   /* int *v_path = NULL; */
-  double log_p, *initial_distribution, **alpha, *scale, p, sum, osum = 0.0;
+  double log_p, *initial_distribution, **alpha, *scale, p, sum;
   /* aicj */
   int class = -1;
 
@@ -204,8 +204,6 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
       }
       sq->seq[n][t] = smodel_get_random_var (smo, i, m);
 
-
-      /*class = sequence_d_class(sq->seq[n], t, &osum); */
       if (smo->cos == 1) {
         class = 0;
       }
@@ -236,7 +234,6 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
           class = smo->class_change->get_class (smo, sq->seq[n], n, t);
         }
 
-      /*class = sequence_d_class(sq->seq[n], t, &osum); */
       t = short_len;
     }
     while (t < len) {
@@ -305,8 +302,6 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
       }
 
 
-      /*class = sequence_d_class(sq->seq[n], t, &osum); */
-
       up = 0;
       t++;
     }                           /* while (t < len) */
@@ -335,7 +330,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
 # define CUR_PROC "sgenerate_single_ext"
   int i, j, m, t, class, up = 0;
   double *new_O = NULL, *scale = NULL, *initial_distribution = NULL;
-  double log_p, sum, p, osum;
+  double log_p, sum, p;
   int k;
   /* TEMP */
   if (mode == all_viterbi || mode == viterbi_viterbi || mode == viterbi_all) {
@@ -408,8 +403,6 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
       /*printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t);*/
       class = smo->class_change->get_class (smo, O, 0, t);      /*XXX No sequence number */
     }
-
-  /*class = sequence_d_class(O, t, &osum); */
 
   t = len;
   while (t < (int) MAX_SEQ_LEN) {
@@ -487,7 +480,6 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
       class = smo->class_change->get_class (smo, new_O, 0, t);  /* XXX sequence number ? */
     }
 
-    /*class = sequence_d_class(new_O, t, &osum); */
     t++;
     up = 0;
   }                             /* while (t < MAX_SEQ_LEN) */
