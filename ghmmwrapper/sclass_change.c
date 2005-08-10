@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
-#include <ghmm/sdmodel.h>
+#include <ghmm/smodel.h>
 #include <ghmm/mes.h>
 #include <Python.h>
 
@@ -87,7 +87,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
      pDict = PyModule_GetDict(pModule);
      printf("done.\n");    
     
-     printf("C: Calling Python with value %d\n",t);
+     //printf("C: Calling Python with value %d\n",t);
      pFunc = PyDict_GetItemString(pDict, FunctionName);
      if(!pFunc) {
        printf("python_class_change ERROR: Function %s not found.\n",FunctionName);
@@ -116,7 +116,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
 
    /* parsing the result from Python to C data type */
    class = PyInt_AsLong(pValue);
-   /*printf("C: The returned class is %d\n",class);*/
+  /*printf("C: The returned class is %d\n",class);*/
      
    /* cleaning up */
    Py_DECREF(pArgs); 
