@@ -716,6 +716,7 @@ int mes_realloc (void **mem, int bytes)
              "realloc: could not reallocate %d bytes\n", bytes);
   return (-1);
 }                               /* mes_realloc */
+int mes_realloc_depr (void **mem, int bytes) {return mes_realloc(mem, bytes);}
 
 /*============================================================================*/
 FILE *mes_fopen (const char *filename, char *attrstr)

@@ -141,7 +141,7 @@ extern "C" {
 
 /* */
 #ifndef m_free
-#define m_free( p )  if(p) { free(p); (p) = NULL; }else { printf("ERROR: Attempted m_free on NULL pointer.  Bad program. BAD ! No cookie for you.\n\n");abort();}
+#define m_free( p )  do {if(p) { free(p); (p) = NULL; } else { printf("ERROR: Attempted m_free on NULL pointer.  Bad program. BAD ! No cookie for you.\n\n");abort();}} while (0)
 #endif
 
 #ifndef m_strlen
@@ -170,7 +170,7 @@ extern "C" {
 
 #ifndef m_realloc
 #define m_realloc(ptr,entries) \
-  mes_realloc( (void**)&(ptr), sizeof(*(ptr))*(entries) )
+  mes_realloc_depr ( (void**)&(ptr), sizeof(*(ptr))*(entries) )
 #endif
 
 #ifndef m_malloc
@@ -357,6 +357,9 @@ extern "C" {
   /**
    */
   int mes_realloc (void **mem, int bytes);
+  /* The macros m_[cm]alloc(ptr, entries) are dprecated,
+     use ARRAY_[CM]ALLOC(ptr, entries) instead */
+  DECLARE_DEPRECATED int mes_realloc_depr (void **mem, int bytes);
   /**
    */
   int mes_remove (char *filename);
