@@ -615,6 +615,11 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
 
             osc = smo->class_change->get_class (smo, O[k], k, t - 1);
             /*printf("osc=%d : cos = %d, k = %d, t = %d, state=%d\n",osc,smo->cos,smo->class_change->k,t,i); */
+	    if (osc >= smo->cos){
+	      printf("ERROR: get_class returned index %d but model has only %d classes !\n",osc,smo->cos);
+	      goto STOP;
+	    }
+	    
           }
 
 
