@@ -312,6 +312,13 @@ extern "C" {
   int model_check_compatibility (model ** mo, int model_number);
 
 /**
+   Test if to models are compatible. That means their states and outputs match.
+   @return 0 for succes; -1 for error
+   @param mo:     first model
+   @param m2:     second model */
+int model_check_compatibel_models (const model * mo, const model * m2);
+
+/**
    Produces a model, which generates the given sequence with probability 1.
    The model is a strict left-right model with one state for each element 
    in the sequence and the output in state i is the i-th value in the sequence 

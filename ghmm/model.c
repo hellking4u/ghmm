@@ -2201,7 +2201,7 @@ int model_apply_duration (model * mo, int cur, int times)
 {
 #define CUR_PROC "model_apply_duration"
 
-  int i, j, last, size;
+  int i, j, last, size, failed=0;
 
   if (mo->model_type & kSilentStates) {
     mes_prot ("Sorry, apply_duration doesn't support silent states yet\n");
@@ -2280,18 +2280,13 @@ int model_apply_duration (model * mo, int cur, int times)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   /* Fail hard if these realloc fail. They shouldn't because we have the memory
      and try only to clean up! */
-  if (m_realloc (mo->s, last)) {
-    mes_proc ();
+  if (failed++)
     exit (1);
-  }
-  if (m_realloc (mo->tied_to, last)) {
-    mes_proc ();
-    exit (1);
-  }
-  if (m_realloc (mo->background_id, last)) {
-    mes_proc ();
-    exit (1);
-  }
+  
+  ARRAY_REALLOC (mo->s, last);
+  ARRAY_REALLOC (mo->tied_to, last);
+  ARRAY_REALLOC (mo->background_id, last);
+
   mo->N = last;
   return -1;
 #undef CUR_PROC
