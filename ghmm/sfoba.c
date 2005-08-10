@@ -122,6 +122,11 @@ int sfoba_forward (smodel * smo, double *O, int T, double ***b,
       }
       /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
       osc = smo->class_change->get_class (smo, O, smo->class_change->k, t);
+      if (osc >= smo->cos){
+        printf("ERROR: get_class returned index %d but model has only %d classes !\n",osc,smo->cos);
+        goto STOP;
+      }
+
     }
 
 
@@ -164,6 +169,10 @@ int sfoba_forward (smodel * smo, double *O, int T, double ***b,
         }
         /* printf("1: cos = %d, k = %d, t = %d\n",smo->cos,smo->class_change->k,t); */
         osc = smo->class_change->get_class (smo, O, smo->class_change->k, t);
+        if (osc >= smo->cos){
+          printf("ERROR: get_class returned index %d but model has only %d classes !\n",osc,smo->cos);
+          goto STOP;
+        }		
       }
 
 
@@ -222,6 +231,10 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
     }
      osc = smo->class_change->get_class (smo, O, smo->class_change->k, T - 2);
      /* printf("osc(%d) = %d\n",T-2,osc);  */
+    if (osc >= smo->cos){
+      printf("ERROR: get_class returned index %d but model has only %d classes !\n",osc,smo->cos);
+      goto STOP;
+    }     
   }
 
 
@@ -268,6 +281,10 @@ int sfoba_backward (smodel * smo, double *O, int T, double ***b,
       if (t >= 1){
         osc = smo->class_change->get_class (smo, O, smo->class_change->k, t-1);
         /* printf("osc(%d) = %d\n",t-1,osc);  */
+        if (osc >= smo->cos){
+          printf("ERROR: get_class returned index %d but model has only %d classes !\n",osc,smo->cos);
+          goto STOP;
+        }	
       }
     }
   }

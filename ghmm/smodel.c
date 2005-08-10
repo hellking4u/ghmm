@@ -940,7 +940,10 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
         return (NULL);
       }
       class = smo->class_change->get_class (smo, sq->seq[n], n, 0);
-
+      if (class >= smo->cos){
+        printf("ERROR: get_class returned index %d but model has only %d classes !\n",class,smo->cos);
+        goto STOP;
+      }
     }
     while (state < len) {
       /* Get a new state */
@@ -1024,6 +1027,10 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
         }
         class = smo->class_change->get_class (smo, sq->seq[n], n, state);
         printf ("class = %d\n", class);
+        if (class >= smo->cos){
+          printf("ERROR: get_class returned index %d but model has only %d classes !\n",class,smo->cos);
+          goto STOP;
+        }
       }
       up = 0;
       state++;
