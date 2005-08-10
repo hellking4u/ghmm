@@ -798,29 +798,52 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 int model_check_compatibility (model ** mo, int model_number)
 {
 #define CUR_PROC "model_check_compatibility"
+  int i;
+  for (i = 1; i < model_number; i++)
+    if (-1 == model_check_compatibel_models (mo[0], mo[i]))
+      return -1;
+
+  return 0;
+#undef CUR_PROC
+}
+
+/*============================================================================*/
+int model_check_compatibel_models (const model * mo, const model * m2)
+{
+#define CUR_PROC "model_check_compatibel_models"
   int i, j;
-  for (i = 0; i < model_number; i++)
-    for (j = i + 1; j < model_number; j++) {
-      if (mo[i]->N != mo[j]->N) {
-        char *str =
-          mprintf (NULL, 0,
-                   "ERROR: different number of states in model %d (%d) and model %d (%d)",
-                   i, mo[i]->N, j, mo[j]->N);
-        mes_prot (str);
-        m_free (str);
-        return (-1);
-      }
-      if (mo[i]->M != mo[j]->M) {
-        char *str =
-          mprintf (NULL, 0,
-                   "ERROR: different number of possible outputs in model %d (%d) and model %d (%d)",
-                   i, mo[i]->M, j, mo[j]->M);
-        mes_prot (str);
-        m_free (str);
-        return (-1);
+  char *str;
+
+  if (mo->N != m2->N) {
+    str = mprintf(NULL, 0, "ERROR: different number of states (%d != %d)\n",
+                   mo->N, m2->N);
+    goto STOP;
+  }
+  if (mo->M != m2->M) {
+    str = mprintf(NULL, 0, "ERROR: different number of possible outputs (%d != %d)\n",
+                   mo->M, m2->M);
+    goto STOP;
+  }
+  for (i=0; i<mo->N; ++i) {
+    if (mo->s[i].out_states != m2->s[i].out_states) {
+      str = mprintf(NULL, 0, "ERROR: different number of outstates (%d != %d) in state %d.\n",
+                   mo->s[i].out_states, m2->s[i].out_states, i);
+      goto STOP;
+    }
+    for (j=0; j<mo->s[i].out_states; ++j) {
+      if (mo->s[i].out_id[j] != m2->s[i].out_id[j]) {
+	str = mprintf(NULL, 0, "ERROR: different out_ids (%d != %d) in entry %d of state %d.\n",
+		      mo->s[i].out_id[j], m2->s[i].out_id[j], j, i);
+	goto STOP;
       }
     }
+  }
+
   return 0;
+STOP:
+  mes_prot (str);
+  m_free (str);
+  return (-1);
 #undef CUR_PROC
 }                               /* model_check_compatibility */
 
@@ -2459,6 +2482,46 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 # undef CUR_PROC
 }                               /* end get_background */
+
+
+double model_distance(const model * mo, const model * m2) {
+#define CUR_PROC "model_distances"
+
+  int i, j, number=0;
+  double tmp, distance=0.0;
+
+/*   if (!model_check_compatibility(mo, m2)) */
+/*     exit(1); */
+/*   if (!model_check(mo)) */
+/*     exit(1); */
+/*   if (!model_check(m2)) */
+/*     exit(1); */
+
+
+  /* PI */
+  for (i=0; i<mo->N; ++i) {
+    tmp = mo->s[i].pi - m2->s[i].pi;
+    distance += tmp*tmp;
+    ++number;
+  }
+  for (i=0; i<mo->N; ++i) {
+    /* A */
+    for (j=0; j<mo->s[i].out_states; ++j) {
+      tmp = mo->s[i].out_a[j] - m2->s[i].out_a[j];
+      distance += tmp*tmp;
+      ++number;
+    }
+    /* B */
+    for (j=0; j<model_ipow(mo, mo->M, mo->s[i].order+1); ++j) {
+      tmp = mo->s[i].b[j] - m2->s[i].b[j];
+      distance += tmp*tmp;
+      ++number;
+    } 
+  }
+
+  return (distance/number);
+#undef CUR_PROC
+}
 
 /*============================================================================*/
 
