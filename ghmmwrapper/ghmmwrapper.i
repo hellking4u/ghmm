@@ -52,7 +52,7 @@
 #include <ghmm/kbest.h>
 #include "sclass_change.h"
 #include <ghmm/randvar.h>
-#include <ghmm/mysequence.h>
+#include <ghmm/psequence.h>
 #include <ghmm/pmodel.h>
 #include <ghmm/pviterbi.h>
 #include <ghmm/pviterbi_propagate.h>
