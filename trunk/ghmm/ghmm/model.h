@@ -610,7 +610,14 @@ extern "C" {
 */
   int model_get_uniform_background (model * mo, sequence_t * sq);
 
-
+/**
+   Calculates the squared distance between two compatible models.
+   The distance is normalized by the number of parameters of the models.
+   @return:      normalized squared distance
+   @param mo:    first model
+   @param m2:    second model
+*/
+  double model_distance(const model * mo, const model * m2);
 /**
    Copies a given state. Allocates the necessary memory.
    @author Peter Pipenbacher
