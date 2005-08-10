@@ -135,10 +135,8 @@ void pviterbi_prop_precompute( pmodel *mo, plocal_propagate_store_t *pv)
 {
 #define CUR_PROC "pviterbi_precompute"
   int i, j, emission, t_class;
-  double log_p = +1;
   
-  /* Precomputing the log(a_ij) */
-  
+  /* Precomputing the log(a_ij) */  
   for (j = 0; j < mo->N; j++)
     for (i = 0; i < mo->s[j].in_states; i++) 
       for (t_class = 0; t_class < mo->s[mo->s[j].in_id[i]].kclasses; t_class++){
@@ -319,7 +317,6 @@ int * pviterbi_propagate(pmodel *mo, mysequence * X, mysequence * Y, double *log
      for the normal pviterbi algorithm */
 
   /* start of the implementation */
-  int * path_seq = NULL;
   /* give sequence length of X = 0 to pviterbi alloc so traceback matrix 
      will not be allocated */
   plocal_propagate_store_t * pv = pviterbi_propagate_alloc(mo, Y->length);
@@ -357,6 +354,13 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
   /* start of the implementation */
   int * path_seq = NULL;
   int start_x, start_y, stop_x, stop_y;
+  double * original_pi=NULL;
+  int i;
+  cell * middle;
+  int length1, length2;
+  double log_p1, log_p2;
+  int * path1, * path2;
+
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
 #ifdef DEBUG
   printf("Recursion: start, stop cells\n");
@@ -369,9 +373,6 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
   else
   printf("(%i, %i) last segment\n", stop_x, stop_y);
 #endif
-  int middle_x = start_x + (stop_x - start_x) / 2;
-  double * original_pi;
-  int i;
   /* Break the recursion if the lengths of both sequences become tractable
      for the normal pviterbi algorithm */
   if ((double)(stop_x - start_x) * (double)(stop_y - start_y) < max_size) {
@@ -431,10 +432,7 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
       /* set the initial prob. for the state that was in the middle of path */
       mo->s[start->state].log_pi =  start->log_p + start->log_a;
     }
-    cell * middle = pviterbi_propagate_step(mo, X, Y,
-					    start, 
-					    stop,
-					    &step_log_p, pv);
+    middle = pviterbi_propagate_step(mo, X, Y, start, stop, &step_log_p, pv);
     if (start != NULL) {
       /* restore the original model */
       for (i=0; i<mo->N; i++) 
@@ -468,14 +466,14 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
     }
     /* 2. Solve recursively the two alignments X[0:len/2] vs Y[0:m] and 
        X[len/2+1:len] vs Y[m+1:len] */
-    int length1 = 0;
-    double log_p1 = 0;
-    int * path1 = pviterbi_propagate_recursion(mo, X, Y, &log_p1, &length1, 
+    length1 = 0;
+    log_p1 = 0;
+    path1 = pviterbi_propagate_recursion(mo, X, Y, &log_p1, &length1, 
 					       start, middle,
 					       max_size, pv);
-    int length2 = 0;
-    double log_p2 = 0;
-    int * path2 = pviterbi_propagate_recursion(mo, X, Y, &log_p2, &length2, 
+    length2 = 0;
+    log_p2 = 0;
+    path2 = pviterbi_propagate_recursion(mo, X, Y, &log_p2, &length2, 
 					       middle, stop,
 					       max_size, pv);
     /* check the paths */
@@ -533,17 +531,17 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y, cell * start, cell * stop) {
-  int u, v, j, i, k, off_x, off_y, y;
+  int u, v, j, i, off_x, y, osc;
+  double value, max_value, previous_prob, log_b_i, log_in_a_ij ;
+  int start_x, start_y, stop_x, stop_y, middle_x;
   pmodel * mo = pv->mo;
   double (*log_in_a)(plocal_propagate_store_t*, int, int, mysequence*, 
 		     mysequence*, int, int);
   log_in_a = &sget_log_in_a_prop;
-  double value, max_value, previous_prob, log_b_i, log_b_j;
-  int start_x, start_y, stop_x, stop_y;
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
   pv->start_x = start_x;
   pv->start_y = start_y;
-  int middle_x = start_x + (stop_x - start_x) / 2;
+  middle_x = start_x + (stop_x - start_x) / 2;
   /* to be sure that we do not look up something out of the bounds set the
      whole matrix to 1 */
   /* Initialize the lookback matrix (for positions [-offsetX,0], [0, len_y]*/
@@ -560,8 +558,7 @@ void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y
 	  /* m_free(pv->end_of_first[off_x][y][j]); */
 	  pv->end_of_first[off_x][y][j] = NULL;
 	}
-  if ( mo->model_type == kSilentStates ) { /* could go into silent state at t=0 */
-    int osc;
+  if ( mo->model_type & kSilentStates ) { /* could go into silent state at t=0 */
     /*p__viterbi_silent( mo, t=0, v);*/
   }
   /*for (j = 0; j < mo->N; j++)
@@ -600,7 +597,7 @@ void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y
 	    /* look back in the phi matrix at the offsets */
 	    previous_prob = get_phi_prop(pv, u, v, mo->s[i].offset_x, 
 					 mo->s[i].offset_y, mo->s[i].in_id[j]);
-	    double log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
+	    log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
 	    if ( previous_prob != +1 && log_in_a_ij != +1) {
 	      value = previous_prob + log_in_a_ij;
 	      if (value > max_value) {
@@ -741,22 +738,18 @@ void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y
 cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell * start, cell * stop, double * log_p, plocal_propagate_store_t * pv) {
 #define CUR_PROC "pviterbi_step"
   /* printf("---- propagate step -----\n"); */
-  int u, v, j, i, k, St, off_x, off_y, current_state_index, y;
-  int topocount = 0;
+  int u, v, j, i;
   double value, max_value, previous_prob;  
-  double sum, osum = 0.0;
-  double dummy = 0.0;
   /* int len_path  = mo->N*len; the length of the path is not known apriori */
-  int lastemState;
+  int start_x, start_y, stop_x, stop_y;
+  double log_b_i, log_in_a_ij;
+  cell * middle = NULL;
+  int middle_x;
   double (*log_in_a)(plocal_propagate_store_t*, int, int, mysequence*, 
 		     mysequence*, int, int);
   log_in_a = &sget_log_in_a_prop;
-  pstate s_j;
-  int start_x, start_y, stop_x, stop_y;
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
-  double log_b_j, log_b_i;
-  cell * middle = NULL;
-  int middle_x = start_x + (stop_x - start_x) / 2;
+  middle_x = start_x + (stop_x - start_x) / 2;
 /*   if (mo->model_type == kSilentStates &&  */
 /*       mo->silent != NULL &&  */
 /*       mo->topo_order == NULL) { */
@@ -796,7 +789,7 @@ cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell 
 	    /* look back in the phi matrix at the offsets */
 	    previous_prob = get_phi_prop(pv, u, v, mo->s[i].offset_x,
 					   mo->s[i].offset_y, mo->s[i].in_id[j]);
-	    double log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
+	    log_in_a_ij = (*log_in_a)(pv, i, j, X, Y, u, v);
 	    if ( previous_prob != +1 && 
 		 log_in_a_ij != +1) {
 	      value = previous_prob + log_in_a_ij;
@@ -918,9 +911,5 @@ cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell 
     *log_p = max_value;
   }
   return middle;
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  /* Free the memory space */
-  
-  return NULL;
 #undef CUR_PROC
 }
