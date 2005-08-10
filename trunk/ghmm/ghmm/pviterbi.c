@@ -131,7 +131,7 @@ void print_pviterbi_store(plocal_store_t * pv) {
   for (j = 0; j < mo->N; j++){
     printf("state %i in states %i\n", j, mo->s[j].in_states);
     for (k=0; k<mo->s[j].in_states; k++)
-      printf("From: %i %f\n", mo->s[j].in_id[k], pv->log_in_a[j][k]);
+      printf("FIXME: log_in_a has three dimensions!"/*From: %i %f\n", mo->s[j].in_id[k], pv->log_in_a[j][k]*/);
   }
   printf("Log b:\n");
   for (j = 0; j < mo->N; j++){
@@ -145,7 +145,6 @@ void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
 {
 #define CUR_PROC "pviterbi_precompute"
   int i, j, emission, t_class;
-  double log_p = +1;
   
   /* Precomputing the log(a_ij) */
   
@@ -238,10 +237,13 @@ double log_b(plocal_store_t * pv, int state, int emission) {
 }
 
 void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
-  int osc, emission;
-  int u, v, j, i, k, St, off_x, off_y, current_state_index, y;
+  int osc;
+#ifdef DEBUG
+  int emission;
+#endif
+  int u, v, j, i, off_x, y;
   double log_in_a_ij;
-  double value, max_value, previous_prob, log_b_i, log_b_j;  
+  double value, max_value, previous_prob, log_b_i;  
   /* printf("pviterbi init\n"); */
   pmodel * mo = pv->mo;
   double (*log_in_a)(plocal_store_t*, int, int, mysequence*, mysequence*, 
@@ -254,7 +256,7 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
       for (j=0; j<mo->N; j++) {
 	pv->phi[off_x][y][j] = +1;
       }
-    if ( mo->model_type == kSilentStates ) { /* could go into silent state at t=0 */
+    if ( mo->model_type & kSilentStates ) { /* could go into silent state at t=0 */
 
     /*p__viterbi_silent( mo, t=0, v);*/
   }
@@ -469,16 +471,12 @@ int *pviterbi(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *pa
 int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, int start_traceback_with)
 {
 #define CUR_PROC "pviterbi"
-  int u, v, j, i, k, St, off_x, off_y, current_state_index, y;
-  int topocount = 0;
+  int u, v, j, i, off_x, off_y, current_state_index;
   double value, max_value, previous_prob;  
-  double sum, osum = 0.0;
-  double dummy = 0.0;
   plocal_store_t *pv;
   int *state_seq = NULL;
-  int lastemState, emission;
-  pstate s_j;
-  double log_b_j, log_b_i, log_in_a_ij;
+  int emission;
+  double log_b_i, log_in_a_ij;
   double (*log_in_a)(plocal_store_t*, int, int, mysequence*, mysequence*, 
 		     int, int);
   /* printf("---- viterbi -----\n"); */
@@ -602,7 +600,7 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
     for (j = 0; j < mo->N; j++){
 #ifdef DEBUG
       printf("phi(len_x)(len_y)(%i)=%f\n", j, get_phi(pv, u, Y->length-1, 0, 0, j));
-#endif;
+#endif
       if ( get_phi(pv, u, Y->length-1, 0, 0, j) != +1 && 
 	   get_phi(pv, u, Y->length-1, 0, 0, j) > max_value) { 
 	max_value = get_phi(pv, X->length-1, Y->length-1, 0, 0, j);
@@ -696,9 +694,8 @@ double pviterbi_logp(pmodel *mo, mysequence * X, mysequence * Y, int *state_seq,
   double log_p = 0.0;
   double log_b_i = 1.0;
   double log_in_a = 1.0;
-  int length;
-  int* vpath;
   plocal_store_t *pv;
+
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
   pv = pviterbi_alloc(mo, 0, 0);
   pviterbi_precompute(mo, pv);
