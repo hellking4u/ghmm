@@ -116,23 +116,24 @@ static int reestimate_free (local_store_t ** r, int N)
     return (0);
   m_free ((*r)->pi_num);
 
-  if ((*r)->a_num) {
-    for (i=0; i<N; i++)
+  if ((*r)->a_num){
+    for (i = 0; i < N; i++){
       m_free ((*r)->a_num[i]);
-  }
+    }  
+  }  
   m_free ((*r)->a_num);
-
   m_free ((*r)->a_denom);
 
-  if ((*r)->b_num) {
-    for (i=0; i<N; i++)
+  if ((*r)->b_num){
+    for (i = 0; i < N; i++){
       m_free ((*r)->b_num[i]);
+    }
   }
   m_free ((*r)->b_num);
-
-  if ((*r)->b_denom) {
-    for (i=0; i<N; i++)
+  if ((*r)->b_denom){
+    for (i = 0; i < N; i++){
       m_free ((*r)->b_denom[i]);
+    }  
   }
   m_free ((*r)->b_denom);
 
@@ -837,7 +838,7 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
 
     /* stop iterations? */
     if (diff < fabs ((double) likelihood_delta * log_p)) {
-      /*printf("Convergence after %d steps\n", n); */
+      printf("Convergence after %d steps\n", n); 
 
       break;
     }
