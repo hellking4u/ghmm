@@ -160,6 +160,44 @@ extern "C" {
                                       double trunc_ratio, int seed);
 
 
+
+/**
+  Extract a single sequence from a larger sequence_t into a new struct.
+  
+  @return sequence_t struct containing a single sequence
+  @param sq   source sequence_t
+  @param index   index of sequence to extract
+*/
+sequence_t *sequence_get_singlesequence(sequence_t *sq, int index);
+
+/**
+  Extract a single sequence_d from a larger sequence_d_t into a new struct.
+  
+  @return sequence_d_t struct containing a single sequence
+  @param sq   source sequence_d_t
+  @param index   index of sequence to extract
+*/
+sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index);
+
+/*XXX TEST: frees everything but the seq field */
+
+/**
+  Free a sequence_t struct which holds as sequence a reference to a sequence in a different
+  sequence_t. The function deallocates everything but the reference.
+*/
+int sequence_subseq_free (sequence_t ** sq);
+
+/**
+  Free a sequence_d_t struct which holds as sequence a reference to a sequence in a different
+  sequence_d_t. The function deallocates everything but the reference.
+*/
+int sequence_d_subseq_free (sequence_d_t ** sqd);
+
+
+
+
+
+
 /** Generates all possible integer sequence of lenght n from an alphabet with
     M letters. Use lexicographical ordering. Memory allocation here.
     @param n      length of sequences

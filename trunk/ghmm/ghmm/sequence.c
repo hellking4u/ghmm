@@ -102,7 +102,9 @@ sequence_t **sequence_read (const char *filename, int *sq_number)
   scanner_free (&s);
   return sequence;
 
+
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  scanner_free (&s);
   for (i = 0; i < *sq_number; i++)
     sequence_free (&(sequence[i]));
   m_free (sequence);
@@ -565,6 +567,98 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }                               /* sequence_calloc */
 
+/*============================================================================*/
+
+sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index)
+{
+  sequence_d_t *res;
+  res = sequence_d_calloc(1);
+  
+  res->seq[0] = sq->seq[index];
+  res->seq_len[0] = sq->seq_len[index];
+  res->seq_label[0] = sq->seq_label[index];
+  res->seq_id[0] = sq->seq_id[index];
+  res->seq_w[0] = sq->seq_w[index];
+  res->total_w = res->seq_w[0];
+
+  return res;
+  
+}
+
+sequence_t *sequence_get_singlesequence(sequence_t *sq, int index)
+{
+  sequence_t *res;
+  res = sequence_calloc(1);
+  
+  res->seq[0] = sq->seq[index];
+  res->seq_len[0] = sq->seq_len[index];
+  res->seq_label[0] = sq->seq_label[index];
+  res->seq_id[0] = sq->seq_id[index];
+  res->seq_w[0] = sq->seq_w[index];
+  res->total_w = res->seq_w[0];
+
+  if (sq->state_labels){
+      m_calloc (res->state_labels, 1);
+      m_calloc (res->state_labels_len, 1);
+      res->state_labels[0] = sq->state_labels[index];
+      res->state_labels_len[0] = sq->state_labels_len[index];
+  }
+  
+  return res;
+  
+}
+/*XXX TEST: frees everything but the seq field */
+int sequence_subseq_free (sequence_t ** sq)
+{
+# define CUR_PROC "sequence_subseq_free"
+  /*int i,j;*/
+
+  mes_check_ptr (sq, return (-1));
+  if (!*sq)
+    return (0);
+
+  m_free ((*sq)->seq_len);
+  m_free ((*sq)->seq_label);
+  m_free ((*sq)->seq_id);
+  m_free ((*sq)->seq_w);
+
+  if ((*sq)->states) {
+    matrix_i_free (&(*sq)->states, (*sq)->seq_number);
+    /*m_free((*sq)->states); */
+  }
+
+  if ((*sq)->state_labels) {
+    matrix_i_free (&(*sq)->state_labels, (*sq)->seq_number);
+    m_free ((*sq)->state_labels_len);
+
+    /*m_free((*sq)->states); */
+  }
+
+  m_free ((*sq)->seq);
+  m_free (*sq);
+  return 0;
+# undef CUR_PROC
+}                               /* sequence_subseq_free */
+
+
+int sequence_d_subseq_free (sequence_d_t ** sqd)
+{
+# define CUR_PROC "sequence_d_subseq_free"
+  mes_check_ptr (sqd, return (-1));
+
+
+  /* sequence_d_print(stdout,*sqd,0);*/
+  m_free ((*sqd)->seq);
+  m_free ((*sqd)->seq_len);
+  m_free ((*sqd)->seq_label);
+  m_free ((*sqd)->seq_id);
+  m_free ((*sqd)->seq_w);
+  m_free (*sqd);
+  return 0;
+# undef CUR_PROC
+}   /* sequence_d_subseq_free */
+
+
 
 /*============================================================================*/
 sequence_t *sequence_lexWords (int n, int M)
@@ -1005,7 +1099,7 @@ int sequence_free (sequence_t ** sq)
     printf ("Error in sequence_free !\n");
   }
 
-  /* The allocation of state must be fixed */
+  /* XXX The allocation of state must be fixed XXX*/
   /*** Added attribute to the sequence_t
   if (&(*sq)->states) { 
     matrix_i_free(&(*sq)->states, (*sq)->seq_number);
@@ -1041,9 +1135,6 @@ int sequence_d_free (sequence_d_t ** sqd)
 {
 # define CUR_PROC "sequence_d_free"
   mes_check_ptr (sqd, return (-1));
-  if (!*sqd)
-    return (0);
-
   /* sequence_d_print(stdout,*sqd,0);*/
 
   matrix_d_free (&(*sqd)->seq, (*sqd)->seq_number);
