@@ -1,5 +1,5 @@
 #include <ghmm/pmodel.h>
-#include <ghmm/mysequence.h>
+#include <ghmm/psequence.h>
 #include <ghmm/mes.h>
 
 #ifndef PCLASSCHANGE_H
