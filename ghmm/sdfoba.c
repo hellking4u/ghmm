@@ -42,6 +42,7 @@
 #include "mes.h"
 #include <ghmm/internal.h>
 
+
 static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,
                                double *scale)
 {
@@ -115,7 +116,6 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
   int i, t, id;
   double c_t, dblems;
   int class = 0;
-  double dummy = 0.0;
 
   /*if (mo->model_type == kSilentStates)
      sdmodel_topo_ordering(mo);
@@ -241,7 +241,6 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
   int i, t, id;
   double c_t;
   int class = 0;
-  double dummy = 0.0;
 
   if (mo->model_type == kSilentStates)
     sdmodel_topo_ordering (mo);
