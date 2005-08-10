@@ -143,6 +143,9 @@ double **stat_matrix_d_alloc (int n, int m)
   int i;
   double **A;
   double *tmp;
+ 
+  /* if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) { */
+
 
   if (!(A = mes_calloc (n * sizeof (double*) + n * m * sizeof (double)))) {
     mes_proc ();
