@@ -53,7 +53,7 @@
 #include "sequence.h"
 #include "const.h"
 #include "rng.h"
-#include "foba.h"
+#include "sdfoba.h"
 #include "mes.h"
 #include "mprintf.h"
 #include "string.h"
@@ -62,6 +62,7 @@
 
 #define  __EPS 10e-6
 
+#ifdef sdmodelSTATIC
 /*----------------------------------------------------------------------------*/
 static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
                                 int out_states, int cos)
@@ -92,7 +93,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 #undef CUR_PROC
 }                               /* model_state_alloc */
-
+#endif
 
 /*----------------------------------------------------------------------------*/
 double sdmodel_likelihood (sdmodel * mo, sequence_t * sq)
@@ -122,14 +123,13 @@ double sdmodel_likelihood (sdmodel * mo, sequence_t * sq)
 #undef CUR_PROC
 }                               /*sdmodel_likelihood */
 
-
+#ifdef sdmodelSTATIC
 /*----------------------------------------------------------------------------*/
-
 static int sdmodel_copy_vectors (sdmodel * mo, int index, double ***a_matrix,
                                  double **b_matrix, double *pi, int *fix)
 {
 #define CUR_PROC "sdmodel_copy_vectors"
-  int i, j, c, cnt_out = 0, cnt_in = 0;
+  int i, c, cnt_out = 0, cnt_in = 0;
 
   mo->s[index].pi = pi[index];
   mo->s[index].fix = fix[index];
@@ -159,7 +159,7 @@ static int sdmodel_copy_vectors (sdmodel * mo, int index, double ***a_matrix,
   return (0);
 #undef CUR_PROC
 }                               /* model_alloc_vectors */
-
+#endif
 
 /*============================================================================*/
 
@@ -295,7 +295,7 @@ void sdmodel_topo_ordering (sdmodel * mo)
 #undef CUR_PROC
 }
 
-
+#ifdef sdmodelSTATIC
 /*============================================================================*/
 static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
                                                  int global_len,
@@ -468,7 +468,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (NULL);
 # undef CUR_PROC
 }                               /* data */
-
+#endif
 
 int sdmodel_initSilentStates (sdmodel * mo)
 {
@@ -524,10 +524,9 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
   unsigned long tm;             /* Time seed */
   sequence_t *sq = NULL;
   int state, n, i, j, m, reject_os, reject_tmax, badseq, trans_class;
-  double p, sum, osum = 0.0;
+  double p, sum;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
   int obsLength = 0;
-  double dummy = 0.0;
   int silent_len = 0, badSilentStates = 0;
   int lastStateSilent = 0;
   int matchcount = 0;
@@ -705,10 +704,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
       /*trans_class = mo->get_class(sq->seq[n],state);*/
       up = 0;
       obsLength++;
-
     }                           /* while (state < len) , global_len depends on the data */
-
-  next_sequence:;
 
     if (badseq) {
       reject_os_tmp++;
@@ -802,11 +798,11 @@ void sdmodel_states_print (FILE * file, sdmodel * mo)
     fprintf (file, "\n Transition probability \n");
     fprintf (file, "  Out states (Id, a):\t");
     for (j = 0; j < mo->s[i].out_states; j++)
-      fprintf (file, "(%d, %.3f) \t", mo->s[i].out_id[j], mo->s[i].out_a[j]);
+      fprintf (file, "FIXME: out_a is a matrix"/*(%d, %.3f) \t", mo->s[i].out_id[j], mo->s[i].out_a[j]*/);
     fprintf (file, "\n");
     fprintf (file, "  In states (Id, a):\t");
     for (j = 0; j < mo->s[i].in_states; j++)
-      fprintf (file, "(%d, %.3f) \t", mo->s[i].in_id[j], mo->s[i].in_a[j]);
+      fprintf (file, "FIXME: in_a is a matrix"/*(%d, %.3f) \t", mo->s[i].in_id[j], mo->s[i].in_a[j]*/);
     fprintf (file, "\n");
   }
 }                               /* model_states_print */

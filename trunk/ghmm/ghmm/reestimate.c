@@ -555,12 +555,12 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
   int * O;
   double c_t;
   
-  double * alpha_last_col;
-  double * alpha_curr_col;
+  double * alpha_last_col=NULL;
+  double * alpha_curr_col=NULL;
   double * switching_tmp;
   double scale, old_scale, scalingf;
-  double * summands;
-  local_store_t * * curr_est, * * last_est, * * switch_lst; 
+  double * summands=NULL;
+  local_store_t * * curr_est=NULL, * * last_est=NULL, * * switch_lst;
 
   /* allocating memory for two columns of alpha matrix */
   ARRAY_CALLOC (alpha_last_col, mo->N);

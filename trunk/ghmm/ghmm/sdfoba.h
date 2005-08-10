@@ -43,14 +43,16 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-#include "ghmm/sdmodel.h"
-#include <math.h>
-#include "ghmm/const.h"
-#include "ghmm/matrix.h"
-#include "ghmm/mes.h"
+int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
+                    double *scale, double *log_p);
+
+int sdfoba_backward (sdmodel * mo, const int *O, int len, double **beta,
+                     const double *scale);
+
+  int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p);
 
 
 #ifdef __cplusplus
 }
 #endif
-#endif                          // SDFOBA_H
+#endif

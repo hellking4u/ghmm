@@ -587,8 +587,10 @@ sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index)
 
 sequence_t *sequence_get_singlesequence(sequence_t *sq, int index)
 {
+#define CUR_PROC "sequence_get_singlesequence"
   sequence_t *res;
   res = sequence_calloc(1);
+  if (!res) goto STOP;
   
   res->seq[0] = sq->seq[index];
   res->seq_len[0] = sq->seq_len[index];
@@ -598,14 +600,16 @@ sequence_t *sequence_get_singlesequence(sequence_t *sq, int index)
   res->total_w = res->seq_w[0];
 
   if (sq->state_labels){
-      m_calloc (res->state_labels, 1);
-      m_calloc (res->state_labels_len, 1);
+      ARRAY_CALLOC (res->state_labels, 1);
+      ARRAY_CALLOC (res->state_labels_len, 1);
       res->state_labels[0] = sq->state_labels[index];
       res->state_labels_len[0] = sq->state_labels_len[index];
   }
   
   return res;
-  
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return NULL;
+#undef CUR_PROC
 }
 /*XXX TEST: frees everything but the seq field */
 int sequence_subseq_free (sequence_t ** sq)

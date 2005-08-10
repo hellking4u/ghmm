@@ -72,16 +72,10 @@ static local_store_t *sdviterbi_alloc (sdmodel * mo, int len)
   ARRAY_CALLOC (v, 1);
 
   /* Allocate the log_in_a's -> individal lenghts */
-
-  if (v->log_in_a = (double ***) malloc (sizeof (double **) * mo->N)) {
-    for (j = 0; j < mo->N; j++)
-      v->log_in_a[j] = stat_matrix_d_alloc (mo->cos, mo->s[j].in_states);
-  }
-  else {
-    mes_proc ();
-    goto STOP;
-  }
-
+  ARRAY_CALLOC (v->log_in_a, mo->N);
+  for (j = 0; j < mo->N; j++)
+    v->log_in_a[j] = stat_matrix_d_alloc (mo->cos, mo->s[j].in_states);
+  
   v->log_b = stat_matrix_d_alloc (mo->N, len);
   if (!(v->log_b)) {
     mes_proc ();
@@ -133,8 +127,7 @@ static void Viterbi_precompute (sdmodel * mo, int *o, int len,
                                 local_store_t * v)
 {
 #define CUR_PROC "viterbi_precompute"
-  int i, j, k, t, osc;
-  double log_p = +1;
+  int i, j, k, t;
 
   /* Precomputing the log(a_ij) */
 
@@ -224,15 +217,12 @@ static void __viterbi_silent (sdmodel * mo, int t, local_store_t * v,
 /** Return the log score of the sequence */
 int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
 {
-#define CUR_PROC "sdviterbi_silent"
+#define CUR_PROC "sdviterbi"
 
   int *state_seq = NULL;
-  int t, j, i, k, St, osc;
-  int topocount = 0;
+  int t, j, i, k, St, osc=0;
   int last_osc = -1;
   double value, max_value;
-  double sum, osum = 0.0;
-  double dummy = 0.0;
   local_store_t *v;
   int len_path = mo->N * len;
   /*lists to remember how long we have been staying in the circular part of the model */
@@ -243,8 +233,6 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   int nr_of_countstates = 2 * ((mo->N - 5) / 3);        /* # of matchstates + deletestates*/
   int lastemState;
   int *tmp_path;
-
-  osc = 0;
 
   if (mo->model_type == kSilentStates && mo->topo_order == NULL) {
     /* sdmodel_topo_ordering( mo ); */
@@ -293,7 +281,6 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
       v->phi[j] = log (mo->s[j].pi) + v->log_b[j][0];
   }
   if (mo->model_type == kSilentStates) {        /* could go into silent state at t=0 */
-    int osc;
     __viterbi_silent (mo, t =
                       0, v, recent_matchcount, countstates,
                       nr_of_countstates);
@@ -307,7 +294,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
-    /*int osc = mo->get_class(mo->N,t);*/
+    /*osc = mo->get_class(mo->N,t);*/
 
     for (j = 0; j < mo->N; j++) {
 /** initialization of phi, psi **/
@@ -465,6 +452,7 @@ int *sdviterbi_silent (sdmodel * mo, int *o, int len, double *log_p)
 {
 #define CUR_PROC "sdviterbi_silent"
 
+  return 0;
 
 #undef CUR_PROC
 }

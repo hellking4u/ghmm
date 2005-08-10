@@ -397,18 +397,9 @@ scanner_t *scanner_alloc (const char *filename)
     mes_proc ();
     goto STOP;
   }
-  if (!(s->txt = mes_malloc (s->txtlen))) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!(s->id = mes_malloc (s->txtlen))) {
-    mes_proc ();
-    goto STOP;
-  }
-  if (!(s->filename = mes_calloc (strlen (filename) + 1))) {
-    mes_proc ();
-    goto STOP;
-  }
+  ARRAY_MALLOC (s->txt, s->txtlen);
+  ARRAY_MALLOC (s->id, s->txtlen);
+  ARRAY_CALLOC (s->filename, strlen (filename) + 1);
 
   memcpy (s->filename, filename, strlen (filename) + 1);
   s->line = 1;
@@ -1114,7 +1105,7 @@ int scanner_tst (void)
   }
 
   res = 0;
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+STOP:
   scanner_free (&s);
   m_free (char_arr);
   m_free (int_arr);
