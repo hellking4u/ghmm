@@ -133,7 +133,7 @@ int **model_DFS (model * c_model)
   int i, j, initials=0;
   int timevisit = 0;
   int *colors;
-  int *parents;
+  int *parents=NULL;
   int **edge_classes=NULL;
 
   ARRAY_CALLOC (colors, c_model->N);
