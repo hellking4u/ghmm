@@ -339,6 +339,41 @@ int sequence_d_free(sequence_d_t **sq);
 
 extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 
+
+/**
+  Extract a single sequence from a larger sequence_t into a new struct.
+  
+  @return sequence_t struct containing a single sequence
+  @param sq   source sequence_t
+  @param index   index of sequence to extract
+*/
+extern sequence_t *sequence_get_singlesequence(sequence_t *sq, int index);
+
+/**
+  Extract a single sequence_d from a larger sequence_d_t into a new struct.
+  
+  @return sequence_d_t struct containing a single sequence
+  @param sq   source sequence_d_t
+  @param index   index of sequence to extract
+*/
+extern sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index);
+
+/**
+  Free a sequence_t struct which holds as sequence a reference to a sequence in a different
+  sequence_t. The function deallocates everything but the reference.
+*/
+extern int sequence_subseq_free (sequence_t ** sq);
+
+/**
+  Free a sequence_d_t struct which holds as sequence a reference to a sequence in a different
+  sequence_d_t. The function deallocates everything but the reference.
+*/
+extern int sequence_d_subseq_free (sequence_d_t ** sqd);
+
+
+
+
+
 /*** !!!!!!!! TO DO: Free functions for all types of pointers !!!!!!!!***/
 
 %inline%{
@@ -413,11 +448,10 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
 
   void call_sequence_free(sequence_t *sq ) {sequence_free(&sq);}  
   void call_sequence_d_free(sequence_d_t *sq ){sequence_d_free(&sq);}  
-    
- /*   sequence_t *copy_sequence_t(sequence_t *source){
-      cp_seq = sequence_calloc(source->seq_number);
-      
-   }        */
+
+  
+  void call_sequence_subseq_free(sequence_t *sq ) {sequence_subseq_free(&sq);}  
+  void call_sequence_d_subseq_free(sequence_d_t *sq ){sequence_d_subseq_free(&sq);}  
 
    
 %}

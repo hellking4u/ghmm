@@ -515,6 +515,7 @@ class EmissionSequence:
             self.setSymbol = ghmmwrapper.set_2d_arrayint
             self.freeFunction = ghmmwrapper.call_sequence_free
             self.addSeqFunction = ghmmwrapper.sequence_add
+            self.freeSubSetFunction = ghmmwrapper.call_sequence_subseq_free
 
             #create a sequence_t with state_labels, if the appropiate parameters are set
             if (isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None )):
@@ -587,6 +588,8 @@ class EmissionSequence:
             self.setSymbol = ghmmwrapper.set_2d_arrayd
             self.freeFunction = ghmmwrapper.call_sequence_d_free
             self.addSeqFunction = ghmmwrapper.sequence_d_add
+            self.freeSubSetFunction = ghmmwrapper.call_sequence_d_subseq_free
+            
 
             if isinstance(sequenceInput, list):
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
@@ -618,15 +621,26 @@ class EmissionSequence:
 
     def __del__(self):
         "Deallocation of C sequence struct."
-        
         #print "__del__ EmissionSequence " + str(self.cseq)
-        # if a parent SequenceSet exits, we only delete the reference
+
+        # if a parent SequenceSet exits, we use self.freeSubSetFunction to free memory
+        # and clean up the other python-side attributes
         if self.ParentSequenceSet is not None:
             #print "__del__ EmissionSequence " + str(self.cseq)
             self.ParentSequenceSet = None
+            self.emissionDomain = None
+            self.freeSubSetFunction(self.cseq)
+            # set labelDomain attribute to None, if applicable
+            try:
+                hasattr(self,labelDomain)
+                self.labelDomain = None
+            except:
+                pass           
+            
+                
         # otherwise the memory is freed        
         else:
-            self.freeFunction( self.cseq)
+            self.freeFunction(self.cseq)
             self.cseq = None
 
     def __len__(self):
@@ -726,6 +740,7 @@ class SequenceSet:
             self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbolSingle = ghmmwrapper.set_arrayint
+            self.getSingleSeq = ghmmwrapper.sequence_get_singlesequence
             
             if (isinstance(sequenceSetInput, str)  and labelInput == None): # from file
                 # reads in the first sequence struct in the input file
@@ -813,7 +828,7 @@ class SequenceSet:
             self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbolSingle = ghmmwrapper.set_arrayd
-
+            self.getSingleSeq = ghmmwrapper.sequence_d_get_singlesequence
                         
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
@@ -917,13 +932,17 @@ class SequenceSet:
         if index >= self.cseq.seq_number:
             raise IndexError
         
-        seq = self.sequenceAllocationFunction(1)
-        seqPtr = self.getPtr(self.cseq.seq,index)
-        seq.seq = self.castPtr(seqPtr)  
-        ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
-        seq.seq_number = 1
-        return EmissionSequence(self.emissionDomain, seq,ParentSequenceSet=self)        
+        #seq = self.sequenceAllocationFunction(1)
+        #seqPtr = self.getPtr(self.cseq.seq,index)
+        #seq.seq = self.castPtr(seqPtr)  
+        #ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
+        #seq.seq_number = 1
+        #return EmissionSequence(self.emissionDomain, seq,ParentSequenceSet=self)        
 
+        seq = self.getSingleSeq(self.cseq,index) 
+        return EmissionSequence(self.emissionDomain, seq,ParentSequenceSet=self) 
+    
+    
     def getSeqLabel(self,index):
         if (self.emissionDomain.CDataType != "double"):
             #print "WARNING: Discrete sequences do not support sequence labels."
@@ -1043,6 +1062,9 @@ class SequenceSetSubset(SequenceSet):
             overloaded.
         
         """
+        
+        # XXX leaks memory ? XXX
+        
         # remove reference on parent SequenceSet object
         self.ParentSequenceSet = None
     
@@ -1435,7 +1457,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     A_col_i = map( lambda x: x[i], A)
                     # Numarray use A[,:i]
                     state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
-                    #fix probabilities by reestimation, else 0
+                    #fix probabilities in reestimation, else 0
                     state.fix = 0
 
                 cmodel.s = states
