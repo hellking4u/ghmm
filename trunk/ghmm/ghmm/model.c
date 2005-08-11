@@ -983,7 +983,6 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   int len = global_len;
   /* int silent_len = 0; */
   int n = 0;
-  int incomplete_seq = 0;
   int state = 0;
 
   sq = sequence_calloc (seq_number);
@@ -1001,14 +1000,11 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   mo->emission_history = 0;
 
   while (n < seq_number) {
-    /* printf("sequenz n = %d\n",n);
-       printf("incomplete_seq: %d\n",incomplete_seq); */
+    /* printf("sequenz n = %d\n",n); */
 
-    if (incomplete_seq == 0) {
-      ARRAY_CALLOC (sq->seq[n], len);
-      state = 0;
-    }
-
+    ARRAY_CALLOC (sq->seq[n], len);
+    state = 0;
+    
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
     sum = 0.0;
@@ -1034,24 +1030,20 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
     else {
       /* first state emits */
       /* printf("first state %d not silent\n",i); */
-
       /* Get a random initial output m */
       m = get_random_output (mo, i, state);
       update_emission_history (mo, m);
-      sq->seq[n][state] = m;
-      state = state + 1;
+      sq->seq[n][state++] = m;
     }
 
     /* check whether sequence was completed by inital state */
-    if (state >= len && incomplete_seq == 1) {
-
+    if (state >= len) {
       /* printf("assinging length %d to sequence %d\n",state,n);
          printf("sequence complete...\n"); */
-      sq->seq_len[n] = state;
-      incomplete_seq = 0;
-      n++;
+      sq->seq_len[n++] = state;
       continue;
     }
+
     while (state < len) {
       /* Get a random state i */
       p = GHMM_RNG_UNIFORM (RNG);
@@ -1065,25 +1057,19 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
       /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state); */
 
       if (sum == 0.0) {
-        if (state < len) {
-          incomplete_seq = 1;
-          /* printf("final state reached - aborting\n"); */
-          break;
-        }
-        else {
-          n++;
-          break;
-        }
+	/* printf("final state reached - aborting\n"); */
+	/* Set Sequence length and sample the next sequence */
+	sq->seq_len[n++] = state;
+	break;
       }
+
       i = mo->s[i].out_id[j];
       if ((mo->model_type & kSilentStates) && mo->silent[i]) {  /* Get a silent state i */
         /* printf("silent state \n");
            silent_len += 1; */
         /*if (silent_len >= Tmax) {
            printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
-           incomplete_seq = 0;
-           sq->seq_len[n] = state; 
-           n++; 
+           sq->seq_len[n++] = state; 
            break;
            } */
       }
@@ -1091,14 +1077,11 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
         /* Get a random output m from state i */
         m = get_random_output (mo, i, state);
         update_emission_history (mo, m);
-        sq->seq[n][state] = m;
-        state++;
+        sq->seq[n][state++] = m;
       }
-      if (state == len) {
-        incomplete_seq = 0;
-        sq->seq_len[n] = state;
-        n++;
-      }
+      if (state == len)
+        sq->seq_len[n++] = state;
+
     }                           /* while (state < len) */
   }                             /* while( n < seq_number ) */
 
@@ -1769,7 +1752,6 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   int len = global_len;
   /*int silent_len = 0; */
   int n = 0;
-  int incomplete_seq = 0;
   int state = 0;
   int label_index = 0;
 
@@ -1797,26 +1779,23 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   mo->emission_history = 0;
 
   while (n < seq_number) {
-    /* printf("sequenz n = %d\n",n);
-       printf("incomplete_seq: %d\n",incomplete_seq);
-     */
-    if (incomplete_seq == 0) {
-      ARRAY_CALLOC (sq->seq[n], len);
+    /* printf("sequenz n = %d\n",n); */
 
-      if (mo->model_type & kSilentStates) {
-
-        /* printf("Model has silent states.\n"); */
-        /* for silent models we have to allocate for the maximal possible number of lables */
-        ARRAY_CALLOC (sq->state_labels[n], len * mo->N);
-      }
-      else {
-        /* printf("Model has no silent states.\n"); */
-        ARRAY_CALLOC (sq->state_labels[n], len);
-      }
-      label_index = 0;
-      state = 0;
+    ARRAY_CALLOC (sq->seq[n], len);
+    
+    if (mo->model_type & kSilentStates) {
+      
+      /* printf("Model has silent states.\n"); */
+      /* for silent models we have to allocate for the maximal possible number of lables */
+      ARRAY_CALLOC (sq->state_labels[n], len * mo->N);
     }
-
+    else {
+      /* printf("Model has no silent states.\n"); */
+      ARRAY_CALLOC (sq->state_labels[n], len);
+    }
+    label_index = 0;
+    state = 0;
+    
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
     sum = 0.0;
@@ -1834,8 +1813,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
     }
 
     /* add label of fist state to the label list */
-    sq->state_labels[n][label_index] = mo->s[i].label;
-    label_index++;
+    sq->state_labels[n][label_index++] = mo->s[i].label;
 
     if (mo->model_type & kSilentStates && mo->silent[i]) {
       /* silent state: we do nothing, no output */
@@ -1850,18 +1828,15 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
       /* Get a random initial output m */
       m = get_random_output (mo, i, state);
       update_emission_history (mo, m);
-      sq->seq[n][state] = m;
-      state = state + 1;
+      sq->seq[n][state++] = m;
     }
 
     /* check whether sequence was completed by inital state */
-    if (state >= len && incomplete_seq == 1) {
+    if (state >= len) {
 
       /* printf("assinging length %d to sequence %d\n",state,n);
          printf("sequence complete...\n"); */
-
       sq->seq_len[n] = state;
-
       sq->state_labels_len[n] = label_index;
 
       /* printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
@@ -1870,8 +1845,6 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
         printf ("reallocating\n");
         ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
       }
-
-      incomplete_seq = 0;
       n++;
       continue;
     }
@@ -1880,7 +1853,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
         /* if maxorder is not yet reached, we should only go to states with order < state */
         transition_impossible = 1;
         for (j = 0; j < mo->s[i].out_states; j++) {
-          j_id = mo->s[i].out_id[j];    /* aufpassen! */
+          j_id = mo->s[i].out_id[j];
           if ((mo->s[j_id].order) < (state)) {
             transition_impossible = 0;
             break;
@@ -1902,7 +1875,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
             if (sum >= p)
               break;
           }
-        } while (mo->s[j_id].order >= state);   /* hier auch aufpassen! */
+        } while (mo->s[j_id].order >= state);
       }
       else {
         /* Get a random state i */
@@ -1923,15 +1896,9 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
       /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state); */
 
       if (sum == 0.0) {
-        if (state < len) {
-          incomplete_seq = 1;
-          /* printf("final state reached - aborting\n"); */
-          break;
-        }
-        else {
-          n++;
-          break;
-        }
+	/* printf("final state reached - aborting\n"); */
+	sq->seq_len[n++] = state;
+	break;
       }
 
       if (mo->model_type & kSilentStates && mo->silent[i]) {    /* Got a silent state i */
@@ -1939,9 +1906,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
            silent_len += 1;
            if (silent_len >= Tmax) {
            printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
-           incomplete_seq = 0;
-           sq->seq_len[n] = state; 
-           n++; 
+           sq->seq_len[n++] = state; 
            break;
            } */
       }
@@ -1949,12 +1914,9 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
         /* Get a random output m from state i */
         m = get_random_output (mo, i, state);
         update_emission_history (mo, m);
-        sq->seq[n][state] = m;
-        state++;
+        sq->seq[n][state++] = m;
       }
       if (state == len) {
-        incomplete_seq = 0;
-
         sq->state_labels_len[n] = label_index;
 
         /* printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
@@ -1964,8 +1926,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
           ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
         }
 
-        sq->seq_len[n] = state;
-        n++;
+        sq->seq_len[n++] = state;
       }
     }                           /* while (state < len) */
   }                             /* while( n < seq_number ) */
