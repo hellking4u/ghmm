@@ -1653,9 +1653,9 @@ extern int sreestimate_baum_welch(smosqd_t *cs);
 
 /********** Here comes all the Pair HMM stuff  **********/
 
-/********** Pair HMM mysequence (mysequence.c) **********/
+/********** Pair HMM psequence (psequence.c) **********/
 
-struct mysequence {
+struct psequence {
   /** for each alphabet in model->number_of_alphabets there is one int seq **/
   int ** seq;
   /** number of alphabets (same as in model) **/
@@ -1668,21 +1668,21 @@ struct mysequence {
   int length;
 };
 
-typedef struct mysequence mysequence;
+typedef struct psequence psequence;
 
-extern mysequence * init_mysequence(int length, int number_of_alphabets, int number_of_d_seqs);
+extern psequence * init_psequence(int length, int number_of_alphabets, int number_of_d_seqs);
 
-extern int free_mysequence(mysequence * seq, int number_of_alphabets, int number_of_d_seqs);
+extern int free_psequence(psequence * seq, int number_of_alphabets, int number_of_d_seqs);
 
-extern void set_discrete_mysequence(mysequence * seq_pointer, int index, int * sequence);
+extern void set_discrete_psequence(psequence * seq_pointer, int index, int * sequence);
 
-extern void set_continuous_mysequence(mysequence * seq_pointer, int index, double * sequence);
+extern void set_continuous_psequence(psequence * seq_pointer, int index, double * sequence);
 
-extern int * get_discrete_mysequence(mysequence * seq_pointer, int index);
+extern int * get_discrete_psequence(psequence * seq_pointer, int index);
 
-extern double * get_continuous_mysequence(mysequence * seq_pointer, int index);
+extern double * get_continuous_psequence(psequence * seq_pointer, int index);
 
-/********** End of Pair HMM mysequence (mysequence.c) **********/
+/********** End of Pair HMM psequence (psequence.c) **********/
 
 /********** Pair HMM model (pmodel.c) **********/
 struct pclass_change_context{
@@ -1692,7 +1692,7 @@ struct pclass_change_context{
     char* python_function;
     
     /** pointer to class function called with seq X, Y and resp indices */
-    int (*get_class)(struct pmodel*, mysequence*, mysequence*, int, int,void*);
+    int (*get_class)(struct pmodel*, psequence*, psequence*, int, int,void*);
     
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
     void* user_data;
@@ -1855,7 +1855,7 @@ extern pstate * get_pstateptr(pstate * ary, int index);
 
 extern int pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
-extern int default_transition_class(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+extern int default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
 extern void set_to_default_transition_class(pclass_change_context * pccc);
 
@@ -1863,21 +1863,21 @@ extern void set_to_default_transition_class(pclass_change_context * pccc);
 
 /********  Pair HMM viterbi (pviterbi.c) *********/
 
-extern int *pviterbi(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int * length);
+extern int *pviterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int * length);
 
-int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, int start_traceback_with);
+int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
 
-double pviterbi_logp(pmodel *mo, mysequence * X, mysequence * Y, int *state_seq, int state_seq_len);
+double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
 
 /********  End of Pair HMM viterbi (pviterbi.c) *********/
 
 /********  Pair HMM viterbi linear space (pviterbi_propagate.c) *********/
 
-extern int * pviterbi_propagate(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, double max_size);
+extern int * pviterbi_propagate(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, double max_size);
 
 %inline%{
 
-int * pviterbi_propagate_segment(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, double max_size, int start_x, int start_y, int stop_x, int stop_y, int start_state, int stop_state, double start_log_p, double stop_log_p){
+int * pviterbi_propagate_segment(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, double max_size, int start_x, int start_y, int stop_x, int stop_y, int start_state, int stop_state, double start_log_p, double stop_log_p){
   int * path_seq = NULL;
   plocal_propagate_store_t * pv = pviterbi_propagate_alloc(mo, Y->length);
   /* Precomputing the log(a_ij) and log(bj(ot)) */
@@ -1909,13 +1909,13 @@ struct threshold_user_data {
 };
 typedef struct threshold_user_data threshold_user_data;
 
-extern int gt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+extern int gt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-extern int lt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+extern int lt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-extern int boolean_and(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+extern int boolean_and(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-extern int boolean_or(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+extern int boolean_or(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
 extern void set_to_lt_sum(pclass_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
 

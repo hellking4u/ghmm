@@ -1660,7 +1660,7 @@ class BackgroundDistribution:
                 else:
                     o = len(bgInput[i]) - 1
                          
-                assert (o % 1) == 0, "Ivalid order of distribution " + str(i) + ": " + str(o)
+                assert (o % 1) == 0, "Invalid order of distribution " + str(i) + ": " + str(o)
 
                 ghmmwrapper.set_arrayint(order,i, int(o))
                 # dynamic allocation, rows have different lenghts
@@ -3705,16 +3705,16 @@ class ComplexEmissionSequence:
                 self.continuousDomains.append(emissionDomains[i])
                 self.continuousInputs.append(sequenceInputs[i])
                 
-        # necessary C functions for accessing the mysequence struct
+        # necessary C functions for accessing the psequence struct
         self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
         self.getSymbol = ghmmwrapper.get_2d_arrayint
         self.setSymbol = ghmmwrapper.set_2d_arrayint
-        self.cleanFunction = ghmmwrapper.free_mysequence
-        self.setDiscreteSequenceFunction = ghmmwrapper.set_discrete_mysequence
-        self.setContinuousSequenceFunction = ghmmwrapper.set_continuous_mysequence
-        self.getDiscreteSequenceFunction = ghmmwrapper.get_discrete_mysequence
-        self.getContinuousSequenceFunction = ghmmwrapper.get_continuous_mysequence
-        self.cseq = ghmmwrapper.init_mysequence(self.length,
+        self.cleanFunction = ghmmwrapper.free_psequence
+        self.setDiscreteSequenceFunction = ghmmwrapper.set_discrete_psequence
+        self.setContinuousSequenceFunction = ghmmwrapper.set_continuous_psequence
+        self.getDiscreteSequenceFunction = ghmmwrapper.get_discrete_psequence
+        self.getContinuousSequenceFunction = ghmmwrapper.get_continuous_psequence
+        self.cseq = ghmmwrapper.init_psequence(self.length,
                                                 len(self.discreteDomains),
                                                 len(self.continuousDomains))
         

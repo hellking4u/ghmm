@@ -202,7 +202,7 @@ void print_pmodel(pmodel* mo) {
   }
 }
 
-int default_transition_class(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data) {
+int default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   return 0;
 }
 

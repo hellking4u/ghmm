@@ -4,11 +4,11 @@
    transition class 0 is the default class */
 
 /* if the sum of the ka values is less than the threshold return 1 */
-int lt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data) {
+int lt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   /* cast the user data */
   threshold_user_data * td = (threshold_user_data *)user_data;
-  if (get_double_mysequence(X, td->seq_index, index_x + td->offset_x) + 
-      get_double_mysequence(Y, td->seq_index, index_y + td->offset_y) < 
+  if (get_double_psequence(X, td->seq_index, index_x + td->offset_x) + 
+      get_double_psequence(Y, td->seq_index, index_y + td->offset_y) < 
       td->threshold)
     return 1;
   else
@@ -16,11 +16,11 @@ int lt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y
 }
 
 /* if the sum of the ka values is greater than the threshold return 1 */
-int gt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data) {
+int gt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   /* cast the user data */
   threshold_user_data * td = (threshold_user_data *)user_data;
-  if (get_double_mysequence(X, td->seq_index, index_x + td->offset_x) + 
-      get_double_mysequence(Y, td->seq_index, index_y + td->offset_y) >
+  if (get_double_psequence(X, td->seq_index, index_x + td->offset_x) + 
+      get_double_psequence(Y, td->seq_index, index_y + td->offset_y) >
       td->threshold)
     return 1;
   else
@@ -29,10 +29,10 @@ int gt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y
 
 /* reads int sequences of boolean precomputed classification. If both positions
    are true return true else false */
-int boolean_and(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data) {
+int boolean_and(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   boolean_user_data * td = (boolean_user_data *)user_data;
-  if (get_char_mysequence(X, td->seq_index, index_x + td->offset_x) && 
-      get_char_mysequence(Y, td->seq_index, index_y + td->offset_y))
+  if (get_char_psequence(X, td->seq_index, index_x + td->offset_x) && 
+      get_char_psequence(Y, td->seq_index, index_y + td->offset_y))
     return 1;
   else
     return 0;
@@ -40,10 +40,10 @@ int boolean_and(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int in
 
 /* reads int sequences of boolean precomputed classification. If one position
    is true return true else false */
-int boolean_or(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data) {
+int boolean_or(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   boolean_user_data * td = (boolean_user_data *)user_data;
-  if (get_char_mysequence(X, td->seq_index, index_x + td->offset_x) ||
-      get_char_mysequence(Y, td->seq_index, index_y + td->offset_y))
+  if (get_char_psequence(X, td->seq_index, index_x + td->offset_x) ||
+      get_char_psequence(Y, td->seq_index, index_y + td->offset_y))
     return 1;
   else
     return 0;

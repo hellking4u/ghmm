@@ -58,11 +58,11 @@ typedef struct plocal_propagate_store_t {
 
 cell * init_cell(int x, int y, int state, int previous_state, double log_p, double log_a);
 
-int * pviterbi_propagate(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, double max_size);
+int * pviterbi_propagate(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, double max_size);
 
-int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, cell *start, cell *stop, double max_size, plocal_propagate_store_t * pv);
+int * pviterbi_propagate_recursion(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, cell *start, cell *stop, double max_size, plocal_propagate_store_t * pv);
 
-cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell * start, cell * stop, double * log_p, plocal_propagate_store_t * pv);
+cell * pviterbi_propagate_step(pmodel *mo, psequence * X, psequence * Y, cell * start, cell * stop, double * log_p, plocal_propagate_store_t * pv);
 
 plocal_propagate_store_t * pviterbi_propagate_alloc(pmodel *mo, int len_y);
   

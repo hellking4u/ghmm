@@ -198,7 +198,7 @@ int pviterbi_propagate_free(plocal_propagate_store_t **v, int n, int max_offset_
 #undef CUR_PROC
 }
 
-double sget_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j, mysequence * X, mysequence * Y, int index_x, int index_y) {
+double sget_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   /* determine the transition class for the source state */
   int id = pv->mo->s[i].in_id[j];
   int cl = pv->mo->s[id].class_change->get_class(pv->mo, X, Y, index_x,index_y,
@@ -206,7 +206,7 @@ double sget_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j, mysequenc
   return pv->log_in_a[i][j][cl];
 }
 
-double get_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j, mysequence * X, mysequence * Y, int index_x, int index_y) {
+double get_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   return pv->log_in_a[i][j][0];
 }
 
@@ -285,7 +285,7 @@ void push_back_phi_prop(plocal_propagate_store_t * pv, int length_y){
       }
 }
 
-void init_start_stop(cell * start, cell *stop, mysequence * X, mysequence * Y, int * start_x, int * start_y, int * stop_x, int * stop_y) {
+void init_start_stop(cell * start, cell *stop, psequence * X, psequence * Y, int * start_x, int * start_y, int * stop_x, int * stop_y) {
   if (start != NULL) {
     *start_x = start->x;
     *start_y = start->y;
@@ -304,7 +304,7 @@ void init_start_stop(cell * start, cell *stop, mysequence * X, mysequence * Y, i
   }
 }
 
-int * pviterbi_propagate(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, double max_size) {
+int * pviterbi_propagate(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, double max_size) {
 #define CUR_PROC "pviterbi_propagate"
   /* Divide and conquer algorithm to reduce the memory requirement */
   
@@ -339,7 +339,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, cell *start, cell *stop, double max_size, plocal_propagate_store_t * pv) {
+int * pviterbi_propagate_recursion(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, cell *start, cell *stop, double max_size, plocal_propagate_store_t * pv) {
 #define CUR_PROC "pviterbi_propagate_recursion"
   /* Divide and conquer algorithm to reduce the memory requirement */
   
@@ -377,8 +377,8 @@ int * pviterbi_propagate_recursion(pmodel *mo, mysequence * X, mysequence * Y, d
      for the normal pviterbi algorithm */
   if ((double)(stop_x - start_x) * (double)(stop_y - start_y) < max_size) {
     /* to use the unchanged pviterbi algorithm take slices of the sequences */
-    mysequence * tractable_X = slice_mysequence(X, start_x, stop_x);
-    mysequence * tractable_Y = slice_mysequence(Y, start_y, stop_y);
+    psequence * tractable_X = slice_psequence(X, start_x, stop_x);
+    psequence * tractable_Y = slice_psequence(Y, start_y, stop_y);
     /* if this is not the very first path segment starting at zero:
        temporarily change the initial probabability to go into state k+1 */
 #ifdef DEBUG
@@ -530,13 +530,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 
-void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y, cell * start, cell * stop) {
+void init_phi_prop(plocal_propagate_store_t * pv, psequence * X, psequence * Y, cell * start, cell * stop) {
   int u, v, j, i, off_x, y, osc;
   double value, max_value, previous_prob, log_b_i, log_in_a_ij ;
   int start_x, start_y, stop_x, stop_y, middle_x;
   pmodel * mo = pv->mo;
-  double (*log_in_a)(plocal_propagate_store_t*, int, int, mysequence*, 
-		     mysequence*, int, int);
+  double (*log_in_a)(plocal_propagate_store_t*, int, int, psequence*, 
+		     psequence*, int, int);
   log_in_a = &sget_log_in_a_prop;
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
   pv->start_x = start_x;
@@ -630,24 +630,24 @@ void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 #ifdef DEBUG
-	  int emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u + start_x), 
-			      get_char_mysequence(Y, mo->s[i].alphabet, v),
+	  int emission = pair(get_char_psequence(X, mo->s[i].alphabet, u + start_x), 
+			      get_char_psequence(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 	  if (emission > emission_table_size(mo, i)){
 	    printf("State %i\n", i);
 	    print_pstate(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		   get_char_mysequence(X, mo->s[i].alphabet, u),
-		   get_char_mysequence(Y, mo->s[i].alphabet, v),
+		   get_char_psequence(X, mo->s[i].alphabet, u),
+		   get_char_psequence(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
 		   emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b_prop(pv, i, pair(get_char_mysequence(X, 
+	  log_b_i = log_b_prop(pv, i, pair(get_char_psequence(X, 
 							       mo->s[i].alphabet,
 							       u + start_x),
-					   get_char_mysequence(Y, 
+					   get_char_psequence(Y, 
 							       mo->s[i].alphabet,
 							       v),
 					   mo->size_of_alphabet[mo->s[i].alphabet],
@@ -672,8 +672,8 @@ void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y
 #ifdef DEBUG	     
 	      printf("Initial log prob state %i at (%i, %i) = %f\n", i, start_x + u, v, get_phi_prop(pv, u, v, 0, 0, i));
 	      printf("Characters emitted X: %i, Y: %i\n", 
-		     get_char_mysequence(X, mo->s[i].alphabet, u + start_x),
-		     get_char_mysequence(Y, mo->s[i].alphabet, v));
+		     get_char_psequence(X, mo->s[i].alphabet, u + start_x),
+		     get_char_psequence(Y, mo->s[i].alphabet, v));
 #endif
 	    }
 	    if (get_phi_prop(pv, u, v, 0, 0, i) != 1) {
@@ -735,7 +735,7 @@ void init_phi_prop(plocal_propagate_store_t * pv, mysequence * X, mysequence * Y
   } /* End for u in X */ 
 }
 
-cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell * start, cell * stop, double * log_p, plocal_propagate_store_t * pv) {
+cell * pviterbi_propagate_step(pmodel *mo, psequence * X, psequence * Y, cell * start, cell * stop, double * log_p, plocal_propagate_store_t * pv) {
 #define CUR_PROC "pviterbi_step"
   /* printf("---- propagate step -----\n"); */
   int u, v, j, i;
@@ -745,8 +745,8 @@ cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell 
   double log_b_i, log_in_a_ij;
   cell * middle = NULL;
   int middle_x;
-  double (*log_in_a)(plocal_propagate_store_t*, int, int, mysequence*, 
-		     mysequence*, int, int);
+  double (*log_in_a)(plocal_propagate_store_t*, int, int, psequence*, 
+		     psequence*, int, int);
   log_in_a = &sget_log_in_a_prop;
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
   middle_x = start_x + (stop_x - start_x) / 2;
@@ -823,22 +823,22 @@ cell * pviterbi_propagate_step(pmodel *mo, mysequence * X, mysequence * Y, cell 
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 #ifdef DEBUG
-	  int emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-			      get_char_mysequence(Y, mo->s[i].alphabet, v),
+	  int emission = pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+			      get_char_psequence(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 	  if (emission > emission_table_size(mo, i)){
 	    printf("State %i\n", i);
 	    print_pstate(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		   get_char_mysequence(X, mo->s[i].alphabet, u),
-		   get_char_mysequence(Y, mo->s[i].alphabet, v),
+		   get_char_psequence(X, mo->s[i].alphabet, u),
+		   get_char_psequence(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
 		   emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b_prop(pv, i, pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-					   get_char_mysequence(Y, mo->s[i].alphabet, v),
+	  log_b_i = log_b_prop(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+					   get_char_psequence(Y, mo->s[i].alphabet, v),
 					   mo->size_of_alphabet[mo->s[i].alphabet],
 					   mo->s[i].offset_x, mo->s[i].offset_y));
 	  /* No maximum found (that is, state never reached)
