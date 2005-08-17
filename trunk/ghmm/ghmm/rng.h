@@ -61,7 +61,7 @@ typedef gsl_rng GHMM_RNG;
 #define GHMM_RNG_UNIFORM gsl_rng_uniform
 #define GHMM_RNG_NAME gsl_rng_name
 
-#endif
+#endif /*  DO_WITH_GSL  */
 
 
 /** @name rng Initialization for the random number generator */

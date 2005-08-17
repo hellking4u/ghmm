@@ -181,6 +181,21 @@ extern "C" {
 #define m_calloc(ptr, entries) (ptr = mes_calloc_depr( sizeof(*(ptr))*(entries)))
 #endif
 
+#ifndef not_deprecated_m_realloc
+#define not_deprecated_m_realloc(ptr,entries) \
+  (mes_realloc ( (void**)&(ptr), sizeof(*(ptr))*(entries)))
+#endif
+
+#ifndef not_deprecated_m_malloc
+#define not_deprecated_m_malloc(ptr, entries) \
+  (ptr = mes_malloc( sizeof(*(ptr))*(entries)))
+#endif
+
+#ifndef not_deprecated_m_calloc
+#define not_deprecated_m_calloc(ptr, entries) \
+  (ptr = mes_calloc( sizeof(*(ptr))*(entries)))
+#endif
+
 #ifndef m_memset
 #define m_memset(dst, c, entries) memset( (dst), (c), sizeof(*(dst))*(entries))
 #endif

@@ -73,7 +73,7 @@ const char *ghmm_rng_name (GHMM_RNG * r)
 void ghmm_rng_init (void)
 {
   initstate (1, rng_state, sizeof (ghmm_rng_state));
-  RNG = rng_state;
+  RNG = &rng_state;
 }
 
 #else

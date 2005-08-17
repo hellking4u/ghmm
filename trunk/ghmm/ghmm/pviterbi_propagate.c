@@ -531,7 +531,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 void init_phi_prop(plocal_propagate_store_t * pv, psequence * X, psequence * Y, cell * start, cell * stop) {
-  int u, v, j, i, off_x, y, osc;
+  int u, v, j, i, off_x, y;
   double value, max_value, previous_prob, log_b_i, log_in_a_ij ;
   int start_x, start_y, stop_x, stop_y, middle_x;
   pmodel * mo = pv->mo;

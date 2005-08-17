@@ -180,7 +180,7 @@ static int scanner_nextchar (scanner_t * s, int expect)
     return (0);
   while (s->pos + 1 >= s->txtlen) {
     int mes_stat = mes_ability (0);
-    int err = m_realloc (s->txt, s->txtlen + 256);
+    int err = not_deprecated_m_realloc (s->txt, s->txtlen + 256);
     mes_ability (mes_stat);
 
     if (err) {
@@ -514,7 +514,7 @@ int scanner_get_name (scanner_t * s)
   while (m_scanner_isxalpha (s->c) || m_scanner_isdigit (s->c)) {
     while (pos + 1 >= s->idlen) {
       int mes_stat = mes_ability (0);
-      int err = m_realloc (s->txt, s->txtlen + 256);
+      int err = not_deprecated_m_realloc (s->txt, s->txtlen + 256);
       mes_ability (mes_stat);
       if (err) {
         scanner_error (s, "identifier too long");
@@ -895,7 +895,7 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
     goto STOP;
   }
   mes_stat = mes_ability (0);
-  err = !m_malloc (val, maxlen);
+  err = !not_deprecated_m_malloc (val, maxlen);
   mes_ability (mes_stat);
   if (err) {
     mprintf (txt, sizeof (txt), "Not enough memory to read %s array", type);
@@ -937,7 +937,7 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
 
     if (i == maxlen) {
       mes_stat = mes_ability (0);
-      err = m_realloc (val, maxlen + 16 * size);
+      err = not_deprecated_m_realloc (val, maxlen + 16 * size);
       mes_ability (mes_stat);
       if (err) {
         mprintf (txt, sizeof (txt), "Not enough memory to read %s array",
@@ -949,7 +949,7 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
     }
   }
   mes_stat = mes_ability (0);
-  m_realloc (val, i);           /* Do'nt worry if this fails ! */
+  not_deprecated_m_realloc (val, i);           /* Do'nt worry if this fails ! */
   mes_ability (mes_stat);
 
   *len = i / size;

@@ -801,13 +801,24 @@ int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
 
   /* main loop Baum-Welch-Alg. */
   while (n <= max_step) {
-
-    if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq,
-                             &log_p, sq->seq_w) == -1) {
-      str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
-      mes_prot (str);
-      m_free (str);
-      goto STOP;
+    
+    if (1) {
+      if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq,
+			      &log_p, sq->seq_w) == -1) {
+	str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
+	mes_prot (str);
+	m_free (str);
+	goto STOP;
+      }
+    }
+    else {
+      if (reestimate_one_step_lean(mo, r, sq->seq_number, sq->seq_len, sq->seq,
+			      &log_p, sq->seq_w) == -1) {
+	str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
+	mes_prot (str);
+	m_free (str);
+	goto STOP;
+      }
     }
 
     /*if (n == 1)*/

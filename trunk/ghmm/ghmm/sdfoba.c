@@ -117,7 +117,7 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
   double c_t, dblems;
   int class = 0;
 
-  /*if (mo->model_type == kSilentStates)
+  /*if (mo->model_type & kSilentStates)
      sdmodel_topo_ordering(mo);
    */
   sdfoba_initforward (mo, alpha[0], O[0], scale);
@@ -132,11 +132,11 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
       scale[t] = 0.0;
       /*      printf("\nStep t=%i mit len=%i, O[i]=%i\n",t,len,O[t]);*/
       if (mo->cos > 1)
-        class = mo->get_class (mo->N, t - 1);
+        class = mo->get_class (&(mo->N), t-1);
       /*iterate over non-silent states*/
       /*printf("\nnach Class\n");*/
       for (i = 0; i < mo->N; i++) {
-        if (mo->model_type != kSilentStates || !(mo->silent[i])) {
+        if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
           if (O[t] != mo->M) {
             dblems = mo->s[i].b[O[t]];
           }
@@ -155,7 +155,7 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
       }
       /*printf("\nvor silent states\n");*/
       /*iterate over silent state*/
-      if (mo->model_type == kSilentStates) {
+      if (mo->model_type & kSilentStates) {
         for (i = 0; i < mo->topo_order_length; i++) {
           /*printf("\nget id\n");*/
           id = mo->topo_order[i];
@@ -242,7 +242,7 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
   double c_t;
   int class = 0;
 
-  if (mo->model_type == kSilentStates)
+  if (mo->model_type & kSilentStates)
     sdmodel_topo_ordering (mo);
 
   sdfobau_initforward (mo, alpha[0], O[0], scale);
@@ -255,10 +255,10 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
     for (t = 1; t < len; t++) {
       scale[t] = 0.0;
       if (mo->cos > 1)
-        class = mo->get_class (mo->N, t - 1);
+        class = mo->get_class (&(mo->N), t - 1);
       /*iterate over non-silent states*/
       for (i = 0; i < mo->N; i++) {
-        if (mo->model_type != kSilentStates || !(mo->silent[i])) {
+        if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
           alpha[t][i] =
             sdfoba_stepforward (&mo->s[i], alpha[t - 1], mo->s[i].b[O[t]],
                                 class);
@@ -266,7 +266,7 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
         }
       }
       /*iterate over silent state       */
-      if (mo->model_type == kSilentStates) {
+      if (mo->model_type & kSilentStates) {
         for (i = 0; i < mo->topo_order_length; i++) {
           id = mo->topo_order[i];
           alpha[t][id] = sdfoba_stepforward (&mo->s[id], alpha[t], 1, class);
