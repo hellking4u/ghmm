@@ -14,27 +14,21 @@ extern "C" {
 #endif
 
 #ifndef ARRAY_MALLOC
-#define ARRAY_MALLOC(ptr, entries)  do {                                                       \
-                                        if (!((ptr) = mes_malloc(sizeof(*(ptr)) * (entries)))) \
-                                            {mes_proc(); goto STOP;}                           \
-					}                                                      \
-                                    while (0)
+#define ARRAY_MALLOC(ptr, entries) { if (!((ptr) = mes_malloc(sizeof(*(ptr)) * (entries)))) \
+                                         {mes_proc(); goto STOP;}                           \
+				   }
 #endif
 
 #ifndef ARRAY_CALLOC
-#define ARRAY_CALLOC(ptr, entries)  do {                                                         \
-                                        if (!((ptr) = mes_calloc(sizeof(*(ptr)) * (entries))))   \
-                                            {mes_proc(); goto STOP;}                             \
-				       }                                                         \
-                                    while (0)
+#define ARRAY_CALLOC(ptr, entries) { if (!((ptr) = mes_calloc(sizeof(*(ptr)) * (entries))))   \
+                                         {mes_proc(); goto STOP;}                             \
+				   }
 #endif
 
 #ifndef ARRAY_REALLOC
-#define ARRAY_REALLOC(ptr, entries) do {                                                            \
-                                        if (mes_realloc ((void**)&(ptr), sizeof(*(ptr))*(entries))) \
-                                            {mes_proc(); goto STOP;}                                \
-				       }                                                            \
-                                    while (0)
+#define ARRAY_REALLOC(ptr, entries) { if (mes_realloc ((void**)&(ptr), sizeof(*(ptr))*(entries))) \
+                                          {mes_proc(); goto STOP;}                                \
+				    }
 #endif
 
 
