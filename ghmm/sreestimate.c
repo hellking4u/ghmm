@@ -275,7 +275,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
   int a_num_pos, a_denom_pos, c_denom_pos, c_num_pos;
   char *str;
 
-  double p_i;
+  double p_i=0.0;
   int g, h;
 
   if (r->pi_denom <= DBL_MIN) {

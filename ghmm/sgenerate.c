@@ -328,7 +328,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
                               sgeneration_mode_t mode)
 {
 # define CUR_PROC "sgenerate_single_ext"
-  int i, j, m, t, class, up = 0;
+  int i, j, m, t, class=0, up = 0;
   double *new_O = NULL, *scale = NULL, *initial_distribution = NULL;
   double log_p, sum, p;
   int k;

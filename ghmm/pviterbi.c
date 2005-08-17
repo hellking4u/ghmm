@@ -237,7 +237,6 @@ double log_b(plocal_store_t * pv, int state, int emission) {
 }
 
 void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
-  int osc;
 #ifdef DEBUG
   int emission;
 #endif

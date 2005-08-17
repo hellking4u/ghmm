@@ -51,6 +51,13 @@
 #define LAMBDA 0.14
 #define TRIM(o, n) ((1-LAMBDA)*(o) + LAMBDA*(n))
 
+#ifdef __STRICT_ANSI__
+#define logl(A) log(A)
+#endif
+#ifdef __STRICT_ANSI__
+#define expl(A) exp(A)
+#endif
+
 /* forward declaration */
 static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
                      double ******matrix_b, double *****matrix_a,

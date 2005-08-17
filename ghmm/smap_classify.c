@@ -240,7 +240,7 @@ int smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
 #define CUR_PROC "smap_bayes"
   double *prior, *log_p;
   double sum = 0.0, p_von_O = 0.0, max_result = 0.0;
-  int *error;
+  int *error=NULL;
   int found_model = 0, err = 0;
   int m, max_model = -1;
 
