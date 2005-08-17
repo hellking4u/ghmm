@@ -48,7 +48,7 @@ struct pclass_change_context{
     
     /** pointer to class function called with seq X, Y and resp indices 
      in the void you can pass the user data */
-    int (*get_class)(struct pmodel*, mysequence*, mysequence*, int, int,void*);
+    int (*get_class)(struct pmodel*, psequence*, psequence*, int, int,void*);
     
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
     void* user_data;
@@ -218,7 +218,7 @@ int pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
 int emission_table_size(pmodel * mo, int state_index);
   
-int default_transition_class(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data) ;
+int default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) ;
 
 void set_to_default_transition_class(pclass_change_context * pccc);
 

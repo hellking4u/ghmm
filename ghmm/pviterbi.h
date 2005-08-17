@@ -75,7 +75,7 @@ typedef struct plocal_store_t {
 
   void print_pviterbi_store(plocal_store_t * pv);
 
-  void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y);
+  void init_phi(plocal_store_t * pv, psequence * X, psequence * Y);
 
   double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state);
 
@@ -99,11 +99,11 @@ typedef struct plocal_store_t {
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
-int *pviterbi(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length);
+int *pviterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
 
-int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, int start_traceback_with);
+int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
 
-int *pviterbi_test(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length);
+int *pviterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
 
 /* static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y); */
 /* static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y); */
@@ -119,7 +119,7 @@ int *pviterbi_test(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, in
   @return log P
   */
 
-double pviterbi_logp(pmodel *mo, mysequence * X, mysequence * Y, int *state_seq, int state_seq_len);
+double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
 
 
 #ifdef __cplusplus

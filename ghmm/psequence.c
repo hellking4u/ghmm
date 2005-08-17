@@ -40,9 +40,9 @@
 #include "matrix.h"
 #include <ghmm/internal.h>
 
-mysequence * init_mysequence(int length, int number_of_alphabets, int number_of_d_seqs) {
-#define CUR_PROC "init_mysequence"
-  mysequence * seq;
+psequence * init_psequence(int length, int number_of_alphabets, int number_of_d_seqs) {
+#define CUR_PROC "init_psequence"
+  psequence * seq;
 
   ARRAY_MALLOC (seq, 1);
 
@@ -62,13 +62,13 @@ mysequence * init_mysequence(int length, int number_of_alphabets, int number_of_
 
   return seq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  free_mysequence(seq, number_of_alphabets, number_of_d_seqs);
+  free_psequence(seq, number_of_alphabets, number_of_d_seqs);
   return NULL;
 #undef CUR_PROC
 }
 
-int free_mysequence(mysequence * seq, int number_of_alphabets, int number_of_d_seqs) {
-#define CUR_PROC "free_mysequence"
+int free_psequence(psequence * seq, int number_of_alphabets, int number_of_d_seqs) {
+#define CUR_PROC "free_psequence"
   int i;
   mes_check_ptr(seq, return(-1));
   if ( seq == NULL ) return(0);
@@ -87,31 +87,31 @@ int free_mysequence(mysequence * seq, int number_of_alphabets, int number_of_d_s
 #undef CUR_PROC
 }
 
-void set_discrete_mysequence(mysequence * seq_pointer, int index, int * int_seq) {
+void set_discrete_psequence(psequence * seq_pointer, int index, int * int_seq) {
   seq_pointer->seq[index] = int_seq;
 }
   
-void set_continuous_mysequence(mysequence * seq_pointer, int index, double * d_seq) {
+void set_continuous_psequence(psequence * seq_pointer, int index, double * d_seq) {
   seq_pointer->d_value[index] = d_seq;
 }
 
-int * get_discrete_mysequence(mysequence * seq_pointer, int index){
+int * get_discrete_psequence(psequence * seq_pointer, int index){
   return seq_pointer->seq[index];
 }
 
-double * get_continuous_mysequence(mysequence * seq_pointer, int index){
+double * get_continuous_psequence(psequence * seq_pointer, int index){
   return seq_pointer->d_value[index];
 }
 
-mysequence * slice_mysequence(mysequence * seq_pointer, int start, int stop){
+psequence * slice_psequence(psequence * seq_pointer, int start, int stop){
   int i, j;
-  mysequence * slice;
+  psequence * slice;
 
   if (stop > seq_pointer->length) {
     fprintf(stderr, "Slice: sequence index (%i) out of bounds (%i)\n", 
 	    stop, seq_pointer->length);
   }
-  slice = init_mysequence(stop - start, seq_pointer->number_of_alphabets,
+  slice = init_psequence(stop - start, seq_pointer->number_of_alphabets,
 			  seq_pointer->number_of_d_seqs);
   for (i=start; i<stop; i++){
     for (j=0; j<slice->number_of_alphabets; j++)
@@ -122,7 +122,7 @@ mysequence * slice_mysequence(mysequence * seq_pointer, int start, int stop){
   return slice;
 }
 
-int get_char_mysequence(mysequence * seq_pointer, int alphabet, int index){
+int get_char_psequence(psequence * seq_pointer, int alphabet, int index){
   if (alphabet < seq_pointer->number_of_alphabets) {
     if (index < 0)
       return -1;
@@ -141,7 +141,7 @@ int get_char_mysequence(mysequence * seq_pointer, int alphabet, int index){
   }
 }
 
-double get_double_mysequence(mysequence * seq_pointer, int seq_index, int index){
+double get_double_psequence(psequence * seq_pointer, int seq_index, int index){
   if (seq_index < seq_pointer->number_of_d_seqs) {
     if (index < 0)
       return 0;

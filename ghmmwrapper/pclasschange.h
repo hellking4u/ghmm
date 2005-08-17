@@ -27,13 +27,13 @@ struct boolean_user_data {
 };
 typedef struct boolean_user_data boolean_user_data;
 
-int gt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+int gt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-int lt_sum(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+int lt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-int boolean_and(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+int boolean_and(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-int boolean_or(pmodel * mo, mysequence * X, mysequence * Y, int index_x, int index_y, void * user_data);
+int boolean_or(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
 void set_to_lt_sum(pclass_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
 

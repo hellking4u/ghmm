@@ -213,7 +213,7 @@ void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
 /*   } */
 /* } */
 
-double sget_log_in_a(plocal_store_t * pv, int i, int j, mysequence * X, mysequence * Y, int index_x, int index_y) {
+double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   /* determine the transition class for the source state */
   int id = pv->mo->s[i].in_id[j];
   int cl = pv->mo->s[id].class_change->get_class(pv->mo, X, Y, index_x,index_y,
@@ -221,7 +221,7 @@ double sget_log_in_a(plocal_store_t * pv, int i, int j, mysequence * X, mysequen
   return pv->log_in_a[i][j][cl];
 }
 
-double get_log_in_a(plocal_store_t * pv, int i, int j, mysequence * X, mysequence * Y, int index_x, int index_y) {
+double get_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   return pv->log_in_a[i][j][0];
 }
 
@@ -236,7 +236,7 @@ double log_b(plocal_store_t * pv, int state, int emission) {
   return pv->log_b[state][emission];
 }
 
-void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
+void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
   int osc;
 #ifdef DEBUG
   int emission;
@@ -246,7 +246,7 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
   double value, max_value, previous_prob, log_b_i;  
   /* printf("pviterbi init\n"); */
   pmodel * mo = pv->mo;
-  double (*log_in_a)(plocal_store_t*, int, int, mysequence*, mysequence*, 
+  double (*log_in_a)(plocal_store_t*, int, int, psequence*, psequence*, 
 		     int, int);
   log_in_a = &sget_log_in_a;
 
@@ -311,22 +311,22 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
 		{;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	    }
 #ifdef DEBUG
-	    emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-				get_char_mysequence(Y, mo->s[i].alphabet, v),
+	    emission = pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+				get_char_psequence(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y);
 	    if (emission > emission_table_size(mo, i)){
 	      printf("State %i\n", i);
 	      print_pstate(&(mo->s[i]));
 	      printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		     get_char_mysequence(X, mo->s[i].alphabet, u),
-		     get_char_mysequence(Y, mo->s[i].alphabet, v),
+		     get_char_psequence(X, mo->s[i].alphabet, u),
+		     get_char_psequence(Y, mo->s[i].alphabet, v),
 		     mo->size_of_alphabet[mo->s[i].alphabet],
 		     emission_table_size(mo, i), emission);
 	    }
 #endif
-	    log_b_i = log_b(pv, i, pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-					get_char_mysequence(Y, mo->s[i].alphabet, v),
+	    log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+					get_char_psequence(Y, mo->s[i].alphabet, v),
 					mo->size_of_alphabet[mo->s[i].alphabet],
 					mo->s[i].offset_x, mo->s[i].offset_y));
 	    
@@ -349,8 +349,8 @@ void init_phi(plocal_store_t * pv, mysequence * X, mysequence * Y) {
 #ifdef DEBUG
 		printf("Initial log prob state %i at (%i, %i) = %f\n", i, u, v, get_phi(pv, u, v, 0, 0, i));
 		printf("Characters emitted X: %i, Y: %i\n", 
-		       get_char_mysequence(X, mo->s[i].alphabet, u),
-		       get_char_mysequence(Y, mo->s[i].alphabet, v));
+		       get_char_psequence(X, mo->s[i].alphabet, u),
+		       get_char_psequence(Y, mo->s[i].alphabet, v));
 #endif
 	      }
 	      if (get_phi(pv, u, v, 0, 0, i) != 1)
@@ -451,7 +451,7 @@ int get_psi(plocal_store_t * pv, int x, int y, int state) {
   return pv->psi[x + pv->mo->max_offset_x][y + pv->mo->max_offset_y][state];
 }
 
-int *pviterbi_test(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length) {
+int *pviterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length) {
   plocal_store_t *pv;
   printf("---- viterbi test -----\n");
   /*print_pmodel(mo);*/
@@ -464,11 +464,11 @@ int *pviterbi_test(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, in
 }
 
 
-int *pviterbi(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length) {
+int *pviterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length) {
   return pviterbi_variable_tb(mo, X, Y, log_p, path_length, -1);
 }
 
-int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *log_p, int *path_length, int start_traceback_with)
+int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with)
 {
 #define CUR_PROC "pviterbi"
   int u, v, j, i, off_x, off_y, current_state_index;
@@ -477,7 +477,7 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
   int *state_seq = NULL;
   int emission;
   double log_b_i, log_in_a_ij;
-  double (*log_in_a)(plocal_store_t*, int, int, mysequence*, mysequence*, 
+  double (*log_in_a)(plocal_store_t*, int, int, psequence*, psequence*, 
 		     int, int);
   /* printf("---- viterbi -----\n"); */
   i_list * state_list;
@@ -534,8 +534,8 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 
-	  emission = pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-			      get_char_mysequence(Y, mo->s[i].alphabet, v),
+	  emission = pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+			      get_char_psequence(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 #ifdef DEBUG
@@ -543,14 +543,14 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
 	    printf("State %i\n", i);
 	    print_pstate(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		   get_char_mysequence(X, mo->s[i].alphabet, u),
-		   get_char_mysequence(Y, mo->s[i].alphabet, v),
+		   get_char_psequence(X, mo->s[i].alphabet, u),
+		   get_char_psequence(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
 		   emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b(pv, i, pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-				      get_char_mysequence(Y, mo->s[i].alphabet, v),
+	  log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+				      get_char_psequence(Y, mo->s[i].alphabet, v),
 				      mo->size_of_alphabet[mo->s[i].alphabet],
 				      mo->s[i].offset_x, mo->s[i].offset_y));
 
@@ -614,9 +614,9 @@ int *pviterbi_variable_tb(pmodel *mo, mysequence * X, mysequence * Y, double *lo
 #ifdef DEBUG
     printf("D & C traceback from state %i!\n", start_traceback_with);
     printf("Last characters emitted X: %i, Y: %i\n", 
-	   get_char_mysequence(X, mo->s[start_traceback_with].alphabet, 
+	   get_char_psequence(X, mo->s[start_traceback_with].alphabet, 
 			       X->length-1),
-	   get_char_mysequence(Y, mo->s[start_traceback_with].alphabet, 
+	   get_char_psequence(Y, mo->s[start_traceback_with].alphabet, 
 			       Y->length-1));
     for (j = 0; j < mo->N; j++){
       printf("phi(len_x)(len_y)(%i)=%f\n", j, get_phi(pv, X->length-1, Y->length-1, 0, 0, j)); 
@@ -688,7 +688,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   
   
 /*============================================================================*/
-double pviterbi_logp(pmodel *mo, mysequence * X, mysequence * Y, int *state_seq, int state_seq_len) {
+double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len) {
 #define CUR_PROC "viterbi_logp"
   int s, t, i, j, u, v;
   double log_p = 0.0;
@@ -715,15 +715,15 @@ double pviterbi_logp(pmodel *mo, mysequence * X, mysequence * Y, int *state_seq,
     u += mo->s[i].offset_x;
     v += mo->s[i].offset_y;
     /* get the emission probability */
-    log_b_i = log_b(pv, i, pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-				get_char_mysequence(Y, mo->s[i].alphabet, v),
+    log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+				get_char_psequence(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y));
     if (log_b_i == 1.0) { /* chars cant be emitted */
       pviterbi_free(&pv, mo->N, 0, 0, mo->max_offset_x, mo->max_offset_y);
       fprintf(stderr, "characters (%i, %i) at position (%i, %i) cannot be emitted by state %i (t=%i)\n",
-	      get_char_mysequence(X, mo->s[i].alphabet, u),
-	      get_char_mysequence(Y, mo->s[i].alphabet, v), u, v, i, t);
+	      get_char_psequence(X, mo->s[i].alphabet, u),
+	      get_char_psequence(Y, mo->s[i].alphabet, v), u, v, i, t);
       return 1.0;
     }
     log_p += log_b_i;
@@ -759,15 +759,15 @@ double pviterbi_logp(pmodel *mo, mysequence * X, mysequence * Y, int *state_seq,
       return 1.0; /* transition not possible */
     }
     /* emission probability */
-    log_b_i = log_b(pv, i, pair(get_char_mysequence(X, mo->s[i].alphabet, u), 
-				get_char_mysequence(Y, mo->s[i].alphabet, v),
+    log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
+				get_char_psequence(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y));
     if (log_b_i == 1.0) {
       pviterbi_free(&pv, mo->N, 0, 0, mo->max_offset_x, mo->max_offset_y);
       fprintf(stderr, "characters (%i, %i) at position (%i, %i) cannot be emitted by state %i (t=%i)\n",
-	      get_char_mysequence(X, mo->s[i].alphabet, u),
-	      get_char_mysequence(Y, mo->s[i].alphabet, v), u, v, i, t);
+	      get_char_psequence(X, mo->s[i].alphabet, u),
+	      get_char_psequence(Y, mo->s[i].alphabet, v), u, v, i, t);
       return 1.0; /* characters cant be emitted */
     }
     log_p += log_in_a + log_b_i;
