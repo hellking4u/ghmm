@@ -108,7 +108,15 @@ pkginclude_HEADERS = ghmm.h \
 		  pmodel.h \
 		  linkedlist.h \
 		  pviterbi.h \
-		  pviterbi_propagate.h
+		  pviterbi_propagate.h \
+		  vector.h \
+		  matrix.h \
+		  const.h \
+		  rng.h \
+		  mes.h \
+		  randvar.h \
+		  internal.h
+
 
 # must be eleminated...
 pkgdata_DATA = PHI_001_20.dat
