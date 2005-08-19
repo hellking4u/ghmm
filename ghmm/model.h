@@ -93,6 +93,14 @@ extern "C" {
   };
   typedef struct state state;
 
+
+struct coord {
+  double x;
+  double y;
+};
+typedef struct coord coord;
+
+
 /** @name model
     The complete HMM. Contains all parameters, that define a HMM.
 */
@@ -180,9 +188,34 @@ extern "C" {
       The last entry is maxorder+1
   */
     int *pow_lookup;
+    
+    
+    
+    /*  storage of model representation information ( read in from XML ) */
+    
+    /* emission alphabet  */ 
+    char*** alphabet;
+    
+    /* sizes of the different alphabets (for pair HMMs there might be more than one)  */
+    int*  alphabet_size;
+    
+    /* number of entries in alphabet_size */
+    int S;
+    
+    /* an arry of positions of states for graphical representation */ 
+    coord *position;
+    
+    /* state label alphabet (only for labelled HMMs)  */ 
+    char** label_alphabet;
+ 
+    /* size of the label_alphabet */
+    int label_size;
 
   };
   typedef struct model model;
+  
+  
+  
 
 
 /** @name model_direct
