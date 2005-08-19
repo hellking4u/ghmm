@@ -513,41 +513,49 @@ struct state {
 };
 typedef struct state state;
 
+
+struct coord {
+  double x;
+  double y;
+};
+typedef struct coord coord;
+
+
 /** @name model
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct model {
+  struct model {
   /** Number of states */
-  int N;
-  /** Number of outputs */   
-  int M;   
+    int N;
+  /** Number of outputs */
+    int M;
   /** Vector of the states */
-  state *s; 
+    state *s;
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
       distributions*/
-  double prior;
+    double prior;
 
-  /* contains a arbitrary name for the model */
-  char* name;
-  
+    /* contains a arbitrary name for the model */
+    char *name;
+
    /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
-  int model_type;
+    int model_type;
 
   /** Flag variables for each state indicating whether it is emitting
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
-  int* silent; /*AS*/
-
+    int *silent;
+      /*AS*/
   /** Int variable for the maximum level of higher order emissions */
-  int maxorder;
+    int maxorder;
   /** saves the history of emissions as int, 
       the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
       see ...*/
-  int emission_history;
+    int emission_history;
 
   /** Flag variables for each state indicating whether the states emissions
       are tied to another state. Groups of tied states are represented
@@ -560,8 +568,8 @@ struct model {
       tied_to[t] == s        : t is tied to state s
 
       Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
-  int* tied_to; 
-  
+    int *tied_to;
+
   /** Note: State store order information of the emissions.
       Classic HMMS have emission order 0, that is the emission probability
       is conditioned only on the state emitting the symbol.
@@ -573,7 +581,7 @@ struct model {
       set state.order.
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
-  
+
   /** background_distributions is a pointer to a
       background_distributions structure, which holds (essentially) an
       array of background distributions (which are just vectors of floating
@@ -583,24 +591,49 @@ struct model {
       distributions to use in parameter estimation. A value of kNoBackgroundDistribution
       indicates that none should be used.
 
+
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
-  int *background_id;
-  background_distributions* bp;
+    int *background_id;
+    background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
    */
-  int* topo_order; 
-  int  topo_order_length;
+    int *topo_order;
+    int topo_order_length;
 
   /** pow_lookup is a array of precomputed powers
 
       It contains in the i-th entry M (alphabet size) to the power of i
       The last entry is maxorder+1
   */
-  int *pow_lookup;
-};
-typedef struct model model;
+    int *pow_lookup;
+    
+    
+    
+    /*  storage of model representation information ( read in from XML ) */
+    
+    /* emission alphabet  */ 
+    char*** alphabet;
+    
+    /* sizes of the different alphabets (for pair HMMs there might be more than one)  */
+    int*  alphabet_size;
+    
+    /* number of entries in alphabet_size */
+    int S;
+    
+    /* an arry of positions of states for graphical representation */ 
+    coord *position;
+    
+    /* state label alphabet (only for labelled HMMs)  */ 
+    char** label_alphabet;
+ 
+    /* size of the label_alphabet */
+    int label_size;
+
+  };
+  typedef struct model model;
+  
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
