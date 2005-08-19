@@ -561,7 +561,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 int model_free (model ** mo)
 {
 #define CUR_PROC "model_free"
-  int i;
+  int i,j;
   mes_check_ptr (mo, return (-1));
 
   for (i = 0; i < (*mo)->N; i++)
@@ -582,6 +582,32 @@ int model_free (model ** mo)
   if ((*mo)->pow_lookup){
     m_free ((*mo)->pow_lookup);
   }
+  
+  
+
+  /* Optional attributes for storing representation information from the XML */  
+  if ((*mo)->alphabet){
+    for(i=0; i < (*mo)->S; i++) {
+      for(j=0; j < (*mo)->alphabet_size[i]; j++) {
+	m_free ((*mo)->alphabet[i][j]);	
+      }
+    }
+    m_free ((*mo)->alphabet);
+    m_free ((*mo)->alphabet_size);
+  }
+  if ((*mo)->position){
+    m_free ((*mo)->position);
+  }
+  if ((*mo)->label_alphabet){
+    for(i=0; i < (*mo)->label_size; i++) {
+      m_free ((*mo)->label_alphabet[i]);
+    }
+    m_free ((*mo)->label_alphabet); 
+  }
+
+  
+  
+  
   m_free (*mo);
   return (0);
 #undef CUR_PROC
@@ -604,55 +630,7 @@ int model_free_background_distributions (background_distributions * bg)
 #undef CUR_PROC
 }
 
-/*===========================================================================*/
 
-
-/* XXX What the fuck is this? */
-#ifdef XXX
-int model_free(model **mo) {
-#define CUR_PROC "sdmodel_free"
-  state *my_state;
-  int i;
-  mes_check_ptr(mo, return(-1));
-  if( !*mo ) return(0);
-  for (i = 0; i < (*mo)->N; i++) {
-    my_state = &((*mo)->s[i]);
-    if (my_state->b)
-      m_free(my_state->b);
-    if (my_state->out_id)
-      m_free(my_state->out_id);
-    if (my_state->in_id)
-      m_free(my_state->in_id);
-    
-    if (my_state->out_a)
-      m_free(my_state->out_a);
-    if (my_state->in_a)
-      m_free(my_state->in_a);
-    
-    /* XXX commented out ???? */
-    if (my_state->out_a)
-      matrix_d_free(&((*mo)->s[i].out_a), (*mo)->cos);
-    if (my_state->in_a)
-      matrix_d_free(&((*mo)->s[i].in_a), (*mo)->cos); 
-    
-    printf("Free every thing set it to NULL\n");
-
-    my_state->pi         = 0;
-    my_state->b          = NULL;
-    my_state->out_id     = NULL;  
-    my_state->in_id      = NULL;
-    my_state->out_a      = NULL;
-    my_state->in_a       = NULL;
-    my_state->out_states = 0;
-    my_state->in_states  = 0;
-    my_state->fix        = 0;
-  }
-  m_free((*mo)->s);
-  m_free(*mo);
-  return(0);
-#undef CUR_PROC
-} /* model_free */
-#endif
 
 /*============================================================================*/
 model *model_copy (const model * mo)
