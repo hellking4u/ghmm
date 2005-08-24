@@ -120,7 +120,7 @@ static int randvar_read_PHI ()
 # define CUR_PROC "randvar_read_PHI"
   int res = -1;
   char filename[] = PHI_DATA_FILE;
-#warning "PHI_DATA_FILE depreciated!"
+#warning "PHI_DATA_FILE deprecated!"
   scanner_t *s = NULL;
   s = scanner_alloc (filename);
   if (!s) {

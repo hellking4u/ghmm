@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/scluster.c
-*       Authors:  Bernhard Knab
+*       Authors:  Bernhard Knab, Benjamin Georgi
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -759,8 +759,10 @@ int scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
   }                            /* while */
   if (!error)
     return (0);
-STOP:if (result)
+STOP:
+  if (result){
     m_free (result);
+  } 
   return (-1);
   
 #undef CUR_PROC

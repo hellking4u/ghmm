@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/model.c
-*       Authors:  Bernd Wichern
+*       Authors:  Benhard Knab, Bernd Wichern, Benjamin Georgi, Alexander Schliep
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
