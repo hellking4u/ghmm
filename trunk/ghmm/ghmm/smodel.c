@@ -732,7 +732,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 int smodel_check (const smodel * smo)
 {
 # define CUR_PROC "smodel_check"
-  int valid = 1;
+  int valid = 0;
   double sum;
   int i, k, j;
   /* sum  Pi[i] == 1 ? */
