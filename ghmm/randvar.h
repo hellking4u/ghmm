@@ -152,7 +152,7 @@ extern "C" {
    time.
    @return          x with PHI(x)==1, PHI(y) < 1 for all y < x
    */
-  double randvar_get_xPHIless1 ();
+  double randvar_get_xPHIless1();
 
 #if 0
 /**
@@ -160,7 +160,7 @@ extern "C" {
    the first time, where x and y consecutive.
    @return          x with PHI(x)==PHI(y), where PHI(x')<PHI(y') f.a.x',y'<x,y
    */
-  double randvar_get_xPHIxgleichPHIy ();
+  double randvar_get_xPHIxgleichPHIy();
 #endif
 
 /**                                 
@@ -184,17 +184,17 @@ extern "C" {
   /**
    Small help function for interpolation, returns a constant.
   */
-  double randvar_get_xfaktphi ();
+  double randvar_get_xfaktphi();
 
 /**
    Small help function for interpolation, returns a constant.
   */
-  double randvar_get_xstepphi ();
+  double randvar_get_xstepphi();
 
   /** 
    Small help function for interpolation, returns a constant.
   */
-  double randvar_get_philen ();
+  double randvar_get_philen();
 
 #ifdef __cplusplus
 }

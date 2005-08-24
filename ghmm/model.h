@@ -333,7 +333,7 @@ extern "C" {
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
-   @return 0 for succes; -1 for error
+   @return 0 for success; -1 for error
    @param mo:  model to test */
   int model_check (const model * mo);
 
