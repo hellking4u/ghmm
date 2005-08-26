@@ -194,7 +194,37 @@ static void __viterbi_silent (model * mo, int t, local_store_t * v)
   }
 }
 
-/** Return the log score of the sequence */
+
+
+/*============================================================================*/
+
+/* auxilary function. Reallocates an integer array to a given length and initialises the new 
+positions with -1 */
+int extend_int_array(int *array, int cur_len, int extend)
+{
+#define CUR_PROC "extend_int_array"
+  int j;
+
+   /* printf("*** Reallocating...\n"); */
+   
+   cur_len = cur_len + extend;
+   ARRAY_REALLOC(array, cur_len );
+   /* initialising new memory with -1  */
+   for(j= cur_len-1;j >= (cur_len-extend) ;j--){
+     array[j] = -1;
+   } 
+   return(cur_len); 
+STOP:
+  return(-1);
+
+#undef CUR_PROC
+    
+}
+
+
+
+
+/** Return the viterbi path of the sequence.  */
 int *viterbi (model * mo, int *o, int len, double *log_p)
 {
 #define CUR_PROC "viterbi"
@@ -203,11 +233,36 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   int t, j, i, k, St;
   double value, max_value;
   local_store_t *v;
-  int len_path = mo->N * len;
+  
+  /* length_factor determines the size of the memory allocation for the state path array in case the model contains
+  silent states. The larger length_factor is chosen, the less reallocs will be necessary but it increases the amount of allocated
+  memory that is not used.  */
+  int length_factor = 2;
+  
+  /* the lenght of the viterbi path is unknown for models with silent states. The maximum length is given by 
+  mo->N * len. In order to keep memory consumption in check we first allocate lenght_factor * len and realloc more
+  space as needed. */
+  int len_path;
+  
+  int cur_len_path = 0; /* the current length of the viterbi path */ 
+    
   int lastemState;
+  int state_seq_index;
+
 
   /* printf("---- viterbi -----\n");*/
 
+  if (mo->model_type & kSilentStates){
+    /* for silent states: initializing path length with a multiple of the sequence length */
+    len_path = length_factor * len;
+  }
+  else {
+    /* if there are no silent states, path and sequence length are identical */
+    len_path = len;
+  }  
+  
+  
+  
   if (mo->model_type & kSilentStates &&
       mo->silent != NULL && mo->topo_order == NULL) {
     model_topo_ordering (mo);   /* Should we call it here ???? */
@@ -219,11 +274,17 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
     mes_proc ();
     goto STOP;
   }
+  
+  /* allocating state_seq array */
   ARRAY_CALLOC (state_seq, len_path);
-  for (i = 0; i < len_path; i++) {
-    state_seq[i] = -1;
+  
+  /* initialization of state_seq with -1, only necessary for silent state models */
+  if (mo->model_type & kSilentStates){
+    for (i = 0; i < len_path; i++) {
+      state_seq[i] = -1;
+    }
   }
-
+  
   /* Precomputing the log(a_ij) and log(bj(ot)) */
   Viterbi_precompute (mo, o, len, v);
 
@@ -318,53 +379,130 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   }                             /* Next observation , increment time-step */
 
   /* Termination */
+  /* for models with silent states we store the last state in the path at position 0.
+     If there are no silent states we can use the correct position directly. */
+  
+  if (! (mo->model_type & kSilentStates)){
+    state_seq_index= len_path - 1;
+  }
+  else {
+    state_seq_index= 0;
+  }  
+  
+  
   max_value = -DBL_MAX;
-  state_seq[len_path - 1] = -1;
-  for (j = 0; j < mo->N; j++)
+  state_seq[state_seq_index] = -1;
+  for (j = 0; j < mo->N; j++){
     if (v->phi[j] != +1 && v->phi[j] > max_value) {
       max_value = v->phi[j];
-      state_seq[len_path - 1] = j;
+      state_seq[state_seq_index] = j;
     }
+  }  
   if (max_value == -DBL_MAX) {
     /* Sequence can't be generated from the model! */
     *log_p = +1;
-    /* Backtracing doesn't work, because state_seq[*] allocated with -1 */
-    for (t = len - 2; t >= 0; t--)
-      state_seq[t] = -1;
+    
+    if (! (mo->model_type & kSilentStates)){
+      /* Backtracing doesn't work, insert -1 values in state_seq */
+      for (t = len - 2; t >= 0; t--){
+         state_seq[t] = -1;
+      }   
+    }
+    
   }
   else {
     /* Backtracing, should put DEL path nicely */
-    *log_p = max_value;
-    lastemState = state_seq[len_path - 1];
-    for (t = len - 2, i = len_path - 2; t >= 0; t--) {
-      if (mo->model_type == kSilentStates &&
-          mo->silent[v->psi[t + 1][lastemState]]) {
-
-        St = v->psi[t + 1][lastemState];
-        /* fprintf(stderr, "t=%d:  DEL St=%d\n", t+1, St ); */
-        while (St != -1 && mo->silent[St]) {    /* trace back up to the last emitting state */
-          /* fprintf(stderr, "t=%d:  DEL St=%d\n", t, St ); */
-          state_seq[i--] = St;
-          St = v->psi[t][St];
-        }
-        state_seq[i--] = St;
-        lastemState = St;
-      }
-      else {
+    
+    /* for models without silent states traceback is straightforward */
+    if (! (mo->model_type & kSilentStates)){
+      *log_p = max_value;
+      lastemState = state_seq[len_path - 1];
+      
+      for (t = len - 2, i = len_path - 2; t >= 0; t--) {
         state_seq[i--] = v->psi[t + 1][lastemState];
         lastemState = v->psi[t + 1][lastemState];
+      }  
+    }
+    
+    /* if there are silent states, we have to watch the length 
+    of the viterbi path and realloc as needed */
+    else {
+      cur_len_path  = 1;
+      *log_p = max_value;
+      lastemState = state_seq[0];
+      
+      for (t = len - 2, i = 1; t >= 0; t--) {
+        
+        /* if last state inserted into the path is silent we have to propagate up to the next emitting state */
+        if ( mo->silent[v->psi[t + 1][lastemState]]) {
+
+          St = v->psi[t + 1][lastemState];
+ 
+          /* fprintf(stderr, "t=%d:  DEL St=%d\n", t+1, St ); */
+
+          while (St != -1 && mo->silent[St]) {    /* trace-back up to the last emitting state */
+
+            /* fprintf(stderr, "t=%d:  DEL St=%d\n", t, St ); */
+         
+            if (cur_len_path+1 > len_path){
+              /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
+               len_path =  extend_int_array(state_seq,len_path,len); 
+            }   
+
+            state_seq[i++] = St;
+            St = v->psi[t][St];
+            cur_len_path++;
+          }
+
+          if (cur_len_path+1 > len_path){
+             /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
+             len_path =  extend_int_array(state_seq,len_path,len);
+          }   
+
+          state_seq[i++] = St;
+          lastemState = St;
+          cur_len_path++;
+          
+        }
+        else {
+        
+          if (cur_len_path+1 > len_path){
+             /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
+             len_path =  extend_int_array(state_seq,len_path,len);
+          }    
+
+          state_seq[i++] = v->psi[t + 1][lastemState];
+          lastemState = v->psi[t + 1][lastemState];
+          cur_len_path++;
+        }
       }
     }
-
   }
 
-  /* PRINT PATH */
-  /* 
+  /* PRINT PATH 
      fprintf(stderr, "Viterbi path: " );
      for(t=0; t < len_path; t++)
-     if (state_seq[t] >= 0) fprintf(stderr, " %d ",  state_seq[t]);
+       fprintf(stderr, " %d ",  state_seq[t]);
      fprintf(stderr, "\n Freeing ... \n"); */
 
+  /* post-processing of the state path for models with silent states. 
+    We have to realloc to the actual path length and reverse the order.
+    The final entry of the state path is marked with a -1 entry at the following array position*/
+    if (mo->model_type & kSilentStates){
+      /* reallocating */
+      if (cur_len_path+1 != len_path ){
+        ARRAY_REALLOC(state_seq, cur_len_path+1 );
+        state_seq[cur_len_path] = -1; /*end marker entry*/
+        len_path = cur_len_path+1; 
+      }  
+      /* reversing order */
+      for(i = 0; i<= floor(cur_len_path/2);i++ ){
+        k = state_seq[i];
+        state_seq[i] = state_seq[cur_len_path-1-i];
+        state_seq[cur_len_path-1-i] = k;
+      }
+    }
+     
   /* Free the memory space */
   viterbi_free (&v, mo->N, len);
   return (state_seq);
@@ -375,6 +513,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* viterbi */
+
 
 
 
