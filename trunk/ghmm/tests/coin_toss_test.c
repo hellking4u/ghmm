@@ -141,10 +141,10 @@ int two_states_coin_toss()
   if (viterbi_path==NULL)
     {fprintf(stderr,"viterbi failed!"); return 1;}
 
-  fprintf(stdout,"reverse viterbi path (last symbol->first):\n");
-  i = (my_output->seq_len[0]*my_model.N)-1;
-  while( viterbi_path[i] != -1 ) {
-    printf(" %d, ", viterbi_path[i--]);
+  fprintf(stdout,"viterbi:\n");
+  
+  for(i=0;i<my_output->seq_len[0];i++){
+    printf(" %d, ", viterbi_path[i++]);
   }
   printf("\n");
 
