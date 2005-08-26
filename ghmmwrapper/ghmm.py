@@ -1732,7 +1732,6 @@ class HMM:
         self.N = self.cmodel.N  # number of states
         self.M = self.cmodel.M  # number of symbols / mixture components
 
-        self.silent = 0   # flag for silent states
         
         # Function pointers to the C level (assigned in derived classes)
         self.freeFunction = ""           # C function for deallocation
@@ -1822,6 +1821,52 @@ class HMM:
         return likelihoodList
 
     ## Further Marginals ...
+
+
+    def pathPosterior(self, sequence, path):
+        """ Returns the posterior probability for 'path' having generated 'sequence'.
+        
+        """
+        pass
+
+    def statePosterior(self, sequence, time, state):
+        """ Posterior probability for being at 'state' at time 'time' in 'sequence'.
+        
+        """
+        pass
+
+    def posterior(self, sequence):
+        """ Posterior distribution matrix for 'sequence'.
+        
+        """
+    	
+        (alpha,scale)  = self.forward(sequence)
+        beta = self.backward(sequence,scale)
+       
+        
+        print "alpha: ",alpha,"\n"
+        print "beta: ",beta
+        
+        
+        post_seq = []
+        for i in range(len(sequence)):
+            post = []            
+            for state in range(self.N):
+                #s = sum(alpha[i])
+                #print alpha[i]
+                post.append( alpha[i][state] * beta[i][state] ) 
+       
+            post_seq.append(post)   
+
+       
+
+        return post_seq
+
+
+
+
+
+
 
     def logprob(self, emissionSequence, stateSequence):
         """log P[ emissionSequence, stateSequence| m] 
@@ -1945,7 +1990,7 @@ class HMM:
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
 
-            if seq_len != 0:
+            if seq_len > 0:
                 viterbiPath = self.viterbiFunction(self.cmodel,seq,seq_len,log_p)
             else:
                 viterbiPath = None
@@ -1953,21 +1998,22 @@ class HMM:
             onePath = []
             
             # for model types without possible silent states the length of the viterbi path is known
-            if self.silent == 0:            
+            if (self.cmodel.model_type &  4) == 0:    # check model_type for silent state flag        
                 for j in range(seq_len):                
                     onePath.append(ghmmwrapper.get_arrayint(viterbiPath,j))
             
-            # in the silent case we have to reversely append as long as the path is positive because unused positions
-            # are initialised with -1 on the C level.
-            elif self.silent == 1:
+            # in the silent case we have to append as long as the path is positive because the final state path position
+            # is marked with a -1 in the following array entry.
+            elif self.cmodel.model_type &  4 != 0:  # check model_type for silent state flag   
                 
-                for j in range( ( seq_len * self.N )-1,-1,-1): # maximum length of a viterbi path for a silent model
+                for j in range( seq_len * self.N): # maximum length of a viterbi path for a silent model
                     d = ghmmwrapper.get_arrayint(viterbiPath,j)
                                    
                     if d >= 0:
-                        onePath.insert(0,d)
+                        onePath.append(d)
                     else:
                         break
+                        
 
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
@@ -2161,7 +2207,6 @@ class DiscreteEmissionHMM(HMM):
     """
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
-        self.silent = 1  # flag indicating whether the model type does include silent states
 
         self.model_type = self.cmodel.model_type  # model type
         self.maxorder = self.cmodel.maxorder
@@ -2932,7 +2977,6 @@ class GaussianEmissionHMM(HMM):
 
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
-        self.silent = 0  # flag indicating whether the model type does include silent states
 
         # Assignment of the C function names to be used with this model type
         self.freeFunction = ghmmwrapper.call_smodel_free
@@ -3230,23 +3274,9 @@ class GaussianEmissionHMM(HMM):
                 viterbiPath = None
 
             onePath = []
+            for j in range(seq_len):                
+                onePath.append(ghmmwrapper.get_arrayint(viterbiPath,j))
             
-            # for model types without possible silent states the length of the viterbi path is known
-            if self.silent == 0:            
-                for j in range(seq_len):                
-                    onePath.append(ghmmwrapper.get_arrayint(viterbiPath,j))
-            
-            # in the silent case we have to reversely append as long as the path is positive because unused positions
-            # are initialised with -1 on the C level.
-            elif self.silent == 1:
-                
-                for j in range( ( seq_len * self.N )-1,-1,-1): # maximum length of a viterbi path for a silent model
-                    d = ghmmwrapper.get_arrayint(viterbiPath,j)
-                                   
-                    if d >= 0:
-                        onePath.insert(0,d)
-                    else:
-                        break
 
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
@@ -3853,7 +3883,6 @@ class PairHMM(HMM):
         for domain in self.emissionDomains:
             if (isinstance(domain, Alphabet)):
                 self.alphabetSizes.append(len(domain))
-        self.silent = 0  # flag indicating whether the model type does include silent states
 
         self.maxSize = 10000
         self.model_type = self.cmodel.model_type  # model type
