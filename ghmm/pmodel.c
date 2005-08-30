@@ -39,17 +39,17 @@
 #include <ghmm/internal.h>
 
 
-int pstate_alloc(pstate *state, int M, int in_states, int out_states) {
+int pstate_alloc(pstate * s, int M, int in_states, int out_states) {
 # define CUR_PROC "pstate_alloc"
   int res = -1;
-  ARRAY_CALLOC (state->b, M);
+  ARRAY_CALLOC (s->b, M);
   if (out_states > 0) {
-    ARRAY_CALLOC (state->out_id, out_states);
-    ARRAY_CALLOC (state->out_a, out_states);
+    ARRAY_CALLOC (s->out_id, out_states);
+    ARRAY_CALLOC (s->out_a, out_states);
   }
   if (in_states > 0) {
-    ARRAY_CALLOC (state->in_id, in_states);
-    ARRAY_CALLOC (state->in_a, in_states);
+    ARRAY_CALLOC (s->in_id, in_states);
+    ARRAY_CALLOC (s->in_a, in_states);
   }
   res = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
