@@ -105,19 +105,19 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
 }
 
 /*----------------------------------------------------------------------------*/
-static int model_state_alloc (state * state, int M, int in_states,
+static int model_state_alloc (state * s, int M, int in_states,
                               int out_states)
 {
 # define CUR_PROC "model_state_alloc"
   int res = -1;
-  ARRAY_CALLOC (state->b, M);
+  ARRAY_CALLOC (s->b, M);
   if (out_states > 0) {
-    ARRAY_CALLOC (state->out_id, out_states);
-    ARRAY_CALLOC (state->out_a, out_states);
+    ARRAY_CALLOC (s->out_id, out_states);
+    ARRAY_CALLOC (s->out_a, out_states);
   }
   if (in_states > 0) {
-    ARRAY_CALLOC (state->in_id, in_states);
-    ARRAY_CALLOC (state->in_a, in_states);
+    ARRAY_CALLOC (s->in_id, in_states);
+    ARRAY_CALLOC (s->in_a, in_states);
   }
   res = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -1730,7 +1730,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   int len = global_len;
   /*int silent_len = 0; */
   int n = 0;
-  int state = 0;
+  int pos = 0;
   int label_index = 0;
 
   sq = sequence_calloc (seq_number);
@@ -1772,7 +1772,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
       ARRAY_CALLOC (sq->state_labels[n], len);
     }
     label_index = 0;
-    state = 0;
+    pos = 0;
     
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
@@ -1796,7 +1796,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
     if (mo->model_type & kSilentStates && mo->silent[i]) {
       /* silent state: we do nothing, no output */
       /* printf("first state %d silent\n",i);
-         state = 0; 
+         pos = 0; 
          silent_len = silent_len + 1; */
     }
     else {
@@ -1804,17 +1804,17 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
       /* printf("first state %d not silent\n",i); */
 
       /* Get a random initial output m */
-      m = get_random_output (mo, i, state);
+      m = get_random_output (mo, i, pos);
       update_emission_history (mo, m);
-      sq->seq[n][state++] = m;
+      sq->seq[n][pos++] = m;
     }
 
     /* check whether sequence was completed by inital state */
-    if (state >= len) {
+    if (pos >= len) {
 
-      /* printf("assinging length %d to sequence %d\n",state,n);
+      /* printf("assinging length %d to sequence %d\n", pos, n);
          printf("sequence complete...\n"); */
-      sq->seq_len[n] = state;
+      sq->seq_len[n] = pos;
       sq->state_labels_len[n] = label_index;
 
       /* printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
@@ -1826,13 +1826,13 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
       n++;
       continue;
     }
-    while (state < len) {
-      if (state < mo->maxorder) {
-        /* if maxorder is not yet reached, we should only go to states with order < state */
+    while (pos < len) {
+      if (pos < mo->maxorder) {
+        /* if maxorder is not yet reached, we should only go to states with order < pos */
         transition_impossible = 1;
         for (j = 0; j < mo->s[i].out_states; j++) {
           j_id = mo->s[i].out_id[j];
-          if ((mo->s[j_id].order) < (state)) {
+          if ((mo->s[j_id].order) < (pos)) {
             transition_impossible = 0;
             break;
           }
@@ -1840,7 +1840,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
         if (1 == transition_impossible) {
           fprintf (stderr,
                    "No possible transition from state %d, due to too high order of all successor states. Position: %d",
-                   i, state);
+                   i, pos);
           exit (1);
         }
         do {
@@ -1853,7 +1853,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
             if (sum >= p)
               break;
           }
-        } while (mo->s[j_id].order >= state);
+        } while (mo->s[j_id].order >= pos);
       }
       else {
         /* Get a random state i */
@@ -1871,11 +1871,11 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
       sq->state_labels[n][label_index] = mo->s[i].label;
       label_index++;
 
-      /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state); */
+      /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,pos); */
 
       if (sum == 0.0) {
 	/* printf("final state reached - aborting\n"); */
-	sq->seq_len[n++] = state;
+	sq->seq_len[n++] = pos;
 	break;
       }
 
@@ -1884,17 +1884,17 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
            silent_len += 1;
            if (silent_len >= Tmax) {
            printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
-           sq->seq_len[n++] = state; 
+           sq->seq_len[n++] = pos; 
            break;
            } */
       }
       else {
         /* Get a random output m from state i */
-        m = get_random_output (mo, i, state);
+        m = get_random_output (mo, i, pos);
         update_emission_history (mo, m);
-        sq->seq[n][state++] = m;
+        sq->seq[n][pos++] = m;
       }
-      if (state == len) {
+      if (pos == len) {
         sq->state_labels_len[n] = label_index;
 
         /* printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
@@ -1904,9 +1904,9 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
           ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
         }
 
-        sq->seq_len[n++] = state;
+        sq->seq_len[n++] = pos;
       }
-    }                           /* while (state < len) */
+    }                           /* while (pos < len) */
   }                             /* while( n < seq_number ) */
 
   return (sq);
