@@ -59,35 +59,35 @@
 #include <ghmm/internal.h>
 
 /*----------------------------------------------------------------------------*/
-int smodel_state_alloc (sstate * state,
+int smodel_state_alloc (sstate * s,
                         int M, int in_states, int out_states, int cos)
 {
 # define CUR_PROC "smodel_state_alloc"
   int res = -1;
   int i;
-  ARRAY_CALLOC (state->c, M);
-  ARRAY_CALLOC (state->mue, M);
-  ARRAY_CALLOC (state->u, M);
+  ARRAY_CALLOC (s->c, M);
+  ARRAY_CALLOC (s->mue, M);
+  ARRAY_CALLOC (s->u, M);
 
-  ARRAY_CALLOC (state->mixture_fix, M);
+  ARRAY_CALLOC (s->mixture_fix, M);
 
   /* mixture component fixing deactivated by default */
   for (i = 0; i < M; i++) {
-    state->mixture_fix[i] = 0;
+    s->mixture_fix[i] = 0;
   }
 
   if (out_states > 0) {
-    ARRAY_CALLOC (state->out_id, out_states);
-    state->out_a = matrix_d_alloc (cos, out_states);
-    if (!state->out_a) {
+    ARRAY_CALLOC (s->out_id, out_states);
+    s->out_a = matrix_d_alloc (cos, out_states);
+    if (!s->out_a) {
       mes_proc ();
       goto STOP;
     }
   }
   if (in_states > 0) {
-    ARRAY_CALLOC (state->in_id, in_states);
-    state->in_a = matrix_d_alloc (cos, in_states);
-    if (!state->in_a) {
+    ARRAY_CALLOC (s->in_id, in_states);
+    s->in_a = matrix_d_alloc (cos, in_states);
+    if (!s->in_a) {
       mes_proc ();
       goto STOP;
     }
@@ -860,7 +860,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
   /* An end state is characterized by not having an output probabiliy. */
 
   sequence_d_t *sq = NULL;
-  int state, n, i, j, m, reject_os, reject_tmax, badseq, class;
+  int pos, n, i, j, m, reject_os, reject_tmax, badseq, class;
   double p, sum;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
 
@@ -926,7 +926,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
       m--;
     /* Get random numbers according to the density function */
     sq->seq[n][0] = smodel_get_random_var (smo, i, m);
-    state = 1;
+    pos = 1;
 
     /* The first symbol chooses the start class */
     if (smo->cos == 1) {
@@ -945,7 +945,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
         goto STOP;
       }
     }
-    while (state < len) {
+    while (pos < len) {
       /* Get a new state */
       p = GHMM_RNG_UNIFORM (RNG);
       sum = 0.0;
@@ -1013,7 +1013,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
           m--;
       }
       /* Get a random number from the corresponding density function */
-      sq->seq[n][state] = smodel_get_random_var (smo, i, m);
+      sq->seq[n][pos] = smodel_get_random_var (smo, i, m);
 
       /* Decide the class for the next step */
       if (smo->cos == 1) {
@@ -1025,7 +1025,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
           printf ("ERROR: get_class not initialized\n");
           return (NULL);
         }
-        class = smo->class_change->get_class (smo, sq->seq[n], n, state);
+        class = smo->class_change->get_class (smo, sq->seq[n], n, pos);
         printf ("class = %d\n", class);
         if (class >= smo->cos){
           printf("ERROR: get_class returned index %d but model has only %d classes !\n",class,smo->cos);
@@ -1033,7 +1033,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
         }
       }
       up = 0;
-      state++;
+      pos++;
 
     }                           /* while (state < len) */
     if (badseq) {
@@ -1045,15 +1045,15 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
       m_free (sq->seq[n]);
       /*      printf("cl %d, s %d, %d\n", class, i, n); */
     }
-    else if (state > Tmax) {
+    else if (pos > Tmax) {
       reject_tmax++;
       m_free (sq->seq[n]);
     }
     else {
-      if (state < len)
+      if (pos < len)
 
-        ARRAY_REALLOC (sq->seq[n], state);
-      sq->seq_len[n] = state;
+        ARRAY_REALLOC (sq->seq[n], pos);
+      sq->seq_len[n] = pos;
       sq->seq_label[n] = label;
       /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
