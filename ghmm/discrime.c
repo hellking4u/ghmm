@@ -1262,8 +1262,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
     if (gradient)
       lambda = .3;
 
-    while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < 75
-           || firstrun)) {
+    while (firstrun || (last_perf < cur_perf || cur_cer < last_cer) && (step++ < 75)) {
       if (firstrun)
         firstrun = 0;
       else
