@@ -843,8 +843,12 @@ extern double viterbi_logp(model *mo, int *o, int len, int *state_seq);
    @param mo:              array of pointers to some models
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
+   @param max_steps:       maximum number of training steps for a class
+   @param gradient:        if gradient == 0 try a closed form solution
+                           otherwise a gradient descent
  */
-extern int discriminative(model** mo, sequence_t** sqs, int noC, int gradient);
+extern int discriminative(model** mo, sequence_t** sqs, int noC, int max_steps,
+			  int gradient);
 
 /**
    Returns the value of the in this discriminative training algorithm optimised

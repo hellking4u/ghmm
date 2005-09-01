@@ -3544,7 +3544,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return [A,B,pi]
 
 
-def HMMDiscriminativeTraining(HMMList, SeqList, gradient = 0):
+def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, maxgradient = 0):
     """ """
     
     # XXX working ? 
@@ -3576,7 +3576,7 @@ def HMMDiscriminativeTraining(HMMList, SeqList, gradient = 0):
         ghmmwrapper.discrime_modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
         ghmmwrapper.discrime_seqarray_setptr(SeqArray, SeqList[i].cseq, i)
 
-    ghmmwrapper.discriminative(HMMArray, SeqArray, inplen, gradient)
+    ghmmwrapper.discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
         HMMList[i].cmodel = ghmmwrapper.discrime_modelarray_getptr(HMMArray, i)
