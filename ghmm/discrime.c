@@ -1211,7 +1211,8 @@ FREE:
 
 
 /*----------------------------------------------------------------------------*/
-int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
+int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps, 
+		    int gradient)
 {
 #define CUR_PROC "driscriminative"
 
@@ -1226,17 +1227,28 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
 
   int *falseP=NULL, *falseN=NULL;
 
+  double * prior_backup=NULL;
+
   int i, k, step;
 
   model * last;
 
   ARRAY_CALLOC (falseP, noC);
   ARRAY_CALLOC (falseN, noC);
+  ARRAY_CALLOC (prior_backup, noC);
 
   for (i = 0; i < noC; i++) {
     totalseqs += sqs[i]->seq_number;
     for (k = 0; k < sqs[i]->seq_number; k++)
       totalsyms += sqs[i]->seq_len[k];
+  }
+  
+  /* setting priors from number of training sequences and
+     remember the old values */
+  for (i=0; i<noC; i++) {
+    prior_backup[i] = mo[i]->prior;
+    mo[i]->prior = (double)sqs[i]->seq_number / totalseqs;
+    printf("original prior: %g \t new prior %g\n", prior_backup[i], mo[i]->prior);
   }
 
   last_perf = discrime_compute_performance (mo, sqs, noC);
@@ -1301,7 +1313,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
       printf
         ("==============================================================\n");
 
-    } while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < 75));
+    } while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < max_steps));
 
     mo[k] = model_copy (last);
     model_free (&last);
@@ -1309,8 +1321,12 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
     cur_cer = last_cer;
   }
 
+  /* resetting priors to old values */
+  for (i = 0; i < noC; i++)
+    mo[i]->prior = prior_backup[i];
   retval = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  m_free (prior_backup);
   m_free (falseP);
   m_free (falseN);
 

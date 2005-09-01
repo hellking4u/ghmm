@@ -63,10 +63,12 @@ extern "C" {
    @param mo:              array of pointers to some models
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
+   @param max_steps:       maximum number of training steps for a class
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-  int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient);
+  int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps,
+		      int gradient);
 
 /*----------------------------------------------------------------------------*/
 /**
