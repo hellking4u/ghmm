@@ -1226,9 +1226,9 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
 
   int *falseP=NULL, *falseN=NULL;
 
-  int i, k, step, firstrun;
+  int i, k, step;
 
-  model *last;
+  model * last;
 
   ARRAY_CALLOC (falseP, noC);
   ARRAY_CALLOC (falseN, noC);
@@ -1257,15 +1257,13 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
   last_cer = cur_cer = fp;
 
   for (k = 0; k < noC; k++) {
-    firstrun = 1;
+    last = NULL;
     step = 0;
     if (gradient)
       lambda = .3;
 
-    while (firstrun || (last_perf < cur_perf || cur_cer < last_cer) && (step++ < 75)) {
-      if (firstrun)
-        firstrun = 0;
-      else
+    do {
+      if (last)
         model_free (&last);
 
       /* save a copy of the currently trained model */
@@ -1303,7 +1301,8 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int gradient)
       printf
         ("==============================================================\n");
 
-    }
+    } while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < 75));
+
     mo[k] = model_copy (last);
     model_free (&last);
     cur_perf = last_perf;
