@@ -1822,7 +1822,7 @@ class HMM:
 
     ## Further Marginals ...
 
-
+    # XXX yet to be implemented  XXX
     def pathPosterior(self, sequence, path):
         """ Returns the posterior probability for 'path' having generated 'sequence'.
         
@@ -1862,10 +1862,18 @@ class HMM:
 
         return post_seq
 
+    def getPrior(self):
+        """ Returns current value of the model prior.
+        
+        """
+        return self.cmodel.prior
+        
 
-
-
-
+    def setPrior(self, p):
+        """ Sets the model prior to value p.
+        
+        """
+        self.cmodel.prior = p
 
 
     def logprob(self, emissionSequence, stateSequence):
@@ -3544,6 +3552,13 @@ def HMMDiscriminativeTraining(HMMList, SeqList, gradient = 0):
     if len(HMMList) != len(SeqList):
         raise TypeError, 'Inputs not equally long'
 
+    priors = []
+    for model in HMMList:
+        assert model.cmodel.prior != -1, "Model priors need to be specified."
+        priors.append(model.cmodel.prior)
+
+    assert sum(priors) == 1, "Priors need to be normalized over models (current total weight is "+str(sum(priors))+")."
+    
     inplen = len(HMMList)
     if gradient not in [0, 1]:
        raise UnknownInputType, "TrainingType " + gradient + " not supported."
