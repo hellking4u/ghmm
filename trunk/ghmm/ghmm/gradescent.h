@@ -41,9 +41,6 @@ extern "C" {
 #endif
 
 /*----------------------------------------------------------------------------*/
-double compute_performance (model * mo, sequence_t * sq);
-
-/*----------------------------------------------------------------------------*/
 /**
    Trains the model with a set of annotated sequences till convergence using
    gradient descent.
