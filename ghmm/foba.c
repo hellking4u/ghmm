@@ -289,6 +289,9 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
   /* int beta_out=0; */
   double emission;
 
+  int r; /*XXX for testing only -> remove*/
+
+
   ARRAY_CALLOC (beta_tmp, mo->N);
   for (t = 0; t < len; t++)
     mes_check_0 (scale[t], goto STOP);
@@ -326,7 +329,7 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
      for(r =0;r < mo->N; r++){
      printf("%f, ",beta_tmp[r]);
      }
-     printf("\n"); */
+     printf("\n"); /*
   /*#################################### */
 
   /*printf("** iterating...\n");*/
@@ -336,45 +339,74 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
      loop over reverse topological ordering of silent states, non-silent states  */
   for (t = len - 2; t >= 0; t--) {
 
+    /* printf(" ----------- *** t = %d ***  ---------- \n",t); */
+
+
     /* updating of emission_history with O[t] such that emission_history memorizes
        O[t - maxorder ... t] */
     if (0 <= t - mo->maxorder + 1)
       update_emission_history_front (mo, O[t - mo->maxorder + 1]);
 
-    /*printf("\n*** O(%d) = %d\n",t+1,O[t+1]);*/
+    /* printf("\n*** O(%d) = %d\n",t+1,O[t+1]); */
 
     if (mo->model_type & kSilentStates) {
-      /*printf("  * silent states:\n");*/
+      /* printf("  * silent states:\n"); */
       for (k = mo->topo_order_length - 1; k >= 0; k--) {
         id = mo->topo_order[k];
 
-        /*printf("  silent[%d] = %d\n",id,mo->silent[id]);*/
+        /* printf("  silent[%d] = %d\n",id,mo->silent[id]); */
 
         assert (mo->silent[id] == 1);
 
         sum = 0.0;
         for (j = 0; j < mo->s[id].out_states; j++) {
           j_id = mo->s[id].out_id[j];
-          /*printf("  von %d nach %d mit %f\n",id,j_id,mo->s[id].out_a[j]);*/
-          /*printf("  [%d,%d] sum += %f * 1 * %f\n",id,j_id,mo->s[id].out_a[j],beta[t+1][j_id]);*/
+          
+          
           e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
+          
+          /* printf("   e_index = %d\n",e_index); */
+          
           if (e_index != -1) {
-            if (mo->s[j_id].b[e_index] < EPS_PREC)
+            
+            /* printf(" b[%d] = %f\n",e_index,mo->s[j_id].b[e_index]);  */
+            
+            if (mo->s[j_id].b[e_index] < EPS_PREC){
+              
+              /* printf("   *** continue\n"); */
               continue;
+            }
+           
+           /*
+            printf("  von %d nach %d mit %f\n",id,j_id,mo->s[id].out_a[j]);
+            printf("  mo->s[%d].out_a[%d] * mo->s[%d].b[%d] * beta_tmp[%d]\n",id,j, j_id,e_index  ,j_id);
+            printf("  [%d,%d] sum += %f * %f * %f\n",id,j_id,mo->s[id].out_a[j], mo->s[j_id].b[e_index] ,beta_tmp[j_id]);
+            */
 
-            sum +=
-              mo->s[id].out_a[j] * mo->s[j_id].b[e_index] * beta_tmp[j_id];
+            sum += mo->s[id].out_a[j] * mo->s[j_id].b[e_index] * beta_tmp[j_id];
           }
         }
 
-        /*if(sum > 0.0)*/
-        /*  printf("  --> beta[%d][%d] = %f\n",t+1,id,sum);*/
+        /* if(sum > 0.0)
+           printf("  --> beta[%d][%d] = %f\n",t+1,id,sum); */
 
         beta[t + 1][id] = sum;
+        
+        /* printf("  update beta_tmp[%d] = %f / %f\n",id,sum,scale[t+1]); */
+        beta_tmp[id] = sum/scale[t+1]; /* updating beta_tmp */
+                
+        /* printf("\nbeta_tmp = ");
+         for (r = 0; r < mo->N; r++){
+            printf("%f, ",beta_tmp[r]);
+         }
+         printf("\n"); */
+
+        
+        
       }
     }
 
-    /*printf("  * non-silent states:\n");*/
+    /* printf("\n  * non-silent states:\n"); */
     for (i = 0; i < mo->N; i++) {
       if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
 
@@ -395,32 +427,39 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
             emission = 1;
           }
 
-          /*printf("  von %d nach %d mit %f\n",i,j_id,mo->s[i].out_a[j]);*/
-          /*printf("  [%d,%d] sum += %f * %f * %f\n",i,j_id,mo->s[i].out_a[j],mo->s[j_id].b[O[t+1]],beta[t+1][j_id]);*/
+          /*printf("  von %d nach %d mit %f\n",i,j_id,mo->s[i].out_a[j]);
+          printf("  mo->s[%d].out_a[%d] * mo->s[%d].b[%d] * beta_tmp[%d]\n",id,j, j_id,e_index  ,j_id);
+          printf("  [%d,%d] sum += %f * %f * %f\n",i,j_id,mo->s[i].out_a[j],emission,beta_tmp[j_id]); */
 
           sum += mo->s[i].out_a[j] * emission * beta_tmp[j_id];
         }
 
-        /*if(sum > 0.0)*/
-        /*  printf("  --> beta[%d][%d] = %f\n",t,i,sum);*/
+        /* if(sum > 0.0)
+          printf("  --> beta[%d][%d] = %f\n",t,i,sum); */
 
         beta[t][i] = sum;
         /* if ((beta[t][i] > 0) && ((beta[t][i] < .01) || (beta[t][i] > 100))) beta_out++; */
       }
     }
 
-    for (i = 0; i < mo->N; i++)
+
+    /* printf("\nbeta_tmp = ");
+    for (i = 0; i < mo->N; i++){
       beta_tmp[i] = beta[t][i] / scale[t];
+      printf("%f, ",beta_tmp[i]);
+      
+    }
+    printf("\n"); */
 
     /*################################## */
-    /*printf("\n");
+      /* printf("\n");
        for (r = len-1; r >= 0; r--) {
        printf("%d | ",O[r]);
        for (i = 0; i < mo->N; i++) {
        printf("%f ",beta[r][i]);
        }
        printf("\n");
-       } */
+       }  */
     /*################################## */
 
   }
