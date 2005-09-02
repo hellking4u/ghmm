@@ -5,7 +5,8 @@
 #       GHMM version __VERSION__, see http://ghmm.org
 #
 #       file:    ghmm.py
-#       authors: Benjamin Georgi, Wasinee Rungsarityotin, Alexander Schliep
+#       authors: Benjamin Georgi, Wasinee Rungsarityotin, Alexander Schliep,
+#                Janne Grunau
 #
 #       Copyright (C) 1998-2004 Alexander Schliep
 #       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -3544,7 +3545,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return [A,B,pi]
 
 
-def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, maxgradient = 0):
+def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
     """ """
     
     # XXX working ? 
