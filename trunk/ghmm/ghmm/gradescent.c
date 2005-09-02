@@ -47,8 +47,10 @@
 #include "ghmm.h"
 #include <ghmm/internal.h>
 
+static double compute_performance (model * mo, sequence_t * sq);
+
 /*----------------------------------------------------------------------------*/
-void gradient_descent_gfree (double **matrix_b, double *matrix_a,
+static void gradient_descent_gfree (double **matrix_b, double *matrix_a,
                              double *matrix_pi, int N)
 {
 #define CUR_PROC "gradient_descent_gfree"
@@ -70,7 +72,7 @@ void gradient_descent_gfree (double **matrix_b, double *matrix_a,
 
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
-int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
+static int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
                              double **matrix_pi, model * mo)
 {
 #define CUR_PROC "gradient_descent_galloc"
@@ -192,7 +194,7 @@ int gradescent_compute_expectations (model * mo, double **alpha,
 
 
 /*----------------------------------------------------------------------------*/
-double compute_performance (model * mo, sequence_t * sq)
+static double compute_performance (model * mo, sequence_t * sq)
 {
 #define CUR_PROC "compute_performance"
 
@@ -245,7 +247,7 @@ double compute_performance (model * mo, sequence_t * sq)
    @param sq:         struct of annotated sequences
    @param eta:        training parameter for gradient descent
  */
-int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
+static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
 {
 #define CUR_PROC "gradient_descent_onestep"
 
