@@ -51,7 +51,7 @@
   @param s:           array of all states of the model
   @param N:           number of states in the model
  */
-double **kbest_buildLogMatrix (state * s, int N)
+static double **kbest_buildLogMatrix (state * s, int N)
 {
 #define CUR_PROC "kbest_buildLogMatrix"
   int i, j;
