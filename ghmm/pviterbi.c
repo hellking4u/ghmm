@@ -51,10 +51,23 @@
 #include <ghmm/internal.h>
 
 
+  static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y);
+
+  static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y);
+
+  static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y);
+
+  static double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state);
+
+  static void set_phi(plocal_store_t * pv, int x, int y, int state, double prob);
+
+  static void push_back_phi(plocal_store_t * pv, int length_y);
+
+  static void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state);
 
 
 /*----------------------------------------------------------------------------*/
-plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y) {
+static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y) {
 #define CUR_PROC "pviterbi_alloc"
   plocal_store_t* v = NULL;
   int i, j;
@@ -96,7 +109,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y) {
+static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y) {
 #define CUR_PROC "pviterbi_free"
   int i, j;
   mes_check_ptr(v, return(-1));
@@ -141,7 +154,7 @@ void print_pviterbi_store(plocal_store_t * pv) {
   } 
 }
 
-void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
+static void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
 {
 #define CUR_PROC "pviterbi_precompute"
   int i, j, emission, t_class;
@@ -213,7 +226,7 @@ void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
 /*   } */
 /* } */
 
-double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
+static double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   /* determine the transition class for the source state */
   int id = pv->mo->s[i].in_id[j];
   int cl = pv->mo->s[id].class_change->get_class(pv->mo, X, Y, index_x,index_y,
@@ -221,11 +234,11 @@ double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence
   return pv->log_in_a[i][j][cl];
 }
 
-double get_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
+static double get_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   return pv->log_in_a[i][j][0];
 }
 
-double log_b(plocal_store_t * pv, int state, int emission) {
+static double log_b(plocal_store_t * pv, int state, int emission) {
 #ifdef DEBUG
   if (state > pv->mo->N) 
     fprintf(stderr, "log_b: State index out of bounds %i > %i\n", state, pv->mo->N);
@@ -236,7 +249,7 @@ double log_b(plocal_store_t * pv, int state, int emission) {
   return pv->log_b[state][emission];
 }
 
-void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
+static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 #ifdef DEBUG
   int emission;
 #endif
@@ -391,7 +404,7 @@ void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 
 /* call this function when you are at position (x, y) and want to get the
    probability of state 'state' which is offset_x and offset_y away from x,y */
-double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state){
+static double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state){
 #ifdef DEBUG
   if (y > pv->len_y || state > pv->mo->N || y < - pv->mo->max_offset_y)
     fprintf(stderr, "get_phi: out of bounds %i %i %i\n", 
@@ -405,7 +418,7 @@ double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, in
 }
 
 /* set the value of this matrix cell */
-void set_phi(plocal_store_t * pv, int x, int y, int state, double prob){
+static void set_phi(plocal_store_t * pv, int x, int y, int state, double prob){
 #ifdef DEBUG
   if (y > pv->len_y || state > pv->mo->N || y < - pv->mo->max_offset_y)
     fprintf(stderr, "set_phi: out of bounds %i %i %i %f\n", 
@@ -417,7 +430,7 @@ void set_phi(plocal_store_t * pv, int x, int y, int state, double prob){
 
 /* since we only keep the frontier we have to push back when ever a row is
    complete */
-void push_back_phi(plocal_store_t * pv, int length_y){
+static void push_back_phi(plocal_store_t * pv, int length_y){
   int off_x, y, j;
   /* push back the old phi values */
   for (off_x=pv->mo->max_offset_x; off_x>0; off_x--)
@@ -426,7 +439,7 @@ void push_back_phi(plocal_store_t * pv, int length_y){
 	pv->phi[off_x][y][j] = pv->phi[off_x-1][y][j];
 }
 
-void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state){
+static void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state){
   /* shift by max_offsets for negative indices */
 #ifdef DEBUG
   if (x > pv->len_x || y > pv->len_y || state > pv->mo->N || 
@@ -438,7 +451,7 @@ void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state){
   pv->psi[x + pv->mo->max_offset_x][y + pv->mo->max_offset_y][state] = from_state;
 }
 
-int get_psi(plocal_store_t * pv, int x, int y, int state) {
+static int get_psi(plocal_store_t * pv, int x, int y, int state) {
   /* shift by max_offsets for negative indices*/
 #ifdef DEBUG
   if (x > pv->len_x || y > pv->len_y || state > pv->mo->N || 

@@ -45,6 +45,7 @@ extern "C" {
 #include "psequence.h"
 #include "linkedlist.h"
 
+
 typedef struct plocal_store_t {
   /** precomputed log probabilities for transitions into the states 
       for each transition class **/
@@ -69,21 +70,7 @@ typedef struct plocal_store_t {
   int    topo_order_length;
 } plocal_store_t;
 
-  plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y);
-
-  int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y);
-
-  void print_pviterbi_store(plocal_store_t * pv);
-
-  void init_phi(plocal_store_t * pv, psequence * X, psequence * Y);
-
-  double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state);
-
-  void set_phi(plocal_store_t * pv, int x, int y, int state, double prob);
-
-  void push_back_phi(plocal_store_t * pv, int length_y);
-
-  void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state);
+void print_pviterbi_store(plocal_store_t * pv);
 
 /**@name Viterbi-Algorithmus */
 /*@{ (Doc++-Group: viterbi) */
@@ -104,9 +91,6 @@ int *pviterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path
 int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
 
 int *pviterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
-
-/* static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y); */
-/* static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y); */
 
 /**
   Calculates the logarithmic probability to a given path through the 
