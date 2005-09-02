@@ -1823,30 +1823,138 @@ class HMM:
 
     ## Further Marginals ...
 
-    # XXX yet to be implemented  XXX
     def pathPosterior(self, sequence, path):
-        """ Returns the posterior probability for 'path' having generated 'sequence'.
-        
+        """ Returns the log posterior probability for 'path' having generated 'sequence'.
+            
+            CAVEAT: statePosterior needs to calculate the complete forward and backward matrices. If 
+            you are interested in multiple paths it would be more efficient to use the 'posterior' function
+            directly and not multiple calls to pathPosterior
         """
-        pass
+        # XXX for silent states things arr more complicated -> to be done
+        if self.cmodel.model_type & 4:
+            raise RuntimeError, "Models with silent states not yet supported."
+            
+                    
+        # checking function arguments
+        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+        
 
-    def statePosterior(self, sequence, time, state):
-        """ Posterior probability for being at 'state' at time 'time' in 'sequence'.
+        # checking path validity (XXX too inefficient ?)
+        for p in path:
+            assert 0 <= p <= self.N-1, "Invalid state index "+str(p)+". Model and path are incompatible"
+
+        # calculate complete posterior matrix
+        post = self.posterior(sequence)
+        path_log_lik = 0
+        
+        if not (self.cmodel.model_type & 4):   # check for kSilentStates
+            # if there are no silent states things are straightforward
+            
+            assert len(path) == len(sequence), "Path and sequence have different lengths"
+            
+        
+            # summation of log posterior for all states in the path
+            for p in range(len(path)):
+                #print "post[",p,"],[",path[p],"] =",post[p][path[p]]
+            
+                pp = post[p][path[p]]
+            
+                if pp == 0:
+                    return float('-inf')
+                else:
+                    path_log_lik += log(post[p][path[p]])
+                
+            return path_log_lik  
+        
+        else:
+            # for silent state models we have to propagate the silent states in each column of the 
+            # posterior matrix 
+            
+            assert not self.isSilent(path[0]), "First state in path must not be silent."
+            
+            j = 0   # path index
+            for i in range(len(sequence)):
+                pp = post[i][path[j]]
+                
+                print pp
+                
+                if pp == 0:
+                    return float('-inf')
+                else:
+                    path_log_lik += log(post[p][path[p]])
+                    j+=1
+                
+                
+                # propagate path up until the next emitting state
+                while self.isSilent(path[j]):
+                    
+                    print "** silent state ",path[j]
+                    
+                    pp =  post[i][path[j]]
+                    if pp == 0:
+                        return float('-inf')
+                    else:
+                        path_log_lik += log(post[p][path[p]])
+                        j+=1    
+                
+            return path_log_lik        
+                
+        
+        
+
+    def statePosterior(self, sequence, state, time):
+        """ Return the log posterior probability for being at 'state' at time 'time' in 'sequence'.
+            
+            CAVEAT: statePosterior needs to calculate the complete forward and backward matrices. If 
+            you are interested in multiple states it would be more efficient to use the posterior function
+            directly and not multiple calls to statePosterior
         
         """
-        pass
+        # XXX for silent states things arr more complicated -> to be done
+        if self.cmodel.model_type & 4:
+            raise RuntimeError, "Models with silent states not yet supported."
+            
+                    
+        # checking function arguments
+        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+        assert 0 <= time <= len(sequence), "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
+        assert 0 <= state <= self.N-1, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
+
+        post = self.posterior(sequence)
+        res = post[time][state]
+
+        if res == 0:
+            return float('-inf')
+
+        else:    
+            return log(res)
+
+
 
     def posterior(self, sequence):
         """ Posterior distribution matrix for 'sequence'.
         
         """
-    	
+
+        # XXX for silent states things arr more complicated -> to be done    	
+        if self.cmodel.model_type & 4:
+            raise RuntimeError, "Models with silent states not yet supported."
+
+        
+        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+        
         (alpha,scale)  = self.forward(sequence)
         beta = self.backward(sequence,scale)
        
+        print "alpha: "
+        for a in alpha:
+            print a
+        print "\n"
         
-        print "alpha: ",alpha,"\n"
-        print "beta: ",beta
+        print "beta: "
+        for b in beta:
+            print b
+        print "\n"    
         
         
         post_seq = []
@@ -2539,6 +2647,23 @@ class DiscreteEmissionHMM(HMM):
                 A[i][state_index] = ghmmwrapper.get_arrayd(state.out_a,j)
 
         return [A,B,pi]
+
+    def isSilent(self,state):
+        """ Returns True if 'state' is silent, False otherwise
+        
+        """
+        assert 0 <= state <= self.N-1, "Invalid state index"
+        
+        # check whether model contains silent states at all
+        if not (self.cmodel.model_type & 4):
+            return False
+        
+        # check silent flag for state 'state'
+        if ghmmwrapper.get_arrayint(self.cmodel.silent,state):
+            return True
+        else:
+            return False    
+
 
 
     def toXML(self, filename, backgroundobj = None):
@@ -3547,19 +3672,13 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
 def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
     """ """
-    
+     
     # XXX working ? 
     
     if len(HMMList) != len(SeqList):
         raise TypeError, 'Inputs not equally long'
 
-    priors = []
-    for model in HMMList:
-        assert model.cmodel.prior != -1, "Model priors need to be specified."
-        priors.append(model.cmodel.prior)
-
-    assert sum(priors) == 1, "Priors need to be normalized over models (current total weight is "+str(sum(priors))+")."
-    
+   
     inplen = len(HMMList)
     if gradient not in [0, 1]:
        raise UnknownInputType, "TrainingType " + gradient + " not supported."
