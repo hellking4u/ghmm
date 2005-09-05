@@ -42,19 +42,6 @@
 extern "C" {
 #endif
 
-  model **discrime_modelarray_alloc (int size);
-  void discrime_modelarray_dealloc (model ** mos);
-
-  void discrime_modelarray_setptr (model ** mos, model * mo, int pos);
-  model *discrime_modelarray_getptr (model ** mos, int pos);
-
-  sequence_t **discrime_seqarray_alloc (int size);
-  void discrime_seqarray_dealloc (sequence_t ** seqs);
-
-  void discrime_seqarray_setptr (sequence_t ** seqs, sequence_t * seq,
-                                 int pos);
-  sequence_t *discrime_seqarray_getptr (sequence_t ** seqs, int pos);
-
 /*----------------------------------------------------------------------------*/
 /**
    Trains two or more models to opimise the discrimination between the

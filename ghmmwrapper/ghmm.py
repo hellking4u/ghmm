@@ -3689,21 +3689,21 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
         #initial training with Baum-Welch
         HMMList[i].baumWelch(SeqList[i], 3, 1e-9)
 
-    HMMArray = ghmmwrapper.discrime_modelarray_alloc(inplen)
-    SeqArray = ghmmwrapper.discrime_seqarray_alloc(inplen)
-
+    HMMArray = ghmmwrapper.modelarray_alloc(inplen)
+    SeqArray = ghmmwrapper.seqarray_alloc(inplen)
+    
     for i in range(inplen):
-        ghmmwrapper.discrime_modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
-        ghmmwrapper.discrime_seqarray_setptr(SeqArray, SeqList[i].cseq, i)
+        ghmmwrapper.modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
+        ghmmwrapper.seqarray_setptr(SeqArray, SeqList[i].cseq, i)
 
     ghmmwrapper.discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
-        HMMList[i].cmodel = ghmmwrapper.discrime_modelarray_getptr(HMMArray, i)
-        SeqList[i].cseq   = ghmmwrapper.discrime_seqarray_getptr(SeqArray, i)
+        HMMList[i].cmodel = ghmmwrapper.modelarray_getptr(HMMArray, i)
+        SeqList[i].cseq   = ghmmwrapper.seqarray_getptr(SeqArray, i)
 
-    ghmmwrapper.discrime_modelarray_dealloc(HMMArray)
-    ghmmwrapper.discrime_seqarray_dealloc(SeqArray)
+    ghmmwrapper.modelarray_free(HMMArray)
+    ghmmwrapper.seqarray_free(SeqArray)
 
     return HMMDiscriminativePerformance(HMMList, SeqList)
 
@@ -3719,17 +3719,17 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
     
     single = [0.0] * inplen
 
-    HMMArray = ghmmwrapper.discrime_modelarray_alloc(inplen)
-    SeqArray = ghmmwrapper.discrime_seqarray_alloc(inplen)
+    HMMArray = ghmmwrapper.modelarray_alloc(inplen)
+    SeqArray = ghmmwrapper.seqarray_alloc(inplen)
 
     for i in range(inplen):
-        ghmmwrapper.discrime_modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
-        ghmmwrapper.discrime_seqarray_setptr(SeqArray, SeqList[i].cseq, i)
+        ghmmwrapper.modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
+        ghmmwrapper.seqarray_setptr(SeqArray, SeqList[i].cseq, i)
 
     retval = ghmmwrapper.discrime_compute_performance(HMMArray, SeqArray, inplen)
     
-    ghmmwrapper.discrime_modelarray_dealloc(HMMArray)
-    ghmmwrapper.discrime_seqarray_dealloc(SeqArray)
+    ghmmwrapper.modelarray_free(HMMArray)
+    ghmmwrapper.seqarray_free(SeqArray)
 
     return retval
         
