@@ -69,47 +69,47 @@ static int smodel_state_alloc(sstate *state,
 			      int in_states,
 			      int out_states,
 			      int cos) {
-# define CUR_PROC "smodel_state_alloc"
+#define CUR_PROC "smodel_state_alloc"
   int res = -1;
-  if(!m_calloc(state->c, M)) {mes_proc(); goto STOP;}
-  if(!m_calloc(state->mue, M)) {mes_proc(); goto STOP;}
-  if(!m_calloc(state->u, M)) {mes_proc(); goto STOP;}
+  ARRAY_CALLOC (state->c, M);
+  ARRAY_CALLOC (state->mue, M);
+  ARRAY_CALLOC (state->u, M);
   if (out_states > 0) {
-    if(!m_calloc(state->out_id, out_states)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (state->out_id, out_states);
     state->out_a = matrix_d_alloc(cos, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
-    if(!m_calloc(state->in_id, in_states)) {mes_proc(); goto STOP;}
+    ARRAY_CALLOC (state->in_id, in_states);
     state->in_a = matrix_d_alloc(cos, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
   }
   res = 0;
 STOP:
   return(res);
-# undef CUR_PROC
+#undef CUR_PROC
 }
 
 smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
+#define CUR_PROC "smodel_alloc_fill"
   int i;
   smodel *smo=NULL;
-  if ((smo = malloc(sizeof(smodel))) == NULL) {
-    fprintf(stderr, "smodel_alloc_fill(1): out of memory\n");
-    return NULL;
-  }
+  ARRAY_MALLOC (smo, 1);
   smo->M   = M;
   smo->N   = N;
   smo->cos = cos;
   smo->prior = prior;
   smo->density = density;  /* 0 = normal, 1 = normal_pos */
-  if (!m_calloc(smo->s, smo->N)) {
-    fprintf(stderr, "smodel_alloc_fill(1): out of memory\n");
-    return NULL;
-  }
+  ARRAY_CALLOC (smo->s, smo->N);
+
   for(i=0; i < smo->N; i++) {
     smodel_state_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
   }
   return smo;
+STOP:
+  fprintf (stderr, "smodel_alloc_fill(1): out of memory\n");
+  return NULL;
+#undef CUR_PROC
 }
 
 void smodel_set_pivector(smodel *smo, int i, double piv) {
