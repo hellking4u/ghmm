@@ -329,7 +329,7 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
      for(r =0;r < mo->N; r++){
      printf("%f, ",beta_tmp[r]);
      }
-     printf("\n"); /*
+     printf("\n"); */
   /*#################################### */
 
   /*printf("** iterating...\n");*/
@@ -551,9 +551,6 @@ int foba_forward_lean (model * mo, const int *O, int len, double *log_p)
       /* iterate over non-silent states */
       for (i = 0; i < mo->N; i++) {
         if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
-
-          /* printf("  akt_ state %d\n",i);*/
-
           e_index = get_emission_index (mo, i, O[t], t);
           if (e_index != -1) {
             alpha_curr_col[i] = foba_stepforward (&mo->s[i], alpha_last_col,
@@ -568,8 +565,7 @@ int foba_forward_lean (model * mo, const int *O, int len, double *log_p)
       if (mo->model_type & kSilentStates) {
         for (i = 0; i < mo->topo_order_length; i++) {
           id = mo->topo_order[i];
-          alpha_curr_col[id] =
-            foba_stepforward (&mo->s[id], alpha_last_col, 1);
+          alpha_curr_col[id] = foba_stepforward (&mo->s[id], alpha_curr_col, 1);
           scale[t] += alpha_curr_col[id];
         }
       }
