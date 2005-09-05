@@ -298,17 +298,20 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   if (mo->model_type & kSilentStates) {        /* could go into silent state at t=0 */
     __viterbi_silent (mo, t = 0, v);
   }
-  /*for (j = 0; j < mo->N; j++)
-     {
-     printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]);
-     }
-
-     for( i = 0; i < mo->N; i++){
-     printf("%d\t", former_matchcount[i]);
-     }
-     for (i = 0; i < mo->N; i++){
-     printf("%d\t", recent_matchcount[i]);
-     } */
+  
+  
+  
+    printf("phi[0] = \n");
+    for (j = 0; j < mo->N; j++) {      
+       /*printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]); */
+       printf("%f,  ",v->phi[j]);
+    }
+    printf("\n");
+    for (j = 0; j < mo->N; j++) {      
+       /*printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]); */
+       printf("%d,  ",v->psi[0][j]);
+    }
+    printf("\n");
 
   /* t > 0 */
   for (t = 1; t < len; t++) {
@@ -361,27 +364,38 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
       __viterbi_silent (mo, t, v);
     }                           /* complete time step for silent states */
 
-    /**************
-    for (j = 0; j < mo->N; j++) 
-      {      
-	printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]);
-       }
-      
-    for (i = 0; i < mo->N; i++){
-      printf("%d\t", former_matchcount[i]);
+    /* **************
+    
+    printf("\nphi[%d] = \n",t);
+    for (j = 0; j < mo->N; j++) {      
+       printf("%f,  ",v->phi[j]);
     }
+    printf("\n");
+    for (j = 0; j < mo->N; j++) {      
 
-    for (i = 0; i < mo->N; i++){
-      printf("%d\t", recent_matchcount[i]);
+       printf("%d,  ",v->psi[t][j]);
     }
-    ****************/
+    printf("\n");
+      
+    **************** */
 
   }                             /* Next observation , increment time-step */
 
   /* Termination */
   /* for models with silent states we store the last state in the path at position 0.
      If there are no silent states we can use the correct position directly. */
-  
+
+ /* printf("\n----------------------");
+  printf("Phi Matrix:\n");  
+  for (j=0; j < len; j++ ){
+    for (k=0;k<mo->N;k++){
+      printf("%f  ",v->phi[j][k]);
+    }
+    printf("\n");
+  }    
+  printf("--------------------\n"); */
+
+
   if (! (mo->model_type & kSilentStates)){
     state_seq_index= len_path - 1;
   }
@@ -433,16 +447,17 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
       
       for (t = len - 2, i = 1; t >= 0; t--) {
         
-        /* if last state inserted into the path is silent we have to propagate up to the next emitting state */
+        /* if next state to be inserted into the path is silent we have to propagate up to the next emitting state */
         if ( mo->silent[v->psi[t + 1][lastemState]]) {
 
+            
           St = v->psi[t + 1][lastemState];
  
           /* fprintf(stderr, "t=%d:  DEL St=%d\n", t+1, St ); */
 
           while (St != -1 && mo->silent[St]) {    /* trace-back up to the last emitting state */
 
-            /* fprintf(stderr, "t=%d:  DEL St=%d\n", t, St ); */
+            /* fprintf(stderr, "***  t=%d:  DEL St=%d\n", t, St ); */
          
             if (cur_len_path+1 > len_path){
               /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
@@ -479,15 +494,15 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
     }
   }
 
-  /* PRINT PATH 
+  /* PRINT PATH */
      fprintf(stderr, "Viterbi path: " );
      for(t=0; t < len_path; t++)
        fprintf(stderr, " %d ",  state_seq[t]);
-     fprintf(stderr, "\n Freeing ... \n"); */
-
+     fprintf(stderr, "\n Freeing ... \n"); 
+     
   /* post-processing of the state path for models with silent states. 
     We have to realloc to the actual path length and reverse the order.
-    The final entry of the state path is marked with a -1 entry at the following array position*/
+    The final element of the state path is marked with a -1 entry at the following array position*/
     if (mo->model_type & kSilentStates){
       /* reallocating */
       if (cur_len_path+1 != len_path ){
@@ -496,10 +511,11 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
         len_path = cur_len_path+1; 
       }  
       /* reversing order */
-      for(i = 0; i<= floor(cur_len_path/2);i++ ){
+      for(i = 0; i< floor(cur_len_path/2.0);i++ ){
         k = state_seq[i];
         state_seq[i] = state_seq[cur_len_path-1-i];
         state_seq[cur_len_path-1-i] = k;
+       
       }
     }
      
