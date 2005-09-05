@@ -860,17 +860,6 @@ extern int discriminative(model** mo, sequence_t** sqs, int noC, int max_steps,
 */
 extern double discrime_compute_performance(model** mo, sequence_t** sqs, int noC);
 
-extern model** discrime_modelarray_alloc(int size);
-extern void discrime_modelarray_dealloc(model** mos);
-extern void discrime_modelarray_setptr(model** mos, model* mo, int pos);
-extern model* discrime_modelarray_getptr(model** mos, int pos);
-
-extern sequence_t** discrime_seqarray_alloc(int size);
-extern void discrime_seqarray_dealloc(sequence_t** seqs);
-
-extern void discrime_seqarray_setptr(sequence_t** seqs, sequence_t* seq, int pos);
-extern sequence_t* discrime_seqarray_getptr(sequence_t** seqs, int pos);
-
 
 /******* Forward , backward (foba.c) ******/
 
@@ -2084,9 +2073,53 @@ extern double randvar_normal_density (double x, double mean, double u);
 
   char *get_arraychar(char** ary, int index) { return ary[index]; }
 
+  void free_arraychar (char * * ary) {m_free (ary);}
+
+  /********** Create and access model* arrays  ****************************/
+model * * modelarray_alloc (int size) {
+#define CUR_PROC "modelarray_alloc"
+  model * * retval;
+  ARRAY_CALLOC (retval, size);
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return retval;
+#undef CUR_PROC
+}
+
+void modelarray_free (model ** mos) {
+#define CUR_PROC "modelarray_dealloc"
+  m_free (mos);
+#undef CUR_PROC
+}
+
+void modelarray_setptr (model ** mos, model * mo, int pos) {mos[pos] = mo;}
+
+model * modelarray_getptr (model ** mos, int pos) {return mos[pos];}
+
+
+  /********** Create and access sequence* arrays  *************************/
+sequence_t * * seqarray_alloc (int size) {
+#define CUR_PROC "seqarray_alloc"
+  sequence_t * * retval;
+  ARRAY_CALLOC (retval, size);
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return retval;
+#undef CUR_PROC
+}
+
+void seqarray_free (sequence_t ** seqs) {
+#define CUR_PROC "seqarray_dealloc"
+  m_free (seqs);
+#undef CUR_PROC
+}
+
+void seqarray_setptr (sequence_t ** seqs, sequence_t * seq, int pos)
+{seqs[pos] = seq;}
+
+sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
+{return seqs[pos];}
    
+
   /************  Create and access double[size1][size2] arrays ************/
-  
  
   double **double_2d_array(int rows, int cols) {
     return matrix_d_alloc(rows,cols);

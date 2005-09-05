@@ -74,59 +74,6 @@ static void discrime_trim_gradient (double *new, int length);
 double discrime_lambda = 0.0;
 double discrime_alpha = 1.0;
 
-model * * discrime_modelarray_alloc (int size)
-{
-#define CUR_PROC "discrime_modelarray_alloc"
-  model * * retval;
-
-  ARRAY_CALLOC (retval, size);
-
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  return retval;
-#undef CUR_PROC
-}
-
-void discrime_modelarray_dealloc (model ** mos)
-{
-#define CUR_PROC "discrime_modelarray_dealloc"
-  m_free (mos);
-#undef CUR_PROC
-}
-void discrime_modelarray_setptr (model ** mos, model * mo, int pos)
-{
-  mos[pos] = mo;
-}
-model *discrime_modelarray_getptr (model ** mos, int pos)
-{
-  return mos[pos];
-}
-
-sequence_t * * discrime_seqarray_alloc (int size)
-{
-#define CUR_PROC "discrime_seqarray_alloc"
-  sequence_t * * retval;
-
-  ARRAY_CALLOC (retval, size);
-
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  return retval;
-#undef CUR_PROC
-}
-
-void discrime_seqarray_dealloc (sequence_t ** seqs)
-{
-#define CUR_PROC "discrime_seqarray_dealloc"
-  m_free (seqs);
-#undef CUR_PROC
-}
-void discrime_seqarray_setptr (sequence_t ** seqs, sequence_t * seq, int pos)
-{
-  seqs[pos] = seq;
-}
-sequence_t *discrime_seqarray_getptr (sequence_t ** seqs, int pos)
-{
-  return seqs[pos];
-}
 
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
