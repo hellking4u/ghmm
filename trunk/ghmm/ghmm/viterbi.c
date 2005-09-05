@@ -300,19 +300,6 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
   }
   
   
-  
-    printf("phi[0] = \n");
-    for (j = 0; j < mo->N; j++) {      
-       /*printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]); */
-       printf("%f,  ",v->phi[j]);
-    }
-    printf("\n");
-    for (j = 0; j < mo->N; j++) {      
-       /*printf("\npsi[%d],in:%d, phi=%f\n", t, v->psi[t][j], v->phi[j]); */
-       printf("%d,  ",v->psi[0][j]);
-    }
-    printf("\n");
-
   /* t > 0 */
   for (t = 1; t < len; t++) {
 
@@ -494,11 +481,11 @@ int *viterbi (model * mo, int *o, int len, double *log_p)
     }
   }
 
-  /* PRINT PATH */
+  /* PRINT PATH 
      fprintf(stderr, "Viterbi path: " );
      for(t=0; t < len_path; t++)
        fprintf(stderr, " %d ",  state_seq[t]);
-     fprintf(stderr, "\n Freeing ... \n"); 
+     fprintf(stderr, "\n Freeing ... \n"); */
      
   /* post-processing of the state path for models with silent states. 
     We have to realloc to the actual path length and reverse the order.
