@@ -402,12 +402,12 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
       }
     }
 
-    /* printf("\nbeta_tmp = ");
+    /* printf("\nbeta_tmp = "); */
     for (i = 0; i < mo->N; i++){
       beta_tmp[i] = beta[t][i] / scale[t];
-      printf("%f, ",beta_tmp[i]);
+      /* printf("%f, ",beta_tmp[i]); *
     }
-    printf("\n"); */
+    /* printf("\n"); */
 
   }
 
