@@ -2934,12 +2934,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
                   + str(emissionsequences.__class__.__name__)
 
 
-        cmodelPTR = ghmmwrapper.discrime_modelarray_alloc(1)
-        ghmmwrapper.discrime_modelarray_setptr(cmodelPTR, self.cmodel, 0)
+        cmodelPTR = ghmmwrapper.modelarray_alloc(1)
+        ghmmwrapper.modelarray_setptr(cmodelPTR, self.cmodel, 0)
         error = self.gradientDescentFunction(cmodelPTR, emissionsequences.cseq, eta, steps)
 
-        self.cmodel = ghmmwrapper.discrime_modelarray_getptr(cmodelPTR, 0)
-        ghmmwrapper.discrime_modelarray_dealloc(cmodelPTR)
+        self.cmodel = ghmmwrapper.modelarray_getptr(cmodelPTR, 0)
+        ghmmwrapper.modelarray_free(cmodelPTR)
         
         if error == -1:
             print "ERROR: Gradient descent finished not successfully."
