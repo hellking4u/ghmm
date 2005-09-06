@@ -289,8 +289,6 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
   /* int beta_out=0; */
   double emission;
 
-  int r; /*XXX for testing only -> remove*/
-
 
   ARRAY_CALLOC (beta_tmp, mo->N);
   for (t = 0; t < len; t++)
@@ -298,7 +296,6 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
 
   /* topological ordering for models with silent states */
   if (mo->model_type & kSilentStates) {
-    /*printf("silent states require topological ordering\n");*/
     model_topo_ordering (mo);
   }
 
@@ -310,7 +307,6 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
     else {
       beta[len - 1][i] = 0.0;
     }
-
     beta_tmp[i] = beta[len - 1][i] / scale[len - 1];
   }
 
@@ -320,27 +316,11 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
   for (t = len - (mo->maxorder); t < len; t++)
     update_emission_history (mo, O[t]);
 
-  /*#################################### */
-  /*printf("scale:\n");
-     for(r =0;r < len; r++){
-     printf("%f, ",scale[r]);
-     }
-     printf("\nbeta_tmp:\n");
-     for(r =0;r < mo->N; r++){
-     printf("%f, ",beta_tmp[r]);
-     }
-     printf("\n"); */
-  /*#################################### */
-
-  /*printf("** iterating...\n");*/
-
   /* Backward Step for t = T-1, ..., 0 */
   /* beta_tmp: Vector for storage of scaled beta in one time step 
      loop over reverse topological ordering of silent states, non-silent states  */
   for (t = len - 2; t >= 0; t--) {
-
     /* printf(" ----------- *** t = %d ***  ---------- \n",t); */
-
 
     /* updating of emission_history with O[t] such that emission_history memorizes
        O[t - maxorder ... t] */
@@ -353,7 +333,6 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
       /* printf("  * silent states:\n"); */
       for (k = mo->topo_order_length - 1; k >= 0; k--) {
         id = mo->topo_order[k];
-
         /* printf("  silent[%d] = %d\n",id,mo->silent[id]); */
 
         assert (mo->silent[id] == 1);
@@ -362,59 +341,44 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
         for (j = 0; j < mo->s[id].out_states; j++) {
           j_id = mo->s[id].out_id[j];
           
-          
           e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
           
-          /* printf("   e_index = %d\n",e_index); */
-          
           if (e_index != -1) {
-            
             /* printf(" b[%d] = %f\n",e_index,mo->s[j_id].b[e_index]);  */
-            
             if (mo->s[j_id].b[e_index] < EPS_PREC){
-              
-              /* printf("   *** continue\n"); */
               continue;
             }
            
-           /*
-            printf("  von %d nach %d mit %f\n",id,j_id,mo->s[id].out_a[j]);
-            printf("  mo->s[%d].out_a[%d] * mo->s[%d].b[%d] * beta_tmp[%d]\n",id,j, j_id,e_index  ,j_id);
-            printf("  [%d,%d] sum += %f * %f * %f\n",id,j_id,mo->s[id].out_a[j], mo->s[j_id].b[e_index] ,beta_tmp[j_id]);
-            */
-
             sum += mo->s[id].out_a[j] * mo->s[j_id].b[e_index] * beta_tmp[j_id];
           }
         }
 
         /* if(sum > 0.0)
            printf("  --> beta[%d][%d] = %f\n",t+1,id,sum); */
-
         beta[t + 1][id] = sum;
         
         /* printf("  update beta_tmp[%d] = %f / %f\n",id,sum,scale[t+1]); */
-        beta_tmp[id] = sum/scale[t+1]; /* updating beta_tmp */
+	/* updating beta_tmp */
+        beta_tmp[id] = sum/scale[t+1];
                 
         /* printf("\nbeta_tmp = ");
          for (r = 0; r < mo->N; r++){
             printf("%f, ",beta_tmp[r]);
          }
          printf("\n"); */
-
-        
-        
       }
     }
 
+    /* iterating over the the non-silent states */
     /* printf("\n  * non-silent states:\n"); */
     for (i = 0; i < mo->N; i++) {
       if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
-
         sum = 0.0;
+
         for (j = 0; j < mo->s[i].out_states; j++) {
-          j_id = mo->s[i].out_id[j];
+	  /* computing the emission probability */
+	  j_id = mo->s[i].out_id[j];
           if (!(mo->model_type & kSilentStates) || !(mo->silent[j_id])) {
-            /* get emission index */
             e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
             if (e_index != -1) {
               emission = mo->s[j_id].b[e_index];
@@ -427,51 +391,25 @@ int foba_backward (model * mo, const int *O, int len, double **beta,
             emission = 1;
           }
 
-          /*printf("  von %d nach %d mit %f\n",i,j_id,mo->s[i].out_a[j]);
-          printf("  mo->s[%d].out_a[%d] * mo->s[%d].b[%d] * beta_tmp[%d]\n",id,j, j_id,e_index  ,j_id);
-          printf("  [%d,%d] sum += %f * %f * %f\n",i,j_id,mo->s[i].out_a[j],emission,beta_tmp[j_id]); */
-
           sum += mo->s[i].out_a[j] * emission * beta_tmp[j_id];
         }
-
         /* if(sum > 0.0)
           printf("  --> beta[%d][%d] = %f\n",t,i,sum); */
 
         beta[t][i] = sum;
-        /* if ((beta[t][i] > 0) && ((beta[t][i] < .01) || (beta[t][i] > 100))) beta_out++; */
+        /* if ((beta[t][i] > 0) && ((beta[t][i] < .01) || (beta[t][i] > 100)))
+	   beta_out++; */
       }
     }
-
 
     /* printf("\nbeta_tmp = ");
     for (i = 0; i < mo->N; i++){
       beta_tmp[i] = beta[t][i] / scale[t];
       printf("%f, ",beta_tmp[i]);
-      
     }
     printf("\n"); */
 
-    /*################################## */
-      /* printf("\n");
-       for (r = len-1; r >= 0; r--) {
-       printf("%d | ",O[r]);
-       for (i = 0; i < mo->N; i++) {
-       printf("%f ",beta[r][i]);
-       }
-       printf("\n");
-       }  */
-    /*################################## */
-
   }
-
-  /* Termination, (does not work that way with scaling)
-     p = 0.0;
-     for (i = 0; i < mo->N; i++) {
-     p += mo->s[i].pi * mo->s[i].b[O[0]]*beta[0][i];
-     }   
-     printf("Backward: %f\n",p); */
-
-  /* printf("betas out of [.01 100]: %d (%f %)\n", beta_out, (float)beta_out/(mo->N*len)); */
 
   res = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -854,7 +792,6 @@ int foba_label_backward (model * mo, const int *O, const int *label, int len,
         j_id = mo->s[i].out_id[j];
         /* The state has only a emission with probability > 0, if the label matches */
         if (label[t] == mo->s[i].label) {
-          /* get emission index */
           e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
           if (e_index != -1)
             emission = mo->s[j_id].b[e_index];
