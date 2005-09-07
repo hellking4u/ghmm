@@ -92,7 +92,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
    
      pModule = PyImport_Import(pName);       /* Import module */     
      if(!pModule) {
-       printf("python_class_change ERROR: Module %s not found.\n",ModuleName);
+       printf("python_class_change: import error - Module %s.py not found in current paths.\n",ModuleName);
        return(-1);
      }    
    
@@ -102,7 +102,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
      /*printf("C: Calling Python with value %d\n",t); */
      pFunc = PyDict_GetItemString(pDict, FunctionName);
      if(!pFunc) {
-       printf("python_class_change ERROR: Function %s not found.\n",FunctionName);
+       printf("python_class_change: Error - Function %s not found in namespace of module %s.\n",FunctionName,ModuleName);
        return(-1);
      }  
      Py_DECREF(pDict); 
