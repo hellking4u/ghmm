@@ -41,6 +41,12 @@
 #include <ghmm/mes.h>
 #include <Python.h>
 
+
+/* smo is a smodel struct
+   seq is a double matrix of observations 
+   k is the first current sequence index (corresponding to the rows in seq)
+   t is the second current sequence index (corresponding to seq[k] )
+*/
 int cp_class_change( smodel *smo, double* seq, int k, int t) {
   int res;
   
@@ -56,12 +62,18 @@ int cp_class_change( smodel *smo, double* seq, int k, int t) {
   return res;
 } 		
 		
-
+/*
+   setSwitchingFunction assigns cp_class_change as switching function in model smo.
+   Needs to be modified for user defined C switching function.
+*/
 void setSwitchingFunction( smodel *smd ) {
   smd->class_change->get_class = cp_class_change;
 }
 
-
+/* Implements the Python Callback to the switching function defined in smo->class_change.
+   Arguments ( which are analogue to cp_class_change (s.a.)) are parsed into Python data structures
+   before the call-back.
+*/
 int python_class_change( smodel* smo, double *seq, int k, int t ){
    char* ModuleName = smo->class_change->python_module;
    char* FunctionName = smo->class_change->python_function;
@@ -78,7 +90,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
      printf("C: Importing Python module ... ");
      pName = PyString_FromString(ModuleName);
    
-     pModule = PyImport_Import(pName);       // Import module
+     pModule = PyImport_Import(pName);       /* Import module */     
      if(!pModule) {
        printf("python_class_change ERROR: Module %s not found.\n",ModuleName);
        return(-1);
@@ -87,7 +99,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
      pDict = PyModule_GetDict(pModule);
      printf("done.\n");    
     
-     //printf("C: Calling Python with value %d\n",t);
+     /*printf("C: Calling Python with value %d\n",t); */
      pFunc = PyDict_GetItemString(pDict, FunctionName);
      if(!pFunc) {
        printf("python_class_change ERROR: Function %s not found.\n",FunctionName);
@@ -127,7 +139,16 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
  
 }
 
+/* Assignment of Python module and function for class change. The values are stored in smo->class_change.
+   
+   smo: smodel struct with multiple transition classes
+   python_module: Name of the module the switching function is defined in
+   python_function: Name of the Python function to be used. 
+   IMPORTANT: python_function must have a signature compatible to cp_class_change (that means three arguments:
+   first the sequence (as a Python list), second sequence number, third the time step in the current sequence.
+   See class_change.py in the ghmmwrapper directory for an example.)
 
+*/
 void setPythonSwitching( smodel *smd, char* python_module, char* python_function ){
    if(!smd->class_change) {
      printf("setPythonSwitching ERROR: class_change struct not initialized.\n");
