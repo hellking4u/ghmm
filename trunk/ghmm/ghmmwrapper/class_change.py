@@ -34,15 +34,41 @@
 #*
 #*******************************************************************************/
 
+
+
 def getClass( seq, k,t):
-     #print "Python: Inside of getClass. Argument value is "+str(t)
-     #print smo
-     #print seq
-     #print t
-     #print k
+     """ Example of a Python class change function.
      
-    classes = [0] * 6+  [1] * 6
+         seq: a list of obervations
+         k:  sequence index of seq in the sequence collection seq came from 
+         t: current time step in seq (e.g  we need the class for seq[t] )
+     
+     """
+     # dummy function right now
+     return 0
+
+     # The class change could depend on a number of variables.
+     # Here are some examples:
     
-    if t > len(classes):
-        raise RuntimeError
-    return classes[t]
+     # the sequence index k
+     if k < 10:
+         return 0
+     else:
+         return 1    
+
+     # the time step t
+     if t < 100:
+         return 0
+     else:    
+         return 1
+
+     # some cumulative function over the sequence
+     seq_sum = 0
+     for i in range(t):
+         seq_sum += seq[0]
+     if seq_sum <= 80:
+         return 0
+     else:
+         return 1 
+
+     # or some combination thereof for any number of classes.
