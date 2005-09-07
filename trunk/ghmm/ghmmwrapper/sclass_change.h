@@ -54,6 +54,15 @@ int cp_class_change( smodel *smo, double *seq, int k, int t);
 */
 void setSwitchingFunction( smodel *smd );
 
+
+
+/* Implements the Python Callback to the switching function defined in smo->class_change.
+   Arguments ( which are analogue to cp_class_change (s.a.)) are parsed into Python data structures
+   before the call-back.
+*/
+int python_class_change( smodel* smo, int* seq, int k, int t );
+
+
 /* Assignment of Python module and function for class change. The values are stored in smo->class_change.
    
    smo: smodel struct with multiple transition classes
@@ -65,15 +74,6 @@ void setSwitchingFunction( smodel *smd );
 
 */
 void setPythonSwitching( smodel *smd, char* python_module, char* python_function);
-
-/* Implements the Python Callback to the switching function defined in smo->class_change.
-   Arguments ( which are analogue to cp_class_change (s.a.)) are parsed into Python data structures
-   before the call-back.
-*/
-int python_class_change( smodel* smo, int* seq, int k, int t );
-
-
-
 
 
 
