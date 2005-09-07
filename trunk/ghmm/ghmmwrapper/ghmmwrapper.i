@@ -1436,7 +1436,7 @@ extern int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, 
 extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
 
 
-extern int cp_class_change(smodel *smo, int *seq, int k, int t);
+extern int cp_class_change(smodel *smo, double *seq, int k, int t);
 extern void setSwitchingFunction( smodel *smd );		  
 
 extern int python_class_change(smodel *smo, int *seq, int k, int t);
