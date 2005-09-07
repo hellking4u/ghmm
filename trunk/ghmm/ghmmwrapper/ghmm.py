@@ -34,7 +34,7 @@
 ################################################################################
 
 """
-
+ 
 The Design of ghmm.py
 
 HMMs are stochastic models which encode a probability density over
@@ -1845,7 +1845,7 @@ class HMM:
 
         # calculate complete posterior matrix
         post = self.posterior(sequence)
-        path_log_lik = 0
+        path_posterior = []
         
         if not (self.cmodel.model_type & 4):   # check for kSilentStates
             # if there are no silent states things are straightforward
@@ -1853,51 +1853,48 @@ class HMM:
             assert len(path) == len(sequence), "Path and sequence have different lengths"
             
         
-            # summation of log posterior for all states in the path
+            # appending posteriors for each element of path
             for p in range(len(path)):
                 #print "post[",p,"],[",path[p],"] =",post[p][path[p]]
             
-                pp = post[p][path[p]]
-            
-                if pp == 0:
-                    return float('-inf')
-                else:
-                    path_log_lik += log(post[p][path[p]])
-                
-            return path_log_lik  
+                path_posterior.append(post[p][path[p]])
+               
+            return path_posterior  
         
-        else:
-            # for silent state models we have to propagate the silent states in each column of the 
-            # posterior matrix 
-            
-            assert not self.isSilent(path[0]), "First state in path must not be silent."
-            
-            j = 0   # path index
-            for i in range(len(sequence)):
-                pp = post[i][path[j]]
-                
-                print pp
-                
-                if pp == 0:
-                    return float('-inf')
-                else:
-                    path_log_lik += log(post[p][path[p]])
-                    j+=1
-                
-                
-                # propagate path up until the next emitting state
-                while self.isSilent(path[j]):
-                    
-                    print "** silent state ",path[j]
-                    
-                    pp =  post[i][path[j]]
-                    if pp == 0:
-                        return float('-inf')
-                    else:
-                        path_log_lik += log(post[p][path[p]])
-                        j+=1    
-                
-            return path_log_lik        
+
+        # XXX silent states are yet to be done
+#        else:
+#            # for silent state models we have to propagate the silent states in each column of the 
+#            # posterior matrix 
+#            
+#            assert not self.isSilent(path[0]), "First state in path must not be silent."
+#            
+#            j = 0   # path index
+#            for i in range(len(sequence)):
+#                pp = post[i][path[j]]
+#                
+#                print pp
+#                
+#                if pp == 0:
+#                    return float('-inf')
+#                else:
+#                    path_log_lik += log(post[p][path[p]])
+#                    j+=1
+#                
+#                
+#                # propagate path up until the next emitting state
+#                while self.isSilent(path[j]):
+#                    
+#                    print "** silent state ",path[j]
+#                    
+#                    pp =  post[i][path[j]]
+#                    if pp == 0:
+#                        return float('-inf')
+#                    else:
+#                        path_log_lik += log(post[p][path[p]])
+#                        j+=1    
+#                
+#            return path_log_lik        
                 
         
         
@@ -1921,13 +1918,7 @@ class HMM:
         assert 0 <= state <= self.N-1, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
 
         post = self.posterior(sequence)
-        res = post[time][state]
-
-        if res == 0:
-            return float('-inf')
-
-        else:    
-            return log(res)
+        return post[time][state]
 
 
 
@@ -1946,18 +1937,18 @@ class HMM:
         (alpha,scale)  = self.forward(sequence)
         beta = self.backward(sequence,scale)
        
-        print "alpha: "
-        for a in alpha:
-            print a
-        print "\n"
+#        print "alpha: "
+#        for a in alpha:
+#            print a
+#        print "\n"
+#        
+#        print "beta: "
+#        for b in beta:
+#            print b
+#        print "\n"    
         
-        print "beta: "
-        for b in beta:
-            print b
-        print "\n"    
         
-        
-        post_seq = []
+        post_mat = []
         for i in range(len(sequence)):
             post = []            
             for state in range(self.N):
@@ -1965,11 +1956,11 @@ class HMM:
                 #print alpha[i]
                 post.append( alpha[i][state] * beta[i][state] ) 
        
-            post_seq.append(post)   
+            post_mat.append(post)   
 
        
 
-        return post_seq
+        return post_mat
 
     def getPrior(self):
         """ Returns current value of the model prior.
@@ -2033,8 +2024,10 @@ class HMM:
         error = self.forwardAlphaFunction(self.cmodel, seq,t, calpha, cscale, unused)
         if error == -1:
             print "ERROR: forward finished with -1: EmissionSequence cannot be build."
+
+        #res = ghmmwrapper.get_arrayd(unused,0)
+        #print "Full forward logp = ",res, " -> ", euler**res
             
-        
         # translate alpha / scale to python lists 
         pyscale = ghmmhelper.arrayd2list(cscale, t)
         pyalpha = ghmmhelper.matrixd2list(calpha,t,self.N)
@@ -2119,7 +2112,7 @@ class HMM:
                 for j in range(seq_len):                
                     onePath.append(ghmmwrapper.get_arrayint(viterbiPath,j))
             
-            # in the silent case we have to append as long as the path is positive because the final state path position
+            # in the silent case we have to append as long as the path is positive because the final path position
             # is marked with a -1 in the following array entry.
             elif self.cmodel.model_type &  4 != 0:  # check model_type for silent state flag   
                 
@@ -2852,6 +2845,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         else:
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
 
+        assert emissionSequences.emissionDomain == self.emissionDomain, "Sequence and model emissionDomains are incompatible."
+        
         (vPath, log_p) = self.viterbi(emissionSequences)
 
         labels = []
@@ -3265,8 +3260,7 @@ class GaussianEmissionHMM(HMM):
         error = self.forwardAlphaFunction(self.cmodel, seq,t, None, calpha, cscale, logP)
         if error == -1:
             print "ERROR: Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build."
-            
-
+        
         # translate alpha / scale to python lists
         pyscale = ghmmhelper.arrayd2list(cscale, t)
         pyalpha = ghmmhelper.matrixd2list(calpha,t,i)
