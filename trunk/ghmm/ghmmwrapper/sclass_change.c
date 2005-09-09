@@ -33,13 +33,14 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
 #include <ghmm/mes.h>
-#include <Python.h>
+
 
 
 /* smo is a smodel struct
@@ -86,18 +87,25 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
    static PyObject *pFunc = NULL;
    
    /* importing module and function on first function call */
+   
    if (pModule == NULL) {   
      printf("C: Importing Python module ... ");
+    
      pName = PyString_FromString(ModuleName);
    
-     pModule = PyImport_Import(pName);       /* Import module */     
+     pModule = PyImport_Import(pName);       /* Import module */
      if(!pModule) {
        printf("python_class_change: import error - Module %s.py not found in current paths.\n",ModuleName);
        return(-1);
      }    
    
      pDict = PyModule_GetDict(pModule);
-     printf("done.\n");    
+     printf("done.\n"); 
+    
+      /*--- TEST ---
+      printf("Python Module %s.\n",ModuleName);
+      pDict = PyImport_GetModuleDict(); */
+    
     
      /*printf("C: Calling Python with value %d\n",t); */
      pFunc = PyDict_GetItemString(pDict, FunctionName);
@@ -157,3 +165,75 @@ void setPythonSwitching( smodel *smd, char* python_module, char* python_function
    smd->class_change->python_function = python_function;     
    smd->class_change->get_class = python_class_change ;
 }
+
+
+
+/* --------------------------------------------------------------------------------------- */
+/* The functions below provide an interface to passing arbitrary python objects as class switch
+   functions. Such an object has to fulfill two conditions:
+    1) it needs to be callable
+    2) it needs to have the following (or an equivalent) signature:
+        def switchFun(seq,k,t) for a function
+            or
+        def __call__(self,seq,k,t)  for a callable object
+*/
+
+/* pyCallback holds the global Python callback variable */
+static PyObject *pyCallback = NULL;
+
+/* executePythonCallback carries out the actual function call of the object
+   assigned to pyCallback.
+
+    Arguments:
+     smo: pointer on the smodel
+     seq: current sequence
+     k:   index of current sequence in the sequence set it originated from
+     t:   current time step (e.q seq[t] is the current observation)
+   
+*/
+int executePythonCallback(smodel* smo, double *seq, int k, int t){
+   int class,i;
+
+   PyObject  *pArgs, *pValue, *pList; /*  *pDict, *pName, */
+
+   pArgs = PyTuple_New(3);
+   
+   pList = PyList_New(t);
+   for(i=0;i<t;i++){
+     pValue = PyFloat_FromDouble(seq[i]);
+     PyList_SetItem(pList, i, pValue);
+   }    
+   PyTuple_SetItem(pArgs, 0, pList); 
+
+   pValue = PyInt_FromLong((long)k);
+   PyTuple_SetItem(pArgs, 1, pValue); 
+
+   pValue = PyInt_FromLong((long)t);
+   PyTuple_SetItem(pArgs, 2, pValue); 
+   
+   pValue = PyObject_CallObject(pyCallback, pArgs); // Calling Python 
+
+   /* parsing the result from Python to C data type */
+   class = PyInt_AsLong(pValue);
+  /*printf("C: The returned class is %d\n",class);*/
+     
+   /* cleaning up */
+   Py_DECREF(pArgs); 
+   Py_DECREF(pValue); 
+   Py_DECREF(pList);    
+   
+   return class; 
+ 
+}
+
+/* setPythonCallback assigns the arguement py_cb to the global
+   callback variable and sets the corresponding switching function executePythonCallback 
+   in the smodel-class_change context.
+
+ */
+void setPythonCallback(smodel *smo, PyObject *py_cb){
+  pyCallback = py_cb;
+  smo->class_change->get_class = executePythonCallback;
+}
+
+
