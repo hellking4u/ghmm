@@ -702,7 +702,7 @@ static void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
           b_new[h] = b_old[h] + discrime_lambda * (sum / b_old[h]);
       }
 
-      /* change paramters to fit into valid parameter range */
+      /* change parameters to fit into valid parameter range */
       discrime_trim_gradient (b_new, mo[0]->M);
 
       for (h = hist; h < hist + mo[class]->M; h++) {
