@@ -234,10 +234,6 @@ static double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, ps
   return pv->log_in_a[i][j][cl];
 }
 
-static double get_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
-  return pv->log_in_a[i][j][0];
-}
-
 static double log_b(plocal_store_t * pv, int state, int emission) {
 #ifdef DEBUG
   if (state > pv->mo->N) 
