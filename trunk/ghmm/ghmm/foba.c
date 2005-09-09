@@ -266,157 +266,202 @@ int foba_descale (double **alpha, double *scale, int t, int n,
 
 
 /***************************** Backward Algorithm ******************************/
-/*int foba_initbackward(model *mo, double *beta_1, int symb, double *scale){
-  int i,j;
-	
-  for (i = 0; i < mo->N; i++) {
-    sum = 0.0;
-    for (j = 0; j < mo->s[i].out_states; j++) {
-	   sum += mo->s[i].out_a[j] * mo->s[j_id].b[symb];
-    }
-	beta_1[i] = sum;
-  }	
-} */
-
 int foba_backward (model * mo, const int *O, int len, double **beta,
                    const double *scale)
 {
 # define CUR_PROC "foba_backward"
-  double *beta_tmp, sum;
+  /* beta_tmp holds beta-variables for silent states */
+  double *beta_tmp=NULL;
+  double sum, emission;
   int i, j, j_id, t, k, id;
   int res = -1;
   int e_index;
-  /* int beta_out=0; */
-  double emission;
 
 
-  ARRAY_CALLOC (beta_tmp, mo->N);
   for (t = 0; t < len; t++)
     mes_check_0 (scale[t], goto STOP);
 
   /* topological ordering for models with silent states */
   if (mo->model_type & kSilentStates) {
+    ARRAY_CALLOC (beta_tmp, mo->N);
     model_topo_ordering (mo);
   }
 
-  /* initialize */
+  /* initialize all states */
   for (i = 0; i < mo->N; i++) {
-    if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
-      beta[len - 1][i] = 1.0;
-    }
-    else {
-      beta[len - 1][i] = 0.0;
-    }
-    beta_tmp[i] = beta[len - 1][i] / scale[len - 1];
+    beta[len - 1][i] = 1.0;
   }
 
-  /* initialize emission history */
-  if (!(mo->model_type & kHigherOrderEmissions))
+  if (!(mo->model_type & kHigherOrderEmissions)) {
     mo->maxorder = 0;
-  for (t = len - (mo->maxorder); t < len; t++)
+  }
+  /* initialize emission history */
+  for (t = len - (mo->maxorder); t < len; t++) {
     update_emission_history (mo, O[t]);
-
+  }
+  
   /* Backward Step for t = T-1, ..., 0 */
-  /* beta_tmp: Vector for storage of scaled beta in one time step 
-     loop over reverse topological ordering of silent states, non-silent states  */
+  /* loop over reverse topological ordering of silent states, non-silent states  */
   for (t = len - 2; t >= 0; t--) {
     /* printf(" ----------- *** t = %d ***  ---------- \n",t); */
+    /* printf("\n*** O(%d) = %d\n",t+1,O[t+1]); */
 
     /* updating of emission_history with O[t] such that emission_history memorizes
        O[t - maxorder ... t] */
     if (0 <= t - mo->maxorder + 1)
       update_emission_history_front (mo, O[t - mo->maxorder + 1]);
 
-    /* printf("\n*** O(%d) = %d\n",t+1,O[t+1]); */
-
+    /* iterating over the the silent states and filling beta_tmp */
     if (mo->model_type & kSilentStates) {
-      /* printf("  * silent states:\n"); */
       for (k = mo->topo_order_length - 1; k >= 0; k--) {
         id = mo->topo_order[k];
         /* printf("  silent[%d] = %d\n",id,mo->silent[id]); */
-
         assert (mo->silent[id] == 1);
 
         sum = 0.0;
         for (j = 0; j < mo->s[id].out_states; j++) {
           j_id = mo->s[id].out_id[j];
-          
-          e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
-          
-          if (e_index != -1) {
-            /* printf(" b[%d] = %f\n",e_index,mo->s[j_id].b[e_index]);  */
-            if (mo->s[j_id].b[e_index] < EPS_PREC){
-              continue;
-            }
-           
-            sum += mo->s[id].out_a[j] * mo->s[j_id].b[e_index] * beta_tmp[j_id];
-          }
-        }
 
-        /* if(sum > 0.0)
-           printf("  --> beta[%d][%d] = %f\n",t+1,id,sum); */
-        beta[t + 1][id] = sum;
-        
-        /* printf("  update beta_tmp[%d] = %f / %f\n",id,sum,scale[t+1]); */
-	/* updating beta_tmp */
-        beta_tmp[id] = sum/scale[t+1];
-                
-        /* printf("\nbeta_tmp = ");
-         for (r = 0; r < mo->N; r++){
-            printf("%f, ",beta_tmp[r]);
-         }
-         printf("\n"); */
+	  /* out_state is not silent */
+	  if (!mo->silent[j_id]) {
+	    e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
+	    if (e_index != -1) {
+	      sum += mo->s[id].out_a[j] * mo->s[j_id].b[e_index] * beta[t+1][j_id];
+	    }
+	  }
+	  /* out_state is silent, beta_tmp[j_id] is useful since we go through
+	     the silent states in reversed topological order */
+	  else {
+	    sum += mo->s[id].out_a[j] * beta_tmp[j_id];
+	  }
+	}
+	/* setting beta_tmp for the silent state
+	   don't scale the betas for silent states now 
+	   wait until the betas for non-silent states are complete to avoid
+	   multiple scaling with the same scalingfactor in one term */
+        beta_tmp[id] = sum;
       }
     }
 
     /* iterating over the the non-silent states */
-    /* printf("\n  * non-silent states:\n"); */
     for (i = 0; i < mo->N; i++) {
       if (!(mo->model_type & kSilentStates) || !(mo->silent[i])) {
         sum = 0.0;
-
+	
         for (j = 0; j < mo->s[i].out_states; j++) {
-	  /* computing the emission probability */
 	  j_id = mo->s[i].out_id[j];
-          if (!(mo->model_type & kSilentStates) || !(mo->silent[j_id])) {
+        
+	  /* out_state is not silent: get the emission probability
+	     and use beta[t+1]*/
+	  if (!(mo->model_type & kSilentStates) || !(mo->silent[j_id])) {
             e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
-            if (e_index != -1) {
+            if (e_index != -1)
               emission = mo->s[j_id].b[e_index];
-            }
-            else {
+            else
               emission = 0;
-            }
+	    sum += mo->s[i].out_a[j] * emission * beta[t+1][j_id];
           }
+	  /* out_state is silent: use beta_tmp */
           else {
-            emission = 1;
+            sum += mo->s[i].out_a[j] * beta_tmp[j_id];
           }
-
-          sum += mo->s[i].out_a[j] * emission * beta_tmp[j_id];
         }
-        /* if(sum > 0.0)
-          printf("  --> beta[%d][%d] = %f\n",t,i,sum); */
-
-        beta[t][i] = sum;
-        /* if ((beta[t][i] > 0) && ((beta[t][i] < .01) || (beta[t][i] > 100)))
-	   beta_out++; */
+	/* updating beta[t] for non-silent state */
+        beta[t][i] = sum / scale[t+1];
       }
     }
-
-    /* printf("\nbeta_tmp = "); */
-    for (i = 0; i < mo->N; i++){
-      beta_tmp[i] = beta[t][i] / scale[t];
-      /* printf("%f, ",beta_tmp[i]); */
-    }
-    /* printf("\n"); */
-
+    /* updating beta[t] for silent states, finally scale them
+       and resetting beta_tmp */
+    if (mo->model_type & kSilentStates)
+      for (i=0; i<mo->N; i++) {
+	if (mo->silent[i]) {
+	  beta[t][i] = beta_tmp[i] / scale[t+1];
+	  beta_tmp[i] = 0.0;
+	}
+      }
   }
 
   res = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  m_free (beta_tmp);
+  if (mo->model_type & kSilentStates) m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
 }                               /* foba_backward */
+
+
+/*============================================================================*/
+int foba_backward_termination (model *mo, const int *O, int length,
+			       double **beta, double *scale, double *log_p) {
+#define CUR_PROC "backward_finalize"
+  int i, id, j, j_id, k, res=-1;
+  double log_scale_sum, sum;
+  double * beta_tmp=NULL;
+
+  /* topological ordering for models with silent states and precomputing
+     the beta_tmp for silent states */
+  if (mo->model_type & kSilentStates) {
+    model_topo_ordering (mo);
+    ARRAY_CALLOC (beta_tmp, mo->N);
+    for (k = mo->topo_order_length - 1; k >= 0; k--) {
+      id = mo->topo_order[k];
+      assert (mo->silent[id] == 1);
+      sum = 0.0;
+
+      for (j = 0; j < mo->s[id].out_states; j++) {
+	j_id = mo->s[id].out_id[j];
+
+	/* out_state is not silent */
+	if (!mo->silent[j_id]) {
+	  /* no emission history for the first symbol */
+	  if (!(mo->model_type & kHigherOrderEmissions) || mo->s[id].order==0) {
+	    sum += mo->s[id].out_a[j] * mo->s[j_id].b[O[0]] * beta[0][j_id];
+	  }
+	}
+	/* out_state is silent, beta_tmp[j_id] is useful since we go through
+	   the silent states in reversed topological order */
+	else {
+	  sum += mo->s[id].out_a[j] * beta_tmp[j_id];
+	}
+      }
+      /* setting beta_tmp for the silent state
+	 don't scale the betas for silent states now */
+      beta_tmp[id] = sum;
+    }
+  }
+
+  sum = 0.0;
+  /* iterating over all states with pi > 0.0 */
+  for (i = 0; i < mo->N; i++) {
+    if (mo->s[i].pi > 0.0) {
+      /* silent states */
+      if ((mo->model_type & kSilentStates) && mo->silent[i]) {
+	sum += mo->s[i].pi * beta_tmp[i];
+      }
+      /* non-silent states */
+      else {
+	/* no emission history for the first symbol */
+	if (!(mo->model_type & kHigherOrderEmissions) || mo->s[i].order==0) {
+	  sum += mo->s[i].pi * mo->s[i].b[O[0]] * beta[0][i];
+	}
+      }
+    }
+  }
+  
+  *log_p = log (sum / scale[0]);
+
+  log_scale_sum = 0.0;
+  for (i = 0; i < length; i++) {
+    log_scale_sum += log (scale[i]);
+  }
+
+  *log_p += log_scale_sum;
+  
+  res = 0;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  if (mo->model_type & kSilentStates) m_free (beta_tmp);
+  return (res);
+# undef CUR_PROC
+}
 
 
 /*============================================================================*/
@@ -531,15 +576,17 @@ int foba_forward_lean (model * mo, const int *O, int len, double *log_p)
     }
 
     /* Termination step: compute log likelihood */
-    if (mo->model_type & kSilentStates && *log_p != +1) {
+    if ((mo->model_type & kSilentStates) && *log_p != +1) {
       /*printf("silent model\n");*/
-      for (i = 0; i < len; i++)
+      for (i = 0; i < len; i++) {
         log_scale_sum += log (scale[i]);
-
-      for (i = 0; i < mo->N; i++)
+      }
+      for (i = 0; i < mo->N; i++) {
+	/* use alpha_last_col since the columms are also in the last step
+	   switched */
         if (!(mo->silent[i]))
-          non_silent_salpha_sum += alpha_curr_col[i];
-
+          non_silent_salpha_sum += alpha_last_col[i];
+      }
       salpha_log = log (non_silent_salpha_sum);
       *log_p = log_scale_sum + salpha_log;
     }
