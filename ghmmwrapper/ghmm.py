@@ -1823,9 +1823,10 @@ class HMM:
     def pathPosterior(self, sequence, path):
         """ Returns the log posterior probability for 'path' having generated 'sequence'.
             
-            CAVEAT: statePosterior needs to calculate the complete forward and backward matrices. If 
-            you are interested in multiple paths it would be more efficient to use the 'posterior' function
-            directly and not multiple calls to pathPosterior
+            CAVEAT: statePosterior needs to calculate the complete forward and
+            backward matrices. If you are interested in multiple paths it would
+            be more efficient to use the 'posterior' function directly and not
+            multiple calls to pathPosterior
         """
         # implemented in derived classes 
         pass
@@ -2205,6 +2206,7 @@ class DiscreteEmissionHMM(HMM):
         self.forwardFunction = ghmmwrapper.foba_forward_lean
         self.forwardAlphaFunction = ghmmwrapper.foba_forward      
         self.backwardBetaFunction = ghmmwrapper.foba_backward
+        self.backwardTerminationFunction = ghmmwrapper.foba_backward_termination
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
         self.getModelPtr = ghmmwrapper.get_model_ptr
@@ -2244,7 +2246,7 @@ class DiscreteEmissionHMM(HMM):
             strout +=  "\nIngoing transitions:"
             for i in range(state.in_states):
                 strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
-                strout += "\nint fix:" + str(state.fix) + "\n"
+            strout += "\nint fix:" + str(state.fix) + "\n"
         strout += "\nSilent states: \n"
         for k in range(hmm.N):
             strout += str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", "
@@ -2294,6 +2296,42 @@ class DiscreteEmissionHMM(HMM):
         
         for i in range(self.M):
             ghmmwrapper.set_arrayd(state.b,i,distributionParameters[i])
+
+
+    def backwardTermination(self, emissionSequence, pybeta, scalingVector):
+        """
+
+            Result: the backward log probability of emissionSequence
+        """
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise TypeError, "EmissionSequence required, got " + str (emissionSequence.__class__.__name__)
+
+        seq = emissionSequence.getPtr (emissionSequence.cseq.seq, 0)
+        
+        # parsing 'scalingVector' to C double array.
+        cscale = ghmmhelper.list2arrayd (scalingVector)
+        
+        # alllocating beta matrix
+        t = len (emissionSequence)
+        cbeta = ghmmhelper.list2matrixd (pybeta)
+        #print cbeta[0]
+
+        # allocating double * for log probability
+        log_p = ghmmwrapper.double_array (1)
+        
+        error = self.backwardTerminationFunction (self.cmodel, seq, t, cbeta[0], cscale, log_p)
+        if error == -1:
+            print "ERROR: backward finished with -1: EmissionSequence cannot be build."
+
+        logp = ghmmwrapper.get_arrayd (log_p, 0)
+
+        # deallocation
+        ghmmwrapper.free_arrayd(log_p)
+        ghmmwrapper.freearray(cscale)
+        ghmmwrapper.free_2darrayd(cbeta[0],t)
+        cscale = None
+        cbeta = None
+        return logp
     
     
     def logprob(self, emissionSequence, stateSequence):
