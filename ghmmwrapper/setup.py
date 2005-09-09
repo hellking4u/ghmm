@@ -85,8 +85,8 @@ setup(name="ghmmwrapper",
                                ['sclass_change.c', 'pclasschange.c',
                                 'gql.c', 'ghmmwrapper_wrap.c'],
                                include_dirs = [ghmmprefix + '/include'],
-                               library_dirs = [ghmmlib_path ,swiglib_path],
-                               libraries = ['stdc++','gsl','gslcblas','m','ghmm', 'swigpy' ] 
+                               library_dirs = [ghmmlib_path, swiglib_path],
+                               libraries = ['stdc++', 'm', 'ghmm', 'swigpy']
                                )
                      ]
      )
