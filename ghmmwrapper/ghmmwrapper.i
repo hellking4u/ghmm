@@ -1442,6 +1442,15 @@ extern void setSwitchingFunction( smodel *smd );
 extern int python_class_change(smodel *smo, int *seq, int k, int t);
 extern void setPythonSwitching( smodel *smd, char* python_module, char* python_function);
 
+
+/* TEST */
+/* static PyObject *pyCallBack = NULL;*/
+
+extern void setPythonCallback(smodel *smo, PyObject *py_cb);
+extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
+
+
+
 %inline %{
   
   void set_trunc_density(smodel* smo){
