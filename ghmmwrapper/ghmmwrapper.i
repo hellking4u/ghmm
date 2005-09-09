@@ -1924,37 +1924,15 @@ double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, i
 
 /********  Pair HMM viterbi linear space (pviterbi_propagate.c) *********/
 
-extern int * pviterbi_propagate(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, double max_size);
+extern int * pviterbi_propagate (pmodel *mo, psequence * X, psequence * Y,
+				 double *log_p, int *path_length, double max_size);
 
-extern plocal_propagate_store_t * pviterbi_propagate_alloc (pmodel *mo, int len_y);
-  
-extern int pviterbi_propagate_free (plocal_propagate_store_t **v, int n, int max_offset_x, int max_offset_y, int len_y);
+extern int * pviterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
+					 double *log_p, int *path_length, double max_size,
+					 int start_x, int start_y, int stop_x, int stop_y,
+					 int start_state, int stop_state, double start_log_p,
+					 double stop_log_p);
 
-extern void pviterbi_prop_precompute (pmodel *mo, plocal_propagate_store_t *pv);
-
-extern int * pviterbi_propagate_recursion(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, cell *start, cell *stop, double max_size, plocal_propagate_store_t * pv);
-
-extern cell * init_cell(int x, int y, int state, int previous_state, double log_p, double log_a);
-
-%inline%{
-
-int * pviterbi_propagate_segment(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, double max_size, int start_x, int start_y, int stop_x, int stop_y, int start_state, int stop_state, double start_log_p, double stop_log_p){
-  int * path_seq = NULL;
-  plocal_propagate_store_t * pv = pviterbi_propagate_alloc(mo, Y->length);
-  /* Precomputing the log(a_ij) and log(bj(ot)) */
-  pviterbi_prop_precompute(mo, pv);
-  /* init start and stop */
-  cell * start = init_cell(start_x, start_y, start_state, -1, start_log_p, 0);
-  cell * stop = init_cell(stop_x, stop_y, stop_state, stop_state, stop_log_p, 0);
-  /* Launch the recursion */
-  path_seq = pviterbi_propagate_recursion(mo, X, Y, log_p, path_length,
-				      start, stop, max_size, pv);
-  pviterbi_propagate_free (&pv, mo->N, mo->max_offset_x, mo->max_offset_y, Y->length);
-
-  return path_seq;
-  
-}
-%}
 
 /********  End of Pair HMM viterbi linear space (pviterbi_propagate.c) *******/
 
