@@ -866,30 +866,46 @@ extern double discrime_compute_performance(model** mo, sequence_t** sqs, int noC
 /** Forward-Algorithm.
   Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
   a given double sequence and a given model.
-  @param smo      model
-  @param O        sequence
-  @param length: length of sequence
-  @param alpha:  alpha[t][i]
-  @param scale:  scale factors
+  @param mo:      model
+  @param O:       sequence
+  @param len:     length of sequence
+  @param alpha:   alpha[t][i]
+  @param scale:   scale factors
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int foba_forward(model *mo, const int *O, int length, double **alpha, 
-		 double *scale, double *log_p);
+extern int foba_forward (model * mo, const int *O, int length, double **alpha,
+                    double *scale, double *log_p);
 
 /** 
   Backward-Algorithm. 
   Calculates beta[t][i] given an integer sequence and a model. Scale factors 
   given as parameter (come from foba\_forward).
-  @param  mo      model
-  @param O          sequence
-  @param length   length of sequence
-  @param beta     beta[t][i]
-  @param scale    scale factors
+  @param mo:      model
+  @param O:       sequence
+  @param len:     length of sequence
+  @param beta:    empty beta matrix
+  @param scale:   scale factors
   @return 0 for success, -1 for error
   */
-extern int foba_backward(model *mo, const int *O, int length, double **beta, 
-		 const double *scale);
+extern int foba_backward (model * mo, const int *O, int len, double **beta,
+                     const double *scale);
+
+/** 
+  Termination of Backward-Algorithm. 
+  Calculates Backward-probability given an integer sequence, a model and
+  the beta matrix. Scale factors given as parameter (come from foba\_forward).
+  @param mo:      pointer to the model
+  @param O:       sequence
+  @param len:     length of sequence
+  @param beta:    beta matrix
+  @param scale    scale factors
+  @param log\_p:  log probability
+  @return 0 for success, -1 for error
+  */
+extern int foba_backward_termination (model *mo, const int *O, int len,
+				 double **beta, double *scale, double *log_p);
+
 
 /**
   Calculation of  log( P(O|lambda) ). 
