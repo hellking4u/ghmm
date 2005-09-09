@@ -34,6 +34,19 @@
 #*
 #*******************************************************************************/
 
+class testChange:
+    def __init__(self):
+        self.classes = None
+
+    def setData(self,classes):
+        self.classes = classes
+    
+    def __call__(self,seq,k,t):
+        print "*** ",seq,k,t
+        print "data: ",self.classes
+        return 0
+        
+
 
 
 def getClass( seq, k,t):
