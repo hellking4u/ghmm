@@ -168,34 +168,6 @@ extern "C" {
 #define m_ptr( p, offs ) ( (void*)((char*)(p)+(offs)) )
 #endif
 
-#ifndef m_realloc
-#define m_realloc(ptr,entries) \
-  mes_realloc_depr ( (void**)&(ptr), sizeof(*(ptr))*(entries) )
-#endif
-
-#ifndef m_malloc
-#define m_malloc(ptr, entries) (ptr = mes_malloc_depr( sizeof(*(ptr))*(entries)))
-#endif
-
-#ifndef m_calloc
-#define m_calloc(ptr, entries) (ptr = mes_calloc_depr( sizeof(*(ptr))*(entries)))
-#endif
-
-#ifndef not_deprecated_m_realloc
-#define not_deprecated_m_realloc(ptr,entries) \
-  (mes_realloc ( (void**)&(ptr), sizeof(*(ptr))*(entries)))
-#endif
-
-#ifndef not_deprecated_m_malloc
-#define not_deprecated_m_malloc(ptr, entries) \
-  (ptr = mes_malloc( sizeof(*(ptr))*(entries)))
-#endif
-
-#ifndef not_deprecated_m_calloc
-#define not_deprecated_m_calloc(ptr, entries) \
-  (ptr = mes_calloc( sizeof(*(ptr))*(entries)))
-#endif
-
 #ifndef m_memset
 #define m_memset(dst, c, entries) memset( (dst), (c), sizeof(*(dst))*(entries))
 #endif
@@ -315,9 +287,6 @@ extern "C" {
   /**
    */
   void *mes_calloc (int bytes);
-  /* The macros m_[cm]alloc(ptr, entries) are dprecated,
-     use ARRAY_[CM]ALLOC(ptr, entries) instead */
-  DECLARE_DEPRECATED void *mes_calloc_depr (int bytes);
   /**
    */
   int mes_copy (char *oldname, char *newname);
@@ -363,18 +332,12 @@ extern "C" {
   /**
    */
   void *mes_malloc (int bytes);
-  /* The macros m_[cm]alloc(ptr, entries) are dprecated,
-     use ARRAY_[CM]ALLOC(ptr, entries) instead */
-  DECLARE_DEPRECATED void *mes_malloc_depr (int bytes);
   /**
    */
   int mes_move (char *oldname, char *newname);
   /**
    */
   int mes_realloc (void **mem, int bytes);
-  /* The macros m_[cm]alloc(ptr, entries) are dprecated,
-     use ARRAY_[CM]ALLOC(ptr, entries) instead */
-  DECLARE_DEPRECATED int mes_realloc_depr (void **mem, int bytes);
   /**
    */
   int mes_remove (char *filename);
