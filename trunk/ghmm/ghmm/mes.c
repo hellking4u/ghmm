@@ -675,7 +675,6 @@ void *mes_malloc (int bytes)
              bytes);
   return (NULL);
 }                               /* mes_malloc */
-void * mes_malloc_depr (int bytes) {return mes_malloc (bytes);}
 
 /*============================================================================*/
 void *mes_calloc (int bytes)
@@ -692,7 +691,6 @@ void *mes_calloc (int bytes)
              bytes);
   return (NULL);
 }                               /* mes_calloc */
-void * mes_calloc_depr (int bytes) {return mes_calloc (bytes);}
 
 /*============================================================================*/
 int mes_realloc (void **mem, int bytes)
@@ -716,7 +714,6 @@ int mes_realloc (void **mem, int bytes)
              "realloc: could not reallocate %d bytes\n", bytes);
   return (-1);
 }                               /* mes_realloc */
-int mes_realloc_depr (void **mem, int bytes) {return mes_realloc(mem, bytes);}
 
 /*============================================================================*/
 FILE *mes_fopen (const char *filename, char *attrstr)
