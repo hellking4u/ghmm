@@ -1,23 +1,24 @@
-#  author       : Wasinee Rungsarityotin and Benjamin Georgi
-#  filename     : ghmmwrapper/INSTALL
-#  created      : DATE: September, 2003
-#
-#  $Id$
-#
-# __copyright__
+
+This file contains instructions for installation of the Python bindings for
+the GHMM library version 0.7
 
 
-Run swig [Havent figured out how to pass the -c t swig]
+Required Packages:
+  - SWIG (version 1.3.17)
+  - GHMM 0.7
 
-> swig -noruntime -python -nodefault ghmmwrapper.i
+Installation instructions:
 
+1) Go into the /ghmmwrapper base directory
 
-With the python interpreter you want to use, run
+2) First run swig to build the interace:
+  > swig -noruntime -python -nodefault ghmmwrapper.i
+
+3) With the python interpreter you want to use, run
 
 > python setup.py build
 
-
-> python setup.py install --prefix==/some/where/
+4) > python setup.py install --prefix==/some/where/
 
 This will install the files of the ghmm python
 wrapper into /some/where/lib/pythonX.Y/site-packages.
@@ -26,7 +27,7 @@ Make sure to include /some/where/lib/pythonX.Y/site-packages
 into your PYTHONPATH.
 
 If you want to insert debugging symbols use 
-
 > python setup.py build --debug
 
+To check your installation you can run the ghmmunittests.py file.
 
