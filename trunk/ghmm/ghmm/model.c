@@ -700,9 +700,11 @@ model *model_copy (const model * mo)
   m2->N = mo->N;
   m2->M = mo->M;
   m2->prior = mo->prior;
-  m2->maxorder = mo->maxorder;
-  for (i = 0; i < mo->maxorder + 2; i++)
+  
+  for (i = 0; i < mo->maxorder + 2; i++){
     m2->pow_lookup[i] = mo->pow_lookup[i];
+  }
+  
   m2->model_type = mo->model_type;
   /* not necessary but the history is at least initialised */
   m2->emission_history = mo->emission_history;
