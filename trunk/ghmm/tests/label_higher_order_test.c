@@ -25,6 +25,7 @@
 #include <ghmm/sequence.h>
 
 void generateModel(model *mo, int noStates) {
+# define CUR_PROC "generateModel"
 
   state *states;
   int i, j;
@@ -33,7 +34,7 @@ void generateModel(model *mo, int noStates) {
   int *silent_array;
 
   /*allocate memory for states and array of silent flags*/
-  if (!(m_malloc(states, noStates))) {fprintf(stderr, "Null Pointer in malloc(state).\n");}
+  ARRAY_MALLOC(states, noStates);
   silent_array = (int*)malloc(sizeof(int)*noStates);
 
   /* initialize all states as none silent*/
@@ -52,7 +53,8 @@ void generateModel(model *mo, int noStates) {
   /* kHigherOrderEmissions + kHasBackgroundDistributions*/
 
   /* allocate memory for pow look-up table and fill it */
-  if (!(m_malloc(mo->pow_lookup, mo->maxorder+1))) {fprintf(stderr, "Null Pointer in malloc (pow_lookup).\n");}
+  ARRAY_MALLOC(mo->pow_lookup, mo->maxorder+1)
+  
   mo->pow_lookup[0] = 1;
   for (i=1; i<mo->maxorder+1; i++)
     mo->pow_lookup[i] =  mo->pow_lookup[i-1] * mo->M;
@@ -120,7 +122,11 @@ void generateModel(model *mo, int noStates) {
   }
 #endif
   model_print(stdout, mo);
+
+STOP:
   printf("\n");
+
+# undef CUR_PROC
 }
 
 
@@ -166,7 +172,7 @@ void testBaumwelch(){
   z=0;
   z1=0;
   z2=0;
-  for (i=0; i<(my_output->seq_len[0]*mo->N); i++){
+  for (i=0; i<my_output->seq_len[0]; i++){
     if (path1[i] != -1) {
       real_path1[z1]=path1[i];
       z1++;
@@ -186,7 +192,7 @@ void testBaumwelch(){
       z++;
       printf("%d", path[i]);
     }
-    else printf("hallo");
+
   }
   printf("\n");
   printf("log-prob: %g\n",first_prob);
