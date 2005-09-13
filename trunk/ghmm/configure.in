@@ -5,7 +5,7 @@ dnl  $Id$
 dnl __copyright__
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ghmm, 0.6-alpha)
+AC_INIT(ghmm, 0.7)
 AC_CONFIG_SRCDIR(ghmm/smodel.c)
 AM_INIT_AUTOMAKE
 
