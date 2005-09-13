@@ -300,7 +300,7 @@ static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 	for (i = 0; i < mo->N; i++) {
 	/* Determine the maximum */
 	/* max_phi = phi[i] + log_in_a[j][i] ... */
-	  if ( mo->model_type != kSilentStates || !mo->silent[i] ) {
+	  if (!(mo->model_type & kSilentStates) || !mo->silent[i] ) {
 	    max_value = -DBL_MAX;
 	    set_psi(pv, u, v, i, -1);
 	    for (j = 0; j < mo->s[i].in_states; j++) {
@@ -373,7 +373,7 @@ static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 	/* last_osc = osc; */
 	/* save last transition class */
 	
-	/*if ( mo->model_type == kSilentStates ) { 
+	/*if (mo->model_type & kSilentStates) { 
 	  p__viterbi_silent( mo, t, v );
 	  }*/ /* complete time step for silent states */
 	
@@ -493,7 +493,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
   log_in_a = &sget_log_in_a;
   /* int len_path  = mo->N*len; the length of the path is not known apriori */
 
-/*   if (mo->model_type == kSilentStates &&  */
+/*   if (mo->model_type & kSilentStates &&  */
 /*       mo->silent != NULL &&  */
 /*       mo->topo_order == NULL) { */
 /*     model_topo_ordering( mo );  */
@@ -524,7 +524,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
       for (i = 0; i < mo->N; i++) {
 	/* Determine the maximum */
 	/* max_phi = phi[i] + log_in_a[j][i] ... */
-	if ( mo->model_type != kSilentStates || !mo->silent[i] ) {
+	if (!(mo->model_type & kSilentStates) || !mo->silent[i] ) {
 	  max_value = -DBL_MAX;
 	  set_psi(pv, u, v, i, -1);
 	  for (j = 0; j < mo->s[i].in_states; j++) {
@@ -576,7 +576,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 	/* last_osc = osc; */ 
         /* save last transition class */
 
-      /*if ( mo->model_type == kSilentStates ) { 
+      /*if (mo->model_type & kSilentStates) { 
 	p__viterbi_silent( mo, t, v );
 	}*/ /* complete time step for silent states */
       
