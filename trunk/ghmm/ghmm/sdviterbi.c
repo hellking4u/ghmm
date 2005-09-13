@@ -234,7 +234,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   int lastemState;
   int *tmp_path;
 
-  if (mo->model_type == kSilentStates && mo->topo_order == NULL) {
+  if ((mo->model_type & kSilentStates) && mo->topo_order == NULL) {
     /* sdmodel_topo_ordering( mo ); */
     /* Should we call it here ???? */
     fprintf (stderr,
@@ -280,7 +280,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
     else
       v->phi[j] = log (mo->s[j].pi) + v->log_b[j][0];
   }
-  if (mo->model_type == kSilentStates) {        /* could go into silent state at t=0 */
+  if (mo->model_type & kSilentStates) {        /* could go into silent state at t=0 */
     __viterbi_silent (mo, t =
                       0, v, recent_matchcount, countstates,
                       nr_of_countstates);
@@ -307,7 +307,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
       recent_matchcount[k] = 0;
       /* Determine the maximum */
       /* max_phi = phi[i] + log_in_a[j][i] ... */
-      if (mo->model_type != kSilentStates || !mo->silent[k]) {
+      if (!(mo->model_type & kSilentStates) || !mo->silent[k]) {
         St = k;
         max_value = -DBL_MAX;
         v->psi[t][St] = -1;
@@ -360,7 +360,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
     }
     last_osc = osc;             /* save last transition class */
 
-    if (mo->model_type == kSilentStates) {
+    if (mo->model_type & kSilentStates) {
       __viterbi_silent (mo, t, v, recent_matchcount, countstates,
                         nr_of_countstates);
     }                           /* complete time step for silent states */
@@ -394,7 +394,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
     *log_p = max_value;
     lastemState = state_seq[len_path - 1];
     for (t = len - 2, i = len_path - 2; t >= 0; t--) {
-      if (mo->model_type == kSilentStates &&
+      if ((mo->model_type & kSilentStates) &&
           mo->silent[v->psi[t + 1][lastemState]]) {
 
         St = v->psi[t + 1][lastemState];
@@ -417,7 +417,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
 
   /* COPY PATH */
   tmp_path = state_seq;
-  if (mo->model_type != kSilentStates) {
+  if (!(mo->model_type & kSilentStates)) {
     state_seq = (int *) malloc (sizeof (int) * len);
     for (i = 0, t = 0; t < len_path && i < len; t++) {
       if (tmp_path[t] >= 0) {

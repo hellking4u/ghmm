@@ -263,7 +263,7 @@ sdmodel *sdmodel_copy (const sdmodel * mo)
   m2->prior = mo->prior;
   m2->cos = mo->cos;
   m2->model_type = mo->model_type;
-  if (mo->model_type == kSilentStates) {
+  if (mo->model_type & kSilentStates) {
     assert (mo->silent != NULL);
     ARRAY_CALLOC (m2->silent, mo->N);
     for (i = 0; i < mo->N; i++) {
@@ -572,7 +572,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
     }
     /* assert( !mo->silent[i] ); */
 
-    if (mo->model_type == kSilentStates) {
+    if (mo->model_type & kSilentStates) {
 
       if (!mo->silent[i]) {     /* fDte emits */
         lastStateSilent = 0;
@@ -670,7 +670,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
 
       i = mo->s[i].out_id[j];
 
-      if (mo->model_type == kSilentStates && mo->silent[i]) {   /* Get a silent state i */
+      if ((mo->model_type & kSilentStates) && mo->silent[i]) {   /* Get a silent state i */
         silent_len++;
         if (silent_len >= Tmax) {
           badSilentStates = 1;
@@ -928,7 +928,7 @@ model *sdmodel_to_model (const sdmodel * mo, int kclass)
   m2->prior = mo->prior;
 
   m2->model_type = mo->model_type;
-  if (mo->model_type == kSilentStates) {
+  if (mo->model_type & kSilentStates) {
     assert (mo->silent != NULL);
     ARRAY_CALLOC (m2->silent, mo->N);
     for (i = 0; i < m2->N; i++) {

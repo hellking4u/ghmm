@@ -730,7 +730,7 @@ int foba_label_forward (model * mo, const int *O, const int *label, int len,
         alpha[t][i] *= c_t;
       }
 
-      if (mo->model_type != kSilentStates && *log_p != +1) {
+      if (!(mo->model_type & kSilentStates) && *log_p != +1) {
         /*sum log(c[t]) scaling values to get  log( P(O|lambda) ) */
         /*printf("log_p %f -= log(%f) = ",*log_p,c_t);*/
         *log_p -= log (c_t);
