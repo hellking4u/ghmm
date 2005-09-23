@@ -194,6 +194,8 @@ static PyObject *pyCallback = NULL;
 int executePythonCallback(smodel* smo, double *seq, int k, int t){
    int class,i;
 
+   printf("k=%d, t=%d\n",k,t);
+   
    PyObject  *pArgs, *pValue, *pList; /*  *pDict, *pName, */
 
    pArgs = PyTuple_New(3);
@@ -215,7 +217,12 @@ int executePythonCallback(smodel* smo, double *seq, int k, int t){
 
    /* parsing the result from Python to C data type */
    class = PyInt_AsLong(pValue);
-  /*printf("C: The returned class is %d\n",class);*/
+   /*printf("C: The returned class is %d\n",class);*/
+   
+   if (class == -1)  {
+     printf("ERROR: Python exception has been thrown during call-back\n (class is -1) ");
+     abort();
+   }  
      
    /* cleaning up */
    Py_DECREF(pArgs); 
