@@ -37,32 +37,24 @@
   
 #include <float.h>
 #include <math.h>
-#include "const.h"
+
+#include "ghmm.h"
 #include "randvar.h"
   
 /*============================================================================*/ 
 double pmue (double mue, double A, double B, double eps)
 {
-  
-double feps, u, Atil, Btil;
-  
-Atil = A + eps;
-  
-Btil = B + eps * A;
-  
-u = Btil - mue * Atil;
+  double feps, u, Atil, Btil;
+  Atil = A + eps;
+  Btil = B + eps * A;
+  u = Btil - mue * Atil;
   
     /* if (u < EPS_U) u = (double)EPS_U; DANGEROUS: would fudge the function value! */ 
     if (u <= DBL_MIN)
-    
-return (mue - A);
-  
-feps = randvar_normal_density_trunc (-eps, mue, u, -eps);
-  
-return (A - mue - u * feps);
-
+    return (mue - A);
+  feps = randvar_normal_density_trunc (-eps, mue, u, -eps);
+  return (A - mue - u * feps);
 }
-
 
 
 /*============================================================================*/ 
@@ -72,98 +64,60 @@ return (A - mue - u * feps);
 */ 
 double pmue_interpol (double mue, double A, double B, double eps)
 {
-  
-double u, Atil, Btil, z, z1, z2, m1, m2, u1, u2, p1, p2, pz;
-  
-int i1, i2;
-  
-Atil = A + eps;
-  
-Btil = B + eps * A;
-  
-u = Btil - mue * Atil;
+  double u, Atil, Btil, z, z1, z2, m1, m2, u1, u2, p1, p2, pz;
+  int i1, i2;
+  Atil = A + eps;
+  Btil = B + eps * A;
+  u = Btil - mue * Atil;
   
     /*if (u < EPS_U) u = (double)EPS_U; DANGEROUS: would fudge the function value! */ 
     if (u <= DBL_MIN)
-    
-return (mue - A);
+    return (mue - A);
   
-
     /* Compute like normally where mue positiv. */ 
     if (mue >= 0.0)
-    
-return (A - mue - u * randvar_normal_density_trunc (-eps, mue, u, -eps));
+    return (A - mue - u * randvar_normal_density_trunc (-eps, mue, u, -eps));
   
-
     /* Otherwise: Interpolate the function itself between 2 sampling points. */ 
     z = (eps + mue) / sqrt (u);
-  
-
-i1 = (int) (fabs (z) * randvar_get_xfaktphi ());
-  
-if (i1 >= randvar_get_philen () - 1) {
-    
-i1 = (int) randvar_get_philen () - 1;
-    
-i2 = i1;
-  
-}
+  i1 = (int) (fabs (z) * randvar_get_xfaktphi ());
+  if (i1 >= randvar_get_philen () - 1) {
+    i1 = (int) randvar_get_philen () - 1;
+    i2 = i1;
+  }
   
   else
-    
-i2 = i1 + 1;
-  
-z1 = i1 / randvar_get_xfaktphi ();
-  
-z2 = i2 / randvar_get_xfaktphi ();
-  
-
-m1 = -z1 * sqrt (Btil + eps * Atil + Atil * Atil * z1 * z1 * 0.25) 
+    i2 = i1 + 1;
+  z1 = i1 / randvar_get_xfaktphi ();
+  z2 = i2 / randvar_get_xfaktphi ();
+  m1 = -z1 * sqrt (Btil + eps * Atil + Atil * Atil * z1 * z1 * 0.25) 
     -(eps + Atil * z1 * z1 * 0.5);
-  
-m2 = -z2 * sqrt (Btil + eps * Atil + Atil * Atil * z2 * z2 * 0.25) 
+  m2 = -z2 * sqrt (Btil + eps * Atil + Atil * Atil * z2 * z2 * 0.25) 
     -(eps + Atil * z2 * z2 * 0.5);
-  
-u1 = Btil - m1 * Atil;
-  
-u2 = Btil - m2 * Atil;
-  
-
-p1 = A - m1 - u1 * randvar_normal_density_trunc (-eps, m1, u1, -eps);
-  
-p2 = A - m1 - u1 * randvar_normal_density_trunc (-eps, m2, u2, -eps);
-  
-
-if (i1 >= randvar_get_philen () - 1)
-    
-pz = p1;
+  u1 = Btil - m1 * Atil;
+  u2 = Btil - m2 * Atil;
+  p1 = A - m1 - u1 * randvar_normal_density_trunc (-eps, m1, u1, -eps);
+  p2 = A - m1 - u1 * randvar_normal_density_trunc (-eps, m2, u2, -eps);
+  if (i1 >= randvar_get_philen () - 1)
+    pz = p1;
   
   else {
-    
-pz = p1 + (fabs (z) - i1 * randvar_get_xstepphi ()) 
+    pz = p1 + (fabs (z) - i1 * randvar_get_xstepphi ()) 
       *(p2 - p1) / randvar_get_xstepphi ();
     
       /* pz = p1; */ 
   }
-  
-return (pz);
-
+  return (pz);
 }
-
 
 
 /*============================================================================*/ 
 double pmue_umin (double mue, double A, double B, double eps)
 {
-  
-double feps, u;
-  
-u = EPS_U;
-  
-feps = randvar_normal_density_trunc (-eps, mue, u, -eps);
-  
-return (A - mue - u * feps);
-
+  double feps, u;
+  u = EPS_U;
+  feps = randvar_normal_density_trunc (-eps, mue, u, -eps);
+  return (A - mue - u * feps);
 }
 
 
