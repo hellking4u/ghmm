@@ -194,7 +194,7 @@ static PyObject *pyCallback = NULL;
 int executePythonCallback(smodel* smo, double *seq, int k, int t){
    int class,i;
 
-   printf("k=%d, t=%d\n",k,t);
+   /*printf("k=%d, t=%d\n",k,t); */
    
    PyObject  *pArgs, *pValue, *pList; /*  *pDict, *pName, */
 
