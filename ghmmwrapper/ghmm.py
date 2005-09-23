@@ -146,7 +146,7 @@ from os import path
 from math import log,ceil
 import sys
 
-#print "*** I'm the ghmm in "+ str(path.abspath(path.dirname(sys.argv[0]))) + " ***"
+print "*** I'm the ghmm in "+ str(path.abspath(path.dirname(sys.argv[0]))) + " ***"
 
 # very handy function for debugging:
 import sys
@@ -3444,7 +3444,10 @@ class GaussianEmissionHMM(HMM):
         allPaths = []
         for i in range(seqNumber):
             if self.cmodel.cos > 1:
-                self.cmodel.class_change.k = i
+                # if emissionSequence is a sequenceSet with multiple sequences, 
+                # use sequence index as class_change.k
+                if emissionSequences.cseq.seq_number > 1:
+                    self.cmodel.class_change.k = i
 
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             seq_len = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
