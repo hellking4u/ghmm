@@ -1,5 +1,5 @@
-#ifndef INTERNAL_H
-#define INTERNAL_H
+#ifndef GHMM_INTERNALS_H
+#define GHMM_INTERNALS_H
 
 #ifdef __cplusplus
 extern "C" {
