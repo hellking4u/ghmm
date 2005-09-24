@@ -31,7 +31,7 @@ __copyright__
 #include <math.h>
 
 #include "ghmm/mes.h"
-#include "ghmm/const.h"
+#include "ghmm/ghmm.h"
 #include "ghmm/foba.h"
 #include "ghmm/matrix.h"
 #include "ghmm/model.h"
