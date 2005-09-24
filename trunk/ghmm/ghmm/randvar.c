@@ -43,16 +43,17 @@
 #endif
 
 #include <math.h>
+#include <float.h>
 #include <string.h>
 #ifdef HAVE_LIBPTHREAD
 # include <pthread.h>
 #endif /* HAVE_LIBPTHREAD */
+
+#include "ghmm.h"
 #include "mes.h"
 #include "mprintf.h"
 #include "randvar.h"
 #include "rng.h"
-#include "float.h"
-#include "const.h"
 
 #ifdef DO_WITH_GSL
 

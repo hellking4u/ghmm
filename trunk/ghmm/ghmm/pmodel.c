@@ -36,7 +36,7 @@
 
 #include "pmodel.h"
 #include "mes.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 
 int pstate_alloc(pstate * s, int M, int in_states, int out_states) {

@@ -44,13 +44,14 @@
 
 #include <math.h>
 #include <float.h>
+
 #include "matrix.h"
 #include "vector.h"
 #include "model.h"
 #include "rng.h"
 #include "randvar.h"
-#include <ghmm/mes.h>
-#include <ghmm/internal.h>
+#include "mes.h"
+#include "ghmm_internals.h"
 
 static void lrdecomp (int dim, double **a, double *p);
 static void lyequalsb (double **a, double *b, double *p, int dim, double *y);

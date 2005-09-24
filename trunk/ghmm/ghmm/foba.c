@@ -34,17 +34,17 @@
 *
 *******************************************************************************/
 
+#include <assert.h>
+
 #include "ghmm.h"
 #include "model.h"
 #include "math.h"
-#include "const.h"
 #include "matrix.h"
 #include "mes.h"
-#include <assert.h>
 #include "modelutil.h"
 #include "mprintf.h"
 #include "foba.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 int foba_initforward (model * mo, double *alpha_1, int symb, double *scale)
 {

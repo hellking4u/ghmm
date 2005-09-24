@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
 #include "mes.h"
 #include "matrix.h"
 #include "model.h"
@@ -45,7 +46,8 @@
 #include "reestimate.h"
 #include "gradescent.h"
 #include "ghmm.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
+
 
 static double compute_performance (model * mo, sequence_t * sq);
 

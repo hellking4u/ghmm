@@ -41,44 +41,43 @@ INCLUDES = -I$(top_srcdir)
 lib_LTLIBRARIES = libghmm.la
 
 libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
-libghmm_la_SOURCES= foba.c foba.h \
-                  matrix.c  matrix.h \
-                  model.c model.h\
-                  modelutil.c modelutil.h \
-                  cluster.c cluster.h \
-                  scluster.c scluster.h \
-                  root_finder.c root_finder.h \
-                  reestimate.c reestimate.h \
-                  randvar.c randvar.h \
-                  rng.c rng.h \
-                  sequence.c sequence.h \
-                  vector.c vector.h \
-                  viterbi.c viterbi.h \
-                  sfoba.c sfoba.h \
-                  sviterbi.c sviterbi.h \
-                  smodel.c smodel.h \
-                  sdmodel.c sdmodel.h \
-                  sdviterbi.c \
-                  sdfoba.c sdfoba.h \
-                  ghmm.h \
-                  sreestimate.c sreestimate.h \
-                  sgenerate.c sgenerate.h \
-                  smixturehmm.c smixturehmm.h \
-                  const.h \
-                  mes.c mes.h \
-                  mprintf.c mprintf.h \
-                  scanner.c scanner.h \
-                  gauss_tail.c gauss_tail.h \
-                  smap_classify.c smap_classify.h\
-                  kbestbasics.c kbestbasics.h \
-                  kbest.c kbest.h \
-                  gradescent.c gradescent.h \
-                  discrime.c discrime.h \
-		  psequence.c psequence.h \
-		  pmodel.c pmodel.h \
-		  linkedlist.c linkedlist.h \
-		  pviterbi.c pviterbi.h \
-		  pviterbi_propagate.c pviterbi_propagate.h
+libghmm_la_SOURCES= ghmm.h \
+                    rng.c rng.h \
+                    randvar.c randvar.h \
+                    gauss_tail.c gauss_tail.h \
+                    mes.c mes.h \
+                    mprintf.c mprintf.h \
+                    vector.c vector.h \
+                    matrix.c  matrix.h \
+                    scanner.c scanner.h \
+                    linkedlist.c linkedlist.h \
+                    sequence.c sequence.h \
+                    psequence.c psequence.h \
+                    model.c model.h \
+                    foba.c foba.h \
+                    viterbi.c viterbi.h \
+                    reestimate.c reestimate.h \
+                    gradescent.c gradescent.h \
+                    kbestbasics.c kbestbasics.h \
+                    kbest.c kbest.h \
+                    discrime.c discrime.h \
+                    modelutil.c modelutil.h \
+                    cluster.c cluster.h \
+                    root_finder.c root_finder.h \
+                    smodel.c smodel.h \
+                    sfoba.c sfoba.h \
+                    sviterbi.c sviterbi.h \
+                    sreestimate.c sreestimate.h \
+                    scluster.c scluster.h \
+                    sgenerate.c sgenerate.h \
+                    smixturehmm.c smixturehmm.h \
+                    smap_classify.c smap_classify.h \
+                    sdmodel.c sdmodel.h \
+                    sdfoba.c sdfoba.h \
+                    sdviterbi.c \
+                    pmodel.c pmodel.h \
+                    pviterbi.c pviterbi.h \
+                    pviterbi_propagate.c pviterbi_propagate.h
 
 
 pkginclude_HEADERS = ghmm.h \
@@ -111,11 +110,9 @@ pkginclude_HEADERS = ghmm.h \
 		  pviterbi_propagate.h \
 		  vector.h \
 		  matrix.h \
-		  const.h \
 		  rng.h \
 		  mes.h \
-		  randvar.h \
-		  internal.h
+		  randvar.h
 
 
 # must be eleminated...

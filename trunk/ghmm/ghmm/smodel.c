@@ -44,6 +44,7 @@
 
 #include <float.h>
 #include <math.h>
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "smodel.h"
@@ -52,11 +53,10 @@
 #include "matrix.h"
 #include "vector.h"
 #include "sequence.h"
-#include "const.h"
 #include "rng.h"
 #include "randvar.h"
 #include "string.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 /*----------------------------------------------------------------------------*/
 int smodel_state_alloc (sstate * s,

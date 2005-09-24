@@ -43,6 +43,8 @@
 #endif
 
 #include <stdio.h>
+
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "cluster.h"
@@ -51,9 +53,8 @@
 #include "sequence.h"
 #include "reestimate.h"
 #include "foba.h"
-#include "const.h"
 #include "matrix.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 /*============================================================================*/
 int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)

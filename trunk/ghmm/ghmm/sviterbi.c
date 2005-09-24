@@ -46,7 +46,7 @@
 
 #include <float.h>
 #include <math.h>
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 #include "sviterbi.h"
 #include "matrix.h"
 #include "smodel.h"

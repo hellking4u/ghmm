@@ -36,19 +36,20 @@
 
 /* Possible sources of errors: initialisation, pushback (the loop after) */
 
-#include "mprintf.h"
-#include <ghmm/mes.h>
 #include <float.h>
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <ghmm/ghmm.h>
-#include <ghmm/matrix.h>
-#include <ghmm/pmodel.h>
+
+#include "ghmm.h"
+#include "mprintf.h"
+#include "mes.h"
+#include "matrix.h"
+#include "ghmm/pmodel.h"
 #include "psequence.h"
 #include "linkedlist.h"
 #include "pviterbi.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 
   static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y);

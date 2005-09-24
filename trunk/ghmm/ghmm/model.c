@@ -45,19 +45,19 @@
 
 #include <float.h>
 #include <math.h>
+
+#include "ghmm.h"
 #include "model.h"
 #include "matrix.h"
 #include "sequence.h"
-#include "const.h"
 #include "rng.h"
 #include "foba.h"
 #include "mes.h"
 #include "mprintf.h"
 #include "string.h"
-#include "ghmm.h"
 #include "modelutil.h"
 #include "vector.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 #define  __EPS 10e-6
 

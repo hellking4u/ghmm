@@ -34,10 +34,11 @@
 *
 *******************************************************************************/
 
-#include "linkedlist.h"
 #include <stdlib.h>
+
+#include "linkedlist.h"
 #include "mes.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 void i_list_append(i_list * list, int val){
   i_el * last;

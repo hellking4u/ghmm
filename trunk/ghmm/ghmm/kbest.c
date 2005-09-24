@@ -36,12 +36,13 @@
 
 #include <stdlib.h>
 #include <math.h>
+
 #include "mes.h"
 #include "mprintf.h"
 #include "model.h"
 #include "kbestbasics.h"
 #include "kbest.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 
 /**

@@ -35,16 +35,16 @@
 *******************************************************************************/
 
 
-#include "mprintf.h"
-#include "mes.h"
 #include <float.h>
 #include <math.h>
 #include <assert.h>
 
-#include <ghmm/ghmm.h>
-#include <ghmm/matrix.h>
-#include <ghmm/sdmodel.h>
-#include <ghmm/internal.h>
+#include "ghmm.h"
+#include "mprintf.h"
+#include "mes.h"
+#include "matrix.h"
+#include "sdmodel.h"
+#include "ghmm_internals.h"
 
 typedef enum DFSFLAG { DONE, NOTVISITED, VISITED } DFSFLAG;
 
