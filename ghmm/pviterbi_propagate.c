@@ -40,6 +40,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
+
 #include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
@@ -49,7 +50,7 @@
 #include "linkedlist.h"
 #include "pviterbi.h"
 #include "pviterbi_propagate.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 #define PROP_EPS 10e-6
 

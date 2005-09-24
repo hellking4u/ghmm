@@ -37,10 +37,11 @@
 
 #include <stdlib.h>
 #include <math.h>
+
 #include "mes.h"
 #include "model.h"
 #include "kbestbasics.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
  void hlist_insertElem (hypoList ** plist, int newhyp,

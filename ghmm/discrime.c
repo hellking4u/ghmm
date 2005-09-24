@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
 #include "ghmm.h"
 #include "mes.h"
 #include "matrix.h"
@@ -46,7 +47,7 @@
 #include "reestimate.h"
 #include "gradescent.h"
 #include "discrime.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 #define LAMBDA 0.14
 #define TRIM(o, n) ((1-LAMBDA)*(o) + LAMBDA*(n))

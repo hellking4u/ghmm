@@ -36,6 +36,7 @@
 
 #include <math.h>
 #include <float.h>
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "sreestimate.h"
@@ -45,9 +46,8 @@
 #include "vector.h"
 #include "randvar.h"
 #include "gauss_tail.h"
-#include "const.h"
 #include "root_finder.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 /* switch: turn off (0)  MESCONTR and MESINFO */
 #define MCI 1

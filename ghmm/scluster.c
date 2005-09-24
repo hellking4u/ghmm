@@ -51,6 +51,8 @@
 #include <float.h>
 #include <math.h>
 #include <time.h>
+
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "scluster.h"
@@ -59,11 +61,10 @@
 #include "sfoba.h"
 #include "rng.h"
 #include "sequence.h"
-#include "const.h"
 #include "matrix.h"
 #include "vector.h"
 #include "smap_classify.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
   
 #ifdef HAVE_LIBPTHREAD
 /* switch for parallel mode: (1) = sequential, (0) = parallel */ 

@@ -36,12 +36,12 @@
 
 #include <math.h>
 #include <float.h>
+#include "ghmm.h"
 #include "mes.h"
 #include "sfoba.h"
-#include "const.h"
 #include "matrix.h"
 #include "smap_classify.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 typedef struct local_store_t {
   double ***alpha;

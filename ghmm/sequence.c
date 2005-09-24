@@ -42,23 +42,22 @@
 #  include "config.h"
 #endif
 
+#include <math.h>
+#include <float.h>
+#include <string.h>
+
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "sequence.h"
-#include <math.h>
-#include <float.h>
-#include "mprintf.h"
-#include "mes.h"
 #include "matrix.h"
 #include "vector.h"
-#include "const.h"
 #include "model.h"
 #include "foba.h"
 #include "sfoba.h"
 #include "vector.h"
 #include "rng.h"
-#include "string.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 /*============================================================================*/
 sequence_t **sequence_read (const char *filename, int *sq_number)

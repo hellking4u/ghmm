@@ -34,13 +34,14 @@
 *
 *******************************************************************************/
 
+
+#include <math.h>
+
 #include "ghmm.h"
 #include "sdmodel.h"
-#include "math.h"
-#include "const.h"
 #include "matrix.h"
 #include "mes.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 
 static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,

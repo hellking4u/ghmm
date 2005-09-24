@@ -46,6 +46,7 @@
 #include <math.h>
 #include <time.h>
 
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "matrix.h"
@@ -55,9 +56,8 @@
 #include "sfoba.h"
 #include "rng.h"
 #include "sequence.h"
-#include "const.h"
 #include "smap_classify.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 /* used in main and deactivated other functions */
 #if 0

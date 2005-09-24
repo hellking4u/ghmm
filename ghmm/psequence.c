@@ -34,11 +34,12 @@
 *
 *******************************************************************************/
 
-#include "psequence.h"
 #include <stdlib.h>
+
+#include "psequence.h"
 #include "mes.h"
 #include "matrix.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 psequence * init_psequence(int length, int number_of_alphabets, int number_of_d_seqs) {
 #define CUR_PROC "init_psequence"

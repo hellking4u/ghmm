@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <ghmm/internal.h>
 
 #ifdef __cplusplus
 extern "C" {

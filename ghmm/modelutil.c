@@ -34,14 +34,16 @@
 *
 *******************************************************************************/
 
-typedef enum eDFSCOLORS { GRAY = 0, BLACK = 1, WHITE = 2, NONE =
-    -1 } DFSCOLORS;
 
 #include "mes.h"
 #include "ghmm.h"
 #include "model.h"
 #include "matrix.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
+
+
+typedef enum eDFSCOLORS { GRAY = 0, BLACK = 1, WHITE = 2, NONE =
+    -1 } DFSCOLORS;
 
 typedef struct local_store_topo {
   int *topo_order;

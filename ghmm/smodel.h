@@ -40,8 +40,8 @@
 extern "C" {
 #endif
 
-#include <ghmm/const.h>
-#include <ghmm/scanner.h>
+#include "ghmm.h"
+#include "scanner.h"
 
 
 /**@name SHMM-Modell */

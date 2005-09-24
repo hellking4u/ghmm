@@ -38,10 +38,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+
 #include "mprintf.h"
 #include "mes.h"
 #include "scanner.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 #define SCANNER_TYPE_CHAR     1
 #define SCANNER_TYPE_INT      2

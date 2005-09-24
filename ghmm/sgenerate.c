@@ -45,16 +45,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
-#include "const.h"
 #include "sequence.h"
 #include "smodel.h"
 #include "sgenerate.h"
 #include "sfoba.h"
 #include "matrix.h"
 #include "rng.h"
-#include <ghmm/internal.h>
+#include "ghmm_internals.h"
 
 
 /*============================================================================*/
