@@ -59,6 +59,8 @@
 #include "vector.h"
 #include "ghmm_internals.h"
 
+#include "obsolete.h"
+
 #define  __EPS 10e-6
 
 /* Using floating point exceptions */
@@ -126,7 +128,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* model_state_alloc */
 
 /*----------------------------------------------------------------------------*/
-
+#ifdef GHMM_OBSOLETE
 static int model_copy_vectors (model * mo, int index, double **a_matrix,
                                double **b_matrix, double *pi, int *fix)
 {
@@ -159,7 +161,6 @@ static int model_copy_vectors (model * mo, int index, double **a_matrix,
   return (0);
 #undef CUR_PROC
 }                               /* model_copy_vectors */
-
 
 
 /*============================================================================*/
@@ -243,7 +244,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-
 model *model_direct_read (scanner_t * s, int *multip)
 {
 #define CUR_PROC "model_direct_read"
@@ -477,6 +477,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* model_direct_read */
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 /* Produces models from given sequences */
@@ -1344,6 +1345,7 @@ void model_print (FILE * file, model * mo)
 
 /*============================================================================*/
 
+#ifdef GHMM_OBSOLETE
 void model_direct_print (FILE * file, model_direct * mo_d, int multip)
 {
   int i, j;
@@ -1440,7 +1442,7 @@ int model_direct_check_data (model_direct * mo_d, hmm_check_t * check)
   return 0;
 #undef CUR_PROC
 }                               /* model_direct_check_data */
-
+#endif /* GHMM_OBSOLETE */
 
 
 /*============================================================================*/

@@ -33,6 +33,9 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifdef GHMM_OBSOLETE
+
 #ifndef SMIXTUREHMM_H
 #define SMIXTUREHMM_H
 
@@ -40,8 +43,8 @@
 extern "C" {
 #endif
 
-#include <ghmm/sequence.h>
-#include <ghmm/smodel.h>
+#include "sequence.h"
+#include "smodel.h"
 
 /**
    @name mixture-shmm methods
@@ -94,3 +97,6 @@ extern "C" {
 #endif
 /*@} smixturehmm section */
 #endif                          /* SMIXTUREHMM_H */
+
+
+#endif /* GHMM_OBSOLETE */

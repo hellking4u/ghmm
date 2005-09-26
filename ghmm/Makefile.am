@@ -112,7 +112,8 @@ pkginclude_HEADERS = ghmm.h \
 		  matrix.h \
 		  rng.h \
 		  mes.h \
-		  randvar.h
+		  randvar.h \
+		  obsolete.h
 
 
 # must be eleminated...

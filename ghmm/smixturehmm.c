@@ -33,6 +33,9 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifdef GHMM_OBSOLETE
+
 #ifdef WIN32
 #  include "win_config.h"
 #endif
@@ -716,3 +719,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* smixturehmm_avg_like */
+
+
+#endif /* GHMM_OBSOLETE */

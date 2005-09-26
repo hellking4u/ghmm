@@ -33,6 +33,7 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+#ifdef GHMM_OBSOLETE
 
 #include <math.h>
 #include <float.h>
@@ -329,3 +330,5 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return max_model;
 #undef CUR_PROC
 }
+
+#endif /* GHMM_OBSOLETE */
