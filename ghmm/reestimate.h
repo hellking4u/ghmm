@@ -35,8 +35,8 @@
 *******************************************************************************/
 #ifndef REESTIMATE_H
 #define REESTIMATE_H
-#include <ghmm/sequence.h>
-#include <ghmm/model.h>
+#include "sequence.h"
+#include "model.h"
 
 #ifdef __cplusplus
 extern "C" {

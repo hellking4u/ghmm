@@ -37,8 +37,8 @@
 #define SGENERATE_H
 
 
-#include <ghmm/smodel.h>
-#include <ghmm/sequence.h>
+#include "smodel.h"
+#include "sequence.h"
 
 #ifdef __cplusplus
 extern "C" {

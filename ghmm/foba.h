@@ -38,7 +38,7 @@
 #ifndef FOBA_H
 #define FOBA_H
 
-#include <ghmm/model.h>
+#include "model.h"
 
 
 #ifdef __cplusplus

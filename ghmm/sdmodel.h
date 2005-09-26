@@ -131,8 +131,8 @@ extern "C" {
   Important: The inclusion of sequence.h ist not done before this point in
   order to avoid error by compiling.
 */
-#include <ghmm/sequence.h>
-#include <ghmm/scanner.h>
+#include "sequence.h"
+#include "scanner.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

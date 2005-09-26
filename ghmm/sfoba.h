@@ -36,7 +36,7 @@
 #ifndef SFOBA_H
 #define SFOBA_H
 
-#include <ghmm/smodel.h>
+#include "smodel.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -45,7 +45,7 @@
 #include "mprintf.h"
 #include "mes.h"
 #include "matrix.h"
-#include "ghmm/pmodel.h"
+#include "pmodel.h"
 #include "psequence.h"
 #include "linkedlist.h"
 #include "pviterbi.h"
