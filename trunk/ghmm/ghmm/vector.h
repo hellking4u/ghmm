@@ -55,36 +55,6 @@ extern "C" {
   int vector_normalize (double *v, int len);
 
 /**
-  Gives all elements in a vector a constant value
-  @param v    vector
-  @param len  length of the vector
-  @param c    given value for the elements
-*/
-  void vector_const_values (double *v, int len, double c);
-
-/**
-  Gives all elements, not equal zero, in a vector a constant value
-  @param v    vector
-  @param len  length of the vector
-  @param c    given value for the elements
-*/
-  void vector_const_preserve_struct (double *v, int len, double c);
-
-/**
-  Gives all elements in a vector random values between 0 and 1
-  @param v    vector
-  @param len  length of the vector       
-*/
-  void vector_random_values (double *v, int len);
-
-/**
-  Gives all elements, not equal zero, in a vector random values between 0 and 1
-  @param v    vector
-  @param len  length of the vector   
-*/
-  void vector_random_preserve_struct (double *v, int len);
-
-/**
   Writes a double vector (without parenthesis)
   @param file       output file
   @param vector     vector to write
@@ -122,15 +92,6 @@ extern "C" {
   */
   void vector_i_print (FILE * file, int *vector, int len,
                        char *tab, char *separator, char *ending);
-/**
-  Calculates Ax, where A is a double matrix and x a double vector
-  @param A       n x m matrix
-  @param x       vector to calculate
-  @param n       number of rows
-  @param m       number of columns
-  @param v       calculated vector (return value)
-  */
-  int vector_mat_times_vec (double **A, double *x, int n, int m, double *v);
 
 #ifdef __cplusplus
 }

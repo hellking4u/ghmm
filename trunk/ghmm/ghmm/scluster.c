@@ -33,7 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-   
+ 
+#ifdef GHMM_OBSOLETE  
   
 #ifdef WIN32
 #  include "win_config.h"
@@ -929,3 +930,5 @@ void scluster_print_header (FILE * file, char *argv[])
 #endif  /* HAVE_LIBPTHREAD */
 #undef POUT
 
+
+#endif /* GHMM_OBSOLETE */

@@ -213,56 +213,6 @@ typedef struct coord coord;
 
   };
   typedef struct model model;
-  
-  
-  
-
-
-/** @name model_direct
-    The complete HMM. Keeps the model parameters in a matrix form. 
-*/
-  struct model_direct {
-  /** Number of states */
-    int N;
-  /** Number of outputs */
-    int M;
-  /** Prior for the a priori probability for the model.
-      Gets the value -1 if no prior defined. */
-    double prior;
-  /** Transition matrix  */
-    double **A;
-  /** Output matrix */
-    double **B;
-  /** Initial matrix */
-    double *Pi;
-  /** A vector to know the states where the output should not be trained.
-      Default value is 0 for all states. */
-    int *fix_state;
-
-    /* XXX additional struct members not addedd here; model_direct is 
-       depreciated anyways. Not used by C++ interface */
-
-  };
-  typedef struct model_direct model_direct;
-
-/** @name hmm_check_t
-    Checks the consistence of the model
-  */
-  struct hmm_check_t {
-  /** Number of rows in the A matrix */
-    int r_a;
-  /** Number of columns in the A matrix */
-    int c_a;
-  /** Number of rows in the B matrix */
-    int r_b;
-  /** Number of columns in the B matrix */
-    int c_b;
-  /** Length of the phi vector */
-    int len_pi;
-  /** Length of the fix vector */
-    int len_fix;
-  };
-  typedef struct hmm_check_t hmm_check_t;
 
 #ifdef __cplusplus
 }
@@ -271,8 +221,8 @@ typedef struct coord coord;
   Important: The inclusion of sequence.h ist not done before this point in
   order to avoid error by compiling.
 */
-#include <ghmm/sequence.h>
-#include <ghmm/scanner.h>
+#include "sequence.h"
+#include "scanner.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -288,23 +238,6 @@ extern "C" {
     @return 0 for succes; -1 for error
     @param mo:  pointer to a model */
   int model_free (model ** mo);
-
-/**
-   Reads in ASCII data to initialize an array of models. Memory allocation for
-   the models is done here.
-   @return array of pointers to the models
-   @param filename:   the ASCII input file
-   @param mo_number:  filled with number of models read */
-  model **model_read (char *filename, int *mo_number);
-
-/**
-   Reads in a model, where the model parameters are explicit given in
-   matrix form. Memory allocation for the model is also done here.
-   @return pointer to the model
-   @param s:       scanner
-   @param multip:  multiplicity; gives how many copies should 
-   be made of the model */
-  model *model_direct_read (scanner_t * s, int *multip);
 
 /**
    Produces simple left-right models given sequences. 
@@ -482,15 +415,6 @@ int model_check_compatibel_models (const model * mo, const model * m2);
   void model_Pi_print_transp (FILE * file, model * mo, char *tab,
                               char *ending);
 
-/**
-   Writes a HMM in matrix format. The input model must be of type
-   model_direct, that is, have the parameters saved as matrices.
-   @param file:   output file
-   @param mo_d:   model of type model_direct
-   @param multip: number of copies to write
-*/
-  void model_direct_print (FILE * file, model_direct * mo_d, int multip);
-
 /** 
     Writes the parameters of a model sorted by states. 
     Is not very concise.   
@@ -498,22 +422,6 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @param mo:   model
 */
   void model_states_print (FILE * file, model * mo);
-
-/** 
-    Frees all memory from a model, sets the pointers to NULL and 
-    variables to zero.
-    @param mo_d  HMM structure (\Ref{struct model_direct})
-    @param check Check structure (\Ref{struct hmm_check_t})
-*/
-  void model_direct_clean (model_direct * mo_d, hmm_check_t * check);
-
-/** 
-    Tests compatibility of the model components.
-    @return 0 for success; -1 for failure 
-    @param mo_d  HMM structure  (\Ref{struct model_direct})
-    @param check Check structure  (\Ref{struct hmm_check_t})
-*/
-  int model_direct_check_data (model_direct * mo_d, hmm_check_t * check);
 
 /** Computes probabilistic distance of two models
     @return the distance

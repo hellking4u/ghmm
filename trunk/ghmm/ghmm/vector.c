@@ -69,7 +69,7 @@ int vector_normalize (double *v, int len)
 #undef CUR_PROC
 }                               /* vector_normalize */
 
-
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 void vector_const_values (double *v, int len, double c)
 {
@@ -108,7 +108,7 @@ void vector_random_preserve_struct (double *v, int len)
       v[i] = GHMM_RNG_UNIFORM (RNG);
   }
 }                               /* vector_random_preserve_struct */
-
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 void vector_d_print (FILE * file, double *vector, int len,
@@ -150,6 +150,7 @@ void vector_i_print (FILE * file, int *vector, int len,
   fprintf (file, "%s\n", ending);
 }                               /* vector_i_print */
 
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 int vector_mat_times_vec (double **A, double *x, int n, int m, double *v)
 {
@@ -163,3 +164,5 @@ int vector_mat_times_vec (double **A, double *x, int n, int m, double *v)
   return 0;
 #undef CUR_PROC
 }                               /* vector_mat_times_vec */
+
+#endif /* GHMM_OBSOLETE */

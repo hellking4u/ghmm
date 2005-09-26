@@ -33,11 +33,14 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifdef GHMM_OBSOLETE
+
 #ifndef SCLUSTER_H
 #define SCLUSTER_H
-#include <ghmm/sequence.h>
-#include <ghmm/smodel.h>
-#include <ghmm/sreestimate.h>
+#include "sequence.h"
+#include "smodel.h"
+#include "sreestimate.h"
 
 
 #ifdef __cplusplus
@@ -197,3 +200,5 @@ extern "C" {
 #endif
 /*@} */
 #endif                          /* SCLUSTER_H */
+
+#endif /* GHMM_OBSOLETE */

@@ -34,10 +34,12 @@
 *
 *******************************************************************************/
 
+#ifdef GHMM_OBSOLETE
+
 #ifndef CLUSTER_H
 #define CLUSTER_H
-#include <ghmm/sequence.h>
-#include <ghmm/model.h>
+#include "sequence.h"
+#include "model.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -132,3 +134,5 @@ extern "C" {
 }
 #endif
 #endif                          /* CLUSTER_H */
+
+#endif /* GHMM_OBSOLETE */

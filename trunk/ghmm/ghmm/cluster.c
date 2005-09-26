@@ -34,6 +34,8 @@
 *
 *******************************************************************************/
 
+#ifdef GHMM_OBSOLETE
+
 #ifdef WIN32
 #  include "win_config.h"
 #endif
@@ -55,6 +57,8 @@
 #include "foba.h"
 #include "matrix.h"
 #include "ghmm_internals.h"
+
+#include "obsolete.h"
 
 /*============================================================================*/
 int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
@@ -322,3 +326,5 @@ long cluster_update_label (long *oldlabel, long *seq_label, long seq_number)
     }
   return changes;
 }                               /* cluster_update_label */
+
+#endif /* GHMM_OBSOLETE */

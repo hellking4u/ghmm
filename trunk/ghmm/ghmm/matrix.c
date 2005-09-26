@@ -53,10 +53,14 @@
 #include "mes.h"
 #include "ghmm_internals.h"
 
+#include "obsolete.h"
+
+#ifdef GHMM_OBSOLETE
 static void lrdecomp (int dim, double **a, double *p);
 static void lyequalsb (double **a, double *b, double *p, int dim, double *y);
 static void ltranspxequalsy (double **a, double *y, double *p, int dim,
                              double *x);
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 
@@ -99,6 +103,7 @@ int matrix_d_read (scanner_t * s, double **matrix, int max_zeile,
 
 /*============================================================================*/
 
+#ifdef GHMM_OBSOLETE
 int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
 {
 #define CUR_PROC "matrix_i_read"
@@ -134,6 +139,7 @@ int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
   return (0);
 #undef CUR_PROC
 }                               /* matrix_i_read */
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 
@@ -383,6 +389,8 @@ int matrix3d_i_free(int **** matrix, int zeilen, int spalten) {
 # undef CUR_PROC
 } /* matrix3d_i_free */
 
+
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 void matrix_d_print(FILE *file, double **matrix, int zeilen, int spalten, 
 		    char *tab, char *separator, char *ending) {
@@ -412,7 +420,6 @@ void matrix_i_print (FILE * file, int **matrix, int zeilen, int spalten,
   for (i = 0; i < zeilen; i++)
     vector_i_print (file, matrix[i], spalten, tab, separator, ending);
 }                               /* matrix_i_print */
-
 
 /*============================================================================*/
 int matrix_d_notzero_columns (double **matrix, int row, int max_col)
@@ -723,3 +730,4 @@ int matrix_d_check_stochasticity (double **matrix, int N)
   }
   return (stochastic);
 }
+#endif /* GHMM_OBSOLETE */
