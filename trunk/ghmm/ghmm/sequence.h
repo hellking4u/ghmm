@@ -108,8 +108,8 @@ extern "C" {
 #endif
 /* don't include model.h at the beginning of this file. struct sequence_t has
    to be known in model.h */
-#include <ghmm/model.h>
-#include <ghmm/smodel.h>
+#include "model.h"
+#include "smodel.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

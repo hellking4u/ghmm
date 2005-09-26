@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-#include <ghmm/smodel.h>
+#include "smodel.h"
 
 /**@name SHMM-Baum-Welch-Algorithm */
 /*@{ (Doc++-Group: sreestimate) */

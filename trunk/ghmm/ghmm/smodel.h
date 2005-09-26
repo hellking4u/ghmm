@@ -155,7 +155,7 @@ extern "C" {
 
 
 /* don't include this earlier: in sequence.h smodel has to be known */
-#include <ghmm/sequence.h>
+#include "sequence.h"
 
   int smodel_class_change_alloc (smodel * smo);
 
