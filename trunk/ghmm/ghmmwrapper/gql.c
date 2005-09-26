@@ -71,16 +71,21 @@ static int smodel_state_alloc(sstate *state,
 			      int cos) {
 #define CUR_PROC "smodel_state_alloc"
   int res = -1;
-  ARRAY_CALLOC (state->c, M);
-  ARRAY_CALLOC (state->mue, M);
-  ARRAY_CALLOC (state->u, M);
+  if (!((state->c) = mes_calloc(sizeof(*(state->c)) * M)))
+    {mes_proc(); goto STOP;}
+  if (!((state->mue) = mes_calloc(sizeof(*(state->mue)) * M)))
+    {mes_proc(); goto STOP;}
+  if (!((state->u) = mes_calloc(sizeof(*(state->u)) * M)))
+    {mes_proc(); goto STOP;}
   if (out_states > 0) {
-    ARRAY_CALLOC (state->out_id, out_states);
+    if (!((state->out_id) = mes_calloc(sizeof(*(state->out_id)) * out_states)))
+      {mes_proc(); goto STOP;}
     state->out_a = matrix_d_alloc(cos, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
-    ARRAY_CALLOC (state->in_id, in_states);
+    if (!((state->in_id) = mes_calloc(sizeof(*(state->in_id)) * (in_states)))) 
+      {mes_proc(); goto STOP;}
     state->in_a = matrix_d_alloc(cos, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
   }
@@ -94,13 +99,14 @@ smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
 #define CUR_PROC "smodel_alloc_fill"
   int i;
   smodel *smo=NULL;
-  ARRAY_MALLOC (smo, 1);
+  if (!(smo = mes_malloc (sizeof (smodel)))) {mes_proc(); goto STOP;}  
   smo->M   = M;
   smo->N   = N;
   smo->cos = cos;
   smo->prior = prior;
   smo->density = density;  /* 0 = normal, 1 = normal_pos */
-  ARRAY_CALLOC (smo->s, smo->N);
+  if (!(smo->s = mes_calloc(sizeof(*(smo->s)) * (smo->N))))
+    {mes_proc(); goto STOP;}
 
   for(i=0; i < smo->N; i++) {
     smodel_state_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
