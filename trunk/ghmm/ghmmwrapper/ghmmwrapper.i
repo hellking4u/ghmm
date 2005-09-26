@@ -43,6 +43,7 @@
 #include <ghmm/sequence.h>
 #include <ghmm/scanner.h>
 #include <ghmm/smodel.h>
+#include <ghmm/sreestimate.h>
 #include <ghmm/rng.h>
 #include <ghmm/reestimate.h>
 #include <ghmm/foba.h>
@@ -57,6 +58,8 @@
 #include <ghmm/pviterbi.h>
 #include <ghmm/pviterbi_propagate.h>
 #include "pclasschange.h"
+
+#include <ghmm/obsolete.h>
 %}
 
 %include carrays.i
@@ -150,6 +153,7 @@ extern int** matrix_i_alloc(int rows, int columns);
   */
 extern int matrix_i_free(int ***matrix, long rows); 
 
+#ifdef GHMM_OBSOLETE
 /**
   Writes a double matrix (without parenthesis).
   @param file:       output file
@@ -162,6 +166,7 @@ extern int matrix_i_free(int ***matrix, long rows);
   */
 extern void matrix_d_print(FILE *file, double **matrix, int rows, int columns, 
 		    char *tab, char *separator, char *ending);
+#endif /* GHMM_OBSOLETE */
 
 
 
@@ -641,6 +646,7 @@ typedef struct coord coord;
 */
 extern int     model_free(model **mo);
 
+#ifdef GHMM_OBSOLETE
 /**
    Reads in ASCII data to initialize an array of models. Memory allocation for
    the models is done here.
@@ -648,6 +654,7 @@ extern int     model_free(model **mo);
    @param filename:   the ASCII input file
    @param mo_number:  filled with number of models read */
 extern model** model_read(char *filename, int *mo_number);
+#endif /* GHMM_OBSOLETE */
 
 /**
    Writes a model in matrix format.
@@ -1489,7 +1496,7 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
     return (sstate *) malloc(size*sizeof(sstate));
   }	
   
-   sstate *get_sstate_ptr(sstate *states, int k) {
+  sstate *get_sstate_ptr(sstate *states, int k) {
     return &(states[k]);
   }
 		  	
@@ -1540,6 +1547,7 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 
 
 
+#ifdef GHMM_OBSOLETE
 /* =============================================================================================
    ============================== scluster.c  ================================================== */
 
@@ -1667,6 +1675,7 @@ extern int scluster_hmm(char *argv[]);
   }
   
 %}
+#endif /* GHMM_OBSOLETE */
 
 
 /*=============================================================================================
@@ -2080,18 +2089,13 @@ extern double randvar_normal_density (double x, double mean, double u);
 
   /********** Create and access model* arrays  ****************************/
 model * * modelarray_alloc (int size) {
-#define CUR_PROC "modelarray_alloc"
   model * * retval;
-  ARRAY_CALLOC (retval, size);
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  retval = calloc (size, sizeof(model*));
   return retval;
-#undef CUR_PROC
 }
 
 void modelarray_free (model ** mos) {
-#define CUR_PROC "modelarray_dealloc"
-  m_free (mos);
-#undef CUR_PROC
+  free (mos);
 }
 
 void modelarray_setptr (model ** mos, model * mo, int pos) {mos[pos] = mo;}
@@ -2101,18 +2105,13 @@ model * modelarray_getptr (model ** mos, int pos) {return mos[pos];}
 
   /********** Create and access sequence* arrays  *************************/
 sequence_t * * seqarray_alloc (int size) {
-#define CUR_PROC "seqarray_alloc"
   sequence_t * * retval;
-  ARRAY_CALLOC (retval, size);
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  retval = calloc (size, sizeof(sequence_t*));
   return retval;
-#undef CUR_PROC
 }
 
 void seqarray_free (sequence_t ** seqs) {
-#define CUR_PROC "seqarray_dealloc"
-  m_free (seqs);
-#undef CUR_PROC
+  free (seqs);
 }
 
 void seqarray_setptr (sequence_t ** seqs, sequence_t * seq, int pos)
