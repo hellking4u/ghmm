@@ -675,9 +675,13 @@ class EmissionSequence:
             raise IndexError    
     
     def getSeqLabel(self):
+        if not ghmmwrapper.SEQ_LABEL_FIELD:
+            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         return ghmmwrapper.get_arrayl(self.cseq.seq_label,0)
 
     def setSeqLabel(self,value):
+        if not ghmmwrapper.SEQ_LABEL_FIELD:
+            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         ghmmwrapper.set_arrayl(self.cseq.seq_label,0,value)
     
     def getStateLabel(self):
@@ -963,17 +967,14 @@ class SequenceSet:
     
     
     def getSeqLabel(self,index):
-        if (self.emissionDomain.CDataType != "double"):
-            #print "WARNING: Discrete sequences do not support sequence labels."
-            return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
-        else:
-            return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
+        if not ghmmwrapper.SEQ_LABEL_FIELD:
+            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+        return ghmmwrapper.get_arrayl(self.cseq.seq_label,index)
 
     def setSeqLabel(self,index,value):
-        if (self.emissionDomain.CDataType != "double"):
-            print "WARNING: Discrete sequences do not support sequence labels."
-        else:     
-            ghmmwrapper.set_arrayl(self.cseq.seq_label,index,value)
+        if not ghmmwrapper.SEQ_LABEL_FIELD:
+            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+        ghmmwrapper.set_arrayl(self.cseq.seq_label,index,value)
 
     def getSequence(self, index):
         """ Returns the index-th sequence in internal representation"""
@@ -1040,8 +1041,9 @@ class SequenceSet:
             # Above doesnt copy seq_id or seq_label or seq_w
             seq_id = int(ghmmwrapper.get_arrayd(self.cseq.seq_id, seqIndixes[i]))
             ghmmwrapper.set_arrayd(seq.seq_id, i, seq_id)
-            seq_label = ghmmwrapper.get_arrayl(self.cseq.seq_label, i)
-            ghmmwrapper.set_arrayl(seq.seq_label, i, int(seq_label))
+            if ghmmwrapper.SEQ_LABEL_FIELD:
+                seq_label = ghmmwrapper.get_arrayl(self.cseq.seq_label, i)
+                ghmmwrapper.set_arrayl(seq.seq_label, i, int(seq_label))
 
             seq_w = ghmmwrapper.get_arrayd(self.cseq.seq_w, i)
             ghmmwrapper.set_arrayd(seq.seq_w, i, seq_w)

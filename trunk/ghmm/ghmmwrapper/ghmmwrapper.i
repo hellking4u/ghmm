@@ -93,15 +93,17 @@
   ========================== test for obsolete features ==================== */
 
 #ifdef GHMM_OBSOLETE
-%inline %{
-  int SMO_FILE_SUPPORT = 1;
-  int ASCI_SEQ_FILE = 1;
-%}
+
+#define SMO_FILE_SUPPORT 1
+#define ASCI_SEQ_FILE    1
+#define SEQ_LABEL_FIELD  1
+
 #else
-%inline %{
-  int SMO_FILE_SUPPORT = 0;
-  int ASCI_SEQ_FILE = 0;
-%}
+
+#define SMO_FILE_SUPPORT 0
+#define ASCI_SEQ_FILE    0
+#define SEQ_LABEL_FIELD  0
+
 #endif /* GHMM_OBSOLETE */
 
 
@@ -209,8 +211,10 @@ struct sequence_t {
   int **states;
   /** array of sequence length */
   int *seq_len;
+#ifdef GHMM_OBSOLETE
   /**  array of sequence labels */
   long *seq_label;
+#endif /* GHMM_OBSOLETE */
   /**  array of sequence IDs*/
   double *seq_id;
   /** positiv! sequence weights.  default is 1 = no weight */
@@ -240,8 +244,10 @@ struct sequence_d_t {
   double **seq;
   /** array of sequence length */
   int *seq_len;
+#ifdef GHMM_OBSOLETE
   /**  array of sequence labels */
   long *seq_label;
+#endif /* GHMM_OBSOLETE */
   /**  array of sequence IDs*/
   double *seq_id;
   /** positive! sequence weights.  default is 1 = no weight */
@@ -438,7 +444,8 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
   void set_seq_d_array(sequence_d_t** array, int index,sequence_d_t* seq){
 	array[index] = seq;
   }	
-  
+
+#ifdef GHMM_OBSOLETE
   void set_sequence_d_label(sequence_d_t* seq, int seq_num, long label){
 	  seq->seq_label[seq_num] = label;
   }
@@ -447,7 +454,6 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
 	  return seq->seq_label[seq_num];
   }	  
    
-#ifdef GHMM_OBSOLETE  
   sequence_d_t *seq_d_read(char* filename ){
 	  int i;
       sequence_d_t** s;
@@ -2240,7 +2246,9 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 
   dest_pt.seq        = src_pt.seq;
   dest_pt.seq_len    = src_pt.seq_len;
+#ifdef GHMM_OBSOLETE
   dest_pt.seq_label  = src_pt.seq_label;
+#endif /* GHMM_OBSOLETE */
   dest_pt.seq_id     = src_pt.seq_id;
   dest_pt.seq_w      = src_pt.seq_w;
   dest_pt.seq_number = src_pt.seq_number;
