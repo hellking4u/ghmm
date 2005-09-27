@@ -58,6 +58,8 @@
 #include "string.h"
 #include "ghmm_internals.h"
 
+#include "obsolete.h"
+
 /*----------------------------------------------------------------------------*/
 int smodel_state_alloc (sstate * s,
                         int M, int in_states, int out_states, int cos)
@@ -115,7 +117,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 # undef CUR_PROC
 }
 
-
+#ifdef GHMM_OBSOLETE
 /*----------------------------------------------------------------------------*/
 static int smodel_copy_vectors (smodel * smo, int index, double *pi, int *fix,
                                 double ***a_matrix, double **c_matrix,
@@ -625,6 +627,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* smodel_read_block */
+#endif /* GHMM_OBSOLETE */
 
 
 /*============================================================================*/

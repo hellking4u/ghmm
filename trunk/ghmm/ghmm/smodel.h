@@ -165,24 +165,6 @@ extern "C" {
     @param smo  pointer pointer of smodel */
   int smodel_free (smodel ** smo);
 
-/** Reads an ascii file with specifications for one or more smodels.
-    All parameters in matrix or vector form.
-    This is necessary whenever an initial model is needed (e.g. 
-    training) or sequences have to be generated from trained models.
-    For each smodel block smodel\_read\_block() is called.
-   @return vector of read smodels
-   @param filename   input ascii file
-   @param smo_number  number of smodels to read*/
-  smodel **smodel_read (const char *filename, int *smo_number);
-
-/** Reads one smodel block. It is possible to generate multiple
-    identical copies of the model read. Memory allocation is here.
-   @return pointer of smode read
-   @param s        scanner for reading
-   @param multip   number ob identical copies
-*/
-  smodel *smodel_read_block (scanner_t * s, int *multip);
-
 /**
    Copies one smodel. Memory alloc is here.
    @return pointer to smodel copy

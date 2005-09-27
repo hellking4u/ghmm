@@ -114,39 +114,6 @@ extern "C" {
 extern "C" {
 #endif
 
-/**
-   Reads one or several arrays of integer sequences. 
-   Calls sequence\_read\_alloc, where reading
-   and memory allocation is done. 
-   @return pointer to sequence array
-   @param filename    input filename
-   @param seq\_arrays number of sequence arrays read
-*/
-  sequence_t **sequence_read (const char *filename, int *seq_arrays);
-
-/**
-   Reading of one integer sequence field. Memory alloc here.
-   @param s scanner
-   @return array of sequences
-*/
-  sequence_t *sequence_read_alloc (scanner_t * s);
-
-/**
-   Reads one or several arrays of double sequences. 
-   Calls sequence\_read\_alloc, where reading
-   and memory allocation is done. 
-   @return pointer to sequence array
-   @param filename    input filename
-*/
-  sequence_d_t **sequence_d_read (const char *filename, int *sqd_number);
-
-/**
-   Reading of one double sequence field. Memory alloc here.
-   @param s scanner
-   @return array of sequences
-*/
-  sequence_d_t *sequence_d_read_alloc (scanner_t * s);
-
 /** Truncate double sequences in a given sequence array. 
     Useful for Testing;
    @return truncated sqd_field; 

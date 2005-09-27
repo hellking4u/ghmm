@@ -133,17 +133,6 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   */
   int matrix_i_free (int ***matrix, long rows);
 
-/**
-  Reads in a double matrix.
-  @return 0 for succes; -1 for error
-  @param s:          scanner
-  @param matrix:     matrix to read
-  @param max_row:    number of rows
-  @param max_column: number of columns
-  */
-  int matrix_d_read (scanner_t * s, double **matrix, int max_row,
-                     int max_column);
-
 
 #ifdef __cplusplus
 }
