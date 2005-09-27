@@ -64,8 +64,10 @@
 #include "sequence.h"
 #include "matrix.h"
 #include "vector.h"
-#include "smap_classify.h"
 #include "ghmm_internals.h"
+
+#include "obsolete.h"
+#include "smap_classify.h"
   
 #ifdef HAVE_LIBPTHREAD
 /* switch for parallel mode: (1) = sequential, (0) = parallel */ 

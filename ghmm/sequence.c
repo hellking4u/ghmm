@@ -59,6 +59,9 @@
 #include "rng.h"
 #include "ghmm_internals.h"
 
+#include "obsolete.h"
+
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 sequence_t **sequence_read (const char *filename, int *sq_number)
 {
@@ -443,6 +446,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (NULL);
 #undef CUR_PROC
 }                               /* sequence_d_read_alloc */
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 

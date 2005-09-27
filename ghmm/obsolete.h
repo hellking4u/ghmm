@@ -20,6 +20,17 @@
                      int max_column);
 
 /**
+  Reads in a double matrix.
+  @return 0 for succes; -1 for error
+  @param s:          scanner
+  @param matrix:     matrix to read
+  @param max_row:    number of rows
+  @param max_column: number of columns
+  */
+  int matrix_d_read (scanner_t * s, double **matrix, int max_row,
+                     int max_column);
+
+/**
   Writes a double matrix (without parenthesis).
   @param file:       output file
   @param matrix:     matrix to write
@@ -307,6 +318,16 @@
 */
   int model_direct_check_data (model_direct * mo_d, hmm_check_t * check);
 
+/**
+   Produces simple left-right models given sequences. 
+   The function "model_generate_from_sequence" is called for each 
+   model that should be made. The sequences are read in from the
+   ASCII file and thrown away again when leaving the function.
+   @return vector of models
+   @param s:          scanner
+   @param new_models: number of models to produce */
+  model **model_from_sequence_ascii (scanner_t * s, long *mo_number);
+
 
 
 /*============== vector.h ===================================================*/
@@ -349,6 +370,62 @@
   @param v       calculated vector (return value)
   */
   int vector_mat_times_vec (double **A, double *x, int n, int m, double *v);
+
+
+
+/*============= smodel.h ====================================================*/
+/** Reads an ascii file with specifications for one or more smodels.
+    All parameters in matrix or vector form.
+    This is necessary whenever an initial model is needed (e.g. 
+    training) or sequences have to be generated from trained models.
+    For each smodel block smodel\_read\_block() is called.
+   @return vector of read smodels
+   @param filename   input ascii file
+   @param smo_number  number of smodels to read*/
+  smodel **smodel_read (const char *filename, int *smo_number);
+
+/** Reads one smodel block. It is possible to generate multiple
+    identical copies of the model read. Memory allocation is here.
+   @return pointer of smode read
+   @param s        scanner for reading
+   @param multip   number ob identical copies
+*/
+  smodel *smodel_read_block (scanner_t * s, int *multip);
+
+
+/*============ sequence.h ===================================================*/
+/**
+   Reads one or several arrays of integer sequences. 
+   Calls sequence\_read\_alloc, where reading
+   and memory allocation is done. 
+   @return pointer to sequence array
+   @param filename    input filename
+   @param seq\_arrays number of sequence arrays read
+*/
+  sequence_t **sequence_read (const char *filename, int *seq_arrays);
+
+/**
+   Reading of one integer sequence field. Memory alloc here.
+   @param s scanner
+   @return array of sequences
+*/
+  sequence_t *sequence_read_alloc (scanner_t * s);
+
+/**
+   Reads one or several arrays of double sequences. 
+   Calls sequence\_read\_alloc, where reading
+   and memory allocation is done. 
+   @return pointer to sequence array
+   @param filename    input filename
+*/
+  sequence_d_t **sequence_d_read (const char *filename, int *sqd_number);
+
+/**
+   Reading of one double sequence field. Memory alloc here.
+   @param s scanner
+   @return array of sequences
+*/
+  sequence_d_t *sequence_d_read_alloc (scanner_t * s);
 
 
 

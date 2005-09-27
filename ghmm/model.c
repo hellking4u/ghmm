@@ -501,6 +501,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }                               /* model_from_sequence */
 
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 /* Produces models form given sequences */
 model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
@@ -556,6 +557,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* model_from_sequence_ascii */
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 

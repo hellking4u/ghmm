@@ -239,16 +239,6 @@ extern "C" {
     @param mo:  pointer to a model */
   int model_free (model ** mo);
 
-/**
-   Produces simple left-right models given sequences. 
-   The function "model_generate_from_sequence" is called for each 
-   model that should be made. The sequences are read in from the
-   ASCII file and thrown away again when leaving the function.
-   @return vector of models
-   @param s:          scanner
-   @param new_models: number of models to produce */
-  model **model_from_sequence_ascii (scanner_t * s, long *mo_number);
-
 /** 
     Produces simple left-right models given sequences. The sequences
     are not read in from file, but exists already as a structur.

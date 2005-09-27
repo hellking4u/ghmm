@@ -60,7 +60,6 @@ static void lrdecomp (int dim, double **a, double *p);
 static void lyequalsb (double **a, double *b, double *p, int dim, double *y);
 static void ltranspxequalsy (double **a, double *y, double *p, int dim,
                              double *x);
-#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 
@@ -103,7 +102,6 @@ int matrix_d_read (scanner_t * s, double **matrix, int max_zeile,
 
 /*============================================================================*/
 
-#ifdef GHMM_OBSOLETE
 int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
 {
 #define CUR_PROC "matrix_i_read"
