@@ -487,7 +487,9 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
       sequence_d_copy (sq[i]->seq[j], sqd_in[i]->seq[j], trunc_len);
       ARRAY_REALLOC (sq[i]->seq[j], trunc_len);
       sq[i]->seq_len[j] = trunc_len;
+#ifdef GHMM_OBSOLETE
       sq[i]->seq_label[j] = sqd_in[i]->seq_label[j];
+#endif /* GHMM_OBSOLETE */
       sq[i]->seq_id[j] = sqd_in[i]->seq_id[j];
       sq[i]->seq_w[j] = sqd_in[i]->seq_w[j];
     }
@@ -517,14 +519,18 @@ sequence_d_t *sequence_d_calloc (long seq_number)
   ARRAY_CALLOC (sqd, 1);
   ARRAY_CALLOC (sqd->seq, seq_number);
   ARRAY_CALLOC (sqd->seq_len, seq_number);
+#ifdef GHMM_OBSOLETE
   ARRAY_CALLOC (sqd->seq_label, seq_number);
+#endif /* GHMM_OBSOLETE */
   ARRAY_CALLOC (sqd->seq_id, seq_number);
   ARRAY_CALLOC (sqd->seq_w, seq_number);
   sqd->seq_number = seq_number;
 
   sqd->total_w = 0.0;
   for (i = 0; i < seq_number; i++) {
+#ifdef GHMM_OBSOLETE
     sqd->seq_label[i] = -1;
+#endif /* GHMM_OBSOLETE */
     sqd->seq_id[i] = -1.0;
     sqd->seq_w[i] = 1;
   }
@@ -554,12 +560,16 @@ sequence_t *sequence_calloc (long seq_number)
   ARRAY_CALLOC (sq->seq, seq_number);
   /*ARRAY_CALLOC (sq->states, seq_number);*/
   ARRAY_CALLOC (sq->seq_len, seq_number);
+#ifdef GHMM_OBSOLETE
   ARRAY_CALLOC (sq->seq_label, seq_number);
+#endif /* GHMM_OBSOLETE */
   ARRAY_CALLOC (sq->seq_id, seq_number);
   ARRAY_CALLOC (sq->seq_w, seq_number);
   sq->seq_number = seq_number;
   for (i = 0; i < seq_number; i++) {
+#ifdef GHMM_OBSOLETE
     sq->seq_label[i] = -1;
+#endif /* GHMM_OBSOLETE */
     sq->seq_id[i] = -1.0;
     sq->seq_w[i] = 1;
   }
@@ -579,7 +589,9 @@ sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index)
   
   res->seq[0] = sq->seq[index];
   res->seq_len[0] = sq->seq_len[index];
+#ifdef GHMM_OBSOLETE
   res->seq_label[0] = sq->seq_label[index];
+#endif /* GHMM_OBSOLETE */
   res->seq_id[0] = sq->seq_id[index];
   res->seq_w[0] = sq->seq_w[index];
   res->total_w = res->seq_w[0];
@@ -597,7 +609,9 @@ sequence_t *sequence_get_singlesequence(sequence_t *sq, int index)
   
   res->seq[0] = sq->seq[index];
   res->seq_len[0] = sq->seq_len[index];
+#ifdef GHMM_OBSOLETE
   res->seq_label[0] = sq->seq_label[index];
+#endif /* GHMM_OBSOLETE */
   res->seq_id[0] = sq->seq_id[index];
   res->seq_w[0] = sq->seq_w[index];
   res->total_w = res->seq_w[0];
@@ -625,7 +639,9 @@ int sequence_subseq_free (sequence_t ** sq)
     return (0);
 
   m_free ((*sq)->seq_len);
+#ifdef GHMM_OBSOLETE
   m_free ((*sq)->seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free ((*sq)->seq_id);
   m_free ((*sq)->seq_w);
 
@@ -657,7 +673,9 @@ int sequence_d_subseq_free (sequence_d_t ** sqd)
   /* sequence_d_print(stdout,*sqd,0);*/
   m_free ((*sqd)->seq);
   m_free ((*sqd)->seq_len);
+#ifdef GHMM_OBSOLETE
   m_free ((*sqd)->seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free ((*sqd)->seq_id);
   m_free ((*sqd)->seq_w);
   m_free (*sqd);
@@ -752,7 +770,9 @@ int sequence_add (sequence_t * target, sequence_t * source)
   int **old_seq = target->seq;
   /*int **old_seq_st    = target->states;*/
   int *old_seq_len = target->seq_len;
+#ifdef GHMM_OBSOLETE
   long *old_seq_label = target->seq_label;
+#endif /* GHMM_OBSOLETE */
   double *old_seq_id = target->seq_id;
   double *old_seq_w = target->seq_w;
   long old_seq_number = target->seq_number;
@@ -764,7 +784,9 @@ int sequence_add (sequence_t * target, sequence_t * source)
   ARRAY_CALLOC (target->seq, target->seq_number);
   /*ARRAY_CALLOC (target->states, target->seq_number);*/
   ARRAY_CALLOC (target->seq_len, target->seq_number);
+#ifdef GHMM_OBSOLETE
   ARRAY_CALLOC (target->seq_label, target->seq_number);
+#endif /* GHMM_OBSOLETE */
   ARRAY_CALLOC (target->seq_id, target->seq_number);
   ARRAY_CALLOC (target->seq_w, target->seq_number);
 
@@ -772,7 +794,9 @@ int sequence_add (sequence_t * target, sequence_t * source)
     target->seq[i] = old_seq[i];
     /*target->states[i] = old_seq_st[i];*/
     target->seq_len[i] = old_seq_len[i];
+#ifdef GHMM_OBSOLETE
     target->seq_label[i] = old_seq_label[i];
+#endif /* GHMM_OBSOLETE */
     target->seq_id[i] = old_seq_id[i];
     target->seq_w[i] = old_seq_w[i];
   }
@@ -789,7 +813,9 @@ int sequence_add (sequence_t * target, sequence_t * source)
        source->seq_len[i]); */
 
     target->seq_len[i + old_seq_number] = source->seq_len[i];
+#ifdef GHMM_OBSOLETE
     target->seq_label[i + old_seq_number] = source->seq_label[i];
+#endif /* GHMM_OBSOLETE */
     target->seq_id[i + old_seq_number] = source->seq_id[i];
     target->seq_w[i + old_seq_number] = source->seq_w[i];
   }
@@ -798,7 +824,9 @@ int sequence_add (sequence_t * target, sequence_t * source)
   m_free (old_seq);
   /*m_free(old_seq_st);*/
   m_free (old_seq_len);
+#ifdef GHMM_OBSOLETE
   m_free (old_seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free (old_seq_id);
   m_free (old_seq_w);
   res = 0;
@@ -816,7 +844,9 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
   int res = -1;
   double **old_seq = target->seq;
   int *old_seq_len = target->seq_len;
+#ifdef GHMM_OBSOLETE
   long *old_seq_label = target->seq_label;
+#endif /* GHMM_OBSOLETE */
   double *old_seq_id = target->seq_id;
   double *old_seq_w = target->seq_w;
   long old_seq_number = target->seq_number;
@@ -827,14 +857,18 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
 
   ARRAY_CALLOC (target->seq, target->seq_number);
   ARRAY_CALLOC (target->seq_len, target->seq_number);
+#ifdef GHMM_OBSOLETE
   ARRAY_CALLOC (target->seq_label, target->seq_number);
+#endif /* GHMM_OBSOLETE */
   ARRAY_CALLOC (target->seq_id, target->seq_number);
   ARRAY_CALLOC (target->seq_w, target->seq_number);
 
   for (i = 0; i < old_seq_number; i++) {
     target->seq[i] = old_seq[i];
     target->seq_len[i] = old_seq_len[i];
+#ifdef GHMM_OBSOLETE
     target->seq_label[i] = old_seq_label[i];
+#endif /* GHMM_OBSOLETE */
     target->seq_id[i] = old_seq_id[i];
     target->seq_w[i] = old_seq_w[i];
   }
@@ -845,14 +879,18 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
     sequence_d_copy (target->seq[i + old_seq_number], source->seq[i],
                      source->seq_len[i]);
     target->seq_len[i + old_seq_number] = source->seq_len[i];
+#ifdef GHMM_OBSOLETE
     target->seq_label[i + old_seq_number] = source->seq_label[i];
+#endif /* GHMM_OBSOLETE */
     target->seq_id[i + old_seq_number] = source->seq_id[i];
     target->seq_w[i + old_seq_number] = source->seq_w[i];
   }
 
   m_free (old_seq);
   m_free (old_seq_len);
+#ifdef GHMM_OBSOLETE
   m_free (old_seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free (old_seq_id);
   m_free (old_seq_w);
   res = 0;
@@ -915,8 +953,10 @@ void sequence_print (FILE * file, sequence_t * sq)
   for (i = 0; i < sq->seq_number; i++) {
     if (sq->seq_id[i] != -1.0)
       fprintf (file, "\t(%10.0f)", sq->seq_id[i]);
+#ifdef GHMM_OBSOLETE
     if (sq->seq_label[i] != -1)
       fprintf (file, "\t<%ld>", sq->seq_label[i]);
+#endif /* GHMM_OBSOLETE */
     if (sq->seq_w[i] != 1)
       fprintf (file, "\t|%.0f|", sq->seq_w[i]);
     fprintf (file, "\t");
@@ -942,8 +982,10 @@ void sequence_print (FILE * file, sequence_t * sq)
     if (sq->seq_id[i] != -1.0)
       fprintf (file, " id=\"seq%f\" ", sq->seq_id[i]);
     fprintf (file, ">");
+#ifdef GHMM_OBSOLETE
     if (sq->seq_label[i] != -1)
       fprintf (file, "<Label>%ld</Label>", sq->seq_label[i]);
+#endif /* GHMM_OBSOLETE */
     if (sq->seq_len[i] > 0) {
       fprintf (file, "<!-- Length: %d -->", sq->seq_len[i]);
       for (j = 0; j < sq->seq_len[i]; j++)
@@ -966,8 +1008,10 @@ void sequence_d_print_xml (FILE * file, sequence_d_t * sq)
     if (sq->seq_id[i] != -1.0)
       fprintf (file, " id=\"seq%f\" ", sq->seq_id[i]);
     fprintf (file, ">");
+#ifdef GHMM_OBSOLETE
     if (sq->seq_label[i] != -1)
       fprintf (file, "<Label>%ld</Label>", sq->seq_label[i]);
+#endif /* GHMM_OBSOLETE */
     if (sq->seq_len[i] > 0) {
       fprintf (file, "<!-- Length: %d -->", sq->seq_len[i]);
       for (j = 0; j < sq->seq_len[i]; j++)
@@ -1013,8 +1057,10 @@ void sequence_d_print (FILE * file, sequence_d_t * sqd, int discrete)
   for (i = 0; i < sqd->seq_number; i++) {
     if (sqd->seq_id[i] != -1.0)
       fprintf (file, "\t(%10.0f)", sqd->seq_id[i]);
+#ifdef GHMM_OBSOLETE
     if (sqd->seq_label[i] != -1)
       fprintf (file, "\t<%ld>", sqd->seq_label[i]);
+#endif /* GHMM_OBSOLETE */
     if (sqd->seq_w[i] != 1)
       fprintf (file, "\t|%.0f|", sqd->seq_w[i]);
     fprintf (file, "\t");
@@ -1064,7 +1110,9 @@ void sequence_clean (sequence_t * sq)
   /* keep data, only delete references */
   m_free (sq->seq);
   m_free (sq->seq_len);
+#ifdef GHMM_OBSOLETE
   m_free (sq->seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free (sq->seq_id);
   m_free (sq->seq_w);
   /* m_free(sq->states);*/
@@ -1078,7 +1126,9 @@ void sequence_d_clean (sequence_d_t * sqd)
   /* keep data, only delete references */
   m_free (sqd->seq);
   m_free (sqd->seq_len);
+#ifdef GHMM_OBSOLETE
   m_free (sqd->seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free (sqd->seq_id);
   m_free (sqd->seq_w);
   sqd->seq_number = 0;
@@ -1114,7 +1164,9 @@ int sequence_free (sequence_t ** sq)
   ***/
 
   m_free ((*sq)->seq_len);
+#ifdef GHMM_OBSOLETE
   m_free ((*sq)->seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free ((*sq)->seq_id);
   m_free ((*sq)->seq_w);
 
@@ -1146,7 +1198,9 @@ int sequence_d_free (sequence_d_t ** sqd)
 
   matrix_d_free (&(*sqd)->seq, (*sqd)->seq_number);
   m_free ((*sqd)->seq_len);
+#ifdef GHMM_OBSOLETE
   m_free ((*sqd)->seq_label);
+#endif /* GHMM_OBSOLETE */
   m_free ((*sqd)->seq_id);
   m_free ((*sqd)->seq_w);
   m_free (*sqd);
@@ -1169,7 +1223,9 @@ sequence_d_t *sequence_d_create_from_sq (const sequence_t * sq)
     for (i = 0; i < sq->seq_len[j]; i++)
       sqd->seq[j][i] = (double) (sq->seq[j][i]);
     sqd->seq_len[j] = sq->seq_len[j];
+#ifdef GHMM_OBSOLETE
     sqd->seq_label[j] = sq->seq_label[j];
+#endif /* GHMM_OBSOLETE */
     sqd->seq_id[j] = sq->seq_id[j];
     sqd->seq_w[j] = sq->seq_w[j];
   }
@@ -1198,7 +1254,9 @@ sequence_t *sequence_create_from_sqd (const sequence_d_t * sqd)
       sq->seq[j][i] = m_int (fabs (sqd->seq[j][i]));
     }
     sq->seq_len[j] = sqd->seq_len[j];
+#ifdef GHMM_OBSOLETE
     sq->seq_label[j] = sqd->seq_label[j];
+#endif /* GHMM_OBSOLETE */
     sq->seq_id[j] = sqd->seq_id[j];
     sq->seq_w[j] = sqd->seq_w[j];
   }
@@ -1352,7 +1410,9 @@ int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
   for (i = 0; i < 2; i++) {
     ARRAY_CALLOC (sqd_dummy->seq, total_seqs);
     ARRAY_CALLOC (sqd_dummy->seq_len, total_seqs);
+#ifdef GHMM_OBSOLETE
     ARRAY_CALLOC (sqd_dummy->seq_label, total_seqs);
+#endif /* GHMM_OBSOLETE */
     ARRAY_CALLOC (sqd_dummy->seq_id, total_seqs);
     ARRAY_CALLOC (sqd_dummy->seq_w, total_seqs);
     sqd_dummy->seq_number = 0;
@@ -1377,7 +1437,9 @@ int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
   for (i = 0; i < 2; i++) {
     ARRAY_REALLOC (sqd_dummy->seq, sqd_dummy->seq_number);
     ARRAY_REALLOC (sqd_dummy->seq_len, sqd_dummy->seq_number);
+#ifdef GHMM_OBSOLETE
     ARRAY_REALLOC (sqd_dummy->seq_label, sqd_dummy->seq_number);
+#endif /* GHMM_OBSOLETE */
     ARRAY_REALLOC (sqd_dummy->seq_id, sqd_dummy->seq_number);
     ARRAY_REALLOC (sqd_dummy->seq_w, sqd_dummy->seq_number);
     sqd_dummy = sqd_test;
@@ -1398,7 +1460,9 @@ void sequence_d_copy_all (sequence_d_t * target, long t_num,
   sequence_d_copy (target->seq[t_num], source->seq[s_num],
                    source->seq_len[s_num]);
   target->seq_len[t_num] = source->seq_len[s_num];
+#ifdef GHMM_OBSOLETE
   target->seq_label[t_num] = source->seq_label[s_num];
+#endif /* GHMM_OBSOLETE */
   target->seq_id[t_num] = source->seq_id[s_num];
   target->seq_w[t_num] = source->seq_w[s_num];
 }
