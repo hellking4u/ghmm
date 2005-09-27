@@ -124,7 +124,9 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
       goto STOP;
     }
     sequence_d_copy (sq->seq[n], sqd_short->seq[n], short_len);
+#ifdef GHMM_OBSOLETE
     sq->seq_label[n] = sqd_short->seq_label[n];
+#endif /* GHMM_OBSOLETE */
 
     /* Initial distribution */
     /* 1. Viterbi-state */

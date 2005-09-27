@@ -1057,7 +1057,9 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
 
         ARRAY_REALLOC (sq->seq[n], pos);
       sq->seq_len[n] = pos;
+#ifdef GHMM_OBSOLETE
       sq->seq_label[n] = label;
+#endif /* GHMM_OBSOLETE */
       /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }

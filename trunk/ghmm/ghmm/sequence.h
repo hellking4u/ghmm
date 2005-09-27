@@ -60,8 +60,10 @@ extern "C" {
 
   /** array of sequence length */
     int *seq_len;
+#ifdef GHMM_OBSOLETE
   /**  array of sequence labels */
     long *seq_label;
+#endif /* GHMM_OBSOLETE */
   /**  array of sequence IDs*/
     double *seq_id;
   /** positiv! sequence weights.  default is 1 = no weight */
@@ -89,8 +91,10 @@ extern "C" {
     double **seq;
   /** array of sequence length */
     int *seq_len;
+#ifdef GHMM_OBSOLETE
   /**  array of sequence labels */
     long *seq_label;
+#endif /* GHMM_OBSOLETE */
   /**  array of sequence IDs*/
     double *seq_id;
   /** positive! sequence weights.  default is 1 = no weight */
