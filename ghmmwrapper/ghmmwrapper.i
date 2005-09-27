@@ -34,6 +34,10 @@
 *
 *******************************************************************************/
 
+#ifdef GHMM_OBSOLETE
+%{#define GHMM_OBSOLETE%}
+#endif /* GHMM_OBSOLETE */
+
 %module ghmmwrapper
 
 %{
