@@ -118,14 +118,15 @@ extern "C" {
   double randvar_normal (double mue, double u, int seed);
 
 /** 
-   Generates a positive, N( mue, u ) distributed random number.
+   Generates a ,N( mue, u ) truncated at the right limit a distributed random number.
    @return          random number
+   @param a:         right limit
    @param mue:       mean value for the normal distribution 
    @param u:         variance for the random distribution
    @param seed:      1: only initialize the N( 0, 1 ) generator
                      0: returns a standard normal distributed random number 
   */
-  double randvar_normal_pos (double mue, double u, int seed);
+  double randvar_normal_right (double a, double mue, double u, int seed);
 
 /**
    Determinates the N( 0, 1 ) distribution function at point x.
@@ -179,7 +180,15 @@ extern "C" {
    @param mean:      mean value for the normal distribution
    @param u:         variance for the normal distribution
 */
-  double randvar_normal_pos_cdf (double x, double mean, double u);
+  double randvar_normal_right_cdf (double x, double mean, double u, double a);
+
+
+  /** cumalative distribution function of a uniform distribution in the range (min,max) 
+   @return          F(x)
+   @param x:        point value
+   @param max:      right limit 
+   @param min:      left limit */
+  double randvar_uniform_cdf (double x, double max, double min);
 
   /**
    Small help function for interpolation, returns a constant.
@@ -195,6 +204,7 @@ extern "C" {
    Small help function for interpolation, returns a constant.
   */
   double randvar_get_philen();
+
 
 #ifdef __cplusplus
 }

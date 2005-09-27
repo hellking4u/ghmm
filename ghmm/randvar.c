@@ -12,7 +12,7 @@
 *                               Berlin
 *
 *       Contact: schliep@ghmm.org
-*
+*7
 *       This library is free software; you can redistribute it and/or
 *       modify it under the terms of the GNU Library General Public
 *       License as published by the Free Software Foundation; either
@@ -485,6 +485,28 @@ STOP:
 
 
 /*============================================================================*/
+double randvar_uniform_density (double x, double max, double min)
+{
+# define CUR_PROC "randvar_uniform_density"
+  double prob;
+  if (max <= min) {
+    mes_prot ("max <= min not allowed \n");
+    goto STOP;
+  }
+  prob = 1.0/(max-min);
+
+  if ( (x <= max) && (x>=min) ){
+    return prob;
+  }else{
+    return 0.0;
+  }
+STOP:
+  return (-1.0);
+# undef CUR_PROC
+}                               /* double randvar_uniform_density */
+
+
+/*============================================================================*/
 /* special smodel pdf need it: smo->density==normal_approx: */
 /* generates a table of of aequidistant samples of gaussian pdf */
 
@@ -611,9 +633,9 @@ double randvar_normal (double mue, double u, int seed)
 # define D3 0.001308
 #endif
 
-double randvar_normal_pos (double mue, double u, int seed)
+double randvar_normal_right (double a, double mue, double u, int seed)
 {
-# define CUR_PROC "randvar_normal_pos"
+# define CUR_PROC "randvar_normal_right"
   double x = -1;
   double sigma;
 #ifdef DO_WITH_GSL
@@ -649,7 +671,7 @@ double randvar_normal_pos (double mue, double u, int seed)
   /* move boundary to lower values in order to achieve maximum at mue
      gsl_ran_gaussian_tail(generator, lower_boundary, sigma)
    */
-  return gsl_ran_gaussian_tail (RNG, -mue, sqrt (u)) + mue;
+  return gsl_ran_gaussian_tail (RNG, a - mue, sqrt (u)) + mue;
 
 #else /* DO_WITH_GSL */
   /* Method: Generate Gauss-distributed random nunbers (with GSL-lib.),
@@ -660,11 +682,11 @@ double randvar_normal_pos (double mue, double u, int seed)
 
   /* Inverse transformation with restricted sampling by Fishman */
   U = GHMM_RNG_UNIFORM (RNG);
-  Feps = randvar_get_PHI (-(EPS_NDT + mue) / sigma);
+  Feps = randvar_get_PHI (-(a + mue) / sigma);
   Us = Feps + (1 - Feps) * U;
   /* Numerically better: 1-Us = 1-Feps - (1-Feps)*U, therefore: 
      Feps1 = 1-Feps, Us1 = 1-Us */
-  Feps1 = randvar_get_PHI ((EPS_NDT + mue) / sigma);
+  Feps1 = randvar_get_PHI ((a + mue) / sigma);
   Us1 = Feps1 - Feps1 * U;
   t = m_min (Us, Us1);
   t = sqrt (-log (t * t));
@@ -682,6 +704,7 @@ STOP:
   return (x);
 # undef CUR_PROC
 }                               /* randvar_normal_pos */
+
 
 
 /*============================================================================*/
@@ -703,6 +726,29 @@ double randvar_uniform_int (int seed, int K)
 # undef CUR_PROC
 }                               /* randvar_uniform_int */
 
+/*============================================================================*/
+double randvar_uniform_cont (int seed, double max, double min)
+{
+# define CUR_PROC "randvar_uniform_cont"
+  if (max <= min) {
+    mes_prot ("max <= min not allowed\n");
+    goto STOP;
+  }
+  if (seed != 0) {
+    GHMM_RNG_SET (RNG, seed);
+    return (1.0);
+  }
+  else {
+#ifdef DO_WITH_GSL
+    return (double)(((double)gsl_rng_uniform (RNG)*(max-min)) + min);
+#else
+    return (double)((GHMM_RNG_UNIFORM (RNG))*(max-min) + min );
+#endif
+  }
+STOP:
+  return (-1.0);
+# undef CUR_PROC
+}                               /* randvar_uniform_cont */
 
 /*============================================================================*/
 /* cumalative distribution function of N(mean, u) */
@@ -726,18 +772,18 @@ STOP:
 }                               /* double randvar_normal_cdf */
 
 /*============================================================================*/
-/* cumalative distribution function of -EPS_NDT-truncated N(mean, u) */
-double randvar_normal_pos_cdf (double x, double mean, double u)
+/* cumalative distribution function of a-truncated N(mean, u) */
+double randvar_normal_right_cdf (double x, double mean, double u, double a)
 {
-# define CUR_PROC "randvar_normal_pos_cdf"
+# define CUR_PROC "randvar_normal_right_cdf"
 #ifndef DO_WITH_GSL
   double Fx, c;
 #endif
 
-  if (x <= 0.0)
+  if (x <= a)
     return (0.0);
-  if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+  if (u <= a) {
+    mes_prot ("u <= a not allowed\n");
     goto STOP;
   }
 #ifdef DO_WITH_GSL
@@ -747,13 +793,34 @@ double randvar_normal_pos_cdf (double x, double mean, double u)
      erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2). 
    */
   return 1.0 + (gsl_sf_erf ((x - mean) / sqrt (u * 2)) -
-                1.0) / gsl_sf_erfc ((-mean) / sqrt (u * 2));
+                1.0) / gsl_sf_erfc ((a - mean) / sqrt (u * 2));
 #else
   /*The denominator is possibly < EPS??? Check that ? */
   Fx = randvar_get_PHI ((x - mean) / sqrt (u));
-  c = randvar_get_1overa (-EPS_NDT, mean, u);
+  c = randvar_get_1overa (a, mean, u);
   return (c * (Fx - 1) + 1);
 #endif /* DO_WITH_GSL */
+STOP:
+  return (-1.0);
+# undef CUR_PROC
+}                               /* double randvar_normal_cdf */
+
+/*============================================================================*/
+/* cumalative distribution function of a uniform distribution in the range (min,max) */
+double randvar_uniform_cdf (double x, double max, double min)
+{
+# define CUR_PROC "randvar_uniform_cdf"
+  if (max <= min) {
+    mes_prot ("max <= min not allowed\n");
+    goto STOP;
+  }  
+  if (x <= min) {
+    return 0.0;
+  }
+  if (x >= max) {
+    return 1.0;
+  }
+  return (x-min)/(max-min);
 STOP:
   return (-1.0);
 # undef CUR_PROC

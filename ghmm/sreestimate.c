@@ -100,8 +100,9 @@ static local_store_t *sreestimate_alloc (const smodel * smo)
     mes_proc ();
     goto STOP;
   }
-  /***/
-  ARRAY_CALLOC (r->c_denom, smo->N);
+  /* For sacke of simplicity, a NXmax(M) is being allocated,
+  even though not all emissins components are of size max(M) */
+  ARRAY_CALLOC (r->c_denom, smo->N);  
   r->c_num = stat_matrix_d_alloc (smo->N, smo->M);
   if (!(r->c_num)) {
     mes_proc ();
@@ -256,9 +257,9 @@ static int sreestimate_precompute_b (smodel * smo, double *O, int T,
   /* save c_im * b_im(O_t)  directly in  b[t][i][m] */
   for (t = 0; t < T; t++)
     for (i = 0; i < smo->N; i++)
-      for (m = 0; m < smo->M; m++) {
+      for (m = 0; m < smo->s[i].M; m++) {
         b[t][i][m] = smodel_calc_cmbm (smo, i, m, O[t]);
-        b[t][i][smo->M] += b[t][i][m];
+        b[t][i][smo->s[i].M] += b[t][i][m];
       }
   return (0);
 # undef CUR_PROC
@@ -289,6 +290,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
     /* Pi */
     smo->s[i].pi = r->pi_num[i] * pi_factor;
 
+     
     /* A */
     for (osc = 0; osc < smo->cos; osc++) {
       /* note: denom. might be 0; never reached state? */
@@ -301,6 +303,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
         if (smo->s[i].out_states > 0) {
           if (smo->s[i].in_states == 0)
             mes (MESCONTR, "state %d: no in_states\n", i);
+	    
           else {
             /* Test: sum all ingoing == 0 ? */
             p_i = smo->s[i].pi;
@@ -318,8 +321,10 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
       }
       else
         a_factor_i = 1 / r->a_denom[i][osc];
-
+	
       a_num_pos = 0;
+
+
       for (j = 0; j < smo->s[i].out_states; j++) {
         j_id = smo->s[i].out_id[j];
         /* TEST: denom. < numerator */
@@ -374,11 +379,12 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
     }   /* osc-loop */
 
 
+    /* if fix, continue to next state */
+    if (smo->s[i].fix){
+      continue;
+    }
     /* C, Mue und U */
 
-    /* if fix, continue to next state */
-    if (smo->s[i].fix)
-      continue;
 
     c_denom_pos = 1;
     if (r->c_denom[i] <= DBL_MIN) {     /* < EPS_PREC ? */
@@ -394,7 +400,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
     fix_w = 1.0;
     unfix_w = 0.0;
     fix_flag = 0;
-    for (m = 0; m < smo->M; m++) {
+    for (m = 0; m < smo->s[i].M; m++) {
 
       /* if fixed continue to next component */
       if (smo->s[i].mixture_fix[m] == 1) {
@@ -450,7 +456,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
       /* modification for truncated normal density:
          1-dim optimization for mue, calculate u directly 
          note: if denom == 0 --> mue and u not recalculated above */
-      if (smo->density == normal_pos && fabs (r->mue_u_denom[i][m]) > DBL_MIN) {
+      if (smo->s[i].density[m] == normal_right && fabs (r->mue_u_denom[i][m]) > DBL_MIN) {
         A = smo->s[i].mue[m];
         B = r->sum_gt_otot[i][m] / r->mue_u_denom[i][m];
 
@@ -501,7 +507,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 
     /* adjusting weights for fixed mixture components if necessary  */
     if (fix_flag == 1) {
-      for (m = 0; m < smo->M; m++) {
+      for (m = 0; m < smo->s[i].M; m++) {
         if (smo->s[i].mixture_fix[m] == 0) {
           smo->s[i].c[m] = (smo->s[i].c[m] * fix_w) / unfix_w;
         }
@@ -628,7 +634,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
             j_id = smo->s[i].out_id[j];
             
            contrib_t = (seq_w[k] * alpha[t - 1][i] * smo->s[i].out_a[osc][j] *
-                                    b[t][j_id][smo->M] * beta[t][j_id] * c_t);   /*  c[t] = 1/scale[t] */
+                                    b[t][j_id][smo->s[i].M] * beta[t][j_id] * c_t);   /*  c[t] = 1/scale[t] */
             
             r->a_num[i][osc][j] += contrib_t;
             
@@ -667,7 +673,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
           continue;             /* next t */
 
         /* loop over no of density functions for C-numer., mue and u */
-        for (m = 0; m < smo->M; m++) {
+        for (m = 0; m < smo->s[i].M; m++) {
           /*  c_im * b_im  */
 
 
@@ -772,16 +778,21 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 int sreestimate_baum_welch (smosqd_t * cs)
 {
 # define CUR_PROC "sreestimate_baum_welch"
-  int n, valid, valid_old, max_iter_bw;
+  int i, j, n, valid, valid_old, max_iter_bw;
   double log_p, log_p_old, diff, eps_iter_bw;
   local_store_t *r = NULL;
   char *str;
 
   /* truncated normal density needs static varialbles C_PHI and
      CC_PHI */
-  if (cs->smo->density == normal_pos) {
-    C_PHI = randvar_get_xPHIless1 ();
-    CC_PHI = m_sqr (C_PHI);
+  for (i = 0; i < cs->smo->N; i++){
+    for (j = 0; j < cs->smo->s[i].M; j++){
+      if (cs->smo->s[i].density[j] == normal_right) {
+        C_PHI = randvar_get_xPHIless1 ();
+        CC_PHI = m_sqr (C_PHI);
+        break;
+      }
+    }
   }
 
   /* local store for all iterations */
