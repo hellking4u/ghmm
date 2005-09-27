@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* /*******************************************************************************
 *
 *       This file is part of the General Hidden Markov Model Library,
 *       GHMM version __VERSION__, see http://ghmm.org
@@ -58,7 +58,6 @@
 #include <ghmm/pviterbi.h>
 #include <ghmm/pviterbi_propagate.h>
 #include "pclasschange.h"
-
 #include <ghmm/obsolete.h>
 %}
 
@@ -105,6 +104,7 @@
 #define SEQ_LABEL_FIELD  0
 
 #endif /* GHMM_OBSOLETE */
+
 
 
 /*=============================================================================================
@@ -1255,17 +1255,21 @@ extern int sdfoba_forward(sdmodel *mo, const int *O, int len, double **alpha,
 /*=============================================================================================
   =============================== smodel.c  ============================================== */
 
-typedef enum {
-  normal, 
-  normal_pos, 
-  normal_approx,
-  density_number
-} density_t;
+   typedef enum {
+    normal,
+    normal_right,
+    normal_approx,
+    normal_left,
+    uniform,
+    density_number
+  } density_t;
 
 /** @name sstate
     Structure for one state.
 */
 struct sstate {
+  /** Maximun number of output densities per state */
+  int M;
   /** initial prob. */ 
   double pi;
   /** IDs of successor states */ 
@@ -1289,10 +1293,16 @@ struct sstate {
   double *mue;
   /** variance vector for output functions */
   double *u;
+  /** value where the normal is truncated (only for truncated distributions) */
+    double *a;
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
   int fix;
-  
+  /** Flag for density function for each component of the mixture
+      0: normal density, 1: truncated normal (right side) 
+      density, 2: approximated normal density, 3: truncated normal (left side)
+      4: uniform distribution */
+  density_t *density;  
   /**  array of flags for fixing mixture components in the reestimation
         fix[i] = 1 means mu and sigma of component i are fixed.  **/
   int *mixture_fix;
@@ -1324,15 +1334,12 @@ typedef struct class_change_context class_change_context;
 struct smodel{
   /** Number of states */
   int N;
-  /** Number of output densities per state */
+  /** Maximun number of output densities per state */
   int M;
   /** smodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
   int cos;
-  /** Flag for density function. 0: normal density, 1: truncated normal 
-      density, 2: approximated normal density */
-  density_t density;
   /** prior for a priori prob. of the model. -1 means no prior specified (all
       models have equal prob. a priori. */
   double prior;
@@ -1457,6 +1464,8 @@ extern int sfoba_logp(smodel *smo, double *O, int T, double *log_p);
 
 extern smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density);
 
+//extern void smodel_set_densityvector(smodel *smo, int i, int density);
+
 extern void smodel_set_pivector(smodel *smo, int i, double piv);
 
 extern void smodel_set_fixvector(smodel *smo, int i, double fixv);
@@ -1507,20 +1516,27 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 
 %inline %{
   
-  void set_trunc_density(smodel* smo){
-     smo->density = (density_t) 1 ; 
+  void set_density(sstate *state, int m, int value){
+    state->density[m] = (density_t)value;
   }    
     
   int blatestbla(smodel* smo,double *seq ,int k, int t){
       return smo->class_change->get_class(smo,seq,k,t);
   }     
-    
-    
+        
   /* allocation of an empty smodel struct */
   smodel *new_smodel() {
      return (struct smodel *)(struct smodel *) calloc(1, sizeof(struct smodel));    
   }
 
+  /** allocation of an empty smodel struct */
+  density_t *arraydensity(int size) {
+     return (density_t *) malloc(size*sizeof(density_t));    
+  }
+
+  int get_density(sstate *state, int m){
+    return (int)(state->density[m]);
+  }
     
   /* array of sstate structs */
   sstate *arraysstate(int size) { 
@@ -1542,11 +1558,7 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
   /* extract pointer to sstate  */	
   sstate *get_sstate(smodel *smo, int k) {
     return &(smo->s[k]);
-  }
-
-  
-  
-  
+  }  
   
   /* creation and assessor functions for an array of smodels */
   smodel **smodel_array(int size){
@@ -1579,6 +1591,9 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 
 
 #ifdef GHMM_OBSOLETE
+
+#ifdef GHMM_SCLUSTER
+
 /* =============================================================================================
    ============================== scluster.c  ================================================== */
 
@@ -1603,10 +1618,7 @@ struct scluster_t{
   /** a posteriori probability for the models to calculate the objective
       fucntion in case of a MAW classificator. Is calculated using smap_bayes */
   double *smo_Z_MAW;
-};
-/**
- */
-typedef struct scluster_t scluster_t;
+}; typedef struct scluster_t scluster_t;
 
 
 /**
@@ -1702,10 +1714,12 @@ extern int scluster_hmm(char *argv[]);
 
 %inline %{
   void scluster_printl_stdout(scluster_t *scl) {
-    scluster_print_likelihood(stdout, scl);
+    /*scluster_print_likelihood(stdout, scl);*/
   }
   
 %}
+
+#endif /* GHMM_SCLUSTER */
 #endif /* GHMM_OBSOLETE */
 
 

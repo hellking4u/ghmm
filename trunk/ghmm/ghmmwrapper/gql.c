@@ -42,6 +42,7 @@
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
 #include <ghmm/sfoba.h>
+#include <ghmm/obsolete.h>
 /*#include <ghmm++/GHMM_convertXMLtoC.h>*/
 #include <float.h>
 #include <assert.h>
@@ -77,6 +78,11 @@ static int smodel_state_alloc(sstate *state,
     {mes_proc(); goto STOP;}
   if (!((state->u) = mes_calloc(sizeof(*(state->u)) * M)))
     {mes_proc(); goto STOP;}
+  if (!((state->a) = mes_calloc(sizeof(*(state->a)) * M)))
+    {mes_proc(); goto STOP;}
+  if (!((state->density) = mes_calloc(sizeof(*(state->density)) * M)))
+    {mes_proc(); goto STOP;}
+    
   if (out_states > 0) {
     if (!((state->out_id) = mes_calloc(sizeof(*(state->out_id)) * out_states)))
       {mes_proc(); goto STOP;}
@@ -104,7 +110,6 @@ smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
   smo->N   = N;
   smo->cos = cos;
   smo->prior = prior;
-  smo->density = density;  /* 0 = normal, 1 = normal_pos */
   if (!(smo->s = mes_calloc(sizeof(*(smo->s)) * (smo->N))))
     {mes_proc(); goto STOP;}
 
