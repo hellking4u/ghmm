@@ -70,8 +70,11 @@ int smodel_state_alloc (sstate * s,
   ARRAY_CALLOC (s->c, M);
   ARRAY_CALLOC (s->mue, M);
   ARRAY_CALLOC (s->u, M);
+  ARRAY_CALLOC (s->a,M);
 
   ARRAY_CALLOC (s->mixture_fix, M);
+  ARRAY_CALLOC (s->density,M);
+   
 
   /* mixture component fixing deactivated by default */
   for (i = 0; i < M; i++) {
@@ -124,10 +127,12 @@ static int smodel_copy_vectors (smodel * smo, int index, double *pi, int *fix,
                                 double **mue_matrix, double **u_matrix)
 {
 #define CUR_PROC "smodel_alloc_vectors"
+/* XXX - this function is only used in the smo file reading functions. It should be removed 
+since it does not take care of het .mixtures densities  */
   int i, c, exist, count_out = 0, count_in = 0;
   smo->s[index].pi = pi[index];
   smo->s[index].fix = fix[index];
-  for (i = 0; i < smo->M; i++) {
+  for (i = 0; i < smo->s[index].M; i++) {
     smo->s[index].c[i] = c_matrix[index][i];
     smo->s[index].mue[i] = mue_matrix[index][i];
     smo->s[index].u[i] = u_matrix[index][i];
@@ -180,6 +185,7 @@ static int smodel_copy_vectors (smodel * smo, int index, double *pi, int *fix,
 smodel **smodel_read (const char *filename, int *smo_number)
 {
 #define CUR_PROC "smodel_read"
+/* XXX - old function. No support to heterogeneous densities  */
   int j;
   long new_models = 0;
   scanner_t *s = NULL;
@@ -244,12 +250,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 smodel *smodel_read_block (scanner_t * s, int *multip)
 {
 #define CUR_PROC "smodel_read_block"
+/* XXX - old function. No support to heterogeneous densities  */
   int i, j, osc, m_read, n_read, pi_read, a_read, c_read, mue_read, cos_read,
-    u_read, len, density_read, out, in, prior_read, fix_read;
+    u_read, len, density_read, out, in, prior_read, fix_read, M;
   smodel *smo = NULL;
   double *pi_vektor = NULL, **a_matrix = NULL, ***a_3dmatrix = NULL;
   double **c_matrix = NULL, **mue_matrix = NULL, **u_matrix = NULL;
   int *fix_vektor = NULL;
+  density_t  density = 0;
 
   m_read = n_read = pi_read = a_read = c_read = mue_read = u_read
     = density_read = prior_read = fix_read = cos_read = 0;
@@ -285,7 +293,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "identifier M twice");
         goto STOP;
       }
-      smo->M = scanner_get_int (s);
+      M = scanner_get_int (s);
       m_read = 1;
     }
     else if (!strcmp (s->id, "N")) {    /* number of states */
@@ -295,6 +303,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       }
       smo->N = scanner_get_int (s);
       ARRAY_CALLOC (smo->s, smo->N);
+      /*ARRAY_CALLOC (smo->density, smo->N);*/
       n_read = 1;
     }
     else if (!strcmp (s->id, "density")) {      /* which density function? */
@@ -302,8 +311,9 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         scanner_error (s, "identifier density twice");
         goto STOP;
       }
-      smo->density = (density_t) scanner_get_int (s);
-      if ((int) smo->density < 0 || smo->density >= density_number) {
+      /*current smo format only suport models with same densities*/      
+      density = (density_t) scanner_get_int (s);
+      if ((int) density < 0 || density >= density_number) {
         scanner_error (s, "unknown typ of density function");
         goto STOP;
       }
@@ -492,7 +502,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (c_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, c_matrix, smo->N, smo->M)) {
+        if (matrix_d_read (s, c_matrix, smo->N, M)) {
           scanner_error (s, "unable to read matrix C");
           goto STOP;
         }
@@ -515,7 +525,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (mue_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, mue_matrix, smo->N, smo->M)) {
+        if (matrix_d_read (s, mue_matrix, smo->N, M)) {
           scanner_error (s, "unable to read matrix Mue");
           goto STOP;
         }
@@ -538,7 +548,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (u_matrix, smo->N);
       scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, u_matrix, smo->N, smo->M)) {
+        if (matrix_d_read (s, u_matrix, smo->N, M)) {
           scanner_error (s, "unable to read matrix U");
           goto STOP;
         }
@@ -579,6 +589,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
   /* memory alloc for all transition matrices. If a transition is possible in one
      class --> alloc memory for all classes */
   for (i = 0; i < smo->N; i++) {
+    /*smo->density[i] = density;*/
     for (j = 0; j < smo->N; j++) {
       out = in = 0;
       for (osc = 0; osc < smo->cos; osc++) {
@@ -590,10 +601,19 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       smo->s[i].out_states += out;
       smo->s[i].in_states += in;
     }
-    if (smodel_state_alloc (smo->s + i, smo->M, smo->s[i].in_states,
+    if (smodel_state_alloc (smo->s + i, M, smo->s[i].in_states,
                             smo->s[i].out_states, smo->cos)) {
       mes_proc ();
       goto STOP;
+    }
+    /* given no support of the smo file, make all densities of same type and
+       the cutoff value for the tail gaussian equal to the previously 
+       used constant */
+    smo->M = M;
+    for (j=0; j < smo->M; j++){
+      smo->s[i].density[j] = (density_t)density;
+      smo->s[i].a[j] = -EPS_NDT;
+      smo->s[i].M = M;
     }
     /* copy values read to smodel */
     if (smodel_copy_vectors
@@ -602,6 +622,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       mes_proc ();
       goto STOP;
     }
+
   }
   if (a_3dmatrix)
     for (i = 0; i < smo->cos; i++)
@@ -627,6 +648,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* smodel_read_block */
+
 #endif /* GHMM_OBSOLETE */
 
 
@@ -651,9 +673,10 @@ int smodel_free (smodel ** smo)
     m_free ((*smo)->s[i].c);
     m_free ((*smo)->s[i].mue);
     m_free ((*smo)->s[i].u);
-
+    m_free ((*smo)->s[i].a);
     m_free ((*smo)->s[i].mixture_fix);
-
+    m_free ((*smo)->s[i].density);
+    
   }
   m_free ((*smo)->s);
 
@@ -663,6 +686,7 @@ int smodel_free (smodel ** smo)
     }
     m_free ((*smo)->class_change);
   }
+  /*m_free ((*smo)->density);*/
   m_free (*smo);
   return (0);
 #undef CUR_PROC
@@ -692,10 +716,13 @@ smodel *smodel_copy (const smodel * smo)
       mes_proc ();
       goto STOP;
     }
-    ARRAY_CALLOC (sm2->s[i].c, smo->M);
-    ARRAY_CALLOC (sm2->s[i].mue, smo->M);
-    ARRAY_CALLOC (sm2->s[i].u, smo->M);
-    ARRAY_CALLOC (sm2->s[i].mixture_fix, smo->M);
+    ARRAY_CALLOC (sm2->s[i].c, smo->s[i].M);
+    ARRAY_CALLOC (sm2->s[i].mue, smo->s[i].M);
+    ARRAY_CALLOC (sm2->s[i].u, smo->s[i].M);
+    ARRAY_CALLOC (sm2->s[i].mixture_fix, smo->s[i].M);
+    ARRAY_CALLOC (sm2->s[i].a, smo->s[i].M);
+    ARRAY_CALLOC (sm2->s[i].density, smo->s[i].M);
+    
     /* copy values */
     for (j = 0; j < nachf; j++) {
       for (k = 0; k < smo->cos; k++)
@@ -707,12 +734,15 @@ smodel *smodel_copy (const smodel * smo)
         sm2->s[i].in_a[k][j] = smo->s[i].in_a[k][j];
       sm2->s[i].in_id[j] = smo->s[i].in_id[j];
     }
-    for (m = 0; m < smo->M; m++) {
+    for (m = 0; m < smo->s[i].M; m++) {
       sm2->s[i].c[m] = smo->s[i].c[m];
       sm2->s[i].mue[m] = smo->s[i].mue[m];
       sm2->s[i].u[m] = smo->s[i].u[m];
       sm2->s[i].mixture_fix[m] = smo->s[i].mixture_fix[m];
+      sm2->s[i].a[m] = smo->s[i].a[m];
+      sm2->s[i].density[m] = smo->s[i].density[m];
     }
+    sm2->s[i].M = smo->s[i].M;
     sm2->s[i].pi = smo->s[i].pi;
     sm2->s[i].fix = smo->s[i].fix;
     sm2->s[i].out_states = nachf;
@@ -721,7 +751,6 @@ smodel *smodel_copy (const smodel * smo)
   sm2->cos = smo->cos;
   sm2->N = smo->N;
   sm2->M = smo->M;
-  sm2->density = smo->density;
   sm2->prior = smo->prior;
   return (sm2);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -781,7 +810,7 @@ int smodel_check (const smodel * smo)
     }
     /* sum c[j] */
     sum = 0.0;
-    for (j = 0; j < smo->M; j++)
+    for (j = 0; j < smo->s[i].M; j++)
       sum += smo->s[i].c[j];
     if (fabs (sum - 1.0) >= EPS_PREC) {
       char *str =
@@ -806,7 +835,8 @@ int smodel_check (const smodel * smo)
 int smodel_check_compatibility (smodel ** smo, int smodel_number)
 {
 #define CUR_PROC "smodel_check_compatibility"
-  int i, j;
+/* XXX - old function not used any more !!! */
+  int i, j, k;
   for (i = 0; i < smodel_number; i++)
     for (j = i + 1; j < smodel_number; j++) {
       if (smo[i]->N != smo[j]->N) {
@@ -818,11 +848,11 @@ int smodel_check_compatibility (smodel ** smo, int smodel_number)
         m_free (str);
         return (-1);
       }
-      if (smo[i]->M != smo[j]->M) {
+      if (smo[i]->s[0].M != smo[j]->s[0].M) {
         char *str =
           mprintf (NULL, 0,
                    "ERROR: different number of possible outputs in smodel  %d (%d) and smodel %d (%d)",
-                   i, smo[i]->M, j, smo[j]->M);
+                   i, smo[i]->s[0].M, j, smo[j]->s[0].M);
         mes_prot (str);
         m_free (str);
         return (-1);
@@ -837,12 +867,16 @@ int smodel_check_compatibility (smodel ** smo, int smodel_number)
 double smodel_get_random_var (smodel * smo, int state, int m)
 {
 # define CUR_PROC "smodel_get_random_var"
-  switch (smo->density) {
+  switch (smo->s[state].density[m]) {
   case normal_approx:
   case normal:
     return (randvar_normal (smo->s[state].mue[m], smo->s[state].u[m], 0));
-  case normal_pos:
-    return (randvar_normal_pos (smo->s[state].mue[m], smo->s[state].u[m], 0));
+  case normal_right:
+    return (randvar_normal_right (smo->s[state].a[m],smo->s[state].mue[m], smo->s[state].u[m], 0));
+  case normal_left:
+    return -(randvar_normal_right (-smo->s[state].a[m],-smo->s[state].mue[m], smo->s[state].u[m], 0));
+  case uniform:
+	return (randvar_uniform_cont (0, smo->s[state].mue[m] ,smo->s[state].u[m]));
   default:
     mes (MES_WIN, "Warning: density function not specified!\n");
     return (-1);
@@ -920,12 +954,12 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
        -> get a random m and then respectively a pdf omega. */
     p = GHMM_RNG_UNIFORM (RNG);
     sum = 0.0;
-    for (m = 0; m < smo->M; m++) {
+    for (m = 0; m < smo->s[i].M; m++) {
       sum += smo->s[i].c[m];
       if (sum >= p)
         break;
     }
-    if (m == smo->M)
+    if (m == smo->s[i].M)
       m--;
     /* Get random numbers according to the density function */
     sq->seq[n][0] = smodel_get_random_var (smo, i, m);
@@ -1004,13 +1038,13 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
       /* Get output from state i */
       p = GHMM_RNG_UNIFORM (RNG);
       sum = 0.0;
-      for (m = 0; m < smo->M; m++) {
+      for (m = 0; m < smo->s[i].M; m++) {
         sum += smo->s[i].c[m];
         if (sum >= p)
           break;
       }
 
-      if (m == smo->M) {
+      if (m == smo->s[i].M) {
         m--;
         while (m > 0 && smo->s[i].c[m] == 0.0)
           m--;
@@ -1225,7 +1259,7 @@ void smodel_C_print (FILE * file, smodel * smo, char *tab, char *separator,
   for (i = 0; i < smo->N; i++) {
     fprintf (file, "%s", tab);
     fprintf (file, "%.4f", smo->s[i].c[0]);
-    for (j = 1; j < smo->M; j++)
+    for (j = 1; j < smo->s[i].M; j++)
       fprintf (file, "%s %.4f", separator, smo->s[i].c[j]);
     fprintf (file, "%s\n", ending);
   }
@@ -1240,7 +1274,7 @@ void smodel_Mue_print (FILE * file, smodel * smo, char *tab, char *separator,
   for (i = 0; i < smo->N; i++) {
     fprintf (file, "%s", tab);
     fprintf (file, "%.4f", smo->s[i].mue[0]);
-    for (j = 1; j < smo->M; j++)
+    for (j = 1; j < smo->s[i].M; j++)
       fprintf (file, "%s %.4f", separator, smo->s[i].mue[j]);
     fprintf (file, "%s\n", ending);
   }
@@ -1257,7 +1291,7 @@ void smodel_U_print (FILE * file, smodel * smo, char *tab, char *separator,
   for (i = 0; i < smo->N; i++) {
     fprintf (file, "%s", tab);
     fprintf (file, "%.4f", smo->s[i].u[0]);
-    for (j = 1; j < smo->M; j++)
+    for (j = 1; j < smo->s[i].M; j++)
       fprintf (file, "%s %.4f", separator, smo->s[i].u[j]);
     fprintf (file, "%s\n", ending);
   }
@@ -1290,10 +1324,12 @@ void smodel_fix_print (FILE * file, smodel * smo, char *tab, char *separator,
 /*============================================================================*/
 void smodel_print (FILE * file, smodel * smo)
 {
+/* old function - No support to heterogeneous densities */
   int k;
   fprintf (file,
            "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n\tcos = %d;\n",
-           smo->M, smo->N, (int) smo->density, smo->cos);
+           smo->M, smo->N, (int) smo->s[0].density[0], smo->cos);
+  /* smo files support only models with a single density */
   fprintf (file, "\tprior = %.5f;\n", smo->prior);
   fprintf (file, "\tPi = vector {\n");
   smodel_Pi_print (file, smo, "\t", ",", ";");
@@ -1320,9 +1356,10 @@ void smodel_print (FILE * file, smodel * smo)
 /* needed for hmm_input: only one A (=Ak_1 = Ak_2...) is written */
 void smodel_print_oneA (FILE * file, smodel * smo)
 {
+/* old function - No support to heterogeneous densities */
   fprintf (file,
            "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n\tcos = %d;\n",
-           smo->M, smo->N, (int) smo->density, smo->cos);
+           smo->M, smo->N, (int) smo->s[0].density[0], smo->cos);
   fprintf (file, "\tprior = %.3f;\n", smo->prior);
   fprintf (file, "\tPi = vector {\n");
   smodel_Pi_print (file, smo, "\t", ",", ";");
@@ -1350,19 +1387,28 @@ void smodel_print_oneA (FILE * file, smodel * smo)
 double smodel_calc_cmbm (smodel * smo, int state, int m, double omega)
 {
   double bm = 0.0;
-  switch (smo->density) {
+  switch (smo->s[state].density[m]) {
   case normal:
     bm = randvar_normal_density (omega, smo->s[state].mue[m],
                                  smo->s[state].u[m]);
     break;
-  case normal_pos:
-    bm = randvar_normal_density_pos (omega, smo->s[state].mue[m],
-                                     smo->s[state].u[m]);
+  case normal_right:
+    bm = randvar_normal_density_trunc (omega, smo->s[state].mue[m],
+                                     smo->s[state].u[m],smo->s[state].a[m]);
+    break;
+  case normal_left:
+    bm = randvar_normal_density_trunc (-omega, -smo->s[state].mue[m],
+                                     smo->s[state].u[m],-smo->s[state].a[m]);
     break;
   case normal_approx:
     bm = randvar_normal_density_approx (omega,
                                         smo->s[state].mue[m],
                                         smo->s[state].u[m]);
+    break;
+  case uniform:
+    bm = randvar_uniform_density (omega, 
+                                  smo->s[state].mue[m],
+                                  smo->s[state].u[m]);
     break;
   default:
     mes (MES_WIN, "Warning: density function not specified!\n");
@@ -1381,7 +1427,7 @@ double smodel_calc_b (smodel * smo, int state, double omega)
 {
   int m;
   double b = 0.0;
-  for (m = 0; m < smo->M; m++)
+  for (m = 0; m < smo->s[state].M; m++)
     b += smodel_calc_cmbm (smo, state, m, omega);
   return (b);
 }                               /* smodel_calc_b */
@@ -1585,15 +1631,20 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 double smodel_calc_cmBm (smodel * smo, int state, int m, double omega)
 {
   double Bm = 0.0;
-  switch (smo->density) {
+  switch (smo->s[state].density[m]) {
   case normal_approx:
   case normal:
     Bm = randvar_normal_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]);
     break;
-  case normal_pos:
-    Bm =
-      randvar_normal_pos_cdf (omega, smo->s[state].mue[m],
-                              smo->s[state].u[m]);
+  case normal_right:
+    Bm = randvar_normal_right_cdf (omega, smo->s[state].mue[m],
+                              smo->s[state].u[m],smo->s[state].a[m]);
+    break;
+  case normal_left:
+    Bm = (randvar_normal_right_cdf (omega, -smo->s[state].mue[m], smo->s[state].u[m],-smo->s[state].a[m]));
+    break;
+  case uniform:
+    Bm = (randvar_uniform_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]));
     break;
   default:
     mes (MES_WIN, "Warning: density function not specified!\n");
@@ -1612,7 +1663,7 @@ double smodel_calc_B (smodel * smo, int state, double omega)
 {
   int m;
   double B = 0.0;
-  for (m = 0; m < smo->M; m++)
+  for (m = 0; m < smo->s[state].M; m++)
     B += smodel_calc_cmBm (smo, state, m, omega);
   return (B);
 }                               /* smodel_calc_B */
@@ -1640,15 +1691,15 @@ int smodel_count_free_parameter (smodel ** smo, int smo_number)
         cnt++;
       }
       if (!smo[k]->s[i].fix) {
-        if (smo[k]->M == 1)
+        if (smo[k]->s[i].M == 1)
           cnt += 2;             /* mu, sigma */
         else
-          cnt += (3 * smo[k]->M);       /* c, mu, sigma */
+          cnt += (3 * smo[k]->s[i].M);       /* c, mu, sigma */
       }
     }                           /* for (i ..) */
     if (pi_counted)
       cnt--;                    /* due to condition: sum(pi) = 1 */
-    if (smo[k]->M > 1)
+    if (smo[k]->s[0].M > 1)
       cnt--;                    /* due to condition: sum(c) = 1 */
   }
 
@@ -1660,27 +1711,37 @@ int smodel_count_free_parameter (smodel ** smo, int smo_number)
 void smodel_get_interval_B (smodel * smo, int state, double *a, double *b)
 {
   int m;
-  double mue, delta;
-  switch (smo->density) {
-  case normal:
-  case normal_approx:
-  case normal_pos:
-    *a = DBL_MAX;
-    *b = -DBL_MAX;
-    for (m = 0; m < smo->M; m++) {
+  double mue, delta, max, min;
+  *a = DBL_MAX;
+  *b = -DBL_MAX;
+  for (m = 0; m < smo->s[state].M; m++) {
+    switch (smo->s[state].density[m]) {
+    case normal:
+    case normal_approx:
       mue = smo->s[state].mue[m];
       delta = 3 * sqrt (smo->s[state].u[m]);
       if (*a > mue - delta)
         *a = floor (mue - delta);
       if (*b < mue + delta)
         *b = ceil (mue + delta);
-    }
+    case normal_right:
+    case normal_left:
+      if (smo->s[state].density[state] == normal_right && *a < smo->s[state].a[m])
+        *a = smo->s[state].a[m];
+      if (smo->s[state].density[state] == normal_left && *b > smo->s[state].a[m])
+        *b = smo->s[state].a[m] ;
     break;
-  default:
-    mes (MES_WIN, "Warning: density function not specified!\n");
+    case uniform:
+      max = smo->s[state].mue[m];
+      min = smo->s[state].u[m];
+      *a = floor ((0.01 * (max - min))+min);
+      *b = ceil ((0.99 * (max - min))+min);
+    break;      
+    default:
+      mes (MES_WIN, "Warning: density function not specified!\n");
+    }
   }
-  if (smo->density == normal_pos && *a < 0.0)
-    *a = 0.0;
+
   return;
 }                               /* smodel_get_interval_B */
 

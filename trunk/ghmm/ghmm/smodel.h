@@ -60,8 +60,10 @@ extern "C" {
 */
   typedef enum {
     normal,
-    normal_pos,
+    normal_right,
     normal_approx,
+    normal_left,
+    uniform,
     density_number
   } density_t;
 
@@ -70,6 +72,8 @@ extern "C" {
     Structure for one state.
 */
   struct sstate {
+  /** Number of output densities per state */
+    int M;
   /** initial prob. */
     double pi;
   /** IDs of successor states */
@@ -89,14 +93,20 @@ extern "C" {
   /** weight vector for output function components */
     double *c;
   /** mean vector for output functions (normal density and truncated normal
-      density */
+      density) or max value for uniform distribution */
     double *mue;
-  /** variance vector for output functions */
+  /** variance vector for output functions or min value for uniform distribution */
     double *u;
+  /** value where the normal is truncated (only for truncated distributions) */
+    double *a;
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
     int fix;
-
+  /** Flag for density function for each component of the mixture
+      0: normal density, 1: truncated normal (right side) 
+      density, 2: approximated normal density, 3: truncated normal (left side)
+      4: uniform distribution */
+    density_t *density;
   /**  array of flags for fixing mixture components in the reestimation
         mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
     int *mixture_fix;
@@ -130,15 +140,12 @@ extern "C" {
   struct smodel {
   /** Number of states */
     int N;
-  /** Number of output densities per state */
+  /** Maximun number of components in the states */
     int M;
   /** smodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
     int cos;
-  /** Flag for density function. 0: normal density, 1: truncated normal 
-      density, 2: approximated normal density */
-    density_t density;
   /** prior for a priori prob. of the model. -1 means no prior specified (all
       models have equal prob. a priori. */
     double prior;
@@ -402,7 +409,6 @@ extern "C" {
     @param b      return-value: right side
 */
   void smodel_get_interval_B (smodel * smo, int state, double *a, double *b);
-
 
 
 #ifdef __cplusplus
