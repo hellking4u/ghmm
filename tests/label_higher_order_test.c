@@ -18,11 +18,13 @@
 #include <ghmm/viterbi.h>
 #include <ghmm/reestimate.h>
 #include <ghmm/gradescent.h>
+#include <ghmm/ghmm_internals.h>
 
 #include <ghmm/matrix.h>
 #include <ghmm/vector.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
+
 
 void generateModel(model *mo, int noStates) {
 # define CUR_PROC "generateModel"
@@ -53,7 +55,7 @@ void generateModel(model *mo, int noStates) {
   /* kHigherOrderEmissions + kHasBackgroundDistributions*/
 
   /* allocate memory for pow look-up table and fill it */
-  ARRAY_MALLOC(mo->pow_lookup, mo->maxorder+1)
+  ARRAY_MALLOC(mo->pow_lookup, mo->maxorder+1);
   
   mo->pow_lookup[0] = 1;
   for (i=1; i<mo->maxorder+1; i++)
