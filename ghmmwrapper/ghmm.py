@@ -217,6 +217,12 @@ class GHMMOutOfDomain(GHMMError):
     def __str__(self):
         return repr(self.message)
 
+class UnsupportedFeature(GHMMError):
+    def __init__(self,message):
+       self.message = message
+    def __str__(self):
+        return repr(self.message)
+
 
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
@@ -508,6 +514,13 @@ class EmissionSequence:
         else:
             self.ParentSequenceSet = None
 
+            
+        # check if ghmm is build with asci sequence file support
+        if (((isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)))
+            and not ghmmwrapper.ASCI_SEQ_FILE):
+            raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+        
+
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
 
             # necessary C functions for accessing the sequence_t struct
@@ -727,6 +740,11 @@ class SequenceSet:
     def __init__(self, emissionDomain, sequenceSetInput, labelDomain = None, labelInput = None):
         self.emissionDomain = emissionDomain
         self.cseq = None
+
+        # check if ghmm is build with asci sequence file support
+        if ((isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode))
+            and not ghmmwrapper.ASCI_SEQ_FILE):
+            raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             # necessary C functions for accessing the sequence_t struct
@@ -1194,7 +1212,11 @@ class HMMOpenFactory(HMMFactory):
 	    	return m
 	    
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
-	        # MO & SMO Files, format is deprecated
+            # MO & SMO Files, format is deprecated
+            # check if ghmm is build with smo support
+            if not ghmmwrapper.SMO_FILE_SUPPORT:
+                raise UnsupportedFeature ("smo files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            
     	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
 
             #print "determineHMMClass = ",  (hmmClass, emission_domain, distribution)

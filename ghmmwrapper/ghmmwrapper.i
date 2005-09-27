@@ -89,6 +89,21 @@
 // XXX certain arguments are supposed to be NULL
 // %apply Pointer NONNULL { int *, double *, int **, double **, void * };
 
+/*==========================================================================
+  ========================== test for obsolete features ==================== */
+
+#ifdef GHMM_OBSOLETE
+%inline %{
+  int SMO_FILE_SUPPORT = 1;
+  int ASCI_SEQ_FILE = 1;
+%}
+#else
+%inline %{
+  int SMO_FILE_SUPPORT = 0;
+  int ASCI_SEQ_FILE = 0;
+%}
+#endif /* GHMM_OBSOLETE */
+
 
 /*=============================================================================================
   =============================== Random Number Generator (RNG) ================================= */
@@ -108,7 +123,8 @@ extern void ghmm_rng_timeseed(GHMM_RNG * r);
 		ghmm_rng_timeseed(RNG);
 	}
 %}
-		
+
+	
 /*=============================================================================================
   ================= Utility functions: Matrix allocation and destruction  =====================*/
 
@@ -300,7 +316,7 @@ void sequence_copy(int *target, int *source, int len);
 void sequence_d_copy(double *target, double *source, int len);
 
 
-
+#ifdef GHMM_OBSOLETE
 /**
    Reads one or several arrays of double sequences. 
    Calls sequence\_read\_alloc, where reading
@@ -309,6 +325,7 @@ void sequence_d_copy(double *target, double *source, int len);
    @param filename    input filename
 */
 sequence_d_t **sequence_d_read(const char *filename, int *sqd_number);
+#endif /* GHMM_OBSOLETE */
 
 /**
   Adds all integer sequences, sequence lengths etc 
@@ -388,7 +405,8 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
     return (int *) seqpt->seq[seqnumber];
   }
 
-  
+
+#ifdef GHMM_OBSOLETE  
   sequence_t *seq_read(char* filename ){
 	  int i;
 	  sequence_t** s;
@@ -396,6 +414,7 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
 	  s = sequence_read(filename, &i);
 	  return s[0];
   }
+#endif /* GHMM_OBSOLETE */
   
   sequence_t* get_seq_ptr(sequence_t** array, int index){
 	  return (sequence_t*) array[index];
@@ -427,7 +446,8 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
   long get_sequence_d_label(sequence_d_t* seq, int seq_num ){
 	  return seq->seq_label[seq_num];
   }	  
-     
+   
+#ifdef GHMM_OBSOLETE  
   sequence_d_t *seq_d_read(char* filename ){
 	  int i;
       sequence_d_t** s;
@@ -435,6 +455,7 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
 	  s = sequence_d_read(filename, &i);
 	  return *s;
   }
+#endif /* GHMM_OBSOLETE */
 
   void call_sequence_print(char* ch, sequence_t* seq){
     FILE* file_name;
@@ -664,6 +685,7 @@ extern model** model_read(char *filename, int *mo_number);
 void model_print(FILE *file, model *mo); 
 
 
+#ifdef GHMM_OBSOLETE
 /**
    Produces simple left-right models given sequences. 
    The function "model_generate_from_sequence" is called for each 
@@ -673,6 +695,7 @@ void model_print(FILE *file, model *mo);
    @param s:          scanner
    @param new_models: number of models to produce */
 extern model **model_from_sequence_ascii(scanner_t *s, long *mo_number);
+#endif  /* GHMM_OBSOLETE */
 
 /** 
     Produces simple left-right models given sequences. The sequences
@@ -1325,6 +1348,7 @@ extern int smodel_class_change_alloc(smodel *smo);
     @param smo  pointer pointer of smodel */
 extern int     smodel_free(smodel **smo);
 
+#ifdef GHMM_OBSOLETE
 /** Reads an ascii file with specifications for one or more smodels.
     All parameters in matrix or vector form.
     This is necessary whenever an initial model is needed (e.g. 
@@ -1334,6 +1358,7 @@ extern int     smodel_free(smodel **smo);
    @param filename   input ascii file
    @param smo_number  number of read smodels */
 extern smodel** smodel_read(const char *filename, int *smo_number);
+#endif /* GHMM_OBSOLETE /*
 
 /**
    Copies one smodel. Memory alloc is here.
