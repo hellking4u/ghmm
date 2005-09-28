@@ -61,7 +61,7 @@ int single_state_continuous()
   my_model.N=1; /* states */
   my_model.M=1; /* density functions per state */
   my_model.cos=1; /* class of states */
-  /*my_model.density=0; /* normal distributions */
+  /* my_model.density=0; *//* normal distributions */
   my_model.prior=-1; /* a priori probability */
   my_model.s=&single_state; /* states array*/
  

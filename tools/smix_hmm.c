@@ -23,12 +23,12 @@
 #include <ghmm/smixturehmm.h>
 #include <ghmm/matrix.h>
 
+#ifdef GHMM_OBSOLETE
+
 #include <ghmm/obsolete.h>
 
 static int smix_hmm_run(int argc, char* argv[]) {
 #define CUR_PROC "smix_hmm_run"
-
-#ifdef GHMM_OBSOLETE
 
   int k, exitcode = -1, smo_number, sqd_fields;
   sequence_d_t **sqd = NULL;
@@ -75,14 +75,9 @@ static int smix_hmm_run(int argc, char* argv[]) {
  STOP:
   return exitcode;
 
-
-#else  /* GHMM_OBSOLETE */
-  printf ("cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\".\n");
-  return 0;
-#endif /* GHMM_OBSOLETE */
-
 # undef CUR_PROC
 }
+#endif /* GHMM_OBSOLETE */
 
 
 /*============================================================================*/
@@ -112,7 +107,7 @@ int main(int argc, char* argv[]) {
   return(exitcode);
 
 #else  /* GHMM_OBSOLETE */
-  printf ("cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\".\n");
+  fprintf (stderr, "cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\n");
   return 0;
 #endif /* GHMM_OBSOLETE */
 
