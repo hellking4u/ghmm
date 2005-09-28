@@ -19,7 +19,9 @@ void sequence_alloc_print(void)
 
   seq_array= sequence_calloc(1);
   seq_array->seq_len[0]=10;
+#ifdef GHMM_OBSOLETE
   seq_array->seq_label[0]=100;
+#endif /* GHMM_OBSOLETE */
   seq_array->seq_id[0]=101.0;
   seq_array->seq[0]=(int*)malloc(seq_array->seq_len[0]*sizeof(int));
 

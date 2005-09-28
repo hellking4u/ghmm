@@ -12,6 +12,8 @@
 #include <ghmm/sviterbi.h>
 #include <ghmm/mes.h>
 
+#include <ghmm/obsolete.h>
+
 static int viterbi_test(char* argv[]);
 
 /*============================================================================*/
@@ -67,11 +69,16 @@ STOP:
 
 int main(int argc, char* argv[]) {
 
+#ifdef GHMM_OBSOLETE
   if (argc != 4) {
     printf("Usage: shmm_viterbi_test <Model File> <Sequence File> <Output File> \n");
     exit(1);
   }
 
   return viterbi_test(argv);
+
+#else /* GHMM_OBSOLETE */
+  return 0;
+#endif /* GHMM_OBSOLETE */
 }
 

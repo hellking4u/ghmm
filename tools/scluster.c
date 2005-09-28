@@ -23,6 +23,8 @@ __copyright__
 
 int main(int argc, char* argv[]) {
 #define CUR_PROC "scluster_main"
+
+#ifdef GHMM_OBSOLETE
   int exitcode = -1;
 
   ghmm_rng_init();
@@ -54,5 +56,11 @@ int main(int argc, char* argv[]) {
   mes(MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode );
   mes_exit();
   return(exitcode);
+
+#else  /* GHMM_OBSOLETE */
+  fprintf (1, "cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\.n");
+  return 0;
+#endif /* GHMM_OBSOLETE */
+
 # undef CUR_PROC
 } /* main */

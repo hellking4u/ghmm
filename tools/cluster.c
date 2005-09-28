@@ -20,6 +20,8 @@
 
 int main(int argc, char* argv[]) {
 #define CUR_PROC "main"
+
+#ifdef GHMM_OBSOLETE
   int exitcode = -1;
   if (argc == 4 || argc == 5) {
     if (argc == 5) {
@@ -39,5 +41,11 @@ int main(int argc, char* argv[]) {
         Usage: cluster [sequence file][model file][outfile] <seed>\n"); 
   }
   return exitcode;
+
+#else  /* GHMM_OBSOLETE */
+  fprintf (1, "cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\.n");
+  return 0;
+#endif /* GHMM_OBSOLETE */
+  
 # undef CUR_PROC
 } /* main */
