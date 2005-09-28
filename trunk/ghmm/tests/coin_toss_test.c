@@ -22,6 +22,8 @@
 #include <ghmm/viterbi.h>
 #include <ghmm/foba.h>
 
+#include <ghmm/obsolete.h>
+
 /*
   Simple model with one state and 2 symbols, like a coin toss
 */
@@ -176,7 +178,7 @@ int two_states_coin_toss()
 
   /* alpha matrix */
   fprintf(stdout,"Done.\nalpha matrix from forward algorithm:\n");
-  matrix_d_print(stdout,forward_alpha,10,2,""," ","\n");
+  /* matrix_d_print(stdout,forward_alpha,10,2,""," ","\n"); */
   fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */

@@ -9,9 +9,12 @@
 /* should be corrected with ghmm/sequence.c version 1.9 */
 #include <stdio.h>
 #include <ghmm/sequence.h>
+
+#include <ghmm/obsolete.h>
    
 int main()
 {
+#ifdef GHMM_OBSOLETE
     int test_result=0;
     const char* double_sequences_file="data/test100.sqd";
     sequence_d_t **sqd = NULL;
@@ -45,4 +48,7 @@ int main()
       sequence_free(data);
     }
     return test_result;
+#else /* GHMM_OBSOLETE */
+    return 0;
+#endif /* GHMM_OBSOLETE */
 }

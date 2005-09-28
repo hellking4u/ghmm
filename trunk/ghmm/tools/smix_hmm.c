@@ -76,6 +76,8 @@ static int smix_hmm_run(int argc, char* argv[]) {
 /*============================================================================*/
 int main(int argc, char* argv[]) {
 #define CUR_PROC "smix_hmm_main"
+
+#ifdef GHMM_OBSOLETE
   int exitcode = -1;
 
   if (argc != 4 && argc != 5) {
@@ -96,6 +98,12 @@ int main(int argc, char* argv[]) {
   mes(MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode );
   mes_exit();
   return(exitcode);
+
+#else  /* GHMM_OBSOLETE */
+  fprintf (1, "cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\.n");
+  return 0;
+#endif /* GHMM_OBSOLETE */
+
 # undef CUR_PROC
 } /* main */
 

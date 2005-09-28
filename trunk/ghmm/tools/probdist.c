@@ -45,9 +45,14 @@ __copyright__
 #endif
 #include "ghmm/smodel.h"
 
+#include "ghmm/obsolete.h"
+
 
 int main(int argc, char* argv[]) {
 # define CUR_PROC "main"
+
+
+#ifdef GHMM_OBSOLETE
 
   int mo_number, smo_number;
 #ifdef CMODEL_INCLUDED
@@ -180,6 +185,10 @@ int main(int argc, char* argv[]) {
     printf("S2      = %e\n", s2); 
   }
 #endif /* CMODEL_INCLUDED*/
+
+#else  /* GHMM_OBSOLETE */
+  fprintf (1, "probdist is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\.n");
+#endif /* GHMM_OBSOLETE */
   
   return 0;
 }

@@ -19,6 +19,8 @@
 #include <ghmm/rng.h>
 #include <ghmm/smodel.h>
 
+#include <ghmm/obsolete.h>
+
 /*
   Simple model with one state and 2 symbols, like a coin toss
 */
@@ -59,7 +61,7 @@ int single_state_continuous()
   my_model.N=1; /* states */
   my_model.M=1; /* density functions per state */
   my_model.cos=1; /* class of states */
-  my_model.density=0; /* normal distributions */
+  /*my_model.density=0; /* normal distributions */
   my_model.prior=-1; /* a priori probability */
   my_model.s=&single_state; /* states array*/
  
@@ -100,9 +102,11 @@ int single_state_continuous()
     (void)fseek(my_file, 0L, SEEK_SET);
     fclose(my_file);
 
+#ifdef GHMM_OBSOLETE
     /* read this model */
     fprintf(stdout,"rereading model from file %s\n",filename_buffer);
     model_array=smodel_read(filename_buffer,&model_counter);
+#endif /* GHMM_OBSOLETE */
 
     /* generate sequences */
     fprintf(stdout,"generating sequences again\n");
