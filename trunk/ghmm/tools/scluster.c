@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
   return(exitcode);
 
 #else  /* GHMM_OBSOLETE */
-  fprintf (1, "cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\.n");
+  fprintf (stderr, "cluster is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\".\n");
   return 0;
 #endif /* GHMM_OBSOLETE */
 

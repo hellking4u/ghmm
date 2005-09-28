@@ -14,6 +14,7 @@
 
 #include <ghmm/obsolete.h>
 
+#ifdef GHMM_OBSOLETE
 static int viterbi_test(char* argv[]);
 
 /*============================================================================*/
@@ -64,6 +65,7 @@ STOP:
   return -1;
 # undef CUR_PROC
 }
+#endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 

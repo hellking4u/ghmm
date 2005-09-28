@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
 #endif /* CMODEL_INCLUDED*/
 
 #else  /* GHMM_OBSOLETE */
-  fprintf (1, "probdist is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\"\.n");
+  fprintf (stderr, "probdist is obsolete. If you need it rebuild the GHMM with \"GHMM_OBSOLETE\".\n");
 #endif /* GHMM_OBSOLETE */
   
   return 0;
