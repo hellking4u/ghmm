@@ -1596,7 +1596,6 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 
 #ifdef GHMM_OBSOLETE
 
-#ifdef GHMM_SCLUSTER
 
 /* =============================================================================================
    ============================== scluster.c  ================================================== */
@@ -1723,7 +1722,6 @@ extern int scluster_hmm(char *argv[]);
   
 %}
 
-#endif /* GHMM_SCLUSTER */
 #endif /* GHMM_OBSOLETE */
 
 
