@@ -38,6 +38,8 @@ int single_state_continuous()
   double c[]={1.0};
   double mue[]={0.0};
   double u[]={1.0};
+  double a[]={0.0};
+  int density[] = {0};
   sequence_d_t* my_output;
 
   /* initialise transition array */
@@ -56,12 +58,14 @@ int single_state_continuous()
   single_state.mue=mue; /* mean */
   single_state.u=u; /* variance */
   single_state.fix=0; /* training of output functions */
+  single_state.density=density;
+  single_state.a=a;
+  single_state.M=1;
 
   /* initialise model */
   my_model.N=1; /* states */
   my_model.M=1; /* density functions per state */
   my_model.cos=1; /* class of states */
-  /* my_model.density=0; *//* normal distributions */
   my_model.prior=-1; /* a priori probability */
   my_model.s=&single_state; /* states array*/
  
