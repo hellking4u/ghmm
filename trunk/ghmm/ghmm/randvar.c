@@ -806,7 +806,7 @@ STOP:
 }                               /* double randvar_normal_cdf */
 
 /*============================================================================*/
-/* cumalative distribution function of a uniform distribution in the range (min,max) */
+/* cumalative distribution function of a uniform distribution in the range [min,max] */
 double randvar_uniform_cdf (double x, double max, double min)
 {
 # define CUR_PROC "randvar_uniform_cdf"
@@ -814,7 +814,7 @@ double randvar_uniform_cdf (double x, double max, double min)
     mes_prot ("max <= min not allowed\n");
     goto STOP;
   }  
-  if (x <= min) {
+  if (x < min) {
     return 0.0;
   }
   if (x >= max) {

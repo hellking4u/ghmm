@@ -56,7 +56,7 @@ extern "C" {
    */
   double randvar_normal_density (double x, double mean, double u);
 
-  /** density function of a uniform distribution in the range (min,max) 
+  /** density function of a uniform distribution in the range [min,max]
    @return          F(x)
    @param x:        point value
    @param max:      right limit 
@@ -125,7 +125,7 @@ extern "C" {
   */
   double randvar_normal (double mue, double u, int seed);
 
-  /** distribution function of a uniform distribution in the range (min,max) 
+  /** distribution function of a uniform distribution in the range [min,max]
    @return          F(x)
    @param x:        point value
    @param max:      right limit 
@@ -200,7 +200,7 @@ extern "C" {
   double randvar_normal_right_cdf (double x, double mean, double u, double a);
 
 
-  /** cumalative distribution function of a uniform distribution in the range (min,max) 
+  /** cumalative distribution function of a uniform distribution in the range [min,max]
    @return          F(x)
    @param x:        point value
    @param max:      right limit 
