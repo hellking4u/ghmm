@@ -726,7 +726,7 @@ double randvar_uniform_int (int seed, int K)
 # undef CUR_PROC
 }                               /* randvar_uniform_int */
 
-/*============================================================================*/
+/*===========================================================================*/
 double randvar_uniform_cont (int seed, double max, double min)
 {
 # define CUR_PROC "randvar_uniform_cont"
