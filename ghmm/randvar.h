@@ -56,6 +56,14 @@ extern "C" {
    */
   double randvar_normal_density (double x, double mean, double u);
 
+  /** density function of a uniform distribution in the range (min,max) 
+   @return          F(x)
+   @param x:        point value
+   @param max:      right limit 
+   @param min:      left limit
+ */
+  double randvar_uniform_density (double x, double max, double min);
+
 /**
    Determinates the value of the one dimensional density function 
    phi( mean, u ) for the normal distribution at point x. The value is
@@ -116,6 +124,15 @@ extern "C" {
                      0: returns a standard normal distributed random number 
   */
   double randvar_normal (double mue, double u, int seed);
+
+  /** distribution function of a uniform distribution in the range (min,max) 
+   @return          F(x)
+   @param x:        point value
+   @param max:      right limit 
+   @param min:      left limit
+ */
+
+  double randvar_uniform_cont (int seed, double max, double min);
 
 /** 
    Generates a ,N( mue, u ) truncated at the right limit a distributed random number.
