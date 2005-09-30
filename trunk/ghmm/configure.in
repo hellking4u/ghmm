@@ -84,10 +84,31 @@ AC_PATH_PROG(EXPECT_FOR_DEJAGNU,expect)
 AC_PATH_PROG(RUNTEST_FOR_DEJAGNU,runtest)
 
 dnl experimental things can be switched on or off
-AC_ARG_ENABLE(experimental,[  --enable-experimental   enable experimental features],
-if test "x$enable_experimental" != "xno" ; then
-AC_DEFINE_UNQUOTED(__EXPERIMENTAL__,$enable_experimental,include experimental features)
-fi
+AC_ARG_ENABLE(experimental,
+              AC_HELP_STRING([--enable-experimental],
+                             [enable experimental features [[default=no]]]),
+              if test "x$enable_experimental" != "xno" ; then
+                  AC_DEFINE([__EXPERIMENTAL__], [$enable_experimental], [include experimental features])
+              fi
+)
+
+dnl obsolete features can be switched on or off
+AC_ARG_ENABLE(obsolete,
+              AC_HELP_STRING([--disable-obsolete],
+                             [disable default enabled obsolete features]),
+              if test "x$enable_obsolete" != "xno" ; then
+                  AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
+              fi,
+              AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
+)
+
+dnl unsupported features can be switched on or off
+AC_ARG_ENABLE(unsupported,
+              AC_HELP_STRING([--enable-unsupported],
+                             [enable unsupported features [[default=no]]]),
+              if test "x$enable_unsupported" != "xno" ; then
+                  AC_DEFINE([GHMM_UNSUPPORTED], [], [include unsupported features])
+              fi
 )
 
 dnl preparation for c++ use
@@ -232,6 +253,7 @@ AC_MSG_RESULT(no)
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
 phi_data_file=`eval echo ${datadir}`/${PACKAGE}/PHI_001_20.dat
 AC_DEFINE_UNQUOTED(PHI_DATA_FILE,"${phi_data_file}")
+
 
 
 SUBDIRS="ghmm tools tests doc VisualC"

@@ -33,6 +33,11 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #ifdef GHMM_OBSOLETE
 
 #include <math.h>
