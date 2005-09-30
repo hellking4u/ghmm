@@ -12,7 +12,7 @@
 *                               Berlin
 *
 *       Contact: schliep@ghmm.org
-*7
+*
 *       This library is free software; you can redistribute it and/or
 *       modify it under the terms of the GNU Library General Public
 *       License as published by the Free Software Foundation; either
@@ -39,7 +39,7 @@
 #endif
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#  include "../config.h"
 #endif
 
 #include <math.h>

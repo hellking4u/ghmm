@@ -34,15 +34,15 @@
 *
 *******************************************************************************/
  
-#ifdef GHMM_OBSOLETE  
-  
 #ifdef WIN32
 #  include "win_config.h"
-#endif  /*  */
+#endif
   
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif  /*  */
+#  include "../config.h"
+#endif 
+
+#ifdef GHMM_OBSOLETE
   
 #include <stdio.h>
 #undef HAVE_LIBPTHREAD
