@@ -34,14 +34,17 @@
 *
 *******************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
 
-#include "mprintf.h"
-#include "mes.h"
 #include <float.h>
 #include <math.h>
 #include <assert.h>
 
 #include "ghmm.h"
+#include "mes.h"
+#include "mprintf.h"
 #include "matrix.h"
 #include "sdmodel.h"
 #include "modelutil.h"
