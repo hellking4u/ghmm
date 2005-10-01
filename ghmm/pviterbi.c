@@ -36,6 +36,10 @@
 
 /* Possible sources of errors: initialisation, pushback (the loop after) */
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #include <float.h>
 #include <math.h>
 #include <assert.h>

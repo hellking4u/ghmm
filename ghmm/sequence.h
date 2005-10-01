@@ -33,6 +33,11 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifndef GHMM_OBSOLETE
+#warning "GHMM_OBSOLETE is not defined!"
+#endif
+
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 

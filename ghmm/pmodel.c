@@ -34,6 +34,10 @@
 *
 *******************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #include "pmodel.h"
 #include "mes.h"
 #include "ghmm_internals.h"
