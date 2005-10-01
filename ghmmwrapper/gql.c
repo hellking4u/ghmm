@@ -34,6 +34,9 @@
 *
 *******************************************************************************/
 
+/* XXX FIXME: breaks out of tree build of ghmmwrapper */
+#include "../config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ghmm/mes.h>

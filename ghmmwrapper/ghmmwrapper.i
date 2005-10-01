@@ -34,13 +34,14 @@
 *
 *******************************************************************************/
 
-#ifdef GHMM_OBSOLETE
-%{#define GHMM_OBSOLETE%}
-#endif /* GHMM_OBSOLETE */
 
 %module ghmmwrapper
 
+/* this will not work if we build ghmmwrapper out of the ghmm tree
+   include ../config.h twice, once for swig and once for CC */
+#include "../config.h"
 %{
+#include "../config.h"
 #include <stdio.h>
 #include <ghmm/ghmm.h>
 #include <ghmm/vector.h>
@@ -94,7 +95,6 @@
 
 /*==========================================================================
   ========================== test for obsolete features ==================== */
-
 #ifdef GHMM_OBSOLETE
 
 #define SMO_FILE_SUPPORT 1
@@ -108,7 +108,6 @@
 #define SEQ_LABEL_FIELD  0
 
 #endif /* GHMM_OBSOLETE */
-
 
 
 /*=============================================================================================
@@ -416,7 +415,7 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
   }
 
 
-#ifdef GHMM_OBSOLETE  
+#ifdef GHMM_OBSOLETE
   sequence_t *seq_read(char* filename ){
 	  int i;
 	  sequence_t** s;
@@ -692,7 +691,7 @@ extern model** model_read(char *filename, int *mo_number);
    @param file: output file
    @param mo:   model
 */
-void model_print(FILE *file, model *mo); 
+extern void model_print(FILE *file, model *mo); 
 
 
 #ifdef GHMM_OBSOLETE
@@ -1375,7 +1374,7 @@ extern int     smodel_free(smodel **smo);
    @param filename   input ascii file
    @param smo_number  number of read smodels */
 extern smodel** smodel_read(const char *filename, int *smo_number);
-#endif /* GHMM_OBSOLETE /*
+#endif /* GHMM_OBSOLETE */
 
 /**
    Copies one smodel. Memory alloc is here.
@@ -1594,12 +1593,9 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 
 
 
-#ifdef GHMM_OBSOLETE
-
-
 /* =============================================================================================
    ============================== scluster.c  ================================================== */
-
+#ifdef GHMM_OBSOLETE
 /**
    Cluster structure: All models and sequences. */
 struct scluster_t{
