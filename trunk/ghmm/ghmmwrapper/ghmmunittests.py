@@ -56,7 +56,6 @@ import ghmm
 import ghmmwrapper
 import random
 import ghmmwrapper
-from Numeric import array, sum
 
 class AlphabetTests(unittest.TestCase):
     """Unittests for Emissiondomains subclasses"""
