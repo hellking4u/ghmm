@@ -12,6 +12,10 @@
    generates a model to test c-functions with valgrind
 */
 
+#ifdef HAVE_CONFIG_H
+#include "../config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <float.h>

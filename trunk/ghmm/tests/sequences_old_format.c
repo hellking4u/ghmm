@@ -6,6 +6,10 @@
   __copyright__
 */
 
+#ifdef HAVE_CONFIG_H
+#include "../config.h"
+#endif /* HAVE_CONFIG_H */
+
 /* should be corrected with ghmm/sequence.c version 1.9 */
 #include <stdio.h>
 #include <ghmm/sequence.h>
