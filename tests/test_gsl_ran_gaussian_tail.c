@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "../config.h"
+#endif /* HAVE_CONFIG_H */
+
 #ifndef DO_WITH_GSL
 
 /* This test is not performed */

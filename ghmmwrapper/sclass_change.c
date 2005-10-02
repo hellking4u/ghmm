@@ -33,6 +33,10 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+/* XXX FIXME: breaks out of tree build of ghmmwrapper */
+#include "../config.h"
+
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
