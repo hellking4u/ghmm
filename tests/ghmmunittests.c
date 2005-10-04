@@ -9,7 +9,7 @@
 #include <ghmm/smodel.h>
 #include <check.h>
 
-#include <ghmm/mysequence.h>
+#include <ghmm/psequence.h>
 #include <ghmm/pmodel.h>
 #include <ghmm/pviterbi.h>
 #include <ghmm/pviterbi_propagate.h>

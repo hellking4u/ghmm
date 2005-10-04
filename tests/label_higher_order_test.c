@@ -26,7 +26,7 @@
 #include <ghmm/viterbi.h>
 #include <ghmm/reestimate.h>
 #include <ghmm/gradescent.h>
-#include <ghmm/ghmm_internals.h>
+/*#include <ghmm/ghmm_internals.h>*/
 
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
