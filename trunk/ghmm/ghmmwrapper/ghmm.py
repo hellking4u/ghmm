@@ -1623,18 +1623,20 @@ class HMMFromMatricesFactory(HMMFactory):
                     
                     state = ghmmwrapper.get_sstate_ptr(states,i)
                     state.pi = pi[i]
+		    state.M = 1
 
                     # allocate arrays of emmission parameters
                     state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weights. Unused
                     (mu, sigma) = B[i]
                     state.mue = ghmmhelper.list2arrayd([mu]) #mu = mue in GHMM C-lib.
                     state.u = ghmmhelper.list2arrayd([sigma])
+                    state.c = ghmmhelper.list2arrayd([1.0])
+                    state.a = ghmmhelper.list2arrayd([0.0])
                     
                     # mixture fixing deactivated by default
                     state.mixture_fix = ghmmhelper.list2arrayint([0])
 
-                    # setting densities types (all normal by default)
-                    
+                    # setting densities types (all normal by default)                    
                     densities = ghmmwrapper.arraydensity(1)
                     state.density = densities
                     ghmmwrapper.set_density(state,0,0)                                
@@ -1709,7 +1711,6 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.u = ghmmhelper.list2arrayd(sigma_list)
                     state.c = ghmmhelper.list2arrayd(weight_list)
 		    state.a = ghmmhelper.list2arrayd([0.0] * state.M)
-
 
                     # setting densities types (all normal by default)                    
                     densities = ghmmwrapper.arraydensity(cmodel.M)
