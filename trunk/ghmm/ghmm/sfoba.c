@@ -54,7 +54,7 @@
 static int sfoba_initforward (smodel * smo, double *alpha_1, double omega,
                               double *scale, double **b)
 {
-# define CUR_PROC "foba_initforward"
+# define CUR_PROC "sfoba_initforward"
   int i;
   double c_0;
   scale[0] = 0.0;

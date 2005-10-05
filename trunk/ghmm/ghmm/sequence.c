@@ -932,7 +932,7 @@ int sequence_best_model (model ** mo, int model_number, int *sequence,
   *log_p = -DBL_MAX;
   model_index = -1;
   for (i = 0; i < model_number; i++) {
-    foba_logp (mo[i], sequence, seq_len, &log_ptmp);
+    ghmm_d_logp (mo[i], sequence, seq_len, &log_ptmp);
     if (log_ptmp != +1 && log_ptmp > *log_p) {
       *log_p = log_ptmp;
       model_index = i;

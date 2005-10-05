@@ -327,13 +327,13 @@ static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
           return -1;
 
         /* calculate forward and backward variables without labels: */
-        if (-1 == foba_forward (mo[m], sq->seq[l], seq_len, alpha, scale,
+        if (-1 == ghmm_d_forward (mo[m], sq->seq[l], seq_len, alpha, scale,
                                 &(log_p[k][l][m]))) {
           success = 0;
           printf ("forward\n");
           goto FREE;
         }
-        if (-1 == foba_backward (mo[m], sq->seq[l], seq_len, beta, scale)) {
+        if (-1 == ghmm_d_backward (mo[m], sq->seq[l], seq_len, beta, scale)) {
           success = 0;
           printf ("backward\n");
           goto FREE;
@@ -384,11 +384,11 @@ double discrime_compute_performance (model ** mo, sequence_t ** sqs, int noC)
 
       /* iterate over all classes */
       for (m = 0; m < noC; m++) {
-        temp = foba_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
+        temp = ghmm_d_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
         if (0 != temp)
-          printf ("foba_logp error in sequence[%d][%d] under model %d (%g)\n",
+          printf ("ghmm_d_logp error in sequence[%d][%d] under model %d (%g)\n",
                   k, l, m, logp[m]);
-        /*printf("foba_logp sequence[%d][%d] under model %d (%g)\n", k, l, m, logp[m]);*/
+        /*printf("ghmm_d_logp sequence[%d][%d] under model %d (%g)\n", k, l, m, logp[m]);*/
       }
 
       max = 1.0;
@@ -451,7 +451,7 @@ static void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
     for (l = 0; l < sq->seq_number; l++) {
       argmax = 0, max = -DBL_MAX;
       for (m = 0; m < noC; m++) {
-        foba_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
+        ghmm_d_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
         if (m == 0 || max < logp[m]) {
           max = logp[m];
           argmax = m;
@@ -997,7 +997,7 @@ static void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
                            double ****expect_a, double *****expect_b,
                            long double **omega, long double ***omegati)
 {
-#define CUR_PROC "driscrime_find_factor"
+#define CUR_PROC "discrime_find_factor"
 
   int h, i, j, l, m;
   int size, hist, j_id;
@@ -1080,7 +1080,7 @@ static void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
 static int discrime_onestep (model ** mo, sequence_t ** sqs, int noC, int grad,
                       int class)
 {
-#define CUR_PROC "driscrime_onestep"
+#define CUR_PROC "discrime_onestep"
 
   int j, l, retval = -1;
 
@@ -1166,7 +1166,7 @@ FREE:
 int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps, 
 		    int gradient)
 {
-#define CUR_PROC "driscriminative"
+#define CUR_PROC "discriminative"
 
   double last_perf, cur_perf;
   int retval=-1, last_cer, cur_cer;

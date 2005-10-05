@@ -372,7 +372,7 @@ int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p)
     goto STOP;
   }
   ARRAY_CALLOC (scale, len);
-  /* run foba_forward */
+  /* run sdfoba_forward */
   if (sdfoba_forward (mo, O, len, alpha, scale, log_p) == -1) {
     mes_proc ();
     goto STOP;
