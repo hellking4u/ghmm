@@ -69,23 +69,23 @@ static local_store_t *smap_classify_alloc (int mo_number, int states, int T)
   ARRAY_CALLOC (map, 1);
   ARRAY_CALLOC (map->alpha, mo_number);
   for (i = 0; i < mo_number; i++) {
-    map->alpha[i] = matrix_d_alloc (T, states);
+    map->alpha[i] = ighmm_cmatrix_alloc (T, states);
     if (!map->alpha[i]) {
       mes_proc ();
       goto STOP;
     }
   }
-  map->scale = matrix_d_alloc (mo_number, T);
+  map->scale = ighmm_cmatrix_alloc (mo_number, T);
   if (!map->scale) {
     mes_proc ();
     goto STOP;
   }
-  map->p = matrix_d_alloc (mo_number, T + 1);
+  map->p = ighmm_cmatrix_alloc (mo_number, T + 1);
   if (!map->p) {
     mes_proc ();
     goto STOP;
   }
-  map->sum_alpha = matrix_d_alloc (mo_number, T);
+  map->sum_alpha = ighmm_cmatrix_alloc (mo_number, T);
   if (!map->sum_alpha) {
     mes_proc ();
     goto STOP;
@@ -112,11 +112,11 @@ static int smap_classify_free (local_store_t ** map, int mo_number, int T)
   m_free ((*map)->alpha_1);
   m_free ((*map)->error);
   m_free ((*map)->prior);
-  matrix_d_free (&((*map)->scale), mo_number);
-  matrix_d_free (&((*map)->p), mo_number);
-  matrix_d_free (&((*map)->sum_alpha), mo_number);
+  ighmm_cmatrix_free (&((*map)->scale), mo_number);
+  ighmm_cmatrix_free (&((*map)->p), mo_number);
+  ighmm_cmatrix_free (&((*map)->sum_alpha), mo_number);
   for (i = 0; i < mo_number; i++)
-    matrix_d_free (&((*map)->alpha[i]), T);
+    ighmm_cmatrix_free (&((*map)->alpha[i]), T);
   m_free (*map);
 
   return 0;

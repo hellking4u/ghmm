@@ -307,7 +307,7 @@ model *model_direct_read (scanner_t * s, int *multip)
       ARRAY_CALLOC (a_matrix, mo->N);
       ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, a_matrix, mo->N, mo->N)) {
+        if (ighmm_cmatrix_read (s, a_matrix, mo->N, mo->N)) {
           ighmm_scanner_error (s, "unable to read matrix A");
           goto STOP;
         }
@@ -330,7 +330,7 @@ model *model_direct_read (scanner_t * s, int *multip)
       ARRAY_CALLOC (b_matrix, mo->N);
       ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, b_matrix, mo->N, mo->M)) {
+        if (ighmm_cmatrix_read (s, b_matrix, mo->N, mo->M)) {
           ighmm_scanner_error (s, "unable to read matrix B");
           goto STOP;
         }
@@ -434,8 +434,8 @@ model *model_direct_read (scanner_t * s, int *multip)
     mo->prior = -1;
   /* Allocate memory for the model */
   for (i = 0; i < mo->N; i++) {
-    mo->s[i].out_states = matrix_d_notzero_columns (a_matrix, i, mo->N);
-    mo->s[i].in_states = matrix_d_notzero_rows (a_matrix, i, mo->N);
+    mo->s[i].out_states = ighmm_cmatrix_notzero_columns (a_matrix, i, mo->N);
+    mo->s[i].in_states = ighmm_cmatrix_notzero_rows (a_matrix, i, mo->N);
     if (model_state_alloc (mo->s + i, mo->M, mo->s[i].in_states,
                            mo->s[i].out_states)) {
       mes_proc ();
@@ -465,13 +465,13 @@ model *model_direct_read (scanner_t * s, int *multip)
       goto STOP;
     }
   }
-  matrix_d_free (&a_matrix, mo->N);
-  matrix_d_free (&b_matrix, mo->N);
+  ighmm_cmatrix_free (&a_matrix, mo->N);
+  ighmm_cmatrix_free (&b_matrix, mo->N);
   m_free (pi_vector);
   return (mo);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_d_free (&a_matrix, mo->N);
-  matrix_d_free (&b_matrix, mo->N);
+  ighmm_cmatrix_free (&a_matrix, mo->N);
+  ighmm_cmatrix_free (&b_matrix, mo->N);
   m_free (pi_vector);
   model_free (&mo);
   return NULL;
@@ -625,7 +625,7 @@ int model_free_background_distributions (background_distributions * bg)
     m_free (bg->order);
   }
   if (bg->b){
-    matrix_d_free (&(bg->b), bg->n);
+    ighmm_cmatrix_free (&(bg->b), bg->n);
   }
   m_free (bg);
 
@@ -1355,9 +1355,9 @@ void model_direct_print (FILE * file, model_direct * mo_d, int multip)
     fprintf (file, "HMM = {\n\tM = %d;\n\tN = %d;\n", mo_d->M, mo_d->N);
     fprintf (file, "\tprior = %.3f;\n", mo_d->prior);
     fprintf (file, "\tA = matrix {\n");
-    matrix_d_print (file, mo_d->A, mo_d->N, mo_d->N, "\t", ",", ";");
+    ighmm_cmatrix_print (file, mo_d->A, mo_d->N, mo_d->N, "\t", ",", ";");
     fprintf (file, "\t};\n\tB = matrix {\n");
-    matrix_d_print (file, mo_d->B, mo_d->N, mo_d->M, "\t", ",", ";");
+    ighmm_cmatrix_print (file, mo_d->B, mo_d->N, mo_d->M, "\t", ",", ";");
     fprintf (file, "\t};\n\tPi = vector {\n");
     fprintf (file, "\t%.4f", mo_d->Pi[0]);
     for (j = 1; j < mo_d->N; j++)
@@ -1976,7 +1976,7 @@ int model_normalize (model * mo)
       size = model_ipow (mo, mo->M, mo->s[i].order);
 
     /* normalize transition probabilities */
-    if (vector_normalize (mo->s[i].out_a, mo->s[i].out_states) == -1) {
+    if (ighmm_cvector_normalize (mo->s[i].out_a, mo->s[i].out_states) == -1) {
       res = -1;
     }
     /* for every outgoing probability update the corrosponding incoming probability */
@@ -1998,7 +1998,7 @@ int model_normalize (model * mo)
     }
     /* normalize emission probabilities */
     for (m = 0; m < size; m++) {
-      if (vector_normalize (&(mo->s[i].b[m * mo->M]), mo->M) == -1) {
+      if (ighmm_cvector_normalize (&(mo->s[i].b[m * mo->M]), mo->M) == -1) {
         res = -1;
       }
     }

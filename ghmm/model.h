@@ -472,7 +472,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
 
 
 /**
-    Uses vector_normalize in vector.h
+    Uses ighmm_cvector_normalize in vector.h
     Normalizes the transition and output probs for each state
     in the given model
     @return 0 if normalization went through

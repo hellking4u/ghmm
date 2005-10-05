@@ -16,7 +16,7 @@
   @param max_row:    number of rows
   @param max_column: number of columns
   */
-  int matrix_i_read (scanner_t * s, int **matrix, int max_row,
+  int ighmm_dmatrix_read (scanner_t * s, int **matrix, int max_row,
                      int max_column);
 
 /**
@@ -27,7 +27,7 @@
   @param max_row:    number of rows
   @param max_column: number of columns
   */
-  int matrix_d_read (scanner_t * s, double **matrix, int max_row,
+  int ighmm_cmatrix_read (scanner_t * s, double **matrix, int max_row,
                      int max_column);
 
 /**
@@ -40,7 +40,7 @@
   @param separator:  format: separator for columns
   @param ending:     format: end of a row  
   */
-  void matrix_d_print (FILE * file, double **matrix, int rows, int columns,
+  void ighmm_cmatrix_print (FILE * file, double **matrix, int rows, int columns,
                        char *tab, char *separator, char *ending);
 
 /**
@@ -55,7 +55,7 @@
   @param separator:  format: separator for columns
   @param ending:     format: end of a row
   */
-  void matrix_d_print_prec (FILE * file, double **matrix, int rows,
+  void ighmm_cmatrix_print_prec (FILE * file, double **matrix, int rows,
                             int columns, int width, int prec, char *tab,
                             char *separator, char *ending);
 
@@ -69,7 +69,7 @@
   @param separator:  format: separator for columns
   @param ending:     format: end of a row  
   */
-  void matrix_i_print (FILE * file, int **matrix, int rows, int columns,
+  void ighmm_dmatrix_print (FILE * file, int **matrix, int rows, int columns,
                        char *tab, char *separator, char *ending);
 
 /**
@@ -79,7 +79,7 @@
   @param row:      row to scan
   @param max_col:  number of columns 
   */
-  int matrix_d_notzero_columns (double **matrix, int row, int max_col);
+  int ighmm_cmatrix_notzero_columns (double **matrix, int row, int max_col);
 
 /**
   Determines the number of entries != 0 in a column of a matrix. 
@@ -88,7 +88,7 @@
   @param col:      column to scan
   @param max_row:  number of rows
   */
-  int matrix_d_notzero_rows (double **matrix, int col, int max_row);
+  int ighmm_cmatrix_notzero_rows (double **matrix, int col, int max_row);
 
 /** 
   Scales the rowvectors of a matrix, so that they have sum 1.
@@ -97,7 +97,7 @@
   @param rows:     number of rows
   @param cols:     number of columns
   */
-  int matrix_d_normalize (double **matrix, int rows, int cols);
+  int ighmm_cmatrix_normalize (double **matrix, int rows, int cols);
 
 /** 
   Gives the elements in a matrix uniformly distributed values between min and max. 
@@ -107,7 +107,7 @@
   @param min:      minimum for the random values
   @param max:      maximum for the random values
   */
-  void matrix_d_random_values (double **matrix, int rows, int cols,
+  void ighmm_cmatrix_random_values (double **matrix, int rows, int cols,
                                double min, double max);
 
 /** 
@@ -120,7 +120,7 @@
   @param max:      maximum for the random values
   @param c:        value for the last row
   */
-  void matrix_d_random_const_values (double **matrix, int rows, int cols,
+  void ighmm_cmatrix_random_const_values (double **matrix, int rows, int cols,
                                      double min, double max, double c);
 
 /** 
@@ -130,7 +130,7 @@
   @param cols:     number of columns
   @param c:        value for the elements
   */
-  void matrix_d_const_values (double **matrix, int rows, int cols, double c);
+  void ighmm_cmatrix_const_values (double **matrix, int rows, int cols, double c);
 
 /** 
   Gives all elements on the 1. upper secondary diagonal in a matrix the value 1.
@@ -138,7 +138,7 @@
   @param rows:     number of rows
   @param cols:     number of columns
   */
-  void matrix_d_left_right_strict (double **matrix, int rows, int cols);
+  void ighmm_cmatrix_left_right_strict (double **matrix, int rows, int cols);
 
 /** 
   Gives the elements in a matrix with band width 3 random values. 
@@ -146,7 +146,7 @@
   @param rows:     number of rows
   @param cols:     number of columns
   */
-  void matrix_d_random_left_right (double **matrix, int rows, int cols);
+  void ighmm_cmatrix_random_left_right (double **matrix, int rows, int cols);
 
 
 /** 
@@ -156,7 +156,7 @@
   @param cols:     number of columns
   @param c:        value for the elements
   */
-  void matrix_d_const_preserve_struct (double **matrix, int rows, int cols,
+  void ighmm_cmatrix_const_preserve_struct (double **matrix, int rows, int cols,
                                        double c);
 
 /** 
@@ -166,7 +166,7 @@
   @param rows     number of rows
   @param cols     number of columns
   */
-  void matrix_d_random_preserve_struct (double **matrix, int rows, int cols);
+  void ighmm_cmatrix_random_preserve_struct (double **matrix, int rows, int cols);
 
 /** 
   Gives each row in a matrix values according to a certain Gauss density.
@@ -179,7 +179,7 @@
   @param mue:      pointer to the vector containing the mean values for each row
   @param u:        standard deviation, for all rows equal
  */
-  int matrix_d_gaussrows_values (double **matrix, int rows, int cols,
+  int ighmm_cmatrix_gaussrows_values (double **matrix, int rows, int cols,
                                  double **mue, double u);
 
 /** 
@@ -189,7 +189,7 @@
   @param cols:     number of columns
   @param A_T:      transposed double matrix (the returned value)
  */
-  void matrix_d_transpose (double **A, int rows, int cols, double **A_T);
+  void ighmm_cmatrix_transpose (double **A, int rows, int cols, double **A_T);
 
 /**
   Solves a linear equation system, Ax = b, for a symmetric, positiv definit matrix.
@@ -199,7 +199,7 @@
   @param dim:  dimension of a
   @param x:    double vector, a solution of the system.
   */
-  int matrix_cholesky (double **a, double *b, int dim, double *x);
+  int ighmm_cmatrix_cholesky (double **a, double *b, int dim, double *x);
 
 /**
   Finds the determinant of a symmetric, positiv definit matrix.
@@ -208,7 +208,7 @@
   @param dim:  dimension of a
   @param det:  determinant of a, the returning value
   */
-  int matrix_det_symposdef (double **a, int dim, double *det);
+  int ighmm_cmatrix_det_symposdef (double **a, int dim, double *det);
 
 /** 
   Copies a matrix. Allocation needs to be done outside ! 
@@ -217,7 +217,7 @@
   @param rows:   number of rows
   @param cols:   number of columns
 */
-  void matrix_d_copy (double **src, double **target, int rows, int cols);
+  void ighmm_cmatrix_copy (double **src, double **target, int rows, int cols);
 
 /**
   Checks whether a quadratic double matrix is stochastic
@@ -225,7 +225,7 @@
   @param  double NxN matrix to be checked
   @param  matrix dimension N (matrix must be quadaratic)
   */
-  int matrix_d_check_stochasticity (double **matrix, int N);
+  int ighmm_cmatrix_check_stochasticity (double **matrix, int N);
 
 
 /*================== model.h ================================================*/
@@ -337,7 +337,7 @@
   @param len  length of the vector
   @param c    given value for the elements
 */
-  void vector_const_values (double *v, int len, double c);
+  void ighmm_cvector_const_values (double *v, int len, double c);
 
 /**
   Gives all elements, not equal zero, in a vector a constant value
@@ -345,21 +345,21 @@
   @param len  length of the vector
   @param c    given value for the elements
 */
-  void vector_const_preserve_struct (double *v, int len, double c);
+  void ighmm_cvector_const_preserve_struct (double *v, int len, double c);
 
 /**
   Gives all elements in a vector random values between 0 and 1
   @param v    vector
   @param len  length of the vector       
 */
-  void vector_random_values (double *v, int len);
+  void ighmm_cvector_random_values (double *v, int len);
 
 /**
   Gives all elements, not equal zero, in a vector random values between 0 and 1
   @param v    vector
   @param len  length of the vector   
 */
-  void vector_random_preserve_struct (double *v, int len);
+  void ighmm_cvector_random_preserve_struct (double *v, int len);
 
 /**
   Calculates Ax, where A is a double matrix and x a double vector
@@ -369,7 +369,7 @@
   @param m       number of columns
   @param v       calculated vector (return value)
   */
-  int vector_mat_times_vec (double **A, double *x, int n, int m, double *v);
+  int ighmm_cvector_mat_times_vec (double **A, double *x, int n, int m, double *v);
 
 
 

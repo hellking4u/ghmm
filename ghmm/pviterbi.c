@@ -96,10 +96,10 @@ static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y) {
     ARRAY_CALLOC (v->log_b[j], emission_table_size(mo, j) + 1);
   }
   if (!(v->log_b)) {mes_proc(); goto STOP;}
-  v->phi = matrix3d_d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
+  v->phi = ighmm_cmatrix_3d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->phi)) {mes_proc(); goto STOP;}
   ARRAY_CALLOC (v->phi_new, mo->N);
-  v->psi = matrix3d_i_alloc(len_x + mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
+  v->psi = ighmm_dmatrix_3d_alloc(len_x + mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->psi)) {mes_proc(); goto STOP;}
 
   v->topo_order_length = 0;
@@ -128,10 +128,10 @@ static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int ma
   for (j=0; j<n; j++)
     m_free((*v)->log_b[j]);
   m_free((*v)->log_b);
-  matrix3d_d_free( &((*v)->phi), max_offset_x + 1, 
+  ighmm_cmatrix_3d_free( &((*v)->phi), max_offset_x + 1, 
 		   len_y + max_offset_y + 1);
   m_free((*v)->phi_new);
-  matrix3d_i_free( &((*v)->psi), len_x + max_offset_x + 1, len_y + max_offset_y + 1);
+  ighmm_dmatrix_3d_free( &((*v)->psi), len_x + max_offset_x + 1, len_y + max_offset_y + 1);
   m_free((*v)->topo_order);
   (*v)->mo = NULL;
   m_free(*v);

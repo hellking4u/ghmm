@@ -237,7 +237,7 @@ int main (int argc, char *argv[])
       free_parameter = smodel_count_free_parameter (smo, smo_number)
         + smo_number - 1;
 
-      cp = matrix_d_alloc (sqd_train->seq_number, smo_number);
+      cp = ighmm_cmatrix_alloc (sqd_train->seq_number, smo_number);
       if (!cp) {
         mes_proc ();
         goto STOP;
@@ -277,7 +277,7 @@ int main (int argc, char *argv[])
          mes_prot(str); m_free(str); goto STOP;
          }
          fprintf(outfile, "Component Probs. after Clustering:\n");
-         matrix_d_print(outfile, cp, sqd_train->seq_number, smo_number, " ", ",", ";");
+         ighmm_cmatrix_print(outfile, cp, sqd_train->seq_number, smo_number, " ", ",", ";");
        */
       /* End TEST */
 
@@ -350,7 +350,7 @@ int main (int argc, char *argv[])
 
       for (k = 0; k < smo_number; k++)
         smodel_free (&(smo[k]));
-      matrix_d_free (&cp, sqd_train->seq_number);
+      ighmm_cmatrix_free (&cp, sqd_train->seq_number);
       ghmm_cseq_free (&sqd_train);
       ghmm_cseq_free (&sqd_test);
       m_free (avg_comp_like);

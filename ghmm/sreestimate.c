@@ -93,13 +93,13 @@ static local_store_t *sreestimate_alloc (const smodel * smo)
   ARRAY_CALLOC (r->pi_num, smo->N);
   ARRAY_CALLOC (r->a_num, smo->N);
   for (i = 0; i < smo->N; i++) {
-    r->a_num[i] = stat_matrix_d_alloc (smo->cos, smo->s[i].out_states);
+    r->a_num[i] = ighmm_cmatrix_stat_alloc (smo->cos, smo->s[i].out_states);
     if (!r->a_num[i]) {
       mes_proc ();
       goto STOP;
     }
   }
-  r->a_denom = stat_matrix_d_alloc (smo->N, smo->cos);
+  r->a_denom = ighmm_cmatrix_stat_alloc (smo->N, smo->cos);
   if (!r->a_denom) {
     mes_proc ();
     goto STOP;
@@ -107,32 +107,32 @@ static local_store_t *sreestimate_alloc (const smodel * smo)
   /* For sacke of simplicity, a NXmax(M) is being allocated,
   even though not all emissins components are of size max(M) */
   ARRAY_CALLOC (r->c_denom, smo->N);  
-  r->c_num = stat_matrix_d_alloc (smo->N, smo->M);
+  r->c_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->c_num)) {
     mes_proc ();
     goto STOP;
   }
-  r->mue_num = stat_matrix_d_alloc (smo->N, smo->M);
+  r->mue_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->mue_num)) {
     mes_proc ();
     goto STOP;
   }
-  r->u_num = stat_matrix_d_alloc (smo->N, smo->M);
+  r->u_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->u_num)) {
     mes_proc ();
     goto STOP;
   }
-  r->mue_u_denom = stat_matrix_d_alloc (smo->N, smo->M);
+  r->mue_u_denom = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->mue_u_denom)) {
     mes_proc ();
     goto STOP;
   }
-  r->sum_gt_otot = stat_matrix_d_alloc (smo->N, smo->M);
+  r->sum_gt_otot = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->sum_gt_otot)) {
     mes_proc ();
     goto STOP;
   }
-  r->sum_gt_logb = stat_matrix_d_alloc (smo->N, smo->M);
+  r->sum_gt_logb = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->sum_gt_logb)) {
     mes_proc ();
     goto STOP;
@@ -154,17 +154,17 @@ static int sreestimate_free (local_store_t ** r, int N)
     return (0);
   m_free ((*r)->pi_num);
   for (i = 0; i < N; i++)
-    stat_matrix_d_free (&((*r)->a_num[i]));
+    ighmm_cmatrix_stat_free (&((*r)->a_num[i]));
   m_free ((*r)->a_num);
-  stat_matrix_d_free (&((*r)->a_denom));
+  ighmm_cmatrix_stat_free (&((*r)->a_denom));
   /***/
   m_free ((*r)->c_denom);
-  stat_matrix_d_free (&((*r)->c_num));
-  stat_matrix_d_free (&((*r)->mue_num));
-  stat_matrix_d_free (&((*r)->u_num));
-  stat_matrix_d_free (&((*r)->mue_u_denom));
-  stat_matrix_d_free (&((*r)->sum_gt_otot));
-  stat_matrix_d_free (&((*r)->sum_gt_logb));
+  ighmm_cmatrix_stat_free (&((*r)->c_num));
+  ighmm_cmatrix_stat_free (&((*r)->mue_num));
+  ighmm_cmatrix_stat_free (&((*r)->u_num));
+  ighmm_cmatrix_stat_free (&((*r)->mue_u_denom));
+  ighmm_cmatrix_stat_free (&((*r)->sum_gt_otot));
+  ighmm_cmatrix_stat_free (&((*r)->sum_gt_logb));
   m_free (*r);
   return (0);
 # undef CUR_PROC
@@ -204,12 +204,12 @@ static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
 {
 # define CUR_PROC "sreestimate_alloc_matvek"
   int t, res = -1;
-  *alpha = stat_matrix_d_alloc (T, N);
+  *alpha = ighmm_cmatrix_stat_alloc (T, N);
   if (!(*alpha)) {
     mes_proc ();
     goto STOP;
   }
-  *beta = stat_matrix_d_alloc (T, N);
+  *beta = ighmm_cmatrix_stat_alloc (T, N);
   if (!(*beta)) {
     mes_proc ();
     goto STOP;
@@ -218,7 +218,7 @@ static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
   /* 3-dim. matrix for b[t][i][m] with m = 1..M(!): */
   ARRAY_CALLOC (*b, T);
   for (t = 0; t < T; t++) {
-    (*b)[t] = stat_matrix_d_alloc (N, M + 1);
+    (*b)[t] = ighmm_cmatrix_stat_alloc (N, M + 1);
     if (!((*b)[t])) {
       mes_proc ();
       goto STOP;
@@ -236,13 +236,13 @@ static int sreestimate_free_matvec (double **alpha, double **beta,
 {
 # define CUR_PROC "sreestimate_free_matvec"
   int t;
-  stat_matrix_d_free (&alpha);
-  stat_matrix_d_free (&beta);
+  ighmm_cmatrix_stat_free (&alpha);
+  ighmm_cmatrix_stat_free (&beta);
   m_free (scale);
   if (!b)
     return (0);
   for (t = 0; t < T; t++)
-    stat_matrix_d_free (&b[t]);
+    ighmm_cmatrix_stat_free (&b[t]);
   m_free (b);
   return (0);
 # undef CUR_PROC
@@ -592,9 +592,9 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
     else
 
     /* printf("\n\nalpha:\n");
-    matrix_d_print(stdout,alpha,T_k,smo->N,"\t", ",", ";");   
+    ighmm_cmatrix_print(stdout,alpha,T_k,smo->N,"\t", ",", ";");   
     printf("\n\nbeta:\n");
-    matrix_d_print(stdout,beta,T_k,smo->N,"\t", ",", ";");           
+    ighmm_cmatrix_print(stdout,beta,T_k,smo->N,"\t", ",", ";");           
     printf("\n\n");    */
         
       /* weighted error function */

@@ -139,7 +139,7 @@ extern void ghmm_rng_timeseed(GHMM_RNG * r);
   @param rows: number of rows
   @param columns: number of columns
   */
-extern double** matrix_d_alloc(int rows, int columns);
+extern double** ighmm_cmatrix_alloc(int rows, int columns);
 
 /**
   Copying and allocation of a double matrix.
@@ -148,7 +148,7 @@ extern double** matrix_d_alloc(int rows, int columns);
   @param columns: number of columns
   @param copymatrix: matrix to copy 
   */
-extern double** matrix_d_alloc_copy(int rows, int columns, double **copymatrix);
+extern double** ighmm_cmatrix_alloc_copy(int rows, int columns, double **copymatrix);
 
 /**
   Free the memory of a double matrix.
@@ -156,7 +156,7 @@ extern double** matrix_d_alloc_copy(int rows, int columns, double **copymatrix);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-extern int matrix_d_free(double ***matrix,int row);
+extern int ighmm_cmatrix_free(double ***matrix,int row);
 
 /**
   Allocation of a integer matrix.
@@ -164,7 +164,7 @@ extern int matrix_d_free(double ***matrix,int row);
   @param rows: number of rows
   @param columns: number of columns
   */
-extern int** matrix_i_alloc(int rows, int columns);
+extern int** ighmm_dmatrix_alloc(int rows, int columns);
 
 /**
   Free the memory of a integer matrix.
@@ -172,7 +172,7 @@ extern int** matrix_i_alloc(int rows, int columns);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-extern int matrix_i_free(int ***matrix, long rows); 
+extern int ighmm_dmatrix_free(int ***matrix, long rows); 
 
 #ifdef GHMM_OBSOLETE
 /**
@@ -185,7 +185,7 @@ extern int matrix_i_free(int ***matrix, long rows);
   @param separator:  format: separator for columns
   @param ending:     format: end of a row  
   */
-extern void matrix_d_print(FILE *file, double **matrix, int rows, int columns, 
+extern void ighmm_cmatrix_print(FILE *file, double **matrix, int rows, int columns, 
 		    char *tab, char *separator, char *ending);
 #endif /* GHMM_OBSOLETE */
 
@@ -1034,7 +1034,7 @@ extern void update_emission_history_front(model* mo, int obs);
 
 
 /**
-    Uses vector_normalize in vector.h
+    Uses ighmm_cvector_normalize in vector.h
     Normalizes the transition and output probs for each state
     in the given model
     @author Heval Benav
@@ -1442,7 +1442,7 @@ extern int sfoba_backward(smodel *smo, double *O, int T, double ***b,
   Calculation of  log( P(O|lambda) ).  (sfoba.c)s
   Done by calling sfoba\_forward. Use this function if only the
   log likelihood and not alpha[t][i] is needed, alpha matrix is allocated with
-  stat_matrix_d_alloc
+  ighmm_cmatrix_stat_alloc
   @param smo      model
   @param O        sequence
   @param T         length of sequence
@@ -2167,7 +2167,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
   /************  Create and access double[size1][size2] arrays ************/
  
   double **double_2d_array(int rows, int cols) {
-    return matrix_d_alloc(rows,cols);
+    return ighmm_cmatrix_alloc(rows,cols);
   }
   
   double **double_2d_array_nocols(int rows){
@@ -2207,7 +2207,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 	 return res;
   }	  
   
-  void free_2darrayd(double **pt,int row) { matrix_d_free(&pt,row); }
+  void free_2darrayd(double **pt,int row) { ighmm_cmatrix_free(&pt,row); }
    
   /************  Create and access int[size1][size2] arrays ************/
   
@@ -2238,7 +2238,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 	 return res; 
   }	 
   
-  void free_2darrayint(int **pt, int rows,int cols) {  matrix_i_free(&pt, rows); }
+  void free_2darrayint(int **pt, int rows,int cols) {  ighmm_dmatrix_free(&pt, rows); }
 
 
   /**************** generalized deallocation *******************/  

@@ -77,16 +77,16 @@ static local_store_t *sdviterbi_alloc (sdmodel * mo, int len)
   /* Allocate the log_in_a's -> individal lenghts */
   ARRAY_CALLOC (v->log_in_a, mo->N);
   for (j = 0; j < mo->N; j++)
-    v->log_in_a[j] = stat_matrix_d_alloc (mo->cos, mo->s[j].in_states);
+    v->log_in_a[j] = ighmm_cmatrix_stat_alloc (mo->cos, mo->s[j].in_states);
   
-  v->log_b = stat_matrix_d_alloc (mo->N, len);
+  v->log_b = ighmm_cmatrix_stat_alloc (mo->N, len);
   if (!(v->log_b)) {
     mes_proc ();
     goto STOP;
   }
   ARRAY_CALLOC (v->phi, mo->N);
   ARRAY_CALLOC (v->phi_new, mo->N);
-  v->psi = matrix_i_alloc (len, mo->N);
+  v->psi = ighmm_dmatrix_alloc (len, mo->N);
   if (!(v->psi)) {
     mes_proc ();
     goto STOP;
@@ -112,12 +112,12 @@ static int sdviterbi_free (local_store_t ** v, int n, int cos, int len)
   if (!*v)
     return (0);
   for (j = 0; j < n; j++)
-    stat_matrix_d_free (&((*v)->log_in_a[j]));
+    ighmm_cmatrix_stat_free (&((*v)->log_in_a[j]));
   m_free ((*v)->log_in_a);
-  stat_matrix_d_free (&((*v)->log_b));
+  ighmm_cmatrix_stat_free (&((*v)->log_b));
   m_free ((*v)->phi);
   m_free ((*v)->phi_new);
-  matrix_i_free (&((*v)->psi), len);
+  ighmm_dmatrix_free (&((*v)->psi), len);
   m_free ((*v)->topo_order);
   m_free (*v);
   return (0);

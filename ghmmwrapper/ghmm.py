@@ -2080,7 +2080,7 @@ class HMM:
         unused = ghmmwrapper.double_array(1) # Dummy return value for forwardAlphaFunction    	
      
         t = len(emissionSequence)
-        calpha = ghmmwrapper.matrix_d_alloc(t,self.N)
+        calpha = ghmmwrapper.ighmm_cmatrix_alloc(t,self.N)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
@@ -3246,7 +3246,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if t != len(labelSequence):
             raise TypeError, "ERROR: Observation and Labellist must have same length"
 
-        calpha = ghmmwrapper.matrix_d_alloc(t,n_states)
+        calpha = ghmmwrapper.ighmm_cmatrix_alloc(t,n_states)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
@@ -3493,7 +3493,7 @@ class GaussianEmissionHMM(HMM):
 
 
         t = ghmmwrapper.get_arrayint(emissionSequence.cseq.seq_len,0)
-        calpha = ghmmwrapper.matrix_d_alloc(t,i)
+        calpha = ghmmwrapper.ighmm_cmatrix_alloc(t,i)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)

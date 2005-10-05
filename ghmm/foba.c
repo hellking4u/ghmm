@@ -475,7 +475,7 @@ int ghmm_d_logp (model * mo, const int *O, int len, double *log_p)
   int res = -1;
   double **alpha, *scale = NULL;
 
-  alpha = stat_matrix_d_alloc (len, mo->N);
+  alpha = ighmm_cmatrix_stat_alloc (len, mo->N);
   if (!alpha) {
     mes_proc ();
     goto STOP;
@@ -490,7 +490,7 @@ int ghmm_d_logp (model * mo, const int *O, int len, double *log_p)
 
   res = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  stat_matrix_d_free (&alpha);
+  ighmm_cmatrix_stat_free (&alpha);
   m_free (scale);
   return (res);
 # undef CUR_PROC
@@ -765,7 +765,7 @@ int ghmm_dl_logp (model * mo, const int *O, const int *label, int len,
   int res = -1;
   double **alpha, *scale = NULL;
 
-  alpha = stat_matrix_d_alloc (len, mo->N);
+  alpha = ighmm_cmatrix_stat_alloc (len, mo->N);
   if (!alpha) {
     mes_proc ();
     goto STOP;
@@ -779,7 +779,7 @@ int ghmm_dl_logp (model * mo, const int *O, const int *label, int len,
 
   res = 0;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  stat_matrix_d_free (&alpha);
+  ighmm_cmatrix_stat_free (&alpha);
   m_free (scale);
   return (res);
 # undef CUR_PROC

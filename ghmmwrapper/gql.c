@@ -89,13 +89,13 @@ static int smodel_state_alloc(sstate *state,
   if (out_states > 0) {
     if (!((state->out_id) = mes_calloc(sizeof(*(state->out_id)) * out_states)))
       {mes_proc(); goto STOP;}
-    state->out_a = matrix_d_alloc(cos, out_states);
+    state->out_a = ighmm_cmatrix_alloc(cos, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
     if (!((state->in_id) = mes_calloc(sizeof(*(state->in_id)) * (in_states)))) 
       {mes_proc(); goto STOP;}
-    state->in_a = matrix_d_alloc(cos, in_states);
+    state->in_a = ighmm_cmatrix_alloc(cos, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
   }
   res = 0;

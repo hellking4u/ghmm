@@ -79,14 +79,14 @@ static local_store_t *viterbi_alloc (model * mo, int len)
     ARRAY_CALLOC (v->log_in_a[j], mo->s[j].in_states);
   }
 
-  v->log_b = matrix_d_alloc (mo->N, len);
+  v->log_b = ighmm_cmatrix_alloc (mo->N, len);
   if (!(v->log_b)) {
     mes_proc ();
     goto STOP;
   }
   ARRAY_CALLOC (v->phi, mo->N);
   ARRAY_CALLOC (v->phi_new, mo->N);
-  v->psi = stat_matrix_i_alloc (len, mo->N);
+  v->psi = ighmm_dmatrix_stat_alloc (len, mo->N);
   if (!(v->psi)) {
     mes_proc ();
     goto STOP;
@@ -114,11 +114,11 @@ static int viterbi_free (local_store_t ** v, int n, int len)
   for (j = 0; j < n; j++)
     m_free ((*v)->log_in_a[j]);
   m_free ((*v)->log_in_a);
-  matrix_d_free (&((*v)->log_b), n);
+  ighmm_cmatrix_free (&((*v)->log_b), n);
   m_free ((*v)->phi);
   m_free ((*v)->phi_new);
-  /*matrix_i_free( &((*v)->psi), len );*/
-  stat_matrix_i_free (&((*v)->psi));
+  /*ighmm_dmatrix_free( &((*v)->psi), len );*/
+  ighmm_dmatrix_stat_free (&((*v)->psi));
   m_free ((*v)->topo_order);
   m_free (*v);
   return (0);

@@ -83,7 +83,7 @@ int smodel_state_alloc (sstate * s,
 
   if (out_states > 0) {
     ARRAY_CALLOC (s->out_id, out_states);
-    s->out_a = matrix_d_alloc (cos, out_states);
+    s->out_a = ighmm_cmatrix_alloc (cos, out_states);
     if (!s->out_a) {
       mes_proc ();
       goto STOP;
@@ -91,7 +91,7 @@ int smodel_state_alloc (sstate * s,
   }
   if (in_states > 0) {
     ARRAY_CALLOC (s->in_id, in_states);
-    s->in_a = matrix_d_alloc (cos, in_states);
+    s->in_a = ighmm_cmatrix_alloc (cos, in_states);
     if (!s->in_a) {
       mes_proc ();
       goto STOP;
@@ -424,7 +424,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (a_matrix, smo->N);
       ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, a_matrix, smo->N, smo->N)) {
+        if (ighmm_cmatrix_read (s, a_matrix, smo->N, smo->N)) {
           ighmm_scanner_error (s, "unable to read matrix A");
           goto STOP;
         }
@@ -438,7 +438,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (a_3dmatrix, smo->cos);
       a_3dmatrix[0] = a_matrix;
       for (i = 1; i < smo->cos; i++) {
-        a_3dmatrix[i] = matrix_d_alloc_copy (smo->N, smo->N, a_matrix);
+        a_3dmatrix[i] = ighmm_cmatrix_alloc_copy (smo->N, smo->N, a_matrix);
         if (!a_3dmatrix[i]) {
           mes_proc ();
           goto STOP;
@@ -464,7 +464,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
         ARRAY_CALLOC (a_3dmatrix[osc], smo->N);
         ighmm_scanner_get_name (s);
         if (!strcmp (s->id, "matrix")) {
-          if (matrix_d_read (s, a_3dmatrix[osc], smo->N, smo->N)) {
+          if (ighmm_cmatrix_read (s, a_3dmatrix[osc], smo->N, smo->N)) {
             ighmm_scanner_error (s, "unable to read matrix Ak");
             goto STOP;
           }
@@ -502,7 +502,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (c_matrix, smo->N);
       ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, c_matrix, smo->N, M)) {
+        if (ighmm_cmatrix_read (s, c_matrix, smo->N, M)) {
           ighmm_scanner_error (s, "unable to read matrix C");
           goto STOP;
         }
@@ -525,7 +525,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (mue_matrix, smo->N);
       ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, mue_matrix, smo->N, M)) {
+        if (ighmm_cmatrix_read (s, mue_matrix, smo->N, M)) {
           ighmm_scanner_error (s, "unable to read matrix Mue");
           goto STOP;
         }
@@ -548,7 +548,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       ARRAY_CALLOC (u_matrix, smo->N);
       ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
-        if (matrix_d_read (s, u_matrix, smo->N, M)) {
+        if (ighmm_cmatrix_read (s, u_matrix, smo->N, M)) {
           ighmm_scanner_error (s, "unable to read matrix U");
           goto STOP;
         }
@@ -626,22 +626,22 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
   }
   if (a_3dmatrix)
     for (i = 0; i < smo->cos; i++)
-      matrix_d_free (&(a_3dmatrix[i]), smo->N);
+      ighmm_cmatrix_free (&(a_3dmatrix[i]), smo->N);
   m_free (a_3dmatrix);
-  matrix_d_free (&c_matrix, smo->N);
-  matrix_d_free (&mue_matrix, smo->N);
-  matrix_d_free (&u_matrix, smo->N);
+  ighmm_cmatrix_free (&c_matrix, smo->N);
+  ighmm_cmatrix_free (&mue_matrix, smo->N);
+  ighmm_cmatrix_free (&u_matrix, smo->N);
   m_free (pi_vektor);
   m_free (fix_vektor);
   return (smo);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   if (a_3dmatrix)
     for (i = 0; i < smo->cos; i++)
-      matrix_d_free (&(a_3dmatrix[i]), smo->N);
+      ighmm_cmatrix_free (&(a_3dmatrix[i]), smo->N);
   m_free (a_3dmatrix);
-  matrix_d_free (&c_matrix, smo->N);
-  matrix_d_free (&mue_matrix, smo->N);
-  matrix_d_free (&u_matrix, smo->N);
+  ighmm_cmatrix_free (&c_matrix, smo->N);
+  ighmm_cmatrix_free (&mue_matrix, smo->N);
+  ighmm_cmatrix_free (&u_matrix, smo->N);
   m_free (pi_vektor);
   m_free (fix_vektor);
   smodel_free (&smo);
@@ -668,8 +668,8 @@ int smodel_free (smodel ** smo)
     if ((*smo)->s[i].in_states > 0){
       m_free ((*smo)->s[i].in_id);
     }  
-    matrix_d_free (&((*smo)->s[i].out_a), (*smo)->cos);
-    matrix_d_free (&((*smo)->s[i].in_a), (*smo)->cos);
+    ighmm_cmatrix_free (&((*smo)->s[i].out_a), (*smo)->cos);
+    ighmm_cmatrix_free (&((*smo)->s[i].in_a), (*smo)->cos);
     m_free ((*smo)->s[i].c);
     m_free ((*smo)->s[i].mue);
     m_free ((*smo)->s[i].u);
@@ -705,13 +705,13 @@ smodel *smodel_copy (const smodel * smo)
     nachf = smo->s[i].out_states;
     vorg = smo->s[i].in_states;
     ARRAY_CALLOC (sm2->s[i].out_id, nachf);
-    sm2->s[i].out_a = matrix_d_alloc (smo->cos, nachf);
+    sm2->s[i].out_a = ighmm_cmatrix_alloc (smo->cos, nachf);
     if (!sm2->s[i].out_a) {
       mes_proc ();
       goto STOP;
     }
     ARRAY_CALLOC (sm2->s[i].in_id, vorg);
-    sm2->s[i].in_a = matrix_d_alloc (smo->cos, vorg);
+    sm2->s[i].in_a = ighmm_cmatrix_alloc (smo->cos, vorg);
     if (!sm2->s[i].in_a) {
       mes_proc ();
       goto STOP;
@@ -1094,7 +1094,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
 #ifdef GHMM_OBSOLETE
       sq->seq_label[n] = label;
 #endif /* GHMM_OBSOLETE */
-      /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
+      /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */

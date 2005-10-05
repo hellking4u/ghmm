@@ -154,7 +154,7 @@ int two_states_coin_toss()
 
   /* allocate matrix for forward algorithm */
   fprintf(stdout,"applying forward algorithm to the sequence...");
-  forward_alpha=stat_matrix_d_alloc(10,2);
+  forward_alpha=ighmm_cmatrix_stat_alloc(10,2);
   if (forward_alpha==NULL)
     {
       fprintf(stderr,"\n could not alloc forward_alpha matrix\n");
@@ -170,19 +170,19 @@ int two_states_coin_toss()
 		   &log_p_forward))
     {
       fprintf(stderr,"ghmm_d_logp failed!");
-      stat_matrix_d_free(&forward_alpha);
+      ighmm_cmatrix_stat_free(&forward_alpha);
       return 1;
     }
 
   /* alpha matrix */
   fprintf(stdout,"Done.\nalpha matrix from forward algorithm:\n");
-  /* matrix_d_print(stdout,forward_alpha,10,2,""," ","\n"); */
+  /* ighmm_cmatrix_print(stdout,forward_alpha,10,2,""," ","\n"); */
   fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */
   ghmm_dseq_free(&my_output);
   free(viterbi_path);
-  stat_matrix_d_free(&forward_alpha);
+  ighmm_cmatrix_stat_free(&forward_alpha);
   return 0;
 }
 

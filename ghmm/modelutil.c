@@ -150,7 +150,7 @@ int **model_DFS (model * c_model)
   /*}*/
 
 
-  edge_classes = stat_matrix_i_alloc (c_model->N, c_model->N);
+  edge_classes = ighmm_dmatrix_stat_alloc (c_model->N, c_model->N);
 
 
   for (i = 0; i < c_model->N; i++) {
@@ -259,7 +259,7 @@ void model_topo_ordering (model * mo)
      }
      } */
 
-  stat_matrix_i_free (&edge_cls);
+  ighmm_dmatrix_stat_free (&edge_cls);
   topo_free (&v, mo->N, 1);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   i = 0;
