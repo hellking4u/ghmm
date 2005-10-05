@@ -136,10 +136,8 @@ int two_states_coin_toss()
   sequence_print(stdout,my_output);
 
   /* try viterbi algorithm in a clear situation */
-  viterbi_path=viterbi(&my_model,
-		       my_output->seq[0],
-		       my_output->seq_len[0],
-		       &log_p_viterbi);
+  viterbi_path = ghmm_d_viterbi(&my_model, my_output->seq[0],
+				my_output->seq_len[0], &log_p_viterbi);
   if (viterbi_path==NULL)
     {fprintf(stderr,"viterbi failed!"); return 1;}
 

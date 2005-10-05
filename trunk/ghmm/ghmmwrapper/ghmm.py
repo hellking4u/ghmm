@@ -2390,7 +2390,7 @@ class DiscreteEmissionHMM(HMM):
         # Assignment of the C function names to be used with this model type
         self.freeFunction = ghmmwrapper.call_model_free
         self.samplingFunction = ghmmwrapper.model_generate_sequences
-        self.viterbiFunction = ghmmwrapper.viterbi
+        self.viterbiFunction = ghmmwrapper.ghmm_d_viterbi
         self.forwardFunction = ghmmwrapper.ghmm_d_forward_lean
         self.forwardAlphaFunction = ghmmwrapper.ghmm_d_forward      
         self.backwardBetaFunction = ghmmwrapper.ghmm_d_backward
@@ -2583,10 +2583,10 @@ class DiscreteEmissionHMM(HMM):
             print "Sorry, training of models containing silent states not yet supported."
         else:
             if nrSteps == None:
-                ghmmwrapper.reestimate_baum_welch(self.cmodel, trainingSequences.cseq)
+                ghmmwrapper.ghmm_d_baum_welch(self.cmodel, trainingSequences.cseq)
             else:
                 assert loglikelihoodCutoff != None
-                ghmmwrapper.reestimate_baum_welch_nstep(self.cmodel, trainingSequences.cseq,
+                ghmmwrapper.ghmm_d_baum_welch_nstep(self.cmodel, trainingSequences.cseq,
                                                         nrSteps, loglikelihoodCutoff)
 
 
@@ -2663,7 +2663,7 @@ class DiscreteEmissionHMM(HMM):
         
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         print "##### "+ str(self.cmodel.model_type)
-        ghmmwrapper.reestimate_update_tie_groups(self.cmodel)
+        ghmmwrapper.ghmm_d_update_tied_groups(self.cmodel)
 
     
     def setTieGroups(self, tieList):
@@ -2974,8 +2974,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         self.forwardFunction = ghmmwrapper.ghmm_d_logp
         self.forwardAlphaLabelFunction = ghmmwrapper.ghmm_dl_forward
         self.backwardBetaLabelFunction = ghmmwrapper.ghmm_dl_backward
-        self.kbestFunction = ghmmwrapper.kbest        
-        self.gradientDescentFunction = ghmmwrapper.gradient_descent
+        self.kbestFunction = ghmmwrapper.ghmm_dl_kbest        
+        self.gradientDescentFunction = ghmmwrapper.ghmm_dl_gradient_descent
         #self.cmodel.state_label = ghmmwrapper.int_array(self.N) # XXX ???
 
     def __str__(self):
@@ -3333,10 +3333,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
             print "Sorry, training of models containing silent states not yet supported."
         else:
             if nrSteps == None:
-                ghmmwrapper.reestimate_baum_welch_label(self.cmodel, trainingSequences.cseq)
+                ghmmwrapper.ghmm_dl_baum_welch(self.cmodel, trainingSequences.cseq)
             else:
                 assert loglikelihoodCutoff != None
-                ghmmwrapper.reestimate_baum_welch_nstep_label(self.cmodel, trainingSequences.cseq,
+                ghmmwrapper.ghmm_dl_baum_welch_nstep(self.cmodel, trainingSequences.cseq,
                                                         nrSteps, loglikelihoodCutoff)
 
 
@@ -4133,7 +4133,7 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
         ghmmwrapper.modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
         ghmmwrapper.seqarray_setptr(SeqArray, SeqList[i].cseq, i)
 
-    ghmmwrapper.discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
+    ghmmwrapper.ghmm_d_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
         HMMList[i].cmodel = ghmmwrapper.modelarray_getptr(HMMArray, i)
@@ -4163,7 +4163,7 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
         ghmmwrapper.modelarray_setptr(HMMArray, HMMList[i].cmodel, i)
         ghmmwrapper.seqarray_setptr(SeqArray, SeqList[i].cseq, i)
 
-    retval = ghmmwrapper.discrime_compute_performance(HMMArray, SeqArray, inplen)
+    retval = ghmmwrapper.ghmm_d_discrim_performance(HMMArray, SeqArray, inplen)
     
     ghmmwrapper.modelarray_free(HMMArray)
     ghmmwrapper.seqarray_free(SeqArray)

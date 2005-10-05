@@ -702,7 +702,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   
 /*============================================================================*/
 double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len) {
-#define CUR_PROC "viterbi_logp"
+#define CUR_PROC "ghmm_dp_viterbi_logp"
   int s, t, i, j, u, v;
   double log_p = 0.0;
   double log_b_i = 1.0;
@@ -796,7 +796,7 @@ double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, i
   return log_p;
 
 #undef CUR_PROC
-} /* viterbi_logp */
+} /* ghmm_dp_viterbi_logp */
 
 /*============================================================================*/
 

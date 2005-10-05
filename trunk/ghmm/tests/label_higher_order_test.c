@@ -176,11 +176,11 @@ void testBaumwelch(int seqlen){
 
   /* shifting both models in diffrent directions */
   /* train the first */	 
-  /*reestimate_baum_welch_label(mo_time, my_output);*/
-  error = reestimate_baum_welch(mo_time, my_output);
+  /*ghmm_dl_baum_welch(mo_time, my_output);*/
+  error = ghmm_d_baum_welch(mo_time, my_output);
 
   /* train the second and hope they are equal */
-  error = reestimate_baum_welch(mo_mem, my_output);
+  error = ghmm_d_baum_welch(mo_mem, my_output);
 
   model_print(stdout, mo_time);
   model_print(stdout, mo_mem);

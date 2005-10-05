@@ -47,10 +47,10 @@
 #include "ghmm_internals.h"
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
- void hlist_insertElem (hypoList ** plist, int newhyp,
+ void ighmm_hlist_insert (hypoList ** plist, int newhyp,
                               hypoList * parlist)
 {
-#define CUR_PROC "hlist_insertElem"
+#define CUR_PROC "ighmm_hlist_insert"
   hypoList *newlist;
 
   ARRAY_CALLOC (newlist, 1);
@@ -63,16 +63,16 @@
   *plist = newlist;
   return;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("hlist_insertElem failed\n");
+  mes_prot ("ighmm_hlist_insert failed\n");
   exit (1);
 #undef CUR_PROC
 }
 
 /* removes hypothesis at position indicated by pointer plist from the list
    removes recursively parent hypothesis with refcount==0 */
- void hlist_removeElem (hypoList ** plist)
+ void ighmm_hlist_remove (hypoList ** plist)
 {
-#define CUR_PROC "hlist_removeElem"
+#define CUR_PROC "ighmm_hlist_remove"
   hypoList *tempPtr = (*plist)->next;
 
   free ((*plist)->gamma_a);
@@ -80,7 +80,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   if ((*plist)->parent) {
     (*plist)->parent->refcount -= 1;
     if (0 == (*plist)->parent->refcount)
-      hlist_removeElem (&((*plist)->parent));
+      ighmm_hlist_remove (&((*plist)->parent));
   }
   free (*plist);
 
@@ -89,10 +89,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /******************************************************************************/
-int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
+int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus, int labels,
                    int *nr_s, int *max_out)
 {
-#define CUR_PROC "hlist_propFwd"
+#define CUR_PROC "ighmm_hlist_prop_forward"
   int i, j, c, k;
   int i_id, j_id, g_nr;
   int no_oldHyps = 0, newHyps = 0;
@@ -120,7 +120,7 @@ int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
 
         /* create a new hypothesis with label c */
         if (!created[c]) {
-          hlist_insertElem (hplus, c, hP);
+          ighmm_hlist_insert (hplus, c, hP);
           created[c] = *hplus;
           /* initiallize gamma-array with safe size (number of states */
           ARRAY_MALLOC ((*hplus)->gamma_id, m_min (nr_s[c], hP->gamma_states * max_out[hP->hyp_c]));
@@ -159,7 +159,7 @@ int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
   free (created);
   return (no_oldHyps);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("hlist_propFwd failed\n");
+  mes_prot ("ighmm_hlist_prop_forward failed\n");
   exit (1);
 #undef CUR_PROC
 }
@@ -168,14 +168,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /**
    Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
    which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
-   @return logSum for products of a row from gamma and a row from matrix A
+   @return ighmm_log_sum for products of a row from gamma and a row from matrix A
    @param log_a:      row of the transition matrix with logarithmic values (1.0 for log(0))
    @param s:          state whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
- double logGammaSum (double *log_a, state * s, hypoList * parent)
+ double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent)
 {
-#define CUR_PROC "logGammaSum"
+#define CUR_PROC "ighmm_log_gamma_sum"
   double result;
   int j, j_id, k;
   double max = 1.0;
@@ -220,7 +220,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   free (logP);
   return result;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("logGammaSum failed\n");
+  mes_prot ("ighmm_log_gamma_sum failed\n");
   exit (1);
 #undef CUR_PROC
 }
@@ -233,9 +233,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
    @param N:          length of a
 */
- double logSum (double *a, int N)
+ double ighmm_log_sum (double *a, int N)
 {
-#define CUR_PROC "logSum"
+#define CUR_PROC "ighmm_log_sum"
   int i;
   double max = 1.0;
   int argmax = 0;

@@ -62,11 +62,11 @@ extern "C" {
   } hypoList;
 
 /* inserts new hypothesis into list at position indicated by pointer plist */
-   void hlist_insertElem (hypoList ** plist, int newhyp,
+   void ighmm_hlist_insert (hypoList ** plist, int newhyp,
                                 hypoList * parlist);
 
 /* removes hypothesis at position indicated by pointer plist from the list */
-   void hlist_removeElem (hypoList ** plist);
+   void ighmm_hlist_remove (hypoList ** plist);
 
 
 /**
@@ -81,19 +81,19 @@ extern "C" {
    @param nr_s:       number states which have assigned the index aa label
    @param max_out:    maximum number of out_states over all states with the index aa label
  */
-  int hlist_propFwd (model * mo, hypoList * h, hypoList ** hplus, int labels,
+  int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus, int labels,
                      int *nr_s, int *max_out);
 
 
 /**
    Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
    which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
-   @return logSum for products of a row from gamma and a row from matrix A
+   @return log. sum for products of a row from gamma and a row from matrix A
    @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
    @param s:          state whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
-   double logGammaSum (double *log_a, state * s, hypoList * parent);
+   double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent);
 
 
 /**
@@ -103,7 +103,7 @@ extern "C" {
    @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
    @param N:          length of a
 */
-   double logSum (double *a, int N);
+   double ighmm_log_sum (double *a, int N);
 
 #ifdef __cplusplus
 }

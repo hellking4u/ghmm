@@ -54,19 +54,19 @@ extern "C" {
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-  int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps,
+  int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps,
 		      int gradient);
 
 /*----------------------------------------------------------------------------*/
 /**
-   Returns the value of the in this discriminative training algorithm optimised
+   Returns the value of teh in this discriminative training algorithm optimised
    function for a tupel of HMMs and sequencesets.
    @return                 value of funcion
    @param mo:              array of pointers to some models
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
 */
-  double discrime_compute_performance (model ** mo, sequence_t ** sqs,
+  double ghmm_d_discrim_performance (model ** mo, sequence_t ** sqs,
                                        int noC);
 
 
