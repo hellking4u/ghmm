@@ -1583,7 +1583,7 @@ struct scluster_t{
     log(P) for the model */
   double *smo_Z_MD;
   /** a posteriori probability for the models to calculate the objective
-      fucntion in case of a MAW classificator. Is calculated using smap_bayes */
+      fucntion in case of a MAW classificator. Is calculated using ghmm_smap_bayes */
   double *smo_Z_MAW;
 }; typedef struct scluster_t scluster_t;
 
@@ -1593,7 +1593,7 @@ struct scluster_t{
    @return 0 for success; -1 for error
    @param scl pointer to scl struct
 */
-extern int scluster_t_free(scluster_t *scl);
+extern int ghmm_scluster_t_free(scluster_t *scl);
 
 
 /**
@@ -1603,13 +1603,13 @@ extern int scluster_t_free(scluster_t *scl);
    @param smo_number number of models (needed to determine the interval
    for the random numbers)
 */
-extern int scluster_random_labels(sequence_d_t *sqd, int smo_number);
+extern int ghmm_scluster_random_labels(sequence_d_t *sqd, int smo_number);
 
 /**
    Calculates the logarithmic probability of sequences for a model.
    @param cs sequences and model 
  */
-extern void scluster_prob(smosqd_t *cs);
+extern void ghmm_scluster_prob(smosqd_t *cs);
 
 /** 
     Determines form an already calculated probability matrix, which model 
@@ -1622,7 +1622,7 @@ extern void scluster_prob(smosqd_t *cs);
     @param log_p the probability of the sequence in question for the 
     best fitting model
 */
-extern int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p,
+extern int ghmm_scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p,
 			double *log_p);
 
 /**
@@ -1631,12 +1631,12 @@ extern int scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p,
    @param cl cluster to update
    @param sqd sequences to update the cluster with
  */
-extern int scluster_update(scluster_t *cl, sequence_d_t *sqd);
+extern int ghmm_scluster_update(scluster_t *cl, sequence_d_t *sqd);
 
 /**
-   Prints the input vector for scluster_hmm
+   Prints the input vector for ghmm_scluster_hmm
  */
-void scluster_print_likelihood(FILE *outfile, scluster_t *cl);
+void ghmm_scluster_print_likelihood(FILE *outfile, scluster_t *cl);
 	
 
 /**
@@ -1647,7 +1647,7 @@ void scluster_print_likelihood(FILE *outfile, scluster_t *cl);
    @param outfile output file
    @param out_filename name of the output file
  */
-int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]);
+int ghmm_scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]);
 
 /** Calculates the aposteriori prob. $\log(p(\lambda_best | O[seq\_id]))$, 
     where $\lambda_best$ is the model with highest apost. prob.
@@ -1657,7 +1657,7 @@ int scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[])
     @param seq_id the ID of the sequence
     @param lob_apo the results
 */
-extern int  scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int seq_id, double *log_apo);
+extern int  ghmm_scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int seq_id, double *log_apo);
 
 /**
    Avoids empty models going out as outputs by assigning them a random 
@@ -1668,7 +1668,7 @@ extern int  scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int seq_
    @param sqd sequences to generate the model from
    @param cl cluster for the models
  */
-extern int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl);
+extern int ghmm_scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl);
 
 /**
    Makes a cluster and reestimates the HMMs.
@@ -1676,12 +1676,12 @@ extern int scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl);
    @param argv vector of input files, one with sequences, one with models, 
    one for output and one with labels for the sequences - in this order.
  */
-extern int scluster_hmm(char *argv[]);
+extern int ghmm_scluster_hmm(char *argv[]);
 
 
 %inline %{
   void scluster_printl_stdout(scluster_t *scl) {
-    /*scluster_print_likelihood(stdout, scl);*/
+    /*ghmm_scluster_print_likelihood(stdout, scl);*/
   }
   
 %}

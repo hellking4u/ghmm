@@ -61,9 +61,9 @@
 #include "obsolete.h"
 
 /*============================================================================*/
-int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
+int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
 {
-# define CUR_PROC "cluster_hmm"
+# define CUR_PROC "ghmm_cluster_hmm"
   int res = -1, i, iter = 0, sq_number;
   sequence_t *sq = NULL, **sq_vec = NULL;
   long j, changes = 1;
@@ -135,24 +135,24 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
         goto STOP;
       }
     }
-    if (cluster_avoid_empty_model
+    if (ghmm_cluster_avoid_empty_model
         (sq->seq_label, sq->seq_number, cl.mo_number)) {
       mes_proc ();
       goto STOP;
     }
-    changes = cluster_update_label (oldlabel, sq->seq_label, sq->seq_number);
+    changes = ghmm_cluster_update_label (oldlabel, sq->seq_label, sq->seq_number);
     fprintf (outfile, "%ld changes\n", changes);
     fprintf (stdout, "\n*** %ld changes in iteration %d ***\n\n", changes,
              iter);
 
     /* Reestimate models with the associated sequences */
     if (changes > 0) {
-      if (cluster_update (&cl, sq)) {
+      if (ghmm_cluster_update (&cl, sq)) {
         mes_proc ();
         goto STOP;
       }
       fprintf (outfile, "\nGes. WS VOR %d.Reestimate:\n", iter);
-      cluster_print_likelihood (outfile, &cl);
+      ghmm_cluster_print_likelihood (outfile, &cl);
       for (i = 0; i < cl.mo_number; i++) {
         if (ghmm_d_baum_welch (cl.mo[i], cl.mo_seq[i])) {
           char *str =
@@ -164,13 +164,13 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
         }
       }
       fprintf (outfile, "\nGes. WS NACH %d.Reestimate:\n", iter);
-      cluster_print_likelihood (outfile, &cl);
+      ghmm_cluster_print_likelihood (outfile, &cl);
     }                           /* if changes */
   }                             /* while */
 
 /*----------------------------------------------------------------------------*/
 
-  if (!cluster_out (&cl, sq, outfile, out_filename)) {
+  if (!ghmm_cluster_out (&cl, sq, outfile, out_filename)) {
     mes_proc ();
     goto STOP;
   }
@@ -182,12 +182,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
     fclose (outfile);
   return (res);
 # undef CUR_PROC
-}                               /* cluster_hmm */
+}                               /* ghmm_cluster_hmm */
 
 /*============================================================================*/
-int cluster_update (cluster_t * cl, sequence_t * sq)
+int ghmm_cluster_update (cluster_t * cl, sequence_t * sq)
 {
-#define CUR_PROC "cluster_update"
+#define CUR_PROC "ghmm_cluster_update"
   int i, res = -1;
   long *seq_counter;
   sequence_t *seq_t;
@@ -219,10 +219,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (seq_counter);
   return (res);
 # undef CUR_PROC
-}                               /* cluster_update */
+}                               /* ghmm_cluster_update */
 
 /*============================================================================*/
-void cluster_print_likelihood (FILE * outfile, cluster_t * cl)
+void ghmm_cluster_print_likelihood (FILE * outfile, cluster_t * cl)
 {
   double ges_prob = 0.0, mo_prob;
   int i;
@@ -233,17 +233,17 @@ void cluster_print_likelihood (FILE * outfile, cluster_t * cl)
              cl->mo_seq[i]->seq_number, mo_prob);
   }
   fprintf (outfile, "Summe: %.4f\n\n", ges_prob);
-}                               /* cluster_print_likelihood */
+}                               /* ghmm_cluster_print_likelihood */
 
 /*============================================================================*/
 /* Prevents that empty models are sent out (no associated seqences) by 
    associating a random sequence. Since it's possible to produce an empty model
    in this way, we swap the sequences until a nonempty model is produced. (This 
    could be a never-ending process and therefore it's only done 100 times). */
-int cluster_avoid_empty_model (long *seq_label, long seq_number,
+int ghmm_cluster_avoid_empty_model (long *seq_label, long seq_number,
                                int mo_number)
 {
-#define CUR_PROC "cluster_avoid_empty_model"
+#define CUR_PROC "ghmm_cluster_avoid_empty_model"
   int i;
   long j = 0;
   long *counter;
@@ -293,13 +293,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   else
     return 0;
 #undef CUR_PROC
-}                               /* cluster_avoid_empty_model */
+}                               /* ghmm_cluster_avoid_empty_model */
 
 /*============================================================================*/
-int cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
+int ghmm_cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
                  char *out_filename)
 {
-#define CUR_PROC "cluster_out"
+#define CUR_PROC "ghmm_cluster_out"
   int res = -1;
   int i;
   sequence_d_t *sqd = NULL;
@@ -312,11 +312,11 @@ int cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
   ghmm_cseq_free (&sqd);
   return (res);
 #undef CUR_PROC
-}                               /* cluster_out */
+}                               /* ghmm_cluster_out */
 
 
 /*============================================================================*/
-long cluster_update_label (long *oldlabel, long *seq_label, long seq_number)
+long ghmm_cluster_update_label (long *oldlabel, long *seq_label, long seq_number)
 {
   long i, changes = 0;
   for (i = 0; i < seq_number; i++)
@@ -325,6 +325,6 @@ long cluster_update_label (long *oldlabel, long *seq_label, long seq_number)
       oldlabel[i] = seq_label[i];
     }
   return changes;
-}                               /* cluster_update_label */
+}                               /* ghmm_cluster_update_label */
 
 #endif /* GHMM_OBSOLETE */

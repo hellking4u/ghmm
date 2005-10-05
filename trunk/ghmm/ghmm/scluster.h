@@ -76,7 +76,7 @@ extern "C" {
     log(P) for the model */
     double *smo_Z_MD;
   /** a posteriori probability for the Modelle to calculate the objective
-      fucntion in case of a MAW classificator. Is calculated using smap_bayes */
+      fucntion in case of a MAW classificator. Is calculated using ghmm_smap_bayes */
     double *smo_Z_MAW;
   };
 /**
@@ -89,7 +89,7 @@ extern "C" {
    @return 0 for success; -1 for error
    @param scl pointer to scl struct
 */
-  int scluster_t_free (scluster_t * scl);
+  int ghmm_scluster_t_free (scluster_t * scl);
 
 
 /**
@@ -100,7 +100,7 @@ extern "C" {
    @param outfile output file
    @param out_filename name of the output file
  */
-  int scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile,
+  int ghmm_scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile,
                     char *argv[]);
 
 /**
@@ -112,7 +112,7 @@ extern "C" {
    @param sqd sequences to generate the model from
    @param cl cluster for the models
  */
-  int scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl);
+  int ghmm_scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl);
 
 /**
    Makes a cluster and reestimates the HMMs.
@@ -120,7 +120,7 @@ extern "C" {
    @param argv vector of input files, one with sequences, one with models, 
    one for output and one with labels for the sequences - in this order.
  */
-  int scluster_hmm (char *argv[]);
+  int ghmm_scluster_hmm (char *argv[]);
 
 /**
    Updates the cluster with additional sequences.
@@ -128,7 +128,7 @@ extern "C" {
    @param cl cluster to update
    @param sqd sequences to update the cluster with
  */
-  int scluster_update (scluster_t * cl, sequence_d_t * sqd);
+  int ghmm_scluster_update (scluster_t * cl, sequence_d_t * sqd);
 
 /**
    Updates a label
@@ -138,7 +138,7 @@ extern "C" {
    @param seq_number number of sequences
    @param smo_changed tells, which labels have been changed
  */
-  long scluster_update_label (long *oldlabel, long *seq_label,
+  long ghmm_scluster_update_label (long *oldlabel, long *seq_label,
                               long seq_number, long *smo_changed);
 
 /**
@@ -146,7 +146,7 @@ extern "C" {
    @param outfile output file
    @param cl cluster of models and sequences
  */
-  void scluster_print_likelihood (FILE * outfile, scluster_t * cl);
+  void ghmm_scluster_print_likelihood (FILE * outfile, scluster_t * cl);
 
 /** 
     Determines form an already calculated probability matrix, which model 
@@ -159,14 +159,14 @@ extern "C" {
     @param log_p the probability of the sequence in question for the 
     best fitting model
 */
-  int scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
+  int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
                            double *log_p);
 
 /**
    Calculates the logarithmic probability of sequences for a model.
    @param cs sequences and model 
  */
-  void scluster_prob (smosqd_t * cs);
+  void ghmm_scluster_prob (smosqd_t * cs);
 
 /* int scluster_labels_from_kmeans(sequence_d_t *sqd, int smo_number); */
 
@@ -177,7 +177,7 @@ extern "C" {
    @param smo_number number of models (needed to determine the interval
    for the random numbers)
 */
-  int scluster_random_labels (sequence_d_t * sqd, int smo_number);
+  int ghmm_scluster_random_labels (sequence_d_t * sqd, int smo_number);
 
 /** Calculates the aposteriori prob. $\log(p(\lambda_best | O[seq\_id]))$, 
     where $\lambda_best$ is the model with highest apost. prob.
@@ -187,13 +187,13 @@ extern "C" {
     @param seq_id the ID of the sequence
     @param lob_apo the results
 */
-  int scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
+  int ghmm_scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
                                 int seq_id, double *log_apo);
 
 /**
-   Prints the input vector for scluster_hmm
+   Prints the input vector for ghmm_scluster_hmm
  */
-  void scluster_print_header (FILE * file, char *argv[]);
+  void ghmm_scluster_print_header (FILE * file, char *argv[]);
 
 #ifdef __cplusplus
 }

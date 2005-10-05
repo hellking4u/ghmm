@@ -65,7 +65,7 @@ extern "C" {
    @param O sequence
    @param T length of the sequence
  */
-  int smap_classify (smodel ** smo, double *result, int smo_number,
+  int ghmm_smap_classify (smodel ** smo, double *result, int smo_number,
                      double *O, int T);
 
 /**
@@ -79,7 +79,7 @@ extern "C" {
    @param O sequence
    @param T length of the sequence
  */
-  int smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
+  int ghmm_smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
                   int T);
 
 #ifdef __cplusplus
