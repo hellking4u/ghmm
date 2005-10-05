@@ -440,35 +440,49 @@ int model_check_compatibel_models (const model * mo, const model * m2);
                                               int global_len, long seq_number,
                                               int Tmax);
 
-
 /** 
 	Calculates the right index for emission array b of state j in model mo
 	given an observation obs and taking the state order into account,
 	returns -1 if state order exceeds number of so far emitted characters
-	@param  mo:  model
-	@param   j:  state id 
-	@param obs:  integer observation to be updated with
-	@param   t:  position of obs in sequence (time)
+	@param MO:  model
+	@param  S:  state id 
+	@param  O:  integer observation to be updated with
+	@param  T:  position of obs in sequence (time)
 */
-   int get_emission_index (model * mo, int j, int obs, int t);
+#define get_emission_index(MO, S, O, T)   (((MO)->model_type & kHigherOrderEmissions) ? \
+                                            ((MO)->s[S].order > (T)) ?                    \
+                                              -1 :                                         \
+                                              (((MO)->emission_history*(MO)->M) %           \
+                                               (MO)->pow_lookup[(MO)->s[S].order+1] + (O)) : \
+                                            (O))
 
 /**
 	Updates emission history of model mo, discarding the oldest and 'adding' the
-	new observation by using modulo and multiplication	
-	@param  mo:  model to be updated
-	@param obs:  integer observation to be updated with
+	new observation by using modulo and multiplication
+	left-shift the history, truncate to history length and
+	add the last observation	
+	@param MO:  model to be updated
+	@param  O:  integer observation to be updated with
 */
-   void update_emission_history (model * mo, int obs);
+#define update_emission_history(MO, O)   if ((MO)->model_type & kHigherOrderEmissions)                  \
+                                              (MO)->emission_history = ((MO)->emission_history*(MO)->M) % \
+                                                                  (MO)->pow_lookup[(MO)->maxorder] + (O)
+
 
 /**
 	Updates emission history of model mo for backward algorithm by 'adding'
 	observation obs to the left,
 	(example: obs = 3
 	          2 0 0 1 --> 3 2 0 0 )
-	@param  mo:  model to be updated
-	@param obs:  integer observation to be updated with
+	removes the most significant position (right-shift) and add the last seen
+	observation (left-shifted with the length of history)
+	@param MO:  model to be updated
+	@param  O:  integer observation to be updated with
 */
-   void update_emission_history_front (model * mo, int obs);
+#define update_emission_history_front(MO, O)   if ((MO)->model_type & kHigherOrderEmissions)  \
+                                                  (MO)->emission_history =                      \
+                                                    ((MO)->pow_lookup[(MO)->maxorder-1] * (O)) + \
+                                                    (MO)->emission_history / (MO)->M
 
 
 /**

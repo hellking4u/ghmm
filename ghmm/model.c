@@ -1924,42 +1924,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-/** gets correct index for emission array b of state j */
- int get_emission_index (model * mo, int j, int obs, int t)
-{
-  int retval;
-  if (!(mo->model_type & kHigherOrderEmissions))
-    return (obs);
-  if (mo->s[j].order > t)
-    retval = -1;
-  else
-    retval = (mo->emission_history * mo->M) % mo->pow_lookup[mo->s[j].order + 1] + obs;
-
-  return retval;
-}
-
-/** updates emission history */
- void update_emission_history (model * mo, int obs)
-{
-  /* left-shift the history, truncate to history length and
-     add the last observation */
-  if (mo->model_type & kHigherOrderEmissions)
-    mo->emission_history =
-      (mo->emission_history * mo->M) % mo->pow_lookup[mo->maxorder] + obs;
-}
-
-/** updates emission history for backward algorithm*/
- void update_emission_history_front (model * mo, int obs)
-{
-  /*removes the most significant position (right-shift) and add the last seen
-     observation (left-shifted with the length of history) */
-  if (mo->model_type & kHigherOrderEmissions)
-    mo->emission_history =
-      (mo->pow_lookup[mo->maxorder - 1] * obs) + mo->emission_history / mo->M;
-}
-
-
-/*----------------------------------------------------------------------------*/
 /* Scales the output and transitions probs of all states in a given model */
 int model_normalize (model * mo)
 {
