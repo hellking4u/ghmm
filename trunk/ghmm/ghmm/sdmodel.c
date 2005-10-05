@@ -73,7 +73,7 @@ static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
 
   if (out_states > 0) {
     ARRAY_CALLOC (state->out_id, out_states);
-    state->out_a = matrix_d_alloc (cos, out_states);
+    state->out_a = ighmm_cmatrix_alloc (cos, out_states);
     if (!state->out_a) {
       mes_proc ();
       goto STOP;
@@ -81,7 +81,7 @@ static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
   }
   if (in_states > 0) {
     ARRAY_CALLOC (state->in_id, in_states);
-    state->in_a = matrix_d_alloc (cos, in_states);
+    state->in_a = ighmm_cmatrix_alloc (cos, in_states);
     if (!state->in_a) {
       mes_proc ();
       goto STOP;
@@ -194,9 +194,9 @@ int sdmodel_free (sdmodel ** mo)
        if (my_state->in_a)
        m_free(my_state->in_a); */
     if (my_state->out_a)
-      matrix_d_free (&((*mo)->s[i].out_a), (*mo)->cos);
+      ighmm_cmatrix_free (&((*mo)->s[i].out_a), (*mo)->cos);
     if (my_state->in_a)
-      matrix_d_free (&((*mo)->s[i].in_a), (*mo)->cos);
+      ighmm_cmatrix_free (&((*mo)->s[i].in_a), (*mo)->cos);
     my_state->pi = 0;
     my_state->b = NULL;
     my_state->out_id = NULL;
@@ -228,9 +228,9 @@ sdmodel *sdmodel_copy (const sdmodel * mo)
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
     ARRAY_CALLOC (m2->s[i].out_id, nachf);
-    m2->s[i].out_a = matrix_d_alloc (mo->cos, nachf);
+    m2->s[i].out_a = ighmm_cmatrix_alloc (mo->cos, nachf);
     ARRAY_CALLOC (m2->s[i].in_id, vorg);
-    m2->s[i].in_a = matrix_d_alloc (mo->cos, vorg);
+    m2->s[i].in_a = ighmm_cmatrix_alloc (mo->cos, vorg);
 
     ARRAY_CALLOC (m2->s[i].b, mo->M);
     /* Copy the values */
@@ -442,7 +442,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
         ARRAY_REALLOC (sq->seq[n], state);
       sq->seq_len[n] = state;
       /* sq->seq_label[n] = label; */
-      /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
+      /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
@@ -735,7 +735,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
           }
           sq->seq_len[n] = state;
           /* sq->seq_label[n] = label; */
-          /* vector_d_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
+          /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
           n++;
         }
       }

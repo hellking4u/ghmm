@@ -187,7 +187,7 @@ static plocal_propagate_store_t * pviterbi_propagate_alloc (pmodel *mo, int len_
     ARRAY_CALLOC (v->log_b[j], emission_table_size(mo, j) + 1);
   }
   if (!(v->log_b)) {mes_proc(); goto STOP;}
-  v->phi = matrix3d_d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
+  v->phi = ighmm_cmatrix_3d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
   if (!(v->phi)) {mes_proc(); goto STOP;}
   ARRAY_CALLOC (v->phi_new, mo->N);
   ARRAY_CALLOC (v->end_of_first, mo->max_offset_x + 1);
@@ -259,7 +259,7 @@ static int pviterbi_propagate_free (plocal_propagate_store_t **v, int n,
   for (j=0; j<n; j++)
     m_free((*v)->log_b[j]);
   m_free((*v)->log_b);
-  matrix3d_d_free(&((*v)->phi), max_offset_x + 1, len_y + max_offset_y + 1);
+  ighmm_cmatrix_3d_free(&((*v)->phi), max_offset_x + 1, len_y + max_offset_y + 1);
   m_free((*v)->phi_new);
   if ((*v)->end_of_first) {
     for (j=0; j<max_offset_x + 1; j++) {

@@ -52,7 +52,7 @@ extern "C" {
   @param rows: number of rows
   @param columns: number of columns
   */
-  double **matrix_d_alloc (int n, int m);
+  double **ighmm_cmatrix_alloc (int n, int m);
 
 
 /**
@@ -62,11 +62,11 @@ extern "C" {
   @param columns: number of columns
   @param height: 3rd dimension
   */
-double *** matrix3d_d_alloc(int i, int j, int k);
-int matrix3d_d_free(double **** matrix, int i, int j);
+double *** ighmm_cmatrix_3d_alloc(int i, int j, int k);
+int ighmm_cmatrix_3d_free(double **** matrix, int i, int j);
 
-int *** matrix3d_i_alloc(int i, int j, int k);
-int matrix3d_i_free(int **** matrix, int i, int j);
+int *** ighmm_dmatrix_3d_alloc(int i, int j, int k);
+int ighmm_dmatrix_3d_free(int **** matrix, int i, int j);
 /**
   Copying and allocation of a double matrix.
   @return pointer to a matrix
@@ -74,7 +74,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param columns: number of columns
   @param copymatrix: matrix to copy 
   */
-  double **matrix_d_alloc_copy (int rows, int columns, double **copymatrix);
+  double **ighmm_cmatrix_alloc_copy (int rows, int columns, double **copymatrix);
 
 /**
   Free the memory of a double matrix.
@@ -82,7 +82,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-  int matrix_d_free (double ***matrix, long zeilen);
+  int ighmm_cmatrix_free (double ***matrix, long zeilen);
 
 /**
   Allocation of a static double matrix with a single malloc. 
@@ -90,7 +90,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param rows: number of rows
   @param columns: number of columns
   */
-  double **stat_matrix_d_alloc (int n, int m);
+  double **ighmm_cmatrix_stat_alloc (int n, int m);
 
 /**
   Free the memory of a static double matrix.
@@ -98,7 +98,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-  int stat_matrix_d_free (double ***matrix);
+  int ighmm_cmatrix_stat_free (double ***matrix);
 
 /**
   Allocation of a static int matrix with a single malloc. 
@@ -106,7 +106,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param rows: number of rows
   @param columns: number of columns
   */
-  int **stat_matrix_i_alloc (int n, int m);
+  int **ighmm_dmatrix_stat_alloc (int n, int m);
 
 /**
   Free the memory of a static int matrix.
@@ -114,7 +114,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-  int stat_matrix_i_free (int ***matrix);
+  int ighmm_dmatrix_stat_free (int ***matrix);
 
 
 /**
@@ -123,7 +123,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param rows: number of rows
   @param columns: number of columns
   */
-  int **matrix_i_alloc (int rows, int columns);
+  int **ighmm_dmatrix_alloc (int rows, int columns);
 
 /**
   Free the memory of a integer matrix.
@@ -131,7 +131,7 @@ int matrix3d_i_free(int **** matrix, int i, int j);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-  int matrix_i_free (int ***matrix, long rows);
+  int ighmm_dmatrix_free (int ***matrix, long rows);
 
 
 #ifdef __cplusplus

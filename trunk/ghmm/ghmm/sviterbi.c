@@ -68,14 +68,14 @@ static local_store_t *sviterbi_alloc (smodel * smo, int T)
 #define CUR_PROC "sviterbi_alloc"
   local_store_t *v = NULL;
   ARRAY_CALLOC (v, 1);
-  v->log_b = stat_matrix_d_alloc (smo->N, T);
+  v->log_b = ighmm_cmatrix_stat_alloc (smo->N, T);
   if (!(v->log_b)) {
     mes_proc ();
     goto STOP;
   }
   ARRAY_CALLOC (v->phi, smo->N);
   ARRAY_CALLOC (v->phi_new, smo->N);
-  v->psi = matrix_i_alloc (T, smo->N);
+  v->psi = ighmm_dmatrix_alloc (T, smo->N);
   if (!(v->psi)) {
     mes_proc ();
     goto STOP;
@@ -95,10 +95,10 @@ static int sviterbi_free (local_store_t ** v, int n, int T)
   mes_check_ptr (v, return (-1));
   if (!*v)
     return (0);
-  stat_matrix_d_free (&((*v)->log_b));
+  ighmm_cmatrix_stat_free (&((*v)->log_b));
   m_free ((*v)->phi);
   m_free ((*v)->phi_new);
-  matrix_i_free (&((*v)->psi), T);
+  ighmm_dmatrix_free (&((*v)->psi), T);
   m_free (*v);
   return (0);
 #undef CUR_PROC

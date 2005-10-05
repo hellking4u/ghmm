@@ -106,7 +106,7 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
   }
   ARRAY_CALLOC (initial_distribution, smo->N);
   /* is needed in cfoba_forward() */
-  alpha = matrix_d_alloc (max_short_len, smo->N);
+  alpha = ighmm_cmatrix_alloc (max_short_len, smo->N);
   if (!alpha) {
     mes_proc ();
     goto STOP;
@@ -313,11 +313,11 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
 
   }                             /* for n .. < seq_number */
 
-  matrix_d_free (&alpha, max_short_len);
+  ighmm_cmatrix_free (&alpha, max_short_len);
   m_free (scale);
   return sq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_d_free (&alpha, max_short_len);
+  ighmm_cmatrix_free (&alpha, max_short_len);
   ghmm_cseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
@@ -525,7 +525,7 @@ double sgenerate_next_value (smodel * smo, double *O, const int len)
     goto STOP;
   }
 
-  alpha = matrix_d_alloc (len, smo->N);
+  alpha = ighmm_cmatrix_alloc (len, smo->N);
   if (!alpha) {
     mes_proc ();
     goto STOP;
@@ -610,7 +610,7 @@ double sgenerate_next_value (smodel * smo, double *O, const int len)
   res = smodel_get_random_var (smo, i, m);
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_d_free (&alpha, len);
+  ighmm_cmatrix_free (&alpha, len);
   m_free (scale);
   return res;
 # undef CUR_PROC

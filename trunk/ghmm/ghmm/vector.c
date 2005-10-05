@@ -52,9 +52,9 @@
 /*============================================================================*/
 /* Scales the elements of a vector to have the sum 1 */
 /* PROBLEM: Entries can get very small and be rounded to 0 */
-int vector_normalize (double *v, int len)
+int ighmm_cvector_normalize (double *v, int len)
 {
-#define CUR_PROC "vector_normalize"
+#define CUR_PROC "ighmm_cvector_normalize"
   int i;
   double sum = 0.0;
   for (i = 0; i < len; i++)
@@ -67,51 +67,51 @@ int vector_normalize (double *v, int len)
     v[i] /= sum;
   return 0;
 #undef CUR_PROC
-}                               /* vector_normalize */
+}                               /* ighmm_cvector_normalize */
 
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
-void vector_const_values (double *v, int len, double c)
+void ighmm_cvector_const_values (double *v, int len, double c)
 {
   int i;
   for (i = 0; i < len; i++)
     v[i] = c;
-}                               /* vector_const_values */
+}                               /* ighmm_cvector_const_values */
 
 
 /*============================================================================*/
-void vector_const_preserve_struct (double *v, int len, double c)
+void ighmm_cvector_const_preserve_struct (double *v, int len, double c)
 {
   int i;
   for (i = 0; i < len; i++) {
     if (v[i] != 0.0)
       v[i] = c;
   }
-}                               /* vector_const_preserve_struct */
+}                               /* ighmm_cvector_const_preserve_struct */
 
 
 /*============================================================================*/
-void vector_random_values (double *v, int len)
+void ighmm_cvector_random_values (double *v, int len)
 {
   int i;
   for (i = 0; i < len; i++)
     v[i] = GHMM_RNG_UNIFORM (RNG);
-}                               /* vector_random_values */
+}                               /* ighmm_cvector_random_values */
 
 
 /*============================================================================*/
-void vector_random_preserve_struct (double *v, int len)
+void ighmm_cvector_random_preserve_struct (double *v, int len)
 {
   int i;
   for (i = 0; i < len; i++) {
     if (v[i] != 0.0)
       v[i] = GHMM_RNG_UNIFORM (RNG);
   }
-}                               /* vector_random_preserve_struct */
+}                               /* ighmm_cvector_random_preserve_struct */
 #endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
-void vector_d_print (FILE * file, double *vector, int len,
+void ighmm_cvector_print (FILE * file, double *vector, int len,
                      char *tab, char *separator, char *ending)
 {
   int j;
@@ -123,10 +123,10 @@ void vector_d_print (FILE * file, double *vector, int len,
   for (j = 1; j < len; j++)
     fprintf (file, "%s %6.2f", separator, vector[j]);
   fprintf (file, "%s\n", ending);
-}                               /* vector_d_print */
+}                               /* ighmm_cvector_print */
 
 /*============================================================================*/
-void vector_d_print_prec (FILE * file, double *vector, int len, int width,
+void ighmm_cvector_print_prec (FILE * file, double *vector, int len, int width,
                           int prec, char *tab, char *separator, char *ending)
 {
   int j;
@@ -135,10 +135,10 @@ void vector_d_print_prec (FILE * file, double *vector, int len, int width,
   for (j = 1; j < len; j++)
     fprintf (file, "%s %*.*f", separator, width, prec, vector[j]);
   fprintf (file, "%s\n", ending);
-}                               /* vector_d_print */
+}                               /* ighmm_cvector_print */
 
 /*============================================================================*/
-void vector_i_print (FILE * file, int *vector, int len,
+void ighmm_dvector_print (FILE * file, int *vector, int len,
                      char *tab, char *separator, char *ending)
 {
   int j;
@@ -148,13 +148,13 @@ void vector_i_print (FILE * file, int *vector, int len,
   for (j = 1; j < len; j++)
     fprintf (file, "%s %3d", separator, vector[j]);
   fprintf (file, "%s\n", ending);
-}                               /* vector_i_print */
+}                               /* ighmm_dvector_print */
 
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
-int vector_mat_times_vec (double **A, double *x, int n, int m, double *v)
+int ighmm_cvector_mat_times_vec (double **A, double *x, int n, int m, double *v)
 {
-#define CUR_PROC "vector_mat_times_vec"
+#define CUR_PROC "ighmm_cvector_mat_times_vec"
   int i, j;
   for (i = 0; i < n; i++) {
     v[i] = 0.0;
@@ -163,6 +163,6 @@ int vector_mat_times_vec (double **A, double *x, int n, int m, double *v)
   }
   return 0;
 #undef CUR_PROC
-}                               /* vector_mat_times_vec */
+}                               /* ighmm_cvector_mat_times_vec */
 
 #endif /* GHMM_OBSOLETE */

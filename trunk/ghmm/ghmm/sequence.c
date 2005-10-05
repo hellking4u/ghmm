@@ -646,12 +646,12 @@ int ghmm_dseq_subseq_free (sequence_t ** sq)
   m_free ((*sq)->seq_w);
 
   if ((*sq)->states) {
-    matrix_i_free (&(*sq)->states, (*sq)->seq_number);
+    ighmm_dmatrix_free (&(*sq)->states, (*sq)->seq_number);
     /*m_free((*sq)->states); */
   }
 
   if ((*sq)->state_labels) {
-    matrix_i_free (&(*sq)->state_labels, (*sq)->seq_number);
+    ighmm_dmatrix_free (&(*sq)->state_labels, (*sq)->seq_number);
     m_free ((*sq)->state_labels_len);
 
     /*m_free((*sq)->states); */
@@ -1030,9 +1030,9 @@ void ghmm_dseq_mathematica_print (FILE * file, sequence_t * sq, char *name)
   int i;
   fprintf (file, "%s = {\n", name);
   for (i = 0; i < sq->seq_number - 1; i++)
-    vector_i_print (file, sq->seq[i], sq->seq_len[i], "{", ",", "},");
+    ighmm_dvector_print (file, sq->seq[i], sq->seq_len[i], "{", ",", "},");
   /* no comma after last seq. */
-  vector_i_print (file, sq->seq[sq->seq_number - 1],
+  ighmm_dvector_print (file, sq->seq[sq->seq_number - 1],
                   sq->seq_len[sq->seq_number - 1], "{", ",", "}");
   fprintf (file, "};\n");
 }                               /* ghmm_cseq_mathematica_print */
@@ -1097,9 +1097,9 @@ void ghmm_cseq_mathematica_print (FILE * file, sequence_d_t * sqd,
   int i;
   fprintf (file, "%s = {\n", name);
   for (i = 0; i < sqd->seq_number - 1; i++)
-    vector_d_print (file, sqd->seq[i], sqd->seq_len[i], "{", ",", "},");
+    ighmm_cvector_print (file, sqd->seq[i], sqd->seq_len[i], "{", ",", "},");
   /* no comma after last seq. */
-  vector_d_print (file, sqd->seq[sqd->seq_number - 1],
+  ighmm_cvector_print (file, sqd->seq[sqd->seq_number - 1],
                   sqd->seq_len[sqd->seq_number - 1], "{", ",", "}");
   fprintf (file, "};\n");
 }                               /* ghmm_cseq_mathematica_print */
@@ -1151,15 +1151,15 @@ int ghmm_dseq_free (sequence_t ** sq)
      }  
      } */
 
-  /* matrix_i_free also takes care of  (*sq)->seq */
-  if (matrix_i_free (&(*sq)->seq, (*sq)->seq_number) == -1) {
+  /* ighmm_dmatrix_free also takes care of  (*sq)->seq */
+  if (ighmm_dmatrix_free (&(*sq)->seq, (*sq)->seq_number) == -1) {
     printf ("Error in ghmm_dseq_free !\n");
   }
 
   /* XXX The allocation of state must be fixed XXX*/
   /*** Added attribute to the sequence_t
   if (&(*sq)->states) { 
-    matrix_i_free(&(*sq)->states, (*sq)->seq_number);
+    ighmm_dmatrix_free(&(*sq)->states, (*sq)->seq_number);
    }
   ***/
 
@@ -1171,13 +1171,13 @@ int ghmm_dseq_free (sequence_t ** sq)
   m_free ((*sq)->seq_w);
 
   if ((*sq)->states) {
-    matrix_i_free (&(*sq)->states, (*sq)->seq_number);
+    ighmm_dmatrix_free (&(*sq)->states, (*sq)->seq_number);
     /*m_free((*sq)->states); */
   }
 
 
   if ((*sq)->state_labels) {
-    matrix_i_free (&(*sq)->state_labels, (*sq)->seq_number);
+    ighmm_dmatrix_free (&(*sq)->state_labels, (*sq)->seq_number);
     m_free ((*sq)->state_labels_len);
 
     /*m_free((*sq)->states); */
@@ -1196,7 +1196,7 @@ int ghmm_cseq_free (sequence_d_t ** sqd)
   mes_check_ptr (sqd, return (-1));
   /* ghmm_cseq_print(stdout,*sqd,0);*/
 
-  matrix_d_free (&(*sqd)->seq, (*sqd)->seq_number);
+  ighmm_cmatrix_free (&(*sqd)->seq, (*sqd)->seq_number);
   m_free ((*sqd)->seq_len);
 #ifdef GHMM_OBSOLETE
   m_free ((*sqd)->seq_label);
@@ -1331,7 +1331,7 @@ double **ghmm_cseq_scatter_matrix (const sequence_d_t * sqd, int *dim)
   double **W, *mean;
 
   *dim = ghmm_cseq_max_len (sqd);
-  if (!(W = matrix_d_alloc (*dim, *dim))) {
+  if (!(W = ighmm_cmatrix_alloc (*dim, *dim))) {
     mes_proc ();
     goto STOP;
   }
@@ -1367,7 +1367,7 @@ double **ghmm_cseq_scatter_matrix (const sequence_d_t * sqd, int *dim)
   }
   return W;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_d_free (&W, *dim);
+  ighmm_cmatrix_free (&W, *dim);
   return NULL;
 # undef CUR_PROC
 }                               /* ghmm_cseq_scatter_matrix */

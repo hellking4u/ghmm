@@ -105,7 +105,7 @@ extern "C" {
   Calculation of  log( P(O|lambda) ). 
   Done by calling sfoba\_forward. Use this function if only the
   log likelihood and not alpha[t][i] is needed, alpha is allocated with
-  stat_matrix_d_alloc
+  ighmm_cmatrix_stat_alloc
   @param  mo      model
   @param O        sequence
   @param len       length of sequence

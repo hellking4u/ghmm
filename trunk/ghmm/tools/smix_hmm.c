@@ -48,7 +48,7 @@ static int smix_hmm_run(int argc, char* argv[]) {
   if(!(outfile = mes_fopen(argv[3], "wt"))) {mes_proc(); goto STOP;}
   
   /* matrix for component probs., */
-  cp = matrix_d_alloc(sqd[0]->seq_number, smo_number);
+  cp = ighmm_cmatrix_alloc(sqd[0]->seq_number, smo_number);
   if (!cp) { mes_proc(); goto STOP;}
 
   /* set last arg in smixturehmm_init() : 

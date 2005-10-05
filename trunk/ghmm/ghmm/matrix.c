@@ -63,10 +63,10 @@ static void ltranspxequalsy (double **a, double *y, double *p, int dim,
 
 /*============================================================================*/
 
-int matrix_d_read (scanner_t * s, double **matrix, int max_zeile,
+int ighmm_cmatrix_read (scanner_t * s, double **matrix, int max_zeile,
                    int max_spalte)
 {
-#define CUR_PROC "matrix_d_read"
+#define CUR_PROC "ighmm_cmatrix_read"
   int len = 0, zeile = 0;
   ighmm_scanner_consume (s, '{');
   if (s->err)
@@ -98,13 +98,13 @@ int matrix_d_read (scanner_t * s, double **matrix, int max_zeile,
   }
   return (0);
 #undef CUR_PROC
-}                               /* matrix_d_read */
+}                               /* ighmm_cmatrix_read */
 
 /*============================================================================*/
 
-int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
+int ighmm_dmatrix_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
 {
-#define CUR_PROC "matrix_i_read"
+#define CUR_PROC "ighmm_dmatrix_read"
   int len = 0, zeile = 0;
   ighmm_scanner_consume (s, '{');
   if (s->err)
@@ -136,15 +136,15 @@ int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
   }
   return (0);
 #undef CUR_PROC
-}                               /* matrix_i_read */
+}                               /* ighmm_dmatrix_read */
 #endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 
 /* allocation of matrices with fixed dimensions  */
-double **stat_matrix_d_alloc (int n, int m)
+double **ighmm_cmatrix_stat_alloc (int n, int m)
 {
-#define CUR_PROC "stat_matrix_d_alloc"
+#define CUR_PROC "ighmm_cmatrix_stat_alloc"
   int i;
   double **A;
   double *tmp;
@@ -164,15 +164,15 @@ double **stat_matrix_d_alloc (int n, int m)
   }
   return A;
 STOP:
-  stat_matrix_d_free (&A);
+  ighmm_cmatrix_stat_free (&A);
   return NULL;
 #undef CUR_PROC
 }
 
 
-int stat_matrix_d_free (double ***matrix)
+int ighmm_cmatrix_stat_free (double ***matrix)
 {
-#define CUR_PROC "stat_matrix_d_free"
+#define CUR_PROC "ighmm_cmatrix_stat_free"
   mes_check_ptr (matrix, return (-1));
   if (!*matrix)
     return (0);
@@ -184,9 +184,9 @@ int stat_matrix_d_free (double ***matrix)
 /*============================================================================*/
 
 /* allocation of matrices with fixed dimensions  */
-int **stat_matrix_i_alloc (int n, int m)
+int **ighmm_dmatrix_stat_alloc (int n, int m)
 {
-#define CUR_PROC "stat_matrix_i_alloc"
+#define CUR_PROC "ighmm_dmatrix_stat_alloc"
   int i;
   int **A;
   int *tmp;
@@ -202,15 +202,15 @@ int **stat_matrix_i_alloc (int n, int m)
   }
   return A;
 STOP:
-  stat_matrix_i_free (&A);
+  ighmm_dmatrix_stat_free (&A);
   return NULL;
 #undef CUR_PROC
 }
 
 
-int stat_matrix_i_free (int ***matrix)
+int ighmm_dmatrix_stat_free (int ***matrix)
 {
-#define CUR_PROC "stat_matrix_i_free"
+#define CUR_PROC "ighmm_dmatrix_stat_free"
   mes_check_ptr (matrix, return (-1));
   if (!*matrix)
     return (0);
@@ -223,31 +223,31 @@ int stat_matrix_i_free (int ***matrix)
 /*============================================================================*/
 
 
-double **matrix_d_alloc (int zeilen, int spalten)
+double **ighmm_cmatrix_alloc (int zeilen, int spalten)
 {
-#define CUR_PROC "matrix_d_alloc"
+#define CUR_PROC "ighmm_cmatrix_alloc"
   double **matrix;
   int i;
 
-  /*printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten);*/
+  /*printf("*** ighmm_cmatrix_alloc %d zeilen, %d spalten:\n",zeilen, spalten);*/
 
   ARRAY_CALLOC (matrix, zeilen);
   for (i = 0; i < zeilen; i++)
     ARRAY_CALLOC (matrix[i], spalten);
   return matrix;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_d_free (&matrix, zeilen);
+  ighmm_cmatrix_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
-}                               /* matrix_d_alloc */
+}                               /* ighmm_cmatrix_alloc */
 
 
-double *** matrix3d_d_alloc(int i, int j, int k) {
-#define CUR_PROC "matrix3d_d_alloc"
+double *** ighmm_cmatrix_3d_alloc(int i, int j, int k) {
+#define CUR_PROC "ighmm_cmatrix_3d_alloc"
   double *** matrix;
   int a, b;
   
-  /* printf("*** matrix_d_alloc %d zeilen, %d spalten:\n",zeilen, spalten); */
+  /* printf("*** ighmm_cmatrix_alloc %d zeilen, %d spalten:\n",zeilen, spalten); */
   
   ARRAY_CALLOC (matrix, i);
   for (a = 0; a < i; a++) {
@@ -258,14 +258,14 @@ double *** matrix3d_d_alloc(int i, int j, int k) {
   }
   return matrix;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix3d_d_free(&matrix, i, j);
+  ighmm_cmatrix_3d_free(&matrix, i, j);
   return NULL;
 #undef CUR_PROC
-} /* matrix3d_d_alloc */
+} /* ighmm_cmatrix_3d_alloc */
 
 /** gets a pointer on a 3d matrix and rows and cols **/
-int matrix3d_d_free(double **** matrix, int i, int j) {
-# define CUR_PROC "matrix3d_d_free"
+int ighmm_cmatrix_3d_free(double **** matrix, int i, int j) {
+# define CUR_PROC "ighmm_cmatrix_3d_free"
   int a,b;
   mes_check_ptr(matrix, return(-1));
   if ( !*matrix) return(0);
@@ -277,10 +277,10 @@ int matrix3d_d_free(double **** matrix, int i, int j) {
   m_free(*matrix);
   return (0);
 # undef CUR_PROC
-} /* matrix3d_d_free */
+} /* ighmm_cmatrix_3d_free */
 
-int matrix_d_free(double ***matrix, long zeilen) {
-# define CUR_PROC "matrix_d_free"
+int ighmm_cmatrix_free(double ***matrix, long zeilen) {
+# define CUR_PROC "ighmm_cmatrix_free"
   long i;
   mes_check_ptr (matrix, return (-1));
   if (!*matrix)
@@ -290,7 +290,7 @@ int matrix_d_free(double ***matrix, long zeilen) {
   m_free (*matrix);
   return (0);
 # undef CUR_PROC
-}                               /* matrix_d_free */
+}                               /* ighmm_cmatrix_free */
 
 
 
@@ -298,9 +298,9 @@ int matrix_d_free(double ***matrix, long zeilen) {
 
 
 
-double **matrix_d_alloc_copy (int zeilen, int spalten, double **copymatrix)
+double **ighmm_cmatrix_alloc_copy (int zeilen, int spalten, double **copymatrix)
 {
-#define CUR_PROC "matrix_d_alloc_copy"
+#define CUR_PROC "ighmm_cmatrix_alloc_copy"
   double **matrix;
   int i, j;
   ARRAY_CALLOC (matrix, zeilen);
@@ -311,16 +311,16 @@ double **matrix_d_alloc_copy (int zeilen, int spalten, double **copymatrix)
   }
   return matrix;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_d_free (&matrix, zeilen);
+  ighmm_cmatrix_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
-}                               /* matrix_d_alloc_copy */
+}                               /* ighmm_cmatrix_alloc_copy */
 
 /*============================================================================*/
 
-int **matrix_i_alloc (int zeilen, int spalten)
+int **ighmm_dmatrix_alloc (int zeilen, int spalten)
 {
-#define CUR_PROC "matrix_i_alloc"
+#define CUR_PROC "ighmm_dmatrix_alloc"
   int **matrix;
   int i;
   ARRAY_CALLOC (matrix, zeilen);
@@ -328,16 +328,16 @@ int **matrix_i_alloc (int zeilen, int spalten)
     ARRAY_CALLOC (matrix[i], spalten);
   return matrix;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix_i_free (&matrix, zeilen);
+  ighmm_dmatrix_free (&matrix, zeilen);
   return NULL;
 #undef CUR_PROC
-}                               /* matrix_i_alloc */
+}                               /* ighmm_dmatrix_alloc */
 
 /*============================================================================*/
 
-int matrix_i_free (int ***matrix, long zeilen)
+int ighmm_dmatrix_free (int ***matrix, long zeilen)
 {
-# define CUR_PROC "matrix_i_free"
+# define CUR_PROC "ighmm_dmatrix_free"
   long i;
   mes_check_ptr (matrix, return (-1));
   if (!*matrix)
@@ -348,13 +348,13 @@ int matrix_i_free (int ***matrix, long zeilen)
   m_free (*matrix);
   return (0);
 # undef CUR_PROC
-}                               /* matrix_i_free */
+}                               /* ighmm_dmatrix_free */
 
 /*============================================================================*/
 /*============================================================================*/
 
-int*** matrix3d_i_alloc(int zeilen, int spalten, int hoehe) {
-#define CUR_PROC "matrix_i_alloc"
+int*** ighmm_dmatrix_3d_alloc(int zeilen, int spalten, int hoehe) {
+#define CUR_PROC "ighmm_dmatrix_alloc"
   int ***matrix;
   int i, j;
   ARRAY_CALLOC (matrix, zeilen);
@@ -365,15 +365,15 @@ int*** matrix3d_i_alloc(int zeilen, int spalten, int hoehe) {
   }
   return matrix;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  matrix3d_i_free(&matrix, zeilen, spalten);
+  ighmm_dmatrix_3d_free(&matrix, zeilen, spalten);
   return NULL;
 #undef CUR_PROC
-} /* matrix3d_i_alloc */
+} /* ighmm_dmatrix_3d_alloc */
 
 /*============================================================================*/
 
-int matrix3d_i_free(int **** matrix, int zeilen, int spalten) {
-# define CUR_PROC "matrix_i_free"
+int ighmm_dmatrix_3d_free(int **** matrix, int zeilen, int spalten) {
+# define CUR_PROC "ighmm_dmatrix_free"
   long i, j;
   mes_check_ptr(matrix, return(-1));
   if ( !*matrix ) return(0);
@@ -385,52 +385,52 @@ int matrix3d_i_free(int **** matrix, int zeilen, int spalten) {
   m_free(*matrix);
   return (0);
 # undef CUR_PROC
-} /* matrix3d_i_free */
+} /* ighmm_dmatrix_3d_free */
 
 
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
-void matrix_d_print(FILE *file, double **matrix, int zeilen, int spalten, 
+void ighmm_cmatrix_print(FILE *file, double **matrix, int zeilen, int spalten, 
 		    char *tab, char *separator, char *ending) {
   int i;
   for (i = 0; i < zeilen; i++)
-    vector_d_print (file, matrix[i], spalten, tab, separator, ending);
-}                               /* matrix_d_print */
+    ighmm_cvector_print (file, matrix[i], spalten, tab, separator, ending);
+}                               /* ighmm_cmatrix_print */
 
 /*============================================================================*/
 
-void matrix_d_print_prec (FILE * file, double **matrix, int zeilen,
+void ighmm_cmatrix_print_prec (FILE * file, double **matrix, int zeilen,
                           int spalten, int width, int prec, char *tab,
                           char *separator, char *ending)
 {
   int i;
   for (i = 0; i < zeilen; i++)
-    vector_d_print_prec (file, matrix[i], spalten, width, prec,
+    ighmm_cvector_print_prec (file, matrix[i], spalten, width, prec,
                          tab, separator, ending);
-}                               /* matrix_d_print_prec */
+}                               /* ighmm_cmatrix_print_prec */
 
 /*============================================================================*/
 
-void matrix_i_print (FILE * file, int **matrix, int zeilen, int spalten,
+void ighmm_dmatrix_print (FILE * file, int **matrix, int zeilen, int spalten,
                      char *tab, char *separator, char *ending)
 {
   int i;
   for (i = 0; i < zeilen; i++)
-    vector_i_print (file, matrix[i], spalten, tab, separator, ending);
-}                               /* matrix_i_print */
+    ighmm_dvector_print (file, matrix[i], spalten, tab, separator, ending);
+}                               /* ighmm_dmatrix_print */
 
 /*============================================================================*/
-int matrix_d_notzero_columns (double **matrix, int row, int max_col)
+int ighmm_cmatrix_notzero_columns (double **matrix, int row, int max_col)
 {
   int i, count = 0;
   for (i = 0; i < max_col; i++)
     if (matrix[row][i])
       count++;
   return count;
-}                               /* matrix_d_notzero_columns */
+}                               /* ighmm_cmatrix_notzero_columns */
 
 /*============================================================================*/
-int matrix_d_notzero_rows (double **matrix, int col, int max_row)
+int ighmm_cmatrix_notzero_rows (double **matrix, int col, int max_row)
 {
   int i, count = 0;
   for (i = 0; i < max_row; i++)
@@ -441,20 +441,20 @@ int matrix_d_notzero_rows (double **matrix, int col, int max_row)
 
 /*============================================================================*/
 /* Scales the row vectors of a matrix to have the sum 1 */
-int matrix_d_normalize (double **matrix, int rows, int cols)
+int ighmm_cmatrix_normalize (double **matrix, int rows, int cols)
 {
-#define CUR_PROC "matrix_d_normalize"
+#define CUR_PROC "ighmm_cmatrix_normalize"
   int i;
   for (i = 0; i < rows; i++)
-    if (vector_normalize (matrix[i], cols) == -1)
+    if (ighmm_cvector_normalize (matrix[i], cols) == -1)
       mes (MES_WIN, "WARNING: sum row[%d] == 0!\n", i);
   /* return (-1); */
   return 0;
 #undef CUR_PROC
-}                               /* matrix_d_normalize */
+}                               /* ighmm_cmatrix_normalize */
 
 /*============================================================================*/
-void matrix_d_random_values (double **matrix, int rows, int cols,
+void ighmm_cmatrix_random_values (double **matrix, int rows, int cols,
                              double min, double max)
 {
   int i, j;
@@ -467,11 +467,11 @@ void matrix_d_random_values (double **matrix, int rows, int cols,
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       matrix[i][j] = min + GHMM_RNG_UNIFORM (RNG) * interval;
-}                               /* matrix_d_random_values */
+}                               /* ighmm_cmatrix_random_values */
 
 /*============================================================================*/
 /* Fixed value for final state */
-void matrix_d_random_const_values (double **matrix, int rows, int cols,
+void ighmm_cmatrix_random_const_values (double **matrix, int rows, int cols,
                                    double min, double max, double c)
 {
   int i, j;
@@ -490,20 +490,20 @@ void matrix_d_random_const_values (double **matrix, int rows, int cols,
       matrix[i][j] = min + GHMM_RNG_UNIFORM (RNG) * interval;
   for (j = 0; j < cols; j++)
     matrix[rows - 1][j] = c;
-}                               /* matrix_d_random_const_values */
+}                               /* ighmm_cmatrix_random_const_values */
 
 
 /*============================================================================*/
-void matrix_d_const_values (double **matrix, int rows, int cols, double c)
+void ighmm_cmatrix_const_values (double **matrix, int rows, int cols, double c)
 {
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       matrix[i][j] = c;
-}                               /* matrix_d_const_values */
+}                               /* ighmm_cmatrix_const_values */
 
 /*============================================================================*/
-void matrix_d_random_left_right (double **matrix, int rows, int cols)
+void ighmm_cmatrix_random_left_right (double **matrix, int rows, int cols)
 {
   int i, j;
   for (i = 0; i < rows; i++)
@@ -512,10 +512,10 @@ void matrix_d_random_left_right (double **matrix, int rows, int cols)
         matrix[i][j] = GHMM_RNG_UNIFORM (RNG);
       else
         matrix[i][j] = 0.0;
-}                               /* matrix_d_random_values */
+}                               /* ighmm_cmatrix_random_values */
 
 /*============================================================================*/
-void matrix_d_left_right_strict (double **matrix, int rows, int cols)
+void ighmm_cmatrix_left_right_strict (double **matrix, int rows, int cols)
 {
   int i, j;
   for (i = 0; i < rows; i++)
@@ -524,10 +524,10 @@ void matrix_d_left_right_strict (double **matrix, int rows, int cols)
         matrix[i][j] = 1.0;
       else
         matrix[i][j] = 0.0;
-}                               /* matrix_d_left_right_strict */
+}                               /* ighmm_cmatrix_left_right_strict */
 
 /*============================================================================*/
-int matrix_d_gaussrows_values (double **matrix, int rows, int cols,
+int ighmm_cmatrix_gaussrows_values (double **matrix, int rows, int cols,
                                double **mue, double u)
 {
 # define CUR_PROC "matrix_gaussrows_values"
@@ -569,7 +569,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* matrix_gaussrows_values */
 
 /*============================================================================*/
-void matrix_d_const_preserve_struct (double **matrix, int rows, int cols,
+void ighmm_cmatrix_const_preserve_struct (double **matrix, int rows, int cols,
                                      double c)
 {
   int i, j;
@@ -578,10 +578,10 @@ void matrix_d_const_preserve_struct (double **matrix, int rows, int cols,
       if (matrix[i][j] != 0)
         matrix[i][j] = c;
     }
-}                               /* matrix_d_const_preserve_struct */
+}                               /* ighmm_cmatrix_const_preserve_struct */
 
 /*============================================================================*/
-void matrix_d_random_preserve_struct (double **matrix, int rows, int cols)
+void ighmm_cmatrix_random_preserve_struct (double **matrix, int rows, int cols)
 {
   int i, j;
   for (i = 0; i < rows; i++)
@@ -589,16 +589,16 @@ void matrix_d_random_preserve_struct (double **matrix, int rows, int cols)
       if (matrix[i][j] != 0)
         matrix[i][j] = GHMM_RNG_UNIFORM (RNG);
     }
-}                               /* matrix_d_random_preserve_struct */
+}                               /* ighmm_cmatrix_random_preserve_struct */
 
 /*============================================================================*/
-void matrix_d_transpose (double **A, int rows, int cols, double **A_T)
+void ighmm_cmatrix_transpose (double **A, int rows, int cols, double **A_T)
 {
   int i, j;
   for (i = 0; i < rows; i++)
     for (j = 0; j < cols; j++)
       A_T[j][i] = A[i][j];
-}                               /* matrix_d_transpose */
+}                               /* ighmm_cmatrix_transpose */
 
 
 /*----------------------------------------------------------------------------*/
@@ -656,9 +656,9 @@ static void ltranspxequalsy (double **a, double *y, double *p, int dim,
 
 /*============================================================================*/
 /* Solves a linear equation system for a symmetric, positiv definite matrix. */
-int matrix_cholesky (double **a, double *b, int dim, double *x)
+int ighmm_cmatrix_cholesky (double **a, double *b, int dim, double *x)
 {
-#define CUR_PROC "matrix_cholesky"
+#define CUR_PROC "ighmm_cmatrix_cholesky"
   int res = -1;
   double *p, *y;
   ARRAY_CALLOC (p, dim);
@@ -673,9 +673,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /* Finds the determinant of a symetric, positiv definit matrix. */
-int matrix_det_symposdef (double **a, int dim, double *det)
+int ighmm_cmatrix_det_symposdef (double **a, int dim, double *det)
 {
-#define CUR_PROC "matrix_det_symposdef"
+#define CUR_PROC "ighmm_cmatrix_det_symposdef"
   int res = -1;
   int i;
   double *p, r;
@@ -694,7 +694,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 /* Copies a matrix, the memory allocations must to be done outside! */
-void matrix_d_copy (double **src, double **target, int rows, int cols)
+void ighmm_cmatrix_copy (double **src, double **target, int rows, int cols)
 {
   int i, j;
 
@@ -710,7 +710,7 @@ void matrix_d_copy (double **src, double **target, int rows, int cols)
   @param  double NxN matrix to be checked
   @param  matrix dimension N (matrix must be quadaratic)
   */
-int matrix_d_check_stochasticity (double **matrix, int N)
+int ighmm_cmatrix_check_stochasticity (double **matrix, int N)
 {
   int i, j;
   double row_sum;

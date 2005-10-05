@@ -177,12 +177,12 @@ int ighmm_reestimate_alloc_matvek (double ***alpha, double ***beta, double **sca
 {
 # define CUR_PROC "ighmm_reestimate_alloc_matvek"
   int res = -1;
-  *alpha = stat_matrix_d_alloc (T, N);
+  *alpha = ighmm_cmatrix_stat_alloc (T, N);
   if (!(*alpha)) {
     mes_proc ();
     goto STOP;
   }
-  *beta = stat_matrix_d_alloc (T, N);
+  *beta = ighmm_cmatrix_stat_alloc (T, N);
   if (!(*beta)) {
     mes_proc ();
     goto STOP;
@@ -198,8 +198,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale, int T)
 {
 # define CUR_PROC "ighmm_reestimate_free_matvek"
-  stat_matrix_d_free (&alpha);
-  stat_matrix_d_free (&beta);
+  ighmm_cmatrix_stat_free (&alpha);
+  ighmm_cmatrix_stat_free (&beta);
   m_free (scale);
   return (0);
 # undef CUR_PROC

@@ -52,7 +52,7 @@ extern "C" {
   @param v    vector
   @param len  length of the vector       
 */
-  int vector_normalize (double *v, int len);
+  int ighmm_cvector_normalize (double *v, int len);
 
 /**
   Writes a double vector (without parenthesis)
@@ -63,7 +63,7 @@ extern "C" {
   @param separator  format: separator for columns
   @param ending     format: end of a row  
   */
-  void vector_d_print (FILE * file, double *vector, int len,
+  void ighmm_cvector_print (FILE * file, double *vector, int len,
                        char *tab, char *separator, char *ending);
 
 /**
@@ -77,7 +77,7 @@ extern "C" {
   @param separator  format: separator for columns
   @param ending     format: end of a row 
   */
-  void vector_d_print_prec (FILE * file, double *vector, int len, int width,
+  void ighmm_cvector_print_prec (FILE * file, double *vector, int len, int width,
                             int prec, char *tab, char *separator,
                             char *ending);
 
@@ -90,7 +90,7 @@ extern "C" {
   @param separator  format: separator for columns
   @param ending     format: end of a row  
   */
-  void vector_i_print (FILE * file, int *vector, int len,
+  void ighmm_dvector_print (FILE * file, int *vector, int len,
                        char *tab, char *separator, char *ending);
 
 #ifdef __cplusplus

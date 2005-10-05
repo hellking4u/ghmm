@@ -164,7 +164,7 @@ int scluster_hmm (char *argv[])
   ARRAY_CALLOC (cl.seq_counter, cl.smo_number);
   ARRAY_CALLOC (cl.smo_Z_MD, cl.smo_number);
   ARRAY_CALLOC (cl.smo_Z_MAW, cl.smo_number);
-  all_log_p = matrix_d_alloc (cl.smo_number, (int) sqd->seq_number);
+  all_log_p = ighmm_cmatrix_alloc (cl.smo_number, (int) sqd->seq_number);
   if (!all_log_p) {
     mes_proc ();
     goto STOP;
@@ -534,7 +534,7 @@ int scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile,
        /*if (sqd->seq_label[k] == i) {*/
        /* fuer Wetterdaten: Numerierung von 1 - .. */
        /*fprintf(outfile, "\t%4d\t|%.0f|\t", k+1, sqd->seq_w[k]);*/
-       /*vector_d_print(outfile, sqd->seq[k], sqd->seq_len[k]," "," ","");*/
+       /*ighmm_cvector_print(outfile, sqd->seq[k], sqd->seq_len[k]," "," ","");*/
        /*}     */
        /*}*/
   /*

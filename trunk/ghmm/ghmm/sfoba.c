@@ -306,7 +306,7 @@ int sfoba_logp (smodel * smo, double *O, int T, double *log_p)
   int res = -1;
   double **alpha, *scale = NULL;
 
-  alpha = stat_matrix_d_alloc (T, smo->N);
+  alpha = ighmm_cmatrix_stat_alloc (T, smo->N);
   if (!alpha) {
     mes_proc ();
     goto STOP;
@@ -320,7 +320,7 @@ int sfoba_logp (smodel * smo, double *O, int T, double *log_p)
   res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  stat_matrix_d_free (&alpha);
+  ighmm_cmatrix_stat_free (&alpha);
   m_free (scale);
   return (res);
 # undef CUR_PROC

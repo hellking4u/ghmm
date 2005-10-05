@@ -57,11 +57,11 @@ psequence * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d
   seq->seq = NULL;
   seq->d_value = NULL;
   if (number_of_alphabets > 0) {
-    seq->seq = matrix_i_alloc(number_of_alphabets, length); 
+    seq->seq = ighmm_dmatrix_alloc(number_of_alphabets, length); 
     if (!(seq->seq)) goto STOP;
   }
   if (number_of_d_seqs > 0) {
-    seq->d_value = matrix_d_alloc(number_of_d_seqs, length);
+    seq->d_value = ighmm_cmatrix_alloc(number_of_d_seqs, length);
     if (!(seq->d_value)) goto STOP;
   }
 

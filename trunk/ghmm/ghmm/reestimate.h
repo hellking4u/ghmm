@@ -56,7 +56,7 @@ extern "C" {
 /** Baum-Welch-Algorithm for parameter reestimation (training) in
     a discrete (discrete output functions) HMM. Scaled version
     for multiple sequences, alpha and beta matrices are allocated with
-	stat_matrix_d_alloc 
+	ighmm_cmatrix_stat_alloc 
     New parameters set directly in hmm (no storage of previous values!).
     For reference see:  
     Rabiner, L.R.: "`A Tutorial on Hidden {Markov} Models and Selected
@@ -90,7 +90,7 @@ extern "C" {
 
 /** Baum-Welch-Algorithm for parameter reestimation (training) in
     a StateLabelHMM. Scaled version for multiple sequences, alpha and 
-    beta matrices are allocated with stat_matrix_d_alloc 
+    beta matrices are allocated with ighmm_cmatrix_stat_alloc 
     New parameters set directly in hmm (no storage of previous values!).
     For reference see:  
     Rabiner, L.R.: "`A Tutorial on Hidden {Markov} Models and Selected
