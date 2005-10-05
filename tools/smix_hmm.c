@@ -45,7 +45,7 @@ static int smix_hmm_run(int argc, char* argv[]) {
   if (!smo) {mes_proc(); goto STOP;}
 
   /* open output file */
-  if(!(outfile = mes_fopen(argv[3], "wt"))) {mes_proc(); goto STOP;}
+  if(!(outfile = ighmm_mes_fopen(argv[3], "wt"))) {mes_proc(); goto STOP;}
   
   /* matrix for component probs., */
   cp = ighmm_cmatrix_alloc(sqd[0]->seq_number, smo_number);
@@ -102,8 +102,8 @@ int main(int argc, char* argv[]) {
   exitcode = smix_hmm_run(argc, argv);
   /*------------------------------------------------------------------------*/
  STOP:
-  mes(MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode );
-  mes_exit();
+  ighmm_mes(MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode );
+  ighmm_mes_exit();
   return(exitcode);
 
 #else  /* GHMM_OBSOLETE */

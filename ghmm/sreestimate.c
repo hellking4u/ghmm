@@ -306,7 +306,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 #if MCI
         if (smo->s[i].out_states > 0) {
           if (smo->s[i].in_states == 0)
-            mes (MESCONTR, "state %d: no in_states\n", i);
+            ighmm_mes (MESCONTR, "state %d: no in_states\n", i);
 	    
           else {
             /* Test: sum all ingoing == 0 ? */
@@ -315,9 +315,9 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
               for (h = 0; h < smo->s[i].in_states; h++)
                 p_i += smo->s[i].in_a[g][h];
             if (p_i == 0)
-              mes (MESCONTR, "state %d: P(in) = 0\n", i);
+              ighmm_mes (MESCONTR, "state %d: P(in) = 0\n", i);
             else
-              mes (MESCONTR, "state %d can be reached but a-denom. = 0.0\n",
+              ighmm_mes (MESCONTR, "state %d can be reached but a-denom. = 0.0\n",
                    i);
           }
         }
@@ -334,7 +334,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
         /* TEST: denom. < numerator */
         if ((r->a_denom[i][osc] - r->a_num[i][osc][j]) < -EPS_PREC) {
 #if MCI
-          mes (MESCONTR, "a[%d][%d][%d]: numerator > denom.!\n", i, osc,
+          ighmm_mes (MESCONTR, "a[%d][%d][%d]: numerator > denom.!\n", i, osc,
                j_id);
 #endif
           smo->s[i].out_a[osc][j] = 1.0;
@@ -346,7 +346,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
             printf("%d is an absorbing end state -> don't change transitions !\n",i);
           }   */          
 #if MCI
-          mes (MESCONTR, "state %d has no observed outgoing transitions, parameters will not be reestimated. \n", i );   
+          ighmm_mes (MESCONTR, "state %d has no observed outgoing transitions, parameters will not be reestimated. \n", i );   
 #endif
           continue;                    
           /* smo->s[i].out_a[osc][j] = 0.0; */
@@ -364,7 +364,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
             l++;
         if (l == smo->s[j_id].in_states) {
           str =
-            mprintf (NULL, 0,
+            ighmm_mprintf (NULL, 0,
                      "no matching in_a for out_a(=a[%d][%d]) found!\n", i,
                      j_id);
           mes_prot (str);
@@ -376,7 +376,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 
 #if MCI
       if (!a_num_pos && smo->s[i].out_states > 0)
-        mes (MESCONTR,
+        ighmm_mes (MESCONTR,
              "all numerators a[%d][%d][j]==0 (denom. = %.4f, P(in)=%.4f)!\n",
              i, osc, r->a_denom[i][osc], p_i);
 #endif
@@ -393,7 +393,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
     c_denom_pos = 1;
     if (r->c_denom[i] <= DBL_MIN) {     /* < EPS_PREC ? */
 #if MCI
-      mes (MESCONTR, "c[%d][m]: denominator == 0.0!\n", i);
+      ighmm_mes (MESCONTR, "c[%d][m]: denominator == 0.0!\n", i);
 #endif
       c_denom_pos = 0;
     }
@@ -417,7 +417,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
       /* TEST: denom. < numerator */
       if ((r->c_denom[i] - r->c_num[i][m]) < 0.0) {     /* < -EPS_PREC ? */
 #if MCI
-        mes (MESCONTR, "c[%d][%d]: numerator > denominator! (%.4f > %.4f)!\n",
+        ighmm_mes (MESCONTR, "c[%d][%d]: numerator > denominator! (%.4f > %.4f)!\n",
              i, m, r->c_num[i][m], r->c_denom[i]);
 #endif
         smo->s[i].c[m] = 1.0;
@@ -433,7 +433,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 
       if (fabs (r->mue_u_denom[i][m]) <= DBL_MIN)       /* < EPS_PREC ? */
 #if MCI
-        mes (MESCONTR, "mue[%d][%d]: denominator == 0.0!\n", i, m);
+        ighmm_mes (MESCONTR, "mue[%d][%d]: denominator == 0.0!\n", i, m);
 #else
         ;
 #endif
@@ -445,7 +445,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
       /* TEST: u_denom == 0.0 ? */
       if (fabs (r->mue_u_denom[i][m]) <= DBL_MIN) {     /* < EPS_PREC ? */
 #if MCI
-        mes (MESCONTR, "u[%d][%d]: denominator == 0.0!\n", i, m);
+        ighmm_mes (MESCONTR, "u[%d][%d]: denominator == 0.0!\n", i, m);
 #endif
         ;
         /* smo->s[i].u[m]  unchanged! */
@@ -520,7 +520,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
 
 #if MCI
     if (!c_num_pos)
-      mes (MESCONTR, "all numerators c[%d][m] == 0 (denominator=%.4f)!\n", i,
+      ighmm_mes (MESCONTR, "all numerators c[%d][m] == 0 (denominator=%.4f)!\n", i,
            r->c_denom[i]);
 #endif
 
@@ -582,7 +582,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
     if ((sfoba_forward (smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
         (sfoba_backward (smo, O[k], T_k, b, beta, scale) == -1)) {
 #if MCI
-      mes (MESCONTR, "O(%2d) can't be build from smodel smo!\n", k);
+      ighmm_mes (MESCONTR, "O(%2d) can't be build from smodel smo!\n", k);
 #endif
       /* penalty costs */
       *log_p += seq_w[k] * (double) PENALTY_LOGP;
@@ -761,7 +761,7 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
   }
   else {                        /* NO sequence can be build from smodel smo! */
     /* diskret:  *log_p = +1; */
-    mes (MES_WIN, " NO sequence can be build from smodel smo!\n");
+    ighmm_mes (MES_WIN, " NO sequence can be build from smodel smo!\n");
     return (-1);
   }
 
@@ -823,7 +823,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
     /* to follow convergence of bw: uncomment next line */
     printf ("\tBW Iter %d\t log(p) %.4f\n", n, log_p);
     if (valid == -1) {
-      str = mprintf (NULL, 0, "sreestimate_one_step false (%d.step)\n", n);
+      str = ighmm_mprintf (NULL, 0, "sreestimate_one_step false (%d.step)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -831,9 +831,9 @@ int sreestimate_baum_welch (smosqd_t * cs)
 
 #if MCI
     if (n == 1)
-      mes (MESINFO, "%8.5f (-log_p input smodel)\n", -log_p);
+      ighmm_mes (MESINFO, "%8.5f (-log_p input smodel)\n", -log_p);
     else
-      mes (MESINFO, "\n%8.5f (-log_p)\n", -log_p);
+      ighmm_mes (MESINFO, "\n%8.5f (-log_p)\n", -log_p);
 #endif
 
     diff = log_p - log_p_old;
@@ -841,7 +841,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
     if (diff < -EPS_PREC) {
       if (valid > valid_old) {
         str =
-          mprintf (NULL, 0,
+          ighmm_mprintf (NULL, 0,
                    "log P < log P-old (more sequences (%d) , n = %d)\n",
                    valid - valid_old, n);
         mes_prot (str);
@@ -850,7 +850,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
       /* no convergence */
       else {
         str =
-          mprintf (NULL, 0,
+          ighmm_mprintf (NULL, 0,
                    "NO convergence: log P(%e) < log P-old(%e)! (n = %d)\n",
                    log_p, log_p_old, n);
         mes_prot (str);
@@ -862,7 +862,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
     /* stop iteration */
     if (diff >= 0.0 && diff < fabs (eps_iter_bw * log_p)) {
 #if MCI
-      mes (MESINFO, "Convergence after %d steps\n", n);
+      ighmm_mes (MESINFO, "Convergence after %d steps\n", n);
 #endif
       break;
     }
@@ -878,7 +878,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
   }                             /* while (n <= MAX_ITER_BW) */
 
 #if MCI
-  mes (MESINFO, "%8.5f (-log_p optimized smodel)\n", -log_p);
+  ighmm_mes (MESINFO, "%8.5f (-log_p optimized smodel)\n", -log_p);
 #endif
   /* log_p outside this function */
   *cs->logp = log_p;

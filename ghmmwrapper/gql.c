@@ -75,25 +75,25 @@ static int smodel_state_alloc(sstate *state,
 			      int cos) {
 #define CUR_PROC "smodel_state_alloc"
   int res = -1;
-  if (!((state->c) = mes_calloc(sizeof(*(state->c)) * M)))
+  if (!((state->c) = ighmm_calloc(sizeof(*(state->c)) * M)))
     {mes_proc(); goto STOP;}
-  if (!((state->mue) = mes_calloc(sizeof(*(state->mue)) * M)))
+  if (!((state->mue) = ighmm_calloc(sizeof(*(state->mue)) * M)))
     {mes_proc(); goto STOP;}
-  if (!((state->u) = mes_calloc(sizeof(*(state->u)) * M)))
+  if (!((state->u) = ighmm_calloc(sizeof(*(state->u)) * M)))
     {mes_proc(); goto STOP;}
-  if (!((state->a) = mes_calloc(sizeof(*(state->a)) * M)))
+  if (!((state->a) = ighmm_calloc(sizeof(*(state->a)) * M)))
     {mes_proc(); goto STOP;}
-  if (!((state->density) = mes_calloc(sizeof(*(state->density)) * M)))
+  if (!((state->density) = ighmm_calloc(sizeof(*(state->density)) * M)))
     {mes_proc(); goto STOP;}
     
   if (out_states > 0) {
-    if (!((state->out_id) = mes_calloc(sizeof(*(state->out_id)) * out_states)))
+    if (!((state->out_id) = ighmm_calloc(sizeof(*(state->out_id)) * out_states)))
       {mes_proc(); goto STOP;}
     state->out_a = ighmm_cmatrix_alloc(cos, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
-    if (!((state->in_id) = mes_calloc(sizeof(*(state->in_id)) * (in_states)))) 
+    if (!((state->in_id) = ighmm_calloc(sizeof(*(state->in_id)) * (in_states)))) 
       {mes_proc(); goto STOP;}
     state->in_a = ighmm_cmatrix_alloc(cos, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
@@ -108,12 +108,12 @@ smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
 #define CUR_PROC "smodel_alloc_fill"
   int i;
   smodel *smo=NULL;
-  if (!(smo = mes_malloc (sizeof (smodel)))) {mes_proc(); goto STOP;}  
+  if (!(smo = ighmm_malloc (sizeof (smodel)))) {mes_proc(); goto STOP;}  
   smo->M   = M;
   smo->N   = N;
   smo->cos = cos;
   smo->prior = prior;
-  if (!(smo->s = mes_calloc(sizeof(*(smo->s)) * (smo->N))))
+  if (!(smo->s = ighmm_calloc(sizeof(*(smo->s)) * (smo->N))))
     {mes_proc(); goto STOP;}
 
   for(i=0; i < smo->N; i++) {
@@ -224,7 +224,7 @@ int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double 
     else  {
       /* Test: very small log score for sequence cannot be produced */
       log_ps[i] = -DBL_MAX;
-      /*      mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
+      /*      ighmm_mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
     }
   }
 

@@ -440,7 +440,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
       }
       else {
         char *str =
-          mprintf (NULL, 0, "unable to extend seq (all osc empty)\n");
+          ighmm_mprintf (NULL, 0, "unable to extend seq (all osc empty)\n");
         mes_prot (str);
         m_free (str);
         goto STOP;

@@ -181,11 +181,11 @@ extern "C" {
 #endif
 
 #ifndef m_fread
-#define m_fread( fp, dest, cnt )  mes_fread((fp),(dest),(cnt)*sizeof(*(dest)) )
+#define m_fread( fp, dest, cnt )  ighmm_mes_fread((fp),(dest),(cnt)*sizeof(*(dest)) )
 #endif
 
 #ifndef m_fwrite
-#define m_fwrite( fp, src, cnt )  mes_fwrite((fp),(src),(cnt)*sizeof(*(src)) )
+#define m_fwrite( fp, src, cnt )  ighmm_mes_fwrite((fp),(src),(cnt)*sizeof(*(src)) )
 #endif
 
 /* neu fuer hmm: ungefaehr gleiche Werte, (BW) */
@@ -198,124 +198,124 @@ extern "C" {
   /**
    */
 #define mes_check_ptr(arg, call) \
-  if (!(arg)) { mes_err( #arg, MES_0_PTR, MES_PROC_INFO ); call; }
+  if (!(arg)) { ighmm_mes_err( #arg, MES_0_PTR, MES_PROC_INFO ); call; }
   /**
    */
 #define mes_check_bnd( arg, bnd, call ) \
-  if((arg) > (bnd)){ mes_err( #arg, MES_BIG_ARG, MES_PROC_INFO ); call;} else
+  if((arg) > (bnd)){ ighmm_mes_err( #arg, MES_BIG_ARG, MES_PROC_INFO ); call;} else
   /**
    */
 #define mes_check_0( arg, call ) \
-  if(!(arg)) { mes_err( #arg, MES_0_ARG, MES_PROC_INFO ); call;} else
+  if(!(arg)) { ighmm_mes_err( #arg, MES_0_ARG, MES_PROC_INFO ); call;} else
   /**
    */
 #define mes_check_neg( arg, call ) \
-  if((arg)<0){ mes_err( #arg, MES_NEG_ARG, MES_PROC_INFO );call;} else
+  if((arg)<0){ ighmm_mes_err( #arg, MES_NEG_ARG, MES_PROC_INFO );call;} else
   /**
    */
 #define mes_check_expr( arg, call ) \
-  if(!(arg)){ mes_err( #arg, MES_FALSE_ARG, MES_PROC_INFO );call;} else
+  if(!(arg)){ ighmm_mes_err( #arg, MES_FALSE_ARG, MES_PROC_INFO );call;} else
 
 
   /**
    */
-#define mes_file( txt )     mes_smart( MES_FLAG_FILE, txt, -1 )
+#define mes_file( txt )     ighmm_mes_smart( MES_FLAG_FILE, txt, -1 )
   /**
    */
-#define mes_file_win( txt ) mes_smart( MES_FLAG_FILE_WIN, txt, -1 )
+#define mes_file_win( txt ) ighmm_mes_smart( MES_FLAG_FILE_WIN, txt, -1 )
   /**
    */
-#define mes_win( txt )      mes_smart( MES_FLAG_WIN, txt, -1 )
+#define mes_win( txt )      ighmm_mes_smart( MES_FLAG_WIN, txt, -1 )
 
   /**
    */
-#define mes_proc()      mes( MES_PROT, NULL )
+#define mes_proc()      ighmm_mes( MES_PROT, NULL )
   /**
    */
-#define mes_prot( txt ) mes( MES_PROT_TIME, txt )
+#define mes_prot( txt ) ighmm_mes( MES_PROT_TIME, txt )
 
   /**
    */
-  char *mes_get_std_path (void);
+  char *ighmm_mes_get_std_path (void);
 
   /**
    */
-  void mes (int flags, int line, char *xproc, char *proc, char *format, ...);
+  void ighmm_mes (int flags, int line, char *xproc, char *proc, char *format, ...);
   /**
    */
-  void mes_smart (int flags, const char *txt, int bytes);
+  void ighmm_mes_smart (int flags, const char *txt, int bytes);
   /**
    */
-  int mes_ability (int on);
+  int ighmm_mes_ability (int on);
   /**
    */
-  void mes_err (char *txt, int error_nr, char *proc_info);
+  void ighmm_mes_err (char *txt, int error_nr, char *proc_info);
   /**
    */
-  void mes_exit (void);
+  void ighmm_mes_exit (void);
   /**
    */
-  void mes_fformat (char *txt, char *filename, int line, char *proc_info);
+  void ighmm_mes_fformat (char *txt, char *filename, int line, char *proc_info);
   /**
    */
-  void mes_init (char *logfile, void (*winfct) (const char *), int argc,
+  void ighmm_mes_init (char *logfile, void (*winfct) (const char *), int argc,
                  char *argv[]);
   /**
    */
-  void mes_init_args (int argc, char *argv[]);
+  void ighmm_mes_init_args (int argc, char *argv[]);
   /**
    */
-  void mes_init_logfile (char *file_name);
+  void ighmm_mes_init_logfile (char *file_name);
   /**
    */
-  void mes_init_winfct (void (*win_fct) (const char *));
+  void ighmm_mes_init_winfct (void (*win_fct) (const char *));
   /**
    */
-  int mes_insert (FILE * fp, char src, int cnt);
+  int ighmm_mes_insert (FILE * fp, char src, int cnt);
   /**
    */
-  void mes_time (void);
+  void ighmm_mes_time (void);
   /**
    */
-  void mes_va (int flags, int line, char *xproc, char *proc, char *format,
+  void ighmm_mes_va (int flags, int line, char *xproc, char *proc, char *format,
                va_list args);
   /**
    */
-  int mes_win_ability (int on);
+  int ighmm_mes_win_ability (int on);
 
   /**
    */
-  void *mes_calloc (int bytes);
+  void *ighmm_calloc (int bytes);
   /**
    */
-  int mes_copy (char *oldname, char *newname);
+  int ighmm_mes_copy (char *oldname, char *newname);
   /**
    */
-  int mes_fgetc (FILE * fp);
+  int ighmm_mes_fgetc (FILE * fp);
   /**
    */
-  int mes_fflush (FILE * fp);
+  int ighmm_mes_fflush (FILE * fp);
   /**
    */
-  FILE *mes_fopen (const char *filename, char *attribute_string);
+  FILE *ighmm_mes_fopen (const char *filename, char *attribute_string);
   /**
    */
-  int mes_fprintf (FILE * fp, char *format, ...);
+  int ighmm_mes_fprintf (FILE * fp, char *format, ...);
   /**
    */
-  int mes_fputc (FILE * fp, char chr);
+  int ighmm_mes_fputc (FILE * fp, char chr);
   /**
    */
-  int mes_fputs (FILE * fp, char *str);
+  int ighmm_mes_fputs (FILE * fp, char *str);
   /**
    */
-  int mes_fread (FILE * fp, void *mem, int bytes);
+  int ighmm_mes_fread (FILE * fp, void *mem, int bytes);
   /**
    */
-  int mes_fread_quiet (FILE * fp, void *mem, int bytes);
+  int ighmm_mes_fread_quiet (FILE * fp, void *mem, int bytes);
   /**
    */
-  int mes_fseek (FILE * fp, long offset, int fromwhere);
+  int ighmm_mes_fseek (FILE * fp, long offset, int fromwhere);
 #ifdef WIN32
   /**
    */
@@ -324,28 +324,28 @@ extern "C" {
 #endif
   /**
    */
-  int mes_ftell (FILE * fp);
+  int ighmm_mes_ftell (FILE * fp);
   /**
    */
-  int mes_fwrite (FILE * fp, void *mem, int bytes);
+  int ighmm_mes_fwrite (FILE * fp, void *mem, int bytes);
   /**
    */
-  void *mes_malloc (int bytes);
+  void *ighmm_malloc (int bytes);
   /**
    */
-  int mes_move (char *oldname, char *newname);
+  int ighmm_mes_move (char *oldname, char *newname);
   /**
    */
-  int mes_realloc (void **mem, int bytes);
+  int ighmm_realloc (void **mem, int bytes);
   /**
    */
-  int mes_remove (char *filename);
+  int ighmm_mes_remove (char *filename);
   /**
    */
-  int mes_rename (char *oldname, char *newname);
+  int ighmm_mes_rename (char *oldname, char *newname);
   /**
    */
-  FILE *mes_tmpfile (void);
+  FILE *ighmm_mes_tmpfile (void);
 
 #ifdef __cplusplus
 }

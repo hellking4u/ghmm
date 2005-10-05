@@ -149,10 +149,10 @@ double **ighmm_cmatrix_stat_alloc (int n, int m)
   double **A;
   double *tmp;
  
-  /* if (!(A = mes_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) { */
+  /* if (!(A = ighmm_calloc (n * sizeof (*A) + n * m * sizeof (**A)))) { */
 
 
-  if (!(A = mes_calloc (n * sizeof (double*) + n * m * sizeof (double)))) {
+  if (!(A = ighmm_calloc (n * sizeof (double*) + n * m * sizeof (double)))) {
     mes_proc ();
     goto STOP;
   }
@@ -190,7 +190,7 @@ int **ighmm_dmatrix_stat_alloc (int n, int m)
   int i;
   int **A;
   int *tmp;
-  if (!(A = mes_calloc (n * sizeof(int*) + n * m * sizeof (int)))) {
+  if (!(A = ighmm_calloc (n * sizeof(int*) + n * m * sizeof (int)))) {
     mes_proc ();
     goto STOP;
   }
@@ -447,7 +447,7 @@ int ighmm_cmatrix_normalize (double **matrix, int rows, int cols)
   int i;
   for (i = 0; i < rows; i++)
     if (ighmm_cvector_normalize (matrix[i], cols) == -1)
-      mes (MES_WIN, "WARNING: sum row[%d] == 0!\n", i);
+      ighmm_mes (MES_WIN, "WARNING: sum row[%d] == 0!\n", i);
   /* return (-1); */
   return 0;
 #undef CUR_PROC
@@ -477,7 +477,7 @@ void ighmm_cmatrix_random_const_values (double **matrix, int rows, int cols,
   int i, j;
   double interval;
   if (rows < 1) {
-    mes (MES_WIN, "WARNING: rows = %d not allowed\n", rows);
+    ighmm_mes (MES_WIN, "WARNING: rows = %d not allowed\n", rows);
     return;
   }
   if (max < min) {
@@ -617,7 +617,7 @@ static void lrdecomp (int dim, double **a, double *p)
         x = x - a[j][k] * a[i][k];
       if (i == j) {
         if (x < DBL_MIN)
-          mes (MES_WIN, "FEHLER: Pivotel.<=0!");
+          ighmm_mes (MES_WIN, "FEHLER: Pivotel.<=0!");
         p[i] = 1 / sqrt (x);
       }
       else

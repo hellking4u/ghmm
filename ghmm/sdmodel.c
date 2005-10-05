@@ -113,7 +113,7 @@ double sdmodel_likelihood (sdmodel * mo, sequence_t * sq)
     }
     /*    else {*/
     /*  char *str =*/
-    /*   mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);*/
+    /*   ighmm_mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);*/
     /*  mes_prot(str);*/
     /*}*/
   }

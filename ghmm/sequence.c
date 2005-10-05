@@ -203,7 +203,7 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
         sq->seq_number++;
       }                         /* while( !s->eof...) */
       if ((sq->seq_number == 0) || (sq->seq_number > MAX_SEQ_NUMBER)) {
-        char *str = mprintf (NULL, 0,
+        char *str = ighmm_mprintf (NULL, 0,
                              "Number of sequences %ld exceeds possible range",
                              sq->seq_number);
         mes_prot (str);
@@ -418,7 +418,7 @@ sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
         sqd->seq_number++;
       }                         /* while( !s->eof...) */
       if ((sqd->seq_number == 0) || (sqd->seq_number > MAX_SEQ_NUMBER)) {
-        char *str = mprintf (NULL, 0,
+        char *str = ighmm_mprintf (NULL, 0,
                              "Number of sequences %ld exceeds possible range",
                              sqd->seq_number);
         mes_prot (str);
@@ -509,7 +509,7 @@ sequence_d_t *ghmm_cseq_calloc (long seq_number)
   /*printf("*** sequence_d_t *sequence_d_calloc, nr: %d\n",seq_number);*/
   sequence_d_t *sqd = NULL;
   if (seq_number > MAX_SEQ_NUMBER) {
-    char *str = mprintf (NULL, 0,
+    char *str = ighmm_mprintf (NULL, 0,
                          "Number of sequences %ld exceeds possible range",
                          seq_number);
     mes_prot (str);
@@ -549,7 +549,7 @@ sequence_t *ghmm_dseq_calloc (long seq_number)
   int i;
   sequence_t *sq = NULL;
   if (seq_number > MAX_SEQ_NUMBER) {
-    char *str = mprintf (NULL, 0,
+    char *str = ighmm_mprintf (NULL, 0,
                          "Number of sequences %ld exceeds possible range",
                          seq_number);
     mes_prot (str);
@@ -909,7 +909,7 @@ int ghmm_dseq_check (sequence_t * sq, int max_symb)
     for (i = 0; i < sq->seq_len[j]; i++) {
       if ((sq->seq[j][i] >= max_symb) || (sq->seq[j][i] < 0)) {
         char *str =
-          mprintf (NULL, 0, "Wrong symbol \'%d\' in sequence %d at Pos. %d;\
+          ighmm_mprintf (NULL, 0, "Wrong symbol \'%d\' in sequence %d at Pos. %d;\
                             Should be within [0..%d]\n",
                    sq->seq[j][i], j + 1, i + 1, max_symb - 1);
         mes_prot (str);

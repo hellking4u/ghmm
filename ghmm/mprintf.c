@@ -547,7 +547,7 @@ static int mprintf_memcpy (char **dst, int *dpos, int *dlen,
 }                               /* mprintf_memcpy */
 
 /*============================================================================*/
-char *mprintf_va (char *dst, int dlen, char *format, va_list args)
+char *ighmm_mprintf_va (char *dst, int dlen, char *format, va_list args)
 {
   va_list ap;
   int dyn;
@@ -613,44 +613,44 @@ char *mprintf_va (char *dst, int dlen, char *format, va_list args)
   }
 
   return (dst);
-}                               /* mprintf_va */
+}                               /* ighmm_mprintf_va */
 
 /*============================================================================*/
-char *mprintf (char *dst, int maxlen, char *format, ...)
+char *ighmm_mprintf (char *dst, int maxlen, char *format, ...)
 {
   va_list args;
   char *res;
 
   va_start (args, format);
-  res = mprintf_va (dst, maxlen, format, args);
+  res = ighmm_mprintf_va (dst, maxlen, format, args);
   return (res);
-}                               /* mprintf */
+}                               /* ighmm_mprintf */
 
 /*============================================================================*/
-char *mprintf_va_dyn (char *dst, int maxlen, char *format, va_list args)
+char *ighmm_mprintf_va_dyn (char *dst, int maxlen, char *format, va_list args)
 {
   char *res = NULL;
 
-  res = mprintf_va (dst, maxlen, format, args);
+  res = ighmm_mprintf_va (dst, maxlen, format, args);
   if (!res || !dst || maxlen <= 0)
     return (res);
   if (strlen (res) < maxlen - 1)
     return (res);
-  res = mprintf_va (NULL, 0, format, args);
+  res = ighmm_mprintf_va (NULL, 0, format, args);
   return (res);
-}                               /* mprintf_va_dyn */
+}                               /* ighmm_mprintf_va_dyn */
 
 
 /*============================================================================*/
-char *mprintf_dyn (char *dst, int maxlen, char *format, ...)
+char *ighmm_mprintf_dyn (char *dst, int maxlen, char *format, ...)
 {
   va_list args;
   char *res;
 
   va_start (args, format);
-  res = mprintf_va_dyn (dst, maxlen, format, args);
+  res = ighmm_mprintf_va_dyn (dst, maxlen, format, args);
   return (res);
-}                               /* mprintf_dyn */
+}                               /* ighmm_mprintf_dyn */
 
 
 
@@ -752,40 +752,40 @@ int mprintf_tst (void)
   };
 
   for (i = 0; i < sizeof (format_i) / sizeof (format_i[0]); i++) {
-    mes_win (mprintf (dst, sizeof (dst), "%12s", format_i[i]));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), "%12s", format_i[i]));
     mes_win ("\t");
-    mes_win (mprintf (dst, sizeof (dst), format_i[i], 45));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_i[i], 45));
     mes_win ("\t\t");
-    mes_win (mprintf (dst, sizeof (dst), format_i[i], -45));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_i[i], -45));
     mes_win ("\n");
   }
 
   for (i = 0; i < sizeof (format_c) / sizeof (format_c[0]); i++) {
-    mes_win (mprintf (dst, sizeof (dst), "%12s", format_c[i]));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), "%12s", format_c[i]));
     mes_win ("\t");
-    mes_win (mprintf (dst, sizeof (dst), format_c[i], '*'));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_c[i], '*'));
     mes_win ("\n");
   }
 
   for (i = 0; i < sizeof (format_s) / sizeof (format_s[0]); i++) {
-    mes_win (mprintf (dst, sizeof (dst), "%12s", format_s[i]));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), "%12s", format_s[i]));
     mes_win ("\t");
-    mes_win (mprintf (dst, sizeof (dst), format_s[i], "zap"));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_s[i], "zap"));
     mes_win ("\t\t");
-    mes_win (mprintf (dst, sizeof (dst), format_s[i], "longish"));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_s[i], "longish"));
     mes_win ("\n");
   }
 
   for (i = 0; i < sizeof (format_f) / sizeof (format_f[0]); i++) {
-    mes_win (mprintf (dst, sizeof (dst), "%12s", format_f[i]));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), "%12s", format_f[i]));
     mes_win ("\t");
-    mes_win (mprintf (dst, sizeof (dst), format_f[i], 12.678));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_f[i], 12.678));
     mes_win ("\t\t");
-    mes_win (mprintf (dst, sizeof (dst), format_f[i], -12.678));
+    mes_win (ighmm_mprintf (dst, sizeof (dst), format_f[i], -12.678));
     mes_win ("\n");
   }
 
-  dyn = mprintf_dyn (dst, sizeof (dst), " %s %s (%2T)\n", "Uhrzeit", ":");
+  dyn = ighmm_mprintf_dyn (dst, sizeof (dst), " %s %s (%2T)\n", "Uhrzeit", ":");
   mes_win (dyn);
 
   if (dyn && dyn - dst)

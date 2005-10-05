@@ -43,7 +43,7 @@ static int viterbi_test(char* argv[]) {
   if (!sqd) {mes_proc(); goto STOP;}
   
   strcpy(outfilename, argv[3]);
-  if(!(outfile = mes_fopen(outfilename, "wt"))) {mes_proc(); goto STOP;}
+  if(!(outfile = ighmm_mes_fopen(outfilename, "wt"))) {mes_proc(); goto STOP;}
 
   /* calculate viterbi path for every possible sequence-model combination */
   for (model = 0; model < smo_number; model++) {

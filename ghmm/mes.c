@@ -126,13 +126,13 @@ static int mes_process_win_enabled (void)
 }                               /* mes_process_win_enabled */
 
 /*---------------------------------------------------------------------------*/
-char *mes_get_std_path (void)
+char *ighmm_mes_get_std_path (void)
 {
   mes_t *mpc = mes_process_get ();
   if (mpc)
     return mpc->std_path;
   return (NULL);
-}                               /* mes_get_std_path */
+}                               /* ighmm_mes_get_std_path */
 
 /*---------------------------------------------------------------------------*/
 static void mes_process_alloc ()
@@ -185,10 +185,10 @@ static void mes_aux_va (int flags, char *format, va_list args)
   char str[1024];
   char *tmp;
 
-  tmp = mprintf_va_dyn (str, sizeof (str), format, args);
+  tmp = ighmm_mprintf_va_dyn (str, sizeof (str), format, args);
   if (!tmp)
     return;
-  mes_smart (flags, tmp, -1);
+  ighmm_mes_smart (flags, tmp, -1);
   if (tmp - str)
     free (tmp);
   return;
@@ -267,7 +267,7 @@ static void mes_init_std_path (char *logfile)
 
 
 /*============================================================================*/
-void mes_smart (int flags, const char *txt, int bytes)
+void ighmm_mes_smart (int flags, const char *txt, int bytes)
 {
   char tmp[2] = { 0 };
   int slen;
@@ -275,7 +275,7 @@ void mes_smart (int flags, const char *txt, int bytes)
   if (!mes_process_enabled ())
     return;
   if (flags & MES_FLAG_TIME)
-    mes_time ();
+    ighmm_mes_time ();
   if (!txt)
     return;
   if (bytes < 0) {
@@ -348,10 +348,10 @@ void mes_smart (int flags, const char *txt, int bytes)
   }
   if (slen > bytes)
     ((char *) (txt))[bytes - 1] = tmp[0];
-}                               /* mes_smart */
+}                               /* ighmm_mes_smart */
 
 /*============================================================================*/
-void mes_exit (void)
+void ighmm_mes_exit (void)
 {
   int i, tid = getthreadid ();
   for (i = mes_process_n - 1; i >= 0; i--) {
@@ -368,10 +368,10 @@ void mes_exit (void)
         return;
       }
   }
-}                               /* mes_exit */
+}                               /* ighmm_mes_exit */
 
 /*============================================================================*/
-void mes_init_args (int argc, char *argv[])
+void ighmm_mes_init_args (int argc, char *argv[])
 {
   mes_t *mpc = mes_process_get ();
   if (!argv || argc < 1)
@@ -391,10 +391,10 @@ void mes_init_args (int argc, char *argv[])
       argv++;
       mpc->argc++;
     }
-}                               /* mes_init_args */
+}                               /* ighmm_mes_init_args */
 
 /*============================================================================*/
-void mes_init_logfile (char *logfile)
+void ighmm_mes_init_logfile (char *logfile)
 {
   FILE *tst;
   mes_t *mpc = mes_process_get ();
@@ -419,28 +419,28 @@ void mes_init_logfile (char *logfile)
       return;
     }
   }
-}                               /* mes_init_logfile */
+}                               /* ighmm_mes_init_logfile */
 
 /*============================================================================*/
-void mes_init_winfct (void (*winfct) (const char *))
+void ighmm_mes_init_winfct (void (*winfct) (const char *))
 {
   mes_t *mpc = mes_process_get ();
   if (mpc && winfct)
     mpc->win_fkt = winfct;
-}                               /* mes_init_winfct */
+}                               /* ighmm_mes_init_winfct */
 
 /*============================================================================*/
-void mes_init (char *logfile, void (*winfct) (const char *), int argc,
+void ighmm_mes_init (char *logfile, void (*winfct) (const char *), int argc,
                char *argv[])
 {
   mes_process_alloc ();
-  mes_init_args (argc, argv);
-  mes_init_logfile (logfile);
-  mes_init_winfct (winfct);
-}                               /* mes_init */
+  ighmm_mes_init_args (argc, argv);
+  ighmm_mes_init_logfile (logfile);
+  ighmm_mes_init_winfct (winfct);
+}                               /* ighmm_mes_init */
 
 /*============================================================================*/
-int mes_win_ability (int on)
+int ighmm_mes_win_ability (int on)
 {
   mes_t *mpc = mes_process_get ();
   if (mpc) {
@@ -449,10 +449,10 @@ int mes_win_ability (int on)
     return (res);
   }
   return (1);
-}                               /* mes_win_ability */
+}                               /* ighmm_mes_win_ability */
 
 /*============================================================================*/
-int mes_ability (int on)
+int ighmm_mes_ability (int on)
 {
   mes_t *mpc = mes_process_get ();
   if (mpc) {
@@ -461,10 +461,10 @@ int mes_ability (int on)
     return (res);
   }
   return (1);
-}                               /* mes_ability */
+}                               /* ighmm_mes_ability */
 
 /*============================================================================*/
-void mes_time (void)
+void ighmm_mes_time (void)
 {
   mes_t *mpc = mes_process_get ();
   time_t now = time (NULL);
@@ -499,11 +499,11 @@ void mes_time (void)
   sprintf (txt, "(%.2f sec)", clock () / (float) CLOCKS_PER_SEC);
   mes_file (txt);
   mes_file (" *****:\n");
-}                               /* mes_time */
+}                               /* ighmm_mes_time */
 
 
 /*============================================================================*/
-void mes_va (int flags, int line, char *xproc, char *proc, char *format,
+void ighmm_mes_va (int flags, int line, char *xproc, char *proc, char *format,
              va_list args)
 {
   char digstr[32] = { 0 };
@@ -511,9 +511,9 @@ void mes_va (int flags, int line, char *xproc, char *proc, char *format,
   if (!format && !xproc && !proc)
     return;
   if (line + 1)
-    mprintf (digstr, sizeof (digstr), "(%u)", line);
+    ighmm_mprintf (digstr, sizeof (digstr), "(%u)", line);
   if (flags & MES_FLAG_TIME) {
-    mes_time ();
+    ighmm_mes_time ();
     flags &= ~MES_FLAG_TIME;
     flags |= MES_FLAG_FILE;
   }
@@ -526,27 +526,27 @@ void mes_va (int flags, int line, char *xproc, char *proc, char *format,
       mes_file (xproc);
     if (flags & MES_FLAG_WIN)
       mes_win (proc);
-    mes_smart (flags, digstr, -1);
+    ighmm_mes_smart (flags, digstr, -1);
     if (format)
-      mes_smart (flags, ": ", -1);
+      ighmm_mes_smart (flags, ": ", -1);
   }
 
   if (!format)
-    mes_smart (flags, "\n", -1);
+    ighmm_mes_smart (flags, "\n", -1);
   else
     mes_aux_va (flags, format, args);
-}                               /* mes_va */
+}                               /* ighmm_mes_va */
 
 /*============================================================================*/
-void mes (int flags, int line, char *xproc, char *proc, char *format, ...)
+void ighmm_mes (int flags, int line, char *xproc, char *proc, char *format, ...)
 {
   va_list args;
   va_start (args, format);
-  mes_va (flags, line, xproc, proc, format, args);
-}                               /* mes */
+  ighmm_mes_va (flags, line, xproc, proc, format, args);
+}                               /* ighmm_mes */
 
 /*============================================================================*/
-void mes_printf (int prot_flags, char *format, ...)
+void ighmm_mes_printf (int prot_flags, char *format, ...)
 {
   va_list args;
   char *txt;
@@ -554,31 +554,31 @@ void mes_printf (int prot_flags, char *format, ...)
   if (!prot_flags)
     return;
   if (!format) {
-    mes_time ();
-    mes_file ("Call of mes_printf without format string");
+    ighmm_mes_time ();
+    mes_file ("Call of ighmm_mes_printf without format string");
     return;
   }
   va_start (args, format);
-  txt = mprintf_va (NULL, 0, format, args);
+  txt = ighmm_mprintf_va (NULL, 0, format, args);
   if (!txt) {
-    mes_time ();
-    mes_file_win ("Call of mes_printf with format string\"");
+    ighmm_mes_time ();
+    mes_file_win ("Call of ighmm_mes_printf with format string\"");
     mes_file_win (format);
     mes_file_win ("\" without success\n");
     return;
   }
   if (prot_flags & MES_FLAG_TIME)
-    mes_time ();
-  mes_smart (prot_flags, txt, -1);
+    ighmm_mes_time ();
+  ighmm_mes_smart (prot_flags, txt, -1);
   free (txt);
-}                               /* mes_printf */
+}                               /* ighmm_mes_printf */
 
 /*============================================================================*/
-void mes_fformat (char *txt, char *logfile, int line, char *proc_info)
+void ighmm_mes_fformat (char *txt, char *logfile, int line, char *proc_info)
 {
-  mes_time ();
+  ighmm_mes_time ();
   if (proc_info && strlen (proc_info)) {
-    mes_smart (MES_FLAG_FILE, proc_info, -1);
+    ighmm_mes_smart (MES_FLAG_FILE, proc_info, -1);
     mes_file (":");
   }
   mes_file_win ("format error");
@@ -596,13 +596,13 @@ void mes_fformat (char *txt, char *logfile, int line, char *proc_info)
   else
     mes_file_win ("\n");
 
-}                               /* mes_fformat */
+}                               /* ighmm_mes_fformat */
 
 
 /*============================================================================*/
-void mes_err (char *txt, int error_nr, char *proc_info)
+void ighmm_mes_err (char *txt, int error_nr, char *proc_info)
 {
-  mes_time ();
+  ighmm_mes_time ();
   if (proc_info && strlen (proc_info)) {
     mes_file_win (proc_info);
     mes_file_win (":");
@@ -619,15 +619,15 @@ void mes_err (char *txt, int error_nr, char *proc_info)
   else
     mes_file_win ("\n");
 
-}                               /* mes_err */
+}                               /* ighmm_mes_err */
 
 /*============================================================================*/
-void mes_proc_start (char *proc_info)
+void ighmm_mes_proc_start (char *proc_info)
 {
   mes_t *mpc = mes_process_get ();
   int i;
 
-  mes_time ();
+  ighmm_mes_time ();
   if (proc_info) {
     mes_file (proc_info);
     mes_file (":");
@@ -643,29 +643,29 @@ void mes_proc_start (char *proc_info)
       mes_file ("\n");
     }
 
-}                               /* mes_proc_start */
+}                               /* ighmm_mes_proc_start */
 
 /*============================================================================*/
-int mes_insert (FILE * fp, char src, int cnt)
+int ighmm_mes_insert (FILE * fp, char src, int cnt)
 {
   int i = cnt;
 
   if (fp && fp - stdout)
-    for (i = 0; i < cnt && !mes_fputc (fp, src); i++);
+    for (i = 0; i < cnt && !ighmm_mes_fputc (fp, src); i++);
   else
     for (i = 0; i < cnt; i++)
-      mes_smart (MES_FLAG_WIN, &src, 1);
+      ighmm_mes_smart (MES_FLAG_WIN, &src, 1);
   if (i == cnt)
     return (0);
   return (-1);
-}                               /* mes_insert */
+}                               /* ighmm_mes_insert */
 
 
 /******************************************************************************/
 /******************************************************************************/
 
 /*============================================================================*/
-void *mes_malloc (int bytes)
+void *ighmm_malloc (int bytes)
 {
   void *res;
 
@@ -678,10 +678,10 @@ void *mes_malloc (int bytes)
     mes_aux (MES_FLAG_TIME_WIN, "malloc: could not allocate %d bytes\n",
              bytes);
   return (NULL);
-}                               /* mes_malloc */
+}                               /* ighmm_malloc */
 
 /*============================================================================*/
-void *mes_calloc (int bytes)
+void *ighmm_calloc (int bytes)
 {
   void *res;
 
@@ -694,10 +694,10 @@ void *mes_calloc (int bytes)
     mes_aux (MES_FLAG_TIME_WIN, "calloc: could not allocate %d bytes\n",
              bytes);
   return (NULL);
-}                               /* mes_calloc */
+}                               /* ighmm_calloc */
 
 /*============================================================================*/
-int mes_realloc (void **mem, int bytes)
+int ighmm_realloc (void **mem, int bytes)
 {
   void *res;
 
@@ -717,10 +717,10 @@ int mes_realloc (void **mem, int bytes)
     mes_aux (MES_FLAG_TIME_WIN,
              "realloc: could not reallocate %d bytes\n", bytes);
   return (-1);
-}                               /* mes_realloc */
+}                               /* ighmm_realloc */
 
 /*============================================================================*/
-FILE *mes_fopen (const char *filename, char *attrstr)
+FILE *ighmm_mes_fopen (const char *filename, char *attrstr)
 {
   FILE *fp;
 
@@ -744,17 +744,17 @@ FILE *mes_fopen (const char *filename, char *attrstr)
   }
 
 STOP:
-  mes_time ();
+  ighmm_mes_time ();
   mes_file_win ("fopen: could not open file \"");
   mes_file_win (filename);
   mes_file_win ("\" with attribute \"");
   mes_file_win (attrstr);
   mes_file_win ("\"\n");
   return (NULL);
-}                               /* mes_fopen */
+}                               /* ighmm_mes_fopen */
 
 /*============================================================================*/
-int mes_fread_quiet (FILE * fp, void *mem, int bytes)
+int ighmm_mes_fread_quiet (FILE * fp, void *mem, int bytes)
 {
   if (!bytes)
     return (0);
@@ -765,10 +765,10 @@ int mes_fread_quiet (FILE * fp, void *mem, int bytes)
              "fread: could not read %d bytes from FILE(%p) to mem(%p)\n",
              bytes, fp, mem);
   return (-1);
-}                               /* mes_fread_quiet */
+}                               /* ighmm_mes_fread_quiet */
 
 /*============================================================================*/
-int mes_fread (FILE * fp, void *mem, int bytes)
+int ighmm_mes_fread (FILE * fp, void *mem, int bytes)
 {
   if (!bytes)
     return (0);
@@ -780,10 +780,10 @@ int mes_fread (FILE * fp, void *mem, int bytes)
              "fread: could not read %d bytes from FILE(%p) to mem(%p)\n",
              bytes, fp, mem);
   return (-1);
-}                               /* mes_fread */
+}                               /* ighmm_mes_fread */
 
 /*============================================================================*/
-int mes_fwrite (FILE * fp, void *mem, int bytes)
+int ighmm_mes_fwrite (FILE * fp, void *mem, int bytes)
 {
   if (!fp || !mem)
     bytes = -1;
@@ -798,11 +798,11 @@ int mes_fwrite (FILE * fp, void *mem, int bytes)
              "fwrite: could not write %d bytes from mem(%p) to FILE(%p)\n",
              bytes, mem, fp);
   return (-1);
-}                               /* mes_fwrite */
+}                               /* ighmm_mes_fwrite */
 
 
 /*============================================================================*/
-int mes_fputc (FILE * fp, char chr)
+int ighmm_mes_fputc (FILE * fp, char chr)
 {
   if (fp && fputc (chr, fp) != EOF)
     return (0);
@@ -812,10 +812,10 @@ int mes_fputc (FILE * fp, char chr)
              "fputc: could not write byte %X to FILE(%p)\n",
              (int) chr & 0xFF, fp);
   return (-1);
-}                               /* mes_fputc */
+}                               /* ighmm_mes_fputc */
 
 /*============================================================================*/
-int mes_fputs (FILE * fp, char *str)
+int ighmm_mes_fputs (FILE * fp, char *str)
 {
   if (fp && str && fputs (str, fp) != EOF)
     return (0);
@@ -826,10 +826,10 @@ int mes_fputs (FILE * fp, char *str)
     mes_aux (MES_FLAG_TIME_WIN, "fputs: could not write 0 pointer\n");
 
   return (-1);
-}                               /* mes_fputs */
+}                               /* ighmm_mes_fputs */
 
 /*============================================================================*/
-int mes_fgetc (FILE * fp)
+int ighmm_mes_fgetc (FILE * fp)
 {
   int res = fp ? fgetc (fp) : EOF;
   if (res != EOF)
@@ -837,11 +837,11 @@ int mes_fgetc (FILE * fp)
   else
     mes_aux (MES_FLAG_TIME_WIN, "fgetc: end of FILE(%p)\n", fp);
   return (res);
-}                               /* mes_fgetc */
+}                               /* ighmm_mes_fgetc */
 
 
 /*============================================================================*/
-int mes_fflush (FILE * fp)
+int ighmm_mes_fflush (FILE * fp)
 {
   int res = fp ? fflush (fp) : -1;
 
@@ -850,10 +850,10 @@ int mes_fflush (FILE * fp)
   else
     mes_aux (MES_FLAG_TIME_WIN, "fflush: could not flush FILE(%p)\n", fp);
   return (res);
-}                               /* mes_fflush */
+}                               /* ighmm_mes_fflush */
 
 /*============================================================================*/
-int mes_fprintf (FILE * fp, char *format, ...)
+int ighmm_mes_fprintf (FILE * fp, char *format, ...)
 {
   va_list args;
   char *txt;
@@ -862,24 +862,24 @@ int mes_fprintf (FILE * fp, char *format, ...)
     return (0);
 
   va_start (args, format);
-  txt = mprintf_va (NULL, 0, format, args);
+  txt = ighmm_mprintf_va (NULL, 0, format, args);
   if (!txt) {
-    mes_time ();
+    ighmm_mes_time ();
     mes_file_win ("sprintf_va: call with format string\"");
     mes_file_win (format);
     mes_file_win ("\" without success\n");
     return (-1);
   }
   if (fp && fp - stdout)
-    mes_fputs (fp, txt);
+    ighmm_mes_fputs (fp, txt);
   else
     mes_win (txt);
   free (txt);
   return (1);
-}                               /* mes_fprintf */
+}                               /* ighmm_mes_fprintf */
 
 /*============================================================================*/
-int mes_fseek (FILE * fp, long offset, int fromwhere)
+int ighmm_mes_fseek (FILE * fp, long offset, int fromwhere)
 {
   int res = fp ? fseek (fp, offset, fromwhere) : -1;
 
@@ -902,7 +902,7 @@ int mes_fseek (FILE * fp, long offset, int fromwhere)
     break;
   }
   return (res);
-}                               /* mes_fseek */
+}                               /* ighmm_mes_fseek */
 
 /*============================================================================*/
 #ifdef WIN32
@@ -948,7 +948,7 @@ int mes_ftell64 (int fh, unsigned int *upos, unsigned int *lpos)
 #endif /* WIN32 */
 
 /*============================================================================*/
-int mes_ftell (FILE * fp)
+int ighmm_mes_ftell (FILE * fp)
 {
   int res = fp ? ftell (fp) : -1;
 
@@ -958,12 +958,12 @@ int mes_ftell (FILE * fp)
     mes_aux (MES_FLAG_TIME_WIN,
              "ftell: could not find current position of FILE(%p)\n", fp);
   return (res);
-}                               /* mes_ftell */
+}                               /* ighmm_mes_ftell */
 
 /*============================================================================*/
-int mes_remove (char *filename)
+int ighmm_mes_remove (char *filename)
 {
-#define CUR_PROC "mes_remove"
+#define CUR_PROC "ighmm_mes_remove"
   int res = -1;
 
   if (mes_filename_check (filename))
@@ -972,7 +972,7 @@ int mes_remove (char *filename)
   if (!res)
     return (0);
 STOP:
-  mes_time ();
+  ighmm_mes_time ();
   mes_file_win ("remove: could not remove file \"");
   mes_file_win (filename);
   mes_file_win ("\";");
@@ -981,13 +981,13 @@ STOP:
   mes_file_win ("\n");
   return (res);
 #undef CUR_PROC
-}                               /* mes_remove */
+}                               /* ighmm_mes_remove */
 
 
 /*============================================================================*/
-int mes_rename (char *oldname, char *newname)
+int ighmm_mes_rename (char *oldname, char *newname)
 {
-#define CUR_PROC "mes_rename"
+#define CUR_PROC "ighmm_mes_rename"
   int res = -1;
 
   if (mes_filename_check (oldname))
@@ -1001,7 +1001,7 @@ int mes_rename (char *oldname, char *newname)
     fp = fopen (newname, "rb");
     if (fp) {
       fclose (fp);
-      mes_remove (newname);
+      ighmm_mes_remove (newname);
     }
   }
   else
@@ -1012,7 +1012,7 @@ int mes_rename (char *oldname, char *newname)
     return (res);
 
 STOP:
-  mes_time ();
+  ighmm_mes_time ();
   mes_file_win ("rename: could not rename \"");
   mes_file_win (oldname);
   mes_file_win ("\" -> \"");
@@ -1023,12 +1023,12 @@ STOP:
   mes_file_win ("\n");
   return (res);
 #undef CUR_PROC
-}                               /* mes_rename */
+}                               /* ighmm_mes_rename */
 
 /*============================================================================*/
-int mes_move (char *oldname, char *newname)
+int ighmm_mes_move (char *oldname, char *newname)
 {
-#define CUR_PROC "mes_move"
+#define CUR_PROC "ighmm_mes_move"
   int res = -1;
   int tmp;
 
@@ -1040,23 +1040,23 @@ int mes_move (char *oldname, char *newname)
     goto STOP;
 
   /* first try to rename */
-  tmp = mes_ability (0);
-  if (!mes_rename (oldname, newname)) {
+  tmp = ighmm_mes_ability (0);
+  if (!ighmm_mes_rename (oldname, newname)) {
     res = 0;
-    mes_ability (tmp);
+    ighmm_mes_ability (tmp);
     goto STOP;
   }
-  mes_ability (tmp);
+  ighmm_mes_ability (tmp);
 
   /* need to copy */
-  if (mes_copy (oldname, newname))
+  if (ighmm_mes_copy (oldname, newname))
     goto STOP;
-  mes_remove (oldname);
+  ighmm_mes_remove (oldname);
 
   res = 0;
 STOP:
   if (res < 0) {
-    mes_time ();
+    ighmm_mes_time ();
     mes_file_win ("move: could not move ");
     mes_file_win (oldname);
     mes_file_win (" -> ");
@@ -1065,23 +1065,23 @@ STOP:
   }
   return (res);
 #undef CUR_PROC
-}                               /* mes_move */
+}                               /* ighmm_mes_move */
 
 
 /*============================================================================*/
-int mes_copy (char *oldname, char *newname)
+int ighmm_mes_copy (char *oldname, char *newname)
 {
-#define CUR_PROC "mes_copy"
+#define CUR_PROC "ighmm_mes_copy"
   int res = -1;
   FILE *dst = NULL;
   FILE *src = NULL;
   char *buf = NULL;
 
-  if ((dst = mes_fopen (newname, "wb")) == NULL)
+  if ((dst = ighmm_mes_fopen (newname, "wb")) == NULL)
     goto STOP;
-  if ((src = mes_fopen (oldname, "rb")) == NULL)
+  if ((src = ighmm_mes_fopen (oldname, "rb")) == NULL)
     goto STOP;
-  if ((buf = mes_malloc (0x10000 * sizeof (char))) == NULL)
+  if ((buf = ighmm_malloc (0x10000 * sizeof (char))) == NULL)
     goto STOP;
 
   while (!feof (src)) {
@@ -1101,12 +1101,12 @@ STOP:
     fclose (dst);
   return (res);
 # undef CUR_PROC
-}                               /* mes_copy */
+}                               /* ighmm_mes_copy */
 
 /*============================================================================*/
-FILE *mes_tmpfopen (char *path)
+FILE *ighmm_mes_tmpfopen (char *path)
 {
-# define CUR_PROC "mes_tmpfopen"
+# define CUR_PROC "ighmm_mes_tmpfopen"
   FILE *fp;
   char name[16];
   char tmpname[L_tmpnam + 16];
@@ -1130,15 +1130,15 @@ FILE *mes_tmpfopen (char *path)
       return (fp);
     break;
   }
-  mes_time ();
+  ighmm_mes_time ();
   mes_file_win ("tmpfopen: no success\n");
   return (NULL);
 # undef CUR_PROC
-}                               /* mes_tmpfopen */
+}                               /* ighmm_mes_tmpfopen */
 
 
 /*============================================================================*/
-int mes_tmpfclose (FILE ** fp)
+int ighmm_mes_tmpfclose (FILE ** fp)
 {
   if (!fp)
     return (0);
@@ -1147,20 +1147,20 @@ int mes_tmpfclose (FILE ** fp)
   fclose (*fp);
   (*fp) = 0;
   return (0);
-}                               /* mes_tmpfclose */
+}                               /* ighmm_mes_tmpfclose */
 
 
 /*============================================================================*/
-FILE *mes_tmpfile (void)
+FILE *ighmm_mes_tmpfile (void)
 {
-# define CUR_PROC "mes_tmpfile"
+# define CUR_PROC "ighmm_mes_tmpfile"
   FILE *fp = tmpfile ();
   if (fp)
     return (fp);
   else {
-    mes_time ();
+    ighmm_mes_time ();
     mes_file_win ("tmpfile: no success\n");
   }
   return (NULL);
 # undef CUR_PROC
-}                               /* mes_tmpfile */
+}                               /* ighmm_mes_tmpfile */
