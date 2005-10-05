@@ -151,7 +151,6 @@ int ghmm_dp_free(pmodel *mo) {
 #undef CUR_PROC
 } /* ghmm_dp_free */  
 
-pstate * get_pstateptr(pstate * ary, int index){ return ary + index; }
 
 /* get the emission index for a pair of symbols
    if the pair cannot be emmited this returns the size of the emission table
