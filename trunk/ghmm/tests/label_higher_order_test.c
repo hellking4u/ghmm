@@ -137,7 +137,7 @@ void generateModel (model *mo, int noStates, unsigned int seed) {
   }
 #endif
 
-  /* model_print(stdout, mo); */
+  /* ghmm_d_print(stdout, mo); */
 
 }
 
@@ -165,14 +165,14 @@ void testBaumwelch(int seqlen){
   generateModel(mo_mem,  5, 1704);
 
   /*generate a random sequence*/
-  my_output = model_label_generate_sequences(mo_gen, 0, seqlen, NR_SEQUENCES, seqlen);
-  /* model_add_noise(mo_time, .499, 0); */
+  my_output = ghmm_dl_generate_sequences(mo_gen, 0, seqlen, NR_SEQUENCES, seqlen);
+  /* ghmm_d_add_noise(mo_time, .499, 0); */
   /* randomize the second */
-  /* model_add_noise(mo_mem, .499, 0); */
+  /* ghmm_d_add_noise(mo_mem, .499, 0); */
 
-  model_print(stdout, mo_time);
-  model_print(stdout, mo_mem);
-  printf("Distance between the two models: %g\n\n", model_distance(mo_time, mo_mem));
+  ghmm_d_print(stdout, mo_time);
+  ghmm_d_print(stdout, mo_mem);
+  printf("Distance between the two models: %g\n\n", ghmm_d_distance(mo_time, mo_mem));
 
   /* shifting both models in diffrent directions */
   /* train the first */	 
@@ -182,19 +182,19 @@ void testBaumwelch(int seqlen){
   /* train the second and hope they are equal */
   error = ghmm_d_baum_welch(mo_mem, my_output);
 
-  model_print(stdout, mo_time);
-  model_print(stdout, mo_mem);
-  printf("Distance between the two trained models: %g\n", model_distance(mo_time, mo_mem));
+  ghmm_d_print(stdout, mo_time);
+  ghmm_d_print(stdout, mo_mem);
+  printf("Distance between the two trained models: %g\n", ghmm_d_distance(mo_time, mo_mem));
 
-  printf("Log-Likelyhood generating:    %g\n", model_likelihood (mo_gen, my_output));
-  printf("Log-Likelyhood fb-Baum-Welch: %g\n", model_likelihood (mo_time, my_output));
-  printf("Log-Likelyhood me-Baum-Welch: %g\n", model_likelihood (mo_mem, my_output));
+  printf("Log-Likelyhood generating:    %g\n", ghmm_d_likelihood (mo_gen, my_output));
+  printf("Log-Likelyhood fb-Baum-Welch: %g\n", ghmm_d_likelihood (mo_time, my_output));
+  printf("Log-Likelyhood me-Baum-Welch: %g\n", ghmm_d_likelihood (mo_mem, my_output));
 
 
   /* freeing memory */
-  model_free(&mo_gen);
-  model_free(&mo_time);
-  model_free(&mo_mem);
+  ghmm_d_free(&mo_gen);
+  ghmm_d_free(&mo_time);
+  ghmm_d_free(&mo_mem);
   
   ghmm_dseq_free(&my_output);
 }

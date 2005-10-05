@@ -674,7 +674,7 @@ typedef struct coord coord;
     @return 0 for succes; -1 for error
     @param mo:  pointer to a model 
 */
-extern int     model_free(model **mo);
+extern int     ghmm_d_free(model **mo);
 
 #ifdef GHMM_OBSOLETE
 /**
@@ -683,7 +683,7 @@ extern int     model_free(model **mo);
    @return array of pointers to the models
    @param filename:   the ASCII input file
    @param mo_number:  filled with number of models read */
-extern model** model_read(char *filename, int *mo_number);
+extern model** ghmm_d_read(char *filename, int *mo_number);
 #endif /* GHMM_OBSOLETE */
 
 /**
@@ -691,19 +691,19 @@ extern model** model_read(char *filename, int *mo_number);
    @param file: output file
    @param mo:   model
 */
-extern void model_print(FILE *file, model *mo); 
+extern void ghmm_d_print(FILE *file, model *mo); 
 
 
 #ifdef GHMM_OBSOLETE
 /**
    Produces simple left-right models given sequences. 
-   The function "model_generate_from_sequence" is called for each 
+   The function "ghmm_d_generate_from_sequence" is called for each 
    model that should be made. The sequences are read in from the
    ASCII file and thrown away again when leaving the function.
    @return vector of models
    @param s:          scanner
    @param new_models: number of models to produce */
-extern model **model_from_sequence_ascii(scanner_t *s, long *mo_number);
+extern model **ghmm_d_from_sequence_ascii(scanner_t *s, long *mo_number);
 #endif  /* GHMM_OBSOLETE */
 
 /** 
@@ -712,27 +712,27 @@ extern model **model_from_sequence_ascii(scanner_t *s, long *mo_number);
     @return vector of models
     @param s:          scanner
     @param new_models: number of models to produce */
-extern model **model_from_sequence(sequence_t *sq, long *mo_number);
+extern model **ghmm_d_from_sequence(sequence_t *sq, long *mo_number);
 
 /**
    Copies a given model. Allocates the necessary memory.
    @return copy of the model
    @param mo:  model to copy */
-extern model*  model_copy(const model *mo);
+extern model*  ghmm_d_copy(const model *mo);
 
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
    @return 0 for succes; -1 for error
    @param mo:  model to test */
-extern int     model_check(const model* mo);
+extern int     ghmm_d_check(const model* mo);
 
 /**
    Tests if number of states and number of outputs in the models match.
    @return 0 for succes; -1 for error
    @param mo:           vector of models
    @param model_number: numbr of models */
-extern int     model_check_compatibility(model **mo, int model_number);
+extern int     ghmm_d_check_compatibility(model **mo, int model_number);
 
 /**
    Produces a model, which generates the given sequence with probability 1.
@@ -744,7 +744,7 @@ extern int     model_check_compatibility(model **mo, int model_number);
    @param seq_len:  length of the sequence
    @param anz_symb: number of symbols in the sequence
 */
-extern model*  model_generate_from_sequence(const int *seq, int seq_len, 
+extern model*  ghmm_d_generate_from_sequence(const int *seq, int seq_len, 
 				     int anz_symb);
 
 /** 
@@ -762,7 +762,7 @@ extern model*  model_generate_from_sequence(const int *seq, int seq_len,
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-extern sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
+extern sequence_t *ghmm_d_generate_sequences(model* mo, int seed, int global_len,
 				     long seq_number, int Tmax);
 
 /**
@@ -772,7 +772,7 @@ extern sequence_t *model_generate_sequences(model* mo, int seed, int global_len,
    @param mo model
    @param sq sequences       
 */
-extern double model_likelihood(model *mo, sequence_t *sq);
+extern double ghmm_d_likelihood(model *mo, sequence_t *sq);
 
 
 /** Computes probabilistic distance of two models
@@ -786,7 +786,7 @@ extern double model_likelihood(model *mo, sequence_t *sq);
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
+double ghmm_d_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
 
 
 /** 
@@ -799,7 +799,7 @@ double model_prob_distance(model *m0, model *m, int maxT, int symmetric, int ver
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-extern int model_apply_duration(model* mo, int cur, int times);
+extern int ghmm_d_duration_apply(model* mo, int cur, int times);
 
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
@@ -967,7 +967,7 @@ extern int ghmm_d_logp(model *mo, const int *O, int len, double *log_p);
     @param prob probabilitys
     
 */
-extern void model_set_transition(model *mo, int i, int j, double prob);
+extern void ghmm_d_transition_set(model *mo, int i, int j, double prob);
 
 /** Forward-Algorithm (lean version).
   Calculates log( P(O|lambda) ) for a given double sequence and a given model.
@@ -996,10 +996,10 @@ extern int ghmm_dl_backward(model *mo, const int *O, const int *label, int len, 
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-background_distributions *model_alloc_background_distributions(int n,int m, int *orders, double **B);
+background_distributions *ghmm_d_background_alloc(int n,int m, int *orders, double **B);
 
-extern background_distributions *model_copy_background_distributions(background_distributions *bg);
-extern int model_free_background_distributions(background_distributions *bg);
+extern background_distributions *ghmm_d_background_copy(background_distributions *bg);
+extern int ghmm_d_background_free(background_distributions *bg);
 
 
 /**
@@ -1010,7 +1010,7 @@ extern int model_free_background_distributions(background_distributions *bg);
     @param mo: model to be normalized
 
 */
-extern int model_normalize(model* mo);
+extern int ghmm_d_normalize(model* mo);
 
 /**
    Add a specific level of noise to the model parameters
@@ -1020,7 +1020,7 @@ extern int model_normalize(model* mo);
                         a noise level of 0.0 doesn't change the model
    @param seed :        seed for ramdom number generator
 */
-extern int model_add_noise(model* mo, double level, int seed);
+extern int ghmm_d_add_noise(model* mo, double level, int seed);
 
 /**
    Apply the background distributions to the emission probabilities of states of
@@ -1031,7 +1031,7 @@ extern int model_add_noise(model* mo, double level, int seed);
    @param background_weight:   a parameter controlling the weight given to the
                                background. Note, should be between 0 and 1.
 */
-extern int model_apply_background(model *mo, double* background_weight);
+extern int ghmm_d_background_apply(model *mo, double* background_weight);
 
 
 
@@ -1059,12 +1059,12 @@ extern int model_apply_background(model *mo, double* background_weight);
       fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
     } 
     else {
-      model_print(fp, mo);
+      ghmm_d_print(fp, mo);
       fclose(fp);
     }
   }
   
-  void call_model_free(model *mo ) {model_free(&mo);}
+  void call_ghmm_d_free (model *mo) {ghmm_d_free(&mo);}
 
   model *get_model_ptr(model **mo, int index) { return mo[index]; }
     
@@ -1080,7 +1080,7 @@ extern int model_apply_background(model *mo, double* background_weight);
 /*=============================================================================================
   =============================== labeled models (model.c)  ============================================== */
 
-extern sequence_t *model_label_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
+extern sequence_t *ghmm_dl_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
 
 /*=============================================================================================
   =============================== sdmodel.c  ============================================== */

@@ -43,7 +43,7 @@
 extern "C" {
 #endif
 
-  void model_topo_ordering (model * mo);
+  void ghmm_d_topo_order (model * mo);
 
 #ifdef __cplusplus
 }

@@ -1294,7 +1294,7 @@ class HMMOpenFactory(HMMFactory):
             # XXX broken since silent states are not supported by .smo file format 
             if hmmClass == DiscreteEmissionHMM:
                 print nrModelPtr
-                models = ghmmwrapper.model_read(fileName, nrModelPtr)
+                models = ghmmwrapper.ghmm_d_read(fileName, nrModelPtr)
                 getPtr = ghmmwrapper.get_model_ptr
             else:
                 models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
@@ -1340,7 +1340,7 @@ class HMMOpenFactory(HMMFactory):
         (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
         nrModelPtr = ghmmwrapper.int_array(1)
         if hmmClass == DiscreteEmissionHMM:
-            models = hmmwrapper.model_read(fileName, nrModelPtr)
+            models = hmmwrapper.ghmm_d_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.get_model_ptr
         else:
             models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
@@ -1852,7 +1852,7 @@ class BackgroundDistribution:
                 b_i = ghmmhelper.list2arrayd(bgInput[i])
                 ghmmwrapper.set_2d_arrayd_col(b,i,b_i)
     
-            self.cbackground = ghmmwrapper.model_alloc_background_distributions(distNum,len(emissionDomain) ,order, b)
+            self.cbackground = ghmmwrapper.ghmm_d_background_alloc(distNum,len(emissionDomain) ,order, b)
 
         elif isinstance(bgInput,ghmmwrapper.background_distributions ):
             self.cbackground = bgInput
@@ -1863,7 +1863,7 @@ class BackgroundDistribution:
 
     def __del__(self):
         #print "__del__ BackgroundDistribution " + str(self.cbackground)
-        ghmmwrapper.model_free_background_distributions(self.cbackground)
+        ghmmwrapper.ghmm_d_background_free(self.cbackground)
         self.cbackground = None
     
     def __str__(self):
@@ -2286,7 +2286,7 @@ class HMM:
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
         assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
 
-        ghmmwrapper.model_set_transition(self.cmodel, i, j, prob)
+        ghmmwrapper.ghmm_d_transition_set(self.cmodel, i, j, prob)
 
 
     def getEmission(self, i):
@@ -2388,8 +2388,8 @@ class DiscreteEmissionHMM(HMM):
         self.background = None
         
         # Assignment of the C function names to be used with this model type
-        self.freeFunction = ghmmwrapper.call_model_free
-        self.samplingFunction = ghmmwrapper.model_generate_sequences
+        self.freeFunction = ghmmwrapper.call_ghmm_d_free
+        self.samplingFunction = ghmmwrapper.ghmm_d_generate_sequences
         self.viterbiFunction = ghmmwrapper.ghmm_d_viterbi
         self.forwardFunction = ghmmwrapper.ghmm_d_forward_lean
         self.forwardAlphaFunction = ghmmwrapper.ghmm_d_forward      
@@ -2399,7 +2399,7 @@ class DiscreteEmissionHMM(HMM):
         self.fileWriteFunction = ghmmwrapper.call_model_print
         self.getModelPtr = ghmmwrapper.get_model_ptr
         self.castModelPtr = ghmmwrapper.cast_model_ptr
-        self.distanceFunction = ghmmwrapper.model_prob_distance
+        self.distanceFunction = ghmmwrapper.ghmm_d_prob_distance
     
     def __del__(self):
         #print "__del__ DiscreteEmissionHMM" + str(self.cmodel)
@@ -2448,7 +2448,7 @@ class DiscreteEmissionHMM(HMM):
 
         for i in range(len(durationlist)):
             if durationlist[i] > 1:
-                error = ghmmwrapper.model_apply_duration(self.cmodel, i, durationlist[i])
+                error = ghmmwrapper.ghmm_d_duration_apply(self.cmodel, i, durationlist[i])
                 self.N = self.cmodel.N
                 if error:
                     print "ERROR: durations not applied"
@@ -2600,7 +2600,7 @@ class DiscreteEmissionHMM(HMM):
         assert len(backgroundWeight) == self.N, "Argument 'backgroundWeight' does not match number of states."
         
         cweights = ghmmhelper.list2arrayd(backgroundWeight)
-        result = ghmmwrapper.model_apply_background(self.cmodel, cweights)
+        result = ghmmwrapper.ghmm_d_background_apply(self.cmodel, cweights)
         
         ghmmwrapper.free_arrayd(cweights)
         if result is not 0:
@@ -3066,11 +3066,11 @@ class StateLabelHMM(DiscreteEmissionHMM):
             return self.labelDomain.internal(external)
 
     def sampleSingle(self, seqLength,seed = 0):
-        seqPtr = ghmmwrapper.model_label_generate_sequences(self.cmodel,seed,seqLength,1,seqLength)
+        seqPtr = ghmmwrapper.ghmm_dl_generate_sequences(self.cmodel,seed,seqLength,1,seqLength)
         return EmissionSequence(self.emissionDomain, seqPtr, labelDomain = self.labelDomain )
 
     def sample(self, seqNr,seqLength, seed = 0):
-        seqPtr = ghmmwrapper.model_label_generate_sequences(self.cmodel,seed,seqLength,seqNr,seqLength)
+        seqPtr = ghmmwrapper.ghmm_dl_generate_sequences(self.cmodel,seed,seqLength,seqNr,seqLength)
         return SequenceSet(self.emissionDomain,seqPtr, labelDomain = self.labelDomain)
 
 
@@ -3183,7 +3183,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         return error
         
     def modelNormalize(self):
-       i_error = ghmmwrapper.model_normalize(self.cmodel)
+       i_error = ghmmwrapper.ghmm_d_normalize(self.cmodel)
        if i_error == -1:
             print "ERROR: normalize finished with -1"
        
@@ -4462,7 +4462,7 @@ class PairHMM(HMM):
         
         # Assignment of the C function names to be used with this model type
         self.freeFunction = ghmmwrapper.pmodel_free
-        # self.samplingFunction = ghmmwrapper.model_generate_sequences
+        # self.samplingFunction = ghmmwrapper.ghmm_d_generate_sequences
         self.viterbiFunction = ghmmwrapper.pviterbi
         self.viterbiPropagateFunction = ghmmwrapper.pviterbi_propagate
         self.viterbiPropagateSegmentFunction = ghmmwrapper. pviterbi_propagate_segment
@@ -4473,7 +4473,7 @@ class PairHMM(HMM):
         self.fileWriteFunction = ghmmwrapper.call_model_print
         self.getModelPtr = ghmmwrapper.get_model_ptr
         self.castModelPtr = ghmmwrapper.cast_model_ptr
-        # self.distanceFunction = ghmmwrapper.model_prob_distance
+        # self.distanceFunction = ghmmwrapper.ghmm_d_prob_distance
         self.logPFunction = ghmmwrapper.pviterbi_logp
         self.states = {}
 

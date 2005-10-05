@@ -845,7 +845,7 @@ static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
 /*   if (mo->model_type & kSilentStates &&  */
 /*       mo->silent != NULL &&  */
 /*       mo->topo_order == NULL) { */
-/*     model_topo_ordering( mo );  */
+/*     ghmm_d_topo_order( mo );  */
 /*   } */
   init_phi_prop(pv, X, Y, start, stop);
 #ifdef DEBUG

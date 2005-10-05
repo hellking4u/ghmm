@@ -106,20 +106,20 @@ int my_model()
   
     /* consistency check */
   fprintf(stdout,"checking model:\n");
-  if (model_check(&my_model))
+  if (ghmm_d_check(&my_model))
     {
-      fprintf(stderr,"model_check failed!\n");
+      fprintf(stderr,"ghmm_d_check failed!\n");
       return 1;
     }
   fprintf(stdout,"model is ok\n");
 
   /* print model parameters */
   fprintf(stdout,"two_states_three_symbols model:\n");
-  model_print(stdout,&my_model);
+  ghmm_d_print(stdout,&my_model);
 
   /* generate sequences */
   fprintf(stdout,"generating sequences:...");
-  my_output=model_generate_sequences(&my_model, /* model */
+  my_output=ghmm_d_generate_sequences(&my_model, /* model */
 				     0,   /* random seed */
 				     100, /* length of each sequence */
 				     100, /* no of sequences */
@@ -138,7 +138,7 @@ int my_model()
 
   /* print the result */
   fprintf(stdout,"Done\nthe result is:\n");
-  model_print(stdout,&my_model);
+  ghmm_d_print(stdout,&my_model);
 
   ghmm_dseq_free(&my_output);
 

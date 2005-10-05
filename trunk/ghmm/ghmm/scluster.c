@@ -402,7 +402,7 @@ int scluster_hmm (char *argv[])
           mes_prot (str);
           m_free (str);
           
-            /* model_print(stdout, cl.mo[i]); */ 
+            /* ghmm_d_print(stdout, cl.mo[i]); */ 
             goto STOP;
         }
       }

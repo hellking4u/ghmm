@@ -268,7 +268,7 @@ int * ghmm_d_viterbi (model * mo, int *o, int len, double *log_p)
   
   if (mo->model_type & kSilentStates &&
       mo->silent != NULL && mo->topo_order == NULL) {
-    model_topo_ordering (mo);   /* Should we call it here ???? */
+    ghmm_d_topo_order (mo);   /* Should we call it here ???? */
   }
 
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */

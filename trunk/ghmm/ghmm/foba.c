@@ -148,7 +148,7 @@ int ghmm_d_forward (model * mo, const int *O, int len, double **alpha,
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/
-    model_topo_ordering (mo);
+    ghmm_d_topo_order (mo);
   }
 
   ghmm_d_forward_init (mo, alpha[0], O[0], scale);
@@ -288,7 +288,7 @@ int ghmm_d_backward (model * mo, const int *O, int len, double **beta,
   /* topological ordering for models with silent states */
   if (mo->model_type & kSilentStates) {
     ARRAY_CALLOC (beta_tmp, mo->N);
-    model_topo_ordering (mo);
+    ghmm_d_topo_order (mo);
   }
 
   /* initialize all states */
@@ -404,7 +404,7 @@ int ghmm_d_backward_termination (model *mo, const int *O, int length,
   /* topological ordering for models with silent states and precomputing
      the beta_tmp for silent states */
   if (mo->model_type & kSilentStates) {
-    model_topo_ordering (mo);
+    ghmm_d_topo_order (mo);
     ARRAY_CALLOC (beta_tmp, mo->N);
     for (k = mo->topo_order_length - 1; k >= 0; k--) {
       id = mo->topo_order[k];
@@ -520,7 +520,7 @@ int ghmm_d_forward_lean (model * mo, const int *O, int len, double *log_p)
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/
-    model_topo_ordering (mo);
+    ghmm_d_topo_order (mo);
   }
 
   ghmm_d_forward_init (mo, alpha_last_col, O[0], scale);
@@ -896,7 +896,7 @@ int ghmm_dl_forward_lean (model * mo, const int *O, const int *label,
 
   if (mo->model_type & kSilentStates) {
     /*printf("silent states require topological ordering\n");*/
-    model_topo_ordering (mo);
+    ghmm_d_topo_order (mo);
   }
 
   foba_label_initforward (mo, alpha_last_col, O[0], label[0], scale);
