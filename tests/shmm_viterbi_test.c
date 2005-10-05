@@ -35,7 +35,7 @@ static int viterbi_test(char* argv[]) {
 
 
   /* read array of models */
-  smo = smodel_read(argv[1], &smo_number);
+  smo = ghmm_c_read(argv[1], &smo_number);
   if (!(smo)) {mes_proc(); goto STOP;}
   
   /* read sequences */
@@ -50,7 +50,7 @@ static int viterbi_test(char* argv[]) {
     for (i = 0;  i < sqd_number; i++) {
       for (j = 0; j < sqd[i]->seq_number; j++) {
 	cnt++;
-	state_seq = sviterbi(smo[model], sqd[i]->seq[j], sqd[i]->seq_len[j],
+	state_seq = ghmm_c_viterbi(smo[model], sqd[i]->seq[j], sqd[i]->seq_len[j],
 			     &log_p);
 	if (state_seq == NULL) {mes_proc(); goto STOP;}
 	fprintf(outfile, "%d %ld (Seq.ID %d): logp %.4f\t", model, i, 

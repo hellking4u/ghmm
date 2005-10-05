@@ -13,8 +13,8 @@ int main()
 
   ghmm_rng_init();  /* Important! initialise rng  */
   
-  model_array = smodel_read(inFileName,&model_counter);
+  model_array = ghmm_c_read(inFileName,&model_counter);
   printf("Read %d model(s) from '%s'\n", model_counter, inFileName);
-  smodel_free(model_array);
+  ghmm_c_free(model_array);
 }
   

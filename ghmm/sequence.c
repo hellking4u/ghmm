@@ -1485,7 +1485,7 @@ int ghmm_cseq_mix_like (smodel ** smo, int smo_number, sequence_d_t * sqd,
   for (i = 0; i < sqd->seq_number; i++) {
     seq_like = 0.0;
     for (k = 0; k < smo_number; k++) {
-      if (sfoba_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &log_p) != -1) {
+      if (ghmm_c_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &log_p) != -1) {
         if (log_p > -100)
           seq_like += exp (log_p) * smo[k]->prior;
       }

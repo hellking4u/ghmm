@@ -61,10 +61,10 @@
 #include "obsolete.h"
 
 /*----------------------------------------------------------------------------*/
-int smodel_state_alloc (sstate * s,
+int ghmm_c_state_alloc (sstate * s,
                         int M, int in_states, int out_states, int cos)
 {
-# define CUR_PROC "smodel_state_alloc"
+# define CUR_PROC "ghmm_c_state_alloc"
   int res = -1;
   int i;
   ARRAY_CALLOC (s->c, M);
@@ -101,12 +101,12 @@ int smodel_state_alloc (sstate * s,
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
-}                               /* smodel_state_alloc */
+}                               /* ghmm_c_state_alloc */
 
 
-int smodel_class_change_alloc (smodel * smo)
+int ghmm_c_class_change_alloc (smodel * smo)
 {
-#define CUR_PROC "smodel_class_change_alloc"
+#define CUR_PROC "ghmm_c_class_change_alloc"
   class_change_context *c = NULL;
   ARRAY_CALLOC (c, 1);
 
@@ -182,9 +182,9 @@ since it does not take care of het .mixtures densities  */
 
 
 /*============================================================================*/
-smodel **smodel_read (const char *filename, int *smo_number)
+smodel **ghmm_c_read (const char *filename, int *smo_number)
 {
-#define CUR_PROC "smodel_read"
+#define CUR_PROC "ghmm_c_read"
 /* XXX - old function. No support to heterogeneous densities  */
   int j;
   long new_models = 0;
@@ -205,7 +205,7 @@ smodel **smodel_read (const char *filename, int *smo_number)
       (*smo_number)++;
       /* more mem */
       ARRAY_REALLOC (smo, *smo_number);
-      smo[*smo_number - 1] = smodel_read_block (s, (int *) &new_models);
+      smo[*smo_number - 1] = ghmm_c_read_block (s, (int *) &new_models);
       if (!smo[*smo_number - 1]) {
         mes_proc ();
         goto STOP;
@@ -215,7 +215,7 @@ smodel **smodel_read (const char *filename, int *smo_number)
         /* "-1" due to  (*smo_number)++ from above  */
         ARRAY_REALLOC (smo, *smo_number - 1 + new_models);
         for (j = 1; j < new_models; j++) {
-          smo[*smo_number] = smodel_copy (smo[*smo_number - 1]);
+          smo[*smo_number] = ghmm_c_copy (smo[*smo_number - 1]);
           if (!smo[*smo_number]) {
             mes_proc ();
             goto STOP;
@@ -232,7 +232,7 @@ smodel **smodel_read (const char *filename, int *smo_number)
     if (s->err)
       goto STOP;
   }                             /* while(!s->err && !s->eof) */
-  /*if (smodel_check_compatibility(smo, *smo_number) == -1) {
+  /*if (ghmm_c_check_compatibility(smo, *smo_number) == -1) {
      mes_proc(); goto STOP;
      } */
 
@@ -243,13 +243,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
     ighmm_scanner_free (&s);
     return NULL;
 #undef CUR_PROC
-}    /* smodel_read */
+}    /* ghmm_c_read */
 
 
 /*============================================================================*/
-smodel *smodel_read_block (scanner_t * s, int *multip)
+smodel *ghmm_c_read_block (scanner_t * s, int *multip)
 {
-#define CUR_PROC "smodel_read_block"
+#define CUR_PROC "ghmm_c_read_block"
 /* XXX - old function. No support to heterogeneous densities  */
   int i, j, osc, m_read, n_read, pi_read, a_read, c_read, mue_read, cos_read,
     u_read, len, density_read, out, in, prior_read, fix_read, M;
@@ -601,7 +601,7 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
       smo->s[i].out_states += out;
       smo->s[i].in_states += in;
     }
-    if (smodel_state_alloc (smo->s + i, M, smo->s[i].in_states,
+    if (ghmm_c_state_alloc (smo->s + i, M, smo->s[i].in_states,
                             smo->s[i].out_states, smo->cos)) {
       mes_proc ();
       goto STOP;
@@ -644,18 +644,18 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ighmm_cmatrix_free (&u_matrix, smo->N);
   m_free (pi_vektor);
   m_free (fix_vektor);
-  smodel_free (&smo);
+  ghmm_c_free (&smo);
   return NULL;
 #undef CUR_PROC
-}                               /* smodel_read_block */
+}                               /* ghmm_c_read_block */
 
 #endif /* GHMM_OBSOLETE */
 
 
 /*============================================================================*/
-int smodel_free (smodel ** smo)
+int ghmm_c_free (smodel ** smo)
 {
-#define CUR_PROC "smodel_free"
+#define CUR_PROC "ghmm_c_free"
   int i;
   mes_check_ptr (smo, return (-1));
   for (i = 0; i < (*smo)->N; i++) {
@@ -690,13 +690,13 @@ int smodel_free (smodel ** smo)
   m_free (*smo);
   return (0);
 #undef CUR_PROC
-}                               /* smodel_free */
+}                               /* ghmm_c_free */
 
 
 /*============================================================================*/
-smodel *smodel_copy (const smodel * smo)
+smodel *ghmm_c_copy (const smodel * smo)
 {
-# define CUR_PROC "smodel_copy"
+# define CUR_PROC "ghmm_c_copy"
   int i, k, j, nachf, vorg, m;
   smodel *sm2 = NULL;
   ARRAY_CALLOC (sm2, 1);
@@ -754,16 +754,16 @@ smodel *smodel_copy (const smodel * smo)
   sm2->prior = smo->prior;
   return (sm2);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  smodel_free (&sm2);
+  ghmm_c_free (&sm2);
   return (NULL);
 # undef CUR_PROC
-}                               /* smodel_copy */
+}                               /* ghmm_c_copy */
 
 
 /*============================================================================*/
-int smodel_check (const smodel * smo)
+int ghmm_c_check (const smodel * smo)
 {
-# define CUR_PROC "smodel_check"
+# define CUR_PROC "ghmm_c_check"
   int valid = 0;
   double sum;
   int i, k, j;
@@ -828,13 +828,13 @@ int smodel_check (const smodel * smo)
 /* STOP: */
   return (valid);
 # undef CUR_PROC
-}                               /* smodel_check */
+}                               /* ghmm_c_check */
 
 
 /*============================================================================*/
-int smodel_check_compatibility (smodel ** smo, int smodel_number)
+int ghmm_c_check_compatibility (smodel ** smo, int smodel_number)
 {
-#define CUR_PROC "smodel_check_compatibility"
+#define CUR_PROC "ghmm_c_check_compatibility"
 /* XXX - old function not used any more !!! */
   int i, j, k;
   for (i = 0; i < smodel_number; i++)
@@ -860,13 +860,13 @@ int smodel_check_compatibility (smodel ** smo, int smodel_number)
     }
   return 0;
 #undef CUR_PROC
-}                               /* smodel_check_compatibility */
+}                               /* ghmm_c_check_compatibility */
 
 
 /*============================================================================*/
-double smodel_get_random_var (smodel * smo, int state, int m)
+double ghmm_c_get_random_var (smodel * smo, int state, int m)
 {
-# define CUR_PROC "smodel_get_random_var"
+# define CUR_PROC "ghmm_c_get_random_var"
   switch (smo->s[state].density[m]) {
   case normal_approx:
   case normal:
@@ -882,17 +882,17 @@ double smodel_get_random_var (smodel * smo, int state, int m)
     return (-1);
   }
 # undef CUR_PROC
-}                               /* smodel_get_random_var */
+}                               /* ghmm_c_get_random_var */
 
 
 
 /*============================================================================*/
 
-sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
+sequence_d_t *ghmm_c_generate_sequences (smodel * smo, int seed,
                                          int global_len, long seq_number,
                                          long label, int Tmax)
 {
-# define CUR_PROC "smodel_generate_sequences"
+# define CUR_PROC "ghmm_c_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
 
@@ -962,7 +962,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
     if (m == smo->s[i].M)
       m--;
     /* Get random numbers according to the density function */
-    sq->seq[n][0] = smodel_get_random_var (smo, i, m);
+    sq->seq[n][0] = ghmm_c_get_random_var (smo, i, m);
     pos = 1;
 
     /* The first symbol chooses the start class */
@@ -1050,7 +1050,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
           m--;
       }
       /* Get a random number from the corresponding density function */
-      sq->seq[n][pos] = smodel_get_random_var (smo, i, m);
+      sq->seq[n][pos] = ghmm_c_get_random_var (smo, i, m);
 
       /* Decide the class for the next step */
       if (smo->cos == 1) {
@@ -1121,13 +1121,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_cseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
-}                               /* smodel_generate_sequences */
+}                               /* ghmm_c_generate_sequences */
 
 
 /*============================================================================*/
-int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p)
+int ghmm_c_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p)
 {
-# define CUR_PROC "smodel_likelihood"
+# define CUR_PROC "ghmm_c_likelihood"
   int res = -1;
   double log_p_i;
   int matched, i;
@@ -1145,7 +1145,7 @@ int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p)
       smo->class_change->k = i;
     }
 
-    if (sfoba_logp (smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) {
+    if (ghmm_c_logp (smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) {
       *log_p += log_p_i * sqd->seq_w[i];
       matched++;
     }
@@ -1170,9 +1170,9 @@ int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
-}                               /* smodel_likelihood */
+}                               /* ghmm_c_likelihood */
 
-int smodel_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
+int ghmm_c_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
                                    double *log_ps)
 {
   int matched, res;
@@ -1191,7 +1191,7 @@ int smodel_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
       }
       smo->class_change->k = i;
     }
-    if (sfoba_logp (smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) {
+    if (ghmm_c_logp (smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) {
       log_ps[i] = log_p_i;
       matched++;
     }
@@ -1224,7 +1224,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-void smodel_Ak_print (FILE * file, smodel * smo, int k, char *tab,
+void ghmm_c_Ak_print (FILE * file, smodel * smo, int k, char *tab,
                       char *separator, char *ending)
 {
   int i, j, out_state;
@@ -1248,11 +1248,11 @@ void smodel_Ak_print (FILE * file, smodel * smo, int k, char *tab,
     }
     fprintf (file, "%s\n", ending);
   }
-}                               /* smodel_Ak_print */
+}                               /* ghmm_c_Ak_print */
 
 
 /*============================================================================*/
-void smodel_C_print (FILE * file, smodel * smo, char *tab, char *separator,
+void ghmm_c_C_print (FILE * file, smodel * smo, char *tab, char *separator,
                      char *ending)
 {
   int i, j;
@@ -1263,11 +1263,11 @@ void smodel_C_print (FILE * file, smodel * smo, char *tab, char *separator,
       fprintf (file, "%s %.4f", separator, smo->s[i].c[j]);
     fprintf (file, "%s\n", ending);
   }
-}                               /* smodel_C_print */
+}                               /* ghmm_c_C_print */
 
 
 /*============================================================================*/
-void smodel_Mue_print (FILE * file, smodel * smo, char *tab, char *separator,
+void ghmm_c_Mue_print (FILE * file, smodel * smo, char *tab, char *separator,
                        char *ending)
 {
   int i, j;
@@ -1278,11 +1278,11 @@ void smodel_Mue_print (FILE * file, smodel * smo, char *tab, char *separator,
       fprintf (file, "%s %.4f", separator, smo->s[i].mue[j]);
     fprintf (file, "%s\n", ending);
   }
-}                               /* smodel_Mue_print */
+}                               /* ghmm_c_Mue_print */
 
 
 /*============================================================================*/
-void smodel_U_print (FILE * file, smodel * smo, char *tab, char *separator,
+void ghmm_c_U_print (FILE * file, smodel * smo, char *tab, char *separator,
                      char *ending)
 {
   /* attention: choose precision big enough to allow printing of  
@@ -1295,11 +1295,11 @@ void smodel_U_print (FILE * file, smodel * smo, char *tab, char *separator,
       fprintf (file, "%s %.4f", separator, smo->s[i].u[j]);
     fprintf (file, "%s\n", ending);
   }
-}                               /* smodel_U_print */
+}                               /* ghmm_c_U_print */
 
 
 /*============================================================================*/
-void smodel_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
+void ghmm_c_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
                       char *ending)
 {
   int i;
@@ -1307,10 +1307,10 @@ void smodel_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
   for (i = 1; i < smo->N; i++)
     fprintf (file, "%s %.4f", separator, smo->s[i].pi);
   fprintf (file, "%s\n", ending);
-}                               /* smodel_Pi_print */
+}                               /* ghmm_c_Pi_print */
 
 /*============================================================================*/
-void smodel_fix_print (FILE * file, smodel * smo, char *tab, char *separator,
+void ghmm_c_fix_print (FILE * file, smodel * smo, char *tab, char *separator,
                        char *ending)
 {
   int i;
@@ -1322,7 +1322,7 @@ void smodel_fix_print (FILE * file, smodel * smo, char *tab, char *separator,
 
 
 /*============================================================================*/
-void smodel_print (FILE * file, smodel * smo)
+void ghmm_c_print (FILE * file, smodel * smo)
 {
 /* old function - No support to heterogeneous densities */
   int k;
@@ -1332,29 +1332,29 @@ void smodel_print (FILE * file, smodel * smo)
   /* smo files support only models with a single density */
   fprintf (file, "\tprior = %.5f;\n", smo->prior);
   fprintf (file, "\tPi = vector {\n");
-  smodel_Pi_print (file, smo, "\t", ",", ";");
+  ghmm_c_Pi_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n");
   fprintf (file, "\tfix_state = vector {\n");
-  smodel_fix_print (file, smo, "\t", ",", ";");
+  ghmm_c_fix_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n");
   for (k = 0; k < smo->cos; k++) {
     fprintf (file, "\tAk_%d = matrix {\n", k);
-    smodel_Ak_print (file, smo, k, "\t", ",", ";");
+    ghmm_c_Ak_print (file, smo, k, "\t", ",", ";");
     fprintf (file, "\t};\n");
   }
   fprintf (file, "\tC = matrix {\n");
-  smodel_C_print (file, smo, "\t", ",", ";");
+  ghmm_c_C_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n\tMue = matrix {\n");
-  smodel_Mue_print (file, smo, "\t", ",", ";");
+  ghmm_c_Mue_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n\tU = matrix {\n");
-  smodel_U_print (file, smo, "\t", ",", ";");
+  ghmm_c_U_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n");
   fprintf (file, "};\n\n");
-}                               /* smodel_print */
+}                               /* ghmm_c_print */
 
 /*============================================================================*/
 /* needed for hmm_input: only one A (=Ak_1 = Ak_2...) is written */
-void smodel_print_oneA (FILE * file, smodel * smo)
+void ghmm_c_print_oneA (FILE * file, smodel * smo)
 {
 /* old function - No support to heterogeneous densities */
   fprintf (file,
@@ -1362,29 +1362,29 @@ void smodel_print_oneA (FILE * file, smodel * smo)
            smo->M, smo->N, (int) smo->s[0].density[0], smo->cos);
   fprintf (file, "\tprior = %.3f;\n", smo->prior);
   fprintf (file, "\tPi = vector {\n");
-  smodel_Pi_print (file, smo, "\t", ",", ";");
+  ghmm_c_Pi_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n");
   fprintf (file, "\tfix_state = vector {\n");
-  smodel_fix_print (file, smo, "\t", ",", ";");
+  ghmm_c_fix_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n");
   /* Attention: assumption is: A_k are all the same */
   fprintf (file, "\tA = matrix {\n");
-  smodel_Ak_print (file, smo, 0, "\t", ",", ";");
+  ghmm_c_Ak_print (file, smo, 0, "\t", ",", ";");
   fprintf (file, "\t};\n");
   /***/
   fprintf (file, "\tC = matrix {\n");
-  smodel_C_print (file, smo, "\t", ",", ";");
+  ghmm_c_C_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n\tMue = matrix {\n");
-  smodel_Mue_print (file, smo, "\t", ",", ";");
+  ghmm_c_Mue_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n\tU = matrix {\n");
-  smodel_U_print (file, smo, "\t", ",", ";");
+  ghmm_c_U_print (file, smo, "\t", ",", ";");
   fprintf (file, "\t};\n");
   fprintf (file, "};\n\n");
-}                               /* smodel_print */
+}                               /* ghmm_c_print */
 
 
 /*============================================================================*/
-double smodel_calc_cmbm (smodel * smo, int state, int m, double omega)
+double ghmm_c_calc_cmbm (smodel * smo, int state, int m, double omega)
 {
   double bm = 0.0;
   switch (smo->s[state].density[m]) {
@@ -1418,26 +1418,26 @@ double smodel_calc_cmbm (smodel * smo, int state, int m, double omega)
     bm = 0.0;
   }
   return (smo->s[state].c[m] * bm);
-}                               /* smodel_calc_cmbm */
+}                               /* ghmm_c_calc_cmbm */
 
 
 /*============================================================================*/
 /* PDF(omega) in a given state */
-double smodel_calc_b (smodel * smo, int state, double omega)
+double ghmm_c_calc_b (smodel * smo, int state, double omega)
 {
   int m;
   double b = 0.0;
   for (m = 0; m < smo->s[state].M; m++)
-    b += smodel_calc_cmbm (smo, state, m, omega);
+    b += ghmm_c_calc_cmbm (smo, state, m, omega);
   return (b);
-}                               /* smodel_calc_b */
+}                               /* ghmm_c_calc_b */
 
 
 /*============================================================================*/
-double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
+double ghmm_c_prob_distance (smodel * cm0, smodel * cm, int maxT,
                              int symmetric, int verbose)
 {
-#define CUR_PROC "smodel_prob_distance"
+#define CUR_PROC "ghmm_c_prob_distance"
 
 #define STEPS 100
 
@@ -1469,7 +1469,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
 
   for (k = 0; k < 2; k++) {
 
-    seq0 = smodel_generate_sequences (smo1, 0, maxT + 1, 1, 0, maxT + 1);
+    seq0 = ghmm_c_generate_sequences (smo1, 0, maxT + 1, 1, 0, maxT + 1);
 
     /*ghmm_cseq_print(stdout,seq0,0);*/
 
@@ -1495,7 +1495,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
         /* create a additional sequences at once */
         a = (maxT - total) / (total / seq0->seq_number) + 1;
         /* printf("total=%d generating %d", total, a); */
-        tmp = smodel_generate_sequences (smo1, 0, 0, a, 0, maxT + 1);
+        tmp = ghmm_c_generate_sequences (smo1, 0, 0, a, 0, maxT + 1);
         ghmm_cseq_add (seq0, tmp);
         ghmm_cseq_free (&tmp);
 
@@ -1528,14 +1528,14 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
           seq0->seq_len[index] = total - t;
         seq0->seq_number = index + 1;
 
-        if (smodel_likelihood (smo1, seq0, &p0) == -1) {
+        if (ghmm_c_likelihood (smo1, seq0, &p0) == -1) {
           /* error! */
           mes_prot ("seq0 can't be build from smo1!");
           goto STOP;
 
 
         }
-        n = smodel_likelihood (smo2, seq0, &p); /* ==-1: KEINE Seq. erzeugbar */
+        n = ghmm_c_likelihood (smo2, seq0, &p); /* ==-1: KEINE Seq. erzeugbar */
         if (n < seq0->seq_number) {
           ighmm_mes (MES_WIN,
                "problem: some seqences in seq0 can't be build from smo2\n");
@@ -1572,12 +1572,12 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
       for (t = step_width, i = 0; t <= maxT; t += step_width, i++) {
         seq0->seq_len[0] = t;
 
-        if (smodel_likelihood (smo1, seq0, &p0) == -1) {
+        if (ghmm_c_likelihood (smo1, seq0, &p0) == -1) {
           /* error case */
           mes_prot ("seq0 can't be build from smo1!");
           goto STOP;
         }
-        n = smodel_likelihood (smo2, seq0, &p);/*== -1: KEINE Seq. erzeugbar*/
+        n = ghmm_c_likelihood (smo2, seq0, &p);/*== -1: KEINE Seq. erzeugbar*/
         if (n < seq0->seq_number) {
           ighmm_mes (MES_WIN,
                "problem: some sequences in seq0 can't be build from smo2\n");
@@ -1628,7 +1628,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-double smodel_calc_cmBm (smodel * smo, int state, int m, double omega)
+double ghmm_c_calc_cmBm (smodel * smo, int state, int m, double omega)
 {
   double Bm = 0.0;
   switch (smo->s[state].density[m]) {
@@ -1659,14 +1659,14 @@ double smodel_calc_cmBm (smodel * smo, int state, int m, double omega)
 
 /*============================================================================*/
 /* CDF(omega) in a given state */
-double smodel_calc_B (smodel * smo, int state, double omega)
+double ghmm_c_calc_B (smodel * smo, int state, double omega)
 {
   int m;
   double B = 0.0;
   for (m = 0; m < smo->s[state].M; m++)
-    B += smodel_calc_cmBm (smo, state, m, omega);
+    B += ghmm_c_calc_cmBm (smo, state, m, omega);
   return (B);
-}                               /* smodel_calc_B */
+}                               /* ghmm_c_calc_B */
 
 /*============================================================================*/
 /* What is the dimension of the modell ( = dimension of the parameter vektor) ?
@@ -1674,7 +1674,7 @@ double smodel_calc_B (smodel * smo, int state, double omega)
    Only those parameters, that can be changed during  training.
    mixture coeff from smix and priors are not counted! 
 */
-int smodel_count_free_parameter (smodel ** smo, int smo_number)
+int ghmm_c_count_free_parameter (smodel ** smo, int smo_number)
 {
   int i, k;
   int pi_counted = 0, cnt = 0;
@@ -1708,7 +1708,7 @@ int smodel_count_free_parameter (smodel ** smo, int smo_number)
 
 /*============================================================================*/
 /* interval (a,b) with ~ B(a) < 0.01, B(b) > 0.99 */
-void smodel_get_interval_B (smodel * smo, int state, double *a, double *b)
+void ghmm_c_get_interval_B (smodel * smo, int state, double *a, double *b)
 {
   int m;
   double mue, delta, max, min;
@@ -1743,12 +1743,12 @@ void smodel_get_interval_B (smodel * smo, int state, double *a, double *b)
   }
 
   return;
-}                               /* smodel_get_interval_B */
+}                               /* ghmm_c_get_interval_B */
 
 /*============================================================================*/
-double smodel_ifunc (smodel * smo, int state, double c, double x)
+double ghmm_c_ifunc (smodel * smo, int state, double c, double x)
 {
-  return (fabs (smodel_calc_B (smo, state, x) - c));
+  return (fabs (ghmm_c_calc_B (smo, state, x) - c));
 }
 
 /*============================ TEST =========================================*/
