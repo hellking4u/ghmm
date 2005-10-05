@@ -4195,7 +4195,7 @@ class DiscretePairDistribution(DiscreteDistribution):
         self.offsetX = offsetX
         self.offsetY = offsetY
         self.prob_vector = None
-        self.pairIndexFunction = ghmmwrapper.pair
+        self.pairIndexFunction = ghmmwrapper.ghmm_dp_pair
 
     def getPairIndex(self, charX, charY):
         """
@@ -4461,11 +4461,11 @@ class PairHMM(HMM):
         self.background = None
         
         # Assignment of the C function names to be used with this model type
-        self.freeFunction = ghmmwrapper.pmodel_free
+        self.freeFunction = ghmmwrapper.ghmm_dp_free
         # self.samplingFunction = ghmmwrapper.ghmm_d_generate_sequences
-        self.viterbiFunction = ghmmwrapper.pviterbi
-        self.viterbiPropagateFunction = ghmmwrapper.pviterbi_propagate
-        self.viterbiPropagateSegmentFunction = ghmmwrapper. pviterbi_propagate_segment
+        self.viterbiFunction = ghmmwrapper.ghmm_dp_viterbi
+        self.viterbiPropagateFunction = ghmmwrapper.ghmm_dp_viterbi_propagate
+        self.viterbiPropagateSegmentFunction = ghmmwrapper.ghmm_dp_viterbi_propagate_segment
         # self.forwardFunction = 
         # self.forwardAlphaFunction = 
         # self.backwardBetaFunction = 
@@ -4474,7 +4474,7 @@ class PairHMM(HMM):
         self.getModelPtr = ghmmwrapper.get_model_ptr
         self.castModelPtr = ghmmwrapper.cast_model_ptr
         # self.distanceFunction = ghmmwrapper.ghmm_d_prob_distance
-        self.logPFunction = ghmmwrapper.pviterbi_logp
+        self.logPFunction = ghmmwrapper.ghmm_dp_viterbi_logp
         self.states = {}
 
     def __str__(self):
@@ -4699,7 +4699,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
         if not len(A) == len(B):
             raise InvalidModelParameters, " Different number of entries in A and B."
 
-        cmodel = ghmmwrapper.init_pmodel()
+        cmodel = ghmmwrapper.ghmm_dp_init()
         cmodel.N = len(A)
         cmodel.M = -1 # no use anymore len(emissionDomain)
         cmodel.prior = -1 # No prior by default
@@ -4826,7 +4826,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
                 cstate.fix = 0
 
                 # set the class determination function
-                cstate.class_change = ghmmwrapper.init_pclass_change_context()
+                cstate.class_change = ghmmwrapper.ghmm_dp_init_class_change()
                 if (pystate.transitionFunction != -1):
                     transitionClassFlag = 1
                     tf = hmm_dom.transitionFunctions[pystate.transitionFunction]
@@ -4875,7 +4875,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
                             int(tf.paramDict["seq_index"]),
                             maxTransitionIndexDiscrete)
                 else:
-                    ghmmwrapper.set_to_default_transition_class(cstate.class_change)
+                    ghmmwrapper.ghmm_dp_set_to_default_transition_class(cstate.class_change)
 
         cmodel.s = cstates
 

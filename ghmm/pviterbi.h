@@ -70,7 +70,7 @@ typedef struct plocal_store_t {
   int    topo_order_length;
 } plocal_store_t;
 
-void print_pviterbi_store(plocal_store_t * pv);
+void ghmm_dp_print_viterbi_store(plocal_store_t * pv);
 
 /**@name Viterbi-Algorithmus */
 /*@{ (Doc++-Group: viterbi) */
@@ -86,11 +86,11 @@ void print_pviterbi_store(plocal_store_t * pv);
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
-int *pviterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
+int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
 
-int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
+int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
 
-int *pviterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
+int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
 
 /**
   Calculates the logarithmic probability to a given path through the 
@@ -103,7 +103,7 @@ int *pviterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int 
   @return log P
   */
 
-double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
+double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
 
 
 #ifdef __cplusplus

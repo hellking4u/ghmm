@@ -43,8 +43,8 @@
 #include "ghmm_internals.h"
 
 
-int pstate_alloc(pstate * s, int M, int in_states, int out_states) {
-# define CUR_PROC "pstate_alloc"
+int ghmm_dp_state_alloc(pstate * s, int M, int in_states, int out_states) {
+# define CUR_PROC "ghmm_dp_state_alloc"
   int res = -1;
   ARRAY_CALLOC (s->b, M);
   if (out_states > 0) {
@@ -59,10 +59,10 @@ int pstate_alloc(pstate * s, int M, int in_states, int out_states) {
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return(res);
 # undef CUR_PROC
-} /* pstate_alloc */
+} /* ghmm_dp_state_alloc */
 
-void pstate_clean(pstate *my_state) {
-#define CUR_PROC "pstate_clean"
+void ghmm_dp_state_clean(pstate *my_state) {
+#define CUR_PROC "ghmm_dp_state_clean"
   if (!my_state) return;
   
   if (my_state->b)
@@ -94,11 +94,11 @@ void pstate_clean(pstate *my_state) {
   my_state->fix        = 0;  
 
 #undef CUR_PROC
-} /* pstate_clean */
+} /* ghmm_dp_state_clean */
 
 /* use this to allocate the memory for a pmodel and set the pointers to NULL */
-pmodel * init_pmodel() {
-#define CUR_PROC "init_pmodel"
+pmodel * ghmm_dp_init() {
+#define CUR_PROC "ghmm_dp_init"
   pmodel * mo;
   ARRAY_CALLOC (mo, 1);
 
@@ -108,12 +108,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-pclass_change_context * init_pclass_change_context() {
-#define CUR_PROC "init_pclass_change_context"
+pclass_change_context * ghmm_dp_init_class_change() {
+#define CUR_PROC "ghmm_dp_init_class_change"
   pclass_change_context * pccc;
   ARRAY_CALLOC (pccc, 1);
 
-  pccc->get_class = &default_transition_class;
+  pccc->get_class = &ghmm_dp_default_transition_class;
   pccc->user_data = NULL;
   return pccc;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -121,14 +121,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-int pmodel_free(pmodel *mo) {
-#define CUR_PROC "pmodel_free"
+int ghmm_dp_free(pmodel *mo) {
+#define CUR_PROC "ghmm_dp_free"
   int i;
   mes_check_ptr(mo, return(-1));
   if( !mo ) return(0);
   if (mo->s) {
     for (i = 0; i < mo->N; i++)
-      pstate_clean(&(mo->s[i]));
+      ghmm_dp_state_clean(&(mo->s[i]));
     m_free(mo->s);
   }
   if (mo->  silent)
@@ -149,15 +149,15 @@ int pmodel_free(pmodel *mo) {
   m_free(mo);
   return(0);
 #undef CUR_PROC
-} /* pmodel_free */  
+} /* ghmm_dp_free */  
 
 pstate * get_pstateptr(pstate * ary, int index){ return ary + index; }
 
-/* get the emission index for a pair of symbols 
-   if the pair cannot be emmited this returns the size of the emission table 
+/* get the emission index for a pair of symbols
+   if the pair cannot be emmited this returns the size of the emission table
    plus 1 => emission table[size of table] should be 1 and the actual size
    should be one more... */
-int pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y) {
+int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y) {
   if (off_x == 0 && symbol_y >= 0)
     return symbol_y;
   if (off_y == 0 && symbol_x >= 0)
@@ -171,15 +171,15 @@ int pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y) {
   return(symbol_x * alphabet_size + symbol_y);
 }
 
-int emission_table_size(pmodel* mo, int state_index) {
+int ghmm_dp_emission_table_size(pmodel* mo, int state_index) {
   /* the alphabet is over single sequences so get the maximal index for the
      lookup of emission probabilities and use it to determine the size of
      the lookup table */
   int size =  mo->size_of_alphabet[mo->s[state_index].alphabet];
-  return pair(size - 1, size - 1, size, mo->s[state_index].offset_x, mo->s[state_index].offset_y) + 1;
+  return ghmm_dp_pair(size - 1, size - 1, size, mo->s[state_index].offset_x, mo->s[state_index].offset_y) + 1;
 }
  
-void print_pstate(pstate * s) {
+void ghmm_dp_state_print(pstate * s) {
   int i;
 
   printf("offset x: %i\n", s->offset_x);
@@ -193,7 +193,7 @@ void print_pstate(pstate * s) {
   printf("probabilities...\n");
 }
  
-void print_pmodel(pmodel* mo) {
+void ghmm_dp_print(pmodel* mo) {
   int i;
 
   printf("Pair HMM model\n");
@@ -202,17 +202,17 @@ void print_pmodel(pmodel* mo) {
   printf("Number of states: %i\n", mo->N);
   for (i=0; i<mo->N; i++) {
     printf("State %i:\n", i);
-    print_pstate(&(mo->s[i]));
+    ghmm_dp_state_print(&(mo->s[i]));
   }
 }
 
-int default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
+int ghmm_dp_default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   return 0;
 }
 
-void set_to_default_transition_class(pclass_change_context * pccc) {
+void ghmm_dp_set_to_default_transition_class(pclass_change_context * pccc) {
   if (pccc){
-    pccc->get_class = &default_transition_class;
+    pccc->get_class = &ghmm_dp_default_transition_class;
     pccc->user_data = NULL;
   }
   else
