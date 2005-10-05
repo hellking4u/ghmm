@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     }
     else
       GHMM_RNG_SET(RNG,0);
-    exitcode = cluster_hmm(argv[1], argv[2], argv[3]);
+    exitcode = ghmm_cluster_hmm(argv[1], argv[2], argv[3]);
   }
   else {
     mes_prot

@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     default: printf("argv[4] %d not valid. must be in [0, 3]\n", atoi(argv[4]));
       return exitcode;
     }
-    exitcode = scluster_hmm(argv);
+    exitcode = ghmm_scluster_hmm(argv);
   }
   else {
     mes_prot

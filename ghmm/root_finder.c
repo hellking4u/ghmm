@@ -48,11 +48,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-double zbrent_AB (double (*func) (double, double, double, double),
+double ghmm_zbrent_AB (double (*func) (double, double, double, double),
                    double x1, double x2, double tol, double A, double B,
                    double eps) 
 {
-  fprintf (stderr, "Function zbrent_AB() not implemented!\n");
+  fprintf (stderr, "Function ghmm_zbrent_AB() not implemented!\n");
   exit (1);
   
     /*
@@ -127,7 +127,7 @@ double function_wrapper (double x, void *p)
 /*
   this interface is used in sreestimate.c
  */ 
-double zbrent_AB (double (*func) (double, double, double, double), double x1,
+double ghmm_zbrent_AB (double (*func) (double, double, double, double), double x1,
                   double x2, double tol, double A, double B, double eps) 
 {
   

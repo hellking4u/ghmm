@@ -72,11 +72,11 @@
 
 
 
-sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
+sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
                                     int seed, int global_len,
                                     sgeneration_mode_t mode)
 {
-#define CUR_PROC "sgenerate_extensions"
+#define CUR_PROC "ghmm_sgenerate_extensions"
   sequence_d_t *sq = NULL;
   int i, j, t, n, m, len = global_len, short_len, max_short_len = 0, up = 0;
 #ifdef bausparkasse
@@ -321,15 +321,15 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_cseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
-}                               /* sgenerate_extensions */
+}                               /* ghmm_sgenerate_extensions */
 
 /*============================================================================*/
 
-double *sgenerate_single_ext (smodel * smo, double *O, const int len,
+double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
                               int *new_len, double **alpha,
                               sgeneration_mode_t mode)
 {
-# define CUR_PROC "sgenerate_single_ext"
+# define CUR_PROC "ghmm_sgenerate_single_ext"
   int i, j, m, t, class=0, up = 0;
   double *new_O = NULL, *scale = NULL, *initial_distribution = NULL;
   double log_p, sum, p;
@@ -501,7 +501,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (initial_distribution);
   return NULL;
 # undef CUR_PROC
-}                               /* sgenerate_single_ext */
+}                               /* ghmm_sgenerate_single_ext */
 
 
 /* generate a single next value bases on a trained model and on a seq und
@@ -512,16 +512,16 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    to optimize some more.
 */
 
-double sgenerate_next_value (smodel * smo, double *O, const int len)
+double ghmm_sgenerate_next_value (smodel * smo, double *O, const int len)
 {
-# define CUR_PROC "sgenerate_next_value"
+# define CUR_PROC "ghmm_sgenerate_next_value"
   double **alpha = NULL;
   double res = -1.0, sum, p;
   double *scale = NULL, log_p, max_val = -1000000;
   int i, j, m, init_state = -1;
 
   if (smo->cos > 1) {
-    mes_prot ("sgenerate_next_value only for COS == 1\n");
+    mes_prot ("ghmm_sgenerate_next_value only for COS == 1\n");
     goto STOP;
   }
 

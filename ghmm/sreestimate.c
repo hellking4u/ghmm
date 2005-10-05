@@ -480,7 +480,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
                      mue_right, A, B);
 
           mue_im =
-            zbrent_AB (ighmm_gtail_pmue_umin, mue_left, mue_right, ACC, A, B, EPS_NDT);
+            ghmm_zbrent_AB (ighmm_gtail_pmue_umin, mue_left, mue_right, ACC, A, B, EPS_NDT);
           u_im = EPS_U;
         }
         else {
@@ -495,7 +495,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
           else
             mue_left = m_max (-EPS_NDT, mue_left);
           mue_im =
-            zbrent_AB (ighmm_gtail_pmue_interpol, mue_left, mue_right, ACC, A, B,
+            ghmm_zbrent_AB (ighmm_gtail_pmue_interpol, mue_left, mue_right, ACC, A, B,
                        EPS_NDT);
           u_im = Btil - mue_im * Atil;
         }

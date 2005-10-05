@@ -80,10 +80,10 @@
 #define POUT 1
   
 /*============================================================================*/ 
-int scluster_hmm (char *argv[])
+int ghmm_scluster_hmm (char *argv[])
 {
   
-# define CUR_PROC "scluster_hmm"
+# define CUR_PROC "ghmm_scluster_hmm"
   char *seq_file = argv[1], *smo_file = argv[2], *out_filename = argv[3];
   int labels = atoi (argv[4]);
   int res = -1, i, iter = 0, sqd_number, idummy;
@@ -135,7 +135,7 @@ int scluster_hmm (char *argv[])
 /*--------------Memory allocation and data reading----------------------------*/ 
     
     /* 1 sequence array and initial models */ 
-    scluster_print_header (outfile, argv);
+    ghmm_scluster_print_header (outfile, argv);
   
   /*--- memory alloc and read data ----------------------------*/ 
     sqd_vec = ghmm_cseq_read (seq_file, &sqd_number);
@@ -155,7 +155,7 @@ int scluster_hmm (char *argv[])
     if (labels == 3) {
     fprintf (outfile, "(random start partition)n");
     fprintf (stdout, "(Random start partition...)\n");
-    scluster_random_labels (sqd, cl.smo_number);
+    ghmm_scluster_random_labels (sqd, cl.smo_number);
   }
   ARRAY_CALLOC (oldlabel, sqd->seq_number);
   for (i = 0; i < sqd->seq_number; i++)
@@ -237,7 +237,7 @@ int scluster_hmm (char *argv[])
       for (i = 0; i < cl.smo_number; i++) {
       if (!smo_changed[i])
         continue;
-      scluster_prob (&cs[i]);
+      ghmm_scluster_prob (&cs[i]);
     }
     
 #else   /*  */
@@ -287,13 +287,13 @@ int scluster_hmm (char *argv[])
           
             /* classification: set seq_label to ID of best_model  */ 
             sqd->seq_label[j] =
-            scluster_best_model (&cl, j, all_log_p, &log_p);
+            ghmm_scluster_best_model (&cl, j, all_log_p, &log_p);
         if (sqd->seq_label[j] == -1 || sqd->seq_label[j] >= cl.smo_number) {
           
             /* no model fits! What to do?  hack: use arbitrary model ! */ 
             str =
             ighmm_mprintf (NULL, 0,
-                     "Warning: seq. %ld, ID %.0f: scluster_best_model returns %d\n",
+                     "Warning: seq. %ld, ID %.0f: ghmm_scluster_best_model returns %d\n",
                      j, sqd->seq_id[j], sqd->seq_label[j]);
           mes_prot (str);
           m_free (str);
@@ -310,7 +310,7 @@ int scluster_hmm (char *argv[])
         
           /* 2. Z_MAW */ 
           if (CLASSIFY == 1) {
-          idummy = scluster_log_aposteriori (&cl, sqd, j, &log_apo);
+          idummy = ghmm_scluster_log_aposteriori (&cl, sqd, j, &log_apo);
           if (idummy == -1) {
             str =
               ighmm_mprintf (NULL, 0,
@@ -330,14 +330,14 @@ int scluster_hmm (char *argv[])
       }                        /* for (j = 0; j < sqd->seq_number; j++) */
     }                          /* else */
     if (!(iter == 1 && labels == 1)) {
-      if (scluster_avoid_empty_smodel (sqd, &cl) == -1) {
+      if (ghmm_scluster_avoid_empty_smodel (sqd, &cl) == -1) {
         mes_proc ();
         goto STOP;
       }
       for (i = 0; i < cl.smo_number; i++)
         smo_changed[i] = 0;
       changes =
-        scluster_update_label (oldlabel, sqd->seq_label, sqd->seq_number,
+        ghmm_scluster_update_label (oldlabel, sqd->seq_label, sqd->seq_number,
                                smo_changed);
     }
     fprintf (outfile, "%ld changes in iteration %d \n", changes, iter);
@@ -358,7 +358,7 @@ int scluster_hmm (char *argv[])
       /* -------Reestimate all models with assigned sequences---------------- */ 
       if (changes > 0) {
       if (!(iter == 1 && labels == 1))
-        if (scluster_update (&cl, sqd)) {
+        if (ghmm_scluster_update (&cl, sqd)) {
           mes_proc ();
           goto STOP;
         }
@@ -378,7 +378,7 @@ int scluster_hmm (char *argv[])
            }
          */ 
         fprintf (outfile, "\ntotal Prob. before %d.reestimate:\n", iter);
-      scluster_print_likelihood (outfile, &cl);
+      ghmm_scluster_print_likelihood (outfile, &cl);
       for (i = 0; i < cl.smo_number; i++) {
         cs[i].smo = cl.smo[i];
         if (!(iter == 1 && labels == 1))
@@ -459,12 +459,12 @@ int scluster_hmm (char *argv[])
           cl.smo[i]->prior = cl.smo_seq[i]->total_w / sqd->total_w;
       }
       fprintf (outfile, "\ntotal Prob. after %d.reestimate:\n", iter);
-      scluster_print_likelihood (outfile, &cl);
+      ghmm_scluster_print_likelihood (outfile, &cl);
     }                          /* if changes ... end reestimate */
   }                            /* while */
   
 /*------------------- OUTPUT   -----------------------------------------------*/ 
-    if (scluster_out (&cl, sqd, outfile, argv) == -1)
+    if (ghmm_scluster_out (&cl, sqd, outfile, argv) == -1)
      {
     mes_proc ();
     goto STOP;
@@ -483,15 +483,15 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
   
 # undef CUR_PROC
-}                               /* scluster_hmm */
+}                               /* ghmm_scluster_hmm */
 
 
 /*============================================================================*/ 
-int scluster_t_free (scluster_t * scl)
+int ghmm_scluster_t_free (scluster_t * scl)
 {
   int i;
   
-#define CUR_PROC "scluster_t_free"
+#define CUR_PROC "ghmm_scluster_t_free"
     mes_check_ptr (scl, return (-1));
   if (!scl)
     return (0);
@@ -512,11 +512,11 @@ int scluster_t_free (scluster_t * scl)
 
 
 /*============================================================================*/ 
-int scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile, 
+int ghmm_scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile, 
                   char *argv[])
 {
   
-#define CUR_PROC "scluster_out"
+#define CUR_PROC "ghmm_scluster_out"
   int res = -1, i;
   char filename[128];
   char *out_filename = argv[3];
@@ -546,7 +546,7 @@ sprintf (filename, "%s.smo", out_filename);
     mes_proc ();
     goto STOP;
   }
-  scluster_print_header (out_model, argv);
+  ghmm_scluster_print_header (out_model, argv);
   for (i = 0; i < cl->smo_number; i++) {
     fprintf (out_model, "#trained smodel[%d]:\n", i);
     smodel_print (out_model, cl->smo[i]);
@@ -561,7 +561,7 @@ sprintf (filename, "%s.smo", out_filename);
     mes_proc ();
     goto STOP;
   }
-  scluster_print_header (out_model, argv);
+  ghmm_scluster_print_header (out_model, argv);
   for (i = 0; i < cl->smo_number; i++) {
     if (cl->smo_seq[i] != NULL)
       ghmm_cseq_print (out_model, cl->smo_seq[i], 0);
@@ -578,7 +578,7 @@ sprintf (filename, "%s.smo", out_filename);
     mes_proc ();
     goto STOP;
   }
-  scluster_print_header (out_model, argv);
+  ghmm_scluster_print_header (out_model, argv);
   fprintf (out_model, "numbers = {\n");
   fprintf (out_model,
             "# Clusterung mit Gewichten --> in BS/10, sonst Anzahl Seqs.\n");
@@ -603,16 +603,16 @@ STOP:if (out_model)
   return (res);
   
 #undef CUR_PROC
-}                               /* scluster_out */
+}                               /* ghmm_scluster_out */
 
 
 /*============================================================================*/ 
 /* Memory for sequences for each model is allocated only once and not done with
    realloc for each sequence as before. */ 
-int scluster_update (scluster_t * cl, sequence_d_t * sqd)
+int ghmm_scluster_update (scluster_t * cl, sequence_d_t * sqd)
 {
   
-#define CUR_PROC "scluster_update"
+#define CUR_PROC "ghmm_scluster_update"
   int i;
   sequence_d_t * seq_ptr;
   
@@ -647,11 +647,11 @@ int scluster_update (scluster_t * cl, sequence_d_t * sqd)
   return (0);
   
 # undef CUR_PROC
-}                               /* scluster_update */
+}                               /* ghmm_scluster_update */
 
 
 /*============================================================================*/ 
-void scluster_print_likelihood (FILE * outfile, scluster_t * cl)
+void ghmm_scluster_print_likelihood (FILE * outfile, scluster_t * cl)
 {
   double total_Z_MD = 0.0, total_Z_MAW = 0.0;
   int i;
@@ -678,7 +678,7 @@ void scluster_print_likelihood (FILE * outfile, scluster_t * cl)
   
   else
     printf ("total error function (ZMAW): %15.4f\n", total_Z_MAW);
-}                              /* scluster_print_likelihood */
+}                              /* ghmm_scluster_print_likelihood */
 
 
 /*============================================================================*/ 
@@ -686,10 +686,10 @@ void scluster_print_likelihood (FILE * outfile, scluster_t * cl)
    sequence. This may lead to a produce of a new empty model - therefore
    change out sequences until a non empty model is found. (Quit after 100 
    iterations to avoid a infinite loop). */ 
-int scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
+int ghmm_scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
 {
   
-#define CUR_PROC "scluster_avoid_empty_smodel"
+#define CUR_PROC "ghmm_scluster_avoid_empty_smodel"
   int i, best_smo;
   long i_old, j = 0;
   char error = 1, change = 0;
@@ -718,7 +718,7 @@ int scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
           continue;
         if (CLASSIFY == 1) {
           best_smo =
-            smap_bayes (cl->smo, result, cl->smo_number, sqd->seq[j],
+            ghmm_smap_bayes (cl->smo, result, cl->smo_number, sqd->seq[j],
                         sqd->seq_len[j]);
           if (best_smo == -1)
             continue;
@@ -770,11 +770,11 @@ STOP:
   return (-1);
   
 #undef CUR_PROC
-}                               /* scluster_avoid_empty_smodel */
+}                               /* ghmm_scluster_avoid_empty_smodel */
 
 
 /*============================================================================*/ 
-long scluster_update_label (long *oldlabel, long *seq_label, long seq_number,
+long ghmm_scluster_update_label (long *oldlabel, long *seq_label, long seq_number,
                             long *smo_changed)
 {
   long i, changes = 0;
@@ -785,18 +785,18 @@ long scluster_update_label (long *oldlabel, long *seq_label, long seq_number,
       oldlabel[i] = seq_label[i];
     }
   return changes;
-}                              /* scluster_update_label */
+}                              /* ghmm_scluster_update_label */
 
 
 /*============================================================================*/ 
   
 /* Determines from an already calculated probability matrix, which model 
    fits best to the sequence with the ID seq_id. */ 
-int scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
+int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
                          double *log_p)
 {
   
-#define CUR_PROC "scluster_best_model"
+#define CUR_PROC "ghmm_scluster_best_model"
   int i, smo_id;
   double save = -DBL_MAX;
   *log_p = -DBL_MAX;
@@ -834,11 +834,11 @@ int scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
   return (smo_id);
   
 #undef CUR_PROC
-}                               /* scluster_best_model */
+}                               /* ghmm_scluster_best_model */
 
 
 /*============================================================================*/ 
-void scluster_prob (smosqd_t * cs)
+void ghmm_scluster_prob (smosqd_t * cs)
 {
   int i;
   
@@ -848,14 +848,14 @@ void scluster_prob (smosqd_t * cs)
          (cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i],
           &(cs->logp[i])) == -1)
       cs->logp[i] = (double) PENALTY_LOGP;     /*  Penalty costs */
-} /* scluster_prob */ 
+} /* ghmm_scluster_prob */ 
 
   
 /*============================================================================*/ 
-int scluster_random_labels (sequence_d_t * sqd, int smo_number)
+int ghmm_scluster_random_labels (sequence_d_t * sqd, int smo_number)
 {
   
-#define CUR_PROC "scluster_random_labels"
+#define CUR_PROC "ghmm_scluster_random_labels"
   int j, label;
   for (j = 0; j < sqd->seq_number; j++) {
     label = m_int (GHMM_RNG_UNIFORM (RNG) * (smo_number - 1));
@@ -864,20 +864,20 @@ int scluster_random_labels (sequence_d_t * sqd, int smo_number)
   return (0);
   
 # undef CUR_PROC
-}                               /* scluster_random_labels */
+}                               /* ghmm_scluster_random_labels */
 
 
 /*============================================================================*/ 
-int scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
+int ghmm_scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
                                int seq_id, double *log_apo)
 {
   
-#define CUR_PROC "scluster_log_aposteriori"
+#define CUR_PROC "ghmm_scluster_log_aposteriori"
   double *result = NULL;
   int best_smo = -1;
   ARRAY_CALLOC (result, cl->smo_number);
   best_smo =
-    smap_bayes (cl->smo, result, cl->smo_number, sqd->seq[seq_id],
+    ghmm_smap_bayes (cl->smo, result, cl->smo_number, sqd->seq[seq_id],
                 sqd->seq_len[seq_id]);
   if (best_smo == -1) {
     mes_prot ("best_smo == -1 !\n");
@@ -896,11 +896,11 @@ STOP:m_free (result);
   return best_smo;
   
 # undef CUR_PROC
-}                               /* scluster_log_aposteriori */
+}                               /* ghmm_scluster_log_aposteriori */
 
 
 /*============================================================================*/ 
-void scluster_print_header (FILE * file, char *argv[])
+void ghmm_scluster_print_header (FILE * file, char *argv[])
 {
   time_t zeit;
   time (&zeit);

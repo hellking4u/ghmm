@@ -51,18 +51,18 @@ static int smix_hmm_run(int argc, char* argv[]) {
   cp = ighmm_cmatrix_alloc(sqd[0]->seq_number, smo_number);
   if (!cp) { mes_proc(); goto STOP;}
 
-  /* set last arg in smixturehmm_init() : 
+  /* set last arg in ghmm_smixturehmm_init() : 
      1 = strict random partition; cp = 0/1
-     2. smap_bayes from initial models
+     2. ghmm_smap_bayes from initial models
      3. cp = 1 for best model, cp = 0 for other models 
      4. open
      5. no start partition == equal cp for each model
   */
-  if (smixturehmm_init(cp, sqd[0], smo, smo_number, 5) == -1) {
+  if (ghmm_smixturehmm_init(cp, sqd[0], smo, smo_number, 5) == -1) {
     mes_proc(); goto STOP;
   }
   /* clustering */
-  if (smixturehmm_cluster(outfile, cp, sqd[0], smo, smo_number) == -1) {
+  if (ghmm_smixturehmm_cluster(outfile, cp, sqd[0], smo, smo_number) == -1) {
     mes_proc(); goto STOP;
   }
 

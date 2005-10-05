@@ -142,8 +142,8 @@ int main (int argc, char *argv[])
     goto STOP;
   }
 
-  smixturehmm_print_header (likefile, argv, 1);
-  smixturehmm_print_header (outfile, argv, 0);
+  ghmm_smixturehmm_print_header (likefile, argv, 1);
+  ghmm_smixturehmm_print_header (outfile, argv, 0);
   /* Read Seqs. and Initial Models only once */
   sqd_dummy = ghmm_cseq_read (argv[1], &field_number);
   printf ("Length first Seq: %d\n", sqd_dummy[0]->seq_len[0]);
@@ -245,7 +245,7 @@ int main (int argc, char *argv[])
 
       /* Initial values for component probs for all seqs. and model priors
          before the actual  clustering starts */
-      if (smixturehmm_init (cp, sqd_train, smo, smo_number, mode) == -1) {
+      if (ghmm_smixturehmm_init (cp, sqd_train, smo, smo_number, mode) == -1) {
         str =
           ighmm_mprintf (NULL, 0,
                    "Error in initialization comp. prob (model %d, iter %d)\n",
@@ -259,7 +259,7 @@ int main (int argc, char *argv[])
 
 
       /* clustering */
-      if (smixturehmm_cluster (outfile, cp, sqd_train, smo, smo_number) == -1) {
+      if (ghmm_smixturehmm_cluster (outfile, cp, sqd_train, smo, smo_number) == -1) {
         str = ighmm_mprintf (NULL, 0, "Error in clustering, (model %d, iter %d)\n",
                        smo_number, iter);
         mes_prot (str);
@@ -271,7 +271,7 @@ int main (int argc, char *argv[])
 
       /*
 
-         if (smixturehmm_calc_cp(cp, sqd_train, smo, smo_number)  == -1) {
+         if (ghmm_smixturehmm_calc_cp(cp, sqd_train, smo, smo_number)  == -1) {
          str = ighmm_mprintf(NULL, 0, "Error after clustering, (model %d, CV Iter %d)\n",
          smo_number, iter + 1);
          mes_prot(str); m_free(str); goto STOP;
@@ -292,7 +292,7 @@ int main (int argc, char *argv[])
           smodel_print (smofile, smo[k]);
       }
 
-      avg_comp_like = smixturehmm_avg_like (cp, sqd_train, smo, smo_number);
+      avg_comp_like = ghmm_smixturehmm_avg_like (cp, sqd_train, smo, smo_number);
       if (avg_comp_like == NULL) {
         mes_prot ("Error calculating avg_like \n");
         goto STOP;
@@ -377,10 +377,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
  /* Original version, without attempt to avoid lokal traps */
-int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
+int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
                          smodel ** smo, int smo_number)
 {
-#define CUR_PROC "smixturehmm_cluster"
+#define CUR_PROC "ghmm_smixturehmm_cluster"
   int i, k, iter = 0;
   double likelihood, old_likelihood, delta_likelihood = 1000000.0;
   double total_train_w = 0.0;
@@ -439,7 +439,7 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
       sqd->seq_w[i] = save_w[i];
 
     ghmm_cseq_mix_like (smo, smo_number, sqd, &likelihood);
-    if (smixturehmm_calc_cp (cp, sqd, smo, smo_number, &total_train_w) == -1) {
+    if (ghmm_smixturehmm_calc_cp (cp, sqd, smo, smo_number, &total_train_w) == -1) {
       str = ighmm_mprintf (NULL, 0, "Error iteration %d\n", iter);
       mes_prot (str);
       m_free (str);
@@ -460,7 +460,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (save_w);
   return -1;
 #undef CUR_PROC
-}                               /* smixturehmm_cluster */
+}                               /* ghmm_smixturehmm_cluster */
 
 /*============================================================================*/
 
@@ -469,10 +469,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    and (depending on cp): model priors for all models 
 */
 
-int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
+int ghmm_smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
                       int smo_number, int mode)
 {
-#define CUR_PROC "smixturehmm_init"
+#define CUR_PROC "ghmm_smixturehmm_init"
   int i, j;
   double p;
 
@@ -502,10 +502,10 @@ int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
     }
   }
 
-  /* 2. smap_bayes from initial models */
+  /* 2. ghmm_smap_bayes from initial models */
   else if (mode == 2) {
     for (i = 0; i < sqd->seq_number; i++)
-      if (smap_bayes (smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) ==
+      if (ghmm_smap_bayes (smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) ==
           -1) {
         str =
           ighmm_mprintf (NULL, 0, "Can't determine comp. prob for seq ID %.0f \n",
@@ -520,7 +520,7 @@ int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
   else if (mode == 3) {
     ARRAY_CALLOC (result, smo_number);
     for (i = 0; i < sqd->seq_number; i++) {
-      bm = smap_bayes (smo, result, smo_number, sqd->seq[i], sqd->seq_len[i]);
+      bm = ghmm_smap_bayes (smo, result, smo_number, sqd->seq[i], sqd->seq_len[i]);
       if (bm == -1) {
         str = ighmm_mprintf (NULL, 0,
                        "Can't determine comp. prob for seq ID %.0f \n",
@@ -587,16 +587,16 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /* also recalculate total_train_w; if a seq has cp = 0 don't add its weigth to 
    total_train_w, otherwise errors in calculating model priors occur
 */
-int smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
+int ghmm_smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
                          int smo_number, double *total_train_w)
 {
-#define CUR_PROC "smixturehmm_calc_cp"
+#define CUR_PROC "ghmm_smixturehmm_calc_cp"
   int i;
   char *str;
   double errorseqs = 0.0;
   *total_train_w = 0.0;
   for (i = 0; i < sqd->seq_number; i++)
-    if (smap_bayes (smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) ==
+    if (ghmm_smap_bayes (smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) ==
         -1) {
       /* all cp[i] [ . ] are set to zero; seq. will be ignored for reestimation!!! */
       str = ighmm_mprintf (NULL, 0,
@@ -608,7 +608,7 @@ int smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
       if (errorseqs > 0.1 * (double) sqd->seq_number) {
         printf ("errorseqs %.1f, max false %.1f\n", errorseqs,
                 0.1 * (double) sqd->seq_number);
-        mes_prot ("max. no of errors from smap_bayes exceeded\n");
+        mes_prot ("max. no of errors from ghmm_smap_bayes exceeded\n");
         goto STOP;
       }
     }
@@ -619,14 +619,14 @@ int smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 #undef CUR_PROC
-}                               /* smixturehmm_calc_cp */
+}                               /* ghmm_smixturehmm_calc_cp */
 
 /*============================================================================*/
 /* Is currently not used. Use this function in calc_cp and smixturehmm_like
    later on (saves half of the sfoba_logp() calls).
    Danger: Is it neccessary to take seq_w into account? 
 */
-void smixture_calc_logp (double **logp, int **error, sequence_d_t * sqd,
+void ghmm_smixture_calc_logp (double **logp, int **error, sequence_d_t * sqd,
                          smodel ** smo, int smo_number)
 {
   int i, k;
@@ -644,7 +644,7 @@ void smixture_calc_logp (double **logp, int **error, sequence_d_t * sqd,
 
 /*============================================================================*/
 /* flag == 1 --> Header for .like-file, else --> other file */
-void smixturehmm_print_header (FILE * file, char *argv[], int flag)
+void ghmm_smixturehmm_print_header (FILE * file, char *argv[], int flag)
 {
   time_t zeit;
   int mode = atoi (argv[9]);
@@ -690,10 +690,10 @@ void smixturehmm_print_header (FILE * file, char *argv[], int flag)
    Usefull for identifying models with poor likelihood
 */
 
-double *smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
+double *ghmm_smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
                               smodel ** smo, int smo_number)
 {
-#define CUR_PROC "smixturehmm_avg_like"
+#define CUR_PROC "ghmm_smixturehmm_avg_like"
   double *avg_like = NULL;
   int i, k;
   double num = 0.0, denom = 0.0, log_p = 0.0;
@@ -718,7 +718,7 @@ double *smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
-}                               /* smixturehmm_avg_like */
+}                               /* ghmm_smixturehmm_avg_like */
 
 
 #endif /* GHMM_OBSOLETE */

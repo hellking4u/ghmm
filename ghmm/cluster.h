@@ -78,7 +78,7 @@ extern "C" {
    @param outfile output file
    @param out_filename name of the output file
  */
-  int cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
+  int ghmm_cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
                    char *out_filename);
 
 /**
@@ -91,7 +91,7 @@ extern "C" {
    @param seq_number number of sequences
    @param mo_number number of models
  */
-  int cluster_avoid_empty_model (long *seq_label, long seq_number,
+  int ghmm_cluster_avoid_empty_model (long *seq_label, long seq_number,
                                  int mo_number);
 
 /**
@@ -101,7 +101,7 @@ extern "C" {
    @param mo_file file of initial models
    @param out_file output file
  */
-  int cluster_hmm (char *seq_file, char *mo_file, char *out_file);
+  int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_file);
 
 /**
    Updates the cluster with additional sequences.
@@ -109,7 +109,7 @@ extern "C" {
    @param cl cluster to update
    @param sq sequences to update the cluster with
  */
-  int cluster_update (cluster_t * cl, sequence_t * sq);
+  int ghmm_cluster_update (cluster_t * cl, sequence_t * sq);
 
 /**
    Updates a label
@@ -118,7 +118,7 @@ extern "C" {
    @param up to date label for comparison
    @param seq_number number of sequences
  */
-  long cluster_update_label (long *oldlabel, long *seq_label,
+  long ghmm_cluster_update_label (long *oldlabel, long *seq_label,
                              long seq_number);
 
 /**
@@ -126,7 +126,7 @@ extern "C" {
    @param outfile output file
    @param cl cluster of models and sequences
  */
-  void cluster_print_likelihood (FILE * outfile, cluster_t * cl);
+  void ghmm_cluster_print_likelihood (FILE * outfile, cluster_t * cl);
 
 /*@} cluster documentation */
 
