@@ -232,12 +232,12 @@ extern "C" {
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
     uses if appropiate lookup table from struct model */
-   int model_ipow (const model * mo, int x, unsigned int n);
+   int ghmm_d_ipow (const model * mo, int x, unsigned int n);
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
     @param mo:  pointer to a model */
-  int model_free (model ** mo);
+  int ghmm_d_free (model ** mo);
 
 /** 
     Produces simple left-right models given sequences. The sequences
@@ -245,34 +245,34 @@ extern "C" {
     @return vector of models
     @param s:          scanner
     @param new_models: number of models to produce */
-  model **model_from_sequence (sequence_t * sq, long *mo_number);
+  model **ghmm_d_from_sequence (sequence_t * sq, long *mo_number);
 
 /**
    Copies a given model. Allocates the necessary memory.
    @return copy of the model
    @param mo:  model to copy */
-  model *model_copy (const model * mo);
+  model *ghmm_d_copy (const model * mo);
 
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
    @return 0 for success; -1 for error
    @param mo:  model to test */
-  int model_check (const model * mo);
+  int ghmm_d_check (const model * mo);
 
 /**
    Tests if number of states and number of outputs in the models match.
    @return 0 for succes; -1 for error
    @param mo:           vector of models
    @param model_number: numbr of models */
-  int model_check_compatibility (model ** mo, int model_number);
+  int ghmm_d_check_compatibility (model ** mo, int model_number);
 
 /**
    Test if to models are compatible. That means their states and outputs match.
    @return 0 for succes; -1 for error
    @param mo:     first model
    @param m2:     second model */
-int model_check_compatibel_models (const model * mo, const model * m2);
+int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
 
 /**
    Produces a model, which generates the given sequence with probability 1.
@@ -284,7 +284,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param seq_len:  length of the sequence
    @param anz_symb: number of symbols in the sequence
 */
-  model *model_generate_from_sequence (const int *seq, int seq_len,
+  model *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
                                        int anz_symb);
 
 /** 
@@ -302,7 +302,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-  sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
+  sequence_t *ghmm_d_generate_sequences (model * mo, int seed, int global_len,
                                         long seq_number, int Tmax);
 
 /**
@@ -312,7 +312,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param mo model
    @param sq sequences       
 */
-  double model_likelihood (model * mo, sequence_t * sq);
+  double ghmm_d_likelihood (model * mo, sequence_t * sq);
 
 
 /**
@@ -324,14 +324,14 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @param prob probabilitys
     
 */
-  void model_set_transition (model * mo, int i, int j, double prob);
+  void ghmm_d_transition_set (model * mo, int i, int j, double prob);
 
 /**
    Writes a model in matrix format.
    @param file: output file
    @param mo:   model
 */
-  void model_print (FILE * file, model * mo);
+  void ghmm_d_print (FILE * file, model * mo);
 
 /**
    Writes transition matrix of a model.
@@ -341,7 +341,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_A_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_A_print (FILE * file, model * mo, char *tab, char *separator,
                       char *ending);
 /**
    Writes output matrix of a model.
@@ -351,7 +351,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_B_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_B_print (FILE * file, model * mo, char *tab, char *separator,
                       char *ending);
 /**
    Writes initial allocation vector of a matrix.
@@ -361,7 +361,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_Pi_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_Pi_print (FILE * file, model * mo, char *tab, char *separator,
                        char *ending);
 /**
    Writes fix vector of a matrix.
@@ -371,7 +371,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_fix_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_fix_print (FILE * file, model * mo, char *tab, char *separator,
                         char *ending);
 /**
    Writes transposed transition matrix of a model.
@@ -381,7 +381,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_A_print_transp (FILE * file, model * mo, char *tab,
+  void ghmm_d_A_print_transp (FILE * file, model * mo, char *tab,
                              char *separator, char *ending);
 /**
    Writes transposed output matrix of a model.
@@ -391,7 +391,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_B_print_transp (FILE * file, model * mo, char *tab,
+  void ghmm_d_B_print_transp (FILE * file, model * mo, char *tab,
                              char *separator, char *ending);
 
 /**
@@ -402,7 +402,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void model_Pi_print_transp (FILE * file, model * mo, char *tab,
+  void ghmm_d_Pi_print_transp (FILE * file, model * mo, char *tab,
                               char *ending);
 
 /** 
@@ -411,7 +411,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @param file: output file
     @param mo:   model
 */
-  void model_states_print (FILE * file, model * mo);
+  void ghmm_d_states_print (FILE * file, model * mo);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -424,7 +424,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @param verbose  flag, whether to monitor distance in 40 steps.
                     Prints to stdout (yuk!)
 */
-  double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
+  double ghmm_d_prob_distance (model * m0, model * m, int maxT, int symmetric,
                               int verbose);
 
 /** 
@@ -433,10 +433,10 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @author Peter Pipenbacher
     @param my_state  state to clean (\Ref{struct state})
 */
-  void state_clean (state * my_state);
+  void ghmm_d_state_clean (state * my_state);
 
 
-  sequence_t *model_label_generate_sequences (model * mo, int seed,
+  sequence_t *ghmm_dl_generate_sequences (model * mo, int seed,
                                               int global_len, long seq_number,
                                               int Tmax);
 
@@ -492,7 +492,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
     @return 0 if normalization went through
     @param mo: model to be normalized
 */
-  int model_normalize (model * mo);
+  int ghmm_d_normalize (model * mo);
 
 /**
    Add a specific level of noise to the model parameters
@@ -502,7 +502,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
                         a noise level of 0.0 doesn't change the model
    @param seed :        seed for ramdom number generator
 */
-  int model_add_noise (model * mo, double level, int seed);
+  int ghmm_d_add_noise (model * mo, double level, int seed);
 
 
 /** 
@@ -515,7 +515,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-  int model_apply_duration (model * mo, int cur, int times);
+  int ghmm_d_duration_apply (model * mo, int cur, int times);
 
 
 /**
@@ -527,7 +527,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param background_weight:   a parameter controlling the weight given to the
                                background. Note, should be between 0 and 1.
 */
-  int model_apply_background (model * mo, double *background_weight);
+  int ghmm_d_background_apply (model * mo, double *background_weight);
 
 
 /** 
@@ -540,14 +540,14 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-  background_distributions *model_alloc_background_distributions (int n,
+  background_distributions *ghmm_d_background_alloc (int n,
                                                                   int m,
                                                                   int *orders,
                                                                   double **B);
 
   background_distributions
-    *model_copy_background_distributions (background_distributions * bg);
-  int model_free_background_distributions (background_distributions * bg);
+    *ghmm_d_background_copy (background_distributions * bg);
+  int ghmm_d_background_free (background_distributions * bg);
 
 /**
    Calculates the background distribution for a sequence_t
@@ -560,7 +560,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param sq  : a pointer to a sequence_t struct
    
 */
-  int model_get_uniform_background (model * mo, sequence_t * sq);
+  int ghmm_d_background_get_uniform (model * mo, sequence_t * sq);
 
 /**
    Calculates the squared distance between two compatible models.
@@ -569,7 +569,7 @@ int model_check_compatibel_models (const model * mo, const model * m2);
    @param mo:    first model
    @param m2:    second model
 */
-  double model_distance(const model * mo, const model * m2);
+  double ghmm_d_distance(const model * mo, const model * m2);
 /**
    Copies a given state. Allocates the necessary memory.
    @author Peter Pipenbacher

@@ -100,7 +100,7 @@ static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
       for (m = 0; m < noC; m++) {
         ARRAY_CALLOC ((*matrix_b)[k][l][m], mo[m]->N);
         for (i = 0; i < mo[m]->N; i++)
-          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], model_ipow (mo[m], mo[m]->M, mo[m]->s[i].order + 1));
+          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], ghmm_d_ipow (mo[m], mo[m]->M, mo[m]->s[i].order + 1));
       }
     }
   }
@@ -1210,7 +1210,7 @@ int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_step
   fp = fn = 0;
   for (i = 0; i < noC; i++) {
     printf ("Model %d likelihood: %g, \t false positives: %d\n", i,
-            model_likelihood (mo[i], sqs[i]), falseP[i]);
+            ghmm_d_likelihood (mo[i], sqs[i]), falseP[i]);
     fn += falseN[i];
     fp += falseP[i];
   }
@@ -1228,10 +1228,10 @@ int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_step
 
     do {
       if (last)
-        model_free (&last);
+        ghmm_d_free (&last);
 
       /* save a copy of the currently trained model */
-      last = model_copy (mo[k]);
+      last = ghmm_d_copy (mo[k]);
       last_cer = cur_cer;
       last_perf = cur_perf;
 
@@ -1245,7 +1245,7 @@ int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_step
          k, step, discrime_lambda, noiselevel, gradient);
 
 /*       if (gradient)   */
-/* 	model_add_noise(mo[k], noiselevel, 0); */
+/* 	ghmm_d_add_noise(mo[k], noiselevel, 0); */
 
       discrime_onestep (mo, sqs, noC, gradient, k);
 
@@ -1255,7 +1255,7 @@ int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_step
       fp = fn = 0;
       for (i = 0; i < noC; i++) {
         printf ("Model %d likelihood: %g, \t false positives: %d\n", i,
-                model_likelihood (mo[i], sqs[i]), falseP[i]);
+                ghmm_d_likelihood (mo[i], sqs[i]), falseP[i]);
         fn += falseN[i];
         fp += falseP[i];
       }
@@ -1267,8 +1267,8 @@ int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_step
 
     } while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < max_steps));
 
-    mo[k] = model_copy (last);
-    model_free (&last);
+    mo[k] = ghmm_d_copy (last);
+    ghmm_d_free (&last);
     cur_perf = last_perf;
     cur_cer = last_cer;
   }

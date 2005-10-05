@@ -59,11 +59,11 @@ int single_state_coin_toss()
   my_model.silent = silent_array;
 
   fprintf(stdout,"transition matrix:\n");
-  model_A_print(stdout,&my_model,""," ","\n");
+  ghmm_d_A_print(stdout,&my_model,""," ","\n");
   fprintf(stdout,"observation symbol matrix:\n");
-  model_B_print(stdout,&my_model,""," ","\n");
+  ghmm_d_B_print(stdout,&my_model,""," ","\n");
 
-  my_output=model_generate_sequences(&my_model,0,10,10,100);
+  my_output=ghmm_d_generate_sequences(&my_model,0,10,10,100);
   ghmm_dseq_print(stdout,my_output);
 
   ghmm_dseq_free(&my_output);
@@ -128,11 +128,11 @@ int two_states_coin_toss()
   my_model.silent = silent_array;
   
   fprintf(stdout,"transition matrix:\n");
-  model_A_print(stdout,&my_model,""," ","\n");
+  ghmm_d_A_print(stdout,&my_model,""," ","\n");
   fprintf(stdout,"observation symbol matrix:\n");
-  model_B_print(stdout,&my_model,""," ","\n");
+  ghmm_d_B_print(stdout,&my_model,""," ","\n");
 
-  my_output=model_generate_sequences(&my_model,0,10,10,100);
+  my_output=ghmm_d_generate_sequences(&my_model,0,10,10,100);
   ghmm_dseq_print(stdout,my_output);
 
   /* try viterbi algorithm in a clear situation */

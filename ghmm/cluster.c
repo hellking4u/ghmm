@@ -92,7 +92,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   sq = sq_vec[0];
   fprintf (outfile, "Cluster Sequences\n");
   ghmm_dseq_print (outfile, sq);
-  cl.mo = model_read (mo_file, &cl.mo_number);
+  cl.mo = ghmm_d_read (mo_file, &cl.mo_number);
   if (!cl.mo) {
     mes_proc ();
     goto STOP;
@@ -103,7 +103,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   ARRAY_CALLOC (cl.mo_seq, cl.mo_number);
   for (i = 0; i < cl.mo_number; i++)
     cl.mo_seq[i] = NULL;
-  if (model_check_compatibility (cl.mo, cl.mo_number)) {
+  if (ghmm_d_check_compatibility (cl.mo, cl.mo_number)) {
     mes_proc ();
     goto STOP;
   }
@@ -111,7 +111,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
 /*----------------------------------------------------------------------------*/
   fprintf (outfile, "\nInitial Models:\n");
   for (i = 0; i < cl.mo_number; i++)
-    model_print (outfile, cl.mo[i]);
+    ghmm_d_print (outfile, cl.mo[i]);
 /*----------------------------------------------------------------------------*/
 
   while (changes > 0) {
@@ -159,7 +159,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
             ighmm_mprintf (NULL, 0, "%d.reestimate false, mo[%d]\n", iter, i);
           mes_prot (str);
           m_free (str);
-          /* model_print(stdout, cl.mo[i]); */
+          /* ghmm_d_print(stdout, cl.mo[i]); */
           goto STOP;
         }
       }
@@ -227,7 +227,7 @@ void cluster_print_likelihood (FILE * outfile, cluster_t * cl)
   double ges_prob = 0.0, mo_prob;
   int i;
   for (i = 0; i < cl->mo_number; i++) {
-    mo_prob = model_likelihood (cl->mo[i], cl->mo_seq[i]);
+    mo_prob = ghmm_d_likelihood (cl->mo[i], cl->mo_seq[i]);
     ges_prob += mo_prob;
     fprintf (outfile, "mo %d (#Seq. %ld): %.4f\n", i,
              cl->mo_seq[i]->seq_number, mo_prob);
@@ -306,7 +306,7 @@ int cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
 
   fprintf (outfile, "\nFinal Models:\n");
   for (i = 0; i < cl->mo_number; i++)
-    model_print (outfile, cl->mo[i]);
+    ghmm_d_print (outfile, cl->mo[i]);
 
   res = 0;
   ghmm_cseq_free (&sqd);

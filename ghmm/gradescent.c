@@ -87,7 +87,7 @@ static int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
   /* first allocate memory for matrix_b */
   ARRAY_MALLOC (*matrix_b, mo->N);
   for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC ((*matrix_b)[i], model_ipow (mo, mo->M, mo->s[i].order + 1));
+    ARRAY_CALLOC ((*matrix_b)[i], ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1));
 
   /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
   ARRAY_CALLOC (*matrix_a, mo->N * mo->N);
@@ -139,7 +139,7 @@ int ghmm_dl_gradient_expectations (model * mo, double **alpha,
   for (i = 0; i < mo->N; i++) {
     for (j = 0; j < mo->N; j++)
       matrix_a[i * mo->N + j] = 0;
-    size = model_ipow (mo, mo->M, mo->s[i].order + 1);
+    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
     for (h = 0; h < size; h++)
       matrix_b[i][h] = 0;
   }
@@ -397,7 +397,7 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
         continue;
 
       /* update */
-      size = model_ipow (mo, mo->M, mo->s[i].order);
+      size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
       for (h = 0; h < size; h++) {
         b_block_sum = 0;
         for (g = 0; g < mo->M; g++) {
@@ -463,13 +463,13 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
   double cur_perf, last_perf;
   model *last;
 
-  last = (model *) model_copy (*mo);
+  last = (model *) ghmm_d_copy (*mo);
   last_perf = compute_performance (last, sq);
 
   while (eta > EPS_PREC && runs < no_steps) {
     runs++;
     if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
-      model_free (&last);
+      ghmm_d_free (&last);
       return -1;
     }
     cur_perf = compute_performance (*mo, sq);
@@ -478,14 +478,14 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
       /* if model is degenerated, lower eta and try again */
       if (cur_perf > 0.0) {
         printf ("current performance = %g\n", cur_perf);
-        model_free (mo);
-        *mo = (model *) model_copy (last);
+        ghmm_d_free (mo);
+        *mo = (model *) ghmm_d_copy (last);
         eta *= .5;
       }
       else {
         /* Improvement insignificant, assume convergence */
         if (fabs (last_perf - cur_perf) < cur_perf * (-1e-8)) {
-          model_free (&last);
+          ghmm_d_free (&last);
           printf ("convergence after %d steps.\n", runs);
           return 0;
         }
@@ -495,8 +495,8 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
                   cur_perf - last_perf, runs);
 
         /* significant improvement, next iteration */
-        model_free (&last);
-        last = (model *) model_copy (*mo);
+        ghmm_d_free (&last);
+        last = (model *) ghmm_d_copy (*mo);
         last_perf = cur_perf;
         eta *= 1.07;
       }
@@ -512,7 +512,7 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
       runs++;
       eta *= .85;
       if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
-        model_free (&last);
+        ghmm_d_free (&last);
         return -1;
       }
       cur_perf = compute_performance (*mo, sq);
@@ -520,21 +520,21 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
               cur_perf - last_perf, runs);
       /* improvement, save and proceed with next iteration */
       if (last_perf < cur_perf && cur_perf < 0.0) {
-        model_free (&last);
-        last = (model *) model_copy (*mo);
+        ghmm_d_free (&last);
+        last = (model *) ghmm_d_copy (*mo);
         last_perf = cur_perf;
       }
       /* still no improvement, revert to saved model */
       else {
         runs--;
-        model_free (mo);
-        *mo = (model *) model_copy (last);
+        ghmm_d_free (mo);
+        *mo = (model *) ghmm_d_copy (last);
         eta *= .9;
       }
     }
   }
 
-  model_free (&last);
+  ghmm_d_free (&last);
   return 0;
 
 #undef CUR_PROC

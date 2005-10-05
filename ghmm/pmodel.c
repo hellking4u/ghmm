@@ -59,7 +59,7 @@ int pstate_alloc(pstate * s, int M, int in_states, int out_states) {
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return(res);
 # undef CUR_PROC
-} /* model_state_alloc */
+} /* pstate_alloc */
 
 void pstate_clean(pstate *my_state) {
 #define CUR_PROC "pstate_clean"
@@ -149,7 +149,7 @@ int pmodel_free(pmodel *mo) {
   m_free(mo);
   return(0);
 #undef CUR_PROC
-} /* model_free */  
+} /* pmodel_free */  
 
 pstate * get_pstateptr(pstate * ary, int index){ return ary + index; }
 

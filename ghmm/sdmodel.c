@@ -165,7 +165,7 @@ static int sdmodel_copy_vectors (sdmodel * mo, int index, double ***a_matrix,
 
 /* Old prototyp:
 
-model **model_read(char *filename, int *mo_number, int **seq,
+model **ghmm_d_read(char *filename, int *mo_number, int **seq,
 			 const int *seq_len, int seq_number) { */
 
 
@@ -213,7 +213,7 @@ int sdmodel_free (sdmodel ** mo)
   fprintf (stderr, "Free sdmodel\n");
   return (0);
 #undef CUR_PROC
-}                               /* model_free */
+}                               /* ghmm_d_free */
 
 
 /*============================================================================*/
@@ -284,7 +284,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sdmodel_free (&m2);
   return (NULL);
 # undef CUR_PROC
-}                               /* model_copy */
+}                               /* ghmm_d_copy */
 
 
 /*----------------------------------------------------------------------------*/
@@ -805,7 +805,7 @@ void sdmodel_states_print (FILE * file, sdmodel * mo)
       fprintf (file, "FIXME: in_a is a matrix"/*(%d, %.3f) \t", mo->s[i].in_id[j], mo->s[i].in_a[j]*/);
     fprintf (file, "\n");
   }
-}                               /* model_states_print */
+}                               /* ghmm_d_states_print */
 
 /*============================================================================*/
 
@@ -832,7 +832,7 @@ void sdmodel_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
     }
     fprintf (file, "%s\n", ending);
   }
-}                               /* model_A_print */
+}                               /* ghmm_d_A_print */
 
 /*============================================================================*/
 
@@ -847,7 +847,7 @@ void sdmodel_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
       fprintf (file, "%s %.2f", separator, mo->s[i].b[j]);
     fprintf (file, "%s\n", ending);
   }
-}                               /* model_B_print */
+}                               /* ghmm_d_B_print */
 
 /*============================================================================*/
 
@@ -859,7 +859,7 @@ void sdmodel_Pi_print (FILE * file, sdmodel * mo, char *tab, char *separator,
   for (i = 1; i < mo->N; i++)
     fprintf (file, "%s %.2f", separator, mo->s[i].pi);
   fprintf (file, "%s\n", ending);
-}                               /* model_Pi_print */
+}                               /* ghmm_d_Pi_print */
 
 
 void model_to_sdmodel (const model * mo, sdmodel * smo, int klass)
@@ -944,7 +944,7 @@ model *sdmodel_to_model (const sdmodel * mo, int kclass)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (m2->silent);
   m_free (m2->topo_order);
-  model_free (&m2);
+  ghmm_d_free (&m2);
   return (NULL);
 #undef CUR_PROC
 }

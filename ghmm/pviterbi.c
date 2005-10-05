@@ -501,7 +501,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 /*   if (mo->model_type & kSilentStates &&  */
 /*       mo->silent != NULL &&  */
 /*       mo->topo_order == NULL) { */
-/*     model_topo_ordering( mo );  */
+/*     ghmm_d_topo_order( mo );  */
 /*   } */
 
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */

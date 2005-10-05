@@ -97,10 +97,10 @@ static local_store_t *reestimate_alloc (const model * mo)
 
   ARRAY_MALLOC (r->b_num, mo->N);
   for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC (r->b_num[i], model_ipow(mo, mo->M, mo->s[i].order + 1));
+    ARRAY_CALLOC (r->b_num[i], ghmm_d_ipow(mo, mo->M, mo->s[i].order + 1));
   ARRAY_MALLOC (r->b_denom, mo->N);
   for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC (r->b_denom[i], model_ipow (mo, mo->M, mo->s[i].order));
+    ARRAY_CALLOC (r->b_denom[i], ghmm_d_ipow (mo, mo->M, mo->s[i].order));
 
   return (r);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -160,7 +160,7 @@ static int reestimate_init (local_store_t * r, const model * mo)
     for (j = 0; j < mo->s[i].out_states; j++)
       r->a_num[i][j] = 0.0;
 
-    size = model_ipow (mo, mo->M, mo->s[i].order);
+    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
     for (m = 0; m < size; m++)
       r->b_denom[i][m] = 0.0;
     size *= mo->M;
@@ -225,7 +225,7 @@ void ghmm_d_update_tied_groups (model * mo)
 
   if (mo->model_type & kHigherOrderEmissions) {
     /*  printf("reestimate_update_tie_groups: Allocating for higher order states\n"); */
-    ARRAY_MALLOC (new_emissions, model_ipow (mo, mo->M, mo->maxorder + 1));
+    ARRAY_MALLOC (new_emissions, ghmm_d_ipow (mo, mo->M, mo->maxorder + 1));
   }
   else {
     /* printf("reestimate_update_tie_groups: No higher order states\n"); */
@@ -233,7 +233,7 @@ void ghmm_d_update_tied_groups (model * mo)
   }
 
   for (i = 0; i < mo->N; i++) {
-    bi_len = model_ipow (mo, mo->M, mo->s[i].order + 1);
+    bi_len = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
     /* find tie group leaders */
     if (mo->tied_to[i] == i) {
       nr = 1.0;
@@ -370,7 +370,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       continue;
 
     /* B */
-    size = model_ipow (mo, mo->M, mo->s[i].order);
+    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
     for (hist = 0; hist < size; hist++) {
       if (r->b_denom[i][hist] == 0.0
           && mo->model_type & kHigherOrderEmissions)
@@ -522,10 +522,10 @@ static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
     /* printf ("---- reestimate: after normalization ----\n"); */
     /*
        printf("Emission:\n");
-       model_B_print(stdout, mo, "\t", " ", "\n");
+       ghmm_d_B_print(stdout, mo, "\t", " ", "\n");
      */
     /* only test: */
-    if (model_check (mo) == -1) {
+    if (ghmm_d_check (mo) == -1) {
       mes_proc ();
       goto STOP;
     }
@@ -580,7 +580,7 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 
   /* temporary array to hold logarithmized summands
      for sums over probabilities */
-  ARRAY_CALLOC (summands, m_max(mo->N,model_ipow(mo,mo->M,mo->maxorder+1))+1);
+  ARRAY_CALLOC (summands, m_max(mo->N,ghmm_d_ipow(mo,mo->M,mo->maxorder+1))+1);
 
 
   for (k=0; k<seq_number; k++) {
@@ -674,7 +674,7 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 #endif
 
 	  /* computes estimates for the numerator of emmission probabilities*/
-	  for (h=0; h<model_ipow(mo,mo->M, mo->s[i].order); h++)
+	  for (h=0; h<ghmm_d_ipow(mo,mo->M, mo->s[i].order); h++)
 	    for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
 	      for (g=0; g<mo->s[m].in_states; g++) {
 		g_id = mo->s[m].out_id[g];
@@ -730,7 +730,7 @@ static int reestimate_one_step_lean (model * mo, local_store_t * r,
 	r->a_denom[i] += seq_w[k] * curr_est[m]->a_denom[i];
 	
 	/* B */
-	for (h=0; h < model_ipow(mo,mo->M, mo->s[i].order); h++) {
+	for (h=0; h < ghmm_d_ipow(mo,mo->M, mo->s[i].order); h++) {
 	  curr_est[m]->b_denom[i][h] = 0;
 	  for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
 	    r->b_num[i][s] += seq_w[k] * curr_est[m]->b_num[i][s];
@@ -882,7 +882,7 @@ int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
   /*printf("%8.5f (-log_p optimized model)\n", -log_p);*/
 
   /* check new parameter for plausibility */
-  /* if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
+  /* if (ghmm_d_check(mo) == -1) { mes_proc(); goto STOP; } */
   res = 1;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -1011,9 +1011,9 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
     }
     /* printf ("---- reestimate: after normalization ----\n"); */
     /*     printf("Emission:\n"); */
-    /*     model_B_print(stdout, mo, "\t", " ", "\n"); */
+    /*     ghmm_d_B_print(stdout, mo, "\t", " ", "\n"); */
     /* only test: */
-    /*    if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
+    /*    if (ghmm_d_check(mo) == -1) { mes_proc(); goto STOP; } */
   }
   else {                        /* NO sequence can be built from model mo! */
     *log_p = +1;
@@ -1130,7 +1130,7 @@ int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
   printf ("%8.5f (-log_p optimized model)\n", -log_p);
 
   /* check new parameter for plausibility */
-  /* if (model_check(mo) == -1) { mes_proc(); goto STOP; } */
+  /* if (ghmm_d_check(mo) == -1) { mes_proc(); goto STOP; } */
   res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
