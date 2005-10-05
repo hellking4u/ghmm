@@ -743,7 +743,7 @@ int model_check (const model * mo)
   for (i = 0; i < mo->N; i++) {
     sum = 0.0;
     if (mo->s[i].out_states == 0) {
-      str = mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
+      str = ighmm_mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
       mes_prot (str);
     }
     /* Sum the a[i][j]'s : normalized out transitions */
@@ -752,7 +752,7 @@ int model_check (const model * mo)
       /* printf ("    out_a[%d][%d] = %8.5f\n", i, j, mo->s[i].out_a[j]); */
     }
     if (fabs (sum - 1.0) >= EPS_PREC) {
-      str = mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n",
+      str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n",
                            sum, i);
       mes_prot (str);
       m_free (str);
@@ -764,7 +764,7 @@ int model_check (const model * mo)
       sum += mo->s[i].b[j];
     if (fabs (sum - 1.0) >= EPS_PREC) {
       res = -2;                 /* So we can ignore a silent state */
-      str = mprintf (NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n", sum, i);
+      str = ighmm_mprintf (NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -798,24 +798,24 @@ int model_check_compatibel_models (const model * mo, const model * m2)
   char *str;
 
   if (mo->N != m2->N) {
-    str = mprintf(NULL, 0, "ERROR: different number of states (%d != %d)\n",
+    str = ighmm_mprintf(NULL, 0, "ERROR: different number of states (%d != %d)\n",
                    mo->N, m2->N);
     goto STOP;
   }
   if (mo->M != m2->M) {
-    str = mprintf(NULL, 0, "ERROR: different number of possible outputs (%d != %d)\n",
+    str = ighmm_mprintf(NULL, 0, "ERROR: different number of possible outputs (%d != %d)\n",
                    mo->M, m2->M);
     goto STOP;
   }
   for (i=0; i<mo->N; ++i) {
     if (mo->s[i].out_states != m2->s[i].out_states) {
-      str = mprintf(NULL, 0, "ERROR: different number of outstates (%d != %d) in state %d.\n",
+      str = ighmm_mprintf(NULL, 0, "ERROR: different number of outstates (%d != %d) in state %d.\n",
                    mo->s[i].out_states, m2->s[i].out_states, i);
       goto STOP;
     }
     for (j=0; j<mo->s[i].out_states; ++j) {
       if (mo->s[i].out_id[j] != m2->s[i].out_id[j]) {
-	str = mprintf(NULL, 0, "ERROR: different out_ids (%d != %d) in entry %d of state %d.\n",
+	str = ighmm_mprintf(NULL, 0, "ERROR: different out_ids (%d != %d) in entry %d of state %d.\n",
 		      mo->s[i].out_id[j], m2->s[i].out_id[j], j, i);
 	goto STOP;
       }
@@ -1109,7 +1109,7 @@ double model_likelihood (model * mo, sequence_t * sq)
       found = 1;
     }
     else {
-      str = mprintf (NULL, 0, "sequence[%d] can't be build.\n", i);
+      str = ighmm_mprintf (NULL, 0, "sequence[%d] can't be build.\n", i);
       mes_prot (str);
     }
   }
@@ -1412,7 +1412,7 @@ int model_direct_check_data (model_direct * mo_d, hmm_check_t * check)
 #define CUR_PROC "model_direct_check_data"
   char *str;
   if (check->r_a != mo_d->N || check->c_a != mo_d->N) {
-    str = mprintf (NULL, 0, "Incompatible dim. A (%d X %d) and N (%d)\n",
+    str = ighmm_mprintf (NULL, 0, "Incompatible dim. A (%d X %d) and N (%d)\n",
                    check->r_a, check->c_a, mo_d->N);
     mes_prot (str);
     m_free (str);
@@ -1420,21 +1420,21 @@ int model_direct_check_data (model_direct * mo_d, hmm_check_t * check)
   }
   if (check->r_b != mo_d->N || check->c_b != mo_d->M) {
     str =
-      mprintf (NULL, 0, "Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",
+      ighmm_mprintf (NULL, 0, "Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",
                check->r_b, check->c_b, mo_d->N, mo_d->M);
     mes_prot (str);
     m_free (str);
     return (-1);
   }
   if (check->len_pi != mo_d->N) {
-    str = mprintf (NULL, 0, "Incompatible dim. Pi (%d) and N (%d)\n",
+    str = ighmm_mprintf (NULL, 0, "Incompatible dim. Pi (%d) and N (%d)\n",
                    check->len_pi, mo_d->N);
     mes_prot (str);
     m_free (str);
     return (-1);
   }
   if (check->len_fix != mo_d->N) {
-    str = mprintf (NULL, 0, "Incompatible dim. fix_state (%d) and N (%d)\n",
+    str = ighmm_mprintf (NULL, 0, "Incompatible dim. fix_state (%d) and N (%d)\n",
                    check->len_fix, mo_d->N);
     mes_prot (str);
     m_free (str);
@@ -1989,7 +1989,7 @@ int model_normalize (model * mo)
         }
       }
       if (i_id == mo->s[j_id].in_states) {
-        str = mprintf (NULL, 0, "Outgoing transition from state %d to \
+        str = ighmm_mprintf (NULL, 0, "Outgoing transition from state %d to \
            state %d has no corresponding incoming transition.\n", i, j_id);
         mes_prot (str);
         return -1;

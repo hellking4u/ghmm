@@ -127,7 +127,7 @@ int scluster_hmm (char *argv[])
   
   /*-----------open output file----------------------------------*/ 
     sprintf (filename, "%s%s", out_filename, ".cl");
-  if (!(outfile = mes_fopen (filename, "wt"))) {
+  if (!(outfile = ighmm_mes_fopen (filename, "wt"))) {
     mes_proc ();
     goto STOP;
   }
@@ -251,7 +251,7 @@ int scluster_hmm (char *argv[])
                                        (void *(*)(void *)) scluster_prob, 
                                        (void *) &cs[j]))) {
           str =
-            mprintf (NULL, 0,
+            ighmm_mprintf (NULL, 0,
                      "pthread_create returns false (step %d, smo[%d])\n",
                      iter, j);
           mes_prot (str);
@@ -292,7 +292,7 @@ int scluster_hmm (char *argv[])
           
             /* no model fits! What to do?  hack: use arbitrary model ! */ 
             str =
-            mprintf (NULL, 0,
+            ighmm_mprintf (NULL, 0,
                      "Warning: seq. %ld, ID %.0f: scluster_best_model returns %d\n",
                      j, sqd->seq_id[j], sqd->seq_label[j]);
           mes_prot (str);
@@ -313,7 +313,7 @@ int scluster_hmm (char *argv[])
           idummy = scluster_log_aposteriori (&cl, sqd, j, &log_apo);
           if (idummy == -1) {
             str =
-              mprintf (NULL, 0,
+              ighmm_mprintf (NULL, 0,
                        "Warn: no model fits to Seq %10.0f, use PENALTY_LOGP\n",
                        sqd->seq_id[j]);
             mes_prot (str);
@@ -395,10 +395,10 @@ int scluster_hmm (char *argv[])
         if (!smo_changed[i])
           continue;
         if (cs[i].sqd == NULL)
-          mes (MES_WIN, "cluster %d empty, no reestimate!\n", i);
+          ighmm_mes (MES_WIN, "cluster %d empty, no reestimate!\n", i);
         
         else if (sreestimate_baum_welch (&cs[i]) == -1) {
-          str = mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, i);
+          str = ighmm_mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, i);
           mes_prot (str);
           m_free (str);
           
@@ -415,14 +415,14 @@ int scluster_hmm (char *argv[])
           if (!smo_changed[j])
             continue;
           if (cs[j].sqd == NULL)
-            mes (MES_WIN, "cluster %d empty, no reestimate!\n", j);
+            ighmm_mes (MES_WIN, "cluster %d empty, no reestimate!\n", j);
           
           else if ((perror = pthread_create (&tid[j], &Attribute, 
                                              (void *(*)(void *))
                                              sreestimate_baum_welch,
                                              (void *) &cs[j]))) {
             str =
-              mprintf (NULL, 0,
+              ighmm_mprintf (NULL, 0,
                        "pthread_create returns false (step %d, smo[%d])\n",
                        iter, j);
             mes_prot (str);
@@ -437,7 +437,7 @@ int scluster_hmm (char *argv[])
             pthread_join (tid[j], (void **) &return_value[j]);
             if (return_value[j] == -1) {
               str =
-                mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, j);
+                ighmm_mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, j);
               mes_prot (str);
               m_free (str);
               goto STOP;
@@ -542,7 +542,7 @@ int scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile,
     }*/
 
 sprintf (filename, "%s.smo", out_filename);
-  if (!(out_model = mes_fopen (filename, "wt"))) {
+  if (!(out_model = ighmm_mes_fopen (filename, "wt"))) {
     mes_proc ();
     goto STOP;
   }
@@ -557,7 +557,7 @@ sprintf (filename, "%s.smo", out_filename);
        make seperate lists */ 
     fclose (out_model);
   sprintf (filename, "%s.sqd", out_filename);
-  if (!(out_model = mes_fopen (filename, "wt"))) {
+  if (!(out_model = ighmm_mes_fopen (filename, "wt"))) {
     mes_proc ();
     goto STOP;
   }
@@ -574,7 +574,7 @@ sprintf (filename, "%s.smo", out_filename);
        respektively (for the generator) */ 
     fclose (out_model);
   sprintf (filename, "%s.numbers", out_filename);
-  if (!(out_model = mes_fopen (filename, "wt"))) {
+  if (!(out_model = ighmm_mes_fopen (filename, "wt"))) {
     mes_proc ();
     goto STOP;
   }

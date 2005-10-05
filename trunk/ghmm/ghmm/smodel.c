@@ -790,7 +790,7 @@ int smodel_check (const smodel * smo)
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].out_states == 0) {
       char *str =
-        mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
+        ighmm_mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
       mes_prot (str);
     }
     /* sum  a[i][k][j] */
@@ -801,7 +801,7 @@ int smodel_check (const smodel * smo)
       }
       if (fabs (sum - 1.0) >= EPS_PREC) {
         char *str =
-          mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
+          ighmm_mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
         mes_prot (str);
         m_free (str);
         valid = -1;
@@ -814,7 +814,7 @@ int smodel_check (const smodel * smo)
       sum += smo->s[i].c[j];
     if (fabs (sum - 1.0) >= EPS_PREC) {
       char *str =
-        mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
+        ighmm_mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
       valid = -1;            
@@ -841,7 +841,7 @@ int smodel_check_compatibility (smodel ** smo, int smodel_number)
     for (j = i + 1; j < smodel_number; j++) {
       if (smo[i]->N != smo[j]->N) {
         char *str =
-          mprintf (NULL, 0,
+          ighmm_mprintf (NULL, 0,
                    "ERROR: different number of states in smodel %d (%d) and smodel %d (%d)",
                    i, smo[i]->N, j, smo[j]->N);
         mes_prot (str);
@@ -850,7 +850,7 @@ int smodel_check_compatibility (smodel ** smo, int smodel_number)
       }
       if (smo[i]->s[0].M != smo[j]->s[0].M) {
         char *str =
-          mprintf (NULL, 0,
+          ighmm_mprintf (NULL, 0,
                    "ERROR: different number of possible outputs in smodel  %d (%d) and smodel %d (%d)",
                    i, smo[i]->s[0].M, j, smo[j]->s[0].M);
         mes_prot (str);
@@ -878,7 +878,7 @@ double smodel_get_random_var (smodel * smo, int state, int m)
   case uniform:
 	return (ighmm_rand_uniform_cont (0, smo->s[state].mue[m] ,smo->s[state].u[m]));
   default:
-    mes (MES_WIN, "Warning: density function not specified!\n");
+    ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
     return (-1);
   }
 # undef CUR_PROC
@@ -1153,7 +1153,7 @@ int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p)
       /* Test: high costs for each unmatched Seq. */
       *log_p += PENALTY_LOGP * sqd->seq_w[i];
       matched++;
-      mes (MES_WIN, "sequence[%d] can't be build.\n", i);
+      ighmm_mes (MES_WIN, "sequence[%d] can't be build.\n", i);
     }
   }
   if (!matched) {
@@ -1411,10 +1411,10 @@ double smodel_calc_cmbm (smodel * smo, int state, int m, double omega)
                                   smo->s[state].u[m]);
     break;
   default:
-    mes (MES_WIN, "Warning: density function not specified!\n");
+    ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
   }
   if (bm == -1) {
-    mes (MES_WIN, "Warning: density function returns -1!\n");
+    ighmm_mes (MES_WIN, "Warning: density function returns -1!\n");
     bm = 0.0;
   }
   return (smo->s[state].c[m] * bm);
@@ -1537,7 +1537,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
         }
         n = smodel_likelihood (smo2, seq0, &p); /* ==-1: KEINE Seq. erzeugbar */
         if (n < seq0->seq_number) {
-          mes (MES_WIN,
+          ighmm_mes (MES_WIN,
                "problem: some seqences in seq0 can't be build from smo2\n");
           /* what shall we do now? */
           goto STOP;
@@ -1579,7 +1579,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
         }
         n = smodel_likelihood (smo2, seq0, &p);/*== -1: KEINE Seq. erzeugbar*/
         if (n < seq0->seq_number) {
-          mes (MES_WIN,
+          ighmm_mes (MES_WIN,
                "problem: some sequences in seq0 can't be build from smo2\n");
           /* what shall we do now? */
           goto STOP;
@@ -1647,10 +1647,10 @@ double smodel_calc_cmBm (smodel * smo, int state, int m, double omega)
     Bm = (ighmm_rand_uniform_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]));
     break;
   default:
-    mes (MES_WIN, "Warning: density function not specified!\n");
+    ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
   }
   if (Bm == -1) {
-    mes (MES_WIN, "Warning: density function returns -1!\n");
+    ighmm_mes (MES_WIN, "Warning: density function returns -1!\n");
     Bm = 0.0;
   }
   return (smo->s[state].c[m] * Bm);
@@ -1738,7 +1738,7 @@ void smodel_get_interval_B (smodel * smo, int state, double *a, double *b)
       *b = ceil ((0.99 * (max - min))+min);
     break;      
     default:
-      mes (MES_WIN, "Warning: density function not specified!\n");
+      ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
     }
   }
 

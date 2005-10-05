@@ -320,11 +320,11 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       }
       if (p_i == 0) {
         if (mo->s[i].in_states == 0)
-          str = mprintf (NULL, 0,
+          str = ighmm_mprintf (NULL, 0,
                          " State %d can't be reached (no in_states)\n", i);
         else
           str =
-            mprintf (NULL, 0, " State %d can't be reached (prob = 0)\n", i);
+            ighmm_mprintf (NULL, 0, " State %d can't be reached (prob = 0)\n", i);
         mes_prot (str);
         m_free (str);
       }
@@ -358,7 +358,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
     }
 
     /*if (!positive) {
-       str = mprintf(NULL, 0, 
+       str = ighmm_mprintf(NULL, 0, 
        "All numerator a[%d][j] == 0 (denom=%.4f, P(in)=%.4f)!\n", 
        i, r->a_denom[i], p_i);
        mes_prot(str);
@@ -387,7 +387,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       col = hist * mo->M;
       for (m = col; m < col + mo->M; m++) {
         if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -EPS_PREC) {
-          str = mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
+          str = ighmm_mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
 			 r->b_num[i][m], r->b_denom[i][hist]);
           mes_prot (str);
           m_free (str);
@@ -399,7 +399,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       }
 
       if (!positive) {
-        str = mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
+        str = ighmm_mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
 		       i, col, col + mo->M, r->b_denom[i][hist]);
         mes_prot (str);
         m_free (str);
@@ -808,7 +808,7 @@ int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
     if (1) {
       if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq,
 			      &log_p, sq->seq_w) == -1) {
-	str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
+	str = ighmm_mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
 	mes_prot (str);
 	m_free (str);
 	goto STOP;
@@ -817,7 +817,7 @@ int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
     else {
       if (reestimate_one_step_lean(mo, r, sq->seq_number, sq->seq_len, sq->seq,
 			      &log_p, sq->seq_w) == -1) {
-	str = mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
+	str = ighmm_mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
 	mes_prot (str);
 	m_free (str);
 	goto STOP;
@@ -838,13 +838,13 @@ int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
     diff = log_p - log_p_old;
     /* error in convergence ? */
     if (diff < -EPS_PREC) {
-      str = mprintf (NULL, 0, "No convergence: log P < log P-old! (n=%d)\n", n);
+      str = ighmm_mprintf (NULL, 0, "No convergence: log P < log P-old! (n=%d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
     }
     else if (log_p > EPS_PREC) {
-      str = mprintf (NULL, 0, "No convergence: log P > 0! (n=%d)\n", n);
+      str = ighmm_mprintf (NULL, 0, "No convergence: log P > 0! (n=%d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -994,7 +994,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
       }
     }
     else {
-      str = mprintf (NULL, 0, "warning: sequence %d can't be built from model\n", k);
+      str = ighmm_mprintf (NULL, 0, "warning: sequence %d can't be built from model\n", k);
       mes_prot (str);
       m_free (str);
     }
@@ -1064,7 +1064,7 @@ int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
     if (reestimate_one_step_label
         (mo, r, sq->seq_number, sq->seq_len, sq->seq, sq->state_labels,
          &log_p, sq->seq_w) == -1) {
-      str = mprintf (NULL, 0, "reestimate_one_step_label false (%d.step)\n", n);
+      str = ighmm_mprintf (NULL, 0, "reestimate_one_step_label false (%d.step)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -1084,13 +1084,13 @@ int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
     diff = log_p - log_p_old;
     /* error in convergence ? */
     if (diff < -EPS_PREC) {
-      str = mprintf (NULL, 0, "No convergence: log P < log P-old! (n = %d)\n", n);
+      str = ighmm_mprintf (NULL, 0, "No convergence: log P < log P-old! (n = %d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;
     }
     else if (log_p > EPS_PREC) {
-      str = mprintf (NULL, 0, "No convergence: log P > 0! (n = %d)\n", n);
+      str = ighmm_mprintf (NULL, 0, "No convergence: log P > 0! (n = %d)\n", n);
       mes_prot (str);
       m_free (str);
       goto STOP;

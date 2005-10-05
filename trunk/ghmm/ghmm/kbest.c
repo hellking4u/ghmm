@@ -230,7 +230,7 @@ int *ghmm_dl_kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
           if (mo->s[i_id].order > t)
             continue;
           else {
-            str = mprintf (NULL, 0,
+            str = ighmm_mprintf (NULL, 0,
                            "i_id: %d, o_seq[%d]=%d\ninvalid emission index!\n",
                            i_id, t, o_seq[t]);
             mes_prot (str);

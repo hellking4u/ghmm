@@ -92,17 +92,17 @@ int main (int argc, char *argv[])
   if (argc == 10 || argc == 11) {
 
     sprintf (filename, "%s.smo", argv[3]);
-    if (!(smofile = mes_fopen (filename, "wt"))) {
+    if (!(smofile = ighmm_mes_fopen (filename, "wt"))) {
       mes_proc ();
       goto STOP;
     }
     sprintf (likefilename, "%s.like", argv[3]);
-    if (!(likefile = mes_fopen (likefilename, "at"))) {
+    if (!(likefile = ighmm_mes_fopen (likefilename, "at"))) {
       mes_proc ();
       goto STOP;
     }
     sprintf (filename, "%s", argv[3]);
-    if (!(outfile = mes_fopen (filename, "at"))) {
+    if (!(outfile = ighmm_mes_fopen (filename, "at"))) {
       mes_proc ();
       goto STOP;
     }
@@ -163,7 +163,7 @@ int main (int argc, char *argv[])
   }
   ARRAY_CALLOC (smo, total_smo_number);
   if (total_smo_number < max_smo) {
-    str = mprintf (NULL, 0,
+    str = ighmm_mprintf (NULL, 0,
                    "Need %d initial models, read only %d from model file\n",
                    max_smo, total_smo_number);
     mes_prot (str);
@@ -185,12 +185,12 @@ int main (int argc, char *argv[])
     /* different partitions of test und train seqs. */
     for (iter = 0; iter < iterations; iter++) {
       if (!outfile)
-        if (!(outfile = mes_fopen (filename, "at"))) {
+        if (!(outfile = ighmm_mes_fopen (filename, "at"))) {
           mes_proc ();
           goto STOP;
         }
       if (!likefile)
-        if (!(likefile = mes_fopen (likefilename, "at"))) {
+        if (!(likefile = ighmm_mes_fopen (likefilename, "at"))) {
           mes_proc ();
           goto STOP;
         }
@@ -204,13 +204,13 @@ int main (int argc, char *argv[])
       ARRAY_CALLOC (sqd_test, 1);
       if (ghmm_cseq_partition (sqd, sqd_train, sqd_test, train_ratio) == -1) {
         str =
-          mprintf (NULL, 0, "Error partitioning seqs, (model %d, iter %d)\n",
+          ighmm_mprintf (NULL, 0, "Error partitioning seqs, (model %d, iter %d)\n",
                    smo_number, iter);
         mes_prot (str);
         m_free (str);
         if (sqd_train->seq == NULL) {
           str =
-            mprintf (NULL, 0,
+            ighmm_mprintf (NULL, 0,
                      "Error: empty train seqs, (model %d, iter %d)\n",
                      smo_number, iter);
           mes_prot (str);
@@ -226,7 +226,7 @@ int main (int argc, char *argv[])
         smo[k] = smodel_copy (smo_initial[k]);
         if (!smo[k]) {
           str =
-            mprintf (NULL, 0, "Error copying models, (model %d, iter %d)\n",
+            ighmm_mprintf (NULL, 0, "Error copying models, (model %d, iter %d)\n",
                      smo_number, iter);
           mes_prot (str);
           m_free (str);
@@ -247,7 +247,7 @@ int main (int argc, char *argv[])
          before the actual  clustering starts */
       if (smixturehmm_init (cp, sqd_train, smo, smo_number, mode) == -1) {
         str =
-          mprintf (NULL, 0,
+          ighmm_mprintf (NULL, 0,
                    "Error in initialization comp. prob (model %d, iter %d)\n",
                    smo_number, iter);
         mes_prot (str);
@@ -260,7 +260,7 @@ int main (int argc, char *argv[])
 
       /* clustering */
       if (smixturehmm_cluster (outfile, cp, sqd_train, smo, smo_number) == -1) {
-        str = mprintf (NULL, 0, "Error in clustering, (model %d, iter %d)\n",
+        str = ighmm_mprintf (NULL, 0, "Error in clustering, (model %d, iter %d)\n",
                        smo_number, iter);
         mes_prot (str);
         m_free (str);
@@ -272,7 +272,7 @@ int main (int argc, char *argv[])
       /*
 
          if (smixturehmm_calc_cp(cp, sqd_train, smo, smo_number)  == -1) {
-         str = mprintf(NULL, 0, "Error after clustering, (model %d, CV Iter %d)\n",
+         str = ighmm_mprintf(NULL, 0, "Error after clustering, (model %d, CV Iter %d)\n",
          smo_number, iter + 1);
          mes_prot(str); m_free(str); goto STOP;
          }
@@ -368,8 +368,8 @@ int main (int argc, char *argv[])
   exitcode = 0;
   /*------------------------------------------------------------------------*/
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes (MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode);
-  mes_exit ();
+  ighmm_mes (MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode);
+  ighmm_mes_exit ();
   return (exitcode);
 # undef CUR_PROC
 }                               /* main */
@@ -425,7 +425,7 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
       }
 
       if (sreestimate_baum_welch (smo_sqd) == -1) {
-        str = mprintf (NULL, 0, "Error iteration %d, model %d\n", iter, k);
+        str = ighmm_mprintf (NULL, 0, "Error iteration %d, model %d\n", iter, k);
         mes_prot (str);
         m_free (str);
         goto STOP;
@@ -440,7 +440,7 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
 
     ghmm_cseq_mix_like (smo, smo_number, sqd, &likelihood);
     if (smixturehmm_calc_cp (cp, sqd, smo, smo_number, &total_train_w) == -1) {
-      str = mprintf (NULL, 0, "Error iteration %d\n", iter);
+      str = ighmm_mprintf (NULL, 0, "Error iteration %d\n", iter);
       mes_prot (str);
       m_free (str);
       goto STOP;
@@ -508,7 +508,7 @@ int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
       if (smap_bayes (smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) ==
           -1) {
         str =
-          mprintf (NULL, 0, "Can't determine comp. prob for seq ID %.0f \n",
+          ighmm_mprintf (NULL, 0, "Can't determine comp. prob for seq ID %.0f \n",
                    sqd->seq_id[i]);
         mes_prot (str);
         m_free (str);           /* goto STOP; */
@@ -522,7 +522,7 @@ int smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
     for (i = 0; i < sqd->seq_number; i++) {
       bm = smap_bayes (smo, result, smo_number, sqd->seq[i], sqd->seq_len[i]);
       if (bm == -1) {
-        str = mprintf (NULL, 0,
+        str = ighmm_mprintf (NULL, 0,
                        "Can't determine comp. prob for seq ID %.0f \n",
                        sqd->seq_id[i]);
         mes_prot (str);
@@ -599,7 +599,7 @@ int smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
     if (smap_bayes (smo, cp[i], smo_number, sqd->seq[i], sqd->seq_len[i]) ==
         -1) {
       /* all cp[i] [ . ] are set to zero; seq. will be ignored for reestimation!!! */
-      str = mprintf (NULL, 0,
+      str = ighmm_mprintf (NULL, 0,
                      "Warning[%d]: Can't determine comp. prob for seq ID %.0f\n",
                      i, sqd->seq_id[i]);
       mes_prot (str);

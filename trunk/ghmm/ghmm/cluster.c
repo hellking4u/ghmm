@@ -73,7 +73,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   cluster_t cl;
   cl.mo = NULL;
   cl.mo_seq = NULL;
-  if (!(outfile = mes_fopen (out_filename, "wt"))) {
+  if (!(outfile = ighmm_mes_fopen (out_filename, "wt"))) {
     mes_proc ();
     goto STOP;
   }
@@ -128,7 +128,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
       if (sq->seq_label[j] == -1 || sq->seq_label[j] >= cl.mo_number) {
         /* No model fits! */
         char *str =
-          mprintf (NULL, 0, "Seq. %ld: ghmm_dseq_best_model gives %d\n",
+          ighmm_mprintf (NULL, 0, "Seq. %ld: ghmm_dseq_best_model gives %d\n",
                    j, sq->seq_label[j]);
         mes_prot (str);
         m_free (str);
@@ -156,7 +156,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
       for (i = 0; i < cl.mo_number; i++) {
         if (ghmm_d_baum_welch (cl.mo[i], cl.mo_seq[i])) {
           char *str =
-            mprintf (NULL, 0, "%d.reestimate false, mo[%d]\n", iter, i);
+            ighmm_mprintf (NULL, 0, "%d.reestimate false, mo[%d]\n", iter, i);
           mes_prot (str);
           m_free (str);
           /* model_print(stdout, cl.mo[i]); */

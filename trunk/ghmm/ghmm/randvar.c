@@ -350,7 +350,7 @@ double ighmm_rand_get_1overa (double x, double mean, double u)
    */
   erfc_value = gsl_sf_erfc ((x - mean) / sqrt (u * 2));
   if (erfc_value <= DBL_MIN) {
-    mes (MES_WIN, "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n", mean, u);
+    ighmm_mes (MES_WIN, "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n", mean, u);
     return (erfc_value);
   }
   else
@@ -392,7 +392,7 @@ double ighmm_rand_get_1overa (double x, double mean, double u)
       a = 1 / a;
     else {
       a = 0.0;
-      mes (MES_WIN, "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n", mean, u);     /* goto STOP; */
+      ighmm_mes (MES_WIN, "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n", mean, u);     /* goto STOP; */
     }
   }
   return a;

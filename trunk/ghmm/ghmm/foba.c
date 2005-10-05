@@ -712,14 +712,14 @@ int ghmm_dl_forward (model * mo, const int *O, const int *label, int len,
 
       if (scale[t] < EPS_PREC) {
         if (t > 4) {
-          str = mprintf (NULL, 0, "%g\t%g\t%g\t%g\t%g\n", scale[t - 5],
+          str = ighmm_mprintf (NULL, 0, "%g\t%g\t%g\t%g\t%g\n", scale[t - 5],
                          scale[t - 4], scale[t - 3], scale[t - 2],
                          scale[t - 1]);
           mes_prot (str);
           m_free (str);
         }
         str =
-          mprintf (NULL, 0,
+          ighmm_mprintf (NULL, 0,
                    "scale = %g smaller than eps = EPS_PREC in the %d-th char.\ncannot generate emission: %d with label: %d in sequence of length %d\n",
                    scale[t], t, O[t], label[t], len);
         mes_prot (str);

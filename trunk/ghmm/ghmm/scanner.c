@@ -184,9 +184,9 @@ static int scanner_nextchar (scanner_t * s, int expect)
   if (!s || s->err || s->eof)
     return (0);
   while (s->pos + 1 >= s->txtlen) {
-    int mes_stat = mes_ability (0);
-    int err = mes_realloc ((void**)&(s->txt), sizeof(*(s->txt))*(s->txtlen + 256));
-    mes_ability (mes_stat);
+    int mes_stat = ighmm_mes_ability (0);
+    int err = ighmm_realloc ((void**)&(s->txt), sizeof(*(s->txt))*(s->txtlen + 256));
+    ighmm_mes_ability (mes_stat);
 
     if (err) {
       ighmm_scanner_error (s, "line too long");
@@ -398,7 +398,7 @@ scanner_t *ighmm_scanner_alloc (const char *filename)
 
   s->txtlen = 256;
   s->idlen = 256;
-  if (!(s->fp = mes_fopen (filename, "rt"))) {
+  if (!(s->fp = ighmm_mes_fopen (filename, "rt"))) {
     mes_proc ();
     goto STOP;
   }
@@ -438,7 +438,7 @@ int ighmm_scanner_error (scanner_t * s, char *message)
     return (0);
   j = s->pos;
   while (!s->eof && s->c - '\n' && !scanner_nextchar (s, 0));
-  mes_time ();
+  ighmm_mes_time ();
   mes_file_win (s->txt);
   mes_file_win ("\n");
   for (i = 0; i < j; i++) {
@@ -449,11 +449,11 @@ int ighmm_scanner_error (scanner_t * s, char *message)
   mes_file_win (s->txt);
   mes_file_win ("^\n");
   if (message) {
-    mes (MES_FILE_WIN, "Error in file %s, line %d : %s\n",
+    ighmm_mes (MES_FILE_WIN, "Error in file %s, line %d : %s\n",
          s->filename, s->line + 1, message);
   }
   else {
-    mes (MES_FILE_WIN, "Syntax error in file %s, line %d\n",
+    ighmm_mes (MES_FILE_WIN, "Syntax error in file %s, line %d\n",
          s->filename, s->line + 1, message);
   }
   s->err = 1;
@@ -518,9 +518,9 @@ int ighmm_scanner_get_name (scanner_t * s)
     return (0);
   while (m_scanner_isxalpha (s->c) || m_scanner_isdigit (s->c)) {
     while (pos + 1 >= s->idlen) {
-      int mes_stat = mes_ability (0);
-      int err = mes_realloc ((void**)&(s->txt), sizeof(*(s->txt))*(s->txtlen + 256));
-      mes_ability (mes_stat);
+      int mes_stat = ighmm_mes_ability (0);
+      int err = ighmm_realloc ((void**)&(s->txt), sizeof(*(s->txt))*(s->txtlen + 256));
+      ighmm_mes_ability (mes_stat);
       if (err) {
         ighmm_scanner_error (s, "identifier too long");
         return (-1);
@@ -885,26 +885,26 @@ void *ighmm_scanner_get_array (scanner_t * s, int *len, char *type)
   if (!s || !type || !len || s->err)
     goto STOP;
   if (!typ) {
-    ighmm_scanner_error (s, mprintf (txt, sizeof (txt), "unknown type %s ", type));
+    ighmm_scanner_error (s, ighmm_mprintf (txt, sizeof (txt), "unknown type %s ", type));
     goto STOP;
   }
   if (!len || !s || s->err)
     goto STOP;
   if (s->eof) {
     ighmm_scanner_error (s,
-                   mprintf (txt, sizeof (txt), "%s array expected ", type));
+                   ighmm_mprintf (txt, sizeof (txt), "%s array expected ", type));
     goto STOP;
   }
   if (s->c == ';') {
     *len = 0;
     goto STOP;
   }
-  mes_stat = mes_ability (0);
-  val = mes_malloc (sizeof (char *) * maxlen);
+  mes_stat = ighmm_mes_ability (0);
+  val = ighmm_malloc (sizeof (char *) * maxlen);
   err = !val;
-  mes_ability (mes_stat);
+  ighmm_mes_ability (mes_stat);
   if (err) {
-    mprintf (txt, sizeof (txt), "Not enough memory to read %s array", type);
+    ighmm_mprintf (txt, sizeof (txt), "Not enough memory to read %s array", type);
     ighmm_scanner_error (s, txt);
     goto STOP;
   }
@@ -942,11 +942,11 @@ void *ighmm_scanner_get_array (scanner_t * s, int *len, char *type)
       goto STOP;
 
     if (i == maxlen) {
-      mes_stat = mes_ability (0);
-      err = mes_realloc ((void**)&val, sizeof (*val) * (maxlen + 16 * size));
-      mes_ability (mes_stat);
+      mes_stat = ighmm_mes_ability (0);
+      err = ighmm_realloc ((void**)&val, sizeof (*val) * (maxlen + 16 * size));
+      ighmm_mes_ability (mes_stat);
       if (err) {
-        mprintf (txt, sizeof (txt), "Not enough memory to read %s array",
+        ighmm_mprintf (txt, sizeof (txt), "Not enough memory to read %s array",
                  type);
         ighmm_scanner_error (s, txt);
         goto STOP;
@@ -954,9 +954,9 @@ void *ighmm_scanner_get_array (scanner_t * s, int *len, char *type)
       maxlen += 16 * size;
     }
   }
-  mes_stat = mes_ability (0);
-  mes_realloc ((void**)&val, sizeof (*val) * i);/* Do'nt worry if this fails!*/
-  mes_ability (mes_stat);
+  mes_stat = ighmm_mes_ability (0);
+  ighmm_realloc ((void**)&val, sizeof (*val) * i);/* Do'nt worry if this fails!*/
+  ighmm_mes_ability (mes_stat);
 
   *len = i / size;
 
@@ -1092,22 +1092,22 @@ int scanner_tst (void)
   if (char_arr) {
     mes_win ("\nchar:\n");
     for (i = 0; i < char_len; i++)
-      mes (MES_WIN, "  '%c'\n", char_arr[i]);
+      ighmm_mes (MES_WIN, "  '%c'\n", char_arr[i]);
   }
   if (int_arr) {
     mes_win ("\nint:\n");
     for (i = 0; i < int_len; i++)
-      mes (MES_WIN, "  %d\n", int_arr[i]);
+      ighmm_mes (MES_WIN, "  %d\n", int_arr[i]);
   }
   if (double_arr) {
     mes_win ("\ndouble:\n");
     for (i = 0; i < double_len; i++)
-      mes (MES_WIN, "  %f\n", double_arr[i]);
+      ighmm_mes (MES_WIN, "  %f\n", double_arr[i]);
   }
   if (string_arr) {
     mes_win ("\nstring:\n");
     for (i = 0; i < string_len; i++)
-      mes (MES_WIN, "  \"%s\"\n", string_arr[i]);
+      ighmm_mes (MES_WIN, "  \"%s\"\n", string_arr[i]);
   }
 
   res = 0;
