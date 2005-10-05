@@ -488,7 +488,7 @@ model **model_from_sequence (sequence_t * sq, long *mo_number)
   int max_symb;
   model **mo = NULL;
   ARRAY_CALLOC (mo, sq->seq_number);
-  max_symb = sequence_max_symbol (sq);
+  max_symb = ghmm_dseq_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
     mo[i] = model_generate_from_sequence (sq->seq[i], sq->seq_len[i],
                                           max_symb + 1);
@@ -522,7 +522,7 @@ model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
       goto STOP;
     /* Reads sequences on normal format */
     if (!strcmp (s->id, "SEQ")) {
-      sq = sequence_read_alloc (s);
+      sq = ghmm_dseq_read_alloc (s);
       if (!sq) {
         mes_proc ();
         goto STOP;
@@ -542,16 +542,16 @@ model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
 
   ARRAY_CALLOC (mo, sq->seq_number);
   /* The biggest symbol that occurs */
-  max_symb = sequence_max_symbol (sq);
+  max_symb = ghmm_dseq_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
     mo[i] = model_generate_from_sequence (sq->seq[i], sq->seq_len[i],
                                           max_symb + 1);
 
   *mo_number = sq->seq_number;
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   for (i = 0; i < *mo_number; i++)
     model_free (&(mo[i]));
   return NULL;
@@ -968,7 +968,7 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
   int n = 0;
   int state = 0;
 
-  sq = sequence_calloc (seq_number);
+  sq = ghmm_dseq_calloc (seq_number);
   if (!sq) {mes_proc (); goto STOP;}
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
@@ -1070,7 +1070,7 @@ sequence_t *model_generate_sequences (model * mo, int seed, int global_len,
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
 }                               /* data */
@@ -1526,8 +1526,8 @@ double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
           mes_prot (" generate_sequences failed !");
           goto STOP;
         }
-        sequence_free (&tmp);
-        sequence_add (seq0, tmp);
+        ghmm_dseq_free (&tmp);
+        ghmm_dseq_add (seq0, tmp);
 
         total = 0;
         for (i = 0; i < seq0->seq_number; i++)
@@ -1629,7 +1629,7 @@ double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
     }
 
     if (symmetric) {
-      sequence_free (&seq0);
+      ghmm_dseq_free (&seq0);
       mo1 = m;
       mo2 = m0;
     }
@@ -1638,12 +1638,12 @@ double model_prob_distance (model * m0, model * m, int maxT, int symmetric,
 
   }                             /* k = 1,2 */
 
-  sequence_free (&seq0);
+  ghmm_dseq_free (&seq0);
   free (d1);
   return d;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&seq0);
+  ghmm_dseq_free (&seq0);
   free (d1);
   return (0.0);
 #undef CUR_PROC
@@ -1739,7 +1739,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
   int pos = 0;
   int label_index = 0;
 
-  sq = sequence_calloc (seq_number);
+  sq = ghmm_dseq_calloc (seq_number);
 
   if (!sq) {
     mes_proc ();
@@ -1917,7 +1917,7 @@ sequence_t *model_label_generate_sequences (model * mo, int seed,
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
 }                               /* data */

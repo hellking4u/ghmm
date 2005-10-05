@@ -196,7 +196,7 @@ void testBaumwelch(int seqlen){
   model_free(&mo_time);
   model_free(&mo_mem);
   
-  sequence_free(&my_output);
+  ghmm_dseq_free(&my_output);
 }
 
 int main(){

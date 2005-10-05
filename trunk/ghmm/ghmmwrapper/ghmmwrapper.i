@@ -210,7 +210,7 @@ struct sequence_t {
    */
   int **seq;
   /** matrix of state ids, can be used to save the viterbi path during sequence generation.
-   ATTENTION: is NOT allocated by sequence_calloc  */
+   ATTENTION: is NOT allocated by ghmm_dseq_calloc  */
   int **states;
   /** array of sequence length */
   int *seq_len;
@@ -271,7 +271,7 @@ typedef struct sequence_d_t sequence_d_t;
    @param seq\_number:  number of sequences
    @return:     pointer of sequence struct
 */
-extern sequence_t *sequence_calloc(long seq_number);
+extern sequence_t *ghmm_dseq_calloc(long seq_number);
 
 
 /**
@@ -281,7 +281,7 @@ extern sequence_t *sequence_calloc(long seq_number);
    @param seq\_number:  number of sequences
    @return:     pointer of sequence struct
 */
-extern sequence_d_t *sequence_d_calloc(long seq_number);
+extern sequence_d_t *ghmm_cseq_calloc(long seq_number);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
@@ -289,7 +289,7 @@ extern sequence_d_t *sequence_d_calloc(long seq_number);
    Differs from sequence\_free since memory is not freed here. 
    @param sq sequence structure
   */
-extern void sequence_clean(sequence_t *sq);
+extern void ghmm_dseq_clean(sequence_t *sq);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
@@ -297,14 +297,14 @@ extern void sequence_clean(sequence_t *sq);
    Differs from sequence\_free since memory is not freed here. 
    @param sq sequence structure
   */
-extern void sequence_d_clean(sequence_d_t *sq);
+extern void ghmm_cseq_clean(sequence_d_t *sq);
 
 /**
   Prints one array of integer sequences in a file.
   @param file       output file
   @param sequence    array of sequences
   */
-void sequence_print(FILE *file, sequence_t *sequence);
+void ghmm_dseq_print(FILE *file, sequence_t *sequence);
 
 
 /**
@@ -313,7 +313,7 @@ void sequence_print(FILE *file, sequence_t *sequence);
   @param source source sequence
   @param len     length of source sequence
   */
-void sequence_copy(int *target, int *source, int len);
+void ghmm_dseq_copy(int *target, int *source, int len);
 
 
 /**
@@ -322,7 +322,7 @@ void sequence_copy(int *target, int *source, int len);
   @param source source sequence
   @param len     length of source sequence
   */
-void sequence_d_copy(double *target, double *source, int len);
+void ghmm_cseq_copy(double *target, double *source, int len);
 
 
 #ifdef GHMM_OBSOLETE
@@ -333,7 +333,7 @@ void sequence_d_copy(double *target, double *source, int len);
    @return pointer to sequence array
    @param filename    input filename
 */
-sequence_d_t **sequence_d_read(const char *filename, int *sqd_number);
+sequence_d_t **ghmm_cseq_read(const char *filename, int *sqd_number);
 #endif /* GHMM_OBSOLETE */
 
 /**
@@ -343,7 +343,7 @@ sequence_d_t **sequence_d_read(const char *filename, int *sqd_number);
   @param source  source sequence structure
   @return -1 for error, 0 for success
   */
-int sequence_add(sequence_t *target, sequence_t *source);
+int ghmm_dseq_add(sequence_t *target, sequence_t *source);
 
 /**
   Adds all double sequences, sequence lengths etc 
@@ -352,23 +352,23 @@ int sequence_add(sequence_t *target, sequence_t *source);
   @param source  source sequence structure
   @return -1 for error, 0 for success
   */
-extern int sequence_d_add(sequence_d_t *target, sequence_d_t *source);
+extern int ghmm_cseq_add(sequence_d_t *target, sequence_d_t *source);
 
 /**
   Frees all memory in a given array of integer sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
   */
-int sequence_free(sequence_t **sq);
+int ghmm_dseq_free(sequence_t **sq);
 
 /**
   Frees all memory in a given array of double sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
   */
-int sequence_d_free(sequence_d_t **sq);
+int ghmm_cseq_free(sequence_d_t **sq);
 
-extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
+extern void ghmm_cseq_print(FILE *file, sequence_d_t *sqd, int discrete);
 
 
 /**
@@ -378,7 +378,7 @@ extern void sequence_d_print(FILE *file, sequence_d_t *sqd, int discrete);
   @param sq   source sequence_t
   @param index   index of sequence to extract
 */
-extern sequence_t *sequence_get_singlesequence(sequence_t *sq, int index);
+extern sequence_t *ghmm_dseq_get_singlesequence(sequence_t *sq, int index);
 
 /**
   Extract a single sequence_d from a larger sequence_d_t into a new struct.
@@ -387,19 +387,19 @@ extern sequence_t *sequence_get_singlesequence(sequence_t *sq, int index);
   @param sq   source sequence_d_t
   @param index   index of sequence to extract
 */
-extern sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index);
+extern sequence_d_t *ghmm_cseq_get_singlesequence(sequence_d_t *sq, int index);
 
 /**
   Free a sequence_t struct which holds as sequence a reference to a sequence in a different
   sequence_t. The function deallocates everything but the reference.
 */
-extern int sequence_subseq_free (sequence_t ** sq);
+extern int ghmm_dseq_subseq_free (sequence_t ** sq);
 
 /**
   Free a sequence_d_t struct which holds as sequence a reference to a sequence in a different
   sequence_d_t. The function deallocates everything but the reference.
 */
-extern int sequence_d_subseq_free (sequence_d_t ** sqd);
+extern int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
 
 
 
@@ -420,7 +420,7 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
 	  int i;
 	  sequence_t** s;
 	  //s = (sequence_d_t **) malloc(1*sizeof(sequence_d_t*));
-	  s = sequence_read(filename, &i);
+	  s = ghmm_dseq_read(filename, &i);
 	  return s[0];
   }
 #endif /* GHMM_OBSOLETE */
@@ -461,32 +461,32 @@ extern int sequence_d_subseq_free (sequence_d_t ** sqd);
 	  int i;
       sequence_d_t** s;
 	  //s = (sequence_d_t **) malloc(1*sizeof(sequence_d_t*));
-	  s = sequence_d_read(filename, &i);
+	  s = ghmm_cseq_read(filename, &i);
 	  return *s;
   }
 #endif /* GHMM_OBSOLETE */
 
-  void call_sequence_print(char* ch, sequence_t* seq){
+  void call_ghmm_dseq_print (char* ch, sequence_t* seq){
     FILE* file_name;
-    file_name = fopen(ch,"at");
-    sequence_print(file_name,seq);
-    fclose(file_name);
+    file_name = fopen (ch, "at");
+    ghmm_dseq_print (file_name, seq);
+    fclose (file_name);
   }	  
 
-  void call_sequence_d_print(char* ch,sequence_d_t* seq, int disc){
+  void call_ghmm_cseq_print (char* ch,sequence_d_t* seq, int disc){
     FILE* file_name;
-    file_name = fopen(ch,"at");
-    sequence_d_print(file_name,seq, disc);
-    fclose(file_name);
+    file_name = fopen (ch, "at");
+    ghmm_cseq_print (file_name, seq, disc);
+    fclose (file_name);
   }	  
 
 
-  void call_sequence_free(sequence_t *sq ) {sequence_free(&sq);}  
-  void call_sequence_d_free(sequence_d_t *sq ){sequence_d_free(&sq);}  
+  void call_ghmm_dseq_free (sequence_t *sq) {ghmm_dseq_free(&sq);}  
+  void call_ghmm_cseq_free (sequence_d_t *sq) {ghmm_cseq_free(&sq);}  
 
   
-  void call_sequence_subseq_free(sequence_t *sq ) {sequence_subseq_free(&sq);}  
-  void call_sequence_d_subseq_free(sequence_d_t *sq ){sequence_d_subseq_free(&sq);}  
+  void call_ghmm_dseq_subseq_free (sequence_t *sq ) {ghmm_dseq_subseq_free (&sq);}  
+  void call_ghmm_cseq_subseq_free (sequence_d_t *sq ) {ghmm_cseq_subseq_free (&sq);}  
 
    
 %}
@@ -1773,17 +1773,17 @@ struct psequence {
 
 typedef struct psequence psequence;
 
-extern psequence * init_psequence(int length, int number_of_alphabets, int number_of_d_seqs);
+extern psequence * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d_seqs);
 
-extern int free_psequence(psequence * seq, int number_of_alphabets, int number_of_d_seqs);
+extern int ghmm_dpseq_free(psequence * seq, int number_of_alphabets, int number_of_d_seqs);
 
-extern void set_discrete_psequence(psequence * seq_pointer, int index, int * sequence);
+extern void ghmm_dpseq_set_discrete(psequence * seq_pointer, int index, int * sequence);
 
-extern void set_continuous_psequence(psequence * seq_pointer, int index, double * sequence);
+extern void ghmm_dpseq_set_continuous(psequence * seq_pointer, int index, double * sequence);
 
-extern int * get_discrete_psequence(psequence * seq_pointer, int index);
+extern int * ghmm_dpseq_get_discrete(psequence * seq_pointer, int index);
 
-extern double * get_continuous_psequence(psequence * seq_pointer, int index);
+extern double * ghmm_dpseq_get_continuous(psequence * seq_pointer, int index);
 
 /********** End of Pair HMM psequence (psequence.c) **********/
 

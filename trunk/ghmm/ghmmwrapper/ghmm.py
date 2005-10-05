@@ -593,9 +593,9 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbol = ghmmwrapper.set_2d_arrayint
-            self.freeFunction = ghmmwrapper.call_sequence_free
-            self.addSeqFunction = ghmmwrapper.sequence_add
-            self.freeSubSetFunction = ghmmwrapper.call_sequence_subseq_free
+            self.freeFunction = ghmmwrapper.call_ghmm_dseq_free
+            self.addSeqFunction = ghmmwrapper.ghmm_dseq_add
+            self.freeSubSetFunction = ghmmwrapper.call_ghmm_dseq_subseq_free
 
             #create a sequence_t with state_labels, if the appropiate parameters are set
             if (isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None )):
@@ -616,7 +616,7 @@ class EmissionSequence:
                 #make c-array of internal labels
                 (label,l) = ghmmhelper.list2matrixint([internalLabel])
 
-                self.cseq = ghmmwrapper.sequence_calloc(1)
+                self.cseq = ghmmwrapper.ghmm_dseq_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
@@ -630,7 +630,7 @@ class EmissionSequence:
 
                 internalInput = map( self.emissionDomain.internal, sequenceInput)
                 (seq,l) = ghmmhelper.list2matrixint([internalInput])
-                self.cseq = ghmmwrapper.sequence_calloc(1)
+                self.cseq = ghmmwrapper.ghmm_dseq_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
 
@@ -666,14 +666,14 @@ class EmissionSequence:
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbol = ghmmwrapper.set_2d_arrayd
-            self.freeFunction = ghmmwrapper.call_sequence_d_free
-            self.addSeqFunction = ghmmwrapper.sequence_d_add
-            self.freeSubSetFunction = ghmmwrapper.call_sequence_d_subseq_free
+            self.freeFunction = ghmmwrapper.call_ghmm_cseq_free
+            self.addSeqFunction = ghmmwrapper.ghmm_cseq_add
+            self.freeSubSetFunction = ghmmwrapper.call_ghmm_cseq_subseq_free
             
 
             if isinstance(sequenceInput, list):
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
-                self.cseq = ghmmwrapper.sequence_d_calloc(1)
+                self.cseq = ghmmwrapper.ghmm_cseq_calloc(1)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
@@ -793,9 +793,9 @@ class EmissionSequence:
 
         # different function signatures require explicit check for C data type
         if self.emissionDomain.CDataType == "int":
-            ghmmwrapper.call_sequence_print(fileName, self.cseq)
+            ghmmwrapper.call_ghmm_dseq_print (fileName, self.cseq)
         if self.emissionDomain.CDataType == "double":
-            ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)
+            ghmmwrapper.call_ghmm_cseq_print (fileName, self.cseq,0)
 
     
     def setWeight(self, value):
@@ -818,18 +818,18 @@ class SequenceSet:
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
             # necessary C functions for accessing the sequence_t struct
-            self.sequenceAllocationFunction = ghmmwrapper.sequence_calloc
+            self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
             self.allocSingleSeq = ghmmwrapper.int_array
-            self.copySingleSeq = ghmmwrapper.sequence_copy
+            self.copySingleSeq = ghmmwrapper.ghmm_dseq_copy
             self.setSeq = ghmmwrapper.set_2d_arrayint_col # assign an int* to a position within an int**
-            self.freeFunction = ghmmwrapper.call_sequence_free
-            self.addSeqFunction = ghmmwrapper.sequence_add # add sequences to the underlying C struct
+            self.freeFunction = ghmmwrapper.call_ghmm_dseq_free
+            self.addSeqFunction = ghmmwrapper.ghmm_dseq_add # add sequences to the underlying C struct
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbolSingle = ghmmwrapper.set_arrayint
-            self.getSingleSeq = ghmmwrapper.sequence_get_singlesequence
+            self.getSingleSeq = ghmmwrapper.ghmm_dseq_get_singlesequence
             
             if (isinstance(sequenceSetInput, str)  and labelInput == None): # from file
                 # reads in the first sequence struct in the input file
@@ -844,7 +844,7 @@ class SequenceSet:
 
                 self.labelDomain = labelDomain                
                 seq_nr = len(sequenceSetInput)
-                self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
+                self.cseq = ghmmwrapper.ghmm_dseq_calloc(seq_nr)
                 self.cseq.seq_number = seq_nr
                 
                 internalInput = []
@@ -876,7 +876,7 @@ class SequenceSet:
             elif isinstance(sequenceSetInput, list) and labelInput == None:
 
                 seq_nr = len(sequenceSetInput)
-                self.cseq = ghmmwrapper.sequence_calloc(seq_nr)
+                self.cseq = ghmmwrapper.ghmm_dseq_calloc(seq_nr)
                 self.cseq.seq_number = seq_nr
                 
                 internalInput = []
@@ -906,22 +906,22 @@ class SequenceSet:
 
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
             # necessary C functions for accessing the sequence_d_t struct
-            self.sequenceAllocationFunction =  ghmmwrapper.sequence_d_calloc
+            self.sequenceAllocationFunction =  ghmmwrapper.ghmm_cseq_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
             self.allocSingleSeq = ghmmwrapper.double_array
-            self.copySingleSeq = ghmmwrapper.sequence_d_copy
+            self.copySingleSeq = ghmmwrapper.ghmm_cseq_copy
             self.setSeq = ghmmwrapper.set_2d_arrayd_col # assign a double* to a position within a double**
-            self.freeFunction = ghmmwrapper.call_sequence_d_free
-            self.addSeqFunction = ghmmwrapper.sequence_d_add # add sequences to the underlying C struct
+            self.freeFunction = ghmmwrapper.call_ghmm_cseq_free
+            self.addSeqFunction = ghmmwrapper.ghmm_cseq_add # add sequences to the underlying C struct
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbolSingle = ghmmwrapper.set_arrayd
-            self.getSingleSeq = ghmmwrapper.sequence_d_get_singlesequence
+            self.getSingleSeq = ghmmwrapper.ghmm_cseq_get_singlesequence
                         
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
-                self.cseq = ghmmwrapper.sequence_d_calloc(seq_nr)
+                self.cseq = ghmmwrapper.ghmm_cseq_calloc(seq_nr)
                 self.cseq.seq_number = seq_nr
 
                 (seq,lenghts) = ghmmhelper.list2matrixd(sequenceSetInput)
@@ -936,7 +936,7 @@ class SequenceSet:
                 else:
                     #self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
                     i = ghmmwrapper.int_array(1)
-                    self.__s = ghmmwrapper.sequence_d_read(sequenceSetInput,i)
+                    self.__s = ghmmwrapper.ghmm_cseq_read(sequenceSetInput,i)
                     self.cseq = ghmmwrapper.get_seq_d_ptr(self.__s,0)
 
                                                      
@@ -1129,9 +1129,9 @@ class SequenceSet:
         
         # different function signatures require explicit check for C data type
         if self.emissionDomain.CDataType == "int":
-            ghmmwrapper.call_sequence_print(fileName, self.cseq)
+            ghmmwrapper.call_ghmm_dseq_print(fileName, self.cseq)
         if self.emissionDomain.CDataType == "double":    
-            ghmmwrapper.call_sequence_d_print(fileName, self.cseq,0)
+            ghmmwrapper.call_ghmm_cseq_print(fileName, self.cseq,0)
 
 class SequenceSetSubset(SequenceSet):
     """ 
@@ -1169,10 +1169,10 @@ def SequenceSetOpen(emissionDomain, fileName):
 
     
     if emissionDomain.CDataType == "int":
-        readFile = ghmmwrapper.sequence_read
+        readFile = ghmmwrapper.ghmm_dseq_read
         seqPtr = ghmmwrapper.get_seq_ptr
     elif emissionDomain.CDataType == "double":
-        readFile = ghmmwrapper.sequence_d_read
+        readFile = ghmmwrapper.ghmm_cseq_read
         seqPtr = ghmmwrapper.get_seq_d_ptr
             
     dArr = ghmmwrapper.int_array(1)
@@ -4311,12 +4311,12 @@ class ComplexEmissionSequence:
         self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
         self.getSymbol = ghmmwrapper.get_2d_arrayint
         self.setSymbol = ghmmwrapper.set_2d_arrayint
-        self.cleanFunction = ghmmwrapper.free_psequence
-        self.setDiscreteSequenceFunction = ghmmwrapper.set_discrete_psequence
-        self.setContinuousSequenceFunction = ghmmwrapper.set_continuous_psequence
-        self.getDiscreteSequenceFunction = ghmmwrapper.get_discrete_psequence
-        self.getContinuousSequenceFunction = ghmmwrapper.get_continuous_psequence
-        self.cseq = ghmmwrapper.init_psequence(self.length,
+        self.cleanFunction = ghmmwrapper.ghmm_dpseq_free
+        self.setDiscreteSequenceFunction = ghmmwrapper.ghmm_dpseq_set_discrete
+        self.setContinuousSequenceFunction = ghmmwrapper.ghmm_dpseq_set_continuous
+        self.getDiscreteSequenceFunction = ghmmwrapper.ghmm_dpseq_get_discrete
+        self.getContinuousSequenceFunction = ghmmwrapper.ghmm_dpseq_get_continuous
+        self.cseq = ghmmwrapper.ghmm_dpseq_init(self.length,
                                                 len(self.discreteDomains),
                                                 len(self.continuousDomains))
         

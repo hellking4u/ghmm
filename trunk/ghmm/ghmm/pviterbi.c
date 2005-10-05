@@ -324,22 +324,22 @@ static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 		{;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	    }
 #ifdef DEBUG
-	    emission = pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-				get_char_psequence(Y, mo->s[i].alphabet, v),
+	    emission = pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+				ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y);
 	    if (emission > emission_table_size(mo, i)){
 	      printf("State %i\n", i);
 	      print_pstate(&(mo->s[i]));
 	      printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		     get_char_psequence(X, mo->s[i].alphabet, u),
-		     get_char_psequence(Y, mo->s[i].alphabet, v),
+		     ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+		     ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		     mo->size_of_alphabet[mo->s[i].alphabet],
 		     emission_table_size(mo, i), emission);
 	    }
 #endif
-	    log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-					get_char_psequence(Y, mo->s[i].alphabet, v),
+	    log_b_i = log_b(pv, i, pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+					ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 					mo->size_of_alphabet[mo->s[i].alphabet],
 					mo->s[i].offset_x, mo->s[i].offset_y));
 	    
@@ -362,8 +362,8 @@ static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 #ifdef DEBUG
 		printf("Initial log prob state %i at (%i, %i) = %f\n", i, u, v, get_phi(pv, u, v, 0, 0, i));
 		printf("Characters emitted X: %i, Y: %i\n", 
-		       get_char_psequence(X, mo->s[i].alphabet, u),
-		       get_char_psequence(Y, mo->s[i].alphabet, v));
+		       ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+		       ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v));
 #endif
 	      }
 	      if (get_phi(pv, u, v, 0, 0, i) != 1)
@@ -547,8 +547,8 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 
-	  emission = pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-			      get_char_psequence(Y, mo->s[i].alphabet, v),
+	  emission = pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+			      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 #ifdef DEBUG
@@ -556,14 +556,14 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 	    printf("State %i\n", i);
 	    print_pstate(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		   get_char_psequence(X, mo->s[i].alphabet, u),
-		   get_char_psequence(Y, mo->s[i].alphabet, v),
+		   ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+		   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
 		   emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-				      get_char_psequence(Y, mo->s[i].alphabet, v),
+	  log_b_i = log_b(pv, i, pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+				      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				      mo->size_of_alphabet[mo->s[i].alphabet],
 				      mo->s[i].offset_x, mo->s[i].offset_y));
 
@@ -627,9 +627,9 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 #ifdef DEBUG
     printf("D & C traceback from state %i!\n", start_traceback_with);
     printf("Last characters emitted X: %i, Y: %i\n", 
-	   get_char_psequence(X, mo->s[start_traceback_with].alphabet, 
+	   ghmm_dpseq_get_char(X, mo->s[start_traceback_with].alphabet, 
 			       X->length-1),
-	   get_char_psequence(Y, mo->s[start_traceback_with].alphabet, 
+	   ghmm_dpseq_get_char(Y, mo->s[start_traceback_with].alphabet, 
 			       Y->length-1));
     for (j = 0; j < mo->N; j++){
       printf("phi(len_x)(len_y)(%i)=%f\n", j, get_phi(pv, X->length-1, Y->length-1, 0, 0, j)); 
@@ -728,15 +728,15 @@ double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, i
     u += mo->s[i].offset_x;
     v += mo->s[i].offset_y;
     /* get the emission probability */
-    log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-				get_char_psequence(Y, mo->s[i].alphabet, v),
+    log_b_i = log_b(pv, i, pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+				ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y));
     if (log_b_i == 1.0) { /* chars cant be emitted */
       pviterbi_free(&pv, mo->N, 0, 0, mo->max_offset_x, mo->max_offset_y);
       fprintf(stderr, "characters (%i, %i) at position (%i, %i) cannot be emitted by state %i (t=%i)\n",
-	      get_char_psequence(X, mo->s[i].alphabet, u),
-	      get_char_psequence(Y, mo->s[i].alphabet, v), u, v, i, t);
+	      ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+	      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v), u, v, i, t);
       return 1.0;
     }
     log_p += log_b_i;
@@ -772,15 +772,15 @@ double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, i
       return 1.0; /* transition not possible */
     }
     /* emission probability */
-    log_b_i = log_b(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-				get_char_psequence(Y, mo->s[i].alphabet, v),
+    log_b_i = log_b(pv, i, pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+				ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y));
     if (log_b_i == 1.0) {
       pviterbi_free(&pv, mo->N, 0, 0, mo->max_offset_x, mo->max_offset_y);
       fprintf(stderr, "characters (%i, %i) at position (%i, %i) cannot be emitted by state %i (t=%i)\n",
-	      get_char_psequence(X, mo->s[i].alphabet, u),
-	      get_char_psequence(Y, mo->s[i].alphabet, v), u, v, i, t);
+	      ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+	      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v), u, v, i, t);
       return 1.0; /* characters cant be emitted */
     }
     log_p += log_in_a + log_b_i;

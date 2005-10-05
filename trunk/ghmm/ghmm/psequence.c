@@ -45,8 +45,8 @@
 #include "matrix.h"
 #include "ghmm_internals.h"
 
-psequence * init_psequence(int length, int number_of_alphabets, int number_of_d_seqs) {
-#define CUR_PROC "init_psequence"
+psequence * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d_seqs) {
+#define CUR_PROC "ghmm_dpseq_init"
   psequence * seq;
 
   ARRAY_MALLOC (seq, 1);
@@ -67,13 +67,13 @@ psequence * init_psequence(int length, int number_of_alphabets, int number_of_d_
 
   return seq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  free_psequence(seq, number_of_alphabets, number_of_d_seqs);
+  ghmm_dpseq_free(seq, number_of_alphabets, number_of_d_seqs);
   return NULL;
 #undef CUR_PROC
 }
 
-int free_psequence(psequence * seq, int number_of_alphabets, int number_of_d_seqs) {
-#define CUR_PROC "free_psequence"
+int ghmm_dpseq_free(psequence * seq, int number_of_alphabets, int number_of_d_seqs) {
+#define CUR_PROC "ghmm_dpseq_free"
   int i;
   mes_check_ptr(seq, return(-1));
   if ( seq == NULL ) return(0);
@@ -92,23 +92,23 @@ int free_psequence(psequence * seq, int number_of_alphabets, int number_of_d_seq
 #undef CUR_PROC
 }
 
-void set_discrete_psequence(psequence * seq_pointer, int index, int * int_seq) {
+void ghmm_dpseq_set_discrete(psequence * seq_pointer, int index, int * int_seq) {
   seq_pointer->seq[index] = int_seq;
 }
   
-void set_continuous_psequence(psequence * seq_pointer, int index, double * d_seq) {
+void ghmm_dpseq_set_continuous(psequence * seq_pointer, int index, double * d_seq) {
   seq_pointer->d_value[index] = d_seq;
 }
 
-int * get_discrete_psequence(psequence * seq_pointer, int index){
+int * ghmm_dpseq_get_discrete(psequence * seq_pointer, int index){
   return seq_pointer->seq[index];
 }
 
-double * get_continuous_psequence(psequence * seq_pointer, int index){
+double * ghmm_dpseq_get_continuous(psequence * seq_pointer, int index){
   return seq_pointer->d_value[index];
 }
 
-psequence * slice_psequence(psequence * seq_pointer, int start, int stop){
+psequence * ghmm_dpseq_slice(psequence * seq_pointer, int start, int stop){
   int i, j;
   psequence * slice;
 
@@ -116,7 +116,7 @@ psequence * slice_psequence(psequence * seq_pointer, int start, int stop){
     fprintf(stderr, "Slice: sequence index (%i) out of bounds (%i)\n", 
 	    stop, seq_pointer->length);
   }
-  slice = init_psequence(stop - start, seq_pointer->number_of_alphabets,
+  slice = ghmm_dpseq_init(stop - start, seq_pointer->number_of_alphabets,
 			  seq_pointer->number_of_d_seqs);
   for (i=start; i<stop; i++){
     for (j=0; j<slice->number_of_alphabets; j++)
@@ -127,7 +127,7 @@ psequence * slice_psequence(psequence * seq_pointer, int start, int stop){
   return slice;
 }
 
-int get_char_psequence(psequence * seq_pointer, int alphabet, int index){
+int ghmm_dpseq_get_char(psequence * seq_pointer, int alphabet, int index){
   if (alphabet < seq_pointer->number_of_alphabets) {
     if (index < 0)
       return -1;
@@ -146,7 +146,7 @@ int get_char_psequence(psequence * seq_pointer, int alphabet, int index){
   }
 }
 
-double get_double_psequence(psequence * seq_pointer, int seq_index, int index){
+double ghmm_dpseq_get_double(psequence * seq_pointer, int seq_index, int index){
   if (seq_index < seq_pointer->number_of_d_seqs) {
     if (index < 0)
       return 0;

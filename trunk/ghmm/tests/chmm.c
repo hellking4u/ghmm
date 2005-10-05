@@ -83,7 +83,7 @@ int single_state_continuous()
 				      0  /* maximal sequence length 0: no limit*/
 				      );
   /* print out sequences */
-  sequence_d_print(stdout,    /* output file */
+  ghmm_cseq_print(stdout,    /* output file */
 		   my_output, /* sequence */
 		   0          /* do not truncate to integer*/
 		   );
@@ -122,14 +122,14 @@ int single_state_continuous()
 					 0   /* maximal sequence length 0: no limit*/
 					 );
 
-    sequence_d_print(stdout,     /* output file */
+    ghmm_cseq_print(stdout,     /* output file */
 		     new_output, /* sequence */
 		     0           /* do not truncate to integer*/
 		     );
     /* free everything */
     close(descriptor);
     unlink(filename_buffer);
-    sequence_d_free(&new_output);
+    ghmm_cseq_free(&new_output);
     /*while(model_counter>0)
       {
 	smodel_free(&(model_array[model_counter-1]));
@@ -139,7 +139,7 @@ int single_state_continuous()
    
   }
 
-  sequence_d_free(&my_output);
+  ghmm_cseq_free(&my_output);
   return 0;
 }
 

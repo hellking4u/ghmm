@@ -125,7 +125,7 @@ int my_model()
 				     100, /* no of sequences */
 		  			 100); /* maxT */ 
   fprintf(stdout,"Done\n");
-  /*sequence_print(stdout,my_output);*/
+  /*ghmm_dseq_print(stdout,my_output);*/
 
   /* slight change of emission probabilities in state 0 */
   symbols_0_state[0] = 0.6;
@@ -140,7 +140,7 @@ int my_model()
   fprintf(stdout,"Done\nthe result is:\n");
   model_print(stdout,&my_model);
 
-  sequence_free(&my_output);
+  ghmm_dseq_free(&my_output);
 
   return 0;
 }

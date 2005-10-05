@@ -145,7 +145,7 @@ int main (int argc, char *argv[])
   smixturehmm_print_header (likefile, argv, 1);
   smixturehmm_print_header (outfile, argv, 0);
   /* Read Seqs. and Initial Models only once */
-  sqd_dummy = sequence_d_read (argv[1], &field_number);
+  sqd_dummy = ghmm_cseq_read (argv[1], &field_number);
   printf ("Length first Seq: %d\n", sqd_dummy[0]->seq_len[0]);
   if (!sqd_dummy) {
     mes_proc ();
@@ -202,7 +202,7 @@ int main (int argc, char *argv[])
       /* divide into train and test seqs. */
       ARRAY_CALLOC (sqd_train, 1);
       ARRAY_CALLOC (sqd_test, 1);
-      if (sequence_d_partition (sqd, sqd_train, sqd_test, train_ratio) == -1) {
+      if (ghmm_cseq_partition (sqd, sqd_train, sqd_test, train_ratio) == -1) {
         str =
           mprintf (NULL, 0, "Error partitioning seqs, (model %d, iter %d)\n",
                    smo_number, iter);
@@ -302,7 +302,7 @@ int main (int argc, char *argv[])
         fprintf (outfile, "%.4f\t%.4f\t%.4f\n", smo[k]->prior,
                  avg_comp_like[k]);
 
-      errors_train = sequence_d_mix_like
+      errors_train = ghmm_cseq_mix_like
         (smo, smo_number, sqd_train, &train_likelihood);
 
       fprintf (outfile,
@@ -315,7 +315,7 @@ int main (int argc, char *argv[])
 
 
       if (sqd_test != NULL) {
-        errors_test = sequence_d_mix_like
+        errors_test = ghmm_cseq_mix_like
           (smo, smo_number, sqd_test, &test_likelihood);
 
         fprintf (outfile,
@@ -351,8 +351,8 @@ int main (int argc, char *argv[])
       for (k = 0; k < smo_number; k++)
         smodel_free (&(smo[k]));
       matrix_d_free (&cp, sqd_train->seq_number);
-      sequence_d_free (&sqd_train);
-      sequence_d_free (&sqd_test);
+      ghmm_cseq_free (&sqd_train);
+      ghmm_cseq_free (&sqd_test);
       m_free (avg_comp_like);
       if (outfile)
         fclose (outfile);       /* save results, open to append at the beginning of the loop */
@@ -408,7 +408,7 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
     smo[k]->prior = sum / total_train_w;
   }
 
-  sequence_d_mix_like (smo, smo_number, sqd, &old_likelihood);
+  ghmm_cseq_mix_like (smo, smo_number, sqd, &old_likelihood);
   printf ("Initial Likelihood %.4f\n", old_likelihood);
   fprintf (outfile, "Initial Likelihood %.4f\n", old_likelihood);
   while (((-1) * delta_likelihood / old_likelihood) > 0.001 && iter < 75) {
@@ -438,7 +438,7 @@ int smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
     for (i = 0; i < sqd->seq_number; i++)
       sqd->seq_w[i] = save_w[i];
 
-    sequence_d_mix_like (smo, smo_number, sqd, &likelihood);
+    ghmm_cseq_mix_like (smo, smo_number, sqd, &likelihood);
     if (smixturehmm_calc_cp (cp, sqd, smo, smo_number, &total_train_w) == -1) {
       str = mprintf (NULL, 0, "Error iteration %d\n", iter);
       mes_prot (str);

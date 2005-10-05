@@ -311,7 +311,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
   double dummy = 0.0;
 
-  sq = sequence_calloc (seq_number);
+  sq = ghmm_dseq_calloc (seq_number);
   if (!sq) {
     mes_proc ();
     goto STOP;
@@ -361,7 +361,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
     /* The first symbol chooses the start class */
     class = mo->get_class (sq->seq[n], state);
-    /*class = sequence_d_class(&dummy, 0, &osum); */ /*  dummy function */
+    /*class = ghmm_cseq_class(&dummy, 0, &osum); */ /*  dummy function */
     while (state < len) {
 
       /* Get a new state */
@@ -419,7 +419,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
       /* Decide the class for the next step */
       class = mo->get_class (sq->seq[n], state);
-      /*class = sequence_d_class(&dummy, state, &osum); */ /* dummy */
+      /*class = ghmm_cseq_class(&dummy, state, &osum); */ /* dummy */
       up = 0;
       state++;
     }                           /* while (state < len) , global_len depends on the data */
@@ -464,7 +464,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
 }                               /* data */
@@ -531,7 +531,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
   int lastStateSilent = 0;
   int matchcount = 0;
 
-  sq = sequence_calloc (seq_number);
+  sq = ghmm_dseq_calloc (seq_number);
 
   if (!sq) {
     mes_proc ();
@@ -763,7 +763,7 @@ sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
 }                               /* data */

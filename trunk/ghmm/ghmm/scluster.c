@@ -138,7 +138,7 @@ int scluster_hmm (char *argv[])
     scluster_print_header (outfile, argv);
   
   /*--- memory alloc and read data ----------------------------*/ 
-    sqd_vec = sequence_d_read (seq_file, &sqd_number);
+    sqd_vec = ghmm_cseq_read (seq_file, &sqd_number);
   if (!sqd_vec) {
     mes_proc ();
     goto STOP;
@@ -367,7 +367,7 @@ int scluster_hmm (char *argv[])
         if (iter == 1 && labels == 2) {
         for (i = 0; i < cl.smo_number; i++) {
           if (cl.smo_seq[i] != NULL)
-            sequence_d_print (stdout, cl.smo_seq[i], 0);
+            ghmm_cseq_print (stdout, cl.smo_seq[i], 0);
         }
       }
       
@@ -497,7 +497,7 @@ int scluster_t_free (scluster_t * scl)
     return (0);
   for (i = 0; i <= scl->smo_number; i++) {
     smodel_free (&(scl->smo[i]));
-    sequence_d_free (&(scl->smo_seq[i]));
+    ghmm_cseq_free (&(scl->smo_seq[i]));
   }
   printf ("hier1\n");
   m_free (scl->smo);
@@ -564,11 +564,11 @@ sprintf (filename, "%s.smo", out_filename);
   scluster_print_header (out_model, argv);
   for (i = 0; i < cl->smo_number; i++) {
     if (cl->smo_seq[i] != NULL)
-      sequence_d_print (out_model, cl->smo_seq[i], 0);
+      ghmm_cseq_print (out_model, cl->smo_seq[i], 0);
   }
   
     /* Output from all sequences in one row with clusterlabel */ 
-    /* sequence_d_print(out_model, sqd, 0); */ 
+    /* ghmm_cseq_print(out_model, sqd, 0); */ 
     
     /* Output: The number of sequences and sequence weights pro cluster,
        respektively (for the generator) */ 
@@ -620,12 +620,12 @@ int scluster_update (scluster_t * cl, sequence_d_t * sqd)
     for (i = 0; i < cl->smo_number; i++) {
     if (cl->smo_seq[i]) {
       
-        /* Important: No sequence_free here, because then the originals  will be lost. */ 
-        sequence_d_clean (cl->smo_seq[i]);
+        /* Important: No ghmm_dseq_free here, because then the originals  will be lost. */ 
+        ghmm_cseq_clean (cl->smo_seq[i]);
       m_free (cl->smo_seq[i]);
     }
     if (cl->seq_counter[i] != 0) {
-      cl->smo_seq[i] = sequence_d_calloc (cl->seq_counter[i]);
+      cl->smo_seq[i] = ghmm_cseq_calloc (cl->seq_counter[i]);
       cl->smo_seq[i]->seq_number = 0;  /* counted below */
     }
     
