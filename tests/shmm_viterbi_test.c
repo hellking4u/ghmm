@@ -39,7 +39,7 @@ static int viterbi_test(char* argv[]) {
   if (!(smo)) {mes_proc(); goto STOP;}
   
   /* read sequences */
-  sqd = sequence_d_read(argv[2], &sqd_number);
+  sqd = ghmm_cseq_read(argv[2], &sqd_number);
   if (!sqd) {mes_proc(); goto STOP;}
   
   strcpy(outfilename, argv[3]);

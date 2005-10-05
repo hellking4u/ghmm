@@ -29,27 +29,27 @@ int main()
 
     /* read double sequences (this works fine)*/
     fprintf(stderr,"reading double sequences from %s ...",double_sequences_file);
-    sqd=sequence_d_read((char*)double_sequences_file, &sqd_number);
+    sqd=ghmm_cseq_read((char*)double_sequences_file, &sqd_number);
     if (sqd==NULL) {
       test_result=1;
       fprintf(stdout, " Failed\n");
     }
     else {
       fprintf(stdout," Done\n");
-      sequence_d_free(sqd);
+      ghmm_cseq_free(sqd);
     }
 
 
      /* read int sequences (this gives a segmentation fault)*/
     fprintf(stderr,"reading int sequences from %s ...",int_sequences_file);
-    data=sequence_read((char*)int_sequences_file,&data_number);
+    data=ghmm_dseq_read((char*)int_sequences_file,&data_number);
     if (data==NULL) {
       test_result=1;
       fprintf(stdout, " Failed\n");
     }
     else {
       fprintf(stdout," Done\n");
-      sequence_free(data);
+      ghmm_dseq_free(data);
     }
     return test_result;
 #else /* GHMM_OBSOLETE */

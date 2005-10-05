@@ -465,8 +465,8 @@ static int * pviterbi_propagate_recursion (pmodel *mo, psequence * X,
      for the normal pviterbi algorithm */
   if ((double)(stop_x - start_x) * (double)(stop_y - start_y) < max_size) {
     /* to use the unchanged pviterbi algorithm take slices of the sequences */
-    psequence * tractable_X = slice_psequence(X, start_x, stop_x);
-    psequence * tractable_Y = slice_psequence(Y, start_y, stop_y);
+    psequence * tractable_X = ghmm_dpseq_slice(X, start_x, stop_x);
+    psequence * tractable_Y = ghmm_dpseq_slice(Y, start_y, stop_y);
     /* if this is not the very first path segment starting at zero:
        temporarily change the initial probabability to go into state k+1 */
 #ifdef DEBUG
@@ -719,24 +719,24 @@ static void init_phi_prop (plocal_propagate_store_t * pv, psequence * X,
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 #ifdef DEBUG
-	  int emission = pair(get_char_psequence(X, mo->s[i].alphabet, u + start_x), 
-			      get_char_psequence(Y, mo->s[i].alphabet, v),
+	  int emission = pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u + start_x), 
+			      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 	  if (emission > emission_table_size(mo, i)){
 	    printf("State %i\n", i);
 	    print_pstate(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		   get_char_psequence(X, mo->s[i].alphabet, u),
-		   get_char_psequence(Y, mo->s[i].alphabet, v),
+		   ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+		   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
 		   emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b_prop(pv, i, pair(get_char_psequence(X, 
+	  log_b_i = log_b_prop(pv, i, pair(ghmm_dpseq_get_char(X, 
 							       mo->s[i].alphabet,
 							       u + start_x),
-					   get_char_psequence(Y, 
+					   ghmm_dpseq_get_char(Y, 
 							       mo->s[i].alphabet,
 							       v),
 					   mo->size_of_alphabet[mo->s[i].alphabet],
@@ -761,8 +761,8 @@ static void init_phi_prop (plocal_propagate_store_t * pv, psequence * X,
 #ifdef DEBUG	     
 	      printf("Initial log prob state %i at (%i, %i) = %f\n", i, start_x + u, v, get_phi_prop(pv, u, v, 0, 0, i));
 	      printf("Characters emitted X: %i, Y: %i\n", 
-		     get_char_psequence(X, mo->s[i].alphabet, u + start_x),
-		     get_char_psequence(Y, mo->s[i].alphabet, v));
+		     ghmm_dpseq_get_char(X, mo->s[i].alphabet, u + start_x),
+		     ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v));
 #endif
 	    }
 	    if (get_phi_prop(pv, u, v, 0, 0, i) != 1) {
@@ -915,22 +915,22 @@ static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 #ifdef DEBUG
-	  int emission = pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-			      get_char_psequence(Y, mo->s[i].alphabet, v),
+	  int emission = pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+			      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 	  if (emission > emission_table_size(mo, i)){
 	    printf("State %i\n", i);
 	    print_pstate(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
-		   get_char_psequence(X, mo->s[i].alphabet, u),
-		   get_char_psequence(Y, mo->s[i].alphabet, v),
+		   ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
+		   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
 		   emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b_prop(pv, i, pair(get_char_psequence(X, mo->s[i].alphabet, u), 
-					   get_char_psequence(Y, mo->s[i].alphabet, v),
+	  log_b_i = log_b_prop(pv, i, pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+					   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 					   mo->size_of_alphabet[mo->s[i].alphabet],
 					   mo->s[i].offset_x, mo->s[i].offset_y));
 	  /* No maximum found (that is, state never reached)

@@ -63,9 +63,9 @@
 
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
-sequence_t **sequence_read (const char *filename, int *sq_number)
+sequence_t **ghmm_dseq_read (const char *filename, int *sq_number)
 {
-#define CUR_PROC "sequence_read"
+#define CUR_PROC "ghmm_dseq_read"
   int i;
   sequence_t **sequence = NULL;
   scanner_t *s = NULL;
@@ -86,7 +86,7 @@ sequence_t **sequence_read (const char *filename, int *sq_number)
       (*sq_number)++;
       /* more mem */
       ARRAY_REALLOC (sequence, *sq_number);
-      sequence[*sq_number - 1] = sequence_read_alloc (s);
+      sequence[*sq_number - 1] = ghmm_dseq_read_alloc (s);
       if (!sequence[*sq_number - 1]) {
         mes_proc ();
         goto STOP;
@@ -108,7 +108,7 @@ sequence_t **sequence_read (const char *filename, int *sq_number)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free (&s);
   for (i = 0; i < *sq_number; i++)
-    sequence_free (&(sequence[i]));
+    ghmm_dseq_free (&(sequence[i]));
   m_free (sequence);
   *sq_number = 0;
   return NULL;
@@ -116,9 +116,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*============================================================================*/
-sequence_t *sequence_read_alloc (scanner_t * s)
+sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
 {
-#define CUR_PROC "sequence_read_alloc"
+#define CUR_PROC "ghmm_dseq_read_alloc"
   int symbols = 0, lexWord = 0;
   sequence_t *sq = NULL;
   int seq_len_lex = 0;
@@ -257,7 +257,7 @@ sequence_t *sequence_read_alloc (scanner_t * s)
           ("Values for seq. length or number of symbols not spezified");
         goto STOP;
       }
-      sq = sequence_lexWords (seq_len_lex, symbols);
+      sq = ghmm_dseq_lexWords (seq_len_lex, symbols);
       if (!sq)
         goto STOP;
     }                           /*if (!strcmp(s->id, "L")) */
@@ -274,16 +274,16 @@ sequence_t *sequence_read_alloc (scanner_t * s)
     goto STOP;
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return (NULL);
 #undef CUR_PROC
-}                               /* sequence_read_alloc */
+}                               /* ghmm_dseq_read_alloc */
 
 /*============================================================================*/
 
-sequence_d_t **sequence_d_read (const char *filename, int *sqd_number)
+sequence_d_t **ghmm_cseq_read (const char *filename, int *sqd_number)
 {
-#define CUR_PROC "sequence_d_read"
+#define CUR_PROC "ghmm_cseq_read"
   int i;
   scanner_t *s = NULL;
   sequence_d_t **sequence = NULL;
@@ -304,7 +304,7 @@ sequence_d_t **sequence_d_read (const char *filename, int *sqd_number)
       (*sqd_number)++;
       /* more mem */
       ARRAY_REALLOC (sequence, *sqd_number);
-      sequence[*sqd_number - 1] = sequence_d_read_alloc (s);
+      sequence[*sqd_number - 1] = ghmm_cseq_read_alloc (s);
       if (!sequence[*sqd_number - 1]) {
         mes_proc ();
         goto STOP;
@@ -324,19 +324,19 @@ sequence_d_t **sequence_d_read (const char *filename, int *sqd_number)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free (&s);
   for (i = 0; i < *sqd_number; i++)
-    sequence_d_free (&(sequence[i]));
+    ghmm_cseq_free (&(sequence[i]));
   m_free (sequence);
   *sqd_number = 0;
   
   
   return NULL;
 #undef CUR_PROC
-}                               /* sequence_d_read */
+}                               /* ghmm_cseq_read */
 
 /*============================================================================*/
-sequence_d_t *sequence_d_read_alloc (scanner_t * s)
+sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
 {
-#define CUR_PROC "sequence_d_read_alloc"
+#define CUR_PROC "ghmm_cseq_read_alloc"
   sequence_d_t *sqd = NULL;
   ARRAY_CALLOC (sqd, 1);
   scanner_consume (s, '{');
@@ -442,10 +442,10 @@ sequence_d_t *sequence_d_read_alloc (scanner_t * s)
     goto STOP;
   return (sqd);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_d_free (&sqd);
+  ghmm_cseq_free (&sqd);
   return (NULL);
 #undef CUR_PROC
-}                               /* sequence_d_read_alloc */
+}                               /* ghmm_cseq_read_alloc */
 #endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
@@ -457,10 +457,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    trunc_ratio -1: 100 % truncation
 */
 
-sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
+sequence_d_t **ghmm_cseq_truncate (sequence_d_t ** sqd_in, int sqd_fields,
                                     double trunc_ratio, int seed)
 {
-#define CUR_PROC "sequence_d_truncate"
+#define CUR_PROC "ghmm_cseq_truncate"
   sequence_d_t **sq;
   int i, j, trunc_len;
   /* Hack, use -1 for complete truncation */
@@ -474,7 +474,7 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
   GHMM_RNG_SET (RNG, seed);
 
   for (i = 0; i < sqd_fields; i++) {
-    sq[i] = sequence_d_calloc (sqd_in[i]->seq_number);
+    sq[i] = ghmm_cseq_calloc (sqd_in[i]->seq_number);
     sq[i]->total_w = sqd_in[i]->total_w;
     for (j = 0; j < sqd_in[i]->seq_number; j++) {
       ARRAY_CALLOC (sq[i]->seq[j], sqd_in[i]->seq_len[j]);
@@ -484,7 +484,7 @@ sequence_d_t **sequence_d_truncate (sequence_d_t ** sqd_in, int sqd_fields,
       else
         trunc_len = (int) ceil ((sqd_in[i]->seq_len[j] *
                                  (1 - trunc_ratio * GHMM_RNG_UNIFORM (RNG))));
-      sequence_d_copy (sq[i]->seq[j], sqd_in[i]->seq[j], trunc_len);
+      ghmm_cseq_copy (sq[i]->seq[j], sqd_in[i]->seq[j], trunc_len);
       ARRAY_REALLOC (sq[i]->seq[j], trunc_len);
       sq[i]->seq_len[j] = trunc_len;
 #ifdef GHMM_OBSOLETE
@@ -502,7 +502,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*============================================================================*/
-sequence_d_t *sequence_d_calloc (long seq_number)
+sequence_d_t *ghmm_cseq_calloc (long seq_number)
 {
 #define CUR_PROC "sequence_dcalloc"
   int i;
@@ -537,15 +537,15 @@ sequence_d_t *sequence_d_calloc (long seq_number)
 
   return sqd;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_d_free (&sqd);
+  ghmm_cseq_free (&sqd);
   return NULL;
 #undef CUR_PROC
-}                               /* sequence_d_calloc */
+}                               /* ghmm_cseq_calloc */
 
 /*============================================================================*/
-sequence_t *sequence_calloc (long seq_number)
+sequence_t *ghmm_dseq_calloc (long seq_number)
 {
-#define CUR_PROC "sequence_calloc"
+#define CUR_PROC "ghmm_dseq_calloc"
   int i;
   sequence_t *sq = NULL;
   if (seq_number > MAX_SEQ_NUMBER) {
@@ -575,17 +575,17 @@ sequence_t *sequence_calloc (long seq_number)
   }
   return sq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return NULL;
 #undef CUR_PROC
-}                               /* sequence_calloc */
+}                               /* ghmm_dseq_calloc */
 
 /*============================================================================*/
 
-sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index)
+sequence_d_t *ghmm_cseq_get_singlesequence(sequence_d_t *sq, int index)
 {
   sequence_d_t *res;
-  res = sequence_d_calloc(1);
+  res = ghmm_cseq_calloc(1);
   
   res->seq[0] = sq->seq[index];
   res->seq_len[0] = sq->seq_len[index];
@@ -600,11 +600,11 @@ sequence_d_t *sequence_d_get_singlesequence(sequence_d_t *sq, int index)
   
 }
 
-sequence_t *sequence_get_singlesequence(sequence_t *sq, int index)
+sequence_t *ghmm_dseq_get_singlesequence(sequence_t *sq, int index)
 {
-#define CUR_PROC "sequence_get_singlesequence"
+#define CUR_PROC "ghmm_dseq_get_singlesequence"
   sequence_t *res;
-  res = sequence_calloc(1);
+  res = ghmm_dseq_calloc(1);
   if (!res) goto STOP;
   
   res->seq[0] = sq->seq[index];
@@ -629,9 +629,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 /*XXX TEST: frees everything but the seq field */
-int sequence_subseq_free (sequence_t ** sq)
+int ghmm_dseq_subseq_free (sequence_t ** sq)
 {
-# define CUR_PROC "sequence_subseq_free"
+# define CUR_PROC "ghmm_dseq_subseq_free"
   /*int i,j;*/
 
   mes_check_ptr (sq, return (-1));
@@ -661,16 +661,16 @@ int sequence_subseq_free (sequence_t ** sq)
   m_free (*sq);
   return 0;
 # undef CUR_PROC
-}                               /* sequence_subseq_free */
+}                               /* ghmm_dseq_subseq_free */
 
 
-int sequence_d_subseq_free (sequence_d_t ** sqd)
+int ghmm_cseq_subseq_free (sequence_d_t ** sqd)
 {
-# define CUR_PROC "sequence_d_subseq_free"
+# define CUR_PROC "ghmm_cseq_subseq_free"
   mes_check_ptr (sqd, return (-1));
 
 
-  /* sequence_d_print(stdout,*sqd,0);*/
+  /* ghmm_cseq_print(stdout,*sqd,0);*/
   m_free ((*sqd)->seq);
   m_free ((*sqd)->seq_len);
 #ifdef GHMM_OBSOLETE
@@ -681,14 +681,14 @@ int sequence_d_subseq_free (sequence_d_t ** sqd)
   m_free (*sqd);
   return 0;
 # undef CUR_PROC
-}   /* sequence_d_subseq_free */
+}   /* ghmm_cseq_subseq_free */
 
 
 
 /*============================================================================*/
-sequence_t *sequence_lexWords (int n, int M)
+sequence_t *ghmm_dseq_lexWords (int n, int M)
 {
-# define CUR_PROC "sequence_lexWords"
+# define CUR_PROC "ghmm_dseq_lexWords"
 
   sequence_t *sq = NULL;
   long seq_number, cnt = 0;
@@ -700,7 +700,7 @@ sequence_t *sequence_lexWords (int n, int M)
     goto STOP;
   }
   seq_number = (long) pow ((double) M, (double) n);
-  sq = sequence_calloc (seq_number);
+  sq = ghmm_dseq_calloc (seq_number);
   if (!sq) {
     mes_proc ();
     goto STOP;
@@ -713,7 +713,7 @@ sequence_t *sequence_lexWords (int n, int M)
 
   ARRAY_CALLOC (seq, n);
   while (!(j < 0)) {
-    sequence_copy (sq->seq[cnt], seq, n);
+    ghmm_dseq_copy (sq->seq[cnt], seq, n);
     j = n - 1;
     while (seq[j] == M - 1) {
       seq[j] = 0;
@@ -725,13 +725,13 @@ sequence_t *sequence_lexWords (int n, int M)
   m_free (seq);
   return sq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return NULL;
 # undef CUR_PROC
 }                               /* sequence_lewWords */
 
 /*============================================================================*/
-int sequence_max_symbol (sequence_t * sq)
+int ghmm_dseq_max_symbol (sequence_t * sq)
 {
   long i, j;
   int max_symb = -1;
@@ -741,30 +741,30 @@ int sequence_max_symbol (sequence_t * sq)
         max_symb = sq->seq[i][j];
     }
   return max_symb;
-}                               /* sequence_max_symbol */
+}                               /* ghmm_dseq_max_symbol */
 
 /*============================================================================*/
-void sequence_copy (int *target, int *source, int len)
+void ghmm_dseq_copy (int *target, int *source, int len)
 {
   int i;
   for (i = 0; i < len; i++)
     target[i] = source[i];
-}                               /* sequence_copy */
+}                               /* ghmm_dseq_copy */
 
 
 /*============================================================================*/
-void sequence_d_copy (double *target, double *source, int len)
+void ghmm_cseq_copy (double *target, double *source, int len)
 {
   int i;
   for (i = 0; i < len; i++)
     target[i] = source[i];
-}                               /* sequence_copy */
+}                               /* ghmm_dseq_copy */
 
 
 /*============================================================================*/
-int sequence_add (sequence_t * target, sequence_t * source)
+int ghmm_dseq_add (sequence_t * target, sequence_t * source)
 {
-#define CUR_PROC "sequence_add"
+#define CUR_PROC "ghmm_dseq_add"
 
   int res = -1;
   int **old_seq = target->seq;
@@ -804,12 +804,12 @@ int sequence_add (sequence_t * target, sequence_t * source)
   for (i = 0; i < (target->seq_number - old_seq_number); i++) {
     ARRAY_CALLOC (target->seq[i + old_seq_number], source->seq_len[i]);
 
-    sequence_copy (target->seq[i + old_seq_number], source->seq[i],
+    ghmm_dseq_copy (target->seq[i + old_seq_number], source->seq[i],
                    source->seq_len[i]);
 
     /*ARRAY_CALLOC (target->states[i+old_seq_number], source->seq_len[i]); */
 
-    /* sequence_copy(target->states[i+old_seq_number], source->states[i], 
+    /* ghmm_dseq_copy(target->states[i+old_seq_number], source->states[i], 
        source->seq_len[i]); */
 
     target->seq_len[i + old_seq_number] = source->seq_len[i];
@@ -837,9 +837,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
+int ghmm_cseq_add (sequence_d_t * target, sequence_d_t * source)
 {
-#define CUR_PROC "sequence_d_add"
+#define CUR_PROC "ghmm_cseq_add"
 
   int res = -1;
   double **old_seq = target->seq;
@@ -876,7 +876,7 @@ int sequence_d_add (sequence_d_t * target, sequence_d_t * source)
   for (i = 0; i < (target->seq_number - old_seq_number); i++) {
     ARRAY_CALLOC (target->seq[i + old_seq_number], source->seq_len[i]);
 
-    sequence_d_copy (target->seq[i + old_seq_number], source->seq[i],
+    ghmm_cseq_copy (target->seq[i + old_seq_number], source->seq[i],
                      source->seq_len[i]);
     target->seq_len[i + old_seq_number] = source->seq_len[i];
 #ifdef GHMM_OBSOLETE
@@ -901,9 +901,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*============================================================================*/
-int sequence_check (sequence_t * sq, int max_symb)
+int ghmm_dseq_check (sequence_t * sq, int max_symb)
 {
-#define CUR_PROC "sequence_check"
+#define CUR_PROC "ghmm_dseq_check"
   int i, j;
   for (j = 0; j < sq->seq_number; j++) {
     for (i = 0; i < sq->seq_len[j]; i++) {
@@ -920,10 +920,10 @@ int sequence_check (sequence_t * sq, int max_symb)
   }
   return 0;
 #undef CUR_PROC
-}                               /* sequence_check */
+}                               /* ghmm_dseq_check */
 
 /*============================================================================*/
-int sequence_best_model (model ** mo, int model_number, int *sequence,
+int ghmm_dseq_best_model (model ** mo, int model_number, int *sequence,
                          int seq_len, double *log_p)
 {
 # define CUR_PROC "seqence_best_model"
@@ -942,11 +942,11 @@ int sequence_best_model (model ** mo, int model_number, int *sequence,
     *log_p = +1;
   return (model_index);
 # undef CUR_PROC
-}                               /* sequence_best_model */
+}                               /* ghmm_dseq_best_model */
 
 
 /*============================================================================*/
-void sequence_print (FILE * file, sequence_t * sq)
+void ghmm_dseq_print (FILE * file, sequence_t * sq)
 {
   int i, j;
   fprintf (file, "SEQ = {\n\tO = {\n");
@@ -968,10 +968,10 @@ void sequence_print (FILE * file, sequence_t * sq)
     fprintf (file, ";\n");
   }
   fprintf (file, "\t};\n};\n\n");
-}                               /* sequence_print */
+}                               /* ghmm_dseq_print */
 
 /*============================================================================*/
- /**/ void sequence_print_xml (FILE * file, sequence_t * sq)
+ /**/ void ghmm_dseq_print_xml (FILE * file, sequence_t * sq)
 {
   int i, j;
   /* coding missing */
@@ -995,9 +995,9 @@ void sequence_print (FILE * file, sequence_t * sq)
   }
   fprintf (file, " </DiscretePD>\n");
   fprintf (file, "</Sequences>\n");
-}                               /* sequence_print_xml */
+}                               /* ghmm_dseq_print_xml */
 
-void sequence_d_print_xml (FILE * file, sequence_d_t * sq)
+void ghmm_cseq_print_xml (FILE * file, sequence_d_t * sq)
 {
   int i, j;
   /* coding missing */
@@ -1021,11 +1021,11 @@ void sequence_d_print_xml (FILE * file, sequence_d_t * sq)
   }
   fprintf (file, " </DiscretePD>\n");
   fprintf (file, "</Sequences>\n");
-}                               /* sequence_print_xml */
+}                               /* ghmm_dseq_print_xml */
 
 /*============================================================================*/
 
-void sequence_mathematica_print (FILE * file, sequence_t * sq, char *name)
+void ghmm_dseq_mathematica_print (FILE * file, sequence_t * sq, char *name)
 {
   int i;
   fprintf (file, "%s = {\n", name);
@@ -1035,11 +1035,11 @@ void sequence_mathematica_print (FILE * file, sequence_t * sq, char *name)
   vector_i_print (file, sq->seq[sq->seq_number - 1],
                   sq->seq_len[sq->seq_number - 1], "{", ",", "}");
   fprintf (file, "};\n");
-}                               /* sequence_d_mathematica_print */
+}                               /* ghmm_cseq_mathematica_print */
 
 /*============================================================================*/
 
-void sequence_d_gnu_print (FILE * file, sequence_d_t * sqd)
+void ghmm_cseq_gnu_print (FILE * file, sequence_d_t * sqd)
 {
   int i, j;
   for (i = 0; i < sqd->seq_number; i++) {
@@ -1050,7 +1050,7 @@ void sequence_d_gnu_print (FILE * file, sequence_d_t * sqd)
 }
 
 /*============================================================================*/
-void sequence_d_print (FILE * file, sequence_d_t * sqd, int discrete)
+void ghmm_cseq_print (FILE * file, sequence_d_t * sqd, int discrete)
 {
   int i, j;
   fprintf (file, "SEQD = {\n\tO = {\n");
@@ -1087,11 +1087,11 @@ void sequence_d_print (FILE * file, sequence_d_t * sqd, int discrete)
     fprintf (file, ";\n");
   }
   fprintf (file, "\t};\n};\n\n");
-}                               /* sequence_print */
+}                               /* ghmm_dseq_print */
 
 /*============================================================================*/
 
-void sequence_d_mathematica_print (FILE * file, sequence_d_t * sqd,
+void ghmm_cseq_mathematica_print (FILE * file, sequence_d_t * sqd,
                                    char *name)
 {
   int i;
@@ -1102,10 +1102,10 @@ void sequence_d_mathematica_print (FILE * file, sequence_d_t * sqd,
   vector_d_print (file, sqd->seq[sqd->seq_number - 1],
                   sqd->seq_len[sqd->seq_number - 1], "{", ",", "}");
   fprintf (file, "};\n");
-}                               /* sequence_d_mathematica_print */
+}                               /* ghmm_cseq_mathematica_print */
 
 /*============================================================================*/
-void sequence_clean (sequence_t * sq)
+void ghmm_dseq_clean (sequence_t * sq)
 {
   /* keep data, only delete references */
   m_free (sq->seq);
@@ -1118,10 +1118,10 @@ void sequence_clean (sequence_t * sq)
   /* m_free(sq->states);*/
   sq->seq_number = 0;
   sq->total_w = 0.0;
-}                               /* sequence_clean */
+}                               /* ghmm_dseq_clean */
 
 /*============================================================================*/
-void sequence_d_clean (sequence_d_t * sqd)
+void ghmm_cseq_clean (sequence_d_t * sqd)
 {
   /* keep data, only delete references */
   m_free (sqd->seq);
@@ -1133,12 +1133,12 @@ void sequence_d_clean (sequence_d_t * sqd)
   m_free (sqd->seq_w);
   sqd->seq_number = 0;
   sqd->total_w = 0.0;
-}                               /* sequence_d_clean */
+}                               /* ghmm_cseq_clean */
 
 /*============================================================================*/
-int sequence_free (sequence_t ** sq)
+int ghmm_dseq_free (sequence_t ** sq)
 {
-# define CUR_PROC "sequence_free"
+# define CUR_PROC "ghmm_dseq_free"
   /*int i,j;*/
 
   mes_check_ptr (sq, return (-1));
@@ -1153,7 +1153,7 @@ int sequence_free (sequence_t ** sq)
 
   /* matrix_i_free also takes care of  (*sq)->seq */
   if (matrix_i_free (&(*sq)->seq, (*sq)->seq_number) == -1) {
-    printf ("Error in sequence_free !\n");
+    printf ("Error in ghmm_dseq_free !\n");
   }
 
   /* XXX The allocation of state must be fixed XXX*/
@@ -1186,15 +1186,15 @@ int sequence_free (sequence_t ** sq)
   m_free (*sq);
   return 0;
 # undef CUR_PROC
-}                               /* sequence_free */
+}                               /* ghmm_dseq_free */
 
 
 /*============================================================================*/
-int sequence_d_free (sequence_d_t ** sqd)
+int ghmm_cseq_free (sequence_d_t ** sqd)
 {
-# define CUR_PROC "sequence_d_free"
+# define CUR_PROC "ghmm_cseq_free"
   mes_check_ptr (sqd, return (-1));
-  /* sequence_d_print(stdout,*sqd,0);*/
+  /* ghmm_cseq_print(stdout,*sqd,0);*/
 
   matrix_d_free (&(*sqd)->seq, (*sqd)->seq_number);
   m_free ((*sqd)->seq_len);
@@ -1206,15 +1206,15 @@ int sequence_d_free (sequence_d_t ** sqd)
   m_free (*sqd);
   return 0;
 # undef CUR_PROC
-}                               /* sequence_d_free */
+}                               /* ghmm_cseq_free */
 
 /*============================================================================*/
-sequence_d_t *sequence_d_create_from_sq (const sequence_t * sq)
+sequence_d_t *ghmm_cseq_create_from_dseq (const sequence_t * sq)
 {
-# define CUR_PROC "sequence_d_create_from_sq"
+# define CUR_PROC "ghmm_cseq_create_from_dseq"
   int j, i;
   sequence_d_t *sqd = NULL;     /* target seq. array */
-  if (!(sqd = sequence_d_calloc (sq->seq_number))) {
+  if (!(sqd = ghmm_cseq_calloc (sq->seq_number))) {
     mes_proc ();
     goto STOP;
   }
@@ -1233,18 +1233,18 @@ sequence_d_t *sequence_d_create_from_sq (const sequence_t * sq)
   sqd->total_w = sq->total_w;
   return (sqd);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_d_free (&sqd);
+  ghmm_cseq_free (&sqd);
   return NULL;
 #undef CUR_PROC
-}                               /* sequence_d_create_from_sq */
+}                               /* ghmm_cseq_create_from_dseq */
 
 /*============================================================================*/
-sequence_t *sequence_create_from_sqd (const sequence_d_t * sqd)
+sequence_t *ghmm_dseq_create_from_cseq (const sequence_d_t * sqd)
 {
-# define CUR_PROC "sequence_create_from_sqd"
+# define CUR_PROC "ghmm_dseq_create_from_cseq"
   int j, i;
   sequence_t *sq = NULL;        /* target seq. array */
-  if (!(sq = sequence_calloc (sqd->seq_number))) {
+  if (!(sq = ghmm_dseq_calloc (sqd->seq_number))) {
     mes_proc ();
     goto STOP;
   }
@@ -1264,44 +1264,44 @@ sequence_t *sequence_create_from_sqd (const sequence_d_t * sqd)
   sq->total_w = sqd->total_w;
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_free (&sq);
+  ghmm_dseq_free (&sq);
   return NULL;
 #undef CUR_PROC
-}                               /* sequence_create_from_sqd */
+}                               /* ghmm_dseq_create_from_cseq */
 
 /*============================================================================*/
 
-int sequence_max_len (const sequence_t * sqd)
+int ghmm_dseq_max_len (const sequence_t * sqd)
 {
   int i, max_len = 0;
   for (i = 0; i < sqd->seq_number; i++)
     if (max_len < sqd->seq_len[i])
       max_len = sqd->seq_len[i];
   return max_len;
-}                               /* sequence_max_len */
+}                               /* ghmm_dseq_max_len */
 
 
 /*============================================================================*/
 
-int sequence_d_max_len (const sequence_d_t * sqd)
+int ghmm_cseq_max_len (const sequence_d_t * sqd)
 {
   int i, max_len = 0;
   for (i = 0; i < sqd->seq_number; i++)
     if (max_len < sqd->seq_len[i])
       max_len = sqd->seq_len[i];
   return max_len;
-}                               /* sequence_d_max_len */
+}                               /* ghmm_cseq_max_len */
 
 /*============================================================================*/
 
-sequence_d_t *sequence_d_mean (const sequence_d_t * sqd)
+sequence_d_t *ghmm_cseq_mean (const sequence_d_t * sqd)
 {
-# define CUR_PROC "sequence_d_mean"
+# define CUR_PROC "ghmm_cseq_mean"
   int i, j, max_len;
   sequence_d_t *out_sqd = NULL;
 
-  max_len = sequence_d_max_len (sqd);
-  if (!(out_sqd = sequence_d_calloc (1))) {
+  max_len = ghmm_cseq_max_len (sqd);
+  if (!(out_sqd = ghmm_cseq_calloc (1))) {
     mes_proc ();
     goto STOP;
   }
@@ -1317,20 +1317,20 @@ sequence_d_t *sequence_d_mean (const sequence_d_t * sqd)
 
   return out_sqd;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_d_free (&out_sqd);
+  ghmm_cseq_free (&out_sqd);
   return NULL;
 # undef CUR_PROC
-}                               /* sequence_d_mean */
+}                               /* ghmm_cseq_mean */
 
 /*============================================================================*/
 
-double **sequence_d_scatter_matrix (const sequence_d_t * sqd, int *dim)
+double **ghmm_cseq_scatter_matrix (const sequence_d_t * sqd, int *dim)
 {
-# define CUR_PROC "sequence_d_scatter_matrix"
+# define CUR_PROC "ghmm_cseq_scatter_matrix"
   int *count, k, l, i, j;
   double **W, *mean;
 
-  *dim = sequence_d_max_len (sqd);
+  *dim = ghmm_cseq_max_len (sqd);
   if (!(W = matrix_d_alloc (*dim, *dim))) {
     mes_proc ();
     goto STOP;
@@ -1370,18 +1370,18 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&W, *dim);
   return NULL;
 # undef CUR_PROC
-}                               /* sequence_d_scatter_matrix */
+}                               /* ghmm_cseq_scatter_matrix */
 
 /*============================================================================*/
 /* dummy function at the moment */
 
-int sequence_d_class (const double *O, int index, double *osum)
+int ghmm_cseq_class (const double *O, int index, double *osum)
 {
-#define CUR_PROC "sequence_d_class"
+#define CUR_PROC "ghmm_cseq_class"
 
   return 0;
 # undef CUR_PROC
-}                               /* sequence_d_class */
+}                               /* ghmm_cseq_class */
 
 /*============================================================================*/
 
@@ -1390,10 +1390,10 @@ int sequence_d_class (const double *O, int index, double *osum)
    into the train_set and test_set resp.
 */
 
-int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
+int ghmm_cseq_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
                           sequence_d_t * sqd_test, double train_ratio)
 {
-#define CUR_PROC "sequence_d_partition"
+#define CUR_PROC "ghmm_cseq_partition"
 
   double p;
   sequence_d_t *sqd_dummy = NULL;
@@ -1428,7 +1428,7 @@ int sequence_d_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
     cur_number = sqd_dummy->seq_number;
     ARRAY_CALLOC (sqd_dummy->seq[cur_number], sqd->seq_len[i]);
     /* copy all entries */
-    sequence_d_copy_all (sqd_dummy, cur_number, sqd, i);
+    ghmm_cseq_copy_all (sqd_dummy, cur_number, sqd, i);
     sqd_dummy->seq_number++;
   }
 
@@ -1453,11 +1453,11 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-void sequence_d_copy_all (sequence_d_t * target, long t_num,
+void ghmm_cseq_copy_all (sequence_d_t * target, long t_num,
                           sequence_d_t * source, long s_num)
 {
 
-  sequence_d_copy (target->seq[t_num], source->seq[s_num],
+  ghmm_cseq_copy (target->seq[t_num], source->seq[s_num],
                    source->seq_len[s_num]);
   target->seq_len[t_num] = source->seq_len[s_num];
 #ifdef GHMM_OBSOLETE
@@ -1473,10 +1473,10 @@ void sequence_d_copy_all (sequence_d_t * target, long t_num,
    sum_k w^k log( sum_c (alpha_c p(O^k | lambda_c)))
 */
 
-int sequence_d_mix_like (smodel ** smo, int smo_number, sequence_d_t * sqd,
+int ghmm_cseq_mix_like (smodel ** smo, int smo_number, sequence_d_t * sqd,
                          double *like)
 {
-#define CUR_PROC "sequence_d_mix_like"
+#define CUR_PROC "ghmm_cseq_mix_like"
   int i, k, error_seqs = 0;
   double seq_like = 0.0, log_p;
 
@@ -1502,4 +1502,4 @@ int sequence_d_mix_like (smodel ** smo, int smo_number, sequence_d_t * sqd,
   return error_seqs;
 
 #undef CUR_PROC
-}                               /* sequence_d_mix_like */
+}                               /* ghmm_cseq_mix_like */

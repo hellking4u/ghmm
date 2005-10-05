@@ -81,7 +81,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
 /*----------------------------------------------------------------------------*/
 
   /* Allocate memory and read in data: Sequences and initial model */
-  sq_vec = sequence_read (seq_file, &sq_number);
+  sq_vec = ghmm_dseq_read (seq_file, &sq_number);
   if (!sq_vec[0]) {
     mes_proc ();
     goto STOP;
@@ -91,7 +91,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
                       Only first array is used for clustering\n");
   sq = sq_vec[0];
   fprintf (outfile, "Cluster Sequences\n");
-  sequence_print (outfile, sq);
+  ghmm_dseq_print (outfile, sq);
   cl.mo = model_read (mo_file, &cl.mo_number);
   if (!cl.mo) {
     mes_proc ();
@@ -121,14 +121,14 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
     fprintf (outfile, "\nSequence, Best Model, logP of generating Seq.:\n");
     for (j = 0; j < sq->seq_number; j++) {
       sq->seq_label[j] =
-        sequence_best_model (cl.mo, cl.mo_number, sq->seq[j], sq->seq_len[j],
+        ghmm_dseq_best_model (cl.mo, cl.mo_number, sq->seq[j], sq->seq_len[j],
                              &log_p);
       fprintf (outfile, "seq %ld, mo %ld, log p %.4f\n", j,
                sq->seq_label[j], log_p);
       if (sq->seq_label[j] == -1 || sq->seq_label[j] >= cl.mo_number) {
         /* No model fits! */
         char *str =
-          mprintf (NULL, 0, "Seq. %ld: sequence_best_model gives %d\n",
+          mprintf (NULL, 0, "Seq. %ld: ghmm_dseq_best_model gives %d\n",
                    j, sq->seq_label[j]);
         mes_prot (str);
         m_free (str);
@@ -198,12 +198,12 @@ int cluster_update (cluster_t * cl, sequence_t * sq)
   /* allocate memory block for block */
   for (i = 0; i < cl->mo_number; i++) {
     if (cl->mo_seq[i]) {
-      /* Important: No sequence_free here, otherwise are the original 
+      /* Important: No ghmm_dseq_free here, otherwise are the original 
          sequences gone! */
-      sequence_clean (cl->mo_seq[i]);
+      ghmm_dseq_clean (cl->mo_seq[i]);
       m_free (cl->mo_seq[i]);
     }
-    cl->mo_seq[i] = sequence_calloc (seq_counter[i]);
+    cl->mo_seq[i] = ghmm_dseq_calloc (seq_counter[i]);
     cl->mo_seq[i]->seq_number = 0;      /* Counted later */
   }
   /* Set entries */
@@ -309,7 +309,7 @@ int cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
     model_print (outfile, cl->mo[i]);
 
   res = 0;
-  sequence_d_free (&sqd);
+  ghmm_cseq_free (&sqd);
   return (res);
 #undef CUR_PROC
 }                               /* cluster_out */

@@ -37,7 +37,7 @@ static int smix_hmm_run(int argc, char* argv[]) {
   FILE *outfile = NULL;
 
   /* read sequences and initial models */
-  sqd = sequence_d_read(argv[1], &sqd_fields);
+  sqd = ghmm_cseq_read(argv[1], &sqd_fields);
   if (!sqd) {mes_proc(); goto STOP;}
   if (sqd_fields > 1)
     printf("Warning: Seq. File contains multiple Seq. Fields; use only the first one\n");

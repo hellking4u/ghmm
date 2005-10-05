@@ -96,10 +96,10 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
   if (len <= 0)
     /* no global length; model should have a final state */
     len = (int) MAX_SEQ_LEN;
-  max_short_len = sequence_d_max_len (sqd_short);
+  max_short_len = ghmm_cseq_max_len (sqd_short);
 
   /*---------------alloc-------------------------------------------------*/
-  sq = sequence_d_calloc (sqd_short->seq_number);
+  sq = ghmm_cseq_calloc (sqd_short->seq_number);
   if (!sq) {
     mes_proc ();
     goto STOP;
@@ -123,7 +123,7 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
       mes_prot ("Error: given sequence is too long\n");
       goto STOP;
     }
-    sequence_d_copy (sq->seq[n], sqd_short->seq[n], short_len);
+    ghmm_cseq_copy (sq->seq[n], sqd_short->seq[n], short_len);
 #ifdef GHMM_OBSOLETE
     sq->seq_label[n] = sqd_short->seq_label[n];
 #endif /* GHMM_OBSOLETE */
@@ -318,7 +318,7 @@ sequence_d_t *sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
   return sq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   matrix_d_free (&alpha, max_short_len);
-  sequence_d_free (&sq);
+  ghmm_cseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
 }                               /* sgenerate_extensions */
@@ -346,7 +346,7 @@ double *sgenerate_single_ext (smodel * smo, double *O, const int len,
   ARRAY_CALLOC (new_O, (int) MAX_SEQ_LEN);
   ARRAY_CALLOC (scale, len);
   ARRAY_CALLOC (initial_distribution, smo->N);
-  sequence_d_copy (new_O, O, len);
+  ghmm_cseq_copy (new_O, O, len);
   *new_len = len;
   /* Initial Distribution ???
      Pi(i) = alpha_t(i)/P(O|lambda) */

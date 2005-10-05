@@ -21,7 +21,7 @@ void sequence_alloc_print(void)
   sequence_t* seq_array;
   int i;
 
-  seq_array= sequence_calloc(1);
+  seq_array= ghmm_dseq_calloc(1);
   seq_array->seq_len[0]=10;
 #ifdef GHMM_OBSOLETE
   seq_array->seq_label[0]=100;
@@ -32,9 +32,9 @@ void sequence_alloc_print(void)
   for (i=0; i<seq_array->seq_len[0]; i++)
     seq_array->seq[0][i]=1;
 
-  sequence_print_xml(stdout,seq_array);
+  ghmm_dseq_print_xml(stdout,seq_array);
 
-  sequence_free(&seq_array);
+  ghmm_dseq_free(&seq_array);
 }
 
 int main()

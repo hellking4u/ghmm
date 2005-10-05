@@ -402,14 +402,14 @@
    @param filename    input filename
    @param seq\_arrays number of sequence arrays read
 */
-  sequence_t **sequence_read (const char *filename, int *seq_arrays);
+  sequence_t **ghmm_dseq_read (const char *filename, int *seq_arrays);
 
 /**
    Reading of one integer sequence field. Memory alloc here.
    @param s scanner
    @return array of sequences
 */
-  sequence_t *sequence_read_alloc (scanner_t * s);
+  sequence_t *ghmm_dseq_read_alloc (scanner_t * s);
 
 /**
    Reads one or several arrays of double sequences. 
@@ -418,14 +418,14 @@
    @return pointer to sequence array
    @param filename    input filename
 */
-  sequence_d_t **sequence_d_read (const char *filename, int *sqd_number);
+  sequence_d_t **ghmm_cseq_read (const char *filename, int *sqd_number);
 
 /**
    Reading of one double sequence field. Memory alloc here.
    @param s scanner
    @return array of sequences
 */
-  sequence_d_t *sequence_d_read_alloc (scanner_t * s);
+  sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s);
 
 
 

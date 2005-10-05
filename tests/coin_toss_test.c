@@ -64,9 +64,9 @@ int single_state_coin_toss()
   model_B_print(stdout,&my_model,""," ","\n");
 
   my_output=model_generate_sequences(&my_model,0,10,10,100);
-  sequence_print(stdout,my_output);
+  ghmm_dseq_print(stdout,my_output);
 
-  sequence_free(&my_output);
+  ghmm_dseq_free(&my_output);
   return 0;
 }
 
@@ -133,7 +133,7 @@ int two_states_coin_toss()
   model_B_print(stdout,&my_model,""," ","\n");
 
   my_output=model_generate_sequences(&my_model,0,10,10,100);
-  sequence_print(stdout,my_output);
+  ghmm_dseq_print(stdout,my_output);
 
   /* try viterbi algorithm in a clear situation */
   viterbi_path = ghmm_d_viterbi(&my_model, my_output->seq[0],
@@ -180,7 +180,7 @@ int two_states_coin_toss()
   fprintf(stdout,"log-p of this sequence (forward algorithm): %f\n",log_p_forward);
   
   /* clean up */
-  sequence_free(&my_output);
+  ghmm_dseq_free(&my_output);
   free(viterbi_path);
   stat_matrix_d_free(&forward_alpha);
   return 0;

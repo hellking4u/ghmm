@@ -46,8 +46,8 @@
 int lt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   /* cast the user data */
   threshold_user_data * td = (threshold_user_data *)user_data;
-  if (get_double_psequence(X, td->seq_index, index_x + td->offset_x) + 
-      get_double_psequence(Y, td->seq_index, index_y + td->offset_y) < 
+  if (ghmm_dpseq_get_double (X, td->seq_index, index_x + td->offset_x) + 
+      ghmm_dpseq_get_double (Y, td->seq_index, index_y + td->offset_y) < 
       td->threshold)
     return 1;
   else
@@ -58,8 +58,8 @@ int lt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, 
 int gt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   /* cast the user data */
   threshold_user_data * td = (threshold_user_data *)user_data;
-  if (get_double_psequence(X, td->seq_index, index_x + td->offset_x) + 
-      get_double_psequence(Y, td->seq_index, index_y + td->offset_y) >
+  if (ghmm_dpseq_get_double (X, td->seq_index, index_x + td->offset_x) + 
+      ghmm_dpseq_get_double (Y, td->seq_index, index_y + td->offset_y) >
       td->threshold)
     return 1;
   else
@@ -70,8 +70,8 @@ int gt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, 
    are true return true else false */
 int boolean_and(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   boolean_user_data * td = (boolean_user_data *)user_data;
-  if (get_char_psequence(X, td->seq_index, index_x + td->offset_x) && 
-      get_char_psequence(Y, td->seq_index, index_y + td->offset_y))
+  if (ghmm_dpseq_get_char (X, td->seq_index, index_x + td->offset_x) && 
+      ghmm_dpseq_get_char (Y, td->seq_index, index_y + td->offset_y))
     return 1;
   else
     return 0;
@@ -81,8 +81,8 @@ int boolean_and(pmodel * mo, psequence * X, psequence * Y, int index_x, int inde
    is true return true else false */
 int boolean_or(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
   boolean_user_data * td = (boolean_user_data *)user_data;
-  if (get_char_psequence(X, td->seq_index, index_x + td->offset_x) ||
-      get_char_psequence(Y, td->seq_index, index_y + td->offset_y))
+  if (ghmm_dpseq_get_char (X, td->seq_index, index_x + td->offset_x) ||
+      ghmm_dpseq_get_char (Y, td->seq_index, index_y + td->offset_y))
     return 1;
   else
     return 0;

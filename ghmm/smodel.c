@@ -901,7 +901,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
   double p, sum;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
 
-  sq = sequence_d_calloc (seq_number);
+  sq = ghmm_cseq_calloc (seq_number);
   if (!sq) {
     mes_proc ();
     goto STOP;
@@ -1118,7 +1118,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_d_free (&sq);
+  ghmm_cseq_free (&sq);
   return (NULL);
 # undef CUR_PROC
 }                               /* smodel_generate_sequences */
@@ -1471,7 +1471,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
 
     seq0 = smodel_generate_sequences (smo1, 0, maxT + 1, 1, 0, maxT + 1);
 
-    /*sequence_d_print(stdout,seq0,0);*/
+    /*ghmm_cseq_print(stdout,seq0,0);*/
 
     if (seq0->seq_len[0] < maxT) {      /* There is an absorbing state */
 
@@ -1496,8 +1496,8 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
         a = (maxT - total) / (total / seq0->seq_number) + 1;
         /* printf("total=%d generating %d", total, a); */
         tmp = smodel_generate_sequences (smo1, 0, 0, a, 0, maxT + 1);
-        sequence_d_add (seq0, tmp);
-        sequence_d_free (&tmp);
+        ghmm_cseq_add (seq0, tmp);
+        ghmm_cseq_free (&tmp);
 
         total = 0;
         for (i = 0; i < seq0->seq_number; i++)
@@ -1607,7 +1607,7 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
     }
 
     if (symmetric) {
-      sequence_d_free (&seq0);
+      ghmm_cseq_free (&seq0);
       smo1 = cm;
       smo2 = cm0;
     }
@@ -1616,12 +1616,12 @@ double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
 
   }                             /* k = 1,2 */
 
-  sequence_d_free (&seq0);
+  ghmm_cseq_free (&seq0);
 
   return d;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sequence_d_free (&seq0);
+  ghmm_cseq_free (&seq0);
   return (-1.0);
 #undef CUR_PROC
 }
