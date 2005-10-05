@@ -100,7 +100,7 @@ START_TEST (mysequence_test) /* Add mysequence_test in  pmodel_suite() below */
 }
 END_TEST
 
-START_TEST (pviterbi_path_test) /* Add pviterbi_test in  pmodel_suite() below */
+START_TEST (pviterbi_path_test) /* Add ghmm_dp_viterbi_test in  pmodel_suite() below */
 {
   /* test whether the computed viterbi path correctly aligns the two sequences */
   pmodel * mo = get_test_pmodel();
@@ -125,16 +125,16 @@ START_TEST (pviterbi_path_test) /* Add pviterbi_test in  pmodel_suite() below */
   double logp = 1.0;
   length = 0;
   int * path;
-  path = pviterbi(mo, x, y, &logp, &length);
+  path = ghmm_dp_viterbi(mo, x, y, &logp, &length);
 
   /* check if logp is the expected log p */
   double exp_logp = -168.239906;
   fail_unless(abs(logp - exp_logp) < PROP_EPS, "Log p of the path should be %f instead of %f", exp_logp, logp);
 
   /* double check with the logp function */
-  double check_logp = pviterbi_logp(mo, x, y, path, length);
-  fail_unless(abs(check_logp - exp_logp) < PROP_EPS, "Log p computed by the pviterbi_logp function of the path should be %f instead of %f", exp_logp, check_logp);
-  fail_unless(abs(check_logp - logp) < PROP_EPS, "Log p should be equal (pviterbi vs pviterbi_logp: %f != %f", logp, check_logp);
+  double check_logp = ghmm_dp_viterbi_logp(mo, x, y, path, length);
+  fail_unless(abs(check_logp - exp_logp) < PROP_EPS, "Log p computed by the ghmm_dp_viterbi_logp function of the path should be %f instead of %f", exp_logp, check_logp);
+  fail_unless(abs(check_logp - logp) < PROP_EPS, "Log p should be equal (ghmm_dp_viterbi vs pviterbi_logp: %f != %f", logp, check_logp);
 
   /* the begin of the path has to be: 0,0,0,1,0,2 because of the mismatches */
   fail_unless(path[3] == 1 && path[4] == 0 && path[5] == 2, "Alignment impossible!!!");
@@ -143,11 +143,11 @@ START_TEST (pviterbi_path_test) /* Add pviterbi_test in  pmodel_suite() below */
   m_free(path);
   free_mysequence(x, 1, 0);
   free_mysequence(y, 1, 0);
-  pmodel_free(mo);
+  ghmm_dp_free(mo);
 }
 END_TEST
 
-START_TEST (pviterbi_propagate_test) /* Add pviterbi_test in  pmodel_suite() below */
+START_TEST (pviterbi_propagate_test) /* Add ghmm_dp_viterbi_test in  pmodel_suite() below */
 {
   /* test whether the computed viterbi path correctly aligns the two sequences */
   pmodel * mo = get_test_pmodel();
@@ -172,13 +172,13 @@ START_TEST (pviterbi_propagate_test) /* Add pviterbi_test in  pmodel_suite() bel
   double naive_logp = 1.0;
   int naive_length = 0;
   int * naive_path;
-  naive_path = pviterbi_propagate(mo, x, y, &naive_logp, &naive_length, 500);
+  naive_path = ghmm_dp_viterbi_propagate(mo, x, y, &naive_logp, &naive_length, 500);
 
   /* run the linear memory version */
   double logp = 1.0;
   length = 0;
   int * path;
-  path = pviterbi_propagate(mo, x, y, &logp, &length, 500);
+  path = ghmm_dp_viterbi_propagate(mo, x, y, &logp, &length, 500);
 
   /* check if the lengths of the paths are equal */
   fail_unless(length == naive_length, "Path length of the linear verion (%i) differs from naive implementation (%i)", length, naive_length);
@@ -188,9 +188,9 @@ START_TEST (pviterbi_propagate_test) /* Add pviterbi_test in  pmodel_suite() bel
   fail_unless(abs(logp - exp_logp) < PROP_EPS, "Log p of the path should be %f instead of %f", exp_logp, logp);
 
   /* double check with the logp function */
-  double check_logp = pviterbi_logp(mo, x, y, path, length);
-  fail_unless(abs(check_logp - exp_logp) < PROP_EPS, "Log p computed by the pviterbi_logp function of the path should be %f instead of %f", exp_logp, check_logp);
-  fail_unless(abs(check_logp - logp) < PROP_EPS, "Log p should be equal (pviterbi vs pviterbi_logp: %f != %f", logp, check_logp);
+  double check_logp = ghmm_dp_viterbi_logp(mo, x, y, path, length);
+  fail_unless(abs(check_logp - exp_logp) < PROP_EPS, "Log p computed by the ghmm_dp_viterbi_logp function of the path should be %f instead of %f", exp_logp, check_logp);
+  fail_unless(abs(check_logp - logp) < PROP_EPS, "Log p should be equal (ghmm_dp_viterbi vs pviterbi_logp: %f != %f", logp, check_logp);
 
   /* the begin of the path has to be: 0,0,0,1,0,2 because of the mismatches */
   fail_unless(path[3] == 1 && path[4] == 0 && path[5] == 2, "Alignment impossible!!!");
@@ -205,7 +205,7 @@ START_TEST (pviterbi_propagate_test) /* Add pviterbi_test in  pmodel_suite() bel
   m_free(naive_path);
   free_mysequence(x, 1, 0);
   free_mysequence(y, 1, 0);
-  pmodel_free(mo);
+  ghmm_dp_free(mo);
 }
 END_TEST
 

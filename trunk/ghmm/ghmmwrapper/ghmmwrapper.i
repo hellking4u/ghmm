@@ -1914,40 +1914,40 @@ struct pmodel {
 };
 typedef struct pmodel pmodel;
 
-extern void pstate_clean(pstate *my_state);
+extern void ghmm_dp_state_clean(pstate *my_state);
 
-extern pmodel * init_pmodel();
+extern pmodel * ghmm_dp_init();
 
-pclass_change_context * init_pclass_change_context();
+pclass_change_context * ghmm_dp_init_class_change();
 
-extern int pmodel_free(pmodel *mo);
+extern int ghmm_dp_free(pmodel *mo);
 
 extern pstate * get_pstateptr(pstate * ary, int index);
 
-extern int pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
+extern int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
-extern int default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
+extern int ghmm_dp_default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
 
-extern void set_to_default_transition_class(pclass_change_context * pccc);
+extern void ghmm_dp_set_to_default_transition_class(pclass_change_context * pccc);
 
 /********** End of Pair HMM model (pmodel.c) **********/
 
 /********  Pair HMM viterbi (pviterbi.c) *********/
 
-extern int *pviterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int * length);
+extern int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int * length);
 
-int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
+int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
 
-double pviterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
+double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
 
 /********  End of Pair HMM viterbi (pviterbi.c) *********/
 
 /********  Pair HMM viterbi linear space (pviterbi_propagate.c) *********/
 
-extern int * pviterbi_propagate (pmodel *mo, psequence * X, psequence * Y,
+extern int * ghmm_dp_viterbi_propagate (pmodel *mo, psequence * X, psequence * Y,
 				 double *log_p, int *path_length, double max_size);
 
-extern int * pviterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
+extern int * ghmm_dp_viterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
 					 double *log_p, int *path_length, double max_size,
 					 int start_x, int start_y, int stop_x, int stop_y,
 					 int start_state, int stop_state, double start_log_p,

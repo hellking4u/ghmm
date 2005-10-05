@@ -46,11 +46,11 @@ extern "C" {
 
 /*------------        Here comes the Propagate stuff          ------------- */
 
-int * pviterbi_propagate(pmodel *mo, psequence * X, psequence * Y,
+int * ghmm_dp_viterbi_propagate(pmodel *mo, psequence * X, psequence * Y,
 			 double *log_p, int *path_length, double max_size);
 
 
-int * pviterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
+int * ghmm_dp_viterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
 				  double *log_p, int *path_length,
 				  double max_size, int start_x, int start_y,
 				  int stop_x, int stop_y, int start_state,

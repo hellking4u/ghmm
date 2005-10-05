@@ -201,25 +201,25 @@ struct pmodel {
 };
 typedef struct pmodel pmodel;
 
-int pstate_alloc(pstate *state, int M, int in_states, int out_states);
+int ghmm_dp_state_alloc(pstate *state, int M, int in_states, int out_states);
 
-pmodel * init_pmodel();
+pmodel * ghmm_dp_init();
 
-pclass_change_context * init_pclass_change_context();
+pclass_change_context * ghmm_dp_init_class_change();
 
-void pstate_clean(pstate *my_state);
+void ghmm_dp_state_clean(pstate *my_state);
 
-int pmodel_free(pmodel *mo);
+int ghmm_dp_free(pmodel *mo);
 
 pstate *get_pstateptr(pstate *ary, int index); 
 
 /** functions dealing with the emission indices **/
-int pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
+int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
-int emission_table_size(pmodel * mo, int state_index);
+int ghmm_dp_emission_table_size(pmodel * mo, int state_index);
   
-int default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) ;
+int ghmm_dp_default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) ;
 
-void set_to_default_transition_class(pclass_change_context * pccc);
+void ghmm_dp_set_to_default_transition_class(pclass_change_context * pccc);
 
 #endif
