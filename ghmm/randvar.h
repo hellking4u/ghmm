@@ -54,7 +54,7 @@ extern "C" {
    @param mean:   mean value for the normal distribution
    @param u:      variance for the normal distribution ($\sigma^2$)
    */
-  double randvar_normal_density (double x, double mean, double u);
+  double ighmm_rand_normal_density (double x, double mean, double u);
 
   /** density function of a uniform distribution in the range [min,max]
    @return          F(x)
@@ -62,7 +62,7 @@ extern "C" {
    @param max:      right limit 
    @param min:      left limit
  */
-  double randvar_uniform_density (double x, double max, double min);
+  double ighmm_rand_uniform_density (double x, double max, double min);
 
 /**
    Determinates the value of the one dimensional density function 
@@ -74,7 +74,7 @@ extern "C" {
    @param mean:   mean value for the normal distribution
    @param u:      variance for the normal distribution ($\sigma^2$)
    */
-  double randvar_normal_density_approx (double x, double mean, double u);
+  double ighmm_rand_normal_density_approx (double x, double mean, double u);
 
 /**
    Calculates the one dimensional Gauss density function phi( mean, u ) 
@@ -84,7 +84,7 @@ extern "C" {
    @param mean:   mean value for the normal distribution
    @param u:      variance for the normal distribution ($\sigma^2$)
    */
-  double randvar_normal_density_pos (double x, double mean, double u);
+  double ighmm_rand_normal_density_pos (double x, double mean, double u);
 
 /**
    Calculates the one dimensional Gauss density function phi( mean, u ) 
@@ -95,7 +95,7 @@ extern "C" {
    @param u:      variance for the normal distribution ($sigma^2$)
    @param a:      left limit for the density function
    */
-  double randvar_normal_density_trunc (double x, double mean, double u,
+  double ighmm_rand_normal_density_trunc (double x, double mean, double u,
                                        double a);
 
 /** 
@@ -105,7 +105,7 @@ extern "C" {
                      0: return a uniform distributed integer 
    @param K:         right limit for uniform distribution
   */
-  double randvar_uniform_int (int seed, int K);
+  double ighmm_rand_uniform_int (int seed, int K);
 
 /** 
    Generates a N( 0, 1 ) distributed random number.
@@ -113,7 +113,7 @@ extern "C" {
    @param seed:      1: only initialize the U(0,1) generator,
                     0: returns a standard normal distributed random number 
   */
-  double randvar_std_normal (int seed);
+  double ighmm_rand_std_normal (int seed);
 
 /**
    Generates a N( mue, u ) distributed random number.
@@ -123,7 +123,7 @@ extern "C" {
    @param seed:      1: only initialization
                      0: returns a standard normal distributed random number 
   */
-  double randvar_normal (double mue, double u, int seed);
+  double ighmm_rand_normal (double mue, double u, int seed);
 
   /** distribution function of a uniform distribution in the range [min,max]
    @return          F(x)
@@ -132,7 +132,7 @@ extern "C" {
    @param min:      left limit
  */
 
-  double randvar_uniform_cont (int seed, double max, double min);
+  double ighmm_rand_uniform_cont (int seed, double max, double min);
 
 /** 
    Generates a ,N( mue, u ) truncated at the right limit a distributed random number.
@@ -143,7 +143,7 @@ extern "C" {
    @param seed:      1: only initialize the N( 0, 1 ) generator
                      0: returns a standard normal distributed random number 
   */
-  double randvar_normal_right (double a, double mue, double u, int seed);
+  double ighmm_rand_normal_right (double a, double mue, double u, int seed);
 
 /**
    Determinates the N( 0, 1 ) distribution function at point x.
@@ -152,7 +152,7 @@ extern "C" {
    @return           function value
    @param x:         point value
    */
-  double randvar_get_PHI (double x);
+  double ighmm_rand_get_PHI (double x);
 
 /**
    Calculates scaling factor 1/a for the truncated normal distribution.
@@ -163,14 +163,14 @@ extern "C" {
    @param mean:      mean value for the normal distribution
    @param u:         variance for the normal distribution
    */
-  double randvar_get_1overa (double x, double mean, double u);
+  double ighmm_rand_get_1overa (double x, double mean, double u);
 
 /**
    Determinates the first sampling point x, for which PHI(x) = 1 for the first
    time.
    @return          x with PHI(x)==1, PHI(y) < 1 for all y < x
    */
-  double randvar_get_xPHIless1();
+  double ighmm_rand_get_xPHIless1();
 
 #if 0
 /**
@@ -188,7 +188,7 @@ extern "C" {
    @param mean:      mean value for the normal distribution
    @param u:         variance for the normal distribution
 */
-  double randvar_normal_cdf (double x, double mean, double u);
+  double ighmm_rand_normal_cdf (double x, double mean, double u);
 
 /**                                 _
    Cumalative distribution function F(x;mean,u) for the truncated N(mean, u).
@@ -197,7 +197,7 @@ extern "C" {
    @param mean:      mean value for the normal distribution
    @param u:         variance for the normal distribution
 */
-  double randvar_normal_right_cdf (double x, double mean, double u, double a);
+  double ighmm_rand_normal_right_cdf (double x, double mean, double u, double a);
 
 
   /** cumalative distribution function of a uniform distribution in the range [min,max]
@@ -205,22 +205,22 @@ extern "C" {
    @param x:        point value
    @param max:      right limit 
    @param min:      left limit */
-  double randvar_uniform_cdf (double x, double max, double min);
+  double ighmm_rand_uniform_cdf (double x, double max, double min);
 
   /**
    Small help function for interpolation, returns a constant.
   */
-  double randvar_get_xfaktphi();
+  double ighmm_rand_get_xfaktphi();
 
 /**
    Small help function for interpolation, returns a constant.
   */
-  double randvar_get_xstepphi();
+  double ighmm_rand_get_xstepphi();
 
   /** 
    Small help function for interpolation, returns a constant.
   */
-  double randvar_get_philen();
+  double ighmm_rand_get_philen();
 
 
 #ifdef __cplusplus

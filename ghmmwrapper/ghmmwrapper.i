@@ -2062,7 +2062,7 @@ void set_to_boolean_or(pclass_change_context * pccc, int seq_index, int offset_x
    @param mean:   mean value for the normal distribution
    @param u:      variance for the normal distribution ($\sigma^2$)
    */
-extern double randvar_normal_density (double x, double mean, double u);
+extern double ighmm_rand_normal_density (double x, double mean, double u);
 
 
 

@@ -494,7 +494,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 		     int, int);
   /* printf("---- viterbi -----\n"); */
   i_list * state_list;
-  state_list = init_i_list();
+  state_list = ighmm_list_init_list();
   log_in_a = &sget_log_in_a;
   /* int len_path  = mo->N*len; the length of the path is not known apriori */
 
@@ -606,7 +606,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
 
   /* Termination */
   max_value = -DBL_MAX;
-  i_list_append(state_list, -1);
+  ighmm_list_append(state_list, -1);
   /* if start_traceback_with is -1 (it is by default) search for the most 
      likely state at the end of both sequences */
   if (start_traceback_with == -1) {
@@ -665,7 +665,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
       /* update the current state */
       current_state_index = get_psi(pv, u, v, current_state_index);
       if (current_state_index != -1)
-	i_list_insert(state_list, current_state_index);
+	ighmm_list_insert(state_list, current_state_index);
       /* move in the alignment matrix */
       u -= off_x;
       v -= off_y; 
@@ -679,7 +679,7 @@ int *pviterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_
   pviterbi_free(&pv, mo->N, X->length, Y->length, mo->max_offset_x , 
 		mo->max_offset_y);
   /* printf("After traceback: last state = %i\n", state_list->last->val); */
-  state_seq = i_list_to_array(state_list);
+  state_seq = ighmm_list_to_array(state_list);
   *path_length = state_list->length;
   /* PRINT PATH */
   
@@ -694,7 +694,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   pviterbi_free(&pv, mo->N, X->length, Y->length, mo->max_offset_x, 
 		mo->max_offset_y);
   m_free(state_seq);
-  free_i_list(state_list);
+  ighmm_list_free(state_list);
   return NULL;
 #undef CUR_PROC
 } /* viterbi */

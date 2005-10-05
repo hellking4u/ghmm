@@ -50,16 +50,16 @@ extern "C" {
 /*@{ */
 /**
  */
-  double pmue (double mue, double A, double B, double eps);
+  double ighmm_gtail_pmue (double mue, double A, double B, double eps);
 
 /**
  */
-  double pmue_umin (double mue, double A, double B, double eps);
+  double ighmm_gtail_pmue_umin (double mue, double A, double B, double eps);
 
 /** 
     @name Function to find the roots of the truncated normal density function.
 */
-  double pmue_interpol (double mue, double A, double B, double eps);
+  double ighmm_gtail_pmue_interpol (double mue, double A, double B, double eps);
 
 #ifdef __cplusplus
 }

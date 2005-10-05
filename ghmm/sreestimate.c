@@ -469,18 +469,18 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
           mue_left = -EPS_NDT;  /* attention: only works if  EPS_NDT > EPS_U ! */
           mue_right = A;
 
-          if ((pmue_umin (mue_left, A, B, EPS_NDT) > 0.0 &&
-               pmue_umin (mue_right, A, B, EPS_NDT) > 0.0) ||
-              (pmue_umin (mue_left, A, B, EPS_NDT) < 0.0 &&
-               pmue_umin (mue_right, A, B, EPS_NDT) < 0.0))
+          if ((ighmm_gtail_pmue_umin (mue_left, A, B, EPS_NDT) > 0.0 &&
+               ighmm_gtail_pmue_umin (mue_right, A, B, EPS_NDT) > 0.0) ||
+              (ighmm_gtail_pmue_umin (mue_left, A, B, EPS_NDT) < 0.0 &&
+               ighmm_gtail_pmue_umin (mue_right, A, B, EPS_NDT) < 0.0))
             fprintf (stderr,
                      "umin:fl:%.3f\tfr:%.3f\t; left %.3f\t right %3f\t A %.3f\t B %.3f\n",
-                     pmue_umin (mue_left, A, B, EPS_NDT),
-                     pmue_umin (mue_right, A, B, EPS_NDT), mue_left,
+                     ighmm_gtail_pmue_umin (mue_left, A, B, EPS_NDT),
+                     ighmm_gtail_pmue_umin (mue_right, A, B, EPS_NDT), mue_left,
                      mue_right, A, B);
 
           mue_im =
-            zbrent_AB (pmue_umin, mue_left, mue_right, ACC, A, B, EPS_NDT);
+            zbrent_AB (ighmm_gtail_pmue_umin, mue_left, mue_right, ACC, A, B, EPS_NDT);
           u_im = EPS_U;
         }
         else {
@@ -490,12 +490,12 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
                                      + CC_PHI * m_sqr (Atil) / 4.0)
                       - CC_PHI * Atil / 2.0 - EPS_NDT) * 0.99;
           mue_right = A;
-          if (A < Btil * randvar_normal_density_pos (-EPS_NDT, 0, Btil))
+          if (A < Btil * ighmm_rand_normal_density_pos (-EPS_NDT, 0, Btil))
             mue_right = m_min (EPS_NDT, mue_right);
           else
             mue_left = m_max (-EPS_NDT, mue_left);
           mue_im =
-            zbrent_AB (pmue_interpol, mue_left, mue_right, ACC, A, B,
+            zbrent_AB (ighmm_gtail_pmue_interpol, mue_left, mue_right, ACC, A, B,
                        EPS_NDT);
           u_im = Btil - mue_im * Atil;
         }
@@ -792,7 +792,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
   for (i = 0; i < cs->smo->N; i++){
     for (j = 0; j < cs->smo->s[i].M; j++){
       if (cs->smo->s[i].density[j] == normal_right) {
-        C_PHI = randvar_get_xPHIless1 ();
+        C_PHI = ighmm_rand_get_xPHIless1 ();
         CC_PHI = m_sqr (C_PHI);
         break;
       }

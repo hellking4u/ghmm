@@ -70,15 +70,15 @@ sequence_t **ghmm_dseq_read (const char *filename, int *sq_number)
   sequence_t **sequence = NULL;
   scanner_t *s = NULL;
   *sq_number = 0;
-  s = scanner_alloc (filename);
+  s = ighmm_scanner_alloc (filename);
   if (!s) {
     mes_proc ();
     goto STOP;
   }
 
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     /* sequence file */
@@ -93,20 +93,20 @@ sequence_t **ghmm_dseq_read (const char *filename, int *sq_number)
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }
 
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
   return sequence;
 
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
   for (i = 0; i < *sq_number; i++)
     ghmm_dseq_free (&(sequence[i]));
   m_free (sequence);
@@ -123,17 +123,17 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
   sequence_t *sq = NULL;
   int seq_len_lex = 0;
   ARRAY_CALLOC (sq, 1);
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     goto STOP;
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     /* array of sequences to read */
     if (!strcmp (s->id, "O")) {
-      scanner_consume (s, '{');
+      ighmm_scanner_consume (s, '{');
       if (s->err)
         goto STOP;
       sq->seq_number = 0;
@@ -152,39 +152,39 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
         sq->seq_w[sq->seq_number] = 1;
         while (s->c == '<' || s->c == '(' || s->c == '|') {
           if (s->c == '<') {
-            scanner_consume (s, '<');
+            ighmm_scanner_consume (s, '<');
             if (s->err)
               goto STOP;
-            sq->seq_label[sq->seq_number] = scanner_get_int (s);
+            sq->seq_label[sq->seq_number] = ighmm_scanner_get_int (s);
             if (s->err)
               goto STOP;
-            scanner_consume (s, '>');
+            ighmm_scanner_consume (s, '>');
             if (s->err)
               goto STOP;
           }
           if (s->c == '(') {
-            scanner_consume (s, '(');
+            ighmm_scanner_consume (s, '(');
             if (s->err)
               goto STOP;
-            sq->seq_id[sq->seq_number] = scanner_get_edouble (s);
+            sq->seq_id[sq->seq_number] = ighmm_scanner_get_edouble (s);
             if (s->err)
               goto STOP;
-            scanner_consume (s, ')');
+            ighmm_scanner_consume (s, ')');
             if (s->err)
               goto STOP;
           }
           if (s->c == '|') {
-            scanner_consume (s, '|');
+            ighmm_scanner_consume (s, '|');
             if (s->err)
               goto STOP;
-            sq->seq_w[sq->seq_number] = (double) scanner_get_int (s);
+            sq->seq_w[sq->seq_number] = (double) ighmm_scanner_get_int (s);
             if (sq->seq_w[sq->seq_number] <= 0) {
-              scanner_error (s, "sequence weight not positiv\n");
+              ighmm_scanner_error (s, "sequence weight not positiv\n");
               goto STOP;
             }
             if (s->err)
               goto STOP;
-            scanner_consume (s, '|');
+            ighmm_scanner_consume (s, '|');
             if (s->err)
               goto STOP;
           }
@@ -193,10 +193,10 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
         sq->seq[sq->seq_number] =
           scanner_get_int_array (s, sq->seq_len + sq->seq_number);
         if (sq->seq_len[sq->seq_number] > MAX_SEQ_LEN) {
-          scanner_error (s, "sequence too long");
+          ighmm_scanner_error (s, "sequence too long");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
         sq->total_w += sq->seq_w[sq->seq_number];
@@ -210,23 +210,23 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
         m_free (str);
         goto STOP;
       }
-      scanner_consume (s, '}');
+      ighmm_scanner_consume (s, '}');
       if (s->err)
         goto STOP;
     }
     /* all possible seqs., sorted lexicographical */
     else if (!strcmp (s->id, "L")) {
       lexWord = 1;
-      scanner_consume (s, '{');
+      ighmm_scanner_consume (s, '{');
       if (s->err)
         goto STOP;
       while (!s->err && !s->eof && s->c - '}') {
-        scanner_get_name (s);
-        scanner_consume (s, '=');
+        ighmm_scanner_get_name (s);
+        ighmm_scanner_consume (s, '=');
         if (s->err)
           goto STOP;
         if (!strcmp (s->id, "seq_len")) {
-          seq_len_lex = scanner_get_int (s);
+          seq_len_lex = ighmm_scanner_get_int (s);
           if (s->err)
             goto STOP;
           if (seq_len_lex <= 0) {
@@ -239,19 +239,19 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
             mes_prot ("Value for number of symbols not allowed");
             goto STOP;
           }
-          symbols = scanner_get_int (s);
+          symbols = ighmm_scanner_get_int (s);
           if (s->err)
             goto STOP;
         }
         else {
-          scanner_error (s, "unknown identifier");
+          ighmm_scanner_error (s, "unknown identifier");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
       }
-      scanner_consume (s, '}');
+      ighmm_scanner_consume (s, '}');
       if ((seq_len_lex <= 0) || (symbols < 0)) {
         mes_prot
           ("Values for seq. length or number of symbols not spezified");
@@ -262,14 +262,14 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
         goto STOP;
     }                           /*if (!strcmp(s->id, "L")) */
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(!s->err && !s->eof && s->c - '}') */
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     goto STOP;
   return (sq);
@@ -288,15 +288,15 @@ sequence_d_t **ghmm_cseq_read (const char *filename, int *sqd_number)
   scanner_t *s = NULL;
   sequence_d_t **sequence = NULL;
   *sqd_number = 0;
-  s = scanner_alloc (filename);
+  s = ighmm_scanner_alloc (filename);
   if (!s) {
     mes_proc ();
     goto STOP;
   }
 
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     /* sequence file */
@@ -311,18 +311,18 @@ sequence_d_t **ghmm_cseq_read (const char *filename, int *sqd_number)
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
 
   return sequence;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
   for (i = 0; i < *sqd_number; i++)
     ghmm_cseq_free (&(sequence[i]));
   m_free (sequence);
@@ -339,17 +339,17 @@ sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
 #define CUR_PROC "ghmm_cseq_read_alloc"
   sequence_d_t *sqd = NULL;
   ARRAY_CALLOC (sqd, 1);
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     goto STOP;
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     /* array of sequences to read */
     if (!strcmp (s->id, "O")) {
-      scanner_consume (s, '{');
+      ighmm_scanner_consume (s, '{');
       if (s->err)
         goto STOP;
       sqd->seq_number = 0;
@@ -368,39 +368,39 @@ sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
         sqd->seq_w[sqd->seq_number] = 1;
         while (s->c == '<' || s->c == '(' || s->c == '|') {
           if (s->c == '<') {
-            scanner_consume (s, '<');
+            ighmm_scanner_consume (s, '<');
             if (s->err)
               goto STOP;
-            sqd->seq_label[sqd->seq_number] = scanner_get_int (s);
+            sqd->seq_label[sqd->seq_number] = ighmm_scanner_get_int (s);
             if (s->err)
               goto STOP;
-            scanner_consume (s, '>');
+            ighmm_scanner_consume (s, '>');
             if (s->err)
               goto STOP;
           }
           if (s->c == '(') {
-            scanner_consume (s, '(');
+            ighmm_scanner_consume (s, '(');
             if (s->err)
               goto STOP;
-            sqd->seq_id[sqd->seq_number] = scanner_get_edouble (s);
+            sqd->seq_id[sqd->seq_number] = ighmm_scanner_get_edouble (s);
             if (s->err)
               goto STOP;
-            scanner_consume (s, ')');
+            ighmm_scanner_consume (s, ')');
             if (s->err)
               goto STOP;
           }
           if (s->c == '|') {
-            scanner_consume (s, '|');
+            ighmm_scanner_consume (s, '|');
             if (s->err)
               goto STOP;
-            sqd->seq_w[sqd->seq_number] = (double) scanner_get_int (s);
+            sqd->seq_w[sqd->seq_number] = (double) ighmm_scanner_get_int (s);
             if (sqd->seq_w[sqd->seq_number] < 0) {
-              scanner_error (s, "negativ sequence weight\n");
+              ighmm_scanner_error (s, "negativ sequence weight\n");
               goto STOP;
             }
             if (s->err)
               goto STOP;
-            scanner_consume (s, '|');
+            ighmm_scanner_consume (s, '|');
             if (s->err)
               goto STOP;
           }
@@ -408,10 +408,10 @@ sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
         sqd->seq[sqd->seq_number] =
           scanner_get_double_earray (s, sqd->seq_len + sqd->seq_number);
         if (sqd->seq_len[sqd->seq_number] > MAX_SEQ_LEN) {
-          scanner_error (s, "sequence too long");
+          ighmm_scanner_error (s, "sequence too long");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
         sqd->total_w += sqd->seq_w[sqd->seq_number];
@@ -425,19 +425,19 @@ sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
         m_free (str);
         goto STOP;
       }
-      scanner_consume (s, '}');
+      ighmm_scanner_consume (s, '}');
       if (s->err)
         goto STOP;
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(!s->err && !s->eof && s->c - '}') */
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     goto STOP;
   return (sqd);

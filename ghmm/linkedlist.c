@@ -44,10 +44,10 @@
 #include "mes.h"
 #include "ghmm_internals.h"
 
-void i_list_append(i_list * list, int val){
+void ighmm_list_append(i_list * list, int val){
   i_el * last;
   i_el * el;
-  el = init_i_el(val);
+  el = ighmm_list_init_el(val);
   if (list->first == NULL) {
     list->first = el;
     list->last = el;
@@ -60,10 +60,10 @@ void i_list_append(i_list * list, int val){
   list->length++;
 }
 
-void i_list_insert(i_list * list, int val) {
+void ighmm_list_insert(i_list * list, int val) {
   i_el * first;
   i_el * el;
-  el = init_i_el(val);
+  el = ighmm_list_init_el(val);
   if (list->first == NULL) {
     list->first = el;
     list->last = el;
@@ -76,7 +76,7 @@ void i_list_insert(i_list * list, int val) {
   list->length++;
 }
 
-void i_list_print(i_list * list) {
+void ighmm_list_print(i_list * list) {
   i_el * el = list->first;
   printf("LIST : ");
   while(el != NULL) {
@@ -86,8 +86,8 @@ void i_list_print(i_list * list) {
   printf("\n");
 }
 
-int * i_list_to_array(i_list * list) {
-#define CUR_PROC "i_list_to_array"
+int * ighmm_list_to_array(i_list * list) {
+#define CUR_PROC "ighmm_list_to_array"
   int counter = 0;
   int * array;
   i_el * el;
@@ -105,8 +105,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-i_list * init_i_list() {
-#define CUR_PROC "init_i_list"
+i_list * ighmm_list_init_list() {
+#define CUR_PROC "ighmm_list_init_list"
   i_list * list;
 
   ARRAY_CALLOC (list, 1);
@@ -115,13 +115,13 @@ i_list * init_i_list() {
   list->length = 0;
   return list;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  free_i_list(list);
+  ighmm_list_free(list);
   return NULL;
 #undef CUR_PROC
 }
 
-i_el * init_i_el(int val) {
-#define CUR_PROC "init_i_el"
+i_el * ighmm_list_init_el(int val) {
+#define CUR_PROC "ighmm_list_init_el"
   i_el * el;
   ARRAY_CALLOC (el, 1);
   el->next = NULL;
@@ -134,7 +134,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-int free_i_list(i_list * list) {
+int ighmm_list_free(i_list * list) {
   i_el * el;
   i_el * next;
   el = list->first;

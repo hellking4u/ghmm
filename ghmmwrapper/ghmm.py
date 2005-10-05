@@ -3885,7 +3885,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             weight = ghmmwrapper.get_arrayd(state.c,outp)
             mue = ghmmwrapper.get_arrayd(state.mue,outp)
             u = ghmmwrapper.get_arrayd(state.u,outp)
-	    prob = prob + weight *ghmmwrapper.randvar_normal_density(value,mue,u)
+	    prob = prob + weight *ghmmwrapper.ighmm_rand_normal_density(value,mue,u)
 	    #print weight, mue, u, value, prob, st
 	return prob
       
@@ -4006,7 +4006,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 #             weight = ghmmwrapper.get_arrayd(state.c,outp)
 #             mue = ghmmwrapper.get_arrayd(state.mue,outp)
 #             u = ghmmwrapper.get_arrayd(state.u,outp)
-# 	    prob = prob + weight *ghmmwrapper.randvar_normal_density(value,mue,u)
+# 	    prob = prob + weight *ghmmwrapper.ighmm_rand_normal_density(value,mue,u)
 # 	    #print weight, mue, u, value, prob, st
 # 	return prob
 #       

@@ -178,14 +178,14 @@ model **model_read (char *filename, int *mo_number)
   scanner_t *s = NULL;
   model **mo = NULL;
   *mo_number = 0;
-  s = scanner_alloc (filename);
+  s = ighmm_scanner_alloc (filename);
   if (!s) {
     mes_proc ();
     goto STOP;
   }
   while (!s->err && !s->eof) {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     if (!strcmp (s->id, "HMM") || !strcmp (s->id, "hmm")) {
@@ -225,18 +225,18 @@ model **model_read (char *filename, int *mo_number)
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(!s->err && !s->eof) */
   
-  scanner_free(&s);
+  ighmm_scanner_free(&s);
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  scanner_free(&s);
+  ighmm_scanner_free(&s);
   return NULL;
 #undef CUR_PROC
 }                               /* model_read */
@@ -256,23 +256,23 @@ model *model_direct_read (scanner_t * s, int *multip)
   *multip = 1;                  /* default */
   ARRAY_CALLOC (mo, 1);
 
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     goto STOP;
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
+    ighmm_scanner_get_name (s);
     if (strcmp (s->id, "M") && strcmp (s->id, "N") && strcmp (s->id, "Pi")
         && strcmp (s->id, "A") && strcmp (s->id, "B") &&
         strcmp (s->id, "multip") && strcmp (s->id, "prior") &&
         strcmp (s->id, "fix_state")) {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, '=');
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     if (!strcmp (s->id, "multip")) {
-      *multip = scanner_get_int (s);
+      *multip = ighmm_scanner_get_int (s);
       if (*multip < 1) {        /* Doesn't make any sense! */
         *multip = 1;
         mes_prot ("Multip < 1 ignored\n");
@@ -280,152 +280,152 @@ model *model_direct_read (scanner_t * s, int *multip)
     }
     else if (!strcmp (s->id, "M")) {    /*Number of output values */
       if (m_read) {
-        scanner_error (s, "identifier M twice");
+        ighmm_scanner_error (s, "identifier M twice");
         goto STOP;
       }
-      mo->M = scanner_get_int (s);
+      mo->M = ighmm_scanner_get_int (s);
       m_read = 1;
     }
     else if (!strcmp (s->id, "N")) {    /*Number of states */
       if (n_read) {
-        scanner_error (s, "identifier N twice");
+        ighmm_scanner_error (s, "identifier N twice");
         goto STOP;
       }
-      mo->N = scanner_get_int (s);
+      mo->N = ighmm_scanner_get_int (s);
       ARRAY_CALLOC (mo->s, mo->N);
       n_read = 1;
     }
     else if (!strcmp (s->id, "A")) {    /*Transition probability */
       if (!n_read) {
-        scanner_error (s, "need N as a range for A");
+        ighmm_scanner_error (s, "need N as a range for A");
         goto STOP;
       }
       if (a_read) {
-        scanner_error (s, "identifier A twice");
+        ighmm_scanner_error (s, "identifier A twice");
         goto STOP;
       }
       ARRAY_CALLOC (a_matrix, mo->N);
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, a_matrix, mo->N, mo->N)) {
-          scanner_error (s, "unable to read matrix A");
+          ighmm_scanner_error (s, "unable to read matrix A");
           goto STOP;
         }
         a_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else if (!strcmp (s->id, "B")) {    /*Output probability */
       if ((!n_read) || (!m_read)) {
-        scanner_error (s, "need M and N as a range for B");
+        ighmm_scanner_error (s, "need M and N as a range for B");
         goto STOP;
       }
       if (b_read) {
-        scanner_error (s, "identifier B twice");
+        ighmm_scanner_error (s, "identifier B twice");
         goto STOP;
       }
       ARRAY_CALLOC (b_matrix, mo->N);
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, b_matrix, mo->N, mo->M)) {
-          scanner_error (s, "unable to read matrix B");
+          ighmm_scanner_error (s, "unable to read matrix B");
           goto STOP;
         }
         b_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else if (!strcmp (s->id, "prior")) {        /*A prior model */
       if (prior_read) {
-        scanner_error (s, "identifier prior twice");
+        ighmm_scanner_error (s, "identifier prior twice");
         goto STOP;
       }
-      mo->prior = scanner_get_edouble (s);
+      mo->prior = ighmm_scanner_get_edouble (s);
       if ((mo->prior < 0 || mo->prior > 1) && mo->prior != -1) {
-        scanner_error (s, "invalid model prior");
+        ighmm_scanner_error (s, "invalid model prior");
         goto STOP;
       }
       prior_read = 1;
     }
     else if (!strcmp (s->id, "Pi")) {   /*Initial state probabilty */
       if (!n_read) {
-        scanner_error (s, "need N as a range for Pi");
+        ighmm_scanner_error (s, "need N as a range for Pi");
         goto STOP;
       }
       if (pi_read) {
-        scanner_error (s, "identifier Pi twice");
+        ighmm_scanner_error (s, "identifier Pi twice");
         goto STOP;
       }
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "vector")) {
-        scanner_consume (s, '{');
+        ighmm_scanner_consume (s, '{');
         if (s->err)
           goto STOP;
         pi_vector = scanner_get_double_earray (s, &len);
         if (len != mo->N) {
-          scanner_error (s, "wrong number of elements in PI");
+          ighmm_scanner_error (s, "wrong number of elements in PI");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
-        scanner_consume (s, '}');
+        ighmm_scanner_consume (s, '}');
         if (s->err)
           goto STOP;
         pi_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else if (!strcmp (s->id, "fix_state")) {
       if (!n_read) {
-        scanner_error (s, "need N as a range for fix_state");
+        ighmm_scanner_error (s, "need N as a range for fix_state");
         goto STOP;
       }
       if (fix_read) {
-        scanner_error (s, "identifier fix_state twice");
+        ighmm_scanner_error (s, "identifier fix_state twice");
         goto STOP;
       }
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "vector")) {
-        scanner_consume (s, '{');
+        ighmm_scanner_consume (s, '{');
         if (s->err)
           goto STOP;
         fix_vector = scanner_get_int_array (s, &len);
         if (len != mo->N) {
-          scanner_error (s, "wrong number of elements in fix_state");
+          ighmm_scanner_error (s, "wrong number of elements in fix_state");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
-        scanner_consume (s, '}');
+        ighmm_scanner_consume (s, '}');
         if (s->err)
           goto STOP;
         fix_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(..s->c-'}') */
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     goto STOP;
 
@@ -512,12 +512,12 @@ model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
   model **mo = NULL;
   sequence_t *sq = NULL;
 
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     goto STOP;
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     /* Reads sequences on normal format */
@@ -529,14 +529,14 @@ model **model_from_sequence_ascii (scanner_t * s, long *mo_number)
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(..s->c-'}') */
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     goto STOP;
 

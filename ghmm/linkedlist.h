@@ -16,15 +16,15 @@ struct i_list {
 };
 typedef struct i_list i_list;
 
-i_list * init_i_list();
+i_list * ighmm_list_init_list();
 
-int free_i_list(i_list * list);
+int ighmm_list_free(i_list * list);
 
-void i_list_append(i_list * list, int val);
+void ighmm_list_append(i_list * list, int val);
 
-void i_list_insert(i_list * list, int val);
+void ighmm_list_insert(i_list * list, int val);
 
-int * i_list_to_array(i_list * list);
+int * ighmm_list_to_array(i_list * list);
 
-i_el * init_i_el(int val);
+i_el * ighmm_list_init_el(int val);
 #endif

@@ -191,14 +191,14 @@ smodel **smodel_read (const char *filename, int *smo_number)
   scanner_t *s = NULL;
   smodel **smo = NULL;
   *smo_number = 0;
-  s = scanner_alloc (filename);
+  s = ighmm_scanner_alloc (filename);
   if (!s) {
     mes_proc ();
     goto STOP;
   }
   while (!s->err && !s->eof) {
-    scanner_get_name (s);
-    scanner_consume (s, '=');
+    ighmm_scanner_get_name (s);
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     if (!strcmp (s->id, "SHMM") || !strcmp (s->id, "shmm")) {
@@ -225,10 +225,10 @@ smodel **smodel_read (const char *filename, int *smo_number)
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(!s->err && !s->eof) */
@@ -236,11 +236,11 @@ smodel **smodel_read (const char *filename, int *smo_number)
      mes_proc(); goto STOP;
      } */
 
-  scanner_free (&s);             
+  ighmm_scanner_free (&s);             
   return smo;
   
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-    scanner_free (&s);
+    ighmm_scanner_free (&s);
     return NULL;
 #undef CUR_PROC
 }    /* smodel_read */
@@ -264,25 +264,25 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
   *multip = 1;                  /* default */
   ARRAY_CALLOC (smo, 1);
 
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     goto STOP;
   while (!s->err && !s->eof && s->c - '}') {
-    scanner_get_name (s);
+    ighmm_scanner_get_name (s);
     if (strcmp (s->id, "M") && strcmp (s->id, "N") && strcmp (s->id, "Pi") &&
         strcmp (s->id, "A") && strcmp (s->id, "C") && strcmp (s->id, "Mue") &&
         strcmp (s->id, "U") && strcmp (s->id, "multip")
         && strcmp (s->id, "cos") && strcmp (s->id, "prior")
         && strcmp (s->id, "fix_state") && strcmp (s->id, "density")
         && strncmp (s->id, "Ak_", 3)) {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, '=');
+    ighmm_scanner_consume (s, '=');
     if (s->err)
       goto STOP;
     if (!strcmp (s->id, "multip")) {
-      *multip = scanner_get_int (s);
+      *multip = ighmm_scanner_get_int (s);
       if (*multip < 1) {        /* ignore: makes no sense */
         *multip = 1;
         mes_prot ("Multip < 1 ignored\n");
@@ -290,148 +290,148 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
     }
     else if (!strcmp (s->id, "M")) {    /* number of output components */
       if (m_read) {
-        scanner_error (s, "identifier M twice");
+        ighmm_scanner_error (s, "identifier M twice");
         goto STOP;
       }
-      M = scanner_get_int (s);
+      M = ighmm_scanner_get_int (s);
       m_read = 1;
     }
     else if (!strcmp (s->id, "N")) {    /* number of states */
       if (n_read) {
-        scanner_error (s, "identifier N twice");
+        ighmm_scanner_error (s, "identifier N twice");
         goto STOP;
       }
-      smo->N = scanner_get_int (s);
+      smo->N = ighmm_scanner_get_int (s);
       ARRAY_CALLOC (smo->s, smo->N);
       /*ARRAY_CALLOC (smo->density, smo->N);*/
       n_read = 1;
     }
     else if (!strcmp (s->id, "density")) {      /* which density function? */
       if (density_read) {
-        scanner_error (s, "identifier density twice");
+        ighmm_scanner_error (s, "identifier density twice");
         goto STOP;
       }
       /*current smo format only suport models with same densities*/      
-      density = (density_t) scanner_get_int (s);
+      density = (density_t) ighmm_scanner_get_int (s);
       if ((int) density < 0 || density >= density_number) {
-        scanner_error (s, "unknown typ of density function");
+        ighmm_scanner_error (s, "unknown typ of density function");
         goto STOP;
       }
       density_read = 1;
     }
     else if (!strcmp (s->id, "prior")) {        /* modelprior */
       if (prior_read) {
-        scanner_error (s, "identifier prior twice");
+        ighmm_scanner_error (s, "identifier prior twice");
         goto STOP;
       }
-      smo->prior = scanner_get_edouble (s);
+      smo->prior = ighmm_scanner_get_edouble (s);
       if ((smo->prior < 0 || smo->prior > 1) && smo->prior != -1) {
-        scanner_error (s, "invalid model prior");
+        ighmm_scanner_error (s, "invalid model prior");
         goto STOP;
       }
       prior_read = 1;
     }
     else if (!strcmp (s->id, "cos")) {  /* number of transition classes */
       if (cos_read) {
-        scanner_error (s, "identifier cos twice");
+        ighmm_scanner_error (s, "identifier cos twice");
         goto STOP;
       }
-      smo->cos = scanner_get_int (s);
+      smo->cos = ighmm_scanner_get_int (s);
       if (smo->cos <= 0) {
-        scanner_error (s, "invalid model cos");
+        ighmm_scanner_error (s, "invalid model cos");
         goto STOP;
       }
       cos_read = 1;
     }
     else if (!strcmp (s->id, "Pi")) {   /* Initial State Prob. */
       if (!n_read) {
-        scanner_error (s, "need N as a range for Pi");
+        ighmm_scanner_error (s, "need N as a range for Pi");
         goto STOP;
       }
       if (pi_read) {
-        scanner_error (s, "identifier Pi twice");
+        ighmm_scanner_error (s, "identifier Pi twice");
         goto STOP;
       }
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "vector")) {
-        scanner_consume (s, '{');
+        ighmm_scanner_consume (s, '{');
         if (s->err)
           goto STOP;
         pi_vektor = scanner_get_double_earray (s, &len);
         if (len != smo->N) {
-          scanner_error (s, "wrong number of elements in PI");
+          ighmm_scanner_error (s, "wrong number of elements in PI");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
-        scanner_consume (s, '}');
+        ighmm_scanner_consume (s, '}');
         if (s->err)
           goto STOP;
         pi_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else if (!strcmp (s->id, "fix_state")) {
       if (!n_read) {
-        scanner_error (s, "need N as a range for fix_state");
+        ighmm_scanner_error (s, "need N as a range for fix_state");
         goto STOP;
       }
       if (fix_read) {
-        scanner_error (s, "identifier fix_state twice");
+        ighmm_scanner_error (s, "identifier fix_state twice");
         goto STOP;
       }
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "vector")) {
-        scanner_consume (s, '{');
+        ighmm_scanner_consume (s, '{');
         if (s->err)
           goto STOP;
         fix_vektor = scanner_get_int_array (s, &len);
         if (len != smo->N) {
-          scanner_error (s, "wrong number of elements in fix_state");
+          ighmm_scanner_error (s, "wrong number of elements in fix_state");
           goto STOP;
         }
-        scanner_consume (s, ';');
+        ighmm_scanner_consume (s, ';');
         if (s->err)
           goto STOP;
-        scanner_consume (s, '}');
+        ighmm_scanner_consume (s, '}');
         if (s->err)
           goto STOP;
         fix_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     /* 1. Possibility: one matrix for all transition classes */
     else if (!strcmp (s->id, "A")) {
       if (!cos_read) {
-        scanner_error (s, "cos unknown (needed for dim(A))");
+        ighmm_scanner_error (s, "cos unknown (needed for dim(A))");
         goto STOP;
       }
       if (!n_read) {
-        scanner_error (s, "need N as a range for A");
+        ighmm_scanner_error (s, "need N as a range for A");
         goto STOP;
       }
       if (a_read) {
-        scanner_error (s, "Identifier A twice");
+        ighmm_scanner_error (s, "Identifier A twice");
         goto STOP;
       }
       ARRAY_CALLOC (a_matrix, smo->N);
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, a_matrix, smo->N, smo->N)) {
-          scanner_error (s, "unable to read matrix A");
+          ighmm_scanner_error (s, "unable to read matrix A");
           goto STOP;
         }
         a_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
       /* copy transition matrix to all transition classes */
@@ -448,42 +448,42 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
     /* 2. Possibility: one matrix for each transition class specified */
     else if (!strncmp (s->id, "Ak_", 3)) {
       if (!cos_read) {
-        scanner_error (s, "cos unknown (needed for dim(A))");
+        ighmm_scanner_error (s, "cos unknown (needed for dim(A))");
         goto STOP;
       }
       if (!n_read) {
-        scanner_error (s, "need N as a range for A");
+        ighmm_scanner_error (s, "need N as a range for A");
         goto STOP;
       }
       if (a_read) {
-        scanner_error (s, "identifier A twice");
+        ighmm_scanner_error (s, "identifier A twice");
         goto STOP;
       }
       ARRAY_CALLOC (a_3dmatrix, smo->cos);
       for (osc = 0; osc < smo->cos; osc++) {
         ARRAY_CALLOC (a_3dmatrix[osc], smo->N);
-        scanner_get_name (s);
+        ighmm_scanner_get_name (s);
         if (!strcmp (s->id, "matrix")) {
           if (matrix_d_read (s, a_3dmatrix[osc], smo->N, smo->N)) {
-            scanner_error (s, "unable to read matrix Ak");
+            ighmm_scanner_error (s, "unable to read matrix Ak");
             goto STOP;
           }
         }
         else {
-          scanner_error (s, "unknown identifier");
+          ighmm_scanner_error (s, "unknown identifier");
           goto STOP;
         }
         if (osc < smo->cos - 1) {
-          scanner_consume (s, ';');
+          ighmm_scanner_consume (s, ';');
           if (s->err)
             goto STOP;
           /* read next matrix */
-          scanner_get_name (s);
+          ighmm_scanner_get_name (s);
           if (strncmp (s->id, "Ak_", 3)) {
-            scanner_error (s, "not enough matrices Ak");
+            ighmm_scanner_error (s, "not enough matrices Ak");
             goto STOP;
           }
-          scanner_consume (s, '=');
+          ighmm_scanner_consume (s, '=');
           if (s->err)
             goto STOP;
         }
@@ -492,88 +492,88 @@ smodel *smodel_read_block (scanner_t * s, int *multip)
     }
     else if (!strcmp (s->id, "C")) {    /* weight for output components */
       if ((!n_read) || (!m_read)) {
-        scanner_error (s, "need M and N as a range for C");
+        ighmm_scanner_error (s, "need M and N as a range for C");
         goto STOP;
       }
       if (c_read) {
-        scanner_error (s, "identifier C twice");
+        ighmm_scanner_error (s, "identifier C twice");
         goto STOP;
       }
       ARRAY_CALLOC (c_matrix, smo->N);
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, c_matrix, smo->N, M)) {
-          scanner_error (s, "unable to read matrix C");
+          ighmm_scanner_error (s, "unable to read matrix C");
           goto STOP;
         }
         c_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else if (!strcmp (s->id, "Mue")) {  /* mean of normal density */
       if ((!n_read) || (!m_read)) {
-        scanner_error (s, "need M and N as a range for Mue");
+        ighmm_scanner_error (s, "need M and N as a range for Mue");
         goto STOP;
       }
       if (mue_read) {
-        scanner_error (s, "identifier Mue twice");
+        ighmm_scanner_error (s, "identifier Mue twice");
         goto STOP;
       }
       ARRAY_CALLOC (mue_matrix, smo->N);
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, mue_matrix, smo->N, M)) {
-          scanner_error (s, "unable to read matrix Mue");
+          ighmm_scanner_error (s, "unable to read matrix Mue");
           goto STOP;
         }
         mue_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else if (!strcmp (s->id, "U")) {    /* variances of normal density */
       if ((!n_read) || (!m_read)) {
-        scanner_error (s, "need M and N as a range for U");
+        ighmm_scanner_error (s, "need M and N as a range for U");
         goto STOP;
       }
       if (u_read) {
-        scanner_error (s, "identifier U twice");
+        ighmm_scanner_error (s, "identifier U twice");
         goto STOP;
       }
       ARRAY_CALLOC (u_matrix, smo->N);
-      scanner_get_name (s);
+      ighmm_scanner_get_name (s);
       if (!strcmp (s->id, "matrix")) {
         if (matrix_d_read (s, u_matrix, smo->N, M)) {
-          scanner_error (s, "unable to read matrix U");
+          ighmm_scanner_error (s, "unable to read matrix U");
           goto STOP;
         }
         u_read = 1;
       }
       else {
-        scanner_error (s, "unknown identifier");
+        ighmm_scanner_error (s, "unknown identifier");
         goto STOP;
       }
     }
     else {
-      scanner_error (s, "unknown identifier");
+      ighmm_scanner_error (s, "unknown identifier");
       goto STOP;
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }                             /* while(..s->c-'}') */
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     goto STOP;
 
   if (m_read == 0 || n_read == 0 || pi_read == 0 || a_read == 0 ||
       c_read == 0 || mue_read == 0 || u_read == 0 || density_read == 0) {
-    scanner_error (s,
+    ighmm_scanner_error (s,
                    "some identifier not specified (N, M, Pi, A, C, Mue, U or density)");
     goto STOP;
   }
@@ -870,13 +870,13 @@ double smodel_get_random_var (smodel * smo, int state, int m)
   switch (smo->s[state].density[m]) {
   case normal_approx:
   case normal:
-    return (randvar_normal (smo->s[state].mue[m], smo->s[state].u[m], 0));
+    return (ighmm_rand_normal (smo->s[state].mue[m], smo->s[state].u[m], 0));
   case normal_right:
-    return (randvar_normal_right (smo->s[state].a[m],smo->s[state].mue[m], smo->s[state].u[m], 0));
+    return (ighmm_rand_normal_right (smo->s[state].a[m],smo->s[state].mue[m], smo->s[state].u[m], 0));
   case normal_left:
-    return -(randvar_normal_right (-smo->s[state].a[m],-smo->s[state].mue[m], smo->s[state].u[m], 0));
+    return -(ighmm_rand_normal_right (-smo->s[state].a[m],-smo->s[state].mue[m], smo->s[state].u[m], 0));
   case uniform:
-	return (randvar_uniform_cont (0, smo->s[state].mue[m] ,smo->s[state].u[m]));
+	return (ighmm_rand_uniform_cont (0, smo->s[state].mue[m] ,smo->s[state].u[m]));
   default:
     mes (MES_WIN, "Warning: density function not specified!\n");
     return (-1);
@@ -917,7 +917,7 @@ sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
     Tmax = (int) MAX_SEQ_LEN;
 
 
-  /* rng is also used by randvar_std_normal 
+  /* rng is also used by ighmm_rand_std_normal 
      seed == -1: Initialization, has already been done outside the function */
   if (seed >= 0) {
     ghmm_rng_init ();
@@ -1389,24 +1389,24 @@ double smodel_calc_cmbm (smodel * smo, int state, int m, double omega)
   double bm = 0.0;
   switch (smo->s[state].density[m]) {
   case normal:
-    bm = randvar_normal_density (omega, smo->s[state].mue[m],
+    bm = ighmm_rand_normal_density (omega, smo->s[state].mue[m],
                                  smo->s[state].u[m]);
     break;
   case normal_right:
-    bm = randvar_normal_density_trunc (omega, smo->s[state].mue[m],
+    bm = ighmm_rand_normal_density_trunc (omega, smo->s[state].mue[m],
                                      smo->s[state].u[m],smo->s[state].a[m]);
     break;
   case normal_left:
-    bm = randvar_normal_density_trunc (-omega, -smo->s[state].mue[m],
+    bm = ighmm_rand_normal_density_trunc (-omega, -smo->s[state].mue[m],
                                      smo->s[state].u[m],-smo->s[state].a[m]);
     break;
   case normal_approx:
-    bm = randvar_normal_density_approx (omega,
+    bm = ighmm_rand_normal_density_approx (omega,
                                         smo->s[state].mue[m],
                                         smo->s[state].u[m]);
     break;
   case uniform:
-    bm = randvar_uniform_density (omega, 
+    bm = ighmm_rand_uniform_density (omega, 
                                   smo->s[state].mue[m],
                                   smo->s[state].u[m]);
     break;
@@ -1634,17 +1634,17 @@ double smodel_calc_cmBm (smodel * smo, int state, int m, double omega)
   switch (smo->s[state].density[m]) {
   case normal_approx:
   case normal:
-    Bm = randvar_normal_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]);
+    Bm = ighmm_rand_normal_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]);
     break;
   case normal_right:
-    Bm = randvar_normal_right_cdf (omega, smo->s[state].mue[m],
+    Bm = ighmm_rand_normal_right_cdf (omega, smo->s[state].mue[m],
                               smo->s[state].u[m],smo->s[state].a[m]);
     break;
   case normal_left:
-    Bm = (randvar_normal_right_cdf (omega, -smo->s[state].mue[m], smo->s[state].u[m],-smo->s[state].a[m]));
+    Bm = (ighmm_rand_normal_right_cdf (omega, -smo->s[state].mue[m], smo->s[state].u[m],-smo->s[state].a[m]));
     break;
   case uniform:
-    Bm = (randvar_uniform_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]));
+    Bm = (ighmm_rand_uniform_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]));
     break;
   default:
     mes (MES_WIN, "Warning: density function not specified!\n");

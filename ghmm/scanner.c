@@ -102,7 +102,7 @@ static int scanner_digit (int *val, scanner_t * s, int radix, int expect)
     if ('0' <= s->c && s->c <= '9')
       *val = *val * 10 + s->c - '0';
     else if (expect) {
-      scanner_error (s, "decimal digit expected");
+      ighmm_scanner_error (s, "decimal digit expected");
       return (-1);
     }
     else
@@ -116,7 +116,7 @@ static int scanner_digit (int *val, scanner_t * s, int radix, int expect)
     else if ('a' <= s->c && s->c <= 'f')
       *val = *val * 16 + s->c - 'a' + 10;
     else if (expect) {
-      scanner_error (s, "decimal digit expected");
+      ighmm_scanner_error (s, "decimal digit expected");
       return (-1);
     }
     else
@@ -126,7 +126,7 @@ static int scanner_digit (int *val, scanner_t * s, int radix, int expect)
     if (s->c >= '0' && s->c <= '1')
       *val = *val * 2 + s->c - '0';
     else if (expect) {
-      scanner_error (s, "binary digit expected");
+      ighmm_scanner_error (s, "binary digit expected");
       return (-1);
     }
     else
@@ -136,7 +136,7 @@ static int scanner_digit (int *val, scanner_t * s, int radix, int expect)
     if (s->c >= '0' && s->c <= '7')
       *val = *val * 8 + s->c - '0';
     else if (expect) {
-      scanner_error (s, "octal digit expected");
+      ighmm_scanner_error (s, "octal digit expected");
       return (-1);
     }
     else
@@ -189,7 +189,7 @@ static int scanner_nextchar (scanner_t * s, int expect)
     mes_ability (mes_stat);
 
     if (err) {
-      scanner_error (s, "line too long");
+      ighmm_scanner_error (s, "line too long");
       return (-1);
     }
     else
@@ -206,7 +206,7 @@ static int scanner_nextchar (scanner_t * s, int expect)
 
   scanner_fgetc (s);
   if (s->eof && expect) {
-    scanner_error (s, "unexpected end of file");
+    ighmm_scanner_error (s, "unexpected end of file");
     return (-1);
   }
   return (0);
@@ -338,21 +338,21 @@ static int scanner_skipspace (scanner_t * s)
 /*----------------------------------------------------------------------------*/
 static double scanner_get_length (scanner_t * s, double resolution)
 {
-  double val = scanner_get_double (s);
+  double val = ighmm_scanner_get_double (s);
 
   if (!s || s->err)
     return (0);
   if (s->eof) {
-    scanner_error (s, "length expected");
+    ighmm_scanner_error (s, "length expected");
     return (0);
   }
   if (s->c - ';') {
     if (resolution <= 0.0) {
-      scanner_error (s, "resolution not set");
+      ighmm_scanner_error (s, "resolution not set");
       return (0);
     }
     s->resolution_used = 1;
-    if (scanner_get_id (s))
+    if (ighmm_scanner_get_id (s))
       return (0);
     if (!strcmp (s->id, "INCH"))
       val *= resolution;
@@ -361,7 +361,7 @@ static double scanner_get_length (scanner_t * s, double resolution)
     else if (!strcmp (s->id, "MM"))
       val *= (resolution / 25.4);
     else {
-      scanner_error (s, "unknown length unit");
+      ighmm_scanner_error (s, "unknown length unit");
       return (0);
     }
   }
@@ -372,9 +372,9 @@ static double scanner_get_length (scanner_t * s, double resolution)
 /*============================================================================*/
 /*============================================================================*/
 /*============================================================================*/
-int scanner_free (scanner_t ** s)
+int ighmm_scanner_free (scanner_t ** s)
 {
-# define CUR_PROC "scanner_free"
+# define CUR_PROC "ighmm_scanner_free"
   mes_check_ptr (s, return (-1));
   if (!*s)
     return (0);
@@ -385,12 +385,12 @@ int scanner_free (scanner_t ** s)
   m_free (*s);
   return (0);
 # undef CUR_PROC
-}                               /* scanner_free */
+}                               /* ighmm_scanner_free */
 
 /*============================================================================*/
-scanner_t *scanner_alloc (const char *filename)
+scanner_t *ighmm_scanner_alloc (const char *filename)
 {
-#define CUR_PROC "scanner_alloc"
+#define CUR_PROC "ighmm_scanner_alloc"
   scanner_t *s = NULL;
 
   mes_check_ptr (filename, return (NULL));
@@ -424,13 +424,13 @@ scanner_t *scanner_alloc (const char *filename)
     goto STOP;
   return (s);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
   return (NULL);
 #undef CUR_PROC
-}                               /* scanner_alloc */
+}                               /* ighmm_scanner_alloc */
 
 /*============================================================================*/
-int scanner_error (scanner_t * s, char *message)
+int ighmm_scanner_error (scanner_t * s, char *message)
 {
   int i, j;
 
@@ -459,17 +459,17 @@ int scanner_error (scanner_t * s, char *message)
   s->err = 1;
   s->c = 0;
   return (0);
-}                               /* scanner_error */
+}                               /* ighmm_scanner_error */
 
 /*============================================================================*/
-int scanner_consume (scanner_t * s, char ch)
+int ighmm_scanner_consume (scanner_t * s, char ch)
 {
   if (s->err)
     return (0);
   if (s->eof || ch - s->c) {
     char txt[] = "' ' expected!";
     txt[1] = ch;
-    scanner_error (s, txt);
+    ighmm_scanner_error (s, txt);
     return (-1);
   }
   else if (scanner_nextchar (s, 0))
@@ -477,17 +477,17 @@ int scanner_consume (scanner_t * s, char ch)
   if (scanner_skipspace (s))
     return (-1);
   return (0);
-}                               /* scanner_consume */
+}                               /* ighmm_scanner_consume */
 
 /*============================================================================*/
 /* Reads over a block, that's enclosed in '{' and '}'. Other blocks, lying within
    this one will be skipped */
-int scanner_consume_block (scanner_t * s)
+int ighmm_scanner_consume_block (scanner_t * s)
 {
   int open_brackets = 0;
   if (s->err)
     return (0);
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     return (-1);
   open_brackets++;
@@ -503,14 +503,14 @@ int scanner_consume_block (scanner_t * s)
       return (-1);
   }
   if (open_brackets) {
-    scanner_error (s, "Unexpected EOF! '}'expected");
+    ighmm_scanner_error (s, "Unexpected EOF! '}'expected");
     return (-1);
   }
   return (0);
-}                               /* scanner_consume_block */
+}                               /* ighmm_scanner_consume_block */
 
 /*============================================================================*/
-int scanner_get_name (scanner_t * s)
+int ighmm_scanner_get_name (scanner_t * s)
 {
   int pos = 0;
 
@@ -522,7 +522,7 @@ int scanner_get_name (scanner_t * s)
       int err = mes_realloc ((void**)&(s->txt), sizeof(*(s->txt))*(s->txtlen + 256));
       mes_ability (mes_stat);
       if (err) {
-        scanner_error (s, "identifier too long");
+        ighmm_scanner_error (s, "identifier too long");
         return (-1);
       }
       else
@@ -533,20 +533,20 @@ int scanner_get_name (scanner_t * s)
       return (-1);
   }
   if (!pos || m_scanner_isdigit (s->id[0]))
-    scanner_error (s, "identifier expected");
+    ighmm_scanner_error (s, "identifier expected");
   s->id[pos] = 0;
   if (scanner_skipspace (s))
     return (-1);
   return (0);
-}                               /* scanner_get_name */
+}                               /* ighmm_scanner_get_name */
 
 /*============================================================================*/
-int scanner_get_id (scanner_t * s)
+int ighmm_scanner_get_id (scanner_t * s)
 {
   char *str;
   if (!s || s->err)
     return (0);
-  if (scanner_get_name (s))
+  if (ighmm_scanner_get_name (s))
     return (0);
   str = s->id;
   while (*str) {
@@ -555,10 +555,10 @@ int scanner_get_id (scanner_t * s)
     str++;
   }
   return (0);
-}                               /* scanner_get_id */
+}                               /* ighmm_scanner_get_id */
 
 /*============================================================================*/
-char *scanner_get_str (scanner_t * s, int *len, int cmode)
+char *ighmm_scanner_get_str (scanner_t * s, int *len, int cmode)
 {
 # define CUR_PROC "scanner_get_string"
   int i = 0;
@@ -568,7 +568,7 @@ char *scanner_get_str (scanner_t * s, int *len, int cmode)
   if (!s || s->err)
     return (NULL);
   if (s->eof || s->c - '"') {
-    scanner_error (s, "string expected");
+    ighmm_scanner_error (s, "string expected");
     goto STOP;
   }
   ARRAY_MALLOC (val, maxlen);
@@ -584,7 +584,7 @@ char *scanner_get_str (scanner_t * s, int *len, int cmode)
     }
     while (s->c - '"' || s->esc) {
       if (s->eof || ((!s->c || s->c == '\n') && !s->esc)) {
-        scanner_error (s, "String not closed");
+        ighmm_scanner_error (s, "String not closed");
         goto STOP;
       }
       if (i + 1 == maxlen) {
@@ -603,7 +603,7 @@ char *scanner_get_str (scanner_t * s, int *len, int cmode)
       }
     }
 
-    if (scanner_consume (s, '"'))
+    if (ighmm_scanner_consume (s, '"'))
       goto STOP;
     if (scanner_skipspace (s))
       goto STOP;
@@ -618,12 +618,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (val);
   return (NULL);
 # undef CUR_PROC
-}                               /* scanner_get_str */
+}                               /* ighmm_scanner_get_str */
 
 /*============================================================================*/
-char *scanner_get_path (scanner_t * s)
+char *ighmm_scanner_get_path (scanner_t * s)
 {
-#define CUR_PROC "scanner_get_path"
+#define CUR_PROC "ighmm_scanner_get_path"
   char *res = scanner_get_string (s);
   char *p;
 # if defined(_PPC) || defined(_DOS) || defined(_WINDOWS)
@@ -639,10 +639,10 @@ char *scanner_get_path (scanner_t * s)
 # endif
   return (res);
 #undef CUR_PROC
-}                               /* scanner_get_path */
+}                               /* ighmm_scanner_get_path */
 
 /*============================================================================*/
-int scanner_get_int (scanner_t * s)
+int ighmm_scanner_get_int (scanner_t * s)
 {
   int val = 0;
   int sign = 0;
@@ -650,7 +650,7 @@ int scanner_get_int (scanner_t * s)
   if (!s || s->err)
     return (0);
   if (s->eof) {
-    scanner_error (s, "integer expected");
+    ighmm_scanner_error (s, "integer expected");
     return (0);
   }
 
@@ -674,7 +674,7 @@ int scanner_get_int (scanner_t * s)
       return (0);
     if (s->c - '\'') {
       if (!s->esc) {
-        scanner_error (s, " \' expected");
+        ighmm_scanner_error (s, " \' expected");
         return (0);
       }
       val = (unsigned char) '\\';
@@ -684,7 +684,7 @@ int scanner_get_int (scanner_t * s)
   }
 
   else if (!m_scanner_isdigit (s->c)) {
-    if (scanner_get_id (s))
+    if (ighmm_scanner_get_id (s))
       return (0);
     if (!strcmp (s->id, "TRUE"))
       return (sign ? 0 : 1);
@@ -694,7 +694,7 @@ int scanner_get_int (scanner_t * s)
       return (sign ? 0 : 1);
     else if (!strcmp (s->id, "OFF"))
       return (sign ? 1 : 0);
-    scanner_error (s, "integer value expected");
+    ighmm_scanner_error (s, "integer value expected");
     return (0);
   }
 
@@ -740,11 +740,11 @@ int scanner_get_int (scanner_t * s)
     return (0);
   return (sign ? -val : val);
 # undef CUR_PROC
-}                               /* scanner_get_int */
+}                               /* ighmm_scanner_get_int */
 
 
 /*============================================================================*/
-double scanner_get_double (scanner_t * s)
+double ighmm_scanner_get_double (scanner_t * s)
 {
   double val = 0;
   int sign = 0;
@@ -752,7 +752,7 @@ double scanner_get_double (scanner_t * s)
   if (!s || s->err)
     return (0);
   if (s->eof) {
-    scanner_error (s, "real number expected");
+    ighmm_scanner_error (s, "real number expected");
     return (0);
   }
 
@@ -768,7 +768,7 @@ double scanner_get_double (scanner_t * s)
     return (0);
 
   if (!m_scanner_isdigit (s->c) && s->c - '.') {
-    scanner_error (s, "real number expected");
+    ighmm_scanner_error (s, "real number expected");
     return (0);
   }
   while (m_scanner_isdigit (s->c)) {
@@ -791,11 +791,11 @@ double scanner_get_double (scanner_t * s)
   if (scanner_skipspace (s))
     return (0);
   return (sign ? -val : val);
-}                               /* scanner_get_double */
+}                               /* ighmm_scanner_get_double */
 
 
 /*============================================================================*/
-double scanner_get_edouble (scanner_t * s)
+double ighmm_scanner_get_edouble (scanner_t * s)
 {
   double val = 0;
   int sign = 0;
@@ -803,7 +803,7 @@ double scanner_get_edouble (scanner_t * s)
   if (!s || s->err)
     return (0);
   if (s->eof) {
-    scanner_error (s, "real number expected");
+    ighmm_scanner_error (s, "real number expected");
     return (0);
   }
 
@@ -819,7 +819,7 @@ double scanner_get_edouble (scanner_t * s)
     return (0);
 
   if (!m_scanner_isdigit (s->c) && s->c - '.') {
-    scanner_error (s, "real number expected");
+    ighmm_scanner_error (s, "real number expected");
     return (0);
   }
   while (m_scanner_isdigit (s->c)) {
@@ -853,7 +853,7 @@ double scanner_get_edouble (scanner_t * s)
     }
     else if (s->c == '+' && scanner_nextchar (s, 1))
       return (0);
-    eval = scanner_get_int (s);
+    eval = ighmm_scanner_get_int (s);
     if (eval < 0)
       return (0);
     for (i = 0; i < eval; i++)
@@ -867,11 +867,11 @@ double scanner_get_edouble (scanner_t * s)
   if (scanner_skipspace (s))
     return (0);
   return (sign ? -val : val);
-}                               /* scanner_get_edouble */
+}                               /* ighmm_scanner_get_edouble */
 
 
 /*============================================================================*/
-void *scanner_get_array (scanner_t * s, int *len, char *type)
+void *ighmm_scanner_get_array (scanner_t * s, int *len, char *type)
 {
   int size = 0;
   int typ = scanner_type (type, &size);
@@ -885,13 +885,13 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
   if (!s || !type || !len || s->err)
     goto STOP;
   if (!typ) {
-    scanner_error (s, mprintf (txt, sizeof (txt), "unknown type %s ", type));
+    ighmm_scanner_error (s, mprintf (txt, sizeof (txt), "unknown type %s ", type));
     goto STOP;
   }
   if (!len || !s || s->err)
     goto STOP;
   if (s->eof) {
-    scanner_error (s,
+    ighmm_scanner_error (s,
                    mprintf (txt, sizeof (txt), "%s array expected ", type));
     goto STOP;
   }
@@ -905,28 +905,28 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
   mes_ability (mes_stat);
   if (err) {
     mprintf (txt, sizeof (txt), "Not enough memory to read %s array", type);
-    scanner_error (s, txt);
+    ighmm_scanner_error (s, txt);
     goto STOP;
   }
 
   while (s->c - ';') {
     /* Originally:
-       if( i && scanner_consume( s, ',' ) )  goto STOP; */
+       if( i && ighmm_scanner_consume( s, ',' ) )  goto STOP; */
     /* Changed: read array without seperator now possible */
     if (s->c == ',')
-      scanner_consume (s, ',');
+      ighmm_scanner_consume (s, ',');
     switch (typ) {
     case SCANNER_TYPE_CHAR:
-      val[i] = scanner_get_int (s);
+      val[i] = ighmm_scanner_get_int (s);
       break;
     case SCANNER_TYPE_INT:
-      *(int *) (val + i) = scanner_get_int (s);
+      *(int *) (val + i) = ighmm_scanner_get_int (s);
       break;
     case SCANNER_TYPE_DOUBLE:
-      *(double *) (val + i) = scanner_get_double (s);
+      *(double *) (val + i) = ighmm_scanner_get_double (s);
       break;
     case SCANNER_TYPE_EDOUBLE:
-      *(double *) (val + i) = scanner_get_edouble (s);
+      *(double *) (val + i) = ighmm_scanner_get_edouble (s);
       break;
     case SCANNER_TYPE_STRING:
       *(char **) (val + i) = scanner_get_string (s);
@@ -948,7 +948,7 @@ void *scanner_get_array (scanner_t * s, int *len, char *type)
       if (err) {
         mprintf (txt, sizeof (txt), "Not enough memory to read %s array",
                  type);
-        scanner_error (s, txt);
+        ighmm_scanner_error (s, txt);
         goto STOP;
       }
       maxlen += 16 * size;
@@ -968,13 +968,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
     *len = 0;
   return (NULL);
 # undef CUR_PROC
-}                               /* scanner_get_array */
+}                               /* ighmm_scanner_get_array */
 
 
 /*============================================================================*/
-int scanner_free_array (int *len, void ***arr)
+int ighmm_scanner_free_array (int *len, void ***arr)
 {
-# define CUR_PROC "scanner_free_array"
+# define CUR_PROC "ighmm_scanner_free_array"
   mes_check_ptr (len, return (-1));
   mes_check_ptr (arr, return (-1));
   while ((*len)-- > 0) {
@@ -984,60 +984,60 @@ int scanner_free_array (int *len, void ***arr)
   *len = 0;
   return (0);
 # undef CUR_PROC
-}                               /* scanner_free_array */
+}                               /* ighmm_scanner_free_array */
 
 /*============================================================================*/
-int scanner_get_index (scanner_t * s, int n)
+int ighmm_scanner_get_index (scanner_t * s, int n)
 {
   int index = n - 1;
   if (!s || s->err)
     return (0);
   if (s->eof || s->c - '@') {
-    scanner_error (s, "index expected");
+    ighmm_scanner_error (s, "index expected");
     return (0);
   }
-  if (scanner_consume (s, '@'))
+  if (ighmm_scanner_consume (s, '@'))
     return (0);
-  index = scanner_get_int (s);
+  index = ighmm_scanner_get_int (s);
   if (s->err)
     return (0);
   if (index >= n)
-    scanner_error (s, "index too high");
-  if (scanner_consume (s, ';'))
+    ighmm_scanner_error (s, "index too high");
+  if (ighmm_scanner_consume (s, ';'))
     return (0);
   return (index);
-}                               /* scanner_get_index */
+}                               /* ighmm_scanner_get_index */
 
 /*============================================================================*/
-double scanner_get_resolution (scanner_t * s)
+double ighmm_scanner_get_resolution (scanner_t * s)
 {
   double val;
 
   if (!s || s->err)
     return (0);
-  val = scanner_get_double (s);
+  val = ighmm_scanner_get_double (s);
   if (s->err)
     return (0);
-  if (scanner_get_id (s))
+  if (ighmm_scanner_get_id (s))
     return (0);
   if (strcmp (s->id, "DPI")) {
-    scanner_error (s, "dpi expected");
+    ighmm_scanner_error (s, "dpi expected");
     return (0);
   }
   return (val);
-}                               /* scanner_get_resolution */
+}                               /* ighmm_scanner_get_resolution */
 
 /*============================================================================*/
-int scanner_get_length_x (scanner_t * s)
+int ighmm_scanner_get_length_x (scanner_t * s)
 {
   return (s->x_scale * scanner_get_length (s, s->x_resolution) + 0.5);
-}                               /* scanner_get_length_x */
+}                               /* ighmm_scanner_get_length_x */
 
 /*============================================================================*/
-int scanner_get_length_y (scanner_t * s)
+int ighmm_scanner_get_length_y (scanner_t * s)
 {
   return (s->y_scale * scanner_get_length (s, s->y_resolution) + 0.5);
-}                               /* scanner_get_length_y */
+}                               /* ighmm_scanner_get_length_y */
 
 
 #if defined( TEST )
@@ -1045,7 +1045,7 @@ int scanner_get_length_y (scanner_t * s)
 int scanner_tst (void)
 {
 # define CUR_PROC "scanner_tst"
-  scanner_t *s = scanner_alloc ("scanner.cfg");
+  scanner_t *s = ighmm_scanner_alloc ("scanner.cfg");
   char *char_arr = NULL;
   int char_len = 0;
   int *int_arr = NULL;
@@ -1063,9 +1063,9 @@ int scanner_tst (void)
   }
 
   while (!s->err && !s->eof) {
-    if (scanner_get_name (s))
+    if (ighmm_scanner_get_name (s))
       break;
-    if (scanner_consume (s, '='))
+    if (ighmm_scanner_consume (s, '='))
       break;
     else if (!strcmp (s->id, "char")) {
       m_free (char_arr);
@@ -1084,8 +1084,8 @@ int scanner_tst (void)
       double_arr = scanner_get_double_array (s, &double_len);
     }
     else
-      scanner_error (s, "unknown identifyer");
-    if (scanner_consume (s, ';'))
+      ighmm_scanner_error (s, "unknown identifyer");
+    if (ighmm_scanner_consume (s, ';'))
       break;
   }
 
@@ -1112,7 +1112,7 @@ int scanner_tst (void)
 
   res = 0;
 STOP:
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
   m_free (char_arr);
   m_free (int_arr);
   m_free (double_arr);
@@ -1141,9 +1141,9 @@ static int scanner_free_d_matrix (double ***matrix, long rows)
 }                               /* scanner_free_d_matrix */
 
 /*============================================================================*/
-double **scanner_get_d_matrix (scanner_t * s, int *rows, int *cols)
+double **ighmm_scanner_get_d_matrix (scanner_t * s, int *rows, int *cols)
 {
-#define CUR_PROC "scanner_get_d_matrix"
+#define CUR_PROC "ighmm_scanner_get_d_matrix"
   double **matrix = NULL;
   int local_cols = 0;
   *rows = *cols = 0;
@@ -1151,12 +1151,12 @@ double **scanner_get_d_matrix (scanner_t * s, int *rows, int *cols)
     (*rows)++;
     ARRAY_REALLOC (matrix, *rows);
     matrix[*rows - 1] = scanner_get_double_array (s, &local_cols);
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
     if (*rows > 1)
       if (local_cols != *cols) {
-        scanner_error (s, "rows of variing length in matrix");
+        ighmm_scanner_error (s, "rows of variing length in matrix");
         goto STOP;
       }
     *cols = local_cols;
@@ -1166,4 +1166,4 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   scanner_free_d_matrix (&matrix, *rows);
   return NULL;
 #undef CUR_PROC
-}                               /* scanner_get_d_matrix */
+}                               /* ighmm_scanner_get_d_matrix */
