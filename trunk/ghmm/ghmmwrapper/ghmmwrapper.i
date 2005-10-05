@@ -1001,45 +1001,13 @@ background_distributions *model_alloc_background_distributions(int n,int m, int 
 extern background_distributions *model_copy_background_distributions(background_distributions *bg);
 extern int model_free_background_distributions(background_distributions *bg);
 
-/** 
-	Calculates the right index for emission array b of state j in model mo
-	given an observation obs and taking the state order into account,
-	returns -1 if state order exceeds number of so far emitted characters
-    @param  mo:  model
-	@param   j:  state id 
-	@param obs:  integer observation to be updated with
-    @param   t:  position of obs in sequence (time)
-*/ 
-extern int get_emission_index (model* mo, int j , int obs, int t );
-
-
-/**
-	Updates emission history of model mo, discarding the oldest and 'adding' the
-	new observation by using modulo and multiplication	
-    @param  mo:  model to be updated
-	@param obs:  integer observation to be updated with
-*/
-extern void update_emission_history(model* mo, int obs);
-
-
-/**
-	Updates emission history of model mo for backward algorithm by 'adding'
-	observation obs to the left,
-	(example: obs = 3
-	          2 0 0 1 --> 3 2 0 0 )
-	@param  mo:  model to be updated
-	@param obs:  integer observation to be updated with
-*/
-extern void update_emission_history_front(model* mo, int obs);
-
 
 /**
     Uses ighmm_cvector_normalize in vector.h
     Normalizes the transition and output probs for each state
     in the given model
-    @author Heval Benav
     @return 0 if normalization went through
-	@param mo: model to be normalized
+    @param mo: model to be normalized
 
 */
 extern int model_normalize(model* mo);
