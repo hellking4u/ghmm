@@ -68,32 +68,32 @@ int matrix_d_read (scanner_t * s, double **matrix, int max_zeile,
 {
 #define CUR_PROC "matrix_d_read"
   int len = 0, zeile = 0;
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     return (-1);
   while (!s->eof && !s->err && s->c - '}') {
     if (zeile >= max_zeile) {
-      scanner_error (s, "too many rows in matrix");
+      ighmm_scanner_error (s, "too many rows in matrix");
       return (-1);
     }
     /* Memory allocation takes place in scanner_get_double_earray */
     matrix[zeile] = scanner_get_double_earray (s, &len);
     if (len != max_spalte) {
-      scanner_error (s, "wrong number of elements in matrix");
+      ighmm_scanner_error (s, "wrong number of elements in matrix");
       return (-1);
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err) {
-      scanner_error (s, "missing ';' or wrong number of columns");
+      ighmm_scanner_error (s, "missing ';' or wrong number of columns");
       return (-1);
     }
     zeile++;
   }
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     return (-1);
   if (zeile < max_zeile) {
-    scanner_error (s, "rows missing in matrix");
+    ighmm_scanner_error (s, "rows missing in matrix");
     return (-1);
   }
   return (0);
@@ -106,32 +106,32 @@ int matrix_i_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
 {
 #define CUR_PROC "matrix_i_read"
   int len = 0, zeile = 0;
-  scanner_consume (s, '{');
+  ighmm_scanner_consume (s, '{');
   if (s->err)
     return (-1);
   while (!s->eof && !s->err && s->c - '}') {
     if (zeile >= max_zeile) {
-      scanner_error (s, "too many rows in matrix");
+      ighmm_scanner_error (s, "too many rows in matrix");
       return (-1);
     }
     /* Memory allocation takes place in scanner_get_int_array */
     matrix[zeile] = scanner_get_int_array (s, &len);
     if (len != max_spalte) {
-      scanner_error (s, "wrong number of elements in matrix");
+      ighmm_scanner_error (s, "wrong number of elements in matrix");
       return (-1);
     }
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err) {
-      scanner_error (s, "missing ';' or wrong number of columns");
+      ighmm_scanner_error (s, "missing ';' or wrong number of columns");
       return (-1);
     }
     zeile++;
   }
-  scanner_consume (s, '}');
+  ighmm_scanner_consume (s, '}');
   if (s->err)
     return (-1);
   if (zeile < max_zeile) {
-    scanner_error (s, "rows missing in matrix");
+    ighmm_scanner_error (s, "rows missing in matrix");
     return (-1);
   }
   return (0);
@@ -552,7 +552,7 @@ int matrix_d_gaussrows_values (double **matrix, int rows, int cols,
   for (i = 0; i < rows; i++) {
     /* Gauss-distribution around the mean value for each state. */
     for (j = 0; j < cols; j++) {
-      matrix[i][j] = randvar_normal_density ((double) j, mean[i], u);
+      matrix[i][j] = ighmm_rand_normal_density ((double) j, mean[i], u);
       if (matrix[i][j] == -1) {
         mes_proc ();
         goto STOP;

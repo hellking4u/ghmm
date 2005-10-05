@@ -46,7 +46,7 @@ int greatest_thats_different_from_1(void)
   low=0;
   up=10;
   /* find start interval */
-  while (randvar_get_PHI(up)<1.0)
+  while (ighmm_rand_get_PHI(up)<1.0)
     {
       low=up;
       up*=2;
@@ -55,7 +55,7 @@ int greatest_thats_different_from_1(void)
   while (up-low>0.001)
     {
       half=(low+up)/2.0;
-      if (randvar_get_PHI(half)<1.0)
+      if (ighmm_rand_get_PHI(half)<1.0)
 	low=half;
       else
 	up=half;
@@ -70,7 +70,7 @@ int least_thats_different_from_0(void)
   low=-10;
   up=0;
   /* find start interval */
-  while (randvar_get_PHI(low)>0.0)
+  while (ighmm_rand_get_PHI(low)>0.0)
     {
       up=low;
       low*=2;
@@ -79,7 +79,7 @@ int least_thats_different_from_0(void)
   while (up-low>0.001)
     {
       half=(low+up)/2.0;
-      if (randvar_get_PHI(half)>0.0)
+      if (ighmm_rand_get_PHI(half)>0.0)
 	up=half;
       else
 	low=half;

@@ -123,41 +123,41 @@ static int randvar_read_PHI ()
   char filename[] = PHI_DATA_FILE;
 #warning "PHI_DATA_FILE deprecated!"
   scanner_t *s = NULL;
-  s = scanner_alloc (filename);
+  s = ighmm_scanner_alloc (filename);
   if (!s) {
     mes_proc ();
     goto STOP;
   }
-  scanner_get_name (s);
-  scanner_consume (s, '=');
+  ighmm_scanner_get_name (s);
+  ighmm_scanner_consume (s, '=');
   if (s->err)
     goto STOP;
   if (!strcmp (s->id, "PHI")) {
-    scanner_consume (s, '{');
+    ighmm_scanner_consume (s, '{');
     if (s->err)
       goto STOP;
     PHI = scanner_get_double_earray (s, &PHI_len);
     if (s->err)
       goto STOP;
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
-    scanner_consume (s, '}');
+    ighmm_scanner_consume (s, '}');
     if (s->err)
       goto STOP;
-    scanner_consume (s, ';');
+    ighmm_scanner_consume (s, ';');
     if (s->err)
       goto STOP;
   }
   else {
-    scanner_error (s, "unknown identifier");
+    ighmm_scanner_error (s, "unknown identifier");
     goto STOP;
   }
   /* printf("%.4f\n", PHI[PHI_len-1]); */
 
   res = 0;;
 STOP:
-  scanner_free (&s);
+  ighmm_scanner_free (&s);
   return res;
 # undef CUR_PROC
 }                               /* randvar_read_PHI */
@@ -194,32 +194,32 @@ STOP:
 
 
 /*============================================================================*/
-/* needed by pmue_interpol */
+/* needed by ighmm_gtail_pmue_interpol */
 
-double randvar_get_xfaktphi ()
+double ighmm_rand_get_xfaktphi ()
 {
   return X_FAKT_PHI;
 }
 
-double randvar_get_xstepphi ()
+double ighmm_rand_get_xstepphi ()
 {
   return X_STEP_PHI;
 }
 
-double randvar_get_philen ()
+double ighmm_rand_get_philen ()
 {
 #ifdef DO_WITH_GSL
   return PHI_len;
 #else
-  return randvar_get_xPHIless1 () / X_STEP_PHI;
+  return ighmm_rand_get_xPHIless1 () / X_STEP_PHI;
 #endif
 }
 
 
 /*============================================================================*/
-double randvar_get_PHI (double x)
+double ighmm_rand_get_PHI (double x)
 {
-# define CUR_PROC "randvar_get_PHI"
+# define CUR_PROC "ighmm_rand_get_PHI"
 
 #ifdef DO_WITH_GSL
   return (gsl_sf_erf (x * M_SQRT1_2) + 1.0) / 2.0;
@@ -251,14 +251,14 @@ double randvar_get_PHI (double x)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* randvar_get_PHI */
+}                               /* ighmm_rand_get_PHI */
 
 
 /*============================================================================*/
 /* When is PHI[x,0,1] == 1? */
-double randvar_get_xPHIless1 ()
+double ighmm_rand_get_xPHIless1 ()
 {
-# define CUR_PROC "randvar_get_xPHIless1"
+# define CUR_PROC "ighmm_rand_get_xPHIless1"
 #ifdef DO_WITH_GSL
   if (x_PHI_1 == -1) {
     double low, up, half;
@@ -266,7 +266,7 @@ double randvar_get_xPHIless1 ()
     up = 100;
     while (up - low > 0.001) {
       half = (low + up) / 2.0;
-      if (randvar_get_PHI (half) < 1.0)
+      if (ighmm_rand_get_PHI (half) < 1.0)
         low = half;
       else
         up = half;
@@ -285,7 +285,7 @@ double randvar_get_xPHIless1 ()
     /* The last value of the table is 1 */
     for (x = (PHI_len - 1) * X_STEP_PHI, i = PHI_len - 1; i > 0;
          x -= X_STEP_PHI, i--)
-      if (randvar_get_PHI (-x) > 0.0)
+      if (ighmm_rand_get_PHI (-x) > 0.0)
         break;
     /* Modification: x exactly between 2 sampling points! */
     x_PHI_1 = x - (double) X_STEP_PHI / 2.0;
@@ -312,7 +312,7 @@ double randvar_get_xPHIxgleichPHIy ()
     }
     y = -1.0;
     for (x = 0.0, i = 0; i < PHI_len; x += X_STEP_PHI, i++) {
-      if (randvar_get_PHI (-x) == randvar_get_PHI (-y))
+      if (ighmm_rand_get_PHI (-x) == ighmm_rand_get_PHI (-y))
         break;
       y = x;
     }
@@ -326,11 +326,11 @@ STOP:
 #endif /* 0 */
 
 /*============================================================================*/
-double randvar_get_1overa (double x, double mean, double u)
+double ighmm_rand_get_1overa (double x, double mean, double u)
 {
   /* Calulates 1/a(x, mean, u), with a = the integral from x til \infty over
      the Gauss density function */
-# define CUR_PROC "randvar_get_1overa"
+# define CUR_PROC "ighmm_rand_get_1overa"
 
 #ifdef DO_WITH_GSL
   double erfc_value;
@@ -401,7 +401,7 @@ double randvar_get_1overa (double x, double mean, double u)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* randvar_get_1overa */
+}                               /* ighmm_rand_get_1overa */
 
 
 /*============================================================================*/
@@ -409,26 +409,26 @@ STOP:
    The calulation of this density function was testet, by calculating the 
    following integral sum for arbitrary mue and u:
      for (x = 0, x < ..., x += step(=0.01/0.001/0.0001)) 
-       isum += step * randvar_normal_density_pos(x, mue, u);
+       isum += step * ighmm_rand_normal_density_pos(x, mue, u);
    In each case, the sum "converged" evidently towards 1!
    (BK, 14.6.99)
    CHANGE:
    Truncate at -EPS_NDT (const.h), so that x = 0 doesn't lead to a problem.
    (BK, 15.3.2000)
 */
-double randvar_normal_density_pos (double x, double mean, double u)
+double ighmm_rand_normal_density_pos (double x, double mean, double u)
 {
-# define CUR_PROC "randvar_normal_density_pos"
-  return randvar_normal_density_trunc (x, mean, u, -EPS_NDT);
+# define CUR_PROC "ighmm_rand_normal_density_pos"
+  return ighmm_rand_normal_density_trunc (x, mean, u, -EPS_NDT);
 # undef CUR_PROC
-}                               /* double randvar_normal_density_pos */
+}                               /* double ighmm_rand_normal_density_pos */
 
 
 /*============================================================================*/
-double randvar_normal_density_trunc (double x, double mean, double u,
+double ighmm_rand_normal_density_trunc (double x, double mean, double u,
                                      double a)
 {
-# define CUR_PROC "randvar_normal_density_trunc"
+# define CUR_PROC "ighmm_rand_normal_density_trunc"
 #ifndef DO_WITH_GSL
   double c;
 #endif /* DO_WITH_GSL */
@@ -445,23 +445,23 @@ double randvar_normal_density_trunc (double x, double mean, double u,
   /* double gsl_ran_gaussian_tail_pdf (double x, double a, double sigma) */
   return gsl_ran_gaussian_tail_pdf (x - mean, a - mean, sqrt (u));
 #else
-  if ((c = randvar_get_1overa (a, mean, u)) == -1) {
+  if ((c = ighmm_rand_get_1overa (a, mean, u)) == -1) {
     mes_proc ();
     goto STOP;
   };
-  return (c * randvar_normal_density (x, mean, u));
+  return (c * ighmm_rand_normal_density (x, mean, u));
 #endif /* DO_WITH_GSL */
 
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_normal_density_trunc */
+}                               /* double ighmm_rand_normal_density_trunc */
 
 
 /*============================================================================*/
-double randvar_normal_density (double x, double mean, double u)
+double ighmm_rand_normal_density (double x, double mean, double u)
 {
-# define CUR_PROC "randvar_normal_density"
+# define CUR_PROC "ighmm_rand_normal_density"
 #ifndef DO_WITH_GSL
   double expo;
 #endif
@@ -481,13 +481,13 @@ double randvar_normal_density (double x, double mean, double u)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_normal_density */
+}                               /* double ighmm_rand_normal_density */
 
 
 /*============================================================================*/
-double randvar_uniform_density (double x, double max, double min)
+double ighmm_rand_uniform_density (double x, double max, double min)
 {
-# define CUR_PROC "randvar_uniform_density"
+# define CUR_PROC "ighmm_rand_uniform_density"
   double prob;
   if (max <= min) {
     mes_prot ("max <= min not allowed \n");
@@ -503,7 +503,7 @@ double randvar_uniform_density (double x, double max, double min)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_uniform_density */
+}                               /* double ighmm_rand_uniform_density */
 
 
 /*============================================================================*/
@@ -526,9 +526,9 @@ static int randvar_init_pdf_stdnormal ()
 }                               /* randvar_init_pdf_stdnormal */
 
 
-double randvar_normal_density_approx (double x, double mean, double u)
+double ighmm_rand_normal_density_approx (double x, double mean, double u)
 {
-# define CUR_PROC "randvar_normal_density_approx"
+# define CUR_PROC "ighmm_rand_normal_density_approx"
 #ifdef HAVE_LIBPTHREAD
   static pthread_mutex_t lock;
 #endif /* HAVE_LIBPTHREAD */
@@ -563,13 +563,13 @@ double randvar_normal_density_approx (double x, double mean, double u)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_normal_density_approx */
+}                               /* double ighmm_rand_normal_density_approx */
 
 
 /*============================================================================*/
-double randvar_std_normal (int seed)
+double ighmm_rand_std_normal (int seed)
 {
-# define CUR_PROC "randvar_std_normal"
+# define CUR_PROC "ighmm_rand_std_normal"
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
     return (1.0);
@@ -599,13 +599,13 @@ double randvar_std_normal (int seed)
 #endif
   }
 # undef CUR_PROC
-}                               /* randvar_std_normal */
+}                               /* ighmm_rand_std_normal */
 
 
 /*============================================================================*/
-double randvar_normal (double mue, double u, int seed)
+double ighmm_rand_normal (double mue, double u, int seed)
 {
-# define CUR_PROC "randvar_normal"
+# define CUR_PROC "ighmm_rand_normal"
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
     return (1.0 * sqrt (u) + mue);
@@ -615,12 +615,12 @@ double randvar_normal (double mue, double u, int seed)
     return (gsl_ran_gaussian (RNG, sqrt (u)) + mue);
 #else
     double x;
-    x = sqrt (u) * randvar_std_normal (seed) + mue;
+    x = sqrt (u) * ighmm_rand_std_normal (seed) + mue;
     return (x);
 #endif
   }
 # undef CUR_PROC
-}                               /* randvar_normal */
+}                               /* ighmm_rand_normal */
 
 
 /*============================================================================*/
@@ -633,9 +633,9 @@ double randvar_normal (double mue, double u, int seed)
 # define D3 0.001308
 #endif
 
-double randvar_normal_right (double a, double mue, double u, int seed)
+double ighmm_rand_normal_right (double a, double mue, double u, int seed)
 {
-# define CUR_PROC "randvar_normal_right"
+# define CUR_PROC "ighmm_rand_normal_right"
   double x = -1;
   double sigma;
 #ifdef DO_WITH_GSL
@@ -677,16 +677,16 @@ double randvar_normal_right (double a, double mue, double u, int seed)
   /* Method: Generate Gauss-distributed random nunbers (with GSL-lib.),
      until a positive one is found -> not very effective if mue << 0
      while (x < 0.0) {
-     x = sigma * randvar_std_normal(seed) + mue;
+     x = sigma * ighmm_rand_std_normal(seed) + mue;
      } */
 
   /* Inverse transformation with restricted sampling by Fishman */
   U = GHMM_RNG_UNIFORM (RNG);
-  Feps = randvar_get_PHI (-(a + mue) / sigma);
+  Feps = ighmm_rand_get_PHI (-(a + mue) / sigma);
   Us = Feps + (1 - Feps) * U;
   /* Numerically better: 1-Us = 1-Feps - (1-Feps)*U, therefore: 
      Feps1 = 1-Feps, Us1 = 1-Us */
-  Feps1 = randvar_get_PHI ((a + mue) / sigma);
+  Feps1 = ighmm_rand_get_PHI ((a + mue) / sigma);
   Us1 = Feps1 - Feps1 * U;
   t = m_min (Us, Us1);
   t = sqrt (-log (t * t));
@@ -708,9 +708,9 @@ STOP:
 
 
 /*============================================================================*/
-double randvar_uniform_int (int seed, int K)
+double ighmm_rand_uniform_int (int seed, int K)
 {
-# define CUR_PROC "randvar_uniform_int"
+# define CUR_PROC "ighmm_rand_uniform_int"
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
     return (1.0);
@@ -724,12 +724,12 @@ double randvar_uniform_int (int seed, int K)
 #endif
   }
 # undef CUR_PROC
-}                               /* randvar_uniform_int */
+}                               /* ighmm_rand_uniform_int */
 
 /*===========================================================================*/
-double randvar_uniform_cont (int seed, double max, double min)
+double ighmm_rand_uniform_cont (int seed, double max, double min)
 {
-# define CUR_PROC "randvar_uniform_cont"
+# define CUR_PROC "ighmm_rand_uniform_cont"
   if (max <= min) {
     mes_prot ("max <= min not allowed\n");
     goto STOP;
@@ -748,13 +748,13 @@ double randvar_uniform_cont (int seed, double max, double min)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* randvar_uniform_cont */
+}                               /* ighmm_rand_uniform_cont */
 
 /*============================================================================*/
 /* cumalative distribution function of N(mean, u) */
-double randvar_normal_cdf (double x, double mean, double u)
+double ighmm_rand_normal_cdf (double x, double mean, double u)
 {
-# define CUR_PROC "randvar_normal_cdf"
+# define CUR_PROC "ighmm_rand_normal_cdf"
   if (u <= 0.0) {
     mes_prot ("u <= 0.0 not allowed\n");
     goto STOP;
@@ -764,18 +764,18 @@ double randvar_normal_cdf (double x, double mean, double u)
   return (gsl_sf_erf ((x - mean) / sqrt (u * 2.0)) + 1.0) / 2.0;
 #else
   /* The denominator is possibly < EPS??? Check that ? */
-  return (randvar_get_PHI ((x - mean) / sqrt (u)));
+  return (ighmm_rand_get_PHI ((x - mean) / sqrt (u)));
 #endif /* DO_WITH_GSL */
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_normal_cdf */
+}                               /* double ighmm_rand_normal_cdf */
 
 /*============================================================================*/
 /* cumalative distribution function of a-truncated N(mean, u) */
-double randvar_normal_right_cdf (double x, double mean, double u, double a)
+double ighmm_rand_normal_right_cdf (double x, double mean, double u, double a)
 {
-# define CUR_PROC "randvar_normal_right_cdf"
+# define CUR_PROC "ighmm_rand_normal_right_cdf"
 #ifndef DO_WITH_GSL
   double Fx, c;
 #endif
@@ -796,20 +796,20 @@ double randvar_normal_right_cdf (double x, double mean, double u, double a)
                 1.0) / gsl_sf_erfc ((a - mean) / sqrt (u * 2));
 #else
   /*The denominator is possibly < EPS??? Check that ? */
-  Fx = randvar_get_PHI ((x - mean) / sqrt (u));
-  c = randvar_get_1overa (a, mean, u);
+  Fx = ighmm_rand_get_PHI ((x - mean) / sqrt (u));
+  c = ighmm_rand_get_1overa (a, mean, u);
   return (c * (Fx - 1) + 1);
 #endif /* DO_WITH_GSL */
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_normal_cdf */
+}                               /* double ighmm_rand_normal_cdf */
 
 /*============================================================================*/
 /* cumalative distribution function of a uniform distribution in the range [min,max] */
-double randvar_uniform_cdf (double x, double max, double min)
+double ighmm_rand_uniform_cdf (double x, double max, double min)
 {
-# define CUR_PROC "randvar_uniform_cdf"
+# define CUR_PROC "ighmm_rand_uniform_cdf"
   if (max <= min) {
     mes_prot ("max <= min not allowed\n");
     goto STOP;
@@ -824,4 +824,4 @@ double randvar_uniform_cdf (double x, double max, double min)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double randvar_normal_cdf */
+}                               /* double ighmm_rand_normal_cdf */
