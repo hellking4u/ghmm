@@ -1149,7 +1149,7 @@ typedef struct sdmodel sdmodel;
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
     @param mo:  pointer to a model */
-int     sdmodel_free(sdmodel **mo);
+int     ghmm_ds_free (sdmodel **mo);
 
 /** 
     Produces sequences to a given model. All memory that is needed for the 
@@ -1166,7 +1166,7 @@ int     sdmodel_free(sdmodel **mo);
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
+sequence_t *ghmm_ds_generate_sequences (sdmodel* mo, int seed, int global_len,
 				     long seq_number, int Tmax);
 
 
@@ -1177,7 +1177,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
    @param mo model
    @param sq sequences       
 */
-extern double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
+extern double ghmm_ds_likelihood (sdmodel *mo, sequence_t *sq);
 
 /** 
     Computes log likelihood for all sequence of
@@ -1191,7 +1191,7 @@ extern double sdmodel_likelihood(sdmodel *mo, sequence_t *sq);
 extern int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps);
 
 /******* Viterbi for switching discrete model (sdviterbi.c) *******/
-int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
+int *ghmm_ds_viterbi (sdmodel *mo, int *o, int len, double *log_p);
 
 /******* Forward-Algorithm. (sdfoba.c) *******
   Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
@@ -1204,13 +1204,13 @@ int *sdviterbi(sdmodel *mo, int *o, int len, double *log_p);
   @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int sdfoba_forward(sdmodel *mo, const int *O, int len, double **alpha, 
+extern int ghmm_ds_forward (sdmodel *mo, const int *O, int len, double **alpha, 
 		 double *scale, double *log_p); 
 
 
 %inline%{
   
-  void call_sdmodel_free(sdmodel * sdm)	{ sdmodel_free(&sdm); }
+  void call_sdmodel_free (sdmodel * sdm)	{ghmm_ds_free(&sdm);}
 	
   /* allocation of an array of sdstate structs*/	
   sdstate *arraysdstate(int size) {

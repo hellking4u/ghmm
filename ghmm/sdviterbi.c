@@ -218,9 +218,9 @@ static void __viterbi_silent (sdmodel * mo, int t, local_store_t * v,
 }
 
 /** Return the log score of the sequence */
-int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
+int *ghmm_ds_viterbi (sdmodel * mo, int *o, int len, double *log_p)
 {
-#define CUR_PROC "sdviterbi"
+#define CUR_PROC "ghmm_ds_viterbi"
 
   int *state_seq = NULL;
   int t, j, i, k, St, osc=0;
@@ -238,7 +238,7 @@ int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p)
   int *tmp_path;
 
   if ((mo->model_type & kSilentStates) && mo->topo_order == NULL) {
-    /* sdmodel_topo_ordering( mo ); */
+    /* ghmm_ds_topo_order (mo); */
     /* Should we call it here ???? */
     fprintf (stderr,
              "Viterbi Error: Contain silent states, but no topological ordering\n");
@@ -451,9 +451,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* viterbi */
 
 
-int *sdviterbi_silent (sdmodel * mo, int *o, int len, double *log_p)
+int *ghmm_ds_viterbi_silent (sdmodel * mo, int *o, int len, double *log_p)
 {
-#define CUR_PROC "sdviterbi_silent"
+#define CUR_PROC "ghmm_ds_viterbi_silent"
 
   return 0;
 

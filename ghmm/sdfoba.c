@@ -113,16 +113,16 @@ static double sdfoba_stepforward (sdstate * s, double *alpha_t,
 
 /*============================================================================*/
 
-int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
+int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
                     double *scale, double *log_p)
 {
-# define CUR_PROC "sdfoba_forward"
+# define CUR_PROC "ghmm_ds_forward"
   int i, t, id;
   double c_t, dblems;
   int class = 0;
 
   /*if (mo->model_type & kSilentStates)
-     sdmodel_topo_ordering(mo);
+     ghmm_ds_topo_order(mo);
    */
   sdfoba_initforward (mo, alpha[0], O[0], scale);
   if (scale[0] < EPS_PREC) {
@@ -195,8 +195,9 @@ int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
 
   return 0;
 # undef CUR_PROC
-}                               /* sdfoba_forward */
+}                               /* ghmm_ds_forward */
 
+#if 0 /* unused */
 /*============================================================================*/
 static int sdfobau_initforward (sdmodel * mo, double *alpha_1, int symb,
                                 double *scale)
@@ -241,13 +242,13 @@ static int sdfobau_initforward (sdmodel * mo, double *alpha_1, int symb,
 int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
                      double *scale, double *log_p)
 {
-# define CUR_PROC "sdfoba_forward"
+# define CUR_PROC "ghmm_ds_forward"
   int i, t, id;
   double c_t;
   int class = 0;
 
   if (mo->model_type & kSilentStates)
-    sdmodel_topo_ordering (mo);
+    ghmm_ds_topo_order (mo);
 
   sdfobau_initforward (mo, alpha[0], O[0], scale);
   if (scale[0] < EPS_PREC) {
@@ -292,14 +293,15 @@ int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
 
   return 0;
 # undef CUR_PROC
-}                               /* sdfoba_forward */
+}                               /* sdfobau_forward */
+#endif /* unused */
 
 /*============================================================================*/
 
-int sdfoba_descale (double **alpha, double *scale, int t, int n,
+int ghmm_ds_forward_descale (double **alpha, double *scale, int t, int n,
                     double **newalpha)
 {
-# define CUR_PROC "sdfoba_descale"
+# define CUR_PROC "ghmm_ds_forward_descale"
   int i, j, k;
   /*printf("\nAngekommen, t=%i, n=%i\n",t,n);*/
   for (i = 0; i < t; i++) {
@@ -318,14 +320,14 @@ int sdfoba_descale (double **alpha, double *scale, int t, int n,
   /*printf("\ndescale geschafft\n");*/
   return 0;
 # undef CUR_PROC
-}                               /* sdfoba_descale */
+}                               /* ghmm_ds_forward_descale */
 
 /*============================================================================*/
 
-int sdfoba_backward (sdmodel * mo, const int *O, int len, double **beta,
+int ghmm_ds_backward (sdmodel * mo, const int *O, int len, double **beta,
                      const double *scale)
 {
-# define CUR_PROC "sdfoba_backward"
+# define CUR_PROC "ghmm_ds_backward"
   double *beta_tmp, sum;
   int i, j, j_id, t;
   int res = -1;
@@ -357,13 +359,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
-}                               /* sdfoba_backward */
+}                               /* ghmm_ds_backward */
 
 
 /*============================================================================*/
-int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p)
+int ghmm_ds_logp (sdmodel * mo, const int *O, int len, double *log_p)
 {
-#define CUR_PROC "sdfoba_logp"
+#define CUR_PROC "ghmm_ds_logp"
   int res = -1;
   double **alpha, *scale = NULL;
   alpha = ighmm_cmatrix_alloc (len, mo->N);
@@ -372,8 +374,8 @@ int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p)
     goto STOP;
   }
   ARRAY_CALLOC (scale, len);
-  /* run sdfoba_forward */
-  if (sdfoba_forward (mo, O, len, alpha, scale, log_p) == -1) {
+  /* run ghmm_ds_forward */
+  if (ghmm_ds_forward (mo, O, len, alpha, scale, log_p) == -1) {
     mes_proc ();
     goto STOP;
   }
@@ -386,4 +388,4 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (scale);
   return (res);
 # undef CUR_PROC
-}                               /* sdfoba_logp */
+}                               /* ghmm_ds_logp */

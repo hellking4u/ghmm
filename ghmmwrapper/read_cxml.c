@@ -102,7 +102,7 @@ sdmodel *graphmlTosdModel(char *filename)
       if (mymodel->model_id == DISCRETE)
 	{
 	  cmodel = (sdmodel*)(mymodel->model_pt); /* the actual pointer to C struct model */
-	  nsilents = sdmodel_initSilentStates( cmodel );
+	  nsilents = ghmm_ds_init_silent_states (cmodel);
 	  fprintf(stderr, "In Main: # Silent States %d\n", nsilents);
 
 	  if ( cmodel->cos > 1 ) {
@@ -115,7 +115,7 @@ sdmodel *graphmlTosdModel(char *filename)
 	  }
 
  	  fprintf(stderr, "In read_cxml.c\n");
-	  sdmodel_topo_ordering( cmodel );
+	  ghmm_ds_topo_order (cmodel);
 	  free((void*) mymodel);
 	  return cmodel;
 	}
