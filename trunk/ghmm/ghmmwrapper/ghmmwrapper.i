@@ -1188,7 +1188,7 @@ extern double ghmm_ds_likelihood (sdmodel *mo, sequence_t *sq);
    @param sqd    sequence struct
    @param log\_p array of evaluated likelihoods
 */
-extern int smodel_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps);
+extern int ghmm_c_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps);
 
 /******* Viterbi for switching discrete model (sdviterbi.c) *******/
 int *ghmm_ds_viterbi (sdmodel *mo, int *o, int len, double *log_p);
@@ -1325,12 +1325,12 @@ struct smodel{
 typedef struct smodel smodel;
 
 
-extern int smodel_class_change_alloc(smodel *smo);
+extern int ghmm_c_class_change_alloc(smodel *smo);
 
 /** Free memory smodel 
     @return 0: success, -1: error
     @param smo  pointer pointer of smodel */
-extern int     smodel_free(smodel **smo);
+extern int     ghmm_c_free(smodel **smo);
 
 #ifdef GHMM_OBSOLETE
 /** Reads an ascii file with specifications for one or more smodels.
@@ -1341,14 +1341,14 @@ extern int     smodel_free(smodel **smo);
    @return vector of read smodels
    @param filename   input ascii file
    @param smo_number  number of read smodels */
-extern smodel** smodel_read(const char *filename, int *smo_number);
+extern smodel** ghmm_c_read(const char *filename, int *smo_number);
 #endif /* GHMM_OBSOLETE */
 
 /**
    Copies one smodel. Memory alloc is here.
    @return pointer to smodel copy
    @param smo   smodel to be copied  */
-extern smodel*  smodel_copy(const smodel *smo);
+extern smodel*  ghmm_c_copy(const smodel *smo);
 
 /**
    Produces sequences to a given model. All memory that is needed for the 
@@ -1358,7 +1358,7 @@ extern smodel*  smodel_copy(const smodel *smo);
     with no output). If the model has no final state, the sequences will
     have length MAX_SEQ_LEN.
 */
-extern sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global_len,
+extern sequence_d_t *ghmm_c_generate_sequences(smodel* smo, int seed, int global_len,
 					       long seq_number, long label, int Tmax);
 
 /** Computes probabilistic distance of two models
@@ -1372,7 +1372,7 @@ extern sequence_d_t *smodel_generate_sequences(smodel* smo, int seed, int global
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-extern double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
+extern double ghmm_c_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
 
 
 /** Forward-Algorithm.  (sfoba.c)
@@ -1388,7 +1388,7 @@ extern double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmet
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int sfoba_forward(smodel *smo, double *O, int T, double ***b, 
+extern int ghmm_c_forward(smodel *smo, double *O, int T, double ***b, 
 		  double **alpha, double *scale, double *log_p);
 
 /** 
@@ -1403,7 +1403,7 @@ extern int sfoba_forward(smodel *smo, double *O, int T, double ***b,
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-extern int sfoba_backward(smodel *smo, double *O, int T, double ***b,
+extern int ghmm_c_backward(smodel *smo, double *O, int T, double ***b,
 		   double **beta, const double *scale);
 
 /**
@@ -1417,7 +1417,7 @@ extern int sfoba_backward(smodel *smo, double *O, int T, double ***b,
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int sfoba_logp(smodel *smo, double *O, int T, double *log_p);
+extern int ghmm_c_logp(smodel *smo, double *O, int T, double *log_p);
 
 
 
@@ -1451,7 +1451,7 @@ extern void smodel_set_variance(smodel *smo, int i, double *variance);
 
 // extern void call_smodel_print(char *filename, smodel *smo);
 
-extern int smodel_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
+extern int ghmm_c_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
 
 extern int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps, int *seq_rank);
 
@@ -1467,7 +1467,7 @@ extern int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, 
   @param T       sequence length
   @param log_p   log(p) of the sequence using the vitberbi path
   */
-extern int *sviterbi(smodel *smo, double *o, int T, double *log_p);
+extern int *ghmm_c_viterbi(smodel *smo, double *o, int T, double *log_p);
 
 
 extern int cp_class_change(smodel *smo, double *seq, int k, int t);
@@ -1518,12 +1518,12 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
     return &(states[k]);
   }
 		  	
-  void call_smodel_free(smodel *smo ) {smodel_free(&smo);}
+  void call_smodel_free (smodel *smo) {ghmm_c_free(&smo);}
 
-  void free_smodel_array(smodel **smo) { if (smo){ m_free(smo);} }
+  void free_smodel_array (smodel **smo) {if (smo) {m_free(smo);} }
   		
   void smodel_print_stdout(smodel *smo) {
-    smodel_print(stdout, smo);
+    ghmm_c_print(stdout, smo);
   }
  
   /* extract pointer to sstate  */	
@@ -1552,7 +1552,7 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
   if (fp == NULL) {
     fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
   } else {
-    smodel_print(fp, smo);
+    ghmm_c_print(fp, smo);
     fclose(fp);
   }
 }
@@ -1720,7 +1720,7 @@ typedef struct smosqd_t smosqd_t;
   @return            0/-1 success/error
   @param cs         initial model and train sequences
   */
-extern int sreestimate_baum_welch(smosqd_t *cs);
+extern int ghmm_c_baum_welch(smosqd_t *cs);
 
 /********** Here comes all the Pair HMM stuff  **********/
 

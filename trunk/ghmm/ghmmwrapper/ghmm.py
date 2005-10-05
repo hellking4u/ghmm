@@ -1297,7 +1297,7 @@ class HMMOpenFactory(HMMFactory):
                 models = ghmmwrapper.ghmm_d_read(fileName, nrModelPtr)
                 getPtr = ghmmwrapper.get_model_ptr
             else:
-                models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+                models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
                 getPtr = ghmmwrapper.get_smodel_ptr
 
             nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
@@ -1343,7 +1343,7 @@ class HMMOpenFactory(HMMFactory):
             models = hmmwrapper.ghmm_d_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.get_model_ptr
         else:
-            models = ghmmwrapper.smodel_read(fileName, nrModelPtr)
+            models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.get_smodel_ptr
 
         nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
@@ -1601,7 +1601,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     cmodel.N = len(A[0])
                     
                     # allocating class switching context
-                    ghmmwrapper.smodel_class_change_alloc(cmodel)
+                    ghmmwrapper.ghmm_c_class_change_alloc(cmodel)
                 else: 
                     cos = 1
                     cmodel.N = len(A)
@@ -1681,7 +1681,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     cos = len(A)
                     cmodel.N = len(A[0])
                     # allocating class switching context
-                    ghmmwrapper.smodel_class_change_alloc(cmodel)
+                    ghmmwrapper.ghmm_c_class_change_alloc(cmodel)
                     
                 else: 
                     cos = 1
@@ -1764,7 +1764,7 @@ class HMMFromMatricesFactory(HMMFactory):
 #                     cos = len(A)
 #                     cmodel.N = len(A[0])
 #                     # allocating class switching context
-#                     ghmmwrapper.smodel_class_change_alloc(cmodel)
+#                     ghmmwrapper.ghmm_c_class_change_alloc(cmodel)
 #                     
 #                 else: 
 #                     cos = 1
@@ -2060,7 +2060,7 @@ class HMM:
     def baumWelchDelete(self):
         pass
         
-    # extern double smodel_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
+    # extern double ghmm_c_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
     def distance(self,model, seqLength):
         """ Returns the distance between 'self.cmodel' and 'model'.   """
         return self.distanceFunction(self.cmodel, model.cmodel, seqLength,0,0)
@@ -3350,16 +3350,16 @@ class GaussianEmissionHMM(HMM):
 
         # Assignment of the C function names to be used with this model type
         self.freeFunction = ghmmwrapper.call_smodel_free
-        self.samplingFunction = ghmmwrapper.smodel_generate_sequences
-        self.viterbiFunction = ghmmwrapper.sviterbi
-        self.forwardFunction = ghmmwrapper.sfoba_logp
-        self.forwardAlphaFunction = ghmmwrapper.sfoba_forward
-        self.backwardBetaFunction = ghmmwrapper.sfoba_backward
+        self.samplingFunction = ghmmwrapper.ghmm_c_generate_sequences
+        self.viterbiFunction = ghmmwrapper.ghmm_c_viterbi
+        self.forwardFunction = ghmmwrapper.ghmm_c_logp
+        self.forwardAlphaFunction = ghmmwrapper.ghmm_c_forward
+        self.backwardBetaFunction = ghmmwrapper.ghmm_c_backward
         self.getStatePtr = ghmmwrapper.get_sstate_ptr
         self.fileWriteFunction = ghmmwrapper.call_smodel_print
         self.getModelPtr = ghmmwrapper.get_smodel_ptr
         self.castModelPtr = ghmmwrapper.cast_smodel_ptr
-        self.distanceFunction = ghmmwrapper.smodel_prob_distance
+        self.distanceFunction = ghmmwrapper.ghmm_c_prob_distance
 
         # Baum Welch context, call baumWelchSetup to initalize
         self.BWcontext = ""
@@ -3704,7 +3704,7 @@ class GaussianEmissionHMM(HMM):
         assert self.emissionDomain.CDataType == "double", "Continous sequence needed."
         
         self.baumWelchSetup(trainingSequences, nrSteps)
-        ghmmwrapper.sreestimate_baum_welch(self.BWcontext)        
+        ghmmwrapper.ghmm_c_baum_welch(self.BWcontext)        
         likelihood = ghmmwrapper.get_arrayd(self.BWcontext.logp, 0)
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)

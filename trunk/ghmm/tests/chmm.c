@@ -71,11 +71,11 @@ int single_state_continuous()
  
 #if 0
   /* print model */
-  smodel_print(stdout,&my_model);
+  ghmm_c_print(stdout,&my_model);
 #endif
 
   /* generate sequences */
-  my_output=smodel_generate_sequences(&my_model,
+  my_output=ghmm_c_generate_sequences(&my_model,
 				      1,  /* random seed */
 				      10, /* length of sequences */
 				      10, /* sequences */
@@ -102,19 +102,19 @@ int single_state_continuous()
     /* write this model */
     my_file=fdopen(descriptor,"w+");
     fprintf(stdout,"printing model to file %s\n",filename_buffer);
-    smodel_print(my_file,&my_model);
+    ghmm_c_print(my_file,&my_model);
     (void)fseek(my_file, 0L, SEEK_SET);
     fclose(my_file);
 
 #ifdef GHMM_OBSOLETE
     /* read this model */
     fprintf(stdout,"rereading model from file %s\n",filename_buffer);
-    model_array=smodel_read(filename_buffer,&model_counter);
+    model_array=ghmm_c_read(filename_buffer,&model_counter);
 #endif /* GHMM_OBSOLETE */
 
     /* generate sequences */
     fprintf(stdout,"generating sequences again\n");
-    new_output=smodel_generate_sequences(model_array[0],
+    new_output=ghmm_c_generate_sequences(model_array[0],
 					 1,  /* random seed */
 					 10, /* length of sequences */
 					 10, /* sequences */
@@ -132,10 +132,10 @@ int single_state_continuous()
     ghmm_cseq_free(&new_output);
     /*while(model_counter>0)
       {
-	smodel_free(&(model_array[model_counter-1]));
+	ghmm_c_free(&(model_array[model_counter-1]));
 	model_counter-=1;
 	}*/
-    smodel_free(model_array);
+    ghmm_c_free(model_array);
    
   }
 

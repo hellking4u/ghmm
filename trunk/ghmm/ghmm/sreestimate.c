@@ -262,7 +262,7 @@ static int sreestimate_precompute_b (smodel * smo, double *O, int T,
   for (t = 0; t < T; t++)
     for (i = 0; i < smo->N; i++)
       for (m = 0; m < smo->s[i].M; m++) {
-        b[t][i][m] = smodel_calc_cmbm (smo, i, m, O[t]);
+        b[t][i][m] = ghmm_c_calc_cmbm (smo, i, m, O[t]);
         b[t][i][smo->s[i].M] += b[t][i][m];
       }
   return (0);
@@ -579,8 +579,8 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
     }
 
 
-    if ((sfoba_forward (smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
-        (sfoba_backward (smo, O[k], T_k, b, beta, scale) == -1)) {
+    if ((ghmm_c_forward (smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
+        (ghmm_c_backward (smo, O[k], T_k, b, beta, scale) == -1)) {
 #if MCI
       ighmm_mes (MESCONTR, "O(%2d) can't be build from smodel smo!\n", k);
 #endif
@@ -742,10 +742,10 @@ int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
          }
      }  
    
-    smodel_print(stdout,smo); */
+    ghmm_c_print(stdout,smo); */
 
     
-    if (smodel_check(smo) == -1) { 
+    if (ghmm_c_check(smo) == -1) { 
         mes_proc(); 
         printf("Model invalid !\n\n");
         
@@ -778,10 +778,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-/* int sreestimate_baum_welch(smodel *smo, sequence_d_t *sqd) {*/
-int sreestimate_baum_welch (smosqd_t * cs)
+/* int ghmm_c_baum_welch(smodel *smo, sequence_d_t *sqd) {*/
+int ghmm_c_baum_welch (smosqd_t * cs)
 {
-# define CUR_PROC "sreestimate_baum_welch"
+# define CUR_PROC "ghmm_c_baum_welch"
   int i, j, n, valid, valid_old, max_iter_bw;
   double log_p, log_p_old, diff, eps_iter_bw;
   local_store_t *r = NULL;
@@ -814,7 +814,7 @@ int sreestimate_baum_welch (smosqd_t * cs)
   max_iter_bw = m_min (MAX_ITER_BW, cs->max_iter);
   eps_iter_bw = m_max (EPS_ITER_BW, cs->eps);
 
-  /*printf("  *** sreestimate_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );*/
+  /*printf("  *** ghmm_c_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );*/
 
   while (n <= max_iter_bw) {
     valid = sreestimate_one_step (cs->smo, r, cs->sqd->seq_number,
@@ -884,14 +884,14 @@ int sreestimate_baum_welch (smosqd_t * cs)
   *cs->logp = log_p;
 
   /* test plausibility of new parameters */
-  /*  if (smodel_check(mo) == -1) { mes_proc(); goto STOP; } */
+  /*  if (ghmm_c_check(mo) == -1) { mes_proc(); goto STOP; } */
   sreestimate_free (&r, cs->smo->N);
   return (0);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sreestimate_free (&r, cs->smo->N);
   return (-1);
 # undef CUR_PROC
-}                               /* sreestimate_baum_welch */
+}                               /* ghmm_c_baum_welch */
 
 #undef ACC
 #undef MCI

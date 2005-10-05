@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
   ghmm_rng_init();
   if (smodelflag) {
-    smo = smodel_read(argv[1], &smo_number);
+    smo = ghmm_c_read(argv[1], &smo_number);
     if (!smo)  {mes_proc(); return -1;}  
     if (smo_number < 2) {
       printf("Need at least two HMMs to compare (read %d)\n", smo_number);
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
       for (j = i + 1; j < smo_number; j++) {
 	printf("#----- mo[%d], mo[%d] \n", i , j);
 	/* syntax prob_dist: (smo1, smo2, total seqlen., symmetric, verbose) */
-	d = smodel_prob_distance(smo[i], smo[j], T, 1, 0);
+	d = ghmm_c_prob_distance(smo[i], smo[j], T, 1, 0);
 	printf("probdist = %f\n",d);
 
       }

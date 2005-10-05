@@ -164,19 +164,19 @@ extern "C" {
 /* don't include this earlier: in sequence.h smodel has to be known */
 #include "sequence.h"
 
-  int smodel_class_change_alloc (smodel * smo);
+  int ghmm_c_class_change_alloc (smodel * smo);
 
 
 /** Free memory smodel 
     @return 0: success, -1: error
     @param smo  pointer pointer of smodel */
-  int smodel_free (smodel ** smo);
+  int ghmm_c_free (smodel ** smo);
 
 /**
    Copies one smodel. Memory alloc is here.
    @return pointer to smodel copy
    @param smo   smodel to be copied  */
-  smodel *smodel_copy (const smodel * smo);
+  smodel *ghmm_c_copy (const smodel * smo);
 
 /**
    Checks if smodel is well definded. E.g. sum pi = 1, only positive values 
@@ -184,7 +184,7 @@ extern "C" {
    @return 0 if smodel is ok, -1 for error
    @param smo   smodel for  checking
 */
-  int smodel_check (const smodel * smo);
+  int ghmm_c_check (const smodel * smo);
 
 /**
    For a vector of smodels: check that the number of states and the number
@@ -193,7 +193,7 @@ extern "C" {
    @param smo    vector of smodels for checking
    @param smodel_number  number of smodels
  */
-  int smodel_check_compatibility (smodel ** smo, int smodel_number);
+  int ghmm_c_check_compatibility (smodel ** smo, int smodel_number);
 
 /**
    Generates random symbol.
@@ -204,7 +204,7 @@ extern "C" {
    @param state    state
    @param m         index of output component
 */
-  double smodel_get_random_var (smodel * smo, int state, int m);
+  double ghmm_c_get_random_var (smodel * smo, int state, int m);
 
 
 /** 
@@ -225,7 +225,7 @@ extern "C" {
     @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
 */
 
-  sequence_d_t *smodel_generate_sequences (smodel * smo, int seed,
+  sequence_d_t *ghmm_c_generate_sequences (smodel * smo, int seed,
                                            int global_len, long seq_number,
                                            long label, int Tmax);
 
@@ -238,7 +238,7 @@ extern "C" {
    @param sqd    sequence struct
    @param log\_p  evaluated log likelihood
 */
-  int smodel_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p);
+  int ghmm_c_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p);
 
 /** 
     Computes log likelihood for all sequence of
@@ -249,7 +249,7 @@ extern "C" {
    @param sqd    sequence struct
    @param log\_p array of evaluated likelihoods
 */
-  int smodel_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
+  int ghmm_c_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
                                      double *log_ps);
 
 /**
@@ -257,14 +257,14 @@ extern "C" {
    @param file     output file
    @param smo   smodel
 */
-  void smodel_print (FILE * file, smodel * smo);
+  void ghmm_c_print (FILE * file, smodel * smo);
 
 /**
    Prints one smodel with only one transition Matrix A (=Ak\_0).
    @param file     output file
    @param smo   smodel
 */
-  void smodel_print_oneA (FILE * file, smodel * smo);
+  void ghmm_c_print_oneA (FILE * file, smodel * smo);
 
 /**
    Prints transition matrix of specified class.
@@ -275,7 +275,7 @@ extern "C" {
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void smodel_Ak_print (FILE * file, smodel * smo, int k, char *tab,
+  void ghmm_c_Ak_print (FILE * file, smodel * smo, int k, char *tab,
                         char *separator, char *ending);
 
 /**
@@ -286,7 +286,7 @@ extern "C" {
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void smodel_C_print (FILE * file, smodel * smo, char *tab, char *separator,
+  void ghmm_c_C_print (FILE * file, smodel * smo, char *tab, char *separator,
                        char *ending);
 
 /**
@@ -297,7 +297,7 @@ extern "C" {
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void smodel_Mue_print (FILE * file, smodel * smo, char *tab,
+  void ghmm_c_Mue_print (FILE * file, smodel * smo, char *tab,
                          char *separator, char *ending);
 /**
    Prints variance matrix of output functions of an smodel.
@@ -307,7 +307,7 @@ extern "C" {
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void smodel_U_print (FILE * file, smodel * smo, char *tab, char *separator,
+  void ghmm_c_U_print (FILE * file, smodel * smo, char *tab, char *separator,
                        char *ending);
 /**
    Prints initial prob vector of an smodel.
@@ -317,7 +317,7 @@ extern "C" {
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void smodel_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
+  void ghmm_c_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
                         char *ending);
 /**
    Prints vector of fix\_states.
@@ -327,7 +327,7 @@ extern "C" {
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void smodel_fix_print (FILE * file, smodel * smo, char *tab,
+  void ghmm_c_fix_print (FILE * file, smodel * smo, char *tab,
                          char *separator, char *ending);
 
 /** Computes the density of one symbol (omega) in a given state and a 
@@ -338,7 +338,7 @@ extern "C" {
     @param m output component
     @param omega given symbol
 */
-  double smodel_calc_cmbm (smodel * smo, int state, int m, double omega);
+  double ghmm_c_calc_cmbm (smodel * smo, int state, int m, double omega);
 
 /** Computes the density of one symbol (omega) in a given state (sums over
     all output components
@@ -347,7 +347,7 @@ extern "C" {
     @param state state 
     @param omega given symbol
 */
-  double smodel_calc_b (smodel * smo, int state, double omega);
+  double ghmm_c_calc_b (smodel * smo, int state, double omega);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -360,7 +360,7 @@ extern "C" {
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-  double smodel_prob_distance (smodel * cm0, smodel * cm, int maxT,
+  double ghmm_c_prob_distance (smodel * cm0, smodel * cm, int maxT,
                                int symmetric, int verbose);
 
 /** 
@@ -372,7 +372,7 @@ extern "C" {
     @param m      component
     @param omega symbol
 */
-  double smodel_calc_cmBm (smodel * smo, int state, int m, double omega);
+  double ghmm_c_calc_cmBm (smodel * smo, int state, int m, double omega);
 
 /** 
     Computes value of distribution function for a given symbol omega and
@@ -382,7 +382,7 @@ extern "C" {
     @param state  state
     @param omega symbol
 */
-  double smodel_calc_B (smodel * smo, int state, double omega);
+  double ghmm_c_calc_B (smodel * smo, int state, double omega);
 
 /** Computes the number of free parameters in an array of
    smodels. E.g. if the number of parameter from pi is N - 1.
@@ -392,7 +392,7 @@ extern "C" {
    @param smo smodel
    @param smo\_number number of smodels
 */
-  int smodel_count_free_parameter (smodel ** smo, int smo_number);
+  int ghmm_c_count_free_parameter (smodel ** smo, int smo_number);
 
 
 /*============================================================================*/
@@ -408,7 +408,7 @@ extern "C" {
     @param a      return-value: left side
     @param b      return-value: right side
 */
-  void smodel_get_interval_B (smodel * smo, int state, double *a, double *b);
+  void ghmm_c_get_interval_B (smodel * smo, int state, double *a, double *b);
 
 
 #ifdef __cplusplus

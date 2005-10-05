@@ -100,7 +100,7 @@ int ghmm_scluster_hmm (char *argv[])
   double eps_bw, q;
   int max_iter_bw;
   
-    /* sreestimate_baum_welch needs this structure (introduced for parallel mode) */ 
+    /* ghmm_c_baum_welch needs this structure (introduced for parallel mode) */ 
     smosqd_t * cs;
   
 #if POUT == 0
@@ -144,7 +144,7 @@ int ghmm_scluster_hmm (char *argv[])
     goto STOP;
   }
   sqd = sqd_vec[0];
-  cl.smo = smodel_read (smo_file, &cl.smo_number);
+  cl.smo = ghmm_c_read (smo_file, &cl.smo_number);
   if (!cl.smo) {
     mes_proc ();
     goto STOP;
@@ -170,7 +170,7 @@ int ghmm_scluster_hmm (char *argv[])
     goto STOP;
   }
   
-    /*if (smodel_check_compatibility(cl.smo, cl.smo_number)) { 
+    /*if (ghmm_c_check_compatibility(cl.smo, cl.smo_number)) { 
        mes_proc(); goto STOP; 
        } */ 
     ARRAY_CALLOC (smo_changed, cl.smo_number);
@@ -397,7 +397,7 @@ int ghmm_scluster_hmm (char *argv[])
         if (cs[i].sqd == NULL)
           ighmm_mes (MES_WIN, "cluster %d empty, no reestimate!\n", i);
         
-        else if (sreestimate_baum_welch (&cs[i]) == -1) {
+        else if (ghmm_c_baum_welch (&cs[i]) == -1) {
           str = ighmm_mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, i);
           mes_prot (str);
           m_free (str);
@@ -496,7 +496,7 @@ int ghmm_scluster_t_free (scluster_t * scl)
   if (!scl)
     return (0);
   for (i = 0; i <= scl->smo_number; i++) {
-    smodel_free (&(scl->smo[i]));
+    ghmm_c_free (&(scl->smo[i]));
     ghmm_cseq_free (&(scl->smo_seq[i]));
   }
   printf ("hier1\n");
@@ -525,7 +525,7 @@ int ghmm_scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile,
   /*fprintf(outfile, "\nFinal Models:\n");
     for (i = 0; i < cl->smo_number; i++) {
     fprintf(outfile, "smodel[%d]:\n", i);
-    smodel_print(outfile, cl->smo[i]);
+    ghmm_c_print(outfile, cl->smo[i]);
     fprintf(outfile, "Sequences of smodel[%d] (# %ld, total weight %.0f)\n",
     i, cl->smo_seq[i]->seq_number, 
     cl->smo_seq[i]->total_w);*/
@@ -549,7 +549,7 @@ sprintf (filename, "%s.smo", out_filename);
   ghmm_scluster_print_header (out_model, argv);
   for (i = 0; i < cl->smo_number; i++) {
     fprintf (out_model, "#trained smodel[%d]:\n", i);
-    smodel_print (out_model, cl->smo[i]);
+    ghmm_c_print (out_model, cl->smo[i]);
   }
   fclose (out_model);
   
@@ -713,7 +713,7 @@ int ghmm_scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
           j = m_int (GHMM_RNG_UNIFORM (RNG) * (sqd->seq_number - 1));
         
           /* If it's not possible to produce a sequence for an empty model: Quit */ 
-          if (sfoba_logp
+          if (ghmm_c_logp
               (cl->smo[i], sqd->seq[j], sqd->seq_len[j], &log_p_plus) == -1)
           continue;
         if (CLASSIFY == 1) {
@@ -733,11 +733,11 @@ int ghmm_scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
         sqd->seq_label[j] = i;
         
           /* smo_Z_MD update */ 
-          if (sfoba_logp
+          if (ghmm_c_logp
               (cl->smo[i_old], sqd->seq[j], sqd->seq_len[j],
                &log_p_minus) == -1)
            {
-          mes_prot ("sfoba_logp returns -1!\n");
+          mes_prot ("ghmm_c_logp returns -1!\n");
           goto STOP;
           };
         cl->smo_Z_MD[i_old] -= sqd->seq_w[j] * log_p_minus;
@@ -844,7 +844,7 @@ void ghmm_scluster_prob (smosqd_t * cs)
   
     /*printf("seq_num = %d\n", cs->sqd->seq_number);*/
     for (i = 0; i < cs->sqd->seq_number; i++)
-    if (sfoba_logp
+    if (ghmm_c_logp
          (cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i],
           &(cs->logp[i])) == -1)
       cs->logp[i] = (double) PENALTY_LOGP;     /*  Penalty costs */

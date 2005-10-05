@@ -41,7 +41,7 @@ static int smix_hmm_run(int argc, char* argv[]) {
   if (!sqd) {mes_proc(); goto STOP;}
   if (sqd_fields > 1)
     printf("Warning: Seq. File contains multiple Seq. Fields; use only the first one\n");
-  smo = smodel_read(argv[2], &smo_number);
+  smo = ghmm_c_read(argv[2], &smo_number);
   if (!smo) {mes_proc(); goto STOP;}
 
   /* open output file */
@@ -68,7 +68,7 @@ static int smix_hmm_run(int argc, char* argv[]) {
 
   /* print trained models */
   for (k = 0; k < smo_number; k++)
-    smodel_print(outfile, smo[k]);  
+    ghmm_c_print(outfile, smo[k]);  
 
   if (outfile) fclose(outfile);
   exitcode = 0;

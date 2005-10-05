@@ -382,7 +382,7 @@
    @return vector of read smodels
    @param filename   input ascii file
    @param smo_number  number of smodels to read*/
-  smodel **smodel_read (const char *filename, int *smo_number);
+  smodel **ghmm_c_read (const char *filename, int *smo_number);
 
 /** Reads one smodel block. It is possible to generate multiple
     identical copies of the model read. Memory allocation is here.
@@ -390,7 +390,7 @@
    @param s        scanner for reading
    @param multip   number ob identical copies
 */
-  smodel *smodel_read_block (scanner_t * s, int *multip);
+  smodel *ghmm_c_read_block (scanner_t * s, int *multip);
 
 
 /*============ sequence.h ===================================================*/

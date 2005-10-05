@@ -98,7 +98,7 @@ extern "C" {
   @return            0/-1 success/error
   @param cs         initial model and train sequences
   */
-  int sreestimate_baum_welch (smosqd_t * cs);
+  int ghmm_c_baum_welch (smosqd_t * cs);
 
 
 #ifdef __cplusplus

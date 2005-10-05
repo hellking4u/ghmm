@@ -32,18 +32,18 @@ START_TEST (smodel_read_free) /* Add smodel_read_free in  smodel_suite() below *
   smodel **model_array;
   int model_counter, result;
   char *inFileName = kSMODEL_SAMPLE_SMO_FILE;
-  model_array = smodel_read(inFileName, &model_counter);
+  model_array = ghmm_c_read(inFileName, &model_counter);
 
   fail_unless(model_counter == 1, 
 	      "Read %d number of models instead of one", model_counter);
 
   fail_unless(model_array != NULL,
-	      "smodel_read returned null pointer");
+	      "ghmm_c_read returned null pointer");
 
-  result = smodel_free(model_array);  
+  result = ghmm_c_free(model_array);  
   
   fail_unless(result == NULL,
-	      "smodel_free failed");  
+	      "ghmm_c_free failed");  
 }
 END_TEST
 

@@ -131,7 +131,7 @@ sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
     /* Initial distribution */
     /* 1. Viterbi-state */
 #if 0
-    /* wieder aktivieren, wenn sviterbi realisiert */
+    /* wieder aktivieren, wenn ghmm_c_viterbi realisiert */
     if (mode == viterbi_all || mode == viterbi_viterbi) {
       v_path = cviterbi (smo, sqd_short->seq[n], short_len, &log_p);
       if (v_path[short_len - 1] < 0 || v_path[short_len - 1] >= smo->N) {
@@ -150,7 +150,7 @@ sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
        Pi(i) = alpha_t(i)/P(O|lambda) */
     if (mode == all_all || mode == all_viterbi) {
       if (short_len > 0) {
-        if (sfoba_forward (smo, sqd_short->seq[n], short_len, NULL /* ?? */ ,
+        if (ghmm_c_forward (smo, sqd_short->seq[n], short_len, NULL /* ?? */ ,
                            alpha, scale, &log_p)) {
           mes_proc ();
           goto STOP;
@@ -204,7 +204,7 @@ sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
         while (m > 0 && smo->s[i].c[m] == 0.0)
           m--;
       }
-      sq->seq[n][t] = smodel_get_random_var (smo, i, m);
+      sq->seq[n][t] = ghmm_c_get_random_var (smo, i, m);
 
       if (smo->cos == 1) {
         class = 0;
@@ -289,7 +289,7 @@ sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
           m--;
       }
       /* random variable from density function */
-      sq->seq[n][t] = smodel_get_random_var (smo, i, m);
+      sq->seq[n][t] = ghmm_c_get_random_var (smo, i, m);
 
       if (smo->cos == 1) {
         class = 0;
@@ -351,7 +351,7 @@ double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
   /* Initial Distribution ???
      Pi(i) = alpha_t(i)/P(O|lambda) */
   if (mode == all_all || mode == all_viterbi) {
-    if (sfoba_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
+    if (ghmm_c_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
       mes_prot ("error from sfoba_forward, unable to extend\n");
       ARRAY_REALLOC (new_O, *new_len);
       return new_O;
@@ -468,7 +468,7 @@ double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
     }
     /* Output in state i, komp. m */
     /* random variable from density function */
-    new_O[t] = smodel_get_random_var (smo, i, m);
+    new_O[t] = ghmm_c_get_random_var (smo, i, m);
 
     if (smo->cos == 1) {
       class = 0;
@@ -531,7 +531,7 @@ double ghmm_sgenerate_next_value (smodel * smo, double *O, const int len)
     goto STOP;
   }
   ARRAY_CALLOC (scale, len);
-  if (sfoba_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
+  if (ghmm_c_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
     mes_prot ("error from sfoba_forward\n");
     goto STOP;
   }
@@ -607,7 +607,7 @@ double ghmm_sgenerate_next_value (smodel * smo, double *O, const int len)
   }
   /* Output in state i, komp. m */
   /* random variable from density function */
-  res = smodel_get_random_var (smo, i, m);
+  res = ghmm_c_get_random_var (smo, i, m);
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ighmm_cmatrix_free (&alpha, len);

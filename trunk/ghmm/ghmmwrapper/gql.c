@@ -68,12 +68,12 @@ int seq_rank(const void *a1, const void *a2) {
       return 1;
 }
 
-static int smodel_state_alloc(sstate *state,
+static int ghmm_c_state_alloc(sstate *state,
 			      int M,
 			      int in_states,
 			      int out_states,
 			      int cos) {
-#define CUR_PROC "smodel_state_alloc"
+#define CUR_PROC "ghmm_c_state_alloc"
   int res = -1;
   if (!((state->c) = ighmm_calloc(sizeof(*(state->c)) * M)))
     {mes_proc(); goto STOP;}
@@ -117,7 +117,7 @@ smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
     {mes_proc(); goto STOP;}
 
   for(i=0; i < smo->N; i++) {
-    smodel_state_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
+    ghmm_c_state_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
   }
   return smo;
 STOP:
@@ -204,7 +204,7 @@ void call_smodel_print(char *filename, smodel *smo) {
   if (fp == NULL) {
     fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
   } else {
-    smodel_print(fp, smo);
+    ghmm_c_print(fp, smo);
     fclose(fp);
   }
 } */
@@ -217,7 +217,7 @@ int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double 
   matched=0;
   for ( i = 0; i < sqd->seq_number; i++) {
     seq_rank[i] = i;
-    if (sfoba_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
+    if (ghmm_c_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
       log_ps[i] = log_p_i;
       matched++;
     }
