@@ -2391,10 +2391,10 @@ class DiscreteEmissionHMM(HMM):
         self.freeFunction = ghmmwrapper.call_model_free
         self.samplingFunction = ghmmwrapper.model_generate_sequences
         self.viterbiFunction = ghmmwrapper.viterbi
-        self.forwardFunction = ghmmwrapper.foba_forward_lean
-        self.forwardAlphaFunction = ghmmwrapper.foba_forward      
-        self.backwardBetaFunction = ghmmwrapper.foba_backward
-        self.backwardTerminationFunction = ghmmwrapper.foba_backward_termination
+        self.forwardFunction = ghmmwrapper.ghmm_d_forward_lean
+        self.forwardAlphaFunction = ghmmwrapper.ghmm_d_forward      
+        self.backwardBetaFunction = ghmmwrapper.ghmm_d_backward
+        self.backwardTerminationFunction = ghmmwrapper.ghmm_d_backward_termination
         self.getStatePtr = ghmmwrapper.get_stateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
         self.getModelPtr = ghmmwrapper.get_model_ptr
@@ -2971,9 +2971,9 @@ class StateLabelHMM(DiscreteEmissionHMM):
         self.labelDomain = labelDomain
         
         # Assignment of the C function names to be used with this model type
-        self.forwardFunction = ghmmwrapper.foba_logp
-        self.forwardAlphaLabelFunction = ghmmwrapper.foba_label_forward
-        self.backwardBetaLabelFunction = ghmmwrapper.foba_label_backward
+        self.forwardFunction = ghmmwrapper.ghmm_d_logp
+        self.forwardAlphaLabelFunction = ghmmwrapper.ghmm_dl_forward
+        self.backwardBetaLabelFunction = ghmmwrapper.ghmm_dl_backward
         self.kbestFunction = ghmmwrapper.kbest        
         self.gradientDescentFunction = ghmmwrapper.gradient_descent
         #self.cmodel.state_label = ghmmwrapper.int_array(self.N) # XXX ???
@@ -3217,7 +3217,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             seq = emissionSequences.getPtr(emissionSequences.cseq.seq,i)
             labels = ghmmwrapper.get_col_pointer_int(emissionSequences.cseq.state_labels,i)
             tmp = ghmmwrapper.get_arrayint(emissionSequences.cseq.seq_len,i)
-            ret_val = ghmmwrapper.foba_label_logp(self.cmodel, seq, labels, tmp, likelihood)
+            ret_val = ghmmwrapper.ghmm_dl_logp(self.cmodel, seq, labels, tmp, likelihood)
 
             if ret_val == -1:
 
@@ -4466,9 +4466,9 @@ class PairHMM(HMM):
         self.viterbiFunction = ghmmwrapper.pviterbi
         self.viterbiPropagateFunction = ghmmwrapper.pviterbi_propagate
         self.viterbiPropagateSegmentFunction = ghmmwrapper. pviterbi_propagate_segment
-        # self.forwardFunction = ghmmwrapper.foba_forward_lean
-        # self.forwardAlphaFunction = ghmmwrapper.foba_forward      
-        # self.backwardBetaFunction = ghmmwrapper.foba_backward
+        # self.forwardFunction = 
+        # self.forwardAlphaFunction = 
+        # self.backwardBetaFunction = 
         self.getStatePtr = ghmmwrapper.get_pstateptr 
         self.fileWriteFunction = ghmmwrapper.call_model_print
         self.getModelPtr = ghmmwrapper.get_model_ptr

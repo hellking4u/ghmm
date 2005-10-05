@@ -216,21 +216,21 @@ static double compute_performance (model * mo, sequence_t * sq)
     seq_len = sq->seq_len[k];
 
     if (-1 !=
-        foba_label_logp (mo, sq->seq[k], sq->state_labels[k], seq_len,
+        ghmm_dl_logp (mo, sq->seq[k], sq->state_labels[k], seq_len,
                          &log_p)) {
       success = 1;
       log_p_sum += log_p;
 
-      if (-1 != foba_logp (mo, sq->seq[k], seq_len, &log_p))
+      if (-1 != ghmm_d_logp (mo, sq->seq[k], seq_len, &log_p))
         log_p_sum -= log_p;
       else {
-        printf ("foba_forward error in sequence %d, length: %d\n", k,
+        printf ("ghmm_d_logp error in sequence %d, length: %d\n", k,
                 seq_len);
         success = 0;
       }
     }
     else
-      printf ("foba_label_forward error in sequence %d, length: %d\n", k,
+      printf ("ghmm_dl_logp error in sequence %d, length: %d\n", k,
               seq_len);
   }
 
@@ -286,12 +286,12 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
       continue;
 
     /* calculate forward and backward variables without labels: */
-    if (-1 == foba_forward (mo, sq->seq[k], seq_len, alpha, scale, &log_p)) {
+    if (-1 == ghmm_d_forward (mo, sq->seq[k], seq_len, alpha, scale, &log_p)) {
       printf ("forward error!\n");
       goto FREE;
     }
 
-    if (-1 == foba_backward (mo, sq->seq[k], seq_len, beta, scale)) {
+    if (-1 == ghmm_d_backward (mo, sq->seq[k], seq_len, beta, scale)) {
       printf ("backward error!\n");
       goto FREE;
     }
@@ -304,13 +304,13 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
 
     /* calculate forward and backward variables with labels: */
     if (-1 ==
-        foba_label_forward (mo, sq->seq[k], sq->state_labels[k], seq_len,
+        ghmm_dl_forward (mo, sq->seq[k], sq->state_labels[k], seq_len,
                             alpha, scale, &log_p)) {
       printf ("forward labels error!\n");
       goto FREE;
     }
     if (-1 ==
-        foba_label_backward (mo, sq->seq[k], sq->state_labels[k], seq_len,
+        ghmm_dl_backward (mo, sq->seq[k], sq->state_labels[k], seq_len,
                              beta, scale, &log_p)) {
       printf ("backward labels error!\n");
       goto FREE;
@@ -457,7 +457,7 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
  */
 int gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps)
 {
-#define CUR_PROC "gradient_descent_nstep"
+#define CUR_PROC "gradient_descent"
 
   int runs = 0;
   double cur_perf, last_perf;

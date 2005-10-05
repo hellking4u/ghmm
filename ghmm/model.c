@@ -1097,7 +1097,7 @@ double model_likelihood (model * mo, sequence_t * sq)
 /* 	printf("\n"); */
 
 
-    if (foba_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i) == -1) {
+    if (ghmm_d_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i) == -1) {
       mes_proc ();
       goto STOP;
     }

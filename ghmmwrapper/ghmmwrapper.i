@@ -913,7 +913,7 @@ extern double discrime_compute_performance(model** mo, sequence_t** sqs, int noC
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int foba_forward (model * mo, const int *O, int length, double **alpha,
+extern int ghmm_d_forward (model * mo, const int *O, int length, double **alpha,
                     double *scale, double *log_p);
 
 /** 
@@ -927,7 +927,7 @@ extern int foba_forward (model * mo, const int *O, int length, double **alpha,
   @param scale:   scale factors
   @return 0 for success, -1 for error
   */
-extern int foba_backward (model * mo, const int *O, int len, double **beta,
+extern int ghmm_d_backward (model * mo, const int *O, int len, double **beta,
                      const double *scale);
 
 /** 
@@ -942,7 +942,7 @@ extern int foba_backward (model * mo, const int *O, int len, double **beta,
   @param log\_p:  log probability
   @return 0 for success, -1 for error
   */
-extern int foba_backward_termination (model *mo, const int *O, int len,
+extern int ghmm_d_backward_termination (model *mo, const int *O, int len,
 				 double **beta, double *scale, double *log_p);
 
 
@@ -956,7 +956,7 @@ extern int foba_backward_termination (model *mo, const int *O, int len,
   @param log\_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int foba_logp(model *mo, const int *O, int len, double *log_p);
+extern int ghmm_d_logp(model *mo, const int *O, int len, double *log_p);
 
 /**
     Set transition from state 'i' to state 'j' to value 'prob'.
@@ -977,13 +977,13 @@ extern void model_set_transition(model *mo, int i, int j, double prob);
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int foba_forward_lean(model *mo, const int *O, int len, double *log_p); 
+int ghmm_d_forward_lean(model *mo, const int *O, int len, double *log_p); 
 
 
 /* Labeled HMMs */
-extern int foba_label_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
-extern int foba_label_logp(model *mo, const int *O, const int *label, int len, double *log_p);
-extern int foba_label_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+extern int ghmm_dl_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+extern int ghmm_dl_logp(model *mo, const int *O, const int *label, int len, double *log_p);
+extern int ghmm_dl_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 
 
 /** 

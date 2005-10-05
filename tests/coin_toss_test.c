@@ -163,15 +163,15 @@ int two_states_coin_toss()
       return 1;
     }
 
-  /* run foba_forward */
-  if (foba_forward(&my_model,
+  /* run ghmm_d_forward */
+  if (ghmm_d_forward(&my_model,
 		   my_output->seq[0],
 		   my_output->seq_len[0],
 		   forward_alpha,
 		   forward_scale,
 		   &log_p_forward))
     {
-      fprintf(stderr,"foba_logp failed!");
+      fprintf(stderr,"ghmm_d_logp failed!");
       stat_matrix_d_free(&forward_alpha);
       return 1;
     }
