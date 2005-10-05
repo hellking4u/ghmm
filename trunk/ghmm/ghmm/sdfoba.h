@@ -41,15 +41,15 @@ extern "C" {
 #endif
 
 /**@name HMM-Modell */
-/*@{ (Doc++-Group: model) */
+/*@{ (Doc++-Group: ds_model) */
 
-int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
+int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
                     double *scale, double *log_p);
 
-int sdfoba_backward (sdmodel * mo, const int *O, int len, double **beta,
+int ghmm_ds_backward (sdmodel * mo, const int *O, int len, double **beta,
                      const double *scale);
 
-  int sdfoba_logp (sdmodel * mo, const int *O, int len, double *log_p);
+int ghmm_ds_logp (sdmodel * mo, const int *O, int len, double *log_p);
 
 
 #ifdef __cplusplus

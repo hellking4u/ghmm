@@ -96,16 +96,16 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #endif
 
 /*----------------------------------------------------------------------------*/
-double sdmodel_likelihood (sdmodel * mo, sequence_t * sq)
+double ghmm_ds_likelihood (sdmodel * mo, sequence_t * sq)
 {
-# define CUR_PROC "sdmodel_likelihood"
+# define CUR_PROC "ghmm_ds_likelihood"
   double log_p_i, log_p;
   int found, i;
 
   found = 0;
   log_p = 0.0;
   for (i = 0; i < sq->seq_number; i++) {
-    sdfoba_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i);
+    ghmm_ds_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i);
 
     if (log_p_i != +1) {
       log_p += log_p_i;
@@ -121,7 +121,7 @@ double sdmodel_likelihood (sdmodel * mo, sequence_t * sq)
     log_p = +1.0;
   return (log_p);
 #undef CUR_PROC
-}                               /*sdmodel_likelihood */
+}                               /*ghmm_ds_likelihood */
 
 #ifdef sdmodelSTATIC
 /*----------------------------------------------------------------------------*/
@@ -172,9 +172,9 @@ model **ghmm_d_read(char *filename, int *mo_number, int **seq,
 
 /*============================================================================*/
 
-int sdmodel_free (sdmodel ** mo)
+int ghmm_ds_free (sdmodel ** mo)
 {
-#define CUR_PROC "sdmodel_free"
+#define CUR_PROC "ghmm_ds_free"
   sdstate *my_state;
   int i;
   mes_check_ptr (mo, return (-1));
@@ -217,9 +217,9 @@ int sdmodel_free (sdmodel ** mo)
 
 
 /*============================================================================*/
-sdmodel *sdmodel_copy (const sdmodel * mo)
+sdmodel *ghmm_ds_copy (const sdmodel * mo)
 {
-# define CUR_PROC "sdmodel_copy"
+# define CUR_PROC "ghmm_ds_copy"
   int i, j, k, nachf, vorg, m;
   sdmodel *m2 = NULL;
   ARRAY_CALLOC (m2, 1);
@@ -281,17 +281,17 @@ sdmodel *sdmodel_copy (const sdmodel * mo)
   }
   return (m2);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  sdmodel_free (&m2);
+  ghmm_ds_free (&m2);
   return (NULL);
 # undef CUR_PROC
 }                               /* ghmm_d_copy */
 
 
 /*----------------------------------------------------------------------------*/
-void sdmodel_topo_ordering (sdmodel * mo)
+void ghmm_ds_topo_order (sdmodel * mo)
 {
-#define CUR_PROC "sdmodel_topo_ordering"
-  fprintf (stderr, "sdmodel_topo_ordering will be implemented using DFS.\n");
+#define CUR_PROC "ghmm_ds_topo_order"
+  fprintf (stderr, "ghmm_ds_topo_order will be implemented using DFS.\n");
 #undef CUR_PROC
 }
 
@@ -301,7 +301,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
                                                  int global_len,
                                                  long seq_number, int Tmax)
 {
-# define CUR_PROC "sdmodel_generate_sequences"
+# define CUR_PROC "ghmm_ds_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
   unsigned long tm;             /* Time seed */
@@ -470,9 +470,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* data */
 #endif
 
-int sdmodel_initSilentStates (sdmodel * mo)
+int ghmm_ds_init_silent_states (sdmodel * mo)
 {
-#define CUR_PROC "sdmodel_initSilentStates"
+#define CUR_PROC "ghmm_ds_init_silent_states"
   int nSilentStates = 0;
   int i, m;
   double sum;
@@ -514,11 +514,11 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
  *
  */
 /*returns the extended sequence struct with state matrix*/
-sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
+sequence_t *ghmm_ds_generate_sequences (sdmodel * mo, int seed,
                                         int global_len, long seq_number,
                                         int Tmax)
 {
-# define CUR_PROC "sdmodel_generate_sequences"
+# define CUR_PROC "ghmm_ds_generate_sequences"
 
   /* An end state is characterized by not having out-going transition. */
   unsigned long tm;             /* Time seed */
@@ -773,7 +773,7 @@ generate sequences by calling generate_sequences_ext
 ========================================*/
 
 /*
-sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
+sequence_t *ghmm_ds_generate_sequences(sdmodel* mo, int seed, int global_len,
 				     long seq_number, int Tmax) {
   sequence_ext_t *sq = sdmodel_generate_sequences_ext(mo,seed,global_len,seq_number,Tmax);
   printf("jaja\n\n");
@@ -784,7 +784,7 @@ sequence_t *sdmodel_generate_sequences(sdmodel* mo, int seed, int global_len,
 /* Some outputs */
 /*============================================================================*/
 
-void sdmodel_states_print (FILE * file, sdmodel * mo)
+void ghmm_ds_states_print (FILE * file, sdmodel * mo)
 {
   int i, j;
   fprintf (file, "Modelparameters: \n M = %d \t N = %d\n", mo->M, mo->N);
@@ -809,7 +809,7 @@ void sdmodel_states_print (FILE * file, sdmodel * mo)
 
 /*============================================================================*/
 
-void sdmodel_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
+void ghmm_ds_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
                        char *separator, char *ending)
 {
   int i, j, out_state;
@@ -836,7 +836,7 @@ void sdmodel_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
 
 /*============================================================================*/
 
-void sdmodel_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+void ghmm_ds_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
                       char *ending)
 {
   int i, j;
@@ -851,7 +851,7 @@ void sdmodel_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
 
 /*============================================================================*/
 
-void sdmodel_Pi_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+void ghmm_ds_Pi_print (FILE * file, sdmodel * mo, char *tab, char *separator,
                        char *ending)
 {
   int i;
@@ -862,9 +862,9 @@ void sdmodel_Pi_print (FILE * file, sdmodel * mo, char *tab, char *separator,
 }                               /* ghmm_d_Pi_print */
 
 
-void model_to_sdmodel (const model * mo, sdmodel * smo, int klass)
+void ghmm_ds_from_dmodel (const model * mo, sdmodel * smo, int klass)
 {
-#define CUR_PROC "model_to_sdmodel"
+#define CUR_PROC "ghmm_ds_from_dmodel"
   int i, j, m, nachf, vorg;
 
   for (i = 0; i < mo->N; i++) {
@@ -890,9 +890,9 @@ void model_to_sdmodel (const model * mo, sdmodel * smo, int klass)
 }
 
 
-model *sdmodel_to_model (const sdmodel * mo, int kclass)
+model *ghmm_ds_to_dmodel (const sdmodel * mo, int kclass)
 {
-#define CUR_PROC "sdmodel_to_model"
+#define CUR_PROC "ghmm_ds_to_dmodel"
   /*
    * Set the pointer appropriately
    */

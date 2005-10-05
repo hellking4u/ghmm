@@ -141,9 +141,9 @@ extern "C" {
   /** Frees the memory of a model.
       @return 0 for succes; -1 for error
       @param mo:  pointer to a model */
-  int sdmodel_free (sdmodel ** mo);
+  int ghmm_ds_free (sdmodel ** mo);
 
-  int sdmodel_initSilentStates (sdmodel * mo);
+  int ghmm_ds_init_silent_states (sdmodel * mo);
 
   /** 
       Produces sequences to a given model. All memory that is needed for the 
@@ -162,7 +162,7 @@ extern "C" {
 	  @param T_max:  maximal number of consecutive silent states in model (used to
 	  identify silent circles).
   */
-  sequence_t *sdmodel_generate_sequences (sdmodel * mo, int seed,
+  sequence_t *ghmm_ds_generate_sequences (sdmodel * mo, int seed,
                                           int global_len, long seq_number,
                                           int Tmax);
 
@@ -171,13 +171,13 @@ extern "C" {
      Copies a given model. Allocates the necessary memory.
      @return copy of the model
      @param mo:  model to copy */
-  sdmodel *sdmodel_copy (const sdmodel * mo);
+  sdmodel *ghmm_ds_copy (const sdmodel * mo);
 
   /** Utility for converting between single discrete model and switching model */
-  model *sdmodel_to_model (const sdmodel * mo, int kclass);
+  model *ghmm_ds_to_dmodel (const sdmodel * mo, int kclass);
 
   /** */
-  void model_to_sdmodel (const model * mo, sdmodel * smo, int klass);
+  void ghmm_ds_from_dmodel (const model * mo, sdmodel * smo, int klass);
 
   /**
      Writes a model in matrix format.
@@ -195,7 +195,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void sdmodel_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
+  void ghmm_ds_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
                          char *separator, char *ending);
   /**
      Writes output matrix of a model.
@@ -205,7 +205,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void sdmodel_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+  void ghmm_ds_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
                         char *ending);
 
   /**
@@ -216,18 +216,18 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void sdmodel_Pi_print (FILE * file, sdmodel * mo, char *tab,
+  void ghmm_ds_Pi_print (FILE * file, sdmodel * mo, char *tab,
                          char *separator, char *ending);
 
   /*============================================================================*/
-  /** sdviterbi is working for switching discrete model
-   *  sdmodel_topo_ordering -- need to be implemented with DFS (as in model_util.c)
+  /** ghmm_ds_viterbi is working for switching discrete model
+   *  ghmm_ds_topo_order -- need to be implemented with DFS (as in model_util.c)
    *============================================================================
    **/
 
-  void sdmodel_topo_ordering (sdmodel * mo);
+  void ghmm_ds_topo_order (sdmodel * mo);
 
-  int *sdviterbi (sdmodel * mo, int *o, int len, double *log_p);
+  int *ghmm_ds_viterbi (sdmodel * mo, int *o, int len, double *log_p);
 
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
@@ -240,7 +240,7 @@ extern "C" {
       @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
       @return 0 for success, -1 for error
   */
-  int sdfoba_forward (sdmodel * mo, const int *O, int len, double **alpha,
+  int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
                       double *scale, double *log_p);
 
 
@@ -253,7 +253,7 @@ extern "C" {
       @param newalpha: unscaled alpha matrix
       @return 0 for success, -1 for error
   */
-  int sdfoba_descale (double **alpha, double *scale, int t, int n,
+  int ghmm_ds_forward_descale (double **alpha, double *scale, int t, int n,
                       double **newalpha);
 
 
@@ -264,7 +264,7 @@ extern "C" {
    @param mo model
    @param sq sequences       
 */
-  double sdmodel_likelihood (sdmodel * mo, sequence_t * sq);
+  double ghmm_ds_likelihood (sdmodel * mo, sequence_t * sq);
 
 
 /** 
@@ -273,7 +273,7 @@ extern "C" {
     @param file: output file
     @param mo:   model
 */
-  void sdmodel_states_print (FILE * file, sdmodel * mo);
+  void ghmm_ds_states_print (FILE * file, sdmodel * mo);
 
 
 #ifdef __cplusplus
