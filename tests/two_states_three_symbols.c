@@ -134,7 +134,7 @@ int my_model()
 
   /* reestimation */
   fprintf(stdout,"reestimating with Baum-Welch-algorithm...");
-  reestimate_baum_welch(&my_model,my_output);
+  ghmm_d_baum_welch(&my_model,my_output);
 
   /* print the result */
   fprintf(stdout,"Done\nthe result is:\n");

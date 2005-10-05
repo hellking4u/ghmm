@@ -44,9 +44,9 @@ extern "C" {
 
 
 /** matrix allocation and free for training algorithms */
-  int reestimate_alloc_matvek (double ***alpha, double ***beta,
+  int ighmm_reestimate_alloc_matvek (double ***alpha, double ***beta,
                                double **scale, int T, int N);
-  int reestimate_free_matvek (double **alpha, double **beta, double *scale,
+  int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale,
                               int T);
 
 
@@ -67,7 +67,7 @@ extern "C" {
   @param sq          training sequences
   */
 
-  int reestimate_baum_welch (model * mo, sequence_t * sq);
+  int ghmm_d_baum_welch (model * mo, sequence_t * sq);
 
 /** Just like reestimate_baum_welch, but you can limit
     the maximum number of steps
@@ -78,14 +78,14 @@ extern "C" {
   @param likelihood_delta minimal improvement in likelihood required for carrying on. Relative value
   to log likelihood
   */
-  int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
+  int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
                                    double likelihood_delta);
 
 
 /** Update the emissions according to the tie groups by computing the mean
     values within all groups.
     */
-  void reestimate_update_tie_groups (model * mo);
+  void ghmm_d_update_tied_groups (model * mo);
 
 
 /** Baum-Welch-Algorithm for parameter reestimation (training) in
@@ -101,7 +101,7 @@ extern "C" {
   @param sq          training sequences
   */
 
-  int reestimate_baum_welch_label (model * mo, sequence_t * sq);
+  int ghmm_dl_baum_welch (model * mo, sequence_t * sq);
 
 /** Just like reestimate_baum_welch_label, but you can limit
     the maximum number of steps
@@ -112,7 +112,7 @@ extern "C" {
   @param likelihood_delta   minimal improvement in likelihood required for
                             carrying on. Relative value to log likelihood
   */
-  int reestimate_baum_welch_nstep_label (model * mo, sequence_t * sq,
+  int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
                                          int max_step,
                                          double likelihood_delta);
 

@@ -172,10 +172,10 @@ static int reestimate_init (local_store_t * r, const model * mo)
 }                               /* reestimate_init */
 
 /*----------------------------------------------------------------------------*/
-int reestimate_alloc_matvek (double ***alpha, double ***beta, double **scale,
+int ighmm_reestimate_alloc_matvek (double ***alpha, double ***beta, double **scale,
                              int T, int N)
 {
-# define CUR_PROC "reestimate_alloc_matvek"
+# define CUR_PROC "ighmm_reestimate_alloc_matvek"
   int res = -1;
   *alpha = stat_matrix_d_alloc (T, N);
   if (!(*alpha)) {
@@ -192,30 +192,30 @@ int reestimate_alloc_matvek (double ***alpha, double ***beta, double **scale,
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
-}                               /* reestimate_alloc_matvek */
+}                               /* ighmm_reestimate_alloc_matvek */
 
 /*----------------------------------------------------------------------------*/
-int reestimate_free_matvek (double **alpha, double **beta, double *scale, int T)
+int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale, int T)
 {
-# define CUR_PROC "reestimate_free_matvek"
+# define CUR_PROC "ighmm_reestimate_free_matvek"
   stat_matrix_d_free (&alpha);
   stat_matrix_d_free (&beta);
   m_free (scale);
   return (0);
 # undef CUR_PROC
-}                               /* reestimate_free_matvek */
+}                               /* ighmm_reestimate_free_matvek */
 
 /*----------------------------------------------------------------------------*/
-void reestimate_update_tie_groups (model * mo)
+void ghmm_d_update_tied_groups (model * mo)
 {
-#define CUR_PROC "reestimate_update_tie_groups"
+#define CUR_PROC "ghmm_d_update_tied_groups"
   int i, j, k;
   int bi_len;
 
   double *new_emissions;
   double nr = 0.0, non_silent_nr = 0.0;
 
-  /* printf("** Start of reestimate_update_tie_groups **\n"); */
+  /* printf("** Start of ghmm_d_update_tied_groups **\n"); */
 
   /* do nothing if there are no tied emissions */
   if (!(mo->model_type & kTiedEmissions)) {
@@ -293,7 +293,7 @@ void reestimate_update_tie_groups (model * mo)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (new_emissions);
 #undef CUR_PROC
-}           /* reestimate_update_tie_groups */
+}           /* ghmm_d_update_tied_groups */
 
 /*----------------------------------------------------------------------------*/
 static int reestimate_setlambda (local_store_t * r, model * mo)
@@ -409,7 +409,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
 
   res = 0;
   if (mo->model_type & kTiedEmissions)
-    reestimate_update_tie_groups (mo);
+    ghmm_d_update_tied_groups (mo);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
@@ -447,7 +447,7 @@ static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
     T_k = seq_length[k];        /* current seq. length */
 
     /* initialization of  matrices and vector depends on T_k */
-    if (reestimate_alloc_matvek (&alpha, &beta, &scale, T_k, mo->N) == -1) {
+    if (ighmm_reestimate_alloc_matvek (&alpha, &beta, &scale, T_k, mo->N) == -1) {
       mes_proc ();
       goto FREE;
     }
@@ -508,7 +508,7 @@ static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
     else
       printf ("O(%d) can't be built from model mo!\n", k);
 
-    reestimate_free_matvek (alpha, beta, scale, T_k);
+    ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
 
   }                             /* for (k = 0; k < seq_number; k++) */
 
@@ -540,7 +540,7 @@ static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    return (res);
 FREE:
-   reestimate_free_matvek (alpha, beta, scale, T_k);
+   ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
    return (res);
 # undef CUR_PROC
 }                               /* reestimate_one_step */
@@ -772,20 +772,20 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int reestimate_baum_welch (model * mo, sequence_t * sq)
+int ghmm_d_baum_welch (model * mo, sequence_t * sq)
 {
-# define CUR_PROC "reestimate_baum_welch"
+# define CUR_PROC "ghmm_d_baum_welch"
 
-  return reestimate_baum_welch_nstep (mo, sq, MAX_ITER_BW, EPS_ITER_BW);
+  return ghmm_d_baum_welch_nstep (mo, sq, MAX_ITER_BW, EPS_ITER_BW);
 # undef CUR_PROC
-}                               /* reestimate_baum_welch */
+}                               /* ghmm_d_baum_welch */
 
 
 /*============================================================================*/
-int reestimate_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
+int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
                                  double likelihood_delta)
 {
-# define CUR_PROC "reestimate_baum_welch"
+# define CUR_PROC "ghmm_d_baum_welch"
   int n, k, valid;
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
@@ -889,7 +889,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
   return res;
 # undef CUR_PROC
-}                               /* reestimate_baum_welch_nstep */
+}                               /* ghmm_d_baum_welch_nstep */
 
 
 
@@ -929,7 +929,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
     T_k = seq_length[k];        /* current seq. length */
 
     /* initialization of  matrices and vector depends on T_k */
-    if (reestimate_alloc_matvek (&alpha, &beta, &scale, T_k, mo->N) == -1) {
+    if (ighmm_reestimate_alloc_matvek (&alpha, &beta, &scale, T_k, mo->N) == -1) {
       mes_proc ();
       goto FREE;
     }
@@ -999,7 +999,7 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
       m_free (str);
     }
 
-    reestimate_free_matvek (alpha, beta, scale, T_k);
+    ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
 
   }                             /* for (k = 0; k < seq_number; k++) */
 
@@ -1022,26 +1022,26 @@ static int reestimate_one_step_label (model * mo, local_store_t * r,
   return (0);
 
 FREE:
-  reestimate_free_matvek (alpha, beta, scale, T_k);
+  ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (-1);
 # undef CUR_PROC
 }                               /* reestimate_one_step_label */
 
 /*============================================================================*/
-int reestimate_baum_welch_label (model * mo, sequence_t * sq)
+int ghmm_dl_baum_welch (model * mo, sequence_t * sq)
 {
-# define CUR_PROC "reestimate_baum_welch_label"
+# define CUR_PROC "ghmm_dl_baum_welch"
 
-  return reestimate_baum_welch_nstep_label (mo, sq, MAX_ITER_BW, EPS_ITER_BW);
+  return ghmm_dl_baum_welch_nstep (mo, sq, MAX_ITER_BW, EPS_ITER_BW);
 # undef CUR_PROC
-}                               /* reestimate_baum_welch */
+}                               /* ghmm_d_baum_welch */
 
 /*============================================================================*/
-int reestimate_baum_welch_nstep_label (model * mo, sequence_t * sq,
+int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
                                        int max_step, double likelihood_delta)
 {
-# define CUR_PROC "reestimate_baum_welch_label"
+# define CUR_PROC "ghmm_dl_baum_welch"
   int n, k, valid;
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
@@ -1137,4 +1137,4 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
   return res;
 # undef CUR_PROC
-}                               /* reestimate_baum_welch_nstep_label */
+}                               /* ghmm_dl_baum_welch_nstep */

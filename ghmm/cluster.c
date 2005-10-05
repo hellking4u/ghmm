@@ -154,7 +154,7 @@ int cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
       fprintf (outfile, "\nGes. WS VOR %d.Reestimate:\n", iter);
       cluster_print_likelihood (outfile, &cl);
       for (i = 0; i < cl.mo_number; i++) {
-        if (reestimate_baum_welch (cl.mo[i], cl.mo_seq[i])) {
+        if (ghmm_d_baum_welch (cl.mo[i], cl.mo_seq[i])) {
           char *str =
             mprintf (NULL, 0, "%d.reestimate false, mo[%d]\n", iter, i);
           mes_prot (str);

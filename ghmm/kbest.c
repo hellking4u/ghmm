@@ -89,9 +89,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param k:          number of hypotheses to keep for each state
    @param log_p:      variable reference to store the log prob. of the labeling
  */
-int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
+int *ghmm_dl_kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
 {
-#define CUR_PROC "kbest"
+#define CUR_PROC "ghmm_dl_kbest"
   int i, t, c, l, m;            /* counters */
   int no_oldHyps;               /* number of hypotheses until position t-1 */
   int b_index, i_id;            /* index for addressing states' b arrays */
@@ -170,7 +170,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
           hP = hP->next;
       }
       if (!exists) {
-        hlist_insertElem (&(h[0]), mo->s[i].label, NULL);
+        ighmm_hlist_insert (&(h[0]), mo->s[i].label, NULL);
         /* initiallize gamma-array with safe size (number of states) and add the first entry */
         ARRAY_MALLOC (h[0]->gamma_a, states_wlabel[mo->s[i].label]);
         ARRAY_MALLOC (h[0]->gamma_id, states_wlabel[mo->s[i].label]);
@@ -208,7 +208,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
 
     /** 2. Propagate hypotheses forward and update gamma: */
     no_oldHyps =
-      hlist_propFwd (mo, h[t - 1], &(h[t]), no_labels, states_wlabel,
+      ighmm_hlist_prop_forward (mo, h[t - 1], &(h[t]), no_labels, states_wlabel,
                      label_max_out);
     /* printf("t = %d (%d), no of old hypotheses = %d\n", t, seq_len, no_oldHyps); */
 
@@ -223,7 +223,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
            + log(b[i](o_seq[t]))
            else: gamma(i,c):= -INF (represented by 1.0) */
         i_id = hP->gamma_id[i];
-        hP->gamma_a[i] = logGammaSum (log_a[i_id], &mo->s[i_id], hP->parent);
+        hP->gamma_a[i] = ighmm_log_gamma_sum (log_a[i_id], &mo->s[i_id], hP->parent);
         b_index = get_emission_index (mo, i_id, o_seq[t], t);
         if (b_index < 0) {
           hP->gamma_a[i] = 1.0;
@@ -241,7 +241,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
           hP->gamma_a[i] += log (mo->s[i_id].b[b_index]);
         /*printf("%g = %g\n", log(mo->s[i_id].b[b_index]), hP->gamma_a[i]); */
         if (hP->gamma_a[i] > 0.0) {
-          mes_prot ("gamma to large. kbest failed\n");
+          mes_prot ("gamma to large. ghmm_dl_kbest failed\n");
           exit (1);
         }
       }
@@ -293,10 +293,10 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
     /* remove hypotheses that were not chosen from the lists: */
     /* remove all hypotheses till the first chosen one */
     while (h[t] != NULL && 0 == h[t]->chosen)
-      hlist_removeElem (&(h[t]));
+      ighmm_hlist_remove (&(h[t]));
     /* remove all other not chosen hypotheses */
     if (!h[t]) {
-      mes_prot ("No chosen hypothesis. kbest failed\n");
+      mes_prot ("No chosen hypothesis. ghmm_dl_kbest failed\n");
       exit (1);
     }
     hP = h[t];
@@ -304,7 +304,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
       if (1 == hP->next->chosen)
         hP = hP->next;
       else
-        hlist_removeElem (&(hP->next));
+        ighmm_hlist_remove (&(hP->next));
     }
   }
   /* dispose of temporary arrays: */
@@ -321,7 +321,7 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   *log_p = 1.0;                 /* log_p will store log of maximum summed probability */
   while (hP != NULL) {
     /* sum probabilities for each hypothesis over all states: */
-    sum = logSum (hP->gamma_a, hP->gamma_states);
+    sum = ighmm_log_sum (hP->gamma_a, hP->gamma_states);
     /* and select maximum sum */
     if (sum < KBEST_EPS && (*log_p == 1.0 || sum > *log_p)) {
       *log_p = sum;
@@ -346,11 +346,11 @@ int *kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   /* dispose of calculation matrices: */
   hP = h[seq_len - 1];
   while (hP != NULL)
-    hlist_removeElem (&hP);
+    ighmm_hlist_remove (&hP);
   free (h);
   return hypothesis;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("kbest failed\n");
+  mes_prot ("ghmm_dl_kbest failed\n");
   exit (1);
 #undef CUR_PROC
 }

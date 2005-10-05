@@ -803,21 +803,21 @@ extern int model_apply_duration(model* mo, int cur, int times);
 
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
-extern int reestimate_baum_welch(model *mo, sequence_t *sq);
-extern int reestimate_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+extern int ghmm_d_baum_welch(model *mo, sequence_t *sq);
+extern int ghmm_d_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
-extern void reestimate_update_tie_groups(model *mo);
+extern void ghmm_d_update_tied_groups(model *mo);
 
 /**
   Baum Welch training for StateLabelHMMs
 */
-extern int reestimate_baum_welch_label(model *mo, sequence_t *sq);
+extern int ghmm_dl_baum_welch(model *mo, sequence_t *sq);
 
 /**
   Just like reestimate_baum_welch_label, but you can limit
   the maximum number of steps
   */
-extern int reestimate_baum_welch_nstep_label(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+extern int ghmm_dl_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
 
 
 /*----------------------------------------------------------------------------*/
@@ -831,7 +831,7 @@ extern int reestimate_baum_welch_nstep_label(model *mo, sequence_t *sq, int max_
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-extern int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
+extern int ghmm_dl_gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
 
 
 /********  K-Best decoding (kbest.c) ********/
@@ -843,7 +843,7 @@ extern int gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps
    @param o_seq:      output sequence (array of internal representation chars)
    @param seq_len:    length of output sequence
    */
-extern int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p);
+extern int* ghmm_dl_kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p);
 
 /******* Viterbi (viterbi.c)*******/
 /**
@@ -858,7 +858,7 @@ extern int* kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p);
   */
 
 // XXX use swig OUTPUT typemap
-extern int *viterbi(model *mo, int *o, int len, double *log_p);
+extern int * ghmm_d_viterbi(model *mo, int *o, int len, double *log_p);
 
 /**
   Calculates the logarithmic probability to a given path through the 
@@ -870,7 +870,7 @@ extern int *viterbi(model *mo, int *o, int len, double *log_p);
   @param state_seq: path through the states
   @return log P
   */
-extern double viterbi_logp(model *mo, int *o, int len, int *state_seq);
+extern double ghmm_d_viterbi_logp(model *mo, int *o, int len, int *state_seq);
 
 
 /********  Discriminative Training (discrime.c) ********/
@@ -886,18 +886,18 @@ extern double viterbi_logp(model *mo, int *o, int len, int *state_seq);
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-extern int discriminative(model** mo, sequence_t** sqs, int noC, int max_steps,
+extern int ghmm_d_discriminative(model** mo, sequence_t** sqs, int noC, int max_steps,
 			  int gradient);
 
 /**
-   Returns the value of the in this discriminative training algorithm optimised
+   Returns the value of teh in this discriminative training algorithm optimised
    function for a tupel of HMMs and sequencesets.
    @return                 value of funcion
    @param mo:              array of pointers to some models
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
 */
-extern double discrime_compute_performance(model** mo, sequence_t** sqs, int noC);
+extern double ghmm_d_discrim_performance(model** mo, sequence_t** sqs, int noC);
 
 
 /******* Forward , backward (foba.c) ******/

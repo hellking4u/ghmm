@@ -121,12 +121,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
  */
-int gradescent_compute_expectations (model * mo, double **alpha,
+int ghmm_dl_gradient_expectations (model * mo, double **alpha,
                                      double **beta, double *scale, int *seq,
                                      int seq_len, double **matrix_b,
                                      double *matrix_a, double *vec_pi)
 {
-#define CUR_PROC "gradescent_compute_expectations"
+#define CUR_PROC "ghmm_dl_gradient_expectations"
 
   int h, i, j, t;
 
@@ -282,7 +282,7 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
   for (k = 0; k < sq->seq_number; k++) {
     seq_len = sq->seq_len[k];
 
-    if (-1 == reestimate_alloc_matvek (&alpha, &beta, &scale, seq_len, mo->N))
+    if (-1 == ighmm_reestimate_alloc_matvek (&alpha, &beta, &scale, seq_len, mo->N))
       continue;
 
     /* calculate forward and backward variables without labels: */
@@ -298,7 +298,7 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
 
     /* compute n matrices (no labels): */
     if (-1 ==
-        gradescent_compute_expectations (mo, alpha, beta, scale, sq->seq[k],
+        ghmm_dl_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
                                          seq_len, m_b, m_a, m_pi))
       printf ("Error in sequence %d, length %d (no labels)\n", k, seq_len);
 
@@ -318,7 +318,7 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
 
     /* compute m matrices (labels): */
     if (-1 ==
-        gradescent_compute_expectations (mo, alpha, beta, scale, sq->seq[k],
+        ghmm_dl_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
                                          seq_len, m_b, m_a, m_pi))
       printf ("Error in sequence %d, length %d (with labels)\n", k, seq_len);
 
@@ -429,10 +429,10 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
 
     /* restore "tied_to" property */
     if (mo->model_type & kTiedEmissions)
-      reestimate_update_tie_groups (mo);
+      ghmm_d_update_tied_groups (mo);
 
   FREE:
-    reestimate_free_matvek (alpha, beta, scale, seq_len);
+    ighmm_reestimate_free_matvek (alpha, beta, scale, seq_len);
   }
 
   gradient_descent_gfree (m_b, m_a, m_pi, mo->N);
@@ -455,9 +455,9 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-int gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps)
+int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps)
 {
-#define CUR_PROC "gradient_descent"
+#define CUR_PROC "ghmm_dl_gradient_descent"
 
   int runs = 0;
   double cur_perf, last_perf;

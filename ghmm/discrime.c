@@ -322,7 +322,7 @@ static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
       for (m = 0; m < noC; m++) {
 
         if (-1 ==
-            reestimate_alloc_matvek (&alpha, &beta, &scale, seq_len,
+            ighmm_reestimate_alloc_matvek (&alpha, &beta, &scale, seq_len,
                                      mo[m]->N))
           return -1;
 
@@ -342,13 +342,13 @@ static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
         /* compute expectation matrices
            expect_*[k][l][m] holds the expected number how ofter a particular
            parameter of model m is used by l-th training sequence of class k */
-        gradescent_compute_expectations (mo[m], alpha, beta, scale,
+        ghmm_dl_gradient_expectations (mo[m], alpha, beta, scale,
                                          sq->seq[l], seq_len,
                                          expect_b[k][l][m], expect_a[k][l][m],
                                          expect_pi[k][l][m]);
 
       FREE:
-        reestimate_free_matvek (alpha, beta, scale, seq_len);
+        ighmm_reestimate_free_matvek (alpha, beta, scale, seq_len);
         if (!success)
           return -1;
       }
@@ -360,9 +360,9 @@ static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-double discrime_compute_performance (model ** mo, sequence_t ** sqs, int noC)
+double ghmm_d_discrim_performance (model ** mo, sequence_t ** sqs, int noC)
 {
-#define CUR_PROC "discrime_compute_performance"
+#define CUR_PROC "ghmm_d_discrim_performance"
 
   int k, l, m, temp;
   int argmax = 0;
@@ -1163,10 +1163,10 @@ FREE:
 
 
 /*----------------------------------------------------------------------------*/
-int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps, 
+int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps, 
 		    int gradient)
 {
-#define CUR_PROC "discriminative"
+#define CUR_PROC "ghmm_d_discriminative"
 
   double last_perf, cur_perf;
   int retval=-1, last_cer, cur_cer;
@@ -1203,7 +1203,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps,
     printf("original prior: %g \t new prior %g\n", prior_backup[i], mo[i]->prior);
   }
 
-  last_perf = discrime_compute_performance (mo, sqs, noC);
+  last_perf = ghmm_d_discrim_performance (mo, sqs, noC);
   cur_perf = last_perf;
 
   discrime_print_statistics (mo, sqs, noC, falseP, falseN);
@@ -1249,7 +1249,7 @@ int discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps,
 
       discrime_onestep (mo, sqs, noC, gradient, k);
 
-      cur_perf = discrime_compute_performance (mo, sqs, noC);
+      cur_perf = ghmm_d_discrim_performance (mo, sqs, noC);
       discrime_print_statistics (mo, sqs, noC, falseP, falseN);
 
       fp = fn = 0;
