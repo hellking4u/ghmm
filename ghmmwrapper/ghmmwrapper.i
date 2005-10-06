@@ -1922,7 +1922,7 @@ pclass_change_context * ghmm_dp_init_class_change();
 
 extern int ghmm_dp_free(pmodel *mo);
 
-extern pstate * get_pstateptr(pstate * ary, int index);
+%inline %{ pstate * get_pstateptr(pstate * ary, int index) {return &(ary[index]);} %}
 
 extern int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
