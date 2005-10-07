@@ -122,6 +122,8 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
   int symbols = 0, lexWord = 0;
   sequence_t *sq = NULL;
   int seq_len_lex = 0;
+  char * str;
+
   ARRAY_CALLOC (sq, 1);
   ighmm_scanner_consume (s, '{');
   if (s->err)
@@ -203,8 +205,7 @@ sequence_t *ghmm_dseq_read_alloc (scanner_t * s)
         sq->seq_number++;
       }                         /* while( !s->eof...) */
       if ((sq->seq_number == 0) || (sq->seq_number > MAX_SEQ_NUMBER)) {
-        char *str = ighmm_mprintf (NULL, 0,
-                             "Number of sequences %ld exceeds possible range",
+        str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range",
                              sq->seq_number);
         mes_prot (str);
         m_free (str);
@@ -337,7 +338,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
 {
 #define CUR_PROC "ghmm_cseq_read_alloc"
+  char * str;
   sequence_d_t *sqd = NULL;
+
   ARRAY_CALLOC (sqd, 1);
   ighmm_scanner_consume (s, '{');
   if (s->err)
@@ -418,8 +421,7 @@ sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s)
         sqd->seq_number++;
       }                         /* while( !s->eof...) */
       if ((sqd->seq_number == 0) || (sqd->seq_number > MAX_SEQ_NUMBER)) {
-        char *str = ighmm_mprintf (NULL, 0,
-                             "Number of sequences %ld exceeds possible range",
+        str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range",
                              sqd->seq_number);
         mes_prot (str);
         m_free (str);
@@ -505,13 +507,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 sequence_d_t *ghmm_cseq_calloc (long seq_number)
 {
 #define CUR_PROC "sequence_dcalloc"
+
   int i;
+  char * str;
+
   /*printf("*** sequence_d_t *sequence_d_calloc, nr: %d\n",seq_number);*/
   sequence_d_t *sqd = NULL;
   if (seq_number > MAX_SEQ_NUMBER) {
-    char *str = ighmm_mprintf (NULL, 0,
-                         "Number of sequences %ld exceeds possible range",
-                         seq_number);
+    str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
     mes_prot (str);
     m_free (str);
     goto STOP;
@@ -547,11 +550,11 @@ sequence_t *ghmm_dseq_calloc (long seq_number)
 {
 #define CUR_PROC "ghmm_dseq_calloc"
   int i;
+  char * str;
   sequence_t *sq = NULL;
+
   if (seq_number > MAX_SEQ_NUMBER) {
-    char *str = ighmm_mprintf (NULL, 0,
-                         "Number of sequences %ld exceeds possible range",
-                         seq_number);
+    str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
     mes_prot (str);
     m_free (str);
     goto STOP;

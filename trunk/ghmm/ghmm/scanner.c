@@ -946,8 +946,7 @@ void *ighmm_scanner_get_array (scanner_t * s, int *len, char *type)
       err = ighmm_realloc ((void**)&val, sizeof (*val) * (maxlen + 16 * size));
       ighmm_mes_ability (mes_stat);
       if (err) {
-        ighmm_mprintf (txt, sizeof (txt), "Not enough memory to read %s array",
-                 type);
+        ighmm_mprintf (txt, sizeof (txt), "Not enough memory to read %s array", type);
         ighmm_scanner_error (s, txt);
         goto STOP;
       }
