@@ -56,6 +56,33 @@
 #include "ghmm_internals.h"
 
 
+typedef struct plocal_store_t {
+  /** precomputed log probabilities for transitions into the states 
+      for each transition class **/
+  double *** log_in_a;
+  /** precomputed log probabilities for each state for the emissions  **/
+  double ** log_b;
+  /** lookback matrix for the last offset steps **/
+  double *** phi;
+  /** log probabilities for the current u, v and every state **/
+  double *phi_new;
+  /** traceback matrix **/
+  int ***psi;
+  /** for convinience store a pointer to the model **/
+  pmodel * mo;
+  /** for the debug mode store information of matrix sizes **/
+  /** length of sequence X determines size of psi **/
+  int len_x;
+  /** length of sequence Y determines size of phi and psi **/
+  int len_y;
+  /** non functional stuff **/
+  int    *topo_order;
+  int    topo_order_length;
+} plocal_store_t;
+
+
+  static void ghmm_dp_print_viterbi_store(plocal_store_t * pv);
+
   static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y);
 
   static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y);
@@ -139,7 +166,7 @@ static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int ma
 #undef CUR_PROC
 } /* viterbi_free */
 
-void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
+static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
   int j, k;
   pmodel * mo;
 
