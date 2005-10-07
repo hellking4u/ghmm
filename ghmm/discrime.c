@@ -58,8 +58,6 @@
 
 #ifdef __STRICT_ANSI__
 #define logl(A) log(A)
-#endif
-#ifdef __STRICT_ANSI__
 #define expl(A) exp(A)
 #endif
 
@@ -76,8 +74,8 @@ static void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
 
 static void discrime_trim_gradient (double *new, int length);
 
-double discrime_lambda = 0.0;
-double discrime_alpha = 1.0;
+static double discrime_lambda = 0.0;
+static double discrime_alpha = 1.0;
 
 
 /*----------------------------------------------------------------------------*/
