@@ -101,7 +101,9 @@ int ighmm_cmatrix_read (scanner_t * s, double **matrix, int max_zeile,
 }                               /* ighmm_cmatrix_read */
 
 /*============================================================================*/
+#endif /* GHHM_OBSOLETE */
 
+#ifdef GHMM_UNSUPPORTED
 int ighmm_dmatrix_read (scanner_t * s, int **matrix, int max_zeile, int max_spalte)
 {
 #define CUR_PROC "ighmm_dmatrix_read"
@@ -137,7 +139,7 @@ int ighmm_dmatrix_read (scanner_t * s, int **matrix, int max_zeile, int max_spal
   return (0);
 #undef CUR_PROC
 }                               /* ighmm_dmatrix_read */
-#endif /* GHMM_OBSOLETE */
+#endif /* GHMM_UNSUPPORTED */
 
 /*============================================================================*/
 
@@ -396,9 +398,10 @@ void ighmm_cmatrix_print(FILE *file, double **matrix, int zeilen, int spalten,
   for (i = 0; i < zeilen; i++)
     ighmm_cvector_print (file, matrix[i], spalten, tab, separator, ending);
 }                               /* ighmm_cmatrix_print */
+#endif /* GHMM_OBSOLETE */
 
+#ifdef GHMM_UNSUPPORTED
 /*============================================================================*/
-
 void ighmm_cmatrix_print_prec (FILE * file, double **matrix, int zeilen,
                           int spalten, int width, int prec, char *tab,
                           char *separator, char *ending)
@@ -410,7 +413,6 @@ void ighmm_cmatrix_print_prec (FILE * file, double **matrix, int zeilen,
 }                               /* ighmm_cmatrix_print_prec */
 
 /*============================================================================*/
-
 void ighmm_dmatrix_print (FILE * file, int **matrix, int zeilen, int spalten,
                      char *tab, char *separator, char *ending)
 {
@@ -428,7 +430,9 @@ int ighmm_cmatrix_notzero_columns (double **matrix, int row, int max_col)
       count++;
   return count;
 }                               /* ighmm_cmatrix_notzero_columns */
+#endif /* GHMM_UNSUPPORTED */
 
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 int ighmm_cmatrix_notzero_rows (double **matrix, int col, int max_row)
 {
