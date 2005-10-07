@@ -334,6 +334,8 @@ double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
   double *new_O = NULL, *scale = NULL, *initial_distribution = NULL;
   double log_p, sum, p;
   int k;
+  char * str;
+
   /* TEMP */
   if (mode == all_viterbi || mode == viterbi_viterbi || mode == viterbi_all) {
     mes_prot ("Error: mode not implemented yet\n");
@@ -439,8 +441,7 @@ double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
         continue;
       }
       else {
-        char *str =
-          ighmm_mprintf (NULL, 0, "unable to extend seq (all osc empty)\n");
+        str = ighmm_mprintf (NULL, 0, "unable to extend seq (all osc empty)\n");
         mes_prot (str);
         m_free (str);
         goto STOP;

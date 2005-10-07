@@ -331,8 +331,7 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
             if (p_i == 0)
               ighmm_mes (MESCONTR, "state %d: P(in) = 0\n", i);
             else
-              ighmm_mes (MESCONTR, "state %d can be reached but a-denom. = 0.0\n",
-                   i);
+              ighmm_mes (MESCONTR, "state %d can be reached but a-denom. = 0.0\n", i);
           }
         }
 #endif
@@ -377,10 +376,8 @@ static int sreestimate_setlambda (local_store_t * r, smodel * smo)
           else
             l++;
         if (l == smo->s[j_id].in_states) {
-          str =
-            ighmm_mprintf (NULL, 0,
-                     "no matching in_a for out_a(=a[%d][%d]) found!\n", i,
-                     j_id);
+          str = ighmm_mprintf (NULL, 0,
+                  "no matching in_a for out_a(=a[%d][%d]) found!\n", i, j_id);
           mes_prot (str);
           m_free (str);
           goto STOP;
@@ -854,19 +851,17 @@ int ghmm_c_baum_welch (smosqd_t * cs)
 
     if (diff < -EPS_PREC) {
       if (valid > valid_old) {
-        str =
-          ighmm_mprintf (NULL, 0,
-                   "log P < log P-old (more sequences (%d) , n = %d)\n",
-                   valid - valid_old, n);
+        str = ighmm_mprintf (NULL, 0,
+                "log P < log P-old (more sequences (%d) , n = %d)\n",
+                 valid - valid_old, n);
         mes_prot (str);
         m_free (str);
       }
       /* no convergence */
       else {
-        str =
-          ighmm_mprintf (NULL, 0,
-                   "NO convergence: log P(%e) < log P-old(%e)! (n = %d)\n",
-                   log_p, log_p_old, n);
+        str = ighmm_mprintf (NULL, 0,
+	        "NO convergence: log P(%e) < log P-old(%e)! (n = %d)\n",
+	        log_p, log_p_old, n);
         mes_prot (str);
         m_free (str);
         break;                  /* goto STOP; ? */

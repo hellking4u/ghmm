@@ -1419,9 +1419,9 @@ int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check)
     return (-1);
   }
   if (check->r_b != mo_d->N || check->c_b != mo_d->M) {
-    str =
-      ighmm_mprintf (NULL, 0, "Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",
-               check->r_b, check->c_b, mo_d->N, mo_d->M);
+    str = ighmm_mprintf (NULL, 0,
+            "Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",
+            check->r_b, check->c_b, mo_d->N, mo_d->M);
     mes_prot (str);
     m_free (str);
     return (-1);

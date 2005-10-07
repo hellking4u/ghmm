@@ -767,10 +767,10 @@ int ghmm_c_check (const smodel * smo)
   int valid = 0;
   double sum;
   int i, k, j;
+  char * str;
   /* sum  Pi[i] == 1 ? */
   sum = 0.0;
   
-
   for (i = 0; i < smo->N; i++) {
     sum += smo->s[i].pi;
   }
@@ -789,9 +789,9 @@ int ghmm_c_check (const smodel * smo)
   }
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].out_states == 0) {
-      char *str =
-        ighmm_mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
+      str = ighmm_mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
       mes_prot (str);
+      m_free (str);
     }
     /* sum  a[i][k][j] */
     for (k = 0; k < smo->cos; k++) {
@@ -800,8 +800,7 @@ int ghmm_c_check (const smodel * smo)
         sum += smo->s[i].out_a[k][j];
       }
       if (fabs (sum - 1.0) >= EPS_PREC) {
-        char *str =
-          ighmm_mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
+        str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
         mes_prot (str);
         m_free (str);
         valid = -1;
@@ -813,8 +812,7 @@ int ghmm_c_check (const smodel * smo)
     for (j = 0; j < smo->s[i].M; j++)
       sum += smo->s[i].c[j];
     if (fabs (sum - 1.0) >= EPS_PREC) {
-      char *str =
-        ighmm_mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
+      str = ighmm_mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
       valid = -1;            
@@ -837,22 +835,22 @@ int ghmm_c_check_compatibility (smodel ** smo, int smodel_number)
 #define CUR_PROC "ghmm_c_check_compatibility"
 /* XXX - old function not used any more !!! */
   int i, j, k;
+  char * str;
+
   for (i = 0; i < smodel_number; i++)
     for (j = i + 1; j < smodel_number; j++) {
       if (smo[i]->N != smo[j]->N) {
-        char *str =
-          ighmm_mprintf (NULL, 0,
-                   "ERROR: different number of states in smodel %d (%d) and smodel %d (%d)",
-                   i, smo[i]->N, j, smo[j]->N);
+        str = ighmm_mprintf (NULL, 0,
+                "ERROR: different number of states in smodel %d (%d) and smodel %d (%d)",
+                i, smo[i]->N, j, smo[j]->N);
         mes_prot (str);
         m_free (str);
         return (-1);
       }
       if (smo[i]->s[0].M != smo[j]->s[0].M) {
-        char *str =
-          ighmm_mprintf (NULL, 0,
-                   "ERROR: different number of possible outputs in smodel  %d (%d) and smodel %d (%d)",
-                   i, smo[i]->s[0].M, j, smo[j]->s[0].M);
+        str = ighmm_mprintf (NULL, 0,
+                "ERROR: different number of possible outputs in smodel  %d (%d) and smodel %d (%d)",
+                i, smo[i]->s[0].M, j, smo[j]->s[0].M);
         mes_prot (str);
         m_free (str);
         return (-1);

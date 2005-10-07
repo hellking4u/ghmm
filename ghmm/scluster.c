@@ -291,10 +291,9 @@ int ghmm_scluster_hmm (char *argv[])
         if (sqd->seq_label[j] == -1 || sqd->seq_label[j] >= cl.smo_number) {
           
             /* no model fits! What to do?  hack: use arbitrary model ! */ 
-            str =
-            ighmm_mprintf (NULL, 0,
-                     "Warning: seq. %ld, ID %.0f: ghmm_scluster_best_model returns %d\n",
-                     j, sqd->seq_id[j], sqd->seq_label[j]);
+            str = ighmm_mprintf (NULL, 0,
+                    "Warning: seq. %ld, ID %.0f: ghmm_scluster_best_model returns %d\n",
+                    j, sqd->seq_id[j], sqd->seq_label[j]);
           mes_prot (str);
           m_free (str);
           sqd->seq_label[j] = j % cl.smo_number;
