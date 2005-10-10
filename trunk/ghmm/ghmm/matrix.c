@@ -420,7 +420,9 @@ void ighmm_dmatrix_print (FILE * file, int **matrix, int zeilen, int spalten,
   for (i = 0; i < zeilen; i++)
     ighmm_dvector_print (file, matrix[i], spalten, tab, separator, ending);
 }                               /* ighmm_dmatrix_print */
+#endif /* GHMM_UNSUPPORTED */
 
+#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 int ighmm_cmatrix_notzero_columns (double **matrix, int row, int max_col)
 {
@@ -430,9 +432,7 @@ int ighmm_cmatrix_notzero_columns (double **matrix, int row, int max_col)
       count++;
   return count;
 }                               /* ighmm_cmatrix_notzero_columns */
-#endif /* GHMM_UNSUPPORTED */
 
-#ifdef GHMM_OBSOLETE
 /*============================================================================*/
 int ighmm_cmatrix_notzero_rows (double **matrix, int col, int max_row)
 {
