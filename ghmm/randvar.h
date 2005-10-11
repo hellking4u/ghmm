@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/randvar.h
-*       Authors:  Bernhard Knab, Alexander Schliep, Ben Rich
+*       Authors:  Bernhard Knab, Alexander Schliep, Ben Rich, Janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep 
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -171,15 +171,6 @@ extern "C" {
    @return          x with PHI(x)==1, PHI(y) < 1 for all y < x
    */
   double ighmm_rand_get_xPHIless1();
-
-#if 0
-/**
-   Determinates the sampling point x, for which PHI(x) = PHI(y) for 
-   the first time, where x and y consecutive.
-   @return          x with PHI(x)==PHI(y), where PHI(x')<PHI(y') f.a.x',y'<x,y
-   */
-  double randvar_get_xPHIxgleichPHIy();
-#endif
 
 /**                                 
    Cumalative distribution function F(x;mean,u) for the N(mean, u).

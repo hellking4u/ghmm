@@ -219,27 +219,6 @@ AC_DEFINE(GSL_HISTOGRAM_SET_RANGES_UNIFORM,1,[gsl_histogram_set_ranges_uniform i
 AC_MSG_RESULT(no)
 )
 
-dnl checking if gsl_sf_erf exists
-AC_MSG_CHECKING([for gsl_sf_erf])
-AC_TRY_LINK([#include <gsl/gsl_sf.h>],
-[
- (void)gsl_sf_erf(0.0);
-],
-AC_MSG_RESULT(yes)
-AC_DEFINE(HAVE_GSL_SF_ERF,1,[gsl_sf_erf exists]),
-AC_MSG_RESULT(no)
-)
-
-dnl checking if gsl_sf_erfc exists
-AC_MSG_CHECKING([for gsl_sf_erfc])
-AC_TRY_LINK([#include <gsl/gsl_sf.h>],
-[
- (void)gsl_sf_erfc(0.0);
-],
-AC_MSG_RESULT(yes)
-AC_DEFINE(HAVE_GSL_SF_ERFC,1,[gsl_sf_erfc exists]),
-AC_MSG_RESULT(no)
-)
    fi
 ],
 [
@@ -247,13 +226,6 @@ AC_MSG_RESULT(no)
     AC_CHECK_LIB(m, cos)
 ]
 )
-
-
-# substitute default prefix here, because I need it now 
-test "x$prefix" = xNONE && prefix=$ac_default_prefix
-phi_data_file=`eval echo ${datadir}`/${PACKAGE}/PHI_001_20.dat
-AC_DEFINE_UNQUOTED(PHI_DATA_FILE,"${phi_data_file}")
-
 
 
 SUBDIRS="ghmm tools tests doc VisualC"
