@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/randvar.c
-*       Authors:  Bernhard Knab, Benjamin Rich
+*       Authors:  Bernhard Knab, Benjamin Rich, Janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -61,37 +61,14 @@
 # include <gsl/gsl_sf_erf.h>
 # include <gsl/gsl_randist.h>
 
-/* missing functions in gsl-0.7 */
-
-#define EVAL_RESULT(fn) \
-   gsl_sf_result result; \
-   int status = fn; \
-   if (status == GSL_EDOM) { \
-     return GSL_NAN; \
-   } else if (status != GSL_SUCCESS) { \
-     GSL_ERROR(#fn, status); \
-   } ; \
-   return result.val;
-
-# ifndef HAVE_GSL_SF_ERF
-double gsl_sf_erfc (double x)
-{
-  EVAL_RESULT (gsl_sf_erfc_e (x, &result));
-}
-# endif
-
-# ifndef HAVE_GSL_SF_ERFC
-double gsl_sf_erf (double x)
-{
-  EVAL_RESULT (gsl_sf_erf_e (x, &result));
-}
-# endif
-
-#else
-
-#include "scanner.h"
-
 #endif /* DO_WITH_GSL */
+
+
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#else
+static double ighmm_erf (double x);
+static double ighmm_erfc (double x);
+#endif /* check for ISO C99 */
 
 /* A list of already calculated values of the density function of a 
    N(0,1)-distribution, with x in [0.00, 19.99] */
@@ -106,89 +83,10 @@ static int pdf_stdnormal_exists = 0;
 #define X_STEP_PHI 0.001        /* step size */
 #define X_FAKT_PHI 1000         /* equivalent to step size */
 static int PHI_len = 0;
-#if 0                           /* needed for randvar_get_xPHIxgleichPHIy() */
-static double x_PHI_xy = -1.0;
-#endif
 static double x_PHI_1 = -1.0;
 
-
 #ifndef DO_WITH_GSL
-static double *PHI = NULL;
-
-/*----------------------------------------------------------------------------*/
-static int randvar_read_PHI ()
-{
-# define CUR_PROC "randvar_read_PHI"
-  int res = -1;
-  char filename[] = PHI_DATA_FILE;
-#warning "PHI_DATA_FILE deprecated!"
-  scanner_t *s = NULL;
-  s = ighmm_scanner_alloc (filename);
-  if (!s) {
-    mes_proc ();
-    goto STOP;
-  }
-  ighmm_scanner_get_name (s);
-  ighmm_scanner_consume (s, '=');
-  if (s->err)
-    goto STOP;
-  if (!strcmp (s->id, "PHI")) {
-    ighmm_scanner_consume (s, '{');
-    if (s->err)
-      goto STOP;
-    PHI = scanner_get_double_earray (s, &PHI_len);
-    if (s->err)
-      goto STOP;
-    ighmm_scanner_consume (s, ';');
-    if (s->err)
-      goto STOP;
-    ighmm_scanner_consume (s, '}');
-    if (s->err)
-      goto STOP;
-    ighmm_scanner_consume (s, ';');
-    if (s->err)
-      goto STOP;
-  }
-  else {
-    ighmm_scanner_error (s, "unknown identifier");
-    goto STOP;
-  }
-  /* printf("%.4f\n", PHI[PHI_len-1]); */
-
-  res = 0;;
-STOP:
-  ighmm_scanner_free (&s);
-  return res;
-# undef CUR_PROC
-}                               /* randvar_read_PHI */
-
-
-/*----------------------------------------------------------------------------*/
-static int randvar_init_PHI ()
-{
-# define CUR_PROC "randvar_init_PHI"
-#ifdef HAVE_LIBPTHREAD
-  static pthread_mutex_t lock;
-#endif /* HAVE_LIBPTHREAD */
-  /* Read PHI in */
-  if (!PHI_len) {
-#ifdef HAVE_LIBPTHREAD
-    pthread_mutex_lock (&lock); /* Put on a lock, because the clustering is parallel */
-#endif /* HAVE_LIBPTHREAD */
-    if (randvar_read_PHI () == -1) {
-      mes_proc ();
-      goto STOP;
-    };
-#ifdef HAVE_LIBPTHREAD
-    pthread_mutex_unlock (&lock);       /* Take the lock off */
-#endif /* HAVE_LIBPTHREAD */
-  }
-  return 0;
-STOP:
-  return (-1);
-# undef CUR_PROC
-}                               /* randvar_init_PHI */
-
+#define M_SQRT1_2  0.70710678118654752440084436210
 
 #endif /* DO_WITH_GSL */
 
@@ -219,39 +117,12 @@ double ighmm_rand_get_philen ()
 /*============================================================================*/
 double ighmm_rand_get_PHI (double x)
 {
-# define CUR_PROC "ighmm_rand_get_PHI"
-
-#ifdef DO_WITH_GSL
-  return (gsl_sf_erf (x * M_SQRT1_2) + 1.0) / 2.0;
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+  return (erf (x * M_SQRT1_2) + 1.0) / 2.0;
 #else
-  int i;
-  double phi_x;
-
-  if (randvar_init_PHI () == -1) {
-    mes_proc ();
-    goto STOP;
-  }
-
-  /* Linear interpolation (Alternative: Round off with i=m_int(fabs(x)*X_FAKT)) */
-  i = (int) (fabs (x) * X_FAKT_PHI);
-  if (i >= PHI_len - 1) {
-    i = PHI_len - 1;
-    phi_x = PHI[i];
-  }
-  else
-    phi_x =
-      PHI[i] + (fabs (x) - i * X_STEP_PHI) * (PHI[i + 1] -
-                                              PHI[i]) / X_STEP_PHI;
-  /* NOTA BENE: PHI is tabulated for negative values! */
-  if (x > 0.0)
-    return (1.0 - phi_x);
-  else
-    return (phi_x);
-#endif /* DO_WITH_GSL */
-STOP:
-  return (-1.0);
-# undef CUR_PROC
-}                               /* ighmm_rand_get_PHI */
+  return (ighmm_erf (x * M_SQRT1_2) + 1.0) / 2.0;
+#endif
+}                               /* randvar_get_PHI */
 
 
 /*============================================================================*/
@@ -259,7 +130,7 @@ STOP:
 double ighmm_rand_get_xPHIless1 ()
 {
 # define CUR_PROC "ighmm_rand_get_xPHIless1"
-#ifdef DO_WITH_GSL
+
   if (x_PHI_1 == -1) {
     double low, up, half;
     low = 0;
@@ -274,56 +145,9 @@ double ighmm_rand_get_xPHIless1 ()
     x_PHI_1 = low;
   }
   return (x_PHI_1);
-#else
-  double x;
-  int i;
-  if (x_PHI_1 == -1) {
-    if (randvar_init_PHI () == -1) {
-      mes_proc ();
-      goto STOP;
-    }
-    /* The last value of the table is 1 */
-    for (x = (PHI_len - 1) * X_STEP_PHI, i = PHI_len - 1; i > 0;
-         x -= X_STEP_PHI, i--)
-      if (ighmm_rand_get_PHI (-x) > 0.0)
-        break;
-    /* Modification: x exactly between 2 sampling points! */
-    x_PHI_1 = x - (double) X_STEP_PHI / 2.0;
-  }
-  return (x_PHI_1);
-#endif
-STOP:
-  return (-1.0);
-# undef CUR_PROC
-}
 
-#if 0                           /* is not in use */
-/*============================================================================*/
-/* When is PHI[x,0,1] ==  PHI[y,0,1] for consecutive x and y ?*/
-double randvar_get_xPHIxgleichPHIy ()
-{
-# define CUR_PROC "randvar_get_xPHIxgleichPHIy"
-  double x, y;
-  int i;
-  if (x_PHI_xy == -1) {
-    if (randvar_init_PHI () == -1) {
-      mes_proc ();
-      goto STOP;
-    }
-    y = -1.0;
-    for (x = 0.0, i = 0; i < PHI_len; x += X_STEP_PHI, i++) {
-      if (ighmm_rand_get_PHI (-x) == ighmm_rand_get_PHI (-y))
-        break;
-      y = x;
-    }
-    x_PHI_xy = y;
-  }
-  return (x_PHI_xy);
-STOP:
-  return (-1.0);
 # undef CUR_PROC
 }
-#endif /* 0 */
 
 /*============================================================================*/
 double ighmm_rand_get_1overa (double x, double mean, double u)
@@ -332,71 +156,25 @@ double ighmm_rand_get_1overa (double x, double mean, double u)
      the Gauss density function */
 # define CUR_PROC "ighmm_rand_get_1overa"
 
-#ifdef DO_WITH_GSL
   double erfc_value;
-#else
-  int i;
-  double y, z, phi_z, a;
-#endif
 
   if (u <= 0.0) {
     mes_prot ("u <= 0.0 not allowed\n");
     goto STOP;
   }
 
-#ifdef DO_WITH_GSL
-  /* int gsl_sf_erfc (double x) 
-     erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2)
-   */
-  erfc_value = gsl_sf_erfc ((x - mean) / sqrt (u * 2));
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+  erfc_value = erfc ((x - mean) / sqrt (u * 2));
+#else
+  erfc_value = ighmm_erfc ((x - mean) / sqrt (u * 2));
+#endif
+
   if (erfc_value <= DBL_MIN) {
     ighmm_mes (MES_WIN, "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n", mean, u);
     return (erfc_value);
   }
   else
     return (2.0 / erfc_value);
-#else
-
-  if (randvar_init_PHI () == -1) {
-    mes_proc ();
-    goto STOP;
-  };
-
-  y = 1 / sqrt (u);
-  z = (x - mean) * y;
-  /* Linear interpolation (Alternative: Round off with i=m_int(fabs(z)*X_FAKT)) */
-  i = (int) (fabs (z) * X_FAKT_PHI);
-
-  if (i >= PHI_len - 1) {
-    i = PHI_len - 2;
-    /* Originally:
-       i = PHI_len-1; but then, the last value in the table is zero! */
-    phi_z = PHI[i];
-  }
-  else
-    phi_z =
-      PHI[i] + (fabs (z) - i * X_STEP_PHI) * (PHI[i + 1] -
-                                              PHI[i]) / X_STEP_PHI;
-  /* NOTA BENE: PHI is tabulated for negative values! */
-  if (z > 0.0) {
-    if (phi_z == 0) {
-      mes_proc ();
-      goto STOP;
-    }
-    else
-      a = 1 / phi_z;            /* PHI between 0.5 and 1 */ /* ??? between 0.5 and 0 ! */
-  }
-  else {
-    a = 1 - phi_z;
-    if (a > DBL_MIN)
-      a = 1 / a;
-    else {
-      a = 0.0;
-      ighmm_mes (MES_WIN, "a ~= 0.0 critical! (mue = %.2f, u =%.2f)\n", mean, u);     /* goto STOP; */
-    }
-  }
-  return a;
-#endif
 
 STOP:
   return (-1.0);
@@ -759,13 +537,12 @@ double ighmm_rand_normal_cdf (double x, double mean, double u)
     mes_prot ("u <= 0.0 not allowed\n");
     goto STOP;
   }
-#ifdef DO_WITH_GSL
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
   /* PHI(x)=erf(x/sqrt(2))/2+0.5 */
-  return (gsl_sf_erf ((x - mean) / sqrt (u * 2.0)) + 1.0) / 2.0;
+  return (erf ((x - mean) / sqrt (u * 2.0)) + 1.0) / 2.0;
 #else
-  /* The denominator is possibly < EPS??? Check that ? */
-  return (ighmm_rand_get_PHI ((x - mean) / sqrt (u)));
-#endif /* DO_WITH_GSL */
+  return (ighmm_erf ((x - mean) / sqrt (u * 2.0)) + 1.0) / 2.0;
+#endif /* Check for ISO C99 */
 STOP:
   return (-1.0);
 # undef CUR_PROC
@@ -776,9 +553,6 @@ STOP:
 double ighmm_rand_normal_right_cdf (double x, double mean, double u, double a)
 {
 # define CUR_PROC "ighmm_rand_normal_right_cdf"
-#ifndef DO_WITH_GSL
-  double Fx, c;
-#endif
 
   if (x <= a)
     return (0.0);
@@ -786,20 +560,18 @@ double ighmm_rand_normal_right_cdf (double x, double mean, double u, double a)
     mes_prot ("u <= a not allowed\n");
     goto STOP;
   }
-#ifdef DO_WITH_GSL
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
   /*
-     Function: int gsl_sf_erfc_e (double x, gsl_sf_result * result) 
+     Function: int erfc (double x, gsl_sf_result * result) 
      These routines compute the complementary error function
      erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2). 
    */
-  return 1.0 + (gsl_sf_erf ((x - mean) / sqrt (u * 2)) -
-                1.0) / gsl_sf_erfc ((a - mean) / sqrt (u * 2));
+  return 1.0 + (erf ((x - mean) / sqrt (u * 2)) -
+                1.0) / erfc ((a - mean) / sqrt (u * 2));
 #else
-  /*The denominator is possibly < EPS??? Check that ? */
-  Fx = ighmm_rand_get_PHI ((x - mean) / sqrt (u));
-  c = ighmm_rand_get_1overa (a, mean, u);
-  return (c * (Fx - 1) + 1);
-#endif /* DO_WITH_GSL */
+  return 1.0 + (ighmm_erf ((x - mean) / sqrt (u * 2)) -
+                1.0) / ighmm_erfc ((a - mean) / sqrt (u * 2));
+#endif /* Check for ISO C99 */
 STOP:
   return (-1.0);
 # undef CUR_PROC
@@ -824,4 +596,346 @@ double ighmm_rand_uniform_cdf (double x, double max, double min)
 STOP:
   return (-1.0);
 # undef CUR_PROC
-}                               /* double ighmm_rand_normal_cdf */
+}                               /* ighmm_rand_uniform_cdf */
+
+
+
+#if defined(__STDC_VERSION__) || (__STDC_VERSION__ >= 199901L)
+#else
+
+/* THIS WILL BE OBSOLETE WHEN WE USE ISO C99 */ 
+
+/*===========================================================================
+ *
+ * The following functions for the error function and the complementory
+ * error function are taken from
+ * http://www.mathematik.uni-bielefeld.de/~sillke/ALGORITHMS/special-functions/erf.c
+ * and have following different copyright.
+
+ * ====================================================
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
+ * ====================================================
+ */
+
+/*
+ * ====================================================
+ * 
+ * Reference:
+ *
+ * W. J. Cody,
+ *   Rational Chebychev approximations for the
+ *   error function.
+ *   Mathematics of Computations 23 (1969) 631-637
+ *
+ * W. J. Cody,
+ *   Performance evaluations of programs for the 
+ *   error and complementary error function.
+ *   Transactions of the ACM on Mathematical Software, 
+ *   16:1 (March 1990) 38-46
+ *   
+ * W. J. Cody,
+ *   SPECFUN - A portable special function package,
+ *   In: New Computing environments; 
+ *   Microcomputers in Large-Scale Scientific Computing,
+ *   A. Wouk, SIAM, 1987, 1-12
+ *
+ * W. J. Cody,
+ *   http://www.netlib.org/specfun/erf.
+ *
+ * For calculations with complex arguments see:   
+ * 
+ * Walter Gautschi
+ *   "Efficient computation of the complex error function"
+ *   SIAM J. Numer. Anal.
+ *   7:1 (1970), 187-198
+ * 
+ * J.A.C. Weideman
+ *   "Computation of the complex error function"
+ *   SIAM J. Numer. Anal.
+ *   31:5 (1994), 1497-1518 
+ *
+ * ====================================================
+ */
+
+
+/* double erf(double x)
+ * double erfc(double x)
+ *			     x
+ *		      2      |\
+ *     erf(x)  =  ---------  | exp(-t*t)dt
+ *	 	   sqrt(pi) \|
+ *			     0
+ *
+ *     erfc(x) =  1-erf(x)
+ *  Note that
+ *		erf(-x) = -erf(x)
+ *		erfc(-x) = 2 - erfc(x)
+ *
+ * Method:
+ *	1. For |x| in [0, 0.84375]
+ *	    erf(x)  = x + x*R(x^2)
+ *          erfc(x) = 1 - erf(x)           if x in [-.84375,0.25]
+ *                  = 0.5 + ((0.5-x)-x*R)  if x in [0.25,0.84375]
+ *	   where R = P/Q where P is an odd poly of degree 8 and
+ *	   Q is an odd poly of degree 10.
+ *						 -57.90
+ *			| R - (erf(x)-x)/x | <= 2
+ *
+ *
+ *	   Remark. The formula is derived by noting
+ *          erf(x) = (2/sqrt(pi))*(x - x^3/3 + x^5/10 - x^7/42 + ....)
+ *	   and that
+ *          2/sqrt(pi) = 1.128379167095512573896158903121545171688
+ *	   is close to one. The interval is chosen because the fix
+ *	   point of erf(x) is near 0.6174 (i.e., erf(x)=x when x is
+ *	   near 0.6174), and by some experiment, 0.84375 is chosen to
+ * 	   guarantee the error is less than one ulp for erf.
+ *
+ *      2. For |x| in [0.84375,1.25], let s = |x| - 1, and
+ *         c = 0.84506291151 rounded to single (24 bits)
+ *         	erf(x)  = sign(x) * (c  + P1(s)/Q1(s))
+ *         	erfc(x) = (1-c)  - P1(s)/Q1(s) if x > 0
+ *			  1+(c+P1(s)/Q1(s))    if x < 0
+ *         	|P1/Q1 - (erf(|x|)-c)| <= 2**-59.06
+ *	   Remark: here we use the taylor series expansion at x=1.
+ *		erf(1+s) = erf(1) + s*Poly(s)
+ *			 = 0.845.. + P1(s)/Q1(s)
+ *	   That is, we use rational approximation to approximate
+ *			erf(1+s) - (c = (single)0.84506291151)
+ *	   Note that |P1/Q1|< 0.078 for x in [0.84375,1.25]
+ *	   where
+ *		P1(s) = degree 6 poly in s
+ *		Q1(s) = degree 6 poly in s
+ *
+ *      3. For x in [1.25,1/0.35(~2.857143)],
+ *         	erfc(x) = (1/x)*exp(-x*x-0.5625+R1/S1)
+ *         	erf(x)  = 1 - erfc(x)
+ *	   where
+ *		R1(z) = degree 7 poly in z, (z=1/x^2)
+ *		S1(z) = degree 8 poly in z
+ *
+ *      4. For x in [1/0.35,28]
+ *         	erfc(x) = (1/x)*exp(-x*x-0.5625+R2/S2) if x > 0
+ *			= 2.0 - (1/x)*exp(-x*x-0.5625+R2/S2) if -6<x<0
+ *			= 2.0 - tiny		(if x <= -6)
+ *         	erf(x)  = sign(x)*(1.0 - erfc(x)) if x < 6, else
+ *         	erf(x)  = sign(x)*(1.0 - tiny)
+ *	   where
+ *		R2(z) = degree 6 poly in z, (z=1/x^2)
+ *		S2(z) = degree 7 poly in z
+ *
+ *      Note1:
+ *	   To compute exp(-x*x-0.5625+R/S), let s be a single
+ *	   precision number and s := x; then
+ *		-x*x = -s*s + (s-x)*(s+x)
+ *	        exp(-x*x-0.5626+R/S) =
+ *			exp(-s*s-0.5625)*exp((s-x)*(s+x)+R/S);
+ *      Note2:
+ *	   Here 4 and 5 make use of the asymptotic series
+ *			  exp(-x*x)
+ *		erfc(x) ~ ---------- * ( 1 + Poly(1/x^2) )
+ *			  x*sqrt(pi)
+ *	   We use rational approximation to approximate
+ *      	g(s)=f(1/x^2) = log(erfc(x)*x) - x*x + 0.5625
+ *	   Here is the error bound for R1/S1 and R2/S2
+ *      	|R1/S1 - f(x)|  < 2**(-62.57)
+ *      	|R2/S2 - f(x)|  < 2**(-61.52)
+ *
+ *      5. For inf > x >= 28
+ *         	erf(x)  = sign(x) *(1 - tiny)  (raise inexact)
+ *         	erfc(x) = tiny*tiny (raise underflow) if x > 0
+ *			= 2 - tiny if x<0
+ *
+ *      7. Special case:
+ *         	erf(0)  = 0, erf(inf)  = 1, erf(-inf) = -1,
+ *         	erfc(0) = 1, erfc(inf) = 0, erfc(-inf) = 2,
+ *	   	erfc/erf(NaN) is NaN
+ */
+
+
+static const double
+
+tiny =  1e-300,
+half =  5.00000000000000000000e-01, /* 0x3FE00000, 0x00000000 */
+one  =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
+two  =  2.00000000000000000000e+00, /* 0x40000000, 0x00000000 */
+
+erx  =  8.45062911510467529297e-01, /* 0x3FEB0AC1, 0x60000000 */
+/*
+ * Coefficients for approximation to  erf on [0,0.84375]
+ */
+efx  =  1.28379167095512586316e-01, /* 0x3FC06EBA, 0x8214DB69 */
+efx8 =  1.02703333676410069053e+00, /* 0x3FF06EBA, 0x8214DB69 */
+pp0  =  1.28379167095512558561e-01, /* 0x3FC06EBA, 0x8214DB68 */
+pp1  = -3.25042107247001499370e-01, /* 0xBFD4CD7D, 0x691CB913 */
+pp2  = -2.84817495755985104766e-02, /* 0xBF9D2A51, 0xDBD7194F */
+pp3  = -5.77027029648944159157e-03, /* 0xBF77A291, 0x236668E4 */
+pp4  = -2.37630166566501626084e-05, /* 0xBEF8EAD6, 0x120016AC */
+qq1  =  3.97917223959155352819e-01, /* 0x3FD97779, 0xCDDADC09 */
+qq2  =  6.50222499887672944485e-02, /* 0x3FB0A54C, 0x5536CEBA */
+qq3  =  5.08130628187576562776e-03, /* 0x3F74D022, 0xC4D36B0F */
+qq4  =  1.32494738004321644526e-04, /* 0x3F215DC9, 0x221C1A10 */
+qq5  = -3.96022827877536812320e-06, /* 0xBED09C43, 0x42A26120 */
+/*
+ * Coefficients for approximation to  erf  in [0.84375,1.25]
+ */
+pa0  = -2.36211856075265944077e-03, /* 0xBF6359B8, 0xBEF77538 */
+pa1  =  4.14856118683748331666e-01, /* 0x3FDA8D00, 0xAD92B34D */
+pa2  = -3.72207876035701323847e-01, /* 0xBFD7D240, 0xFBB8C3F1 */
+pa3  =  3.18346619901161753674e-01, /* 0x3FD45FCA, 0x805120E4 */
+pa4  = -1.10894694282396677476e-01, /* 0xBFBC6398, 0x3D3E28EC */
+pa5  =  3.54783043256182359371e-02, /* 0x3FA22A36, 0x599795EB */
+pa6  = -2.16637559486879084300e-03, /* 0xBF61BF38, 0x0A96073F */
+qa1  =  1.06420880400844228286e-01, /* 0x3FBB3E66, 0x18EEE323 */
+qa2  =  5.40397917702171048937e-01, /* 0x3FE14AF0, 0x92EB6F33 */
+qa3  =  7.18286544141962662868e-02, /* 0x3FB2635C, 0xD99FE9A7 */
+qa4  =  1.26171219808761642112e-01, /* 0x3FC02660, 0xE763351F */
+qa5  =  1.36370839120290507362e-02, /* 0x3F8BEDC2, 0x6B51DD1C */
+qa6  =  1.19844998467991074170e-02, /* 0x3F888B54, 0x5735151D */
+/*
+ * Coefficients for approximation to  erfc in [1.25,1/0.35]
+ */
+ra0  = -9.86494403484714822705e-03, /* 0xBF843412, 0x600D6435 */
+ra1  = -6.93858572707181764372e-01, /* 0xBFE63416, 0xE4BA7360 */
+ra2  = -1.05586262253232909814e+01, /* 0xC0251E04, 0x41B0E726 */
+ra3  = -6.23753324503260060396e+01, /* 0xC04F300A, 0xE4CBA38D */
+ra4  = -1.62396669462573470355e+02, /* 0xC0644CB1, 0x84282266 */
+ra5  = -1.84605092906711035994e+02, /* 0xC067135C, 0xEBCCABB2 */
+ra6  = -8.12874355063065934246e+01, /* 0xC0545265, 0x57E4D2F2 */
+ra7  = -9.81432934416914548592e+00, /* 0xC023A0EF, 0xC69AC25C */
+sa1  =  1.96512716674392571292e+01, /* 0x4033A6B9, 0xBD707687 */
+sa2  =  1.37657754143519042600e+02, /* 0x4061350C, 0x526AE721 */
+sa3  =  4.34565877475229228821e+02, /* 0x407B290D, 0xD58A1A71 */
+sa4  =  6.45387271733267880336e+02, /* 0x40842B19, 0x21EC2868 */
+sa5  =  4.29008140027567833386e+02, /* 0x407AD021, 0x57700314 */
+sa6  =  1.08635005541779435134e+02, /* 0x405B28A3, 0xEE48AE2C */
+sa7  =  6.57024977031928170135e+00, /* 0x401A47EF, 0x8E484A93 */
+sa8  = -6.04244152148580987438e-02, /* 0xBFAEEFF2, 0xEE749A62 */
+/*
+ * Coefficients for approximation to  erfc in [1/.35,28]
+ */
+rb0  = -9.86494292470009928597e-03, /* 0xBF843412, 0x39E86F4A */
+rb1  = -7.99283237680523006574e-01, /* 0xBFE993BA, 0x70C285DE */
+rb2  = -1.77579549177547519889e+01, /* 0xC031C209, 0x555F995A */
+rb3  = -1.60636384855821916062e+02, /* 0xC064145D, 0x43C5ED98 */
+rb4  = -6.37566443368389627722e+02, /* 0xC083EC88, 0x1375F228 */
+rb5  = -1.02509513161107724954e+03, /* 0xC0900461, 0x6A2E5992 */
+rb6  = -4.83519191608651397019e+02, /* 0xC07E384E, 0x9BDC383F */
+sb1  =  3.03380607434824582924e+01, /* 0x403E568B, 0x261D5190 */
+sb2  =  3.25792512996573918826e+02, /* 0x40745CAE, 0x221B9F0A */
+sb3  =  1.53672958608443695994e+03, /* 0x409802EB, 0x189D5118 */
+sb4  =  3.19985821950859553908e+03, /* 0x40A8FFB7, 0x688C246A */
+sb5  =  2.55305040643316442583e+03, /* 0x40A3F219, 0xCEDF3BE6 */
+sb6  =  4.74528541206955367215e+02, /* 0x407DA874, 0xE79FE763 */
+sb7  = -2.24409524465858183362e+01; /* 0xC03670E2, 0x42712D62 */
+
+static double ighmm_erf (double x) {
+  double R,S,P,Q,s,y,z,r;
+  double ax = fabs(x);
+#ifdef HAVE_IEEE754
+  if (!isfinite(x)) {
+    if (isnan(x)) return x;     /* erf(nan)=nan */
+    return (x==ax) ? 1 : -1;	/* erf(+-inf)=+-1 */
+  }
+#endif
+  if (ax < 0.84375) {		/* |x|<0.84375 */
+    if (ax < 3.7252903e-9) { 	/* |x|<2**-28 */
+      if (ax < tiny)
+	return 0.125*(8.0*x+efx8*x);  /*avoid underflow */
+      return x + efx*x;
+    }
+    z = x*x;
+    r = pp0+z*(pp1+z*(pp2+z*(pp3+z*pp4)));
+    s = one+z*(qq1+z*(qq2+z*(qq3+z*(qq4+z*qq5))));
+    y = r/s;
+    return x + x*y;
+  }
+  if (ax < 1.25) {			/* 0.84375 <= |x| < 1.25 */
+    s = ax-one;
+    P = pa0+s*(pa1+s*(pa2+s*(pa3+s*(pa4+s*(pa5+s*pa6)))));
+    Q = one+s*(qa1+s*(qa2+s*(qa3+s*(qa4+s*(qa5+s*qa6)))));
+    if (x>=0) return erx + P/Q;
+    else return -erx - P/Q;
+  }
+  if (ax >= 6.0) {		/* inf>|x|>=6 */
+    if (x>=0) return one-tiny;
+    else return tiny-one;
+  }
+  s = one/(x*x);
+  if (ax < 2.857142857) {	/* |x| < 1/0.35 */
+    R=ra0+s*(ra1+s*(ra2+s*(ra3+s*(ra4+s*(ra5+s*(ra6+s*ra7))))));
+    S=one+s*(sa1+s*(sa2+s*(sa3+s*(sa4+s*(sa5+s*(sa6+s*(sa7+s*sa8)))))));
+  }
+  else {		/* |x| >= 1/0.35 */
+    R=rb0+s*(rb1+s*(rb2+s*(rb3+s*(rb4+s*(rb5+s*rb6)))));
+    S=one+s*(sb1+s*(sb2+s*(sb3+s*(sb4+s*(sb5+s*(sb6+s*sb7))))));
+  }
+  z  = (double)(float) ax;
+  r  = exp(-z*z-0.5625)*exp((z-ax)*(z+ax)+R/S);
+  if (x>=0) return one-r/ax;
+  else return  r/ax-one;
+}
+
+static double ighmm_erfc (double x) {
+  double R,S,P,Q,s,y,z,r;
+  double ax = fabs(x);
+#ifdef HAVE_IEEE754
+  if (!isfinite(x)) {
+    if (isnan(x)) return x;     /* erfc(nan)=nan */
+    return (x==ax) ? 0 : 2;	/* erfc(+-inf)=0,2 */
+  }
+#endif
+  if (ax < 0.84375) {		/* |x|<0.84375 */
+    if (ax < 13.8777878e-18)  	/* |x|<2**-56 */
+      return one-x;
+    z = x*x;
+    r = pp0+z*(pp1+z*(pp2+z*(pp3+z*pp4)));
+    s = one+z*(qq1+z*(qq2+z*(qq3+z*(qq4+z*qq5))));
+    y = r/s;
+    if (ax < 0.25) {  		/* x<1/4 */
+      return one-(x+x*y);
+    }
+    else {
+      r = x*y;
+      r += (x-half);
+      return half - r ;
+    }
+  }
+  if (ax < 1.25) {			/* 0.84375 <= |x| < 1.25 */
+    s = fabs(x)-one;
+    P = pa0+s*(pa1+s*(pa2+s*(pa3+s*(pa4+s*(pa5+s*pa6)))));
+    Q = one+s*(qa1+s*(qa2+s*(qa3+s*(qa4+s*(qa5+s*qa6)))));
+    if (x>=0) {
+      z  = one-erx; return z - P/Q;
+    }
+    else {
+      z = erx+P/Q; return one+z;
+    }
+  }
+  if (ax < 28.0) {		/* |x|<28 */
+    s = one/(x*x);
+    if (ax < 2.857142857) {	/* |x| < 1/.35 ~ 2.857143*/
+      R=ra0+s*(ra1+s*(ra2+s*(ra3+s*(ra4+s*(ra5+s*(ra6+s*ra7))))));
+      S=one+s*(sa1+s*(sa2+s*(sa3+s*(sa4+s*(sa5+s*(sa6+s*(sa7+s*sa8)))))));
+    }
+    else {			/* |x| >= 1/.35 ~ 2.857143 */
+      if (x < -6.0) return two-tiny;/* x < -6 */
+      R=rb0+s*(rb1+s*(rb2+s*(rb3+s*(rb4+s*(rb5+s*rb6)))));
+      S=one+s*(sb1+s*(sb2+s*(sb3+s*(sb4+s*(sb5+s*(sb6+s*sb7))))));
+    }
+    z  = (double)(float) ax;
+    r  = exp(-z*z-0.5625)*exp((z-ax)*(z+ax)+R/S);
+    if (x>0) return r/ax;
+    else return two-r/ax;
+  }
+  else {
+    if(x>0) return tiny*tiny;
+    else return two-tiny;
+  }
+}
+#endif /* check for ISO C99 */
