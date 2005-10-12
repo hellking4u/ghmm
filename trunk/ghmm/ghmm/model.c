@@ -55,7 +55,6 @@
 #include "mes.h"
 #include "mprintf.h"
 #include "string.h"
-#include "modelutil.h"
 #include "vector.h"
 #include "ghmm_internals.h"
 
@@ -1684,43 +1683,9 @@ void ghmm_d_state_clean (state * my_state)
 #undef CUR_PROC
 }                               /* ghmm_d_state_clean */
 
-/*============================================================================*/
-
-/*state* state_copy(state *my_state) {
-  state* new_state = (state*) malloc(sizeof(state));
-
-  state_copy_to(my_state,new_state);
-
-  return new_state;
-
-  }*/ /* state_copy */
-
-/*============================================================================*/
-
-/*void state_copy_to(state *source, state* dest) {
-  dest->pi         = source->pi;
-  dest->out_states = source->out_states;
-  dest->in_states  = source->in_states;
-  dest->fix        = source->fix;
-
-  dest->b          = malloc(xxx);
-  memcpy(dest->b,source->b,xxx);
-
-  dest->out_id     = malloc(xxx);
-  memcpy(dest->out_id,source->out_id,xxx);
-
-  dest->in_id      = malloc(xxx);
-  memcpy(dest->in_id,source->in_id,xxx);
-
-  dest->out_a      = malloc(xxx);
-  memcpy(dest->out_a,source->out_a,xxx);
-
-  dest->in_a       = malloc(xxx);
-  memcpy(dest->in_a,source->in_a,xxx);
-  }*/ /* state_copy_to */
 
 
- /*==========================Labeled HMMS ================================*/
+/*==========================  Labeled HMMs  ================================*/
 
 sequence_t *ghmm_dl_generate_sequences (model * mo, int seed,
                                             int global_len, long seq_number,

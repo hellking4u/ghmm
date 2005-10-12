@@ -48,6 +48,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "ghmm_internals.h"
+
 double ghmm_zbrent_AB (double (*func) (double, double, double, double),
                    double x1, double x2, double tol, double A, double B,
                    double eps) 

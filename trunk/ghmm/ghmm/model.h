@@ -570,23 +570,12 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param m2:    second model
 */
   double ghmm_d_distance(const model * mo, const model * m2);
-/**
-   Copies a given state. Allocates the necessary memory.
-   @author Peter Pipenbacher
-   @return copy of the state
-   @param my_state:  state to copy */
-#if 0
-  state *state_copy (state * my_state);
-#endif
 
-/**
-   Copies a given state to a given destination.
-   @author Peter Pipenbacher
-   @param source:  state to copy
-   @param dest:    destination */
-#if 0
-  void state_copy_to (state * source, state * dest);
-#endif
+/** Calculates a topological ordering of the silent states
+    and saves it in the model. Detects cycles of silent states.
+    @param mo:      model
+*/
+  void ghmm_d_topo_order (model * mo);
 
 #ifdef __cplusplus
 }

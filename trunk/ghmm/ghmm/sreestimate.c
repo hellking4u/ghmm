@@ -49,8 +49,6 @@
 #include "matrix.h"
 #include "vector.h"
 #include "randvar.h"
-#include "gauss_tail.h"
-#include "root_finder.h"
 #include "ghmm_internals.h"
 
 /* switch: turn off (0)  MESCONTR and MESINFO */

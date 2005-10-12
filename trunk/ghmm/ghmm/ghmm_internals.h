@@ -5,14 +5,8 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-#ifndef DECLARE_DEPRECATED
-#  if ( __GNUC__ == 3 && __GNUC_MINOR__ > 0 ) || __GNUC__ > 3 
-#    define DECLARE_DEPRECATED __attribute__((deprecated))
-#  else
-#    define DECLARE_DEPRECATED /* empty, no compile-time warnings */
-#  endif
-#endif
 
+/*==============  Memory allocation macros for mes-functions  ===============*/
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC(ptr, entries) { if (!((ptr) = ighmm_malloc(sizeof(*(ptr)) * (entries)))) \
                                          {mes_proc(); goto STOP;}                           \
@@ -30,6 +24,40 @@ extern "C" {
                                           {mes_proc(); goto STOP;}                                \
 				    }
 #endif
+
+
+/*==============  declarations for root_finder.c  ===========================*/
+/**
+   brent root finding algorithm.
+   wrapps this functioncall to the gsl 1D-root finding interface
+   @author Achim G\"adke
+   @param x1 lower bracket value
+   @param x2 upper bracket value
+   @param tol tolerance for iteration
+   @param A 1st extra parameter
+   @param B 2nd extra parameter
+   @param eps 3rd extra parameter
+   @return root
+ */
+  double ghmm_zbrent_AB (double (*func) (double, double, double, double),
+                    double x1, double x2, double tol, double A, double B,
+                    double eps);
+
+
+/*==============  declarations for gauss_tail.c  ============================*/
+/**
+ */
+  double ighmm_gtail_pmue (double mue, double A, double B, double eps);
+
+/**
+ */
+  double ighmm_gtail_pmue_umin (double mue, double A, double B, double eps);
+
+/** 
+    @name Function to find the roots of the truncated normal density function.
+*/
+  double ighmm_gtail_pmue_interpol (double mue, double A, double B, double eps);
+
 
 
 #ifdef __cplusplus
