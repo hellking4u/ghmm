@@ -190,8 +190,8 @@ extern "C" {
    For a vector of smodels: check that the number of states and the number
    of output function components are the same in each smodel.
    @return 0 if smodels are  ok, -1 for error
-   @param smo    vector of smodels for checking
-   @param smodel_number  number of smodels
+   @param smo:            vector of smodels for checking
+   @param smodel_number:  number of smodels
  */
   int ghmm_c_check_compatibility (smodel ** smo, int smodel_number);
 
@@ -199,10 +199,10 @@ extern "C" {
    Generates random symbol.
    Generates one random number for a specified state and specified
    output component of the given smodel.
-   @return               random number
-   @param smo     smodel
-   @param state    state
-   @param m         index of output component
+   @return           random number
+   @param smo:       smodel
+   @param state:     state
+   @param m:         index of output component
 */
   double ghmm_c_get_random_var (smodel * smo, int state, int m);
 
