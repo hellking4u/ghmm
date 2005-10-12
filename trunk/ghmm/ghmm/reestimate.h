@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef REESTIMATE_H
-#define REESTIMATE_H
+#ifndef GHMM_REESTIMATE_H
+#define GHMM_REESTIMATE_H
 #include "sequence.h"
 #include "model.h"
 
@@ -121,5 +121,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* REESTIMATE_H */
+#endif                          /* GHMM_REESTIMATE_H */
 /*@} (Doc++-Group: reestimate) */

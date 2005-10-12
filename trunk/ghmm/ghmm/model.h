@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef GHMM_MODEL_H
+#define GHMM_MODEL_H
 
 #ifdef __cplusplus
 extern "C" {

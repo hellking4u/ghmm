@@ -35,8 +35,8 @@
 *******************************************************************************/
 
 
-#ifndef FOBA_H
-#define FOBA_H
+#ifndef GHMM_FOBA_H
+#define GHMM_FOBA_H
 
 #include "model.h"
 

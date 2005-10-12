@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef SREESTIMATE_H
-#define SREESTIMATE_H
+#ifndef GHMM_SREESTIMATE_H
+#define GHMM_SREESTIMATE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,5 +89,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* SREESTIMATE_H */
+#endif                          /* GHMM_SREESTIMATE_H */
 /*@} (Doc++-Group: sreestimate) */

@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef SCANNER_H
-#define SCANNER_H
+#ifndef GHMM_SCANNER_H
+#define GHMM_SCANNER_H
 
 #include <stdio.h>
 
@@ -191,4 +191,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* SCANNER_H */
+#endif                          /* GHMM_SCANNER_H */

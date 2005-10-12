@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef SVITERBI_H
-#define SVITERBI_H
+#ifndef GHMM_SVITERBI_H
+#define GHMM_SVITERBI_H
 
 #ifdef __cplusplus
 extern "C" {

@@ -35,8 +35,8 @@
 *******************************************************************************/
 
 
-#ifndef DISCRIME_H
-#define DISCRIME_H
+#ifndef GHMM_DISCRIME_H
+#define GHMM_DISCRIME_H
 
 #ifdef __cplusplus
 extern "C" {

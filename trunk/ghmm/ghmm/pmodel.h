@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef PMODEL_H
-#define PMODEL_H
+#ifndef GHMM_PMODEL_H
+#define GHMM_PMODEL_H
 #include "model.h" 
 #include "psequence.h"
 

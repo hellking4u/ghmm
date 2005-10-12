@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef RANDVAR_H
-#define RANDVAR_H
+#ifndef GHMM_RANDVAR_H
+#define GHMM_RANDVAR_H
 
 /**@name Help functions for random values */
 /*@{ (Doc++-Group: randvar) */
@@ -217,5 +217,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* RANDVAR_H */
+#endif                          /* RGHMM_ANDVAR_H */
 /*@} (Doc++-Group: randvar) */

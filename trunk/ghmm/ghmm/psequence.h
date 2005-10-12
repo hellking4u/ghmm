@@ -1,5 +1,5 @@
-#ifndef PSEQUENCE_H
-#define PSEQUENCE_H
+#ifndef GHMM_PSEQUENCE_H
+#define GHMM_PSEQUENCE_H
 struct psequence {
   /** for each alphabet in model->number_of_alphabets there is one int seq **/
   int ** seq;

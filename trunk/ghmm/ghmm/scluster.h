@@ -36,8 +36,8 @@
 
 #ifdef GHMM_OBSOLETE
 
-#ifndef SCLUSTER_H
-#define SCLUSTER_H
+#ifndef GHMM_SCLUSTER_H
+#define GHMM_SCLUSTER_H
 #include "sequence.h"
 #include "smodel.h"
 #include "sreestimate.h"
@@ -199,6 +199,6 @@ extern "C" {
 }
 #endif
 /*@} */
-#endif                          /* SCLUSTER_H */
+#endif                          /* GHMM_SCLUSTER_H */
 
 #endif /* GHMM_OBSOLETE */

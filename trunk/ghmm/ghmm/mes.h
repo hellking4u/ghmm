@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef MES_H
-#define MES_H
+#ifndef GHMM_MES_H
+#define GHMM_MES_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -292,4 +292,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
-#endif                          /* MES_H */
+#endif                          /* GHMM_MES_H */

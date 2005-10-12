@@ -36,8 +36,8 @@
 
 #ifdef GHMM_OBSOLETE
 
-#ifndef CLUSTER_H
-#define CLUSTER_H
+#ifndef GHMM_CLUSTER_H
+#define GHMM_CLUSTER_H
 #include "sequence.h"
 #include "model.h"
 
@@ -133,6 +133,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* CLUSTER_H */
+#endif                          /* GHMM_CLUSTER_H */
 
 #endif /* GHMM_OBSOLETE */

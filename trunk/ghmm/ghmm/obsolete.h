@@ -1,7 +1,7 @@
 #ifdef GHMM_OBSOLETE
 
-#ifndef OBSOLETE_H
-#define OBSOLETE_H
+#ifndef GHMM_OBSOLETE_H
+#define GHMM_OBSOLETE_H
 
 #include "scanner.h"
 #include "model.h"
@@ -389,6 +389,6 @@
 
 
 
-#endif /* OBSOLETE_H */
+#endif /* GHMM_OBSOLETE_H */
 
 #endif /* GHMM_OBSOLETE */

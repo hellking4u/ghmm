@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef MATRICE_H
-#define MATRICE_H
+#ifndef GHMM_MATRICE_H
+#define GHMM_MATRICE_H
 
 #include <stdio.h>
 #include "scanner.h"

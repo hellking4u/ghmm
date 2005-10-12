@@ -35,8 +35,8 @@
 *******************************************************************************/
 
 
-#ifndef GAUSS_TAIL_H
-#define GAUSS_TAIL_H
+#ifndef GHMM_GAUSS_TAIL_H
+#define GHMM_GAUSS_TAIL_H
 
 
 #ifdef __cplusplus
@@ -65,4 +65,4 @@ extern "C" {
 }
 #endif
 /*@} */
-#endif                          /* GAUSS_TAIL_H */
+#endif                          /* GHMM_GAUSS_TAIL_H */

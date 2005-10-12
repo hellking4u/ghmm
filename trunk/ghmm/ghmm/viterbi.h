@@ -34,8 +34,8 @@
 *
 *******************************************************************************/
 
-#ifndef VITERBI_H
-#define VITERBI_H
+#ifndef GHMM_VITERBI_H
+#define GHMM_VITERBI_H
 
 #ifdef __cplusplus
 extern "C" {

@@ -52,8 +52,8 @@ GHMM_RNG *RNG;
 
 #ifndef DO_WITH_GSL
 
-ghmm_rng_state rng_state;
-char rng_name[] = "random";
+ghmm_rng_state_t ighmm_rng_state;
+char ighmm_rng_name[] = "random";
 
 void ghmm_rng_set (GHMM_RNG * r, unsigned long int seed)
 {
@@ -67,13 +67,13 @@ double ghmm_rng_uniform (GHMM_RNG * r)
 
 const char *ghmm_rng_name (GHMM_RNG * r)
 {
-  return rng_name;
+  return ighmm_rng_name;
 }
 
 void ghmm_rng_init (void)
 {
-  initstate (1, rng_state, sizeof (ghmm_rng_state));
-  RNG = &rng_state;
+  initstate (1, ighmm_rng_state, sizeof (ghmm_rng_state_t));
+  RNG = &ighmm_rng_state;
 }
 
 #else

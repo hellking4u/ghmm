@@ -36,8 +36,8 @@
 
 #ifdef GHMM_OBSOLETE
 
-#ifndef SMIXTUREHMM_H
-#define SMIXTUREHMM_H
+#ifndef GHMM_SMIXTUREHMM_H
+#define GHMM_SMIXTUREHMM_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,7 +96,7 @@ extern "C" {
 }
 #endif
 /*@} smixturehmm section */
-#endif                          /* SMIXTUREHMM_H */
+#endif                          /* GHMM_SMIXTUREHMM_H */
 
 
 #endif /* GHMM_OBSOLETE */

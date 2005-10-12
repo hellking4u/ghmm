@@ -43,8 +43,8 @@ __copyright__
 
 *******************************************************************************/
 
-#ifndef MPRINTF_H
-#define MPRINTF_H
+#ifndef GHMM_MPRINTF_H
+#define GHMM_MPRINTF_H
 
 #include <stdarg.h>
 
@@ -74,4 +74,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/
-#endif                          /* MPRINTF_H */
+#endif                          /* GHMM_MPRINTF_H */

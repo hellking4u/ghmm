@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef ROOT_FINDER_H
-#define ROOT_FINDER_H
+#ifndef GHMM_ROOT_FINDER_H
+#define GHMM_ROOT_FINDER_H
 
 #ifdef __cplusplus
 extern "C" {
