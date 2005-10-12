@@ -45,7 +45,6 @@
 #include "math.h"
 #include "matrix.h"
 #include "mes.h"
-#include "modelutil.h"
 #include "mprintf.h"
 #include "foba.h"
 #include "ghmm_internals.h"

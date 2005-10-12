@@ -43,6 +43,7 @@
 
 #include "ghmm.h"
 #include "randvar.h"
+#include "ghmm_internals.h"
   
 /*============================================================================*/ 
 double ighmm_gtail_pmue (double mue, double A, double B, double eps)

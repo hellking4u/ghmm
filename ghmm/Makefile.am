@@ -44,7 +44,7 @@ libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION
 libghmm_la_SOURCES= ghmm.h \
                     rng.c rng.h \
                     randvar.c randvar.h \
-                    gauss_tail.c gauss_tail.h \
+                    gauss_tail.c \
                     mes.c mes.h \
                     mprintf.c mprintf.h \
                     vector.c vector.h \
@@ -61,9 +61,9 @@ libghmm_la_SOURCES= ghmm.h \
                     kbestbasics.c kbestbasics.h \
                     kbest.c kbest.h \
                     discrime.c discrime.h \
-                    modelutil.c modelutil.h \
+                    modelutil.c \
                     cluster.c cluster.h \
-                    root_finder.c root_finder.h \
+                    root_finder.c \
                     smodel.c smodel.h \
                     sfoba.c sfoba.h \
                     sviterbi.c sviterbi.h \
@@ -81,14 +81,17 @@ libghmm_la_SOURCES= ghmm.h \
 
 
 pkginclude_HEADERS = ghmm.h \
-		  foba.h \
+                  sequence.h \
+		  psequence.h \
                   model.h \
+		  foba.h \
+                  viterbi.h \
+                  gradescent.h \
+                  kbest.h \
+                  discrime.h \
                   cluster.h \
                   scluster.h \
-                  root_finder.h \
                   reestimate.h \
-                  sequence.h \
-                  viterbi.h \
                   sfoba.h \
                   sviterbi.h \
                   smodel.h \
@@ -97,24 +100,15 @@ pkginclude_HEADERS = ghmm.h \
                   sreestimate.h \
                   sgenerate.h \
                   smixturehmm.h \
-                  scanner.h \
-                  gauss_tail.h \
                   smap_classify.h \
-                  kbest.h \
-                  gradescent.h \
-                  discrime.h \
-		  psequence.h \
 		  pmodel.h \
-		  linkedlist.h \
 		  pviterbi.h \
 		  pviterbi_propagate.h \
 		  vector.h \
 		  matrix.h \
 		  rng.h \
-		  mes.h \
-		  randvar.h \
-		  obsolete.h
-
+		  obsolete.h \
+		  unsupported.h
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

@@ -47,7 +47,6 @@
 #include "mprintf.h"
 #include "matrix.h"
 #include "sdmodel.h"
-#include "modelutil.h"
 #include "ghmm_internals.h"
 
 typedef struct local_store_t {
