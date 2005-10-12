@@ -142,15 +142,13 @@ import modhmmer
 import re
 import StringIO
 import copy
-from os import path
 from math import log,ceil
 import sys
+import os
 
-print "*** I'm the ghmm in "+ str(path.abspath(path.dirname(sys.argv[0]))) + " ***"
+print "*** I'm the ghmm in "+ str(os.path.abspath(os.path.dirname(sys.argv[0]))) + " ***"
 
 # very handy function for debugging:
-import sys
-
 verbose_level = 1
 
 def verbose(message, level=1):
@@ -644,7 +642,7 @@ class EmissionSequence:
             elif (isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)): # from file
 
                 # reads in the first sequence struct in the input file
-                if  not path.exists(sequenceInput):
+                if  not os.path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
                     self.cseq  = ghmmwrapper.seq_read(sequenceInput)
@@ -680,7 +678,7 @@ class EmissionSequence:
 
             elif isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode): # from file
                 # reads in the first sequence struct in the input file
-                if  not path.exists(sequenceInput):
+                if  not os.path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
                     self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
@@ -833,7 +831,7 @@ class SequenceSet:
             
             if (isinstance(sequenceSetInput, str)  and labelInput == None): # from file
                 # reads in the first sequence struct in the input file
-                if  not path.exists(sequenceSetInput):
+                if  not os.path.exists(sequenceSetInput):
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
                      self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
@@ -931,7 +929,7 @@ class SequenceSet:
 
             elif isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode): # from file
                 print "fromFile", sequenceSetInput
-                if  not path.exists(sequenceSetInput):
+                if  not os.path.exists(sequenceSetInput):
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
                     #self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
@@ -1164,7 +1162,7 @@ def SequenceSetOpen(emissionDomain, fileName):
     
     """
 
-    if not path.exists(fileName):
+    if not os.path.exists(fileName):
         raise IOError, 'File ' + str(fileName) + ' not found.'
 
     
@@ -1217,7 +1215,7 @@ class HMMOpenFactory(HMMFactory):
     def __call__(self, fileName, modelIndex = None):
         
         if not isinstance(fileName,StringIO.StringIO):
-            if not path.exists(fileName):
+            if not os.path.exists(fileName):
                 raise IOError, 'File ' + str(fileName) + ' not found.'
 
     	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
@@ -1333,7 +1331,7 @@ class HMMOpenFactory(HMMFactory):
     
     def all(self, fileName):
         
-        if not path.exists(fileName):
+        if not os.path.exists(fileName):
           raise IOError, 'File ' + str(fileName) + ' not found.'
 
         # MO & SMO Files
@@ -1442,7 +1440,7 @@ def readMultipleHMMERModels(fileName):
 
     """
     
-    if not path.exists(fileName):
+    if not os.path.exists(fileName):
         raise IOError, 'File ' + str(fileName) + ' not found.'
     
     modelList = []
@@ -2171,13 +2169,15 @@ class HMM:
 
             onePath = []
             
-            # for model types without possible silent states the length of the viterbi path is known
+            # for model types without possible silent states
+            # the length of the viterbi path is known
             if (self.cmodel.model_type &  4) == 0:    # check model_type for silent state flag        
                 for j in range(seq_len):                
                     onePath.append(ghmmwrapper.get_arrayint(viterbiPath,j))
             
-            # in the silent case we have to append as long as the path is positive because the final path position
-            # is marked with a -1 in the following array entry.
+            # in the silent case we have to append as long as the path is
+            # positive because the final path position is marked with a -1
+            # in the following array entry.
             elif self.cmodel.model_type &  4 != 0:  # check model_type for silent state flag   
                 
                 for j in range( seq_len * self.N): # maximum length of a viterbi path for a silent model
@@ -2365,7 +2365,7 @@ class HMM:
 
 
 def HMMwriteList(fileName,hmmList):
-    if path.exists(fileName):
+    if os.path.exists(fileName):
         print "HMMwriteList warning: File " + str(fileName) + " already exists. " + str(len(hmmList)) + " new models will be appended."
     for model in hmmList:
         model.write(fileName)
@@ -4684,7 +4684,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
         import xml.dom.minidom
         if not (isinstance(fileName_file_or_dom, StringIO.StringIO) or
                 isinstance(fileName_file_or_dom, xml.dom.minidom.Document)):
-            if not path.exists(fileName_file_or_dom):
+            if not os.path.exists(fileName_file_or_dom):
                 raise IOError, 'File ' + str(fileName_file_or_dom) + ' not found.'
 
         hmm_dom = xmlutil.HMM(fileName_file_or_dom)
