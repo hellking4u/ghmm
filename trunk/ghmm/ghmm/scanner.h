@@ -33,6 +33,9 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifdef GHMM_OBSOLETE
+
 #ifndef GHMM_SCANNER_H
 #define GHMM_SCANNER_H
 
@@ -192,3 +195,5 @@ extern "C" {
 }
 #endif
 #endif                          /* GHMM_SCANNER_H */
+
+#endif /* GHMM_OBSOLETE */

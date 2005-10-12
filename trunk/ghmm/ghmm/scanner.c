@@ -38,6 +38,8 @@
 #  include "../config.h"
 #endif
 
+#ifdef GHMM_OBSOLETE
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1166,3 +1168,5 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* ighmm_scanner_get_d_matrix */
+
+#endif /* GHMM_OBSOLETE */
