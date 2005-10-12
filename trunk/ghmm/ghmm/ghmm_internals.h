@@ -70,6 +70,42 @@ extern "C" {
   double ighmm_cvector_log_sum (double *a, int N);
 
 
+
+/*==============  linked list  ===============================================*/
+/* integer element */
+  struct i_el {
+    int val;
+    struct i_el * next;
+  };
+  typedef struct i_el i_el;
+
+/* list header */
+  struct i_list {
+    i_el * first;
+    i_el * last;
+    int length;
+  };
+  typedef struct i_list i_list;
+
+/* inits an empty list */
+  i_list * ighmm_list_init_list();
+
+/* frees the list and all elements */
+  int ighmm_list_free(i_list * list);
+
+/* append an element with value val at the end of the list */
+  void ighmm_list_append(i_list * list, int val);
+
+/* insert an element with value val before the first element of the list */
+  void ighmm_list_insert(i_list * list, int val);
+
+/* */
+  int * ighmm_list_to_array(i_list * list);
+
+/* */
+  i_el * ighmm_list_init_el(int val);
+
+
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/

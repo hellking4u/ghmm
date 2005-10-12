@@ -51,7 +51,6 @@
 #include "matrix.h"
 #include "pmodel.h"
 #include "psequence.h"
-#include "linkedlist.h"
 #include "pviterbi.h"
 #include "pviterbi_propagate.h"
 #include "ghmm_internals.h"
@@ -129,7 +128,7 @@ static int * pviterbi_propagate_recursion(pmodel *mo, psequence * X, psequence *
 
 
 /*------------        Here comes the Propagate stuff          ------------- */
-
+/*============================================================================*/
 static cell * init_cell (int x, int y, int state, int previous_state,
 			 double log_p, double log_a) {
 #define CUR_PROC "init_cell"
@@ -148,6 +147,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
+/*============================================================================*/
 cell * ghmm_dp_copy_cell(cell * c) {
   if (c)
     return init_cell(c->x, c->y, c->state, c->previous_state, c->log_p, c->log_a);
@@ -155,6 +155,7 @@ cell * ghmm_dp_copy_cell(cell * c) {
     return NULL;
 }
 
+/*============================================================================*/
 void ghmm_dp_print_cell(cell * c) {
   if (c)
     printf("(%i, %i) state: %i previous state: %i log p: %f log a: %f\n", c->x, c->y, c->state, c->previous_state, c->log_p, c->log_a);
@@ -162,6 +163,7 @@ void ghmm_dp_print_cell(cell * c) {
     printf("No cell\n");
 }
 
+/*============================================================================*/
 static plocal_propagate_store_t * pviterbi_propagate_alloc (pmodel *mo, int len_y) {
 #define CUR_PROC "pviterbi_propagate_alloc"
   plocal_propagate_store_t* v = NULL;
@@ -209,6 +211,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
+/*============================================================================*/
 static void pviterbi_prop_precompute (pmodel *mo, plocal_propagate_store_t *pv)
 {
 #define CUR_PROC "pviterbi_precompute"
@@ -243,6 +246,7 @@ static void pviterbi_prop_precompute (pmodel *mo, plocal_propagate_store_t *pv)
 }/* viterbi_precompute */
 
 
+/*============================================================================*/
 static int pviterbi_propagate_free (plocal_propagate_store_t **v, int n,
 				    int max_offset_x, int max_offset_y,
 				    int len_y) {
@@ -278,6 +282,7 @@ static int pviterbi_propagate_free (plocal_propagate_store_t **v, int n,
 #undef CUR_PROC
 }
 
+/*============================================================================*/
 static double sget_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j,
 				 psequence * X, psequence * Y, int index_x,
 				 int index_y) {
@@ -288,6 +293,7 @@ static double sget_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j,
   return pv->log_in_a[i][j][cl];
 }
 
+/*============================================================================*/
 static double log_b_prop(plocal_propagate_store_t * pv, int state, int emission) {
 #ifdef DEBUG
   if (state > pv->mo->N) 
@@ -299,6 +305,7 @@ static double log_b_prop(plocal_propagate_store_t * pv, int state, int emission)
   return pv->log_b[state][emission];
 }
 
+/*============================================================================*/
 static double get_phi_prop(plocal_propagate_store_t * pv, int x, int y,
 			   int offset_x, int offset_y, int state){
 #ifdef DEBUG
@@ -313,6 +320,7 @@ static double get_phi_prop(plocal_propagate_store_t * pv, int x, int y,
     return 1;
 }
 
+/*============================================================================*/
 /* set the value of this matrix cell */
 static void set_phi_prop (plocal_propagate_store_t * pv, int x, int y,
 			 int state, double prob){
@@ -325,6 +333,7 @@ static void set_phi_prop (plocal_propagate_store_t * pv, int x, int y,
   pv->phi[0][y + pv->mo->max_offset_y][state] = prob;
 }
 
+/*============================================================================*/
 static void set_end_of_first (plocal_propagate_store_t * pv, int x, int y,
 			     int state, cell * end_of_first){
 #ifdef DEBUG
@@ -338,6 +347,7 @@ static void set_end_of_first (plocal_propagate_store_t * pv, int x, int y,
   pv->end_of_first[0][y + pv->mo->max_offset_y][state] = end_of_first;
 }
 
+/*============================================================================*/
 static cell * get_end_of_first (plocal_propagate_store_t * pv, int x, int y,
 				int offset_x, int offset_y, int state) {
 #ifdef DEBUG
@@ -353,6 +363,7 @@ static cell * get_end_of_first (plocal_propagate_store_t * pv, int x, int y,
     return NULL;
 }
 
+/*============================================================================*/
 /* since we only keep the frontier we have to push back when ever a row is
    complete */
 static void push_back_phi_prop (plocal_propagate_store_t * pv, int length_y){
@@ -366,6 +377,7 @@ static void push_back_phi_prop (plocal_propagate_store_t * pv, int length_y){
       }
 }
 
+/*============================================================================*/
 static void init_start_stop (cell * start, cell *stop, psequence * X,
 			     psequence * Y, int * start_x, int * start_y,
 			     int * stop_x, int * stop_y) {
@@ -387,6 +399,7 @@ static void init_start_stop (cell * start, cell *stop, psequence * X,
   }
 }
 
+/*============================================================================*/
 int * ghmm_dp_viterbi_propagate (pmodel *mo, psequence * X, psequence * Y,
 			  double *log_p, int *path_length, double max_size) {
 #define CUR_PROC "ghmm_dp_viterbi_propagate"
@@ -423,6 +436,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
+/*============================================================================*/
 static int * pviterbi_propagate_recursion (pmodel *mo, psequence * X,
 					   psequence * Y, double *log_p,
 					   int *path_length, cell *start,
@@ -618,6 +632,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 
+/*============================================================================*/
 static void init_phi_prop (plocal_propagate_store_t * pv, psequence * X,
 			   psequence * Y, cell * start, cell * stop) {
   int u, v, j, i, off_x, y;
@@ -824,6 +839,7 @@ static void init_phi_prop (plocal_propagate_store_t * pv, psequence * X,
   } /* End for u in X */ 
 }
 
+/*============================================================================*/
 static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
 				       cell * start, cell * stop,
 				       double * log_p,

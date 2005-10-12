@@ -43,7 +43,6 @@ extern "C" {
 
 #include "pmodel.h"
 #include "psequence.h"
-#include "linkedlist.h"
 
 
 /**@name Viterbi-Algorithmus */
@@ -60,11 +59,15 @@ extern "C" {
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
-int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
+int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p,
+		     int *path_length);
 
-int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
+int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y,
+				 double *log_p, int *path_length,
+				 int start_traceback_with);
 
-int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length);
+int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y,
+			  double *log_p, int *path_length);
 
 /**
   Calculates the logarithmic probability to a given path through the 
@@ -77,7 +80,8 @@ int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_
   @return log P
   */
 
-double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
+double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y,
+			    int *state_seq, int state_seq_len);
 
 
 #ifdef __cplusplus

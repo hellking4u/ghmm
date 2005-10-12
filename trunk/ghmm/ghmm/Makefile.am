@@ -50,7 +50,7 @@ libghmm_la_SOURCES= ghmm.h \
                     vector.c vector.h \
                     matrix.c  matrix.h \
                     scanner.c scanner.h \
-                    linkedlist.c linkedlist.h \
+                    linkedlist.c \
                     sequence.c sequence.h \
                     psequence.c psequence.h \
                     model.c model.h \
