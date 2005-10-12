@@ -106,6 +106,7 @@ pkginclude_HEADERS = ghmm.h \
 		  vector.h \
 		  matrix.h \
 		  rng.h \
+		  scanner.h \
 		  obsolete.h \
 		  unsupported.h
 
