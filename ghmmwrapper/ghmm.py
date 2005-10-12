@@ -2078,7 +2078,7 @@ class HMM:
         unused = ghmmwrapper.double_array(1) # Dummy return value for forwardAlphaFunction    	
      
         t = len(emissionSequence)
-        calpha = ghmmwrapper.ighmm_cmatrix_alloc(t,self.N)
+        calpha = ghmmwrapper.double_2d_array (t, self.N)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
@@ -3246,7 +3246,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if t != len(labelSequence):
             raise TypeError, "ERROR: Observation and Labellist must have same length"
 
-        calpha = ghmmwrapper.ighmm_cmatrix_alloc(t,n_states)
+        calpha = ghmmwrapper.double_2d_array (t, n_states)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
@@ -3493,7 +3493,7 @@ class GaussianEmissionHMM(HMM):
 
 
         t = ghmmwrapper.get_arrayint(emissionSequence.cseq.seq_len,0)
-        calpha = ghmmwrapper.ighmm_cmatrix_alloc(t,i)
+        calpha = ghmmwrapper.double_2d_array (t, i)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
@@ -3878,16 +3878,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         ghmmwrapper.set_arrayd(state.u, comp, float(sigma))
         ghmmwrapper.set_arrayd(state.c, comp, float(weight))
 	
-    def getEmissionProbability(self,value,st):
-        prob = 0.0
-	state = ghmmwrapper.get_sstate(self.cmodel, st)
-        for outp in range(self.M):
-            weight = ghmmwrapper.get_arrayd(state.c,outp)
-            mue = ghmmwrapper.get_arrayd(state.mue,outp)
-            u = ghmmwrapper.get_arrayd(state.u,outp)
-	    prob = prob + weight *ghmmwrapper.ighmm_rand_normal_density(value,mue,u)
-	    #print weight, mue, u, value, prob, st
-	return prob
+    def getEmissionProbability(self, value, state):
+        return ghmmwrapper.ghmm_c_calc_b (self.cmodel, state, value)
       
 
     def logprob(self, emissionSequence, stateSequence):
@@ -4000,15 +3992,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 # 	
 # 
 #     def getEmissionProbability(self,value,st):
-#         prob = 0.0
-# 	state = ghmmwrapper.get_sstate(self.cmodel, st)
-#         for outp in range(self.M):
-#             weight = ghmmwrapper.get_arrayd(state.c,outp)
-#             mue = ghmmwrapper.get_arrayd(state.mue,outp)
-#             u = ghmmwrapper.get_arrayd(state.u,outp)
-# 	    prob = prob + weight *ghmmwrapper.ighmm_rand_normal_density(value,mue,u)
-# 	    #print weight, mue, u, value, prob, st
-# 	return prob
+#         return ghmmwrapper.ghmm_c_calc_b (self.cmodel, state, value)
 #       
 # 
 #     def logprob(self, emissionSequence, stateSequence):
