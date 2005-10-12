@@ -39,25 +39,22 @@
 
 /* this will not work if we build ghmmwrapper out of the ghmm tree
    include ../config.h twice, once for swig and once for CC */
-#include "../config.h"
+%include "../config.h"
 %{
 #include "../config.h"
 #include <stdio.h>
 #include <ghmm/ghmm.h>
 #include <ghmm/vector.h>
 #include <ghmm/sequence.h>
-#include <ghmm/scanner.h>
 #include <ghmm/smodel.h>
 #include <ghmm/sreestimate.h>
 #include <ghmm/rng.h>
 #include <ghmm/reestimate.h>
 #include <ghmm/foba.h>
 #include <ghmm/scluster.h>
-#include <ghmm/mes.h>
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
 #include "sclass_change.h"
-#include <ghmm/randvar.h>
 #include <ghmm/psequence.h>
 #include <ghmm/pmodel.h>
 #include <ghmm/pviterbi.h>
@@ -156,7 +153,7 @@ extern double** ighmm_cmatrix_alloc_copy(int rows, int columns, double **copymat
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-extern int ighmm_cmatrix_free(double ***matrix,int row);
+extern int ighmm_cmatrix_free (double ***matrix,int row);
 
 /**
   Allocation of a integer matrix.
@@ -172,7 +169,7 @@ extern int** ighmm_dmatrix_alloc(int rows, int columns);
   @param  matrix: matrix to free
   @param  rows: number of rows
   */
-extern int ighmm_dmatrix_free(int ***matrix, long rows); 
+extern int ighmm_dmatrix_free (int ***matrix, long rows); 
 
 #ifdef GHMM_OBSOLETE
 /**
@@ -1361,6 +1358,15 @@ extern smodel*  ghmm_c_copy(const smodel *smo);
 extern sequence_d_t *ghmm_c_generate_sequences(smodel* smo, int seed, int global_len,
 					       long seq_number, long label, int Tmax);
 
+/** Computes the density of one symbol (omega) in a given state (sums over
+    all output components
+    @return calculated density
+    @param smo smodel
+    @param state state 
+    @param omega given symbol
+*/
+extern double ghmm_c_calc_b (smodel * smo, int state, double omega);
+
 /** Computes probabilistic distance of two models
     @return the distance
     @param cm0  smodel used for generating random output
@@ -1520,7 +1526,7 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 		  	
   void call_smodel_free (smodel *smo) {ghmm_c_free(&smo);}
 
-  void free_smodel_array (smodel **smo) {if (smo) {m_free(smo);} }
+  void free_smodel_array (smodel **smo) {if (smo) {free(smo);} }
   		
   void smodel_print_stdout(smodel *smo) {
     ghmm_c_print(stdout, smo);
@@ -2012,31 +2018,14 @@ void set_to_boolean_or(pclass_change_context * pccc, int seq_index, int offset_x
   smosqd_t get_smosqd_t_ptr(smosqd_t *cs, int i){  return cs[i];}
   
   void free_smosqd_t(smosqd_t *s){
-	  if(s){
-		m_free(s);
-	 }	
+	  if(s) {free(s);}	
   }	  
   		
 %}	
 
-/*=============================================================================================
-  =============================== randvar.c  ============================================== */
-
-/**
-   Calculates the one dimensional density function phi( mean, u ) for the
-   normal distribution at point x.
-   @return       function value
-   @param x:      point value
-   @param mean:   mean value for the normal distribution
-   @param u:      variance for the normal distribution ($\sigma^2$)
-   */
-extern double ighmm_rand_normal_density (double x, double mean, double u);
-
-
 
 /*=============================================================================================
   =============================== miscellanous functions ====================================== */
-
 
 %inline %{
    
@@ -2053,7 +2042,7 @@ extern double ighmm_rand_normal_density (double x, double mean, double u);
   int  get_arrayint(int  *ary, int index) { return ary[index]; }
 
   void free_arrayi(int *pt ) { 
-          m_free(pt); 
+          free (pt); 
           (pt) = NULL;
   }
 
@@ -2069,7 +2058,7 @@ extern double ighmm_rand_normal_density (double x, double mean, double u);
 
   double get_arrayd(double *ary, int index) { return ary[index]; }
   
-  void free_arrayd(double *pt) { m_free(pt); (pt) = NULL;}
+  void free_arrayd(double *pt) {free (pt); (pt) = NULL;}
   
   /************  Create and access sort of long[size] arrays **************/
     
@@ -2083,7 +2072,7 @@ extern double ighmm_rand_normal_density (double x, double mean, double u);
   
   double get_arrayl(long *ary, int index) { return ary[index]; }
   
-  void free_arrayl(long *ary) {m_free(ary);(ary) = NULL;}
+  void free_arrayl(long *ary) {free (ary); (ary) = NULL;}
   
   /*********** Create and access char** arrays ***********/
   char **char_array(int size) {
@@ -2096,7 +2085,7 @@ extern double ighmm_rand_normal_density (double x, double mean, double u);
 
   char *get_arraychar(char** ary, int index) { return ary[index]; }
 
-  void free_arraychar (char * * ary) {m_free (ary);}
+  void free_arraychar (char * * ary) {free (ary);}
 
   /********** Create and access model* arrays  ****************************/
 model * * modelarray_alloc (int size) {
@@ -2175,7 +2164,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 	 return res;
   }	  
   
-  void free_2darrayd(double **pt,int row) { ighmm_cmatrix_free(&pt,row); }
+  void free_2darrayd(double **pt,int row) {ighmm_cmatrix_free (&pt,row);}
    
   /************  Create and access int[size1][size2] arrays ************/
   
@@ -2197,7 +2186,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
   }
   
   /* Get two dimensional array entry */
-  int  get_2d_arrayint (int **ary, int index1, int index2) {return ary[index1][index2]; }
+  int  get_2d_arrayint (int **ary, int index1, int index2) {return ary[index1][index2];}
    
    int** cast_ptr_int(int* array){
 
@@ -2206,11 +2195,11 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 	 return res; 
   }	 
   
-  void free_2darrayint(int **pt, int rows,int cols) {  ighmm_dmatrix_free(&pt, rows); }
+  void free_2darrayint(int **pt, int rows,int cols) {ighmm_dmatrix_free (&pt, rows);}
 
 
   /**************** generalized deallocation *******************/  
-  void freearray(void *pt)  { m_free(pt); }
+  void freearray(void *pt) {free (pt);}
    
 %}
 
