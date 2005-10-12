@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/mes.c
-*       Authors:  Frank Nübel, Benjamin Georgi
+*       Authors:  Frank Nübel, Benjamin Georgi, Janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -545,6 +545,7 @@ void ighmm_mes (int flags, int line, char *xproc, char *proc, char *format, ...)
   ighmm_mes_va (flags, line, xproc, proc, format, args);
 }                               /* ighmm_mes */
 
+#ifdef GHMM_UNSUPORTED
 /*============================================================================*/
 void ighmm_mes_printf (int prot_flags, char *format, ...)
 {
@@ -597,6 +598,7 @@ void ighmm_mes_fformat (char *txt, char *logfile, int line, char *proc_info)
     mes_file_win ("\n");
 
 }                               /* ighmm_mes_fformat */
+#endif /* GHMM_UNSUPORTED */
 
 
 /*============================================================================*/
@@ -621,6 +623,7 @@ void ighmm_mes_err (char *txt, int error_nr, char *proc_info)
 
 }                               /* ighmm_mes_err */
 
+#ifdef GHMM_UNSUPORTED
 /*============================================================================*/
 void ighmm_mes_proc_start (char *proc_info)
 {
@@ -659,6 +662,7 @@ int ighmm_mes_insert (FILE * fp, char src, int cnt)
     return (0);
   return (-1);
 }                               /* ighmm_mes_insert */
+#endif /* GHMM_UNSUPORTED */
 
 
 /******************************************************************************/
@@ -753,6 +757,7 @@ STOP:
   return (NULL);
 }                               /* ighmm_mes_fopen */
 
+#ifdef GHMM_UNSUPORTED
 /*============================================================================*/
 int ighmm_mes_fread_quiet (FILE * fp, void *mem, int bytes)
 {
@@ -1164,3 +1169,4 @@ FILE *ighmm_mes_tmpfile (void)
   return (NULL);
 # undef CUR_PROC
 }                               /* ighmm_mes_tmpfile */
+#endif /* GHMM_UNSUPORTED */

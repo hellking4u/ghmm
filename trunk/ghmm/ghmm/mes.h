@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/mes.h
-*       Authors:  Frank Nuebel, Benjamin Georgi
+*       Authors:  Frank Nuebel, Benjamin Georgi, Janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep 
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -255,9 +255,6 @@ extern "C" {
   void ighmm_mes_exit (void);
   /**
    */
-  void ighmm_mes_fformat (char *txt, char *filename, int line, char *proc_info);
-  /**
-   */
   void ighmm_mes_init (char *logfile, void (*winfct) (const char *), int argc,
                  char *argv[]);
   /**
@@ -271,9 +268,6 @@ extern "C" {
   void ighmm_mes_init_winfct (void (*win_fct) (const char *));
   /**
    */
-  int ighmm_mes_insert (FILE * fp, char src, int cnt);
-  /**
-   */
   void ighmm_mes_time (void);
   /**
    */
@@ -282,70 +276,18 @@ extern "C" {
   /**
    */
   int ighmm_mes_win_ability (int on);
-
   /**
    */
   void *ighmm_calloc (int bytes);
   /**
    */
-  int ighmm_mes_copy (char *oldname, char *newname);
-  /**
-   */
-  int ighmm_mes_fgetc (FILE * fp);
-  /**
-   */
-  int ighmm_mes_fflush (FILE * fp);
-  /**
-   */
   FILE *ighmm_mes_fopen (const char *filename, char *attribute_string);
-  /**
-   */
-  int ighmm_mes_fprintf (FILE * fp, char *format, ...);
-  /**
-   */
-  int ighmm_mes_fputc (FILE * fp, char chr);
-  /**
-   */
-  int ighmm_mes_fputs (FILE * fp, char *str);
-  /**
-   */
-  int ighmm_mes_fread (FILE * fp, void *mem, int bytes);
-  /**
-   */
-  int ighmm_mes_fread_quiet (FILE * fp, void *mem, int bytes);
-  /**
-   */
-  int ighmm_mes_fseek (FILE * fp, long offset, int fromwhere);
-#ifdef WIN32
-  /**
-   */
-  int mes_fseek64 (FILE * fp, unsigned int uoff, unsigned int loff,
-                   int fromwhere);
-#endif
-  /**
-   */
-  int ighmm_mes_ftell (FILE * fp);
-  /**
-   */
-  int ighmm_mes_fwrite (FILE * fp, void *mem, int bytes);
   /**
    */
   void *ighmm_malloc (int bytes);
   /**
    */
-  int ighmm_mes_move (char *oldname, char *newname);
-  /**
-   */
   int ighmm_realloc (void **mem, int bytes);
-  /**
-   */
-  int ighmm_mes_remove (char *filename);
-  /**
-   */
-  int ighmm_mes_rename (char *oldname, char *newname);
-  /**
-   */
-  FILE *ighmm_mes_tmpfile (void);
 
 #ifdef __cplusplus
 }
