@@ -5,6 +5,8 @@
 extern "C" {
 #endif /*__cplusplus*/
 
+#include "model.h"
+
 
 /*==============  Memory allocation macros for mes-functions  ===============*/
 #ifndef ARRAY_MALLOC
@@ -70,16 +72,17 @@ extern "C" {
   double ighmm_cvector_log_sum (double *a, int N);
 
 
-
 /*==============  linked list  ===============================================*/
-/* integer element */
+/**
+   integer element */
   struct i_el {
     int val;
     struct i_el * next;
   };
   typedef struct i_el i_el;
 
-/* list header */
+/**
+   list header */
   struct i_list {
     i_el * first;
     i_el * last;
@@ -87,23 +90,63 @@ extern "C" {
   };
   typedef struct i_list i_list;
 
-/* inits an empty list */
+/**
+   inits an empty list */
   i_list * ighmm_list_init_list();
 
-/* frees the list and all elements */
+/**
+   frees the list and all elements */
   int ighmm_list_free(i_list * list);
 
-/* append an element with value val at the end of the list */
+/**
+   append an element with value val at the end of the list */
   void ighmm_list_append(i_list * list, int val);
 
-/* insert an element with value val before the first element of the list */
+/**
+   insert an element with value val before the first element of the list */
   void ighmm_list_insert(i_list * list, int val);
 
-/* */
+/**
+ */
   int * ighmm_list_to_array(i_list * list);
 
-/* */
+/**
+ */
   i_el * ighmm_list_init_el(int val);
+
+
+
+
+/*==============  allocate forward-backward matrices  ========================*/
+/**
+   matrix allocation and free for training algorithms */
+  int ighmm_reestimate_alloc_matvek (double ***alpha, double ***beta,
+				     double **scale, int T, int N);
+
+  int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale,
+				    int T);
+
+
+/*==============  compute expected values  ===================================*/
+/**
+   computes matrices of n and m variables (expected values for how often a
+   certain parameter from A or B is used)
+   computes Baum-Welch variables implicit 
+   @return                 0/-1 success/error
+   @param mo:              pointer to a model
+   @param alpha:           matrix of forward variables
+   @param backward:        matrix of backward variables
+   @param scale:           scaling vector from forward-backward-algorithm
+   @param seq:             sequence in internal representation
+   @param seq_len:         length of sequence
+   @param matrix_b:        matrix for parameters from B (n_b or m_b)
+   @param matrix_a:        matrix for parameters from A (n_a or m_a)
+   @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
+*/
+int ghmm_dl_gradient_expectations (model *mo, double **alpha, double **beta,
+				   double *scale, int *seq, int seq_len,
+				   double **matrix_b, double *matrix_a,
+				   double *vec_pi);
 
 
 #ifdef __cplusplus
