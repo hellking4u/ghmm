@@ -40,7 +40,6 @@
 
 #include <stdlib.h>
 
-#include "linkedlist.h"
 #include "mes.h"
 #include "ghmm_internals.h"
 

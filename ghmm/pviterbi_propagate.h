@@ -42,7 +42,6 @@ extern "C" {
 
 #include "pmodel.h"
 #include "psequence.h"
-#include "linkedlist.h"
 
 /*------------        Here comes the Propagate stuff          ------------- */
 

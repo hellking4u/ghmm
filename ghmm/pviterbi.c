@@ -51,7 +51,6 @@
 #include "matrix.h"
 #include "pmodel.h"
 #include "psequence.h"
-#include "linkedlist.h"
 #include "pviterbi.h"
 #include "ghmm_internals.h"
 
@@ -85,20 +84,24 @@ typedef struct plocal_store_t {
 
   static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y);
 
-  static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y);
+  static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y,
+			   int max_offset_x, int max_offset_y);
 
   static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y);
 
-  static double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state);
+  static double get_phi(plocal_store_t * pv, int x, int y, int offset_x,
+			int offset_y, int state);
 
-  static void set_phi(plocal_store_t * pv, int x, int y, int state, double prob);
+  static void set_phi(plocal_store_t * pv, int x, int y, int state,
+		      double prob);
 
   static void push_back_phi(plocal_store_t * pv, int length_y);
 
-  static void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state);
+  static void set_psi(plocal_store_t * pv, int x, int y, int state,
+		      int from_state);
 
 
-/*----------------------------------------------------------------------------*/
+/*============================================================================*/
 static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y) {
 #define CUR_PROC "pviterbi_alloc"
   plocal_store_t* v = NULL;
@@ -140,8 +143,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 } /* viterbi_alloc */
 
 
-/*----------------------------------------------------------------------------*/
-static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int max_offset_x, int max_offset_y) {
+/*============================================================================*/
+static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y,
+			 int max_offset_x, int max_offset_y) {
 #define CUR_PROC "pviterbi_free"
   int i, j;
   mes_check_ptr(v, return(-1));
@@ -166,6 +170,7 @@ static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y, int ma
 #undef CUR_PROC
 } /* viterbi_free */
 
+/*============================================================================*/
 static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
   int j, k;
   pmodel * mo;
@@ -186,8 +191,8 @@ static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
   } 
 }
 
-static void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
-{
+/*============================================================================*/
+static void pviterbi_precompute( pmodel *mo, plocal_store_t *v) {
 #define CUR_PROC "pviterbi_precompute"
   int i, j, emission, t_class;
   
@@ -220,6 +225,7 @@ static void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
 #undef CUR_PROC
 }/* viterbi_precompute */
 
+/*============================================================================*/
 /** */
 /* static void p__viterbi_silent( model *mo, int t, plocal_store_t *v ) */
 /* { */
@@ -258,6 +264,7 @@ static void pviterbi_precompute( pmodel *mo, plocal_store_t *v)
 /*   } */
 /* } */
 
+/*============================================================================*/
 static double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
   /* determine the transition class for the source state */
   int id = pv->mo->s[i].in_id[j];
@@ -266,6 +273,7 @@ static double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, ps
   return pv->log_in_a[i][j][cl];
 }
 
+/*============================================================================*/
 static double log_b(plocal_store_t * pv, int state, int emission) {
 #ifdef DEBUG
   if (state > pv->mo->N) 
@@ -277,6 +285,7 @@ static double log_b(plocal_store_t * pv, int state, int emission) {
   return pv->log_b[state][emission];
 }
 
+/*============================================================================*/
 static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
 #ifdef DEBUG
   int emission;
@@ -430,6 +439,7 @@ static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
     } /* End for u in X */
 }
 
+/*============================================================================*/
 /* call this function when you are at position (x, y) and want to get the
    probability of state 'state' which is offset_x and offset_y away from x,y */
 static double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offset_y, int state){
@@ -445,6 +455,7 @@ static double get_phi(plocal_store_t * pv, int x, int y, int offset_x, int offse
     return 1;
 }
 
+/*============================================================================*/
 /* set the value of this matrix cell */
 static void set_phi(plocal_store_t * pv, int x, int y, int state, double prob){
 #ifdef DEBUG
@@ -456,6 +467,7 @@ static void set_phi(plocal_store_t * pv, int x, int y, int state, double prob){
   pv->phi[0][y + pv->mo->max_offset_y][state] = prob;
 }
 
+/*============================================================================*/
 /* since we only keep the frontier we have to push back when ever a row is
    complete */
 static void push_back_phi(plocal_store_t * pv, int length_y){
@@ -467,6 +479,7 @@ static void push_back_phi(plocal_store_t * pv, int length_y){
 	pv->phi[off_x][y][j] = pv->phi[off_x-1][y][j];
 }
 
+/*============================================================================*/
 static void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state){
   /* shift by max_offsets for negative indices */
 #ifdef DEBUG
@@ -479,6 +492,7 @@ static void set_psi(plocal_store_t * pv, int x, int y, int state, int from_state
   pv->psi[x + pv->mo->max_offset_x][y + pv->mo->max_offset_y][state] = from_state;
 }
 
+/*============================================================================*/
 static int get_psi(plocal_store_t * pv, int x, int y, int state) {
   /* shift by max_offsets for negative indices*/
 #ifdef DEBUG
@@ -491,7 +505,9 @@ static int get_psi(plocal_store_t * pv, int x, int y, int state) {
   return pv->psi[x + pv->mo->max_offset_x][y + pv->mo->max_offset_y][state];
 }
 
-int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length) {
+/*============================================================================*/
+int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y,
+			  double *log_p, int *path_length) {
   plocal_store_t *pv;
   printf("---- viterbi test -----\n");
   /*ghmm_dp_print(mo);*/
@@ -504,12 +520,16 @@ int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y, double *log_
 }
 
 
-int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length) {
+/*============================================================================*/
+int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p,
+		     int *path_length) {
   return ghmm_dp_viterbi_variable_tb(mo, X, Y, log_p, path_length, -1);
 }
 
-int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with)
-{
+/*============================================================================*/
+int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y,
+				 double *log_p, int *path_length,
+				 int start_traceback_with) {
 #define CUR_PROC "ghmm_dp_viterbi"
   int u, v, j, i, off_x, off_y, current_state_index;
   double value, max_value, previous_prob;  
@@ -517,8 +537,8 @@ int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, doubl
   int *state_seq = NULL;
   int emission;
   double log_b_i, log_in_a_ij;
-  double (*log_in_a)(plocal_store_t*, int, int, psequence*, psequence*, 
-		     int, int);
+  double (*log_in_a)(plocal_store_t*, int, int, psequence*, psequence*, int, int);
+
   /* printf("---- viterbi -----\n"); */
   i_list * state_list;
   state_list = ighmm_list_init_list();
@@ -728,7 +748,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   
   
 /*============================================================================*/
-double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len) {
+double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y,
+			    int *state_seq, int state_seq_len) {
 #define CUR_PROC "ghmm_dp_viterbi_logp"
   int s, t, i, j, u, v;
   double log_p = 0.0;
@@ -824,6 +845,4 @@ double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state
 
 #undef CUR_PROC
 } /* ghmm_dp_viterbi_logp */
-
-/*============================================================================*/
 
