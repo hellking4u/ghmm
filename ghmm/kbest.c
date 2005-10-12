@@ -44,11 +44,72 @@
 #include "mes.h"
 #include "mprintf.h"
 #include "model.h"
-#include "kbestbasics.h"
 #include "kbest.h"
 #include "ghmm_internals.h"
 
 
+/* threshold probability (logarithmized) */
+#define KBEST_THRESHOLD -3.50655789732
+  /* log(0.03) => threshold: 3% of most probable partial hypothesis */
+#define KBEST_EPS 1E-15
+
+
+/*============================================================================*/
+/** Data type for linked list of hypotheses
+    Stores the actual label, a link to the parent hypothesis, a counter of the
+    links to this hypothesis and the gamma values */
+struct hypo_List {
+  int hyp_c;
+  int refcount;
+  int chosen;
+  int gamma_states;
+  double *gamma_a;
+  int *gamma_id;
+  struct hypo_List *next;
+  struct hypo_List *parent;
+};
+typedef struct hypo_List hypoList;
+
+/*============================================================================*/
+/* inserts new hypothesis into list at position indicated by pointer plist */
+static void ighmm_hlist_insert (hypoList ** plist, int newhyp,
+                                hypoList * parlist);
+
+/*============================================================================*/
+/* removes hypothesis at position indicated by pointer plist from the list */
+static void ighmm_hlist_remove (hypoList ** plist);
+
+
+/*============================================================================*/
+/**
+   Propagates list of hypotheses forward by extending each old hypothesis to
+   the possible new hypotheses depending on the states in which the old
+   hypothesis could end and the reachable labels
+   @return number of old hypotheses
+   @param mo:         pointer to the model
+   @param h:          pointer to list of hypotheses
+   @param hplus:      address of a pointer to store the propagated hypotheses
+   @param labels:     number of labels
+   @param nr_s:       number states which have assigned the index aa label
+   @param max_out:    maximum number of out_states over all states with the index aa label
+ */
+static int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus, int labels,
+                     int *nr_s, int *max_out);
+
+
+/*============================================================================*/
+/**
+   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
+   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
+   @return log. sum for products of a row from gamma and a row from matrix A
+   @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
+   @param s:          state whose gamma-value is calculated
+   @param parent:     a pointer to the parent hypothesis
+*/
+static double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent);
+
+
+/*============================================================================*/
 /**
   Builds logarithmic transition matrix from the states' in_a values
   the row for each state is the logarithmic version of the state's in_a
@@ -77,6 +138,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 
+/*============================================================================*/
 /**
    Calculates the most probable labeling for the given sequence in the given
    model using k-best decoding.
@@ -321,7 +383,7 @@ int *ghmm_dl_kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   *log_p = 1.0;                 /* log_p will store log of maximum summed probability */
   while (hP != NULL) {
     /* sum probabilities for each hypothesis over all states: */
-    sum = ighmm_log_sum (hP->gamma_a, hP->gamma_states);
+    sum = ighmm_cvector_log_sum (hP->gamma_a, hP->gamma_states);
     /* and select maximum sum */
     if (sum < KBEST_EPS && (*log_p == 1.0 || sum > *log_p)) {
       *log_p = sum;
@@ -351,6 +413,190 @@ int *ghmm_dl_kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
   return hypothesis;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   mes_prot ("ghmm_dl_kbest failed\n");
+  exit (1);
+#undef CUR_PROC
+}
+
+
+
+/*================ utility functions ========================================*/
+/* inserts new hypothesis into list at position indicated by pointer plist */
+static void ighmm_hlist_insert (hypoList ** plist, int newhyp,
+                              hypoList * parlist)
+{
+#define CUR_PROC "ighmm_hlist_insert"
+  hypoList *newlist;
+
+  ARRAY_CALLOC (newlist, 1);
+  newlist->hyp_c = newhyp;
+  if (parlist)
+    parlist->refcount += 1;
+  newlist->parent = parlist;
+  newlist->next = *plist;
+
+  *plist = newlist;
+  return;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  mes_prot ("ighmm_hlist_insert failed\n");
+  exit (1);
+#undef CUR_PROC
+}
+
+/*============================================================================*/
+/* removes hypothesis at position indicated by pointer plist from the list
+   removes recursively parent hypothesis with refcount==0 */
+static void ighmm_hlist_remove (hypoList ** plist) {
+#define CUR_PROC "ighmm_hlist_remove"
+  hypoList *tempPtr = (*plist)->next;
+
+  free ((*plist)->gamma_a);
+  free ((*plist)->gamma_id);
+  if ((*plist)->parent) {
+    (*plist)->parent->refcount -= 1;
+    if (0 == (*plist)->parent->refcount)
+      ighmm_hlist_remove (&((*plist)->parent));
+  }
+  free (*plist);
+
+  *plist = tempPtr;
+#undef CUR_PROC
+}
+
+/*============================================================================*/
+static int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus,
+				     int labels, int *nr_s, int *max_out) {
+#define CUR_PROC "ighmm_hlist_prop_forward"
+  int i, j, c, k;
+  int i_id, j_id, g_nr;
+  int no_oldHyps = 0, newHyps = 0;
+  hypoList *hP = h;
+  hypoList **created;
+
+  ARRAY_MALLOC (created, labels);
+
+  /* extend the all hypotheses with the labels of out_states
+     of all states in the hypotesis */
+  while (hP != NULL) {
+
+    /* lookup table for labels, created[i]!=0 iff the current hypotheses
+       was propagated forward with label i */
+    for (c = 0; c < labels; c++)
+      created[c] = NULL;
+
+    /* extend the current hypothesis and add all states which may have
+       probability greater null */
+    for (i = 0; i < hP->gamma_states; i++) {
+      /* skip impossible states */
+      if (hP->gamma_a[i] == 1.0)
+        continue;
+      i_id = hP->gamma_id[i];
+      for (j = 0; j < mo->s[i_id].out_states; j++) {
+        j_id = mo->s[i_id].out_id[j];
+        c = mo->s[j_id].label;
+
+        /* create a new hypothesis with label c */
+        if (!created[c]) {
+          ighmm_hlist_insert (hplus, c, hP);
+          created[c] = *hplus;
+          /* initiallize gamma-array with safe size (number of states */
+          ARRAY_MALLOC ((*hplus)->gamma_id, m_min (nr_s[c], hP->gamma_states * max_out[hP->hyp_c]));
+          (*hplus)->gamma_id[0] = j_id;
+          (*hplus)->gamma_states = 1;
+          newHyps++;
+        }
+        /* add a new gamma state to the existing hypothesis with c */
+        else {
+          g_nr = created[c]->gamma_states;
+          /* search for state j_id in the gamma list */
+          for (k = 0; k < g_nr; k++)
+            if (j_id == created[c]->gamma_id[k])
+              break;
+          /* add the state to the gamma list */
+          if (k == g_nr) {
+            created[c]->gamma_id[g_nr] = j_id;
+            created[c]->gamma_states = g_nr + 1;
+          }
+        }
+      }
+    }
+    /* reallocating gamma-array to the correct size */
+    for (c = 0; c < labels; c++) {
+      if (created[c]) {
+        ARRAY_CALLOC (created[c]->gamma_a, created[c]->gamma_states);
+        ARRAY_REALLOC (created[c]->gamma_id, created[c]->gamma_states);
+        created[c] = NULL;
+      }
+    }
+    hP = hP->next;
+    no_oldHyps++;
+  }
+
+  /* printf("Created %d new Hypotheses.\n", newHyps); */
+  free (created);
+  return (no_oldHyps);
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  mes_prot ("ighmm_hlist_prop_forward failed\n");
+  exit (1);
+#undef CUR_PROC
+}
+
+
+/*============================================================================*/
+/**
+   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
+   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
+   @return ighmm_log_sum for products of a row from gamma and a row from matrix A
+   @param log_a:      row of the transition matrix with logarithmic values (1.0 for log(0))
+   @param s:          state whose gamma-value is calculated
+   @param parent:     a pointer to the parent hypothesis
+*/
+static double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent) {
+#define CUR_PROC "ighmm_log_gamma_sum"
+  double result;
+  int j, j_id, k;
+  double max = 1.0;
+  int argmax = 0;
+  double *logP;
+
+  /* shortcut for the trivial case */
+  if (parent->gamma_states == 1)
+    for (j = 0; j < s->in_states; j++)
+      if (parent->gamma_id[0] == s->in_id[j])
+        return parent->gamma_a[0] + log_a[j];
+
+  ARRAY_MALLOC (logP, s->in_states);
+
+  /* calculate logs of a[k,l]*gamma[k,hi] as sums of logs and find maximum: */
+  for (j = 0; j < s->in_states; j++) {
+    j_id = s->in_id[j];
+    /* search for state j_id in the gamma list */
+    for (k = 0; k < parent->gamma_states; k++)
+      if (parent->gamma_id[k] == j_id)
+        break;
+    if (k == parent->gamma_states)
+      logP[j] = 1.0;
+    else {
+      logP[j] = log_a[j] + parent->gamma_a[k];
+      if (max == 1.0 || (logP[j] > max && logP[j] != 1.0)) {
+        max = logP[j];
+        argmax = j;
+      }
+    }
+  }
+
+  /* calculate max+log(1+sum[j!=argmax; exp(logP[j]-max)])  */
+  result = 1.0;
+  for (j = 0; j < s->in_states; j++)
+    if (j != argmax && logP[j] != 1.0)
+      result += exp (logP[j] - max);
+
+  result = log (result);
+  result += max;
+
+  free (logP);
+  return result;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  mes_prot ("ighmm_log_gamma_sum failed\n");
   exit (1);
 #undef CUR_PROC
 }

@@ -59,6 +59,16 @@ extern "C" {
   double ighmm_gtail_pmue_interpol (double mue, double A, double B, double eps);
 
 
+/*==============  numeric functions  ========================================*/
+/**
+   Calculates the logarithm of the sum of the probabilities whose logarithms are
+   stored in the given array
+   @return log of sum of exp(a[i])
+   @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
+   @param length:     length of a
+*/
+  double ighmm_cvector_log_sum (double *a, int N);
+
 
 #ifdef __cplusplus
 }

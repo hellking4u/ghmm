@@ -44,10 +44,13 @@
 
 #include <float.h>
 #include <stdio.h>
+#include <math.h>
+
 #include "mes.h"
 #include "vector.h"
 #include "rng.h"
-
+#include "ghmm_internals.h"
+#include "obsolete.h"
 
 /*============================================================================*/
 /* Scales the elements of a vector to have the sum 1 */
@@ -164,5 +167,33 @@ int ighmm_cvector_mat_times_vec (double **A, double *x, int n, int m, double *v)
   return 0;
 #undef CUR_PROC
 }                               /* ighmm_cvector_mat_times_vec */
-
 #endif /* GHMM_OBSOLETE */
+
+
+/*============================================================================*/
+double ighmm_cvector_log_sum (double *a, int length) {
+#define CUR_PROC "ighmm_cvector_log_sum"
+  int i;
+  double max = 1.0;
+  int argmax = 0;
+  double result;
+
+  /* find maximum value in a: */
+  for (i = 0; i < length; i++)
+    if (max == 1.0 || (a[i] > max && a[i] != 1.0)) {
+      max = a[i];
+      argmax = i;
+    }
+
+  /* calculate max+log(1+sum[i!=argmax; exp(a[i]-max)])  */
+  result = 1.0;
+  for (i = 0; i < length; i++) {
+    if (a[i] != 1.0 && i != argmax)
+      result += exp (a[i] - max);
+  }
+  result = log (result);
+  result += max;
+  return result;
+#undef CUR_PROC
+}
+

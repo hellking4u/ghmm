@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/reestimate.c
-*       Authors:  Bernhard Knab, Benjamin Georgi
+*       Authors:  Bernhard Knab, Benjamin Georgi, Janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -48,7 +48,6 @@
 #include "matrix.h"
 #include "model.h"
 #include "foba.h"
-#include "kbestbasics.h"
 #include "ghmm_internals.h"
 
 typedef struct local_store_t {
@@ -318,13 +317,12 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       for (h = 0; h < mo->s[i].in_states; h++) {
         p_i += mo->s[i].in_a[h];
       }
-      if (p_i == 0) {
+      if (p_i == 0.0) {
         if (mo->s[i].in_states == 0)
           str = ighmm_mprintf (NULL, 0,
-                         " State %d can't be reached (no in_states)\n", i);
+                         "State %d can't be reached (no in_states)\n", i);
         else
-          str =
-            ighmm_mprintf (NULL, 0, " State %d can't be reached (prob = 0)\n", i);
+          str = ighmm_mprintf (NULL, 0, "State %d can't be reached (prob = 0.0)\n", i);
         mes_prot (str);
         m_free (str);
       }
@@ -372,13 +370,10 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
     /* B */
     size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
     for (hist = 0; hist < size; hist++) {
-      if (r->b_denom[i][hist] == 0.0
-          && mo->model_type & kHigherOrderEmissions)
-        /* in higher order models we probably don't see all possible
-           emission_histories. So some denumerators are zero. skip'em. */
+      if (r->b_denom[i][hist] < EPS_PREC)
+        /* If the Denominator is zero, we have not seen any emission in this
+	   state with this history. We are conservative and just skip them. */
         continue;
-      else if (r->b_denom[i][hist] < EPS_PREC)
-        factor = 0.0;
       else
         factor = (1.0 / r->b_denom[i][hist]);
 
