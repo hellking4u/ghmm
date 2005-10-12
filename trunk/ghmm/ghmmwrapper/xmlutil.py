@@ -39,7 +39,6 @@ from xml.dom.minidom import *
 import EditObjectAttributesDialog
 from EditObjectAttributesDialog import EditObjectAttributesDialog, ValidatingString, ValidatingInt, ValidatingFloat, PopupableInt, Probability, DefaultedInt, DefaultedString
 
-import whrandom
 import string
 import types
 import copy
