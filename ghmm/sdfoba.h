@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef SDFOBA_H
-#define SDFOBA_H
+#ifndef GHMM_SDFOBA_H
+#define GHMM_SDFOBA_H
 
 #ifdef __cplusplus
 extern "C" {

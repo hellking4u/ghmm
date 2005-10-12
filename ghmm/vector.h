@@ -34,8 +34,8 @@
 *
 *******************************************************************************/
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef GHMM_VECTOR_H
+#define GHMM_VECTOR_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,5 +96,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* VECTOR_H */
+#endif                          /* GHMM_VECTOR_H */
 /*@} (Doc++-Group: vector) */

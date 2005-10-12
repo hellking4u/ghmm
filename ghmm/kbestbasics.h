@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef KBESTBASICS_H
-#define KBESTBASICS_H
+#ifndef GHMM_KBESTBASICS_H
+#define GHMM_KBESTBASICS_H
 
 
 #ifdef __cplusplus

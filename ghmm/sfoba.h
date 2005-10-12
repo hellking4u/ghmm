@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef SFOBA_H
-#define SFOBA_H
+#ifndef GHMM_SFOBA_H
+#define GHMM_SFOBA_H
 
 #include "smodel.h"
 

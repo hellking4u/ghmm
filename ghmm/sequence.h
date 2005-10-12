@@ -38,8 +38,8 @@
 #warning "GHMM_OBSOLETE is not defined!"
 #endif
 
-#ifndef SEQUENCE_H
-#define SEQUENCE_H
+#ifndef GHMM_SEQUENCE_H
+#define GHMM_SEQUENCE_H
 
 #ifdef __cplusplus
 extern "C" {

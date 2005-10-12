@@ -1,5 +1,5 @@
-#ifndef LINKEDLIST_H
-#define LINKEDLIST_H
+#ifndef GHMM_LINKEDLIST_H
+#define GHMM_LINKEDLIST_H
 
 /* integer element */
 struct i_el {

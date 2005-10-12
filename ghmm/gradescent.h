@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef GRADESCENT_H
-#define GRADESCENT_H
+#ifndef GHMM_GRADESCENT_H
+#define GHMM_GRADESCENT_H
 
 #ifdef __cplusplus
 extern "C" {

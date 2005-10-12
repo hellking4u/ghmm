@@ -33,8 +33,8 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef SGENERATE_H
-#define SGENERATE_H
+#ifndef GHMM_SGENERATE_H
+#define GHMM_SGENERATE_H
 
 
 #include "smodel.h"
@@ -115,4 +115,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* SGENERATE_H */
+#endif                          /* GHMM_SGENERATE_H */

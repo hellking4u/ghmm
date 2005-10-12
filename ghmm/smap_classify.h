@@ -36,8 +36,8 @@
 
 #ifdef GHMM_OBSOLETE
 
-#ifndef SMAP_CLASSIFY_H
-#define SMAP_CLASSIFY_H
+#ifndef GHMM_SMAP_CLASSIFY_H
+#define GHMM_SMAP_CLASSIFY_H
 
 #include "smodel.h"
 
@@ -86,6 +86,6 @@ extern "C" {
 }
 #endif
 /*@} */
-#endif                          /* SMAP_CLASSIFY_H */
+#endif                          /* GHMM_SMAP_CLASSIFY_H */
 
 #endif /* GHMM_OBSOLETE */

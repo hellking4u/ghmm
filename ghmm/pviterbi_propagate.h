@@ -34,8 +34,8 @@
 *
 *******************************************************************************/
 
-#ifndef PVITERBI_PROPAGATE_H
-#define PVITERBI_PROPAGATE_H
+#ifndef GHMM_PVITERBI_PROPAGATE_H
+#define GHMM_PVITERBI_PROPAGATE_H
 #ifdef __cplusplus
 extern "C" {
 #endif

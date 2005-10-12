@@ -33,15 +33,15 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
-#ifndef RNG_H
-#define RNG_H
+#ifndef GHMM_RNG_H
+#define GHMM_RNG_H
 
 #ifndef DO_WITH_GSL
 
 #include <stdlib.h>
 
-typedef char ghmm_rng_state[8];
-typedef ghmm_rng_state GHMM_RNG;
+typedef char ghmm_rng_state_t[8];
+typedef ghmm_rng_state_t GHMM_RNG;
 
 /* Functions */
 #define GHMM_RNG_SET ghmm_rng_set
@@ -93,4 +93,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* RNG_H */
+#endif                          /* GHMM_RNG_H */
