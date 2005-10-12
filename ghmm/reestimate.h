@@ -43,13 +43,6 @@ extern "C" {
 #endif
 
 
-/** matrix allocation and free for training algorithms */
-  int ighmm_reestimate_alloc_matvek (double ***alpha, double ***beta,
-                               double **scale, int T, int N);
-  int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale,
-                              int T);
-
-
 /**@name Baum-Welch-Algorithmus */
 /*@{ (Doc++-Group: reestimate) */
 
@@ -80,12 +73,6 @@ extern "C" {
   */
   int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
                                    double likelihood_delta);
-
-
-/** Update the emissions according to the tie groups by computing the mean
-    values within all groups.
-    */
-  void ghmm_d_update_tied_groups (model * mo);
 
 
 /** Baum-Welch-Algorithm for parameter reestimation (training) in

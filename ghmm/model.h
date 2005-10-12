@@ -571,11 +571,19 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
 */
   double ghmm_d_distance(const model * mo, const model * m2);
 
-/** Calculates a topological ordering of the silent states
-    and saves it in the model. Detects cycles of silent states.
-    @param mo:      model
+/**
+   Calculates a topological ordering of the silent states
+   and saves it in the model. Detects cycles of silent states.
+   @param mo:      model
 */
   void ghmm_d_topo_order (model * mo);
+
+/**
+   Update the emissions according to the tie groups by computing the mean
+   values within all groups.
+   @param mo:      model
+*/
+  void ghmm_d_update_tied_groups (model * mo);
 
 #ifdef __cplusplus
 }

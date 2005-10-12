@@ -53,27 +53,6 @@ extern "C" {
  */
 int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps);
 
-/*----------------------------------------------------------------------------*/
-/**
-   computes matrices of n and m variables (expected values for how often a
-   certain parameter from A or B is used)
-   computes Baum-Welch variables implicit 
-   @return                 0/-1 success/error
-   @param mo:              pointer to a model
-   @param alpha:           matrix of forward variables
-   @param backward:        matrix of backward variables
-   @param scale:           scaling vector from forward-backward-algorithm
-   @param seq:             sequence in internal representation
-   @param seq_len:         length of sequence
-   @param matrix_b:        matrix for parameters from B (n_b or m_b)
-   @param matrix_a:        matrix for parameters from A (n_a or m_a)
-   @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
- */
-int ghmm_dl_gradient_expectations (model * mo, double **alpha, double **beta,
-		                     double *scale, int *seq, int seq_len,
-				     double **matrix_b, double *matrix_a,
-				     double *vec_pi);
-
 
 #ifdef __cplusplus
 }

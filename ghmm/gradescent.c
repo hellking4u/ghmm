@@ -42,13 +42,12 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "ghmm.h"
 #include "mes.h"
 #include "matrix.h"
 #include "model.h"
 #include "foba.h"
-#include "reestimate.h"
 #include "gradescent.h"
-#include "ghmm.h"
 #include "ghmm_internals.h"
 
 

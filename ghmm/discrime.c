@@ -48,7 +48,6 @@
 #include "matrix.h"
 #include "model.h"
 #include "foba.h"
-#include "reestimate.h"
 #include "gradescent.h"
 #include "discrime.h"
 #include "ghmm_internals.h"
@@ -56,7 +55,8 @@
 #define LAMBDA 0.14
 #define TRIM(o, n) ((1-LAMBDA)*(o) + LAMBDA*(n))
 
-#ifdef __STRICT_ANSI__
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#else
 #define logl(A) log(A)
 #define expl(A) exp(A)
 #endif
