@@ -311,10 +311,9 @@ int ghmm_scluster_hmm (char *argv[])
           if (CLASSIFY == 1) {
           idummy = ghmm_scluster_log_aposteriori (&cl, sqd, j, &log_apo);
           if (idummy == -1) {
-            str =
-              ighmm_mprintf (NULL, 0,
-                       "Warn: no model fits to Seq %10.0f, use PENALTY_LOGP\n",
-                       sqd->seq_id[j]);
+            str = ighmm_mprintf (NULL, 0,
+                    "Warn: no model fits to Seq %10.0f, use PENALTY_LOGP\n",
+                    sqd->seq_id[j]);
             mes_prot (str);
             m_free (str);
             cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * PENALTY_LOGP;
