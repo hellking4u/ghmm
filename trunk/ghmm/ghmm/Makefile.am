@@ -58,7 +58,6 @@ libghmm_la_SOURCES= ghmm.h \
                     viterbi.c viterbi.h \
                     reestimate.c reestimate.h \
                     gradescent.c gradescent.h \
-                    kbestbasics.c kbestbasics.h \
                     kbest.c kbest.h \
                     discrime.c discrime.h \
                     modelutil.c \
