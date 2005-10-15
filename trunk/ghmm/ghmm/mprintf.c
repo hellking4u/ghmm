@@ -58,6 +58,7 @@
 #define MPRINTF_TMP_LEN    1024
 #define MPRINTF_FRM_LEN    64
 
+
 /*----------------------------------------------------------------------------*/
 static int mprintf_int (char *dst, int dlen, int x)
 {
@@ -298,14 +299,21 @@ static void mprintf_conv_int (char *dst, int flags, int minwidth,
 }                               /* mprintf_conv_int */
 
 
+
+/* workaround for an ABI-change on PPC and X86-64 */
+#if defined(__GNUC__) && (defined (__powerpc__) || defined(__amd64__))
+#define AP_POINTER ap
+#else
+#define AP_POINTER *ap
+#endif
 /*----------------------------------------------------------------------------*/
-static int mprintf_scan_int (char **src, va_list * ap)
+static int mprintf_scan_int (char **src, va_list AP_POINTER)
 {
   char *p = *src;
   int res = 0;
 
   if (*p == '*') {
-    res = va_arg (*ap, int);
+    res = va_arg (AP_POINTER, int);
     p++;
   }
   else
@@ -323,7 +331,7 @@ static int mprintf_scan_int (char **src, va_list * ap)
 
 /*----------------------------------------------------------------------------*/
 static char *mprintf_get_next (char **format, int *flen, int *dlen,
-                               va_list * ap)
+                               va_list AP_POINTER)
 {
   static char tmp[MPRINTF_TMP_LEN];
   char *res = NULL;
@@ -431,19 +439,19 @@ static char *mprintf_get_next (char **format, int *flen, int *dlen,
     case 'X':
     case 'b':
       mprintf_conv_int (tmp, flags, minwidth, precision, convchar,
-                        va_arg (*ap, int));
+                        va_arg (AP_POINTER, int));
       break;
 #if 0                           /* makes only trouble */
     case 'p':
       mprintf_conv_int (tmp, flags, minwidth, precision, 'X',
-                        (int) (va_arg (*ap, char *)));
+                        (int) (va_arg (AP_POINTER, char *)));
       break;
 #endif /* 0 */
     case 's':
       if (precision < 0 || precision > maxwidth)
         precision = maxwidth;
       mprintf_conv_str (tmp, flags, minwidth, precision,
-                        va_arg (*ap, char *));
+                        va_arg (AP_POINTER, char *));
       maxwidth = MPRINTF_TMP_LEN - 1;
       break;
     case 'f':
@@ -452,9 +460,9 @@ static char *mprintf_get_next (char **format, int *flen, int *dlen,
     case 'g':
     case 'G':
       if (sizemodif == 'L')
-        aux_float = va_arg (*ap, long double);
+        aux_float = va_arg (AP_POINTER, long double);
       else
-        aux_float = va_arg (*ap, double);
+        aux_float = va_arg (AP_POINTER, double);
       mprintf_conv_float (tmp, flags, minwidth, precision, sizemodif,
                           convchar, aux_float);
       break;
@@ -467,7 +475,7 @@ static char *mprintf_get_next (char **format, int *flen, int *dlen,
         if (precision < 0)
           precision = 2;
         if (convchar == 't') {
-          clock_diff = clock () - va_arg (*ap, clock_t);
+          clock_diff = clock () - va_arg (AP_POINTER, clock_t);
           minwidth--;
           tmp[0] = '+';
           res = tmp + 1;
@@ -510,6 +518,7 @@ static char *mprintf_get_next (char **format, int *flen, int *dlen,
   *format = src;
   return (res);
 }                               /* mprintf_get_next */
+#undef AP_POINTER
 
 /*----------------------------------------------------------------------------*/
 static int mprintf_memcpy (char **dst, int *dpos, int *dlen,
@@ -546,10 +555,18 @@ static int mprintf_memcpy (char **dst, int *dpos, int *dlen,
   return (0);
 }                               /* mprintf_memcpy */
 
+
+/* workaround for an ABI-change on PPC and X86-64 */
+#if defined(__GNUC__) && (defined (__powerpc__) || defined(__amd64__))
+#define VA_ADDRESS(VAL) (VAL)
+#else
+#define VA_ADDRESS(VAL) (&(VAL))
+#endif
 /*============================================================================*/
 char *ighmm_mprintf_va (char *dst, int dlen, char *format, va_list args)
 {
   va_list ap;
+
   int dyn;
   int dpos;
   char *next;
@@ -564,7 +581,7 @@ char *ighmm_mprintf_va (char *dst, int dlen, char *format, va_list args)
 
   /*****************************************************/
 
-  memcpy ((void *) &ap, (void *) &args, sizeof (va_list));
+  memcpy ((char *) VA_ADDRESS(ap), (char *) VA_ADDRESS(args), sizeof (va_list));
 
   /*****************************************************/
 
@@ -594,7 +611,7 @@ char *ighmm_mprintf_va (char *dst, int dlen, char *format, va_list args)
         flen -= 2;
       }
       else {
-        next = mprintf_get_next (&format, &flen, &nlen, &ap);
+        next = mprintf_get_next (&format, &flen, &nlen, VA_ADDRESS(ap));
         if (!next)
           return (dst);
       }
@@ -611,9 +628,11 @@ char *ighmm_mprintf_va (char *dst, int dlen, char *format, va_list args)
     if (mprintf_memcpy (&dst, &dpos, &dlen, next, nlen, dyn))
       return (dst);
   }
+  va_end (ap);
 
   return (dst);
 }                               /* ighmm_mprintf_va */
+#undef VA_ADDRESS
 
 /*============================================================================*/
 char *ighmm_mprintf (char *dst, int maxlen, char *format, ...)
@@ -623,6 +642,8 @@ char *ighmm_mprintf (char *dst, int maxlen, char *format, ...)
 
   va_start (args, format);
   res = ighmm_mprintf_va (dst, maxlen, format, args);
+  va_end (args);
+
   return (res);
 }                               /* ighmm_mprintf */
 
@@ -649,6 +670,8 @@ char *ighmm_mprintf_dyn (char *dst, int maxlen, char *format, ...)
 
   va_start (args, format);
   res = ighmm_mprintf_va_dyn (dst, maxlen, format, args);
+  va_end (args);
+
   return (res);
 }                               /* ighmm_mprintf_dyn */
 
