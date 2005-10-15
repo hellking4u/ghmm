@@ -724,7 +724,7 @@ int ghmm_d_check (const model * mo)
 # define CUR_PROC "ghmm_d_check"
   int res = -1;
   double sum;
-  int i, j;
+  int i, j, imag=0;
   char *str;
   /* The sum of the Pi[i]'s is 1 */
 
@@ -757,12 +757,34 @@ int ghmm_d_check (const model * mo)
       m_free (str);
       /* goto STOP; */
     }
+    /* Sum the a[i][j]'s : normalized in transitions */
+    sum = 0.0;
+    for (j=0; j<mo->s[i].in_states; j++) {
+      sum += mo->s[i].in_a[j];
+    }
+    if (fabs (sum) == 0.0) {
+      imag = 1;
+      str = mprintf (NULL, 0, "state %d can't be reached\n", i);
+      mes_prot (str);
+      m_free (str);
+    }
+    else if (fabs (sum-1.0) >= EPS_PREC) {
+      str = mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n", sum, i);
+      mes_prot (str);
+      m_free (str);
+    }
     /* Sum the b[j]'s: normalized emission probs */
     sum = 0.0;
     for (j = 0; j < mo->M; j++)
       sum += mo->s[i].b[j];
+    /* silent states */
+    if ((mo->model_type & kSilentStates) && mo->silent[i] && (sum != 0.0))
+      goto STOP;
+    /* not reachable states */
+    else if (imag && (fabs (sum + mo->M) >= EPS_PREC))
+      goto STOP;
+    /* normal states */
     if (fabs (sum - 1.0) >= EPS_PREC) {
-      res = -2;                 /* So we can ignore a silent state */
       str = ighmm_mprintf (NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);

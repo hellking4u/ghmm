@@ -368,38 +368,51 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       continue;
 
     /* B */
-    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
-    for (hist = 0; hist < size; hist++) {
-      if (r->b_denom[i][hist] < EPS_PREC)
-        /* If the Denominator is zero, we have not seen any emission in this
-	   state with this history. We are conservative and just skip them. */
-        continue;
-      else
-        factor = (1.0 / r->b_denom[i][hist]);
-
-      positive = 0;
-      /* TEST: denom. < numerator */
-      col = hist * mo->M;
-      for (m = col; m < col + mo->M; m++) {
-        if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -EPS_PREC) {
-          str = ighmm_mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
-			 r->b_num[i][m], r->b_denom[i][hist]);
-          mes_prot (str);
-          m_free (str);
-        }
-
-        mo->s[i].b[m] = r->b_num[i][m] * factor;
-        if (mo->s[i].b[m] >= EPS_PREC)
-          positive = 1;
+    size = model_ipow (mo, mo->M, mo->s[i].order);
+    /* If all in_a's are zero, the state can't be reached.
+       Set all b's to -1.0 */
+    if (factor == 0.0) {
+      for (hist = 0; hist < size; hist++) {
+	col = hist * mo->M;
+	for (m = col; m < col + mo->M; m++) {
+	  mo->s[i].b[m] = -1.0;
+	}
       }
+    }
+    else {
+      for (hist = 0; hist < size; hist++) {
+        /* If the denominator is very small, we have not seen many emissions
+	   in this state with this history.
+	   We are conservative and just skip them. */
+	if (r->b_denom[i][hist] < EPS_PREC)
+	  continue;
+	else
+	  factor = (1.0 / r->b_denom[i][hist]);
 
-      if (!positive) {
-        str = ighmm_mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
-		       i, col, col + mo->M, r->b_denom[i][hist]);
-        mes_prot (str);
-        m_free (str);
-      }
-    }                           /* for each history */
+	positive = 0;
+	/* TEST: denom. < numerator */
+	col = hist * mo->M;
+	for (m = col; m < col + mo->M; m++) {
+	  if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -EPS_PREC) {
+	    str = mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
+			   r->b_num[i][m], r->b_denom[i][hist]);
+	    mes_prot (str);
+	    m_free (str);
+	  }
+	  
+	  mo->s[i].b[m] = r->b_num[i][m] * factor;
+	  if (mo->s[i].b[m] >= EPS_PREC)
+	    positive = 1;
+	}
+
+	if (!positive) {
+	  str = mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
+			 i, col, col + mo->M, r->b_denom[i][hist]);
+	  mes_prot (str);
+	  m_free (str);
+	}
+      }                           /* for each history */
+    }
   }                             /* for (i = 0 .. < mo->N)  */
 
   res = 0;
