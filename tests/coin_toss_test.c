@@ -30,13 +30,13 @@
 
 int single_state_coin_toss()
 {
-  state single_state;
-  model my_model;
+  ghmm_dstate single_state;
+  ghmm_dmodel my_model;
   double symbols_single_state[2]={0.5,0.5};
   double trans_prob_single_state[1]={1.0};
   double trans_prob_single_state_rev[1]={1.0};
   int trans_id_single_state[1]={0};
-  sequence_t* my_output;
+  ghmm_dseq* my_output;
   int silent_array[2] =  {0}; 
 
   my_model.model_type = 0;
@@ -78,8 +78,8 @@ int single_state_coin_toss()
 
 int two_states_coin_toss()
 {
-  model my_model;
-  state model_states[2];
+  ghmm_dmodel my_model;
+  ghmm_dstate model_states[2];
   double symbols_head_state[2]={1.0,0.0};
   double trans_prob_head_state[2]={0.5,0.5};
   double trans_prob_head_state_rev[2]={0.5,0.5};
@@ -88,7 +88,7 @@ int two_states_coin_toss()
   double trans_prob_tail_state[2]={0.5,0.5};
   double trans_prob_tail_state_rev[2]={0.5,0.5};
   int trans_id_tail_state[2]={0,1};
-  sequence_t *my_output;
+  ghmm_dseq *my_output;
   double log_p_viterbi, log_p_forward;
   double **forward_alpha;
   double forward_scale[10];

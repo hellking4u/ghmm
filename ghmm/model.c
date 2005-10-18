@@ -81,12 +81,12 @@ typedef enum DFSFLAG { DONE, NOTVISITED, VISITED } DFSFLAG;
   int    topo_order_length;
 } local_store_t;
 
-static local_store_t *topo_alloc(model *mo, int len);
+static local_store_t *topo_alloc (ghmm_dmodel *mo, int len);
 static int topo_free(local_store_t **v, int n, int cos, int len); */
 
 
 /*----------------------------------------------------------------------------*/
- int ghmm_d_ipow (const model * mo, int x, unsigned int n)
+ int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n)
 {
 #define CUR_PROC "ghmm_d_ipow"
   int result = 1;
@@ -106,7 +106,7 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
 }
 
 /*----------------------------------------------------------------------------*/
-static int model_state_alloc (state * s, int M, int in_states,
+static int model_state_alloc (ghmm_dstate * s, int M, int in_states,
                               int out_states)
 {
 # define CUR_PROC "model_state_alloc"
@@ -128,7 +128,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 #ifdef GHMM_OBSOLETE
-static int model_copy_vectors (model * mo, int index, double **a_matrix,
+static int model_copy_vectors (ghmm_dmodel * mo, int index, double **a_matrix,
                                double **b_matrix, double *pi, int *fix)
 {
 #define CUR_PROC "model_copy_vectors"
@@ -166,16 +166,16 @@ static int model_copy_vectors (model * mo, int index, double **a_matrix,
 
 /* Old prototype:
 
-model **ghmm_d_read(char *filename, int *mo_number, int **seq,
+ghmm_dmodel **ghmm_d_read(char *filename, int *mo_number, int **seq,
 			 const int *seq_len, int seq_number) { */
 
-model **ghmm_d_read (char *filename, int *mo_number)
+ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
 {
 #define CUR_PROC "ghmm_d_read"
   int j;
   long new_models = 0;
   scanner_t *s = NULL;
-  model **mo = NULL;
+  ghmm_dmodel **mo = NULL;
   *mo_number = 0;
   s = ighmm_scanner_alloc (filename);
   if (!s) {
@@ -211,7 +211,7 @@ model **ghmm_d_read (char *filename, int *mo_number)
       }
     }
     else if (!strcmp (s->id, "HMM_SEQ")) {
-      model **tmp_mo = NULL;
+      ghmm_dmodel **tmp_mo = NULL;
       tmp_mo = ghmm_d_from_sequence_ascii (s, &new_models);
       ARRAY_REALLOC (mo, (*mo_number + new_models));
       for (j = 0; j < new_models; j++) {
@@ -243,11 +243,11 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-model *ghmm_d_direct_read (scanner_t * s, int *multip)
+ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
 {
 #define CUR_PROC "ghmm_d_direct_read"
   int i, m_read, n_read, a_read, b_read, pi_read, len, prior_read, fix_read;
-  model *mo = NULL;
+  ghmm_dmodel *mo = NULL;
   double **a_matrix = NULL, **b_matrix = NULL;
   double *pi_vector = NULL;
   int *fix_vector = NULL;
@@ -480,12 +480,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 /* Produces models from given sequences */
-model **ghmm_d_from_sequence (sequence_t * sq, long *mo_number)
+ghmm_dmodel **ghmm_d_from_sequence (ghmm_dseq * sq, long *mo_number)
 {
 #define CUR_PROC "ghmm_d_from_sequence"
   long i;
   int max_symb;
-  model **mo = NULL;
+  ghmm_dmodel **mo = NULL;
   ARRAY_CALLOC (mo, sq->seq_number);
   max_symb = ghmm_dseq_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
@@ -503,13 +503,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
 /* Produces models form given sequences */
-model **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
+ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
 {
 #define CUR_PROC "ghmm_d_from_sequence_ascii"
   long i;
   int max_symb;
-  model **mo = NULL;
-  sequence_t *sq = NULL;
+  ghmm_dmodel **mo = NULL;
+  ghmm_dseq *sq = NULL;
 
   ighmm_scanner_consume (s, '{');
   if (s->err)
@@ -560,7 +560,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-int ghmm_d_free (model ** mo)
+int ghmm_d_free (ghmm_dmodel ** mo)
 {
 #define CUR_PROC "ghmm_d_free"
   int i,j;
@@ -616,7 +616,7 @@ int ghmm_d_free (model ** mo)
 }  /* ghmm_d_free */
 
 
-int ghmm_d_background_free (background_distributions * bg)
+int ghmm_d_background_free (ghmm_d_background_distributions * bg)
 {
 #define CUR_PROC "ghmm_d_background_free"
 
@@ -635,11 +635,11 @@ int ghmm_d_background_free (background_distributions * bg)
 
 
 /*============================================================================*/
-model *ghmm_d_copy (const model * mo)
+ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
 {
 # define CUR_PROC "ghmm_d_copy"
   int i, j, nachf, vorg, m, size;
-  model *m2 = NULL;
+  ghmm_dmodel *m2 = NULL;
   ARRAY_CALLOC (m2, 1);
   ARRAY_CALLOC (m2->s, mo->N);
   ARRAY_CALLOC (m2->silent, mo->N);
@@ -719,7 +719,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_d_check (const model * mo)
+int ghmm_d_check (const ghmm_dmodel * mo)
 {
 # define CUR_PROC "ghmm_d_check"
   int res = -1;
@@ -764,12 +764,12 @@ int ghmm_d_check (const model * mo)
     }
     if (fabs (sum) == 0.0) {
       imag = 1;
-      str = mprintf (NULL, 0, "state %d can't be reached\n", i);
+      str = ighmm_mprintf (NULL, 0, "state %d can't be reached\n", i);
       mes_prot (str);
       m_free (str);
     }
     else if (fabs (sum-1.0) >= EPS_PREC) {
-      str = mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n", sum, i);
+      str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
     }
@@ -799,7 +799,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_d_check */
 
 /*============================================================================*/
-int ghmm_d_check_compatibility (model ** mo, int model_number)
+int ghmm_d_check_compatibility (ghmm_dmodel ** mo, int model_number)
 {
 #define CUR_PROC "ghmm_d_check_compatibility"
   int i;
@@ -812,7 +812,7 @@ int ghmm_d_check_compatibility (model ** mo, int model_number)
 }
 
 /*============================================================================*/
-int ghmm_d_check_compatibel_models (const model * mo, const model * m2)
+int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * m2)
 {
 #define CUR_PROC "ghmm_d_check_compatibel_models"
   int i, j;
@@ -852,13 +852,13 @@ STOP:
 }                               /* ghmm_d_check_compatibility */
 
 /*============================================================================*/
-model *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
+ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
                                      int anz_symb)
 {
 #define CUR_PROC "ghmm_d_generate_from_sequence"
   int i;
-  model *mo = NULL;
-  state *s = NULL;
+  ghmm_dmodel *mo = NULL;
+  ghmm_dstate *s = NULL;
   ARRAY_CALLOC (mo, 1);
   mo->N = seq_len;
   mo->M = anz_symb;
@@ -935,7 +935,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*===========================================================================*/
 
- static int get_random_output (model * mo, int i, int position)
+ static int get_random_output (ghmm_dmodel * mo, int i, int position)
 {
 #define CUR_PROC "get_random_output"
   int m, e_index;
@@ -974,14 +974,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-sequence_t *ghmm_d_generate_sequences (model * mo, int seed, int global_len,
+ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
                                       long seq_number, int Tmax)
 {
 # define CUR_PROC "ghmm_d_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
 
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
   int i, j, m;
   double p, sum;
   int len = global_len;
@@ -1098,7 +1098,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-double ghmm_d_likelihood (model * mo, sequence_t * sq)
+double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "ghmm_d_likelihood"
   double log_p_i, log_p;
@@ -1144,7 +1144,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 
-void ghmm_d_transition_set (model * mo, int i, int j, double prob)
+void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob)
 {
 # define CUR_PROC "ghmm_d_transition_set"
   int in, out;
@@ -1178,7 +1178,7 @@ void ghmm_d_transition_set (model * mo, int i, int j, double prob)
 /* Some outputs */
 /*============================================================================*/
 
-void ghmm_d_states_print (FILE * file, model * mo)
+void ghmm_d_states_print (FILE * file, ghmm_dmodel * mo)
 {
   int i, j;
   fprintf (file, "Modelparameters: \n M = %d \t N = %d\n", mo->M, mo->N);
@@ -1203,7 +1203,7 @@ void ghmm_d_states_print (FILE * file, model * mo)
 
 /*============================================================================*/
 
-void ghmm_d_A_print (FILE * file, model * mo, char *tab, char *separator,
+void ghmm_d_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                     char *ending)
 {
   int i, j, out_state;
@@ -1230,7 +1230,7 @@ void ghmm_d_A_print (FILE * file, model * mo, char *tab, char *separator,
 
 /*============================================================================*/
 
-void ghmm_d_B_print (FILE * file, model * mo, char *tab, char *separator,
+void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                     char *ending)
 {
   int i, j, size;
@@ -1254,7 +1254,7 @@ void ghmm_d_B_print (FILE * file, model * mo, char *tab, char *separator,
 
 /*============================================================================*/
 
-void ghmm_d_Pi_print (FILE * file, model * mo, char *tab, char *separator,
+void ghmm_d_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                      char *ending)
 {
   int i;
@@ -1264,7 +1264,7 @@ void ghmm_d_Pi_print (FILE * file, model * mo, char *tab, char *separator,
   fprintf (file, "%s\n", ending);
 }                               /* ghmm_d_Pi_print */
 
-void ghmm_d_fix_print (FILE * file, model * mo, char *tab, char *separator,
+void ghmm_d_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                       char *ending)
 {
   int i;
@@ -1276,7 +1276,7 @@ void ghmm_d_fix_print (FILE * file, model * mo, char *tab, char *separator,
 
 /*============================================================================*/
 
-void ghmm_d_A_print_transp (FILE * file, model * mo, char *tab,
+void ghmm_d_A_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                            char *separator, char *ending)
 {
 # define CUR_PROC "ghmm_d_A_print_transp"
@@ -1313,7 +1313,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-void ghmm_d_B_print_transp (FILE * file, model * mo, char *tab,
+void ghmm_d_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                            char *separator, char *ending)
 {
   int i, j;
@@ -1328,7 +1328,7 @@ void ghmm_d_B_print_transp (FILE * file, model * mo, char *tab,
 
 /*============================================================================*/
 
-void ghmm_d_Pi_print_transp (FILE * file, model * mo, char *tab, char *ending)
+void ghmm_d_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab, char *ending)
 {
   int i;
   for (i = 0; i < mo->N; i++)
@@ -1337,7 +1337,7 @@ void ghmm_d_Pi_print_transp (FILE * file, model * mo, char *tab, char *ending)
 
 /*============================================================================*/
 
-void ghmm_dl_print (FILE * file, model * mo, char *tab, char *separator,
+void ghmm_dl_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                         char *ending)
 {
   int i;
@@ -1348,7 +1348,7 @@ void ghmm_dl_print (FILE * file, model * mo, char *tab, char *separator,
 }                               /* ghmm_dl_print */
 
 /*============================================================================*/
-void ghmm_d_print (FILE * file, model * mo)
+void ghmm_d_print (FILE * file, ghmm_dmodel * mo)
 {
   fprintf (file, "HMM = {\n\tM = %d;\n\tN = %d;\n", mo->M, mo->N);
   fprintf (file, "\tprior = %.3f;\n", mo->prior);
@@ -1470,7 +1470,7 @@ int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check)
 
 /*============================================================================*/
 /* XXX symmetric not implemented yet */
-double ghmm_d_prob_distance (model * m0, model * m, int maxT, int symmetric,
+double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int symmetric,
                             int verbose)
 {
 #define CUR_PROC "ghmm_d_prob_distance"
@@ -1480,9 +1480,9 @@ double ghmm_d_prob_distance (model * m0, model * m, int maxT, int symmetric,
   double p0, p;
   double d = 0.0;
   double *d1;
-  sequence_t *seq0 = NULL;
-  sequence_t *tmp = NULL;
-  model *mo1, *mo2;
+  ghmm_dseq *seq0 = NULL;
+  ghmm_dseq *tmp = NULL;
+  ghmm_dmodel *mo1, *mo2;
   int i, t, a, k;
   int true_len;
   int true_number;
@@ -1673,7 +1673,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-void ghmm_d_state_clean (state * my_state)
+void ghmm_d_state_clean (ghmm_dstate * my_state)
 {
 #define CUR_PROC "ghmm_d_state_clean"
 
@@ -1709,7 +1709,7 @@ void ghmm_d_state_clean (state * my_state)
 
 /*==========================  Labeled HMMs  ================================*/
 
-sequence_t *ghmm_dl_generate_sequences (model * mo, int seed,
+ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
                                             int global_len, long seq_number,
                                             int Tmax)
 {
@@ -1717,7 +1717,7 @@ sequence_t *ghmm_dl_generate_sequences (model * mo, int seed,
 
   /* An end state is characterized by not having an output probabiliy. */
 
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
   int i, j, m, transition_impossible, j_id;
   double p, sum;
   int len = global_len;
@@ -1733,7 +1733,7 @@ sequence_t *ghmm_dl_generate_sequences (model * mo, int seed,
     goto STOP;
   }
 
-  /* allocating additional fields for the labels in the sequence_t struct */
+  /* allocating additional fields for the labels in the ghmm_dseq struct */
   ARRAY_CALLOC (sq->state_labels, seq_number);
   ARRAY_CALLOC (sq->state_labels_len, seq_number);
 
@@ -1912,7 +1912,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /* Scales the output and transitions probs of all states in a given model */
-int ghmm_d_normalize (model * mo)
+int ghmm_d_normalize (ghmm_dmodel * mo)
 {
 #define CUR_PROC "ghmm_d_normalize"
 
@@ -1961,7 +1961,7 @@ int ghmm_d_normalize (model * mo)
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_add_noise (model * mo, double level, int seed)
+int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed)
 {
 #define CUR_PROC "model_add_noise_A"
 
@@ -1989,7 +1989,7 @@ int ghmm_d_add_noise (model * mo, double level, int seed)
 }
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_transition_add (state * s, int start, int dest, double prob)
+int ghmm_d_transition_add (ghmm_dstate * s, int start, int dest, double prob)
 {
 #define CUR_PROC "ghmm_d_transition_add"
 
@@ -2036,7 +2036,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_transition_del (state * s, int start, int dest)
+int ghmm_d_transition_del (ghmm_dstate * s, int start, int dest)
 {
 #define CUR_PROC "ghmm_d_transition_del"
 
@@ -2084,7 +2084,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /** 
-   Allocates a new background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
@@ -2093,7 +2093,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-int ghmm_d_duration_apply (model * mo, int cur, int times)
+int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
 {
 #define CUR_PROC "ghmm_d_duration_apply"
 
@@ -2190,21 +2190,21 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /** 
-   Allocates a new background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
-   @return    :               new pointer to a background_distributions struct
+   @return    :               new pointer to a ghmm_d_background_distributions struct
    @param n   :               number of distributions
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-background_distributions *ghmm_d_background_alloc (int n, int m,
+ghmm_d_background_distributions *ghmm_d_background_alloc (int n, int m,
                                                                 int *orders,
                                                                 double **B)
 {
 #define CUR_PROC "ghmm_d_background_alloc"
-  background_distributions *ptbackground;
+  ghmm_d_background_distributions *ptbackground;
 
   ARRAY_CALLOC (ptbackground, 1);
 
@@ -2226,8 +2226,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 
-background_distributions
-  *ghmm_d_background_copy (background_distributions * bg)
+ghmm_d_background_distributions *ghmm_d_background_copy
+                                       (ghmm_d_background_distributions * bg)
 {
 #define CUR_PROC "ghmm_d_background_copy"
   int i, j, b_i_len;
@@ -2258,7 +2258,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_background_apply (model * mo, double *background_weight)
+int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 {
 # define CUR_PROC "ghmm_d_background_apply"
 
@@ -2276,7 +2276,7 @@ int ghmm_d_background_apply (model * mo, double *background_weight)
         return -1;
       }
 
-      /* XXX Cache in background_distributions */
+      /* XXX Cache in ghmm_d_background_distributions */
       size = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
       for (j = 0; j < size; j++)
         mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
@@ -2290,7 +2290,7 @@ int ghmm_d_background_apply (model * mo, double *background_weight)
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_background_get_uniform (model * mo, sequence_t * sq)
+int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "get_background"
 
@@ -2375,7 +2375,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* end get_background */
 
 
-double ghmm_d_distance(const model * mo, const model * m2) {
+double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
 #define CUR_PROC "model_distances"
 
   int i, j, number=0;

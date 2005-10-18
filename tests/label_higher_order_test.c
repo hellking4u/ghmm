@@ -34,9 +34,9 @@
 #define NR_SEQUENCES 50
 
 
-void generateModel (model *mo, int noStates, unsigned int seed) {
+void generateModel (ghmm_dmodel *mo, int noStates, unsigned int seed) {
 
-  state * states;
+  ghmm_dstate * states;
   int h, i, j;
   double rnd;
 
@@ -47,7 +47,7 @@ void generateModel (model *mo, int noStates, unsigned int seed) {
   srandom(seed);
 
   /*allocate memory for states and array of silent flags*/
-  if (!(states = malloc (sizeof (state) * noStates)))
+  if (!(states = malloc (sizeof (ghmm_dstate) * noStates)))
     {printf ("malloc failed in line %d", __LINE__); exit(1);}
   if (!(silent_array = calloc (sizeof (int), noStates))) 
     {printf ("malloc failed in line %d", __LINE__); exit(1);}
@@ -146,17 +146,17 @@ void testBaumwelch(int seqlen){
 
   int  error;
  
-  model * mo_gen = NULL;
-  model * mo_time = NULL;
-  model * mo_mem  = NULL;
-  sequence_t * my_output = NULL;
+  ghmm_dmodel * mo_gen = NULL;
+  ghmm_dmodel * mo_time = NULL;
+  ghmm_dmodel * mo_mem  = NULL;
+  ghmm_dseq * my_output = NULL;
    
 
-  if (!(mo_gen = malloc (sizeof (model))))
+  if (!(mo_gen = malloc (sizeof (ghmm_dmodel))))
     {printf ("malloc failed in line %d", __LINE__); exit(1);}
-  if (!(mo_time = malloc (sizeof (model))))
+  if (!(mo_time = malloc (sizeof (ghmm_dmodel))))
     {printf ("malloc failed in line %d", __LINE__); exit(1);}
-  if (!(mo_mem = malloc (sizeof (model))))
+  if (!(mo_mem = malloc (sizeof (ghmm_dmodel))))
     {printf ("malloc failed in line %d", __LINE__); exit(1);}
       
   /* generate a model with variable number of states*/

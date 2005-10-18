@@ -43,13 +43,13 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: ds_model) */
 
-int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
+int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                     double *scale, double *log_p);
 
-int ghmm_ds_backward (sdmodel * mo, const int *O, int len, double **beta,
+int ghmm_ds_backward (ghmm_dsmodel * mo, const int *O, int len, double **beta,
                      const double *scale);
 
-int ghmm_ds_logp (sdmodel * mo, const int *O, int len, double *log_p);
+int ghmm_ds_logp (ghmm_dsmodel * mo, const int *O, int len, double *log_p);
 
 
 #ifdef __cplusplus

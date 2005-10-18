@@ -59,11 +59,11 @@ typedef struct local_store_t {
   int **psi;
 } local_store_t;
 
-static local_store_t *sviterbi_alloc (smodel * smo, int T);
+static local_store_t *sviterbi_alloc (ghmm_cmodel * smo, int T);
 static int sviterbi_free (local_store_t ** v, int n, int T);
 
 /*----------------------------------------------------------------------------*/
-static local_store_t *sviterbi_alloc (smodel * smo, int T)
+static local_store_t *sviterbi_alloc (ghmm_cmodel * smo, int T)
 {
 #define CUR_PROC "sviterbi_alloc"
   local_store_t *v = NULL;
@@ -107,7 +107,7 @@ static int sviterbi_free (local_store_t ** v, int n, int T)
 
 /*----------------------------------------------------------------------------*/
 
-static void sviterbi_precompute (smodel * smo, double *O, int T,
+static void sviterbi_precompute (ghmm_cmodel * smo, double *O, int T,
                                  local_store_t * v)
 {
 #define CUR_PROC "sviterbi_precompute"
@@ -132,7 +132,7 @@ static void sviterbi_precompute (smodel * smo, double *O, int T,
 
 
 /*============================================================================*/
-int *ghmm_c_viterbi (smodel * smo, double *O, int T, double *log_p)
+int *ghmm_c_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
 {
 #define CUR_PROC "ghmm_c_viterbi"
   int *state_seq = NULL;

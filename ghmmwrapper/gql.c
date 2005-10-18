@@ -68,32 +68,32 @@ int seq_rank(const void *a1, const void *a2) {
       return 1;
 }
 
-static int ghmm_c_state_alloc(sstate *state,
+static int ghmm_c_state_alloc(ghmm_cstate *state,
 			      int M,
 			      int in_states,
 			      int out_states,
 			      int cos) {
 #define CUR_PROC "ghmm_c_state_alloc"
   int res = -1;
-  if (!((state->c) = ighmm_calloc(sizeof(*(state->c)) * M)))
+  if (!((state->c) = calloc(sizeof(*(state->c)), M)))
     {mes_proc(); goto STOP;}
-  if (!((state->mue) = ighmm_calloc(sizeof(*(state->mue)) * M)))
+  if (!((state->mue) = calloc(sizeof(*(state->mue)), M)))
     {mes_proc(); goto STOP;}
-  if (!((state->u) = ighmm_calloc(sizeof(*(state->u)) * M)))
+  if (!((state->u) = calloc(sizeof(*(state->u)), M)))
     {mes_proc(); goto STOP;}
-  if (!((state->a) = ighmm_calloc(sizeof(*(state->a)) * M)))
+  if (!((state->a) = calloc(sizeof(*(state->a)), M)))
     {mes_proc(); goto STOP;}
-  if (!((state->density) = ighmm_calloc(sizeof(*(state->density)) * M)))
+  if (!((state->density) = calloc(sizeof(*(state->density)), M)))
     {mes_proc(); goto STOP;}
     
   if (out_states > 0) {
-    if (!((state->out_id) = ighmm_calloc(sizeof(*(state->out_id)) * out_states)))
+    if (!((state->out_id) = calloc(sizeof(*(state->out_id)), out_states)))
       {mes_proc(); goto STOP;}
     state->out_a = ighmm_cmatrix_alloc(cos, out_states);
     if(!state->out_a) {mes_proc(); goto STOP;}
   }
   if (in_states > 0) {
-    if (!((state->in_id) = ighmm_calloc(sizeof(*(state->in_id)) * (in_states)))) 
+    if (!((state->in_id) = calloc(sizeof(*(state->in_id)), in_states))) 
       {mes_proc(); goto STOP;}
     state->in_a = ighmm_cmatrix_alloc(cos, in_states);
     if(!state->in_a) {mes_proc(); goto STOP;}
@@ -104,11 +104,11 @@ STOP:
 #undef CUR_PROC
 }
 
-smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
+ghmm_cmodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
 #define CUR_PROC "smodel_alloc_fill"
   int i;
-  smodel *smo=NULL;
-  if (!(smo = ighmm_malloc (sizeof (smodel)))) {mes_proc(); goto STOP;}  
+  ghmm_cmodel *smo=NULL;
+  if (!(smo = malloc (sizeof (ghmm_cmodel)))) {mes_proc(); goto STOP;}  
   smo->M   = M;
   smo->N   = N;
   smo->cos = cos;
@@ -126,19 +126,19 @@ STOP:
 #undef CUR_PROC
 }
 
-void smodel_set_pivector(smodel *smo, int i, double piv) {
+void smodel_set_pivector(ghmm_cmodel *smo, int i, double piv) {
   if (smo->s != NULL) {
     smo->s[i].pi = piv;
   }
 }
 
-void smodel_set_fixvector(smodel *smo, int i, double fixv) {
+void smodel_set_fixvector(ghmm_cmodel *smo, int i, double fixv) {
   if (smo->s != NULL) {
     smo->s[i].fix = fixv;
   }
 }
 
-void smodel_set_transition(smodel *smo, int i, int j, int cos, double prob) {
+void smodel_set_transition(ghmm_cmodel *smo, int i, int j, int cos, double prob) {
   int in, out;
   if (cos >= smo->cos) {
     fprintf(stderr, "smodel_set_transition(cos): cos > state->cos\n");
@@ -163,7 +163,7 @@ void smodel_set_transition(smodel *smo, int i, int j, int cos, double prob) {
 }
 
 
-double smodel_get_transition(smodel *smo, int i, int j, int cos) {
+double smodel_get_transition(ghmm_cmodel *smo, int i, int j, int cos) {
   int out;
   if (cos >= smo->cos) {
     fprintf(stderr, "smodel_get_transition(0): cos > state->cos\n");
@@ -180,7 +180,7 @@ double smodel_get_transition(smodel *smo, int i, int j, int cos) {
   return -1.0;
 }
 
-void smodel_set_mean(smodel *smo, int i, double *mu) {
+void smodel_set_mean(ghmm_cmodel *smo, int i, double *mu) {
   int m;
   if (smo->s != NULL) {
     for(m = 0; m < smo->M; m++)
@@ -188,7 +188,7 @@ void smodel_set_mean(smodel *smo, int i, double *mu) {
   }
 }
 
-void smodel_set_variance(smodel *smo, int i, double *variance) {
+void smodel_set_variance(ghmm_cmodel *smo, int i, double *variance) {
   int m;
   if (smo->s != NULL) {
     for(m = 0; m < smo->M; m++) {
@@ -199,7 +199,7 @@ void smodel_set_variance(smodel *smo, int i, double *variance) {
 }
 
 /*
-void call_smodel_print(char *filename, smodel *smo) {
+void call_smodel_print(char *filename, ghmm_cmodel *smo) {
   FILE *fp=fopen(filename, "w");
   if (fp == NULL) {
     fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
@@ -209,7 +209,7 @@ void call_smodel_print(char *filename, smodel *smo) {
   }
 } */
 
-int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps, int *seq_rank) {
+int smodel_sorted_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, double *log_ps, int *seq_rank) {
   int matched, res;
   double log_p_i;
   int i;

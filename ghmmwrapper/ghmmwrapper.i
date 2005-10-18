@@ -74,16 +74,16 @@
 %include typemaps.i
 
 // Constraints on GHMM date types - no NULL pointers as function arguments
-%apply Pointer NONNULL { model * };
-%apply Pointer NONNULL { model ** };
-%apply Pointer NONNULL { smodel * };
-%apply Pointer NONNULL { smodel ** };
-%apply Pointer NONNULL { state * };
-%apply Pointer NONNULL { sstate * };
-%apply Pointer NONNULL { sequence_t * };
-%apply Pointer NONNULL { sequence_t ** };
-%apply Pointer NONNULL { sequence_d_t * };
-%apply Pointer NONNULL { sequence_d_t ** };
+%apply Pointer NONNULL { ghmm_dmodel * };
+%apply Pointer NONNULL { ghmm_dmodel ** };
+%apply Pointer NONNULL { ghmm_cmodel * };
+%apply Pointer NONNULL { ghmm_cmodel ** };
+%apply Pointer NONNULL { ghmm_dstate * };
+%apply Pointer NONNULL { ghmm_cstate * };
+%apply Pointer NONNULL { ghmm_dseq * };
+%apply Pointer NONNULL { ghmm_dseq ** };
+%apply Pointer NONNULL { ghmm_cseq * };
+%apply Pointer NONNULL { ghmm_cseq ** };
 %apply Pointer NONNULL { scluster * };
  
 // Constraints on general C data types - no NULL pointers as function arguments
@@ -195,14 +195,14 @@ extern void ighmm_cmatrix_print(FILE *file, double **matrix, int rows, int colum
 		
 /**@name sequences  (double and int) */
 /*@{ (Doc++-Group: sequence) */
-/** @name struct sequence_t
+/** @name struct ghmm_dseq
     Sequence structure for integer sequences. 
     Contains an array of sequences and corresponding
     data like sequence label, sequence weight, etc. Sequences may have different
     length.    
  */
 
-struct sequence_t {
+struct ghmm_dseq {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
   int **seq;
@@ -229,17 +229,17 @@ struct sequence_t {
   /* number of labels for each sequence */  
   int *state_labels_len;        
 };
-typedef struct sequence_t sequence_t;
+typedef struct ghmm_dseq ghmm_dseq;
 
-%pointer_functions(sequence_t **, sequence_setPtr)
+%pointer_functions(ghmm_dseq **, ghmm_dseq_setPtr)
 
-/** @name struct sequence_d_t
+/** @name struct ghmm_cseq
     Sequence structure for double sequences. 
     Contains an array of sequences and corresponding
     data like sequnce label, sequence weight, etc. Sequences may have different
     length.    
  */
-struct sequence_d_t {
+struct ghmm_cseq {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq. */
   double **seq;
   /** array of sequence length */
@@ -257,9 +257,9 @@ struct sequence_d_t {
   /** sum of sequence weights */
   double total_w;  
 };
-typedef struct sequence_d_t sequence_d_t;
+typedef struct ghmm_cseq ghmm_cseq;
 
-%pointer_functions(sequence_d_t **, sequence_d_setPtr)
+%pointer_functions(ghmm_cseq **, ghmm_cseq_setPtr)
 
 /**
    Memory allocation for an integer sequence struct. Allocates arrays of lenght
@@ -268,7 +268,7 @@ typedef struct sequence_d_t sequence_d_t;
    @param seq\_number:  number of sequences
    @return:     pointer of sequence struct
 */
-extern sequence_t *ghmm_dseq_calloc(long seq_number);
+extern ghmm_dseq *ghmm_dseq_calloc(long seq_number);
 
 
 /**
@@ -278,7 +278,7 @@ extern sequence_t *ghmm_dseq_calloc(long seq_number);
    @param seq\_number:  number of sequences
    @return:     pointer of sequence struct
 */
-extern sequence_d_t *ghmm_cseq_calloc(long seq_number);
+extern ghmm_cseq *ghmm_cseq_calloc(long seq_number);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
@@ -286,7 +286,7 @@ extern sequence_d_t *ghmm_cseq_calloc(long seq_number);
    Differs from sequence\_free since memory is not freed here. 
    @param sq sequence structure
   */
-extern void ghmm_dseq_clean(sequence_t *sq);
+extern void ghmm_dseq_clean(ghmm_dseq *sq);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
@@ -294,14 +294,14 @@ extern void ghmm_dseq_clean(sequence_t *sq);
    Differs from sequence\_free since memory is not freed here. 
    @param sq sequence structure
   */
-extern void ghmm_cseq_clean(sequence_d_t *sq);
+extern void ghmm_cseq_clean(ghmm_cseq *sq);
 
 /**
   Prints one array of integer sequences in a file.
   @param file       output file
   @param sequence    array of sequences
   */
-void ghmm_dseq_print(FILE *file, sequence_t *sequence);
+void ghmm_dseq_print(FILE *file, ghmm_dseq *sequence);
 
 
 /**
@@ -330,7 +330,7 @@ void ghmm_cseq_copy(double *target, double *source, int len);
    @return pointer to sequence array
    @param filename    input filename
 */
-sequence_d_t **ghmm_cseq_read(const char *filename, int *sqd_number);
+ghmm_cseq **ghmm_cseq_read(const char *filename, int *sqd_number);
 #endif /* GHMM_OBSOLETE */
 
 /**
@@ -340,7 +340,7 @@ sequence_d_t **ghmm_cseq_read(const char *filename, int *sqd_number);
   @param source  source sequence structure
   @return -1 for error, 0 for success
   */
-int ghmm_dseq_add(sequence_t *target, sequence_t *source);
+int ghmm_dseq_add(ghmm_dseq *target, ghmm_dseq *source);
 
 /**
   Adds all double sequences, sequence lengths etc 
@@ -349,54 +349,54 @@ int ghmm_dseq_add(sequence_t *target, sequence_t *source);
   @param source  source sequence structure
   @return -1 for error, 0 for success
   */
-extern int ghmm_cseq_add(sequence_d_t *target, sequence_d_t *source);
+extern int ghmm_cseq_add(ghmm_cseq *target, ghmm_cseq *source);
 
 /**
   Frees all memory in a given array of integer sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
   */
-int ghmm_dseq_free(sequence_t **sq);
+int ghmm_dseq_free(ghmm_dseq **sq);
 
 /**
   Frees all memory in a given array of double sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
   */
-int ghmm_cseq_free(sequence_d_t **sq);
+int ghmm_cseq_free(ghmm_cseq **sq);
 
-extern void ghmm_cseq_print(FILE *file, sequence_d_t *sqd, int discrete);
+extern void ghmm_cseq_print(FILE *file, ghmm_cseq *sqd, int discrete);
 
 
 /**
-  Extract a single sequence from a larger sequence_t into a new struct.
+  Extract a single sequence from a larger ghmm_dseq into a new struct.
   
-  @return sequence_t struct containing a single sequence
-  @param sq   source sequence_t
+  @return ghmm_dseq struct containing a single sequence
+  @param sq   source ghmm_dseq
   @param index   index of sequence to extract
 */
-extern sequence_t *ghmm_dseq_get_singlesequence(sequence_t *sq, int index);
+extern ghmm_dseq *ghmm_dseq_get_singlesequence(ghmm_dseq *sq, int index);
 
 /**
-  Extract a single sequence_d from a larger sequence_d_t into a new struct.
+  Extract a single ghmm_cseq from a larger ghmm_cseq into a new struct.
   
-  @return sequence_d_t struct containing a single sequence
-  @param sq   source sequence_d_t
+  @return ghmm_cseq struct containing a single sequence
+  @param sq   source ghmm_cseq
   @param index   index of sequence to extract
 */
-extern sequence_d_t *ghmm_cseq_get_singlesequence(sequence_d_t *sq, int index);
+extern ghmm_cseq *ghmm_cseq_get_singlesequence(ghmm_cseq *sq, int index);
 
 /**
-  Free a sequence_t struct which holds as sequence a reference to a sequence in a different
+  Free a ghmm_dseq struct which holds as sequence a reference to a sequence in a different
   sequence_t. The function deallocates everything but the reference.
 */
-extern int ghmm_dseq_subseq_free (sequence_t ** sq);
+extern int ghmm_dseq_subseq_free (ghmm_dseq ** sq);
 
 /**
-  Free a sequence_d_t struct which holds as sequence a reference to a sequence in a different
+  Free a ghmm_cseq struct which holds as sequence a reference to a sequence in a different
   sequence_d_t. The function deallocates everything but the reference.
 */
-extern int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
+extern int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
 
 
 
@@ -407,70 +407,70 @@ extern int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
 %inline%{
 
   /* return a C-pointer to an integer sequence */
-  int *get_onesequence(sequence_t *seqpt, int seqnumber) { 
+  int *get_onesequence(ghmm_dseq *seqpt, int seqnumber) { 
     return (int *) seqpt->seq[seqnumber];
   }
 
 
 #ifdef GHMM_OBSOLETE
-  sequence_t *seq_read(char* filename ){
+  ghmm_dseq *seq_read(char* filename ){
 	  int i;
-	  sequence_t** s;
-	  //s = (sequence_d_t **) malloc(1*sizeof(sequence_d_t*));
+	  ghmm_dseq** s;
+	  //s = (ghmm_cseq **) malloc(1*sizeof(ghmm_cseq*));
 	  s = ghmm_dseq_read(filename, &i);
 	  return s[0];
   }
 #endif /* GHMM_OBSOLETE */
   
-  sequence_t* get_seq_ptr(sequence_t** array, int index){
-	  return (sequence_t*) array[index];
+  ghmm_dseq* get_seq_ptr(ghmm_dseq** array, int index){
+	  return (ghmm_dseq*) array[index];
   }
   
-  /*** create and manipulate an array of pointers of pointers to sequence_d_t structs ***/
-  sequence_d_t **sequence_d_t_array(int size) {
+  /*** create and manipulate an array of pointers of pointers to ghmm_cseq structs ***/
+  ghmm_cseq **sequence_d_t_array(int size) {
      int i;
-	 sequence_d_t **s;
-	 s = (sequence_d_t **) malloc(size*sizeof(sequence_d_t*));
+	 ghmm_cseq **s;
+	 s = (ghmm_cseq **) malloc(size*sizeof(ghmm_cseq*));
 	 for(i =0;i<size;i++){	
 		 s[i] = NULL;
 	 }
 	 return s;	 
   }
 
-  sequence_d_t* get_seq_d_ptr(sequence_d_t** array, int index){
-	  return (sequence_d_t*) array[index];
+  ghmm_cseq* get_seq_d_ptr(ghmm_cseq** array, int index){
+	  return (ghmm_cseq*) array[index];
   }	  
   
-  void set_seq_d_array(sequence_d_t** array, int index,sequence_d_t* seq){
+  void set_seq_d_array(ghmm_cseq** array, int index,ghmm_cseq* seq){
 	array[index] = seq;
   }	
 
 #ifdef GHMM_OBSOLETE
-  void set_sequence_d_label(sequence_d_t* seq, int seq_num, long label){
+  void set_sequence_d_label(ghmm_cseq* seq, int seq_num, long label){
 	  seq->seq_label[seq_num] = label;
   }
   
-  long get_sequence_d_label(sequence_d_t* seq, int seq_num ){
+  long get_sequence_d_label(ghmm_cseq* seq, int seq_num ){
 	  return seq->seq_label[seq_num];
   }	  
    
-  sequence_d_t *seq_d_read(char* filename ){
+  ghmm_cseq *seq_d_read(char* filename ){
 	  int i;
-      sequence_d_t** s;
-	  //s = (sequence_d_t **) malloc(1*sizeof(sequence_d_t*));
+      ghmm_cseq** s;
+	  //s = (ghmm_cseq **) malloc(1*sizeof(ghmm_cseq*));
 	  s = ghmm_cseq_read(filename, &i);
 	  return *s;
   }
 #endif /* GHMM_OBSOLETE */
 
-  void call_ghmm_dseq_print (char* ch, sequence_t* seq){
+  void call_ghmm_dseq_print (char* ch, ghmm_dseq* seq){
     FILE* file_name;
     file_name = fopen (ch, "at");
     ghmm_dseq_print (file_name, seq);
     fclose (file_name);
   }	  
 
-  void call_ghmm_cseq_print (char* ch,sequence_d_t* seq, int disc){
+  void call_ghmm_cseq_print (char* ch,ghmm_cseq* seq, int disc){
     FILE* file_name;
     file_name = fopen (ch, "at");
     ghmm_cseq_print (file_name, seq, disc);
@@ -478,12 +478,12 @@ extern int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
   }	  
 
 
-  void call_ghmm_dseq_free (sequence_t *sq) {ghmm_dseq_free(&sq);}  
-  void call_ghmm_cseq_free (sequence_d_t *sq) {ghmm_cseq_free(&sq);}  
+  void call_ghmm_dseq_free (ghmm_dseq *sq) {ghmm_dseq_free(&sq);}  
+  void call_ghmm_cseq_free (ghmm_cseq *sq) {ghmm_cseq_free(&sq);}  
 
   
-  void call_ghmm_dseq_subseq_free (sequence_t *sq ) {ghmm_dseq_subseq_free (&sq);}  
-  void call_ghmm_cseq_subseq_free (sequence_d_t *sq ) {ghmm_cseq_subseq_free (&sq);}  
+  void call_ghmm_dseq_subseq_free (ghmm_dseq *sq ) {ghmm_dseq_subseq_free (&sq);}  
+  void call_ghmm_cseq_subseq_free (ghmm_cseq *sq ) {ghmm_cseq_subseq_free (&sq);}  
 
    
 %}
@@ -491,12 +491,12 @@ extern int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
 /*=============================================================================================
   =============================== model.c  ============================================== */
 
-/** @name background_distributions
+/** @name ghmm_d_background_distributions
     A container for background distributions to be used in the reestimation. Model
     has an ID (== index) to be used for the arrays background_distributions.order
     and background_distributions.b
 */
-struct background_distributions {
+struct ghmm_d_background_distributions {
   /** Number of distributions */
   int n;
   /** Number of symbols in alphabet */
@@ -506,13 +506,13 @@ struct background_distributions {
   /** The probabilities */ 
   double **b;
 };
-typedef struct background_distributions background_distributions;
+typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
 
 
-/** @name state
+/** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
 */
-struct state {
+struct ghmm_dstate {
   /** Initial probability */ 
   double pi;
   /** Output probability */
@@ -543,26 +543,26 @@ struct state {
 
   int label;  
 };
-typedef struct state state;
+typedef struct ghmm_dstate ghmm_dstate;
 
 
-struct coord {
+struct ghmm_coord_t {
   double x;
   double y;
 };
-typedef struct coord coord;
+typedef struct ghmm_coord_t ghmm_coord_t;
 
 
-/** @name model
+/** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-  struct model {
+  struct ghmm_dmodel {
   /** Number of states */
     int N;
   /** Number of outputs */
     int M;
   /** Vector of the states */
-    state *s;
+    ghmm_dstate *s;
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
@@ -614,10 +614,9 @@ typedef struct coord coord;
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
 
-  /** background_distributions is a pointer to a
-      background_distributions structure, which holds (essentially) an
-      array of background distributions (which are just vectors of floating
-      point numbers like state.b).
+  /** bp is a pointer to a ghmm_d_background_distributions structure,
+      which holds (essentially) an array of background distributions
+      (which are just vectors of floating point numbers like state.b).
 
       For each state the array background_id indicates which of the background
       distributions to use in parameter estimation. A value of kNoBackgroundDistribution
@@ -626,7 +625,7 @@ typedef struct coord coord;
 
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
     int *background_id;
-    background_distributions *bp;
+    ghmm_d_background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
@@ -655,7 +654,7 @@ typedef struct coord coord;
     int S;
     
     /* an arry of positions of states for graphical representation */ 
-    coord *position;
+    ghmm_coord_t *position;
     
     /* state label alphabet (only for labelled HMMs)  */ 
     char** label_alphabet;
@@ -664,14 +663,14 @@ typedef struct coord coord;
     int label_size;
 
   };
-  typedef struct model model;
+  typedef struct ghmm_dmodel ghmm_dmodel;
   
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
-    @param mo:  pointer to a model 
+    @param mo:  address of a pointer to a ghmm_dmodel 
 */
-extern int     ghmm_d_free(model **mo);
+extern int     ghmm_d_free(ghmm_dmodel **mo);
 
 #ifdef GHMM_OBSOLETE
 /**
@@ -680,7 +679,7 @@ extern int     ghmm_d_free(model **mo);
    @return array of pointers to the models
    @param filename:   the ASCII input file
    @param mo_number:  filled with number of models read */
-extern model** ghmm_d_read(char *filename, int *mo_number);
+extern ghmm_dmodel** ghmm_d_read(char *filename, int *mo_number);
 #endif /* GHMM_OBSOLETE */
 
 /**
@@ -688,7 +687,7 @@ extern model** ghmm_d_read(char *filename, int *mo_number);
    @param file: output file
    @param mo:   model
 */
-extern void ghmm_d_print(FILE *file, model *mo); 
+extern void ghmm_d_print(FILE *file, ghmm_dmodel *mo); 
 
 
 #ifdef GHMM_OBSOLETE
@@ -700,7 +699,7 @@ extern void ghmm_d_print(FILE *file, model *mo);
    @return vector of models
    @param s:          scanner
    @param new_models: number of models to produce */
-extern model **ghmm_d_from_sequence_ascii(scanner_t *s, long *mo_number);
+extern ghmm_dmodel **ghmm_d_from_sequence_ascii(scanner_t *s, long *mo_number);
 #endif  /* GHMM_OBSOLETE */
 
 /** 
@@ -709,27 +708,27 @@ extern model **ghmm_d_from_sequence_ascii(scanner_t *s, long *mo_number);
     @return vector of models
     @param s:          scanner
     @param new_models: number of models to produce */
-extern model **ghmm_d_from_sequence(sequence_t *sq, long *mo_number);
+extern ghmm_dmodel **ghmm_d_from_sequence(ghmm_dseq *sq, long *mo_number);
 
 /**
    Copies a given model. Allocates the necessary memory.
    @return copy of the model
    @param mo:  model to copy */
-extern model*  ghmm_d_copy(const model *mo);
+extern ghmm_dmodel*  ghmm_d_copy(const ghmm_dmodel *mo);
 
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
    @return 0 for succes; -1 for error
    @param mo:  model to test */
-extern int     ghmm_d_check(const model* mo);
+extern int     ghmm_d_check(const ghmm_dmodel* mo);
 
 /**
    Tests if number of states and number of outputs in the models match.
    @return 0 for succes; -1 for error
    @param mo:           vector of models
    @param model_number: numbr of models */
-extern int     ghmm_d_check_compatibility(model **mo, int model_number);
+extern int     ghmm_d_check_compatibility(ghmm_dmodel **mo, int model_number);
 
 /**
    Produces a model, which generates the given sequence with probability 1.
@@ -741,7 +740,7 @@ extern int     ghmm_d_check_compatibility(model **mo, int model_number);
    @param seq_len:  length of the sequence
    @param anz_symb: number of symbols in the sequence
 */
-extern model*  ghmm_d_generate_from_sequence(const int *seq, int seq_len, 
+extern ghmm_dmodel*  ghmm_d_generate_from_sequence(const int *seq, int seq_len, 
 				     int anz_symb);
 
 /** 
@@ -759,7 +758,7 @@ extern model*  ghmm_d_generate_from_sequence(const int *seq, int seq_len,
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-extern sequence_t *ghmm_d_generate_sequences(model* mo, int seed, int global_len,
+extern ghmm_dseq *ghmm_d_generate_sequences(ghmm_dmodel* mo, int seed, int global_len,
 				     long seq_number, int Tmax);
 
 /**
@@ -769,7 +768,7 @@ extern sequence_t *ghmm_d_generate_sequences(model* mo, int seed, int global_len
    @param mo model
    @param sq sequences       
 */
-extern double ghmm_d_likelihood(model *mo, sequence_t *sq);
+extern double ghmm_d_likelihood(ghmm_dmodel *mo, ghmm_dseq *sq);
 
 
 /** Computes probabilistic distance of two models
@@ -783,11 +782,11 @@ extern double ghmm_d_likelihood(model *mo, sequence_t *sq);
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-double ghmm_d_prob_distance(model *m0, model *m, int maxT, int symmetric, int verbose);
+double ghmm_d_prob_distance(ghmm_dmodel *m0, ghmm_dmodel *m, int maxT, int symmetric, int verbose);
 
 
 /** 
-   Allocates a new background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_d_background_distributions struct and assigns the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
@@ -796,25 +795,25 @@ double ghmm_d_prob_distance(model *m0, model *m, int maxT, int symmetric, int ve
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-extern int ghmm_d_duration_apply(model* mo, int cur, int times);
+extern int ghmm_d_duration_apply(ghmm_dmodel* mo, int cur, int times);
 
 
 /******** Reestimate Baum-Welch (reestimate.c) *******/
-extern int ghmm_d_baum_welch(model *mo, sequence_t *sq);
-extern int ghmm_d_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+extern int ghmm_d_baum_welch(ghmm_dmodel *mo, ghmm_dseq *sq);
+extern int ghmm_d_baum_welch_nstep(ghmm_dmodel *mo, ghmm_dseq *sq, int max_step, double likelihood_delta);
 
-extern void ghmm_d_update_tied_groups(model *mo);
+extern void ghmm_d_update_tied_groups(ghmm_dmodel *mo);
 
 /**
   Baum Welch training for StateLabelHMMs
 */
-extern int ghmm_dl_baum_welch(model *mo, sequence_t *sq);
+extern int ghmm_dl_baum_welch(ghmm_dmodel *mo, ghmm_dseq *sq);
 
 /**
   Just like reestimate_baum_welch_label, but you can limit
   the maximum number of steps
   */
-extern int ghmm_dl_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, double likelihood_delta);
+extern int ghmm_dl_baum_welch_nstep(ghmm_dmodel *mo, ghmm_dseq *sq, int max_step, double likelihood_delta);
 
 
 /*----------------------------------------------------------------------------*/
@@ -828,7 +827,7 @@ extern int ghmm_dl_baum_welch_nstep(model *mo, sequence_t *sq, int max_step, dou
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-extern int ghmm_dl_gradient_descent(model** mo, sequence_t* sq, double eta, int no_steps);
+extern int ghmm_dl_gradient_descent(ghmm_dmodel** mo, ghmm_dseq* sq, double eta, int no_steps);
 
 
 /********  K-Best decoding (kbest.c) ********/
@@ -840,7 +839,7 @@ extern int ghmm_dl_gradient_descent(model** mo, sequence_t* sq, double eta, int 
    @param o_seq:      output sequence (array of internal representation chars)
    @param seq_len:    length of output sequence
    */
-extern int* ghmm_dl_kbest(model* mo, int* o_seq, int seq_len, int k, double* log_p);
+extern int* ghmm_dl_kbest(ghmm_dmodel* mo, int* o_seq, int seq_len, int k, double* log_p);
 
 /******* Viterbi (viterbi.c)*******/
 /**
@@ -855,7 +854,7 @@ extern int* ghmm_dl_kbest(model* mo, int* o_seq, int seq_len, int k, double* log
   */
 
 // XXX use swig OUTPUT typemap
-extern int * ghmm_d_viterbi(model *mo, int *o, int len, double *log_p);
+extern int * ghmm_d_viterbi(ghmm_dmodel *mo, int *o, int len, double *log_p);
 
 /**
   Calculates the logarithmic probability to a given path through the 
@@ -867,7 +866,7 @@ extern int * ghmm_d_viterbi(model *mo, int *o, int len, double *log_p);
   @param state_seq: path through the states
   @return log P
   */
-extern double ghmm_d_viterbi_logp(model *mo, int *o, int len, int *state_seq);
+extern double ghmm_d_viterbi_logp(ghmm_dmodel *mo, int *o, int len, int *state_seq);
 
 
 /********  Discriminative Training (discrime.c) ********/
@@ -883,7 +882,7 @@ extern double ghmm_d_viterbi_logp(model *mo, int *o, int len, int *state_seq);
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-extern int ghmm_d_discriminative(model** mo, sequence_t** sqs, int noC, int max_steps,
+extern int ghmm_d_discriminative(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC, int max_steps,
 			  int gradient);
 
 /**
@@ -894,7 +893,7 @@ extern int ghmm_d_discriminative(model** mo, sequence_t** sqs, int noC, int max_
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
 */
-extern double ghmm_d_discrim_performance(model** mo, sequence_t** sqs, int noC);
+extern double ghmm_d_discrim_performance(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC);
 
 
 /******* Forward , backward (foba.c) ******/
@@ -910,7 +909,7 @@ extern double ghmm_d_discrim_performance(model** mo, sequence_t** sqs, int noC);
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int ghmm_d_forward (model * mo, const int *O, int length, double **alpha,
+extern int ghmm_d_forward (ghmm_dmodel * mo, const int *O, int length, double **alpha,
                     double *scale, double *log_p);
 
 /** 
@@ -924,7 +923,7 @@ extern int ghmm_d_forward (model * mo, const int *O, int length, double **alpha,
   @param scale:   scale factors
   @return 0 for success, -1 for error
   */
-extern int ghmm_d_backward (model * mo, const int *O, int len, double **beta,
+extern int ghmm_d_backward (ghmm_dmodel * mo, const int *O, int len, double **beta,
                      const double *scale);
 
 /** 
@@ -939,7 +938,7 @@ extern int ghmm_d_backward (model * mo, const int *O, int len, double **beta,
   @param log\_p:  log probability
   @return 0 for success, -1 for error
   */
-extern int ghmm_d_backward_termination (model *mo, const int *O, int len,
+extern int ghmm_d_backward_termination (ghmm_dmodel *mo, const int *O, int len,
 				 double **beta, double *scale, double *log_p);
 
 
@@ -953,7 +952,7 @@ extern int ghmm_d_backward_termination (model *mo, const int *O, int len,
   @param log\_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int ghmm_d_logp(model *mo, const int *O, int len, double *log_p);
+extern int ghmm_d_logp(ghmm_dmodel *mo, const int *O, int len, double *log_p);
 
 /**
     Set transition from state 'i' to state 'j' to value 'prob'.
@@ -964,39 +963,39 @@ extern int ghmm_d_logp(model *mo, const int *O, int len, double *log_p);
     @param prob probabilitys
     
 */
-extern void ghmm_d_transition_set(model *mo, int i, int j, double prob);
+extern void ghmm_d_transition_set(ghmm_dmodel *mo, int i, int j, double prob);
 
 /** Forward-Algorithm (lean version).
   Calculates log( P(O|lambda) ) for a given double sequence and a given model.
-  @param smo      model
+  @param mo       model
   @param O        sequence
   @param length: length of sequence
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-int ghmm_d_forward_lean(model *mo, const int *O, int len, double *log_p); 
+int ghmm_d_forward_lean(ghmm_dmodel *mo, const int *O, int len, double *log_p); 
 
 
 /* Labeled HMMs */
-extern int ghmm_dl_forward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
-extern int ghmm_dl_logp(model *mo, const int *O, const int *label, int len, double *log_p);
-extern int ghmm_dl_backward(model *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+extern int ghmm_dl_forward(ghmm_dmodel *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
+extern int ghmm_dl_logp(ghmm_dmodel *mo, const int *O, const int *label, int len, double *log_p);
+extern int ghmm_dl_backward(ghmm_dmodel *mo, const int *O, const int *label, int len, double **alpha, double *scale, double *log_p);
 
 
 /** 
-   Allocates a new background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_d_background_distributions struct and assigns the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
-   @return    :               new pointer to a background_distributions struct
+   @return    :               new pointer to a ghmm_d_background_distributions struct
    @param n   :               number of distributions
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-background_distributions *ghmm_d_background_alloc(int n,int m, int *orders, double **B);
+ghmm_d_background_distributions *ghmm_d_background_alloc(int n,int m, int *orders, double **B);
 
-extern background_distributions *ghmm_d_background_copy(background_distributions *bg);
-extern int ghmm_d_background_free(background_distributions *bg);
+extern ghmm_d_background_distributions *ghmm_d_background_copy(ghmm_d_background_distributions *bg);
+extern int ghmm_d_background_free(ghmm_d_background_distributions *bg);
 
 
 /**
@@ -1007,7 +1006,7 @@ extern int ghmm_d_background_free(background_distributions *bg);
     @param mo: model to be normalized
 
 */
-extern int ghmm_d_normalize(model* mo);
+extern int ghmm_d_normalize(ghmm_dmodel* mo);
 
 /**
    Add a specific level of noise to the model parameters
@@ -1017,7 +1016,7 @@ extern int ghmm_d_normalize(model* mo);
                         a noise level of 0.0 doesn't change the model
    @param seed :        seed for ramdom number generator
 */
-extern int ghmm_d_add_noise(model* mo, double level, int seed);
+extern int ghmm_d_add_noise(ghmm_dmodel* mo, double level, int seed);
 
 /**
    Apply the background distributions to the emission probabilities of states of
@@ -1028,29 +1027,29 @@ extern int ghmm_d_add_noise(model* mo, double level, int seed);
    @param background_weight:   a parameter controlling the weight given to the
                                background. Note, should be between 0 and 1.
 */
-extern int ghmm_d_background_apply(model *mo, double* background_weight);
+extern int ghmm_d_background_apply(ghmm_dmodel *mo, double* background_weight);
 
 
 
 
 %inline%{
 	
-  /* allocation of an empty model struct */
-  model *new_model() {
-     return (struct model *)(struct model *) calloc(1, sizeof(struct model));    
+  /* allocation of an empty ghmm_dmodel struct */
+  ghmm_dmodel *new_model() {
+     return (struct ghmm_dmodel *) calloc(1, sizeof(struct ghmm_dmodel));    
   }
 
    
-  /* allocation of an array of state structs*/
-  state *arraystate(int size) {
-    return (state *) malloc(size*sizeof(state));
+  /* allocation of an array of ghmm_dstate structs*/
+  ghmm_dstate *arraystate(int size) {
+    return (ghmm_dstate *) calloc(size*sizeof(ghmm_dstate), 1);
   }
   
-  /* extract pointer to a state */
-  state *get_stateptr(state *ary, int index) { return ary + index; }
+  /* extract pointer to a ghmm_dstate */
+  ghmm_dstate *get_stateptr(ghmm_dstate *ary, int index) { return ary + index; }
   
 
-  void call_model_print(char *filename, model *mo) {
+  void call_model_print(char *filename, ghmm_dmodel *mo) {
     FILE *fp=fopen(filename, "a");
     if (fp == NULL) {
       fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
@@ -1061,12 +1060,12 @@ extern int ghmm_d_background_apply(model *mo, double* background_weight);
     }
   }
   
-  void call_ghmm_d_free (model *mo) {ghmm_d_free(&mo);}
+  void call_ghmm_d_free (ghmm_dmodel *mo) {ghmm_d_free(&mo);}
 
-  model *get_model_ptr(model **mo, int index) { return mo[index]; }
+  ghmm_dmodel *get_model_ptr(ghmm_dmodel **mo, int index) {return mo[index];}
     
-  model **cast_model_ptr(model *mo){
-    model** result = &mo;
+  ghmm_dmodel * * cast_model_ptr(ghmm_dmodel *mo){
+    ghmm_dmodel * * result = &mo;
     return result;
   }   
 
@@ -1077,15 +1076,15 @@ extern int ghmm_d_background_apply(model *mo, double* background_weight);
 /*=============================================================================================
   =============================== labeled models (model.c)  ============================================== */
 
-extern sequence_t *ghmm_dl_generate_sequences(model* mo, int seed, int global_len, long seq_number, int Tmax);
+extern ghmm_dseq *ghmm_dl_generate_sequences(ghmm_dmodel* mo, int seed, int global_len, long seq_number, int Tmax);
 
 /*=============================================================================================
   =============================== sdmodel.c  ============================================== */
 
-/** @name state
-    The basic structure, keeps all parameters that belong to a sdstate. 
+/** @name ghmm_dsstate
+    The basic structure, keeps all parameters that belong to a ghmm_dsstate. 
 */
-struct sdstate {
+struct ghmm_dsstate {
   /** Initial probability */ 
   double pi;
   /** Output probability */
@@ -1107,22 +1106,22 @@ struct sdstate {
   /** if fix == 1 --> b stays fix during the training */
   int fix;
 };
-typedef struct sdstate sdstate;
+typedef struct ghmm_dsstate ghmm_dsstate;
 
-/** @name model
+/** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct sdmodel {
+struct ghmm_dsmodel {
   /** Number of states */
   int N;
   /** Number of outputs */   
   int M;   
- /** smodel includes continuous model with one transition matrix 
+ /** ghmm_dsmodel includes discrete model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
   int cos;
   /** Vector of the states */
-  sdstate *s; 
+  ghmm_dsstate *s; 
   /** Prior for the a priori probability for the model.
       A value of -1 indicates that no prior is defined. */
   double prior;
@@ -1141,12 +1140,12 @@ struct sdmodel {
   int* silent; /*AS*/
 
 };
-typedef struct sdmodel sdmodel;
+typedef struct ghmm_dsmodel ghmm_dsmodel;
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
-    @param mo:  pointer to a model */
-int     ghmm_ds_free (sdmodel **mo);
+    @param mo:  pointer to a ghmm_dmodel */
+int     ghmm_ds_free (ghmm_dsmodel **mo);
 
 /** 
     Produces sequences to a given model. All memory that is needed for the 
@@ -1163,7 +1162,7 @@ int     ghmm_ds_free (sdmodel **mo);
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-sequence_t *ghmm_ds_generate_sequences (sdmodel* mo, int seed, int global_len,
+ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel* mo, int seed, int global_len,
 				     long seq_number, int Tmax);
 
 
@@ -1174,26 +1173,26 @@ sequence_t *ghmm_ds_generate_sequences (sdmodel* mo, int seed, int global_len,
    @param mo model
    @param sq sequences       
 */
-extern double ghmm_ds_likelihood (sdmodel *mo, sequence_t *sq);
+extern double ghmm_ds_likelihood (ghmm_dsmodel *mo, ghmm_dseq *sq);
 
 /** 
     Computes log likelihood for all sequence of
     seq_w * log( P ( O|lambda ) ). If a sequence can't be generated by smo
     error cost of seq_w * PRENALTY_LOGP are imposed.
    @return       n: number of evaluated sequences, -1: error
-   @param smo   smodel
+   @param smo    ghmm_cmodel
    @param sqd    sequence struct
    @param log\_p array of evaluated likelihoods
 */
-extern int ghmm_c_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps);
+extern int ghmm_c_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, double *log_ps);
 
-/******* Viterbi for switching discrete model (sdviterbi.c) *******/
-int *ghmm_ds_viterbi (sdmodel *mo, int *o, int len, double *log_p);
+/******* Viterbi for switching discrete ghmm_dmodel (sdviterbi.c) *******/
+int *ghmm_ds_viterbi (ghmm_dsmodel *mo, int *o, int len, double *log_p);
 
 /******* Forward-Algorithm. (sdfoba.c) *******
   Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
   a given double sequence and a given model.
-  @param smo      model
+  @param mo       model
   @param O        sequence
   @param length: length of sequence
   @param alpha:  alpha[t][i]
@@ -1201,21 +1200,21 @@ int *ghmm_ds_viterbi (sdmodel *mo, int *o, int len, double *log_p);
   @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int ghmm_ds_forward (sdmodel *mo, const int *O, int len, double **alpha, 
+extern int ghmm_ds_forward (ghmm_dsmodel *mo, const int *O, int len, double **alpha, 
 		 double *scale, double *log_p); 
 
 
 %inline%{
   
-  void call_sdmodel_free (sdmodel * sdm)	{ghmm_ds_free(&sdm);}
+  void call_sdmodel_free (ghmm_dsmodel * sdm)	{ghmm_ds_free(&sdm);}
 	
-  /* allocation of an array of sdstate structs*/	
-  sdstate *arraysdstate(int size) {
-    return (sdstate *) malloc(size*sizeof(sdstate));
+  /* allocation of an array of ghmm_dsstate structs*/	
+  ghmm_dsstate *arraysdstate(int size) {
+    return (ghmm_dsstate *) malloc(size*sizeof(ghmm_dsstate));
   }	
   
-  /* extract pointer to a sdstate  */
-  sdstate *get_sdstateptr(sdstate *ary, int index) { return ary + index; }
+  /* extract pointer to a ghmm_dsstate  */
+  ghmm_dsstate *get_sdstateptr(ghmm_dsstate *ary, int index) { return ary + index; }
   
 %}
 
@@ -1230,12 +1229,12 @@ extern int ghmm_ds_forward (sdmodel *mo, const int *O, int len, double **alpha,
     normal_left,
     uniform,
     density_number
-  } density_t;
+  } ghmm_density_t;
 
-/** @name sstate
+/** @name ghmm_cstate
     Structure for one state.
 */
-struct sstate {
+struct ghmm_cstate {
   /** Maximun number of output densities per state */
   int M;
   /** initial prob. */ 
@@ -1270,16 +1269,16 @@ struct sstate {
       0: normal density, 1: truncated normal (right side) 
       density, 2: approximated normal density, 3: truncated normal (left side)
       4: uniform distribution */
-  density_t *density;  
+  ghmm_density_t *density;  
   /**  array of flags for fixing mixture components in the reestimation
         fix[i] = 1 means mu and sigma of component i are fixed.  **/
   int *mixture_fix;
 };
-typedef struct sstate sstate;
+typedef struct ghmm_cstate ghmm_cstate;
 
-struct smodel;
+struct ghmm_cmodel;
 
-struct class_change_context{
+struct ghmm_c_class_change_context{
 
     /* Names of class change module/function (for python callback) */
     char* python_module;
@@ -1289,22 +1288,22 @@ struct class_change_context{
     int k;
 
     /** pointer to class function */
-    int (*get_class)(struct smodel*,double*,int,int);
+    int (*get_class)(struct ghmm_cmodel*,double*,int,int);
     
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
     void* user_data;
 };
-typedef struct class_change_context class_change_context;
+typedef struct ghmm_c_class_change_context ghmm_c_class_change_context;
 
-/** @name smodel
+/** @name ghmm_cmodel
     continous HMM    
 */
-struct smodel{
+struct ghmm_cmodel{
   /** Number of states */
   int N;
   /** Maximun number of output densities per state */
   int M;
-  /** smodel includes continuous model with one transition matrix 
+  /** ghmm_cmodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
   int cos;
@@ -1312,40 +1311,40 @@ struct smodel{
       models have equal prob. a priori. */
   double prior;
   /** All states of the model. Transition probs are part of the states. */
-  sstate *s; 
+  ghmm_cstate *s; 
  
-  /* pointer to a class_change_context struct necessary for multiple transition
+  /* pointer to a ghmm_c_class_change_context struct necessary for multiple transition
    classes */
-  class_change_context *class_change;  
+  ghmm_c_class_change_context *class_change;  
   
  };
-typedef struct smodel smodel;
+typedef struct ghmm_cmodel ghmm_cmodel;
 
 
-extern int ghmm_c_class_change_alloc(smodel *smo);
+extern int ghmm_c_class_change_alloc(ghmm_cmodel *smo);
 
-/** Free memory smodel 
+/** Free memory ghmm_cmodel 
     @return 0: success, -1: error
-    @param smo  pointer pointer of smodel */
-extern int     ghmm_c_free(smodel **smo);
+    @param smo  address of a pointer to a ghmm_cmodel */
+extern int     ghmm_c_free(ghmm_cmodel **smo);
 
 #ifdef GHMM_OBSOLETE
-/** Reads an ascii file with specifications for one or more smodels.
+/** Reads an ascii file with specifications for one or more models.
     All parameters in matrix or vector form.
     This is necessary whenever an initial model is needed (e.g. 
     training) or sequences have to be generated from trained models.
-    For each smodel block smodel\_read\_block() is called.
-   @return vector of read smodels
+    For each ghmm_cmodel block smodel\_read\_block() is called.
+   @return vector of read ghmm_cmodels
    @param filename   input ascii file
-   @param smo_number  number of read smodels */
-extern smodel** ghmm_c_read(const char *filename, int *smo_number);
+   @param smo_number  number of read ghmm_cmodels */
+extern ghmm_cmodel** ghmm_c_read(const char *filename, int *smo_number);
 #endif /* GHMM_OBSOLETE */
 
 /**
-   Copies one smodel. Memory alloc is here.
-   @return pointer to smodel copy
-   @param smo   smodel to be copied  */
-extern smodel*  ghmm_c_copy(const smodel *smo);
+   Copies one ghmm_cmodel. Memory alloc is here.
+   @return pointer to ghmm_cmodel copy
+   @param smo   model to be copied  */
+extern ghmm_cmodel*  ghmm_c_copy(const ghmm_cmodel *smo);
 
 /**
    Produces sequences to a given model. All memory that is needed for the 
@@ -1355,22 +1354,22 @@ extern smodel*  ghmm_c_copy(const smodel *smo);
     with no output). If the model has no final state, the sequences will
     have length MAX_SEQ_LEN.
 */
-extern sequence_d_t *ghmm_c_generate_sequences(smodel* smo, int seed, int global_len,
+extern ghmm_cseq *ghmm_c_generate_sequences(ghmm_cmodel* smo, int seed, int global_len,
 					       long seq_number, long label, int Tmax);
 
 /** Computes the density of one symbol (omega) in a given state (sums over
     all output components
     @return calculated density
-    @param smo smodel
+    @param smo   model
     @param state state 
     @param omega given symbol
 */
-extern double ghmm_c_calc_b (smodel * smo, int state, double omega);
+extern double ghmm_c_calc_b (ghmm_cmodel * smo, int ghmm_dstate, double omega);
 
 /** Computes probabilistic distance of two models
     @return the distance
-    @param cm0  smodel used for generating random output
-    @param cm   smodel to compare with
+    @param cm0  ghmm_cmodel used for generating random output
+    @param cm   ghmm_cmodel to compare with
     @param maxT  maximum output length (for HMMs with absorbing states multiple
                  sequences with a toal length of at least maxT will be 
 		 generated)
@@ -1378,7 +1377,7 @@ extern double ghmm_c_calc_b (smodel * smo, int state, double omega);
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-extern double ghmm_c_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
+extern double ghmm_c_prob_distance(ghmm_cmodel *cm0, ghmm_cmodel *cm, int maxT, int symmetric, int verbose);
 
 
 /** Forward-Algorithm.  (sfoba.c)
@@ -1394,7 +1393,7 @@ extern double ghmm_c_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmet
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int ghmm_c_forward(smodel *smo, double *O, int T, double ***b, 
+extern int ghmm_c_forward(ghmm_cmodel *smo, double *O, int T, double ***b, 
 		  double **alpha, double *scale, double *log_p);
 
 /** 
@@ -1409,7 +1408,7 @@ extern int ghmm_c_forward(smodel *smo, double *O, int T, double ***b,
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-extern int ghmm_c_backward(smodel *smo, double *O, int T, double ***b,
+extern int ghmm_c_backward(ghmm_cmodel *smo, double *O, int T, double ***b,
 		   double **beta, const double *scale);
 
 /**
@@ -1423,10 +1422,7 @@ extern int ghmm_c_backward(smodel *smo, double *O, int T, double ***b,
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-extern int ghmm_c_logp(smodel *smo, double *O, int T, double *log_p);
-
-
-
+extern int ghmm_c_logp(ghmm_cmodel *smo, double *O, int T, double *log_p);
 
 
 /** 
@@ -1434,129 +1430,129 @@ extern int ghmm_c_logp(smodel *smo, double *O, int T, double *log_p);
     seq_w * log( P ( O|lambda ) ). If a sequence can't be generated by smo
     error cost of seq_w * PRENALTY_LOGP are imposed.
    @return       n: number of evaluated sequences, -1: error
-   @param smo   smodel
+   @param smo    model
    @param sqd    sequence struct
    @param log\_p  evaluated log likelihood
 */
 
-extern smodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density);
+extern ghmm_cmodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density);
 
-//extern void smodel_set_densityvector(smodel *smo, int i, int density);
+//extern void smodel_set_densityvector(ghmm_cmodel *smo, int i, int density);
 
-extern void smodel_set_pivector(smodel *smo, int i, double piv);
+extern void smodel_set_pivector(ghmm_cmodel *smo, int i, double piv);
 
-extern void smodel_set_fixvector(smodel *smo, int i, double fixv);
+extern void smodel_set_fixvector(ghmm_cmodel *smo, int i, double fixv);
 
-extern void smodel_set_transition(smodel *smo, int i, int j, int cos, double prob);
+extern void smodel_set_transition(ghmm_cmodel *smo, int i, int j, int cos, double prob);
 
-extern double smodel_get_transition(smodel *smo, int i, int j, int cos);
+extern double smodel_get_transition(ghmm_cmodel *smo, int i, int j, int cos);
 
-extern void smodel_set_mean(smodel *smo, int i, double *mu);
+extern void smodel_set_mean(ghmm_cmodel *smo, int i, double *mu);
 
-extern void smodel_set_variance(smodel *smo, int i, double *variance);
+extern void smodel_set_variance(ghmm_cmodel *smo, int i, double *variance);
 
-// extern void call_smodel_print(char *filename, smodel *smo);
+// extern void call_smodel_print(char *filename, ghmm_cmodel *smo);
 
-extern int ghmm_c_likelihood(smodel *smo, sequence_d_t *sqd, double *log_p);
+extern int ghmm_c_likelihood(ghmm_cmodel *smo, ghmm_cseq *sqd, double *log_p);
 
-extern int smodel_sorted_individual_likelihoods(smodel *smo, sequence_d_t *sqd, double *log_ps, int *seq_rank);
+extern int smodel_sorted_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, double *log_ps, int *seq_rank);
 
-/** Viterbi for smodel (sviterbi.c)
+/** Viterbi for ghmm_cmodel (sviterbi.c)
 
    Viterbi algorithm: calculation of the viterbi path (best possible
-   state sequenz for a given sequenz and a given model (smo)). Also 
+   state sequenz for a given sequenz and a given model (smo)). Also
    calculates logp according to this path, the matrices in the local_store
    struct are allocated using stat_matrix_d_alloc.
   @return        Viterbi-path 
-  @param smo    model
+  @param smo     model
   @param o       double-sequence
   @param T       sequence length
   @param log_p   log(p) of the sequence using the vitberbi path
   */
-extern int *ghmm_c_viterbi(smodel *smo, double *o, int T, double *log_p);
+extern int *ghmm_c_viterbi(ghmm_cmodel *smo, double *o, int T, double *log_p);
 
 
-extern int cp_class_change(smodel *smo, double *seq, int k, int t);
-extern void setSwitchingFunction( smodel *smd );		  
+extern int cp_class_change(ghmm_cmodel *smo, double *seq, int k, int t);
+extern void setSwitchingFunction( ghmm_cmodel *smd );
 
-extern int python_class_change(smodel *smo, int *seq, int k, int t);
-extern void setPythonSwitching( smodel *smd, char* python_module, char* python_function);
+extern int python_class_change(ghmm_cmodel *smo, int *seq, int k, int t);
+extern void setPythonSwitching( ghmm_cmodel *smd, char* python_module, char* python_function);
 
 
 /* TEST */
 /* static PyObject *pyCallBack = NULL;*/
 
-extern void setPythonCallback(smodel *smo, PyObject *py_cb);
-extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
+extern void setPythonCallback(ghmm_cmodel *smo, PyObject *py_cb);
+extern int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t);
 
 
 
 %inline %{
-  
-  void set_density(sstate *state, int m, int value){
-    state->density[m] = (density_t)value;
-  }    
-    
-  int blatestbla(smodel* smo,double *seq ,int k, int t){
+ 
+  void set_density(ghmm_cstate *state, int m, int value){
+    state->density[m] = (ghmm_density_t)value;
+  }
+
+  int blatestbla(ghmm_cmodel* smo,double *seq ,int k, int t){
       return smo->class_change->get_class(smo,seq,k,t);
-  }     
-        
-  /* allocation of an empty smodel struct */
-  smodel *new_smodel() {
-     return (struct smodel *)(struct smodel *) calloc(1, sizeof(struct smodel));    
   }
 
-  /** allocation of an empty smodel struct */
-  density_t *arraydensity(int size) {
-     return (density_t *) malloc(size*sizeof(density_t));    
+  /* allocation of an empty ghmm_cmodel struct */
+  ghmm_cmodel *new_smodel() {
+     return (struct ghmm_cmodel *)(struct ghmm_cmodel *) calloc(1, sizeof(ghmm_cmodel));
   }
 
-  int get_density(sstate *state, int m){
+  /** allocation of an empty ghmm_cmodel struct */
+  ghmm_density_t *arraydensity(int size) {
+     return (ghmm_density_t *) malloc(size*sizeof(ghmm_density_t));
+  }
+
+  int get_density(ghmm_cstate *state, int m){
     return (int)(state->density[m]);
   }
-    
-  /* array of sstate structs */
-  sstate *arraysstate(int size) { 
-    return (sstate *) malloc(size*sizeof(sstate));
-  }	
-  
-  sstate *get_sstate_ptr(sstate *states, int k) {
+
+  /* array of ghmm_cstate structs */
+  ghmm_cstate *arraysstate(int size) {
+    return (ghmm_cstate *) malloc(size*sizeof(ghmm_cstate));
+  }
+
+  ghmm_cstate *get_sstate_ptr(ghmm_cstate *states, int k) {
     return &(states[k]);
   }
-		  	
-  void call_smodel_free (smodel *smo) {ghmm_c_free(&smo);}
 
-  void free_smodel_array (smodel **smo) {if (smo) {free(smo);} }
-  		
-  void smodel_print_stdout(smodel *smo) {
+  void call_smodel_free (ghmm_cmodel *smo) {ghmm_c_free(&smo);}
+
+  void free_smodel_array (ghmm_cmodel **smo) {if (smo) {free(smo);} }
+
+  void smodel_print_stdout(ghmm_cmodel *smo) {
     ghmm_c_print(stdout, smo);
   }
- 
-  /* extract pointer to sstate  */	
-  sstate *get_sstate(smodel *smo, int k) {
-    return &(smo->s[k]);
-  }  
-  
-  /* creation and assessor functions for an array of smodels */
-  smodel **smodel_array(int size){
-  	return (smodel**) malloc(size * sizeof(smodel*));
-  } 
 
-  smodel *get_smodel_ptr(smodel **smo, int index) { return smo[index]; }
- 
-  void set_smodel_ptr(smodel **smo_array ,smodel *smo, int index) { smo_array[index] = smo; }
-  
-  smodel **cast_smodel_ptr(smodel *smo){
-     smodel** res = (smodel**) malloc(sizeof(smodel*));
+  /* extract pointer to ghmm_cstate  */
+  ghmm_cstate *get_sstate(ghmm_cmodel *smo, int k) {
+    return &(smo->s[k]);
+  }
+
+  /* creation and assessor functions for an array of ghmm_cmodels */
+  ghmm_cmodel **smodel_array(int size){
+     return (ghmm_cmodel**) malloc(size * sizeof(ghmm_cmodel*));
+  }
+
+  ghmm_cmodel *get_smodel_ptr(ghmm_cmodel **smo, int index) { return smo[index]; }
+
+  void set_smodel_ptr(ghmm_cmodel **smo_array ,ghmm_cmodel *smo, int index) { smo_array[index] = smo; }
+
+  ghmm_cmodel **cast_smodel_ptr(ghmm_cmodel *smo){
+     ghmm_cmodel** res = (ghmm_cmodel**) malloc(sizeof(ghmm_cmodel*));
      res[0] = smo;
      return res;
-  }   
-  
-  // write a smodel to a file
-  void call_smodel_print(char *filename, smodel *smo) {
+  }
+
+  // write a ghmm_cmodel to a file
+  void call_smodel_print(char *filename, ghmm_cmodel *smo) {
   FILE *fp=fopen(filename, "a");
   if (fp == NULL) {
-    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
+    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);
   } else {
     ghmm_c_print(fp, smo);
     fclose(fp);
@@ -1575,10 +1571,10 @@ extern int executePythonCallback(smodel* smo, double *seq, int k, int t);
 struct scluster_t{
   /** 
   Vector of SHMMs pointers */
-  smodel **smo;
+  ghmm_cmodel **smo;
   /** 
-    Vector of sequence_d_t pointers; to store the sequences, that  belong to the models */
-  sequence_d_t **smo_seq;
+    Vector of ghmm_cseq pointers; to store the sequences, that  belong to the models */
+  ghmm_cseq **smo_seq;
   /** 
     Number of models to read in */
   int smo_number;
@@ -1609,13 +1605,13 @@ extern int ghmm_scluster_t_free(scluster_t *scl);
    @param smo_number number of models (needed to determine the interval
    for the random numbers)
 */
-extern int ghmm_scluster_random_labels(sequence_d_t *sqd, int smo_number);
+extern int ghmm_scluster_random_labels(ghmm_cseq *sqd, int smo_number);
 
 /**
    Calculates the logarithmic probability of sequences for a model.
    @param cs sequences and model 
  */
-extern void ghmm_scluster_prob(smosqd_t *cs);
+extern void ghmm_scluster_prob(ghmm_c_baum_welch_context *cs);
 
 /** 
     Determines form an already calculated probability matrix, which model 
@@ -1624,9 +1620,9 @@ extern void ghmm_scluster_prob(smosqd_t *cs);
     @param cl cluster 
     @param seq_id ID of the sequence in question
     @param all_log_p matrix containing the probability of each sequence
-    for each model
+                     for each model
     @param log_p the probability of the sequence in question for the 
-    best fitting model
+                 best fitting model
 */
 extern int ghmm_scluster_best_model(scluster_t *cl, long seq_id, double **all_log_p,
 			double *log_p);
@@ -1637,7 +1633,7 @@ extern int ghmm_scluster_best_model(scluster_t *cl, long seq_id, double **all_lo
    @param cl cluster to update
    @param sqd sequences to update the cluster with
  */
-extern int ghmm_scluster_update(scluster_t *cl, sequence_d_t *sqd);
+extern int ghmm_scluster_update(scluster_t *cl, ghmm_cseq *sqd);
 
 /**
    Prints the input vector for ghmm_scluster_hmm
@@ -1653,7 +1649,7 @@ void ghmm_scluster_print_likelihood(FILE *outfile, scluster_t *cl);
    @param outfile output file
    @param out_filename name of the output file
  */
-int ghmm_scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *argv[]);
+int ghmm_scluster_out(scluster_t *cl, ghmm_cseq *sqd, FILE *outfile, char *argv[]);
 
 /** Calculates the aposteriori prob. $\log(p(\lambda_best | O[seq\_id]))$, 
     where $\lambda_best$ is the model with highest apost. prob.
@@ -1663,7 +1659,7 @@ int ghmm_scluster_out(scluster_t *cl, sequence_d_t *sqd, FILE *outfile, char *ar
     @param seq_id the ID of the sequence
     @param lob_apo the results
 */
-extern int  ghmm_scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int seq_id, double *log_apo);
+extern int  ghmm_scluster_log_aposteriori(scluster_t *cl, ghmm_cseq *sqd, int seq_id, double *log_apo);
 
 /**
    Avoids empty models going out as outputs by assigning them a random 
@@ -1674,7 +1670,7 @@ extern int  ghmm_scluster_log_aposteriori(scluster_t *cl, sequence_d_t *sqd, int
    @param sqd sequences to generate the model from
    @param cl cluster for the models
  */
-extern int ghmm_scluster_avoid_empty_smodel(sequence_d_t *sqd, scluster_t *cl);
+extern int ghmm_scluster_avoid_empty_smodel(ghmm_cseq *sqd, scluster_t *cl);
 
 /**
    Makes a cluster and reestimates the HMMs.
@@ -1698,16 +1694,16 @@ extern int ghmm_scluster_hmm(char *argv[]);
 /*=============================================================================================
   =============================== sreestimate.c  ============================================== */
 
-/** @name struct smosqd_t
+/** @name struct ghmm_c_baum_welch_context
     structure that combines a continuous model (smo) and an integer
     sequence struct. Is used by sreestimate\_baum\_welch for 
     parameter reestimation.
  */
-struct smosqd_t {
+struct ghmm_c_baum_welch_context {
   /** pointer of continuous model*/
-  smodel *smo;
+  ghmm_cmodel *smo;
   /** sequence\_d\__t pointer */
-  sequence_d_t *sqd;
+  ghmm_cseq *sqd;
   /** calculated log likelihood */
   double* logp;
   /** leave reestimation loop if diff. between successive logp values 
@@ -1716,7 +1712,7 @@ struct smosqd_t {
   /** max. no of iterations */
   int max_iter;
 }; 
-typedef struct smosqd_t smosqd_t;
+typedef struct ghmm_c_baum_welch_context ghmm_c_baum_welch_contex;
 
 
 /**
@@ -1726,13 +1722,13 @@ typedef struct smosqd_t smosqd_t;
   @return            0/-1 success/error
   @param cs         initial model and train sequences
   */
-extern int ghmm_c_baum_welch(smosqd_t *cs);
+extern int ghmm_c_baum_welch(ghmm_c_baum_welch_context *cs);
 
 /********** Here comes all the Pair HMM stuff  **********/
 
-/********** Pair HMM psequence (psequence.c) **********/
+/********** Pair HMM ghmm_dpseq (psequence.c) **********/
 
-struct psequence {
+struct ghmm_dpseq {
   /** for each alphabet in model->number_of_alphabets there is one int seq **/
   int ** seq;
   /** number of alphabets (same as in model) **/
@@ -1745,38 +1741,38 @@ struct psequence {
   int length;
 };
 
-typedef struct psequence psequence;
+typedef struct ghmm_dpseq ghmm_dpseq;
 
-extern psequence * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d_seqs);
+extern ghmm_dpseq * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d_seqs);
 
-extern int ghmm_dpseq_free(psequence * seq, int number_of_alphabets, int number_of_d_seqs);
+extern int ghmm_dpseq_free(ghmm_dpseq * seq, int number_of_alphabets, int number_of_d_seqs);
 
-extern void ghmm_dpseq_set_discrete(psequence * seq_pointer, int index, int * sequence);
+extern void ghmm_dpseq_set_discrete(ghmm_dpseq * seq_pointer, int index, int * sequence);
 
-extern void ghmm_dpseq_set_continuous(psequence * seq_pointer, int index, double * sequence);
+extern void ghmm_dpseq_set_continuous(ghmm_dpseq * seq_pointer, int index, double * sequence);
 
-extern int * ghmm_dpseq_get_discrete(psequence * seq_pointer, int index);
+extern int * ghmm_dpseq_get_discrete(ghmm_dpseq * seq_pointer, int index);
 
-extern double * ghmm_dpseq_get_continuous(psequence * seq_pointer, int index);
+extern double * ghmm_dpseq_get_continuous(ghmm_dpseq * seq_pointer, int index);
 
-/********** End of Pair HMM psequence (psequence.c) **********/
+/********** End of Pair HMM ghmm_dpseq (psequence.c) **********/
 
-/********** Pair HMM model (pmodel.c) **********/
-struct pclass_change_context{
+/********** Pair HMM ghmm_dmodel (pmodel.c) **********/
+struct ghmm_dp_class_change_context{
 
     /* Names of class change module/function (for python callback) */
     char* python_module;
     char* python_function;
     
     /** pointer to class function called with seq X, Y and resp indices */
-    int (*get_class)(struct pmodel*, psequence*, psequence*, int, int,void*);
+    int (*get_class)(struct ghmm_dpmodel*, ghmm_dpseq*, ghmm_dpseq*, int, int,void*);
     
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
     void* user_data;
 };
-typedef struct pclass_change_context pclass_change_context;
+typedef struct ghmm_dp_class_change_context ghmm_dp_class_change_context;
 
-struct pstate {
+struct ghmm_dpstate {
   /** Initial probability */ 
   double pi;
   /** Log of the initial probability */
@@ -1797,7 +1793,7 @@ struct pstate {
   /** number of transition classes in this state **/
   int kclasses;
   /** pointer to class function   */
-  pclass_change_context *class_change; 
+  ghmm_dp_class_change_context *class_change; 
   /** int (*get_class)(int*,int); */
   
   /** Transition probability to a successor 
@@ -1822,18 +1818,18 @@ struct pstate {
   /** which emission alphabet **/
   int alphabet;
 };
-typedef struct pstate pstate;
+typedef struct ghmm_dpstate ghmm_dpstate;
 
-/** @name model
+/** @name ghmm_dpmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct pmodel {
+struct ghmm_dpmodel {
   /** Number of states */
   int N;
   /** Number of outputs */   
   int M;   
   /** Vector of the states */
-  pstate *s; 
+  ghmm_dpstate *s; 
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
@@ -1885,10 +1881,9 @@ struct pmodel {
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   
-  /** background_distributions is a pointer to a
-      background_distributions structure, which holds (essentially) an
-      array of background distributions (which are just vectors of floating
-      point numbers like state.b).
+  /** bp is a pointer to a ghmm_d_background_distributions structure,
+      which holds (essentially) an array of background distributions 
+      (which are just vectors of floating point numbers like state.b).
 
       For each state the array background_id indicates which of the background
       distributions to use in parameter estimation. A value of kNoBackgroundDistribution
@@ -1897,7 +1892,7 @@ struct pmodel {
 
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
   int *background_id;
-  background_distributions* bp; 
+  ghmm_d_background_distributions* bp; 
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
@@ -1918,42 +1913,42 @@ struct pmodel {
   int max_offset_y;
 
 };
-typedef struct pmodel pmodel;
+typedef struct ghmm_dpmodel ghmm_dpmodel;
 
-extern void ghmm_dp_state_clean(pstate *my_state);
+extern void ghmm_dp_state_clean(ghmm_dpstate *my_state);
 
-extern pmodel * ghmm_dp_init();
+extern ghmm_dpmodel * ghmm_dp_init();
 
-pclass_change_context * ghmm_dp_init_class_change();
+ghmm_dp_class_change_context * ghmm_dp_init_class_change();
 
-extern int ghmm_dp_free(pmodel *mo);
+extern int ghmm_dp_free(ghmm_dpmodel *mo);
 
-%inline %{ pstate * get_pstateptr(pstate * ary, int index) {return &(ary[index]);} %}
+%inline %{ ghmm_dpstate * get_pstateptr(ghmm_dpstate * ary, int index) {return &(ary[index]);} %}
 
 extern int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
-extern int ghmm_dp_default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
+extern int ghmm_dp_default_transition_class(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
 
-extern void ghmm_dp_set_to_default_transition_class(pclass_change_context * pccc);
+extern void ghmm_dp_set_to_default_transition_class(ghmm_dp_class_change_context * pccc);
 
-/********** End of Pair HMM model (pmodel.c) **********/
+/********** End of Pair HMM ghmm_dmodel (pmodel.c) **********/
 
 /********  Pair HMM viterbi (pviterbi.c) *********/
 
-extern int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p, int * length);
+extern int *ghmm_dp_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p, int * length);
 
-int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y, double *log_p, int *path_length, int start_traceback_with);
+int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p, int *path_length, int start_traceback_with);
 
-double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y, int *state_seq, int state_seq_len);
+double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, int *state_seq, int state_seq_len);
 
 /********  End of Pair HMM viterbi (pviterbi.c) *********/
 
 /********  Pair HMM viterbi linear space (pviterbi_propagate.c) *********/
 
-extern int * ghmm_dp_viterbi_propagate (pmodel *mo, psequence * X, psequence * Y,
+extern int * ghmm_dp_viterbi_propagate (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				 double *log_p, int *path_length, double max_size);
 
-extern int * ghmm_dp_viterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
+extern int * ghmm_dp_viterbi_propagate_segment (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 					 double *log_p, int *path_length, double max_size,
 					 int start_x, int start_y, int stop_x, int stop_y,
 					 int start_state, int stop_state, double start_log_p,
@@ -1976,48 +1971,48 @@ struct threshold_user_data {
 };
 typedef struct threshold_user_data threshold_user_data;
 
-extern int gt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
+extern int gt_sum(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
 
-extern int lt_sum(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
+extern int lt_sum(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
 
-extern int boolean_and(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
+extern int boolean_and(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
 
-extern int boolean_or(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data);
+extern int boolean_or(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
 
-extern void set_to_lt_sum(pclass_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
+extern void set_to_lt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
 
-extern void set_to_gt_sum(pclass_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
+extern void set_to_gt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
 
-void set_to_boolean_and(pclass_change_context * pccc, int seq_index, int offset_x, int offset_y);
+void set_to_boolean_and(ghmm_dp_class_change_context * pccc, int seq_index, int offset_x, int offset_y);
 
-void set_to_boolean_or(pclass_change_context * pccc, int seq_index, int offset_x, int offset_y);
+void set_to_boolean_or(ghmm_dp_class_change_context * pccc, int seq_index, int offset_x, int offset_y);
 
 /********  End of Pair HMM class change (pclasschange.c) *********/
 
 /********** utility functions for Pair HMMs **********/
 %inline%{
   
-  /* allocation of an array of state structs*/
-  pstate *arraypstate(int size) {
-    return (pstate *) malloc(size*sizeof(pstate));
+  /* allocation of an array of ghmm_dpstate structs*/
+  ghmm_dpstate *arraypstate(int size) {
+    return (ghmm_dpstate *) malloc(size*sizeof(ghmm_dpstate));
   }
   
 %}
 
 %inline%{
   
-  /************ create and manipulate an array of pointers to smosqd_t structs **************/
-  smosqd_t *smosqd_t_array(int size) {
-     return (smosqd_t *) malloc(size*sizeof(smosqd_t));
+  /************ create and manipulate an array of pointers to ghmm_c_baum_welch_context structs **************/
+  ghmm_c_baum_welch_context *smosqd_t_array(int size) {
+     return (ghmm_c_baum_welch_context *) malloc(size*sizeof(ghmm_c_baum_welch_context));
   }
 
-  void set_smosq_t_smo(smosqd_t *cs, smodel *smo, int index){
+  void set_smosq_t_smo(ghmm_c_baum_welch_context *cs, ghmm_cmodel *smo, int index){
 	  cs[index].smo = smo;
   }	  
   
-  smosqd_t get_smosqd_t_ptr(smosqd_t *cs, int i){  return cs[i];}
+  ghmm_c_baum_welch_context get_smosqd_t_ptr(ghmm_c_baum_welch_context *cs, int i) {return cs[i];}
   
-  void free_smosqd_t(smosqd_t *s){
+  void free_smosqd_t(ghmm_c_baum_welch_context *s){
 	  if(s) {free(s);}	
   }	  
   		
@@ -2087,37 +2082,37 @@ void set_to_boolean_or(pclass_change_context * pccc, int seq_index, int offset_x
 
   void free_arraychar (char * * ary) {free (ary);}
 
-  /********** Create and access model* arrays  ****************************/
-model * * modelarray_alloc (int size) {
-  model * * retval;
-  retval = calloc (size, sizeof(model*));
+  /********** Create and access ghmm_dmodel arrays  ****************************/
+ghmm_dmodel * * modelarray_alloc (int size) {
+  ghmm_dmodel * * retval;
+  retval = calloc (size, sizeof(ghmm_dmodel*));
   return retval;
 }
 
-void modelarray_free (model ** mos) {
+void modelarray_free (ghmm_dmodel ** mos) {
   free (mos);
 }
 
-void modelarray_setptr (model ** mos, model * mo, int pos) {mos[pos] = mo;}
+void modelarray_setptr (ghmm_dmodel ** mos, ghmm_dmodel * mo, int pos) {mos[pos] = mo;}
 
-model * modelarray_getptr (model ** mos, int pos) {return mos[pos];}
+ghmm_dmodel * modelarray_getptr (ghmm_dmodel ** mos, int pos) {return mos[pos];}
 
 
   /********** Create and access sequence* arrays  *************************/
-sequence_t * * seqarray_alloc (int size) {
-  sequence_t * * retval;
-  retval = calloc (size, sizeof(sequence_t*));
+ghmm_dseq * * seqarray_alloc (int size) {
+  ghmm_dseq * * retval;
+  retval = calloc (size, sizeof(ghmm_dseq*));
   return retval;
 }
 
-void seqarray_free (sequence_t ** seqs) {
+void seqarray_free (ghmm_dseq ** seqs) {
   free (seqs);
 }
 
-void seqarray_setptr (sequence_t ** seqs, sequence_t * seq, int pos)
+void seqarray_setptr (ghmm_dseq ** seqs, ghmm_dseq * seq, int pos)
 {seqs[pos] = seq;}
 
-sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
+ghmm_dseq * seqarray_getptr (ghmm_dseq ** seqs, int pos)
 {return seqs[pos];}
    
 
@@ -2206,11 +2201,11 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 
 /******************* typemap ********************************/
 
-%typemap(memberin) sequence_d_t * {
-  sequence_d_t *src_pt;
-  sequence_d_t *dest_pt;
+%typemap(memberin) ghmm_cseq * {
+  ghmm_cseq *src_pt;
+  ghmm_cseq *dest_pt;
 
-  dest_pt = (sequence_d_t *) malloc(sizeof(sequence_d_t));
+  dest_pt = (ghmm_cseq *) malloc(sizeof(ghmm_cseq));
   src_pt  = $input;
 
   dest_pt.seq        = src_pt.seq;
@@ -2234,7 +2229,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 }
 
 
-%typemap(check) sequence_d_t *{
+%typemap(check) ghmm_cseq *{
     if ($1 == 0) {
       PyErr_SetString(PyExc_TypeError,"NULL Pointer not allowed");
       return NULL;
@@ -2242,7 +2237,7 @@ sequence_t * seqarray_getptr (sequence_t ** seqs, int pos)
 }
 
 
-%typemap(check) sequence_t *{
+%typemap(check) ghmm_dseq *{
     if ($1 == 0) {
       PyErr_SetString(PyExc_TypeError,"NULL Pointer not allowed");
       return NULL;

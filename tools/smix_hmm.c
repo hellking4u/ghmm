@@ -31,8 +31,8 @@ static int smix_hmm_run(int argc, char* argv[]) {
 #define CUR_PROC "smix_hmm_run"
 
   int k, exitcode = -1, smo_number, sqd_fields;
-  sequence_d_t **sqd = NULL;
-  smodel **smo = NULL;
+  ghmm_cseq **sqd = NULL;
+  ghmm_cmodel **smo = NULL;
   double **cp = NULL;
   FILE *outfile = NULL;
 

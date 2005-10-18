@@ -108,7 +108,7 @@ extern "C" {
 */
 
 #if 0
-/* Now a member of smodel */
+/* Now a member of ghmm_cmodel */
 #define COS 1
 #endif
 

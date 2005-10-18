@@ -60,7 +60,7 @@ extern "C" {
   @param sq          training sequences
   */
 
-  int ghmm_d_baum_welch (model * mo, sequence_t * sq);
+  int ghmm_d_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq);
 
 /** Just like reestimate_baum_welch, but you can limit
     the maximum number of steps
@@ -71,7 +71,7 @@ extern "C" {
   @param likelihood_delta minimal improvement in likelihood required for carrying on. Relative value
   to log likelihood
   */
-  int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
+  int ghmm_d_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
                                    double likelihood_delta);
 
 
@@ -88,7 +88,7 @@ extern "C" {
   @param sq          training sequences
   */
 
-  int ghmm_dl_baum_welch (model * mo, sequence_t * sq);
+  int ghmm_dl_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq);
 
 /** Just like reestimate_baum_welch_label, but you can limit
     the maximum number of steps
@@ -99,7 +99,7 @@ extern "C" {
   @param likelihood_delta   minimal improvement in likelihood required for
                             carrying on. Relative value to log likelihood
   */
-  int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
+  int ghmm_dl_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
                                          int max_step,
                                          double likelihood_delta);
 

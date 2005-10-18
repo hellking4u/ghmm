@@ -46,13 +46,13 @@ extern "C" {
    Labels must be from interval [0:max_label] without gaps!!! (not checked)
    Model must not have silent states. (checked in Python wrapper)
    @return array of labels (internal representation)
-   @param mo:         pointer to a model
+   @param mo:         pointer to a ghmm_dmodel
    @param o_seq:      output sequence (array of internal representation chars)
    @param seq_len:    length of output sequence
    @param k:          number of hypotheses to keep for each state
    @param log_p:      variable reference to store the log prob. of the labeling
  */
-  int *ghmm_dl_kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p);
+  int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *log_p);
 
 #ifdef __cplusplus
 }

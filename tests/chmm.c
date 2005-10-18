@@ -27,8 +27,8 @@
 
 int single_state_continuous()
 {
-  sstate single_state;
-  smodel my_model;
+  ghmm_cstate single_state;
+  ghmm_cmodel my_model;
 
   double trans_prob_single_state[]={1.0};
   double trans_prob_single_state_rev[]={1.0};
@@ -39,8 +39,8 @@ int single_state_continuous()
   double mue[]={0.0};
   double u[]={1.0};
   double a[]={0.0};
-  int density[] = {0};
-  sequence_d_t* my_output;
+  ghmm_density_t density[] = {0};
+  ghmm_cseq* my_output;
 
   /* initialise transition array */
   trans_prob_single_state_array=trans_prob_single_state;
@@ -92,11 +92,11 @@ int single_state_continuous()
   /* reproduce the sequence by saving and rereading the model */
   {  
     FILE *my_file;
-    sequence_d_t* new_output;
+    ghmm_cseq* new_output;
     char filename_buffer[]="/tmp/chmm_test.XXXXXX";
     int descriptor;
     int model_counter;
-    smodel **model_array;
+    ghmm_cmodel **model_array;
 
     descriptor=mkstemp(filename_buffer);
     /* write this model */

@@ -89,7 +89,7 @@ typedef struct plocal_propagate_store_t {
   /** traceback matrix of cell pointers **/
   cell **** end_of_first;
   /** for convinience store a pointer to the model **/
-  pmodel * mo;
+  ghmm_dpmodel * mo;
   /** for the debug mode store information of matrix sizes **/
   /** length of sequence X determines size of psi **/
   int len_x;
@@ -106,22 +106,22 @@ typedef struct plocal_propagate_store_t {
 
 /*  --==--  local declarations --==-- */
 
-static plocal_propagate_store_t * pviterbi_propagate_alloc (pmodel *mo, int len_y);
+static plocal_propagate_store_t * pviterbi_propagate_alloc (ghmm_dpmodel *mo, int len_y);
   
 static int pviterbi_propagate_free (plocal_propagate_store_t **v, int n, int max_offset_x,
 				    int max_offset_y, int len_y);
 
-static cell * init_cell(int x, int y, int state, int previous_state, double log_p,
+static cell * init_cell(int x, int y, int ghmm_dstate, int previous_state, double log_p,
 			double log_a);
 
-static void pviterbi_prop_precompute (pmodel *mo, plocal_propagate_store_t *pv);
+static void pviterbi_prop_precompute (ghmm_dpmodel *mo, plocal_propagate_store_t *pv);
 
 
-static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
+static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				       cell * start, cell * stop, double * log_p,
 				       plocal_propagate_store_t * pv);
 
-static int * pviterbi_propagate_recursion(pmodel *mo, psequence * X, psequence * Y,
+static int * pviterbi_propagate_recursion(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				   double *log_p, int *path_length, cell *start,
 				   cell *stop, double max_size,
 				   plocal_propagate_store_t * pv);
@@ -164,7 +164,7 @@ void ghmm_dp_print_cell(cell * c) {
 }
 
 /*============================================================================*/
-static plocal_propagate_store_t * pviterbi_propagate_alloc (pmodel *mo, int len_y) {
+static plocal_propagate_store_t * pviterbi_propagate_alloc (ghmm_dpmodel *mo, int len_y) {
 #define CUR_PROC "pviterbi_propagate_alloc"
   plocal_propagate_store_t* v = NULL;
   int i, j, k;
@@ -212,7 +212,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*============================================================================*/
-static void pviterbi_prop_precompute (pmodel *mo, plocal_propagate_store_t *pv)
+static void pviterbi_prop_precompute (ghmm_dpmodel *mo, plocal_propagate_store_t *pv)
 {
 #define CUR_PROC "pviterbi_precompute"
   int i, j, emission, t_class;
@@ -284,7 +284,7 @@ static int pviterbi_propagate_free (plocal_propagate_store_t **v, int n,
 
 /*============================================================================*/
 static double sget_log_in_a_prop(plocal_propagate_store_t * pv, int i, int j,
-				 psequence * X, psequence * Y, int index_x,
+				 ghmm_dpseq * X, ghmm_dpseq * Y, int index_x,
 				 int index_y) {
   /* determine the transition class for the source state */
   int id = pv->mo->s[i].in_id[j];
@@ -378,8 +378,8 @@ static void push_back_phi_prop (plocal_propagate_store_t * pv, int length_y){
 }
 
 /*============================================================================*/
-static void init_start_stop (cell * start, cell *stop, psequence * X,
-			     psequence * Y, int * start_x, int * start_y,
+static void init_start_stop (cell * start, cell *stop, ghmm_dpseq * X,
+			     ghmm_dpseq * Y, int * start_x, int * start_y,
 			     int * stop_x, int * stop_y) {
   if (start != NULL) {
     *start_x = start->x;
@@ -400,7 +400,7 @@ static void init_start_stop (cell * start, cell *stop, psequence * X,
 }
 
 /*============================================================================*/
-int * ghmm_dp_viterbi_propagate (pmodel *mo, psequence * X, psequence * Y,
+int * ghmm_dp_viterbi_propagate (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			  double *log_p, int *path_length, double max_size) {
 #define CUR_PROC "ghmm_dp_viterbi_propagate"
   /* Divide and conquer algorithm to reduce the memory requirement */
@@ -437,8 +437,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*============================================================================*/
-static int * pviterbi_propagate_recursion (pmodel *mo, psequence * X,
-					   psequence * Y, double *log_p,
+static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
+					   ghmm_dpseq * Y, double *log_p,
 					   int *path_length, cell *start,
 					   cell *stop, double max_size,
 					   plocal_propagate_store_t * pv) {
@@ -479,8 +479,8 @@ static int * pviterbi_propagate_recursion (pmodel *mo, psequence * X,
      for the normal ghmm_dp_viterbi algorithm */
   if ((double)(stop_x - start_x) * (double)(stop_y - start_y) < max_size) {
     /* to use the unchanged ghmm_dp_viterbi algorithm take slices of the sequences */
-    psequence * tractable_X = ghmm_dpseq_slice(X, start_x, stop_x);
-    psequence * tractable_Y = ghmm_dpseq_slice(Y, start_y, stop_y);
+    ghmm_dpseq * tractable_X = ghmm_dpseq_slice(X, start_x, stop_x);
+    ghmm_dpseq * tractable_Y = ghmm_dpseq_slice(Y, start_y, stop_y);
     /* if this is not the very first path segment starting at zero:
        temporarily change the initial probabability to go into state k+1 */
 #ifdef DEBUG
@@ -633,14 +633,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-static void init_phi_prop (plocal_propagate_store_t * pv, psequence * X,
-			   psequence * Y, cell * start, cell * stop) {
+static void init_phi_prop (plocal_propagate_store_t * pv, ghmm_dpseq * X,
+			   ghmm_dpseq * Y, cell * start, cell * stop) {
   int u, v, j, i, off_x, y;
   double value, max_value, previous_prob, log_b_i, log_in_a_ij ;
   int start_x, start_y, stop_x, stop_y, middle_x;
-  pmodel * mo = pv->mo;
-  double (*log_in_a)(plocal_propagate_store_t*, int, int, psequence*, 
-		     psequence*, int, int);
+  ghmm_dpmodel * mo = pv->mo;
+  double (*log_in_a)(plocal_propagate_store_t*, int, int, ghmm_dpseq*, 
+		     ghmm_dpseq*, int, int);
   log_in_a = &sget_log_in_a_prop;
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
   pv->start_x = start_x;
@@ -840,7 +840,7 @@ static void init_phi_prop (plocal_propagate_store_t * pv, psequence * X,
 }
 
 /*============================================================================*/
-static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
+static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				       cell * start, cell * stop,
 				       double * log_p,
 				       plocal_propagate_store_t * pv) {
@@ -853,8 +853,8 @@ static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
   double log_b_i, log_in_a_ij;
   cell * middle = NULL;
   int middle_x;
-  double (*log_in_a)(plocal_propagate_store_t*, int, int, psequence*, 
-		     psequence*, int, int);
+  double (*log_in_a)(plocal_propagate_store_t*, int, int, ghmm_dpseq*, 
+		     ghmm_dpseq*, int, int);
   log_in_a = &sget_log_in_a_prop;
   init_start_stop(start, stop, X, Y, &start_x, &start_y, &stop_x, &stop_y);
   middle_x = start_x + (stop_x - start_x) / 2;
@@ -1024,7 +1024,7 @@ static cell * pviterbi_propagate_step (pmodel *mo, psequence * X, psequence * Y,
 
 
 /*===========================================================================*/
-int * ghmm_dp_viterbi_propagate_segment (pmodel *mo, psequence * X, psequence * Y,
+int * ghmm_dp_viterbi_propagate_segment (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				  double *log_p, int *path_length,
 				  double max_size, int start_x, int start_y,
 				  int stop_x, int stop_y, int start_state,

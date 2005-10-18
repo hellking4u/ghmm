@@ -40,4 +40,4 @@
 #include <ghmm/sdmodel.h>
 
 int cp_class_change(int *seq, int len);
-void setSwitchingFunction( sdmodel *smd );
+void setSwitchingFunction( ghmm_dsmodel *smd );

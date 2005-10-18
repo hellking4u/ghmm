@@ -49,7 +49,7 @@
 #include "foba.h"
 #include "ghmm_internals.h"
 
-int ghmm_d_forward_init (model * mo, double *alpha_1, int symb, double *scale)
+int ghmm_d_forward_init (ghmm_dmodel * mo, double *alpha_1, int symb, double *scale)
 {
 # define CUR_PROC "ghmm_d_forward_init"
   int res = -1;
@@ -110,7 +110,7 @@ int ghmm_d_forward_init (model * mo, double *alpha_1, int symb, double *scale)
 /*----------------------------------------------------------------------------*/
 
 /** modified by Casillux to improve performance */
-double ghmm_d_forward_step (state * s, double *alpha_t, const double b_symb)
+double ghmm_d_forward_step (ghmm_dstate * s, double *alpha_t, const double b_symb)
 {
   int i, id;
   double value = 0.0;
@@ -132,7 +132,7 @@ double ghmm_d_forward_step (state * s, double *alpha_t, const double b_symb)
 
 /*============================================================================*/
 
-int ghmm_d_forward (model * mo, const int *O, int len, double **alpha,
+int ghmm_d_forward (ghmm_dmodel * mo, const int *O, int len, double **alpha,
                   double *scale, double *log_p)
 {
 # define CUR_PROC "ghmm_d_forward"
@@ -272,7 +272,7 @@ int ghmm_d_forward_descale (double **alpha, double *scale, int t, int n,
 
 
 /***************************** Backward Algorithm ******************************/
-int ghmm_d_backward (model * mo, const int *O, int len, double **beta,
+int ghmm_d_backward (ghmm_dmodel * mo, const int *O, int len, double **beta,
                    const double *scale)
 {
 # define CUR_PROC "ghmm_d_backward"
@@ -396,7 +396,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_d_backward_termination (model *mo, const int *O, int length,
+int ghmm_d_backward_termination (ghmm_dmodel *mo, const int *O, int length,
 			       double **beta, double *scale, double *log_p) {
 #define CUR_PROC "ghmm_d_backward_termination"
   int i, id, j, j_id, k, res=-1;
@@ -471,7 +471,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_d_logp (model * mo, const int *O, int len, double *log_p)
+int ghmm_d_logp (ghmm_dmodel * mo, const int *O, int len, double *log_p)
 {
 # define CUR_PROC "ghmm_d_logp"
   int res = -1;
@@ -500,7 +500,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 /*====================== Lean forward algorithm  ====================*/
-int ghmm_d_forward_lean (model * mo, const int *O, int len, double *log_p)
+int ghmm_d_forward_lean (ghmm_dmodel * mo, const int *O, int len, double *log_p)
 {
 # define CUR_PROC "ghmm_d_forward_lean"
   int res = -1;
@@ -550,7 +550,7 @@ int ghmm_d_forward_lean (model * mo, const int *O, int len, double *log_p)
             alpha_curr_col[i] = 0;
         }
       }
-      /* iterate over silent state  */
+      /* iterate over silent states  */
       if (mo->model_type & kSilentStates) {
         for (i = 0; i < mo->topo_order_length; i++) {
           id = mo->topo_order[i];
@@ -616,7 +616,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*======================= labeled HMMs =======================================*/
-static int foba_label_initforward (model * mo, double *alpha_1, int symb,
+static int foba_label_initforward (ghmm_dmodel * mo, double *alpha_1, int symb,
                                    int label, double *scale)
 {
 # define CUR_PROC "foba_label_initforward"
@@ -658,7 +658,7 @@ static int foba_label_initforward (model * mo, double *alpha_1, int symb,
 
 /*============================================================================*/
 
-int ghmm_dl_forward (model * mo, const int *O, const int *label, int len,
+int ghmm_dl_forward (ghmm_dmodel * mo, const int *O, const int *label, int len,
                         double **alpha, double *scale, double *log_p)
 {
 # define CUR_PROC "ghmm_dl_forward"
@@ -759,7 +759,7 @@ int ghmm_dl_forward (model * mo, const int *O, const int *label, int len,
 
 /*============================================================================*/
 
-int ghmm_dl_logp (model * mo, const int *O, const int *label, int len,
+int ghmm_dl_logp (ghmm_dmodel * mo, const int *O, const int *label, int len,
                      double *log_p)
 {
 # define CUR_PROC "ghmm_dl_logp"
@@ -788,7 +788,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_dl_backward (model * mo, const int *O, const int *label, int len,
+int ghmm_dl_backward (ghmm_dmodel * mo, const int *O, const int *label, int len,
                          double **beta, double *scale, double *log_p)
 {
 # define CUR_PROC "ghmm_dl_backward"
@@ -874,7 +874,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*===========  Lean forward algorithm for labeled states  ====================*/
-int ghmm_dl_forward_lean (model * mo, const int *O, const int *label,
+int ghmm_dl_forward_lean (ghmm_dmodel * mo, const int *O, const int *label,
                              int len, double *log_p)
 {
 # define CUR_PROC "ghmm_dl_forward_lean"
@@ -931,7 +931,7 @@ int ghmm_dl_forward_lean (model * mo, const int *O, const int *label,
           alpha_curr_col[i] = 0;
       }
     }
-    /* iterate over silent state  */
+    /* iterate over silent states  */
     if (mo->model_type & kSilentStates) {
       for (i = 0; i < mo->topo_order_length; i++) {
         id = mo->topo_order[i];

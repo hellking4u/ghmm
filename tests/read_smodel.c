@@ -7,7 +7,7 @@
 
 int main()
 {
-  smodel **model_array;
+  ghmm_cmodel **model_array;
   int model_counter;
   char *inFileName = "sample.smo";
 

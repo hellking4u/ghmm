@@ -69,7 +69,7 @@ extern "C" {
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_d_forward (model * mo, const int *O, int length, double **alpha,
+  int ghmm_d_forward (ghmm_dmodel * mo, const int *O, int length, double **alpha,
                     double *scale, double *log_p);
 
 /** 
@@ -83,14 +83,14 @@ extern "C" {
   @param scale:   scale factors
   @return 0 for success, -1 for error
   */
-  int ghmm_d_backward (model * mo, const int *O, int len, double **beta,
+  int ghmm_d_backward (ghmm_dmodel * mo, const int *O, int len, double **beta,
                      const double *scale);
 
 /** 
   Termination of Backward-Algorithm. 
   Calculates Backward-probability given an integer sequence, a model and
   the beta matrix. Scale factors given as parameter (come from foba\_forward).
-  @param mo:      pointer to the model
+  @param mo:      pointer to a ghmm_dmodel
   @param O:       sequence
   @param len:     length of sequence
   @param beta:    beta matrix
@@ -98,7 +98,7 @@ extern "C" {
   @param log\_p:  log probability
   @return 0 for success, -1 for error
   */
-  int ghmm_d_backward_termination (model *mo, const int *O, int len,
+  int ghmm_d_backward_termination (ghmm_dmodel *mo, const int *O, int len,
 				 double **beta, double *scale, double *log_p);
 
 /**
@@ -106,42 +106,42 @@ extern "C" {
   Done by calling sfoba\_forward. Use this function if only the
   log likelihood and not alpha[t][i] is needed, alpha is allocated with
   ighmm_cmatrix_stat_alloc
-  @param  mo      model
+  @param mo        model
   @param O        sequence
   @param len       length of sequence
   @param log\_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_d_logp (model * mo, const int *O, int len, double *log_p);
+  int ghmm_d_logp (ghmm_dmodel * mo, const int *O, int len, double *log_p);
 
 
 /** Forward-Algorithm (lean version).
   Calculates log( P(O|lambda) ) for a given double sequence and a given model.
-  @param smo      model
+  @param mo       model
   @param O        sequence
   @param length: length of sequence
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_d_forward_lean (model * mo, const int *O, int len, double *log_p);
+  int ghmm_d_forward_lean (ghmm_dmodel * mo, const int *O, int len, double *log_p);
 
 
 /* Labeled HMMs */
 
-  int ghmm_dl_forward (model * mo, const int *O, const int *label, int len,
+  int ghmm_dl_forward (ghmm_dmodel * mo, const int *O, const int *label, int len,
                           double **alpha, double *scale, double *log_p);
-  int ghmm_dl_logp (model * mo, const int *O, const int *label, int len,
+  int ghmm_dl_logp (ghmm_dmodel * mo, const int *O, const int *label, int len,
                        double *log_p);
 
 
-  int ghmm_dl_backward (model * mo, const int *O, const int *label,
+  int ghmm_dl_backward (ghmm_dmodel * mo, const int *O, const int *label,
                            int len, double **beta, double *scale,
                            double *log_p);
 
 
 
-  int ghmm_d_forward_init (model * mo, double *alpha_1, int symb, double *scale);
-  double ghmm_d_forward_step (state * s, double *alpha_t, const double b_symb);
+  int ghmm_d_forward_init (ghmm_dmodel * mo, double *alpha_1, int symb, double *scale);
+  double ghmm_d_forward_step (ghmm_dstate * s, double *alpha_t, const double b_symb);
 
 /*@} (Doc++-Group: foba) */
 

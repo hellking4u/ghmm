@@ -54,16 +54,16 @@ extern "C" {
 	77, no 2, 1989, pp 257--285    
 */
 
-/** @name struct smosqd_t
+/** @name struct ghmm_c_baum_welch_context
     structure that combines a continuous model (smo) and an integer
     sequence struct. Is used by sreestimate\_baum\_welch for 
     parameter reestimation.
  */
-  struct smosqd_t {
+  struct ghmm_c_baum_welch_context {
   /** pointer of continuous model*/
-    smodel *smo;
-  /** sequence\_d\__t pointer */
-    sequence_d_t *sqd;
+    ghmm_cmodel *smo;
+  /** sequence\_d\_t pointer */
+    ghmm_cseq *sqd;
   /** calculated log likelihood */
     double *logp;
   /** leave reestimation loop if diff. between successive logp values 
@@ -72,7 +72,7 @@ extern "C" {
   /** max. no of iterations */
     int max_iter;
   };
-  typedef struct smosqd_t smosqd_t;
+  typedef struct ghmm_c_baum_welch_context ghmm_c_baum_welch_context;
 
 
 /**
@@ -83,7 +83,7 @@ extern "C" {
   @return            0/-1 success/error
   @param cs         initial model and train sequences
   */
-  int ghmm_c_baum_welch (smosqd_t * cs);
+  int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs);
 
 
 #ifdef __cplusplus

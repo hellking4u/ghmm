@@ -43,10 +43,10 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-/** @name state
+/** @name ghmm_dsstate
     The basic structure, keeps all parameters that belong to a state. 
 */
-  struct sdstate {
+  struct ghmm_dsstate {
   /** Initial probability */
     double pi;
   /** Output probability */
@@ -80,22 +80,22 @@ extern "C" {
        WS: if 1 then counts me, 0 don't count me */
     int countme;
   };
-  typedef struct sdstate sdstate;
+  typedef struct ghmm_dsstate ghmm_dsstate;
 
-/** @name model
+/** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-  struct sdmodel {
+  struct ghmm_dsmodel {
   /** Number of states */
     int N;
   /** Number of outputs */
     int M;
- /** smodel includes continuous model with one transition matrix 
+ /** ghmm_dsmodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
     int cos;
   /** Vector of the states */
-    sdstate *s;
+    ghmm_dsstate *s;
   /** Prior for the a priori probability for the model.
       A value of -1 indicates that no prior is defined. */
     double prior;
@@ -121,7 +121,7 @@ extern "C" {
       /*AS*/ int topo_order_length;
       /*WR*/ int *topo_order;
     /*WR*/};
-  typedef struct sdmodel sdmodel;
+  typedef struct ghmm_dsmodel ghmm_dsmodel;
 
 
 #ifdef __cplusplus
@@ -140,10 +140,10 @@ extern "C" {
 
   /** Frees the memory of a model.
       @return 0 for succes; -1 for error
-      @param mo:  pointer to a model */
-  int ghmm_ds_free (sdmodel ** mo);
+      @param mo:  pointer to a ghmm_dsmodel */
+  int ghmm_ds_free (ghmm_dsmodel ** mo);
 
-  int ghmm_ds_init_silent_states (sdmodel * mo);
+  int ghmm_ds_init_silent_states (ghmm_dsmodel * mo);
 
   /** 
       Produces sequences to a given model. All memory that is needed for the 
@@ -159,32 +159,32 @@ extern "C" {
       generator is not initialized.
       @param global_len:  length of sequences (=0: automatically via final states)
       @param seq_number:  number of sequences
-	  @param T_max:  maximal number of consecutive silent states in model (used to
+      @param T_max:  maximal number of consecutive silent states in model (used to
 	  identify silent circles).
   */
-  sequence_t *ghmm_ds_generate_sequences (sdmodel * mo, int seed,
+  ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
                                           int global_len, long seq_number,
                                           int Tmax);
 
 
   /**
      Copies a given model. Allocates the necessary memory.
-     @return copy of the model
-     @param mo:  model to copy */
-  sdmodel *ghmm_ds_copy (const sdmodel * mo);
+     @returns a copy of the model
+     @param mo:  dmodel to copy */
+  ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo);
 
   /** Utility for converting between single discrete model and switching model */
-  model *ghmm_ds_to_dmodel (const sdmodel * mo, int kclass);
+  ghmm_dmodel *ghmm_ds_to_dmodel (const ghmm_dsmodel * mo, int kclass);
 
   /** */
-  void ghmm_ds_from_dmodel (const model * mo, sdmodel * smo, int klass);
+  void ghmm_ds_from_dmodel (const ghmm_dmodel * mo, ghmm_dsmodel * smo, int klass);
 
   /**
      Writes a model in matrix format.
      @param file: output file
      @param mo:   model
   */
-  void sdmodel_print (FILE * file, sdmodel * mo);
+  void sdmodel_print (FILE * file, ghmm_dsmodel * mo);
 
 
   /**
@@ -195,7 +195,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void ghmm_ds_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
+  void ghmm_ds_Ak_print (FILE * file, ghmm_dsmodel * mo, int k, char *tab,
                          char *separator, char *ending);
   /**
      Writes output matrix of a model.
@@ -205,7 +205,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void ghmm_ds_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+  void ghmm_ds_B_print (FILE * file, ghmm_dsmodel * mo, char *tab, char *separator,
                         char *ending);
 
   /**
@@ -216,7 +216,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void ghmm_ds_Pi_print (FILE * file, sdmodel * mo, char *tab,
+  void ghmm_ds_Pi_print (FILE * file, ghmm_dsmodel * mo, char *tab,
                          char *separator, char *ending);
 
   /*============================================================================*/
@@ -225,14 +225,14 @@ extern "C" {
    *============================================================================
    **/
 
-  void ghmm_ds_topo_order (sdmodel * mo);
+  void ghmm_ds_topo_order (ghmm_dsmodel * mo);
 
-  int *ghmm_ds_viterbi (sdmodel * mo, int *o, int len, double *log_p);
+  int *ghmm_ds_viterbi (ghmm_dsmodel * mo, int *o, int len, double *log_p);
 
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
       a given double sequence and a given model.
-      @param smo      model
+      @param mo:      model
       @param O        sequence
       @param length: length of sequence
       @param alpha:  alpha[t][i]
@@ -240,7 +240,7 @@ extern "C" {
       @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
       @return 0 for success, -1 for error
   */
-  int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
+  int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                       double *scale, double *log_p);
 
 
@@ -264,7 +264,7 @@ extern "C" {
    @param mo model
    @param sq sequences       
 */
-  double ghmm_ds_likelihood (sdmodel * mo, sequence_t * sq);
+  double ghmm_ds_likelihood (ghmm_dsmodel * mo, ghmm_dseq * sq);
 
 
 /** 
@@ -273,7 +273,7 @@ extern "C" {
     @param file: output file
     @param mo:   model
 */
-  void ghmm_ds_states_print (FILE * file, sdmodel * mo);
+  void ghmm_ds_states_print (FILE * file, ghmm_dsmodel * mo);
 
 
 #ifdef __cplusplus

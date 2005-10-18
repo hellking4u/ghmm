@@ -21,10 +21,10 @@ int main()
 #ifdef GHMM_OBSOLETE
     int test_result=0;
     const char* double_sequences_file="data/test100.sqd";
-    sequence_d_t **sqd = NULL;
+    ghmm_cseq **sqd = NULL;
     int sqd_number;
     const char* int_sequences_file="data/sequences_old_format.sq";    
-    sequence_t **data = NULL;
+    ghmm_dseq **data = NULL;
     int data_number;
 
     /* read double sequences (this works fine)*/

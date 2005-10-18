@@ -55,33 +55,33 @@ extern "C" {
 
 /**
  */
-  int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
-                           smodel ** smo, int smo_number);
+  int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
+                           ghmm_cmodel ** smo, int smo_number);
 
 /**
  */
-  double smixturehmm_like (smodel ** smo, int smo_number,
-                           sequence_d_t * sqd_test, long *errors);
+  double smixturehmm_like (ghmm_cmodel ** smo, int smo_number,
+                           ghmm_cseq * sqd_test, long *errors);
 
 /**
  */
-  int ghmm_smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
+  int ghmm_smixturehmm_init (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
                         int smo_number, int mode);
 
 /**
  */
-  int smixturehmm_calc_priors (double **cp, sequence_d_t * sqd, smodel ** smo,
+  int smixturehmm_calc_priors (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
                                int smo_number);
 
 /**
  */
-  int ghmm_smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
+  int ghmm_smixturehmm_calc_cp (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
                            int smo_number, double *total_train_w);
 
 /**
 */
-  void ghmm_smixture_calc_logp (double **logp, int **error, sequence_d_t * sqd,
-                           smodel ** smo, int smo_number);
+  void ghmm_smixture_calc_logp (double **logp, int **error, ghmm_cseq * sqd,
+                           ghmm_cmodel ** smo, int smo_number);
 
 /**
  */
@@ -90,8 +90,8 @@ extern "C" {
 
 /**
  */
-  double *ghmm_smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
-                                smodel ** smo, int smo_number);
+  double *ghmm_smixturehmm_avg_like (double **cp, ghmm_cseq * sqd,
+                                ghmm_cmodel ** smo, int smo_number);
 #ifdef __cplusplus
 }
 #endif

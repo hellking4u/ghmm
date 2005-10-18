@@ -59,11 +59,11 @@ typedef struct local_store_t {
   double **b_denom;
 } local_store_t;
 
-static local_store_t *reestimate_alloc (const model * mo);
+static local_store_t *reestimate_alloc (const ghmm_dmodel * mo);
 static int reestimate_free (local_store_t ** r, int N);
-static int reestimate_init (local_store_t * r, const model * mo);
-static int reestimate_setlambda (local_store_t * r, model * mo);
-static int reestimate_one_step (model * mo, local_store_t * r,
+static int reestimate_init (local_store_t * r, const ghmm_dmodel * mo);
+static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo);
+static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r,
                                 int seq_number, int *seq_length, int **O,
                                 double *log_p, double *seq_w);
 
@@ -81,7 +81,7 @@ static double nologSum(double* vec, int len) {
 
 
 /*----------------------------------------------------------------------------*/
-static local_store_t *reestimate_alloc (const model * mo)
+static local_store_t *reestimate_alloc (const ghmm_dmodel * mo)
 {
 # define CUR_PROC "reestimate_alloc"
   int i;
@@ -145,7 +145,7 @@ static int reestimate_free (local_store_t ** r, int N)
 }                               /* reestimate_free */
 
 /*----------------------------------------------------------------------------*/
-static int reestimate_init (local_store_t * r, const model * mo)
+static int reestimate_init (local_store_t * r, const ghmm_dmodel * mo)
 {
 # define CUR_PROC "reestimate_init"
 
@@ -205,7 +205,7 @@ int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale, 
 }                               /* ighmm_reestimate_free_matvek */
 
 /*----------------------------------------------------------------------------*/
-void ghmm_d_update_tied_groups (model * mo)
+void ghmm_d_update_tied_groups (ghmm_dmodel * mo)
 {
 #define CUR_PROC "ghmm_d_update_tied_groups"
   int i, j, k;
@@ -295,7 +295,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }           /* ghmm_d_update_tied_groups */
 
 /*----------------------------------------------------------------------------*/
-static int reestimate_setlambda (local_store_t * r, model * mo)
+static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
 {
 # define CUR_PROC "reestimate_setlambda"
   int res = -1;
@@ -368,7 +368,7 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
       continue;
 
     /* B */
-    size = model_ipow (mo, mo->M, mo->s[i].order);
+    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
     /* If all in_a's are zero, the state can't be reached.
        Set all b's to -1.0 */
     if (factor == 0.0) {
@@ -394,8 +394,8 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
 	col = hist * mo->M;
 	for (m = col; m < col + mo->M; m++) {
 	  if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -EPS_PREC) {
-	    str = mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
-			   r->b_num[i][m], r->b_denom[i][hist]);
+	    str = ighmm_mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
+				 r->b_num[i][m], r->b_denom[i][hist]);
 	    mes_prot (str);
 	    m_free (str);
 	  }
@@ -406,8 +406,8 @@ static int reestimate_setlambda (local_store_t * r, model * mo)
 	}
 
 	if (!positive) {
-	  str = mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
-			 i, col, col + mo->M, r->b_denom[i][hist]);
+	  str = ighmm_mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
+			       i, col, col + mo->M, r->b_denom[i][hist]);
 	  mes_prot (str);
 	  m_free (str);
 	}
@@ -424,7 +424,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* reestimate_setlambda */
 
 /*----------------------------------------------------------------------------*/
-static int reestimate_one_step (model * mo, local_store_t * r, int seq_number,
+static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_number,
 				int *seq_length, int **O, double *log_p,
 				double *seq_w)
 {
@@ -555,7 +555,7 @@ FREE:
 
 
 /*---------------------------------------------------------------------------*/
-static int reestimate_one_step_lean (model * mo, local_store_t * r,
+static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
                                      int seq_number, int *seq_length,
                                      int **seqs, double *log_p, double *seq_w)
 {
@@ -780,7 +780,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_d_baum_welch (model * mo, sequence_t * sq)
+int ghmm_d_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "ghmm_d_baum_welch"
 
@@ -790,7 +790,7 @@ int ghmm_d_baum_welch (model * mo, sequence_t * sq)
 
 
 /*============================================================================*/
-int ghmm_d_baum_welch_nstep (model * mo, sequence_t * sq, int max_step,
+int ghmm_d_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
                                  double likelihood_delta)
 {
 # define CUR_PROC "ghmm_d_baum_welch"
@@ -905,7 +905,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /**============================ Labeled HMMs ================================**/
 /*----------------------------------------------------------------------------*/
-static int reestimate_one_step_label (model * mo, local_store_t * r,
+static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
                                       int seq_number, int *seq_length,
                                       int **O, int **label, double *log_p,
                                       double *seq_w)
@@ -1037,7 +1037,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* reestimate_one_step_label */
 
 /*============================================================================*/
-int ghmm_dl_baum_welch (model * mo, sequence_t * sq)
+int ghmm_dl_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "ghmm_dl_baum_welch"
 
@@ -1046,7 +1046,7 @@ int ghmm_dl_baum_welch (model * mo, sequence_t * sq)
 }                               /* ghmm_d_baum_welch */
 
 /*============================================================================*/
-int ghmm_dl_baum_welch_nstep (model * mo, sequence_t * sq,
+int ghmm_dl_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
                                        int max_step, double likelihood_delta)
 {
 # define CUR_PROC "ghmm_dl_baum_welch"

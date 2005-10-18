@@ -18,7 +18,7 @@ __copyright__
 
 void sequence_alloc_print(void)
 {
-  sequence_t* seq_array;
+  ghmm_dseq* seq_array;
   int i;
 
   seq_array= ghmm_dseq_calloc(1);

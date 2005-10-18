@@ -48,7 +48,7 @@ extern "C" {
 /*@{ (Doc++-Group: smodel) */
 
 /** Continuous HMM. Structures and function. 
-    smodel includes continuous model with one transition matrix 
+    ghmm_cmodel includes continuous ghmm_dmodel with one transition matrix 
     (COS  is set to 1) and an extension for
     models with several matrices
     (COS is set to a value greater than 1). In the latter case
@@ -56,7 +56,7 @@ extern "C" {
     sequence\_get\_class has to be defined */
 
 /**
-   typedef density\_t fuer cmodel u. smodel.
+   typedef density\_t fuer ghmm_cmodel.
 */
   typedef enum {
     normal,
@@ -65,13 +65,13 @@ extern "C" {
     normal_left,
     uniform,
     density_number
-  } density_t;
+  } ghmm_density_t;
 
 
-/** @name sstate
+/** @name ghmm_cstate
     Structure for one state.
 */
-  struct sstate {
+  struct ghmm_cstate {
   /** Number of output densities per state */
     int M;
   /** initial prob. */
@@ -106,16 +106,16 @@ extern "C" {
       0: normal density, 1: truncated normal (right side) 
       density, 2: approximated normal density, 3: truncated normal (left side)
       4: uniform distribution */
-    density_t *density;
+    ghmm_density_t *density;
   /**  array of flags for fixing mixture components in the reestimation
         mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
     int *mixture_fix;
   };
-  typedef struct sstate sstate;
+  typedef struct ghmm_cstate ghmm_cstate;
 
-  struct smodel;
+  struct ghmm_cmodel;
 
-  struct class_change_context {
+  struct ghmm_c_class_change_context {
 
     /* Names of class change module/function (for python callback) */
     char *python_module;
@@ -125,24 +125,24 @@ extern "C" {
     int k;
 
     /** pointer to class function */
-    int (*get_class) (struct smodel *, double *, int, int);
+    int (*get_class) (struct ghmm_cmodel *, double *, int, int);
 
 
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
     void *user_data;
 
   };
-  typedef struct class_change_context class_change_context;
+  typedef struct ghmm_c_class_change_context ghmm_c_class_change_context;
 
-/** @name smodel
+/** @name ghmm_cmodel
     continous HMM    
 */
-  struct smodel {
+  struct ghmm_cmodel {
   /** Number of states */
     int N;
   /** Maximun number of components in the states */
     int M;
-  /** smodel includes continuous model with one transition matrix 
+  /** ghmm_cmodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
     int cos;
@@ -150,41 +150,41 @@ extern "C" {
       models have equal prob. a priori. */
     double prior;
   /** All states of the model. Transition probs are part of the states. */
-    sstate *s;
+    ghmm_cstate *s;
 
-    /* pointer to a class_change_context struct necessary for multiple transition
+    /* pointer to a ghmm_c_class_change_context struct necessary for multiple transition
        classes */
-    class_change_context *class_change;
+    ghmm_c_class_change_context *class_change;
 
   };
-  typedef struct smodel smodel;
+  typedef struct ghmm_cmodel ghmm_cmodel;
 
 
 
-/* don't include this earlier: in sequence.h smodel has to be known */
+/* don't include this earlier: in sequence.h ghmm_cmodel has to be known */
 #include "sequence.h"
 
-  int ghmm_c_class_change_alloc (smodel * smo);
+  int ghmm_c_class_change_alloc (ghmm_cmodel * smo);
 
 
-/** Free memory smodel 
+/** Free memory ghmm_cmodel 
     @return 0: success, -1: error
-    @param smo  pointer pointer of smodel */
-  int ghmm_c_free (smodel ** smo);
+    @param smo  pointer pointer of ghmm_cmodel */
+  int ghmm_c_free (ghmm_cmodel ** smo);
 
 /**
    Copies one smodel. Memory alloc is here.
-   @return pointer to smodel copy
-   @param smo   smodel to be copied  */
-  smodel *ghmm_c_copy (const smodel * smo);
+   @return pointer to ghmm_cmodel copy
+   @param smo   ghmm_cmodel to be copied  */
+  ghmm_cmodel *ghmm_c_copy (const ghmm_cmodel * smo);
 
 /**
-   Checks if smodel is well definded. E.g. sum pi = 1, only positive values 
+   Checks if ghmm_cmodel is well definded. E.g. sum pi = 1, only positive values 
    etc.
-   @return 0 if smodel is ok, -1 for error
-   @param smo   smodel for  checking
+   @return 0 if ghmm_cmodel is ok, -1 for error
+   @param smo   ghmm_cmodel for  checking
 */
-  int ghmm_c_check (const smodel * smo);
+  int ghmm_c_check (const ghmm_cmodel * smo);
 
 /**
    For a vector of smodels: check that the number of states and the number
@@ -193,18 +193,18 @@ extern "C" {
    @param smo:            vector of smodels for checking
    @param smodel_number:  number of smodels
  */
-  int ghmm_c_check_compatibility (smodel ** smo, int smodel_number);
+  int ghmm_c_check_compatibility (ghmm_cmodel ** smo, int smodel_number);
 
 /**
    Generates random symbol.
    Generates one random number for a specified state and specified
    output component of the given smodel.
    @return           random number
-   @param smo:       smodel
+   @param smo:       ghmm_cmodel
    @param state:     state
    @param m:         index of output component
 */
-  double ghmm_c_get_random_var (smodel * smo, int state, int m);
+  double ghmm_c_get_random_var (ghmm_cmodel * smo, int state, int m);
 
 
 /** 
@@ -225,7 +225,7 @@ extern "C" {
     @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
 */
 
-  sequence_d_t *ghmm_c_generate_sequences (smodel * smo, int seed,
+  ghmm_cseq *ghmm_c_generate_sequences (ghmm_cmodel * smo, int seed,
                                            int global_len, long seq_number,
                                            long label, int Tmax);
 
@@ -234,125 +234,125 @@ extern "C" {
     seq_w * log( P ( O|lambda ) ). If a sequence can't be generated by smo
     error cost of seq_w * PRENALTY_LOGP are imposed.
    @return       n: number of evaluated sequences, -1: error
-   @param smo   smodel
+   @param smo   ghmm_cmodel
    @param sqd    sequence struct
    @param log\_p  evaluated log likelihood
 */
-  int ghmm_c_likelihood (smodel * smo, sequence_d_t * sqd, double *log_p);
+  int ghmm_c_likelihood (ghmm_cmodel * smo, ghmm_cseq * sqd, double *log_p);
 
 /** 
     Computes log likelihood for all sequence of
     seq_w * log( P ( O|lambda ) ). If a sequence can't be generated by smo
     error cost of seq_w * PRENALTY_LOGP are imposed.
    @return       n: number of evaluated sequences, -1: error
-   @param smo   smodel
+   @param smo   ghmm_cmodel
    @param sqd    sequence struct
    @param log\_p array of evaluated likelihoods
 */
-  int ghmm_c_individual_likelihoods (smodel * smo, sequence_d_t * sqd,
+  int ghmm_c_individual_likelihoods (ghmm_cmodel * smo, ghmm_cseq * sqd,
                                      double *log_ps);
 
 /**
-   Prints one smodel in matrix form.
+   Prints one ghmm_cmodel in matrix form.
    @param file     output file
-   @param smo   smodel
+   @param smo   ghmm_cmodel
 */
-  void ghmm_c_print (FILE * file, smodel * smo);
+  void ghmm_c_print (FILE * file, ghmm_cmodel * smo);
 
 /**
-   Prints one smodel with only one transition Matrix A (=Ak\_0).
+   Prints one ghmm_cmodel with only one transition Matrix A (=Ak\_0).
    @param file     output file
-   @param smo   smodel
+   @param smo   ghmm_cmodel
 */
-  void ghmm_c_print_oneA (FILE * file, smodel * smo);
+  void ghmm_c_print_oneA (FILE * file, ghmm_cmodel * smo);
 
 /**
    Prints transition matrix of specified class.
    @param file       output file
-   @param smo     smodel
+   @param smo     ghmm_cmodel
    @param k          transition class
    @param tab      format: leading tab
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void ghmm_c_Ak_print (FILE * file, smodel * smo, int k, char *tab,
+  void ghmm_c_Ak_print (FILE * file, ghmm_cmodel * smo, int k, char *tab,
                         char *separator, char *ending);
 
 /**
    Prints weight matrix of output functions of an smodel.
    @param file       output file
-   @param smo     smodel
+   @param smo     ghmm_cmodel
    @param tab      format: leading tab
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void ghmm_c_C_print (FILE * file, smodel * smo, char *tab, char *separator,
+  void ghmm_c_C_print (FILE * file, ghmm_cmodel * smo, char *tab, char *separator,
                        char *ending);
 
 /**
    Prints mean matrix of output functions of an smodel.
    @param file       output file
-   @param smo     smodel
+   @param smo     ghmm_cmodel
    @param tab      format: leading tab
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void ghmm_c_Mue_print (FILE * file, smodel * smo, char *tab,
+  void ghmm_c_Mue_print (FILE * file, ghmm_cmodel * smo, char *tab,
                          char *separator, char *ending);
 /**
    Prints variance matrix of output functions of an smodel.
    @param file       output file
-   @param smo     smodel
+   @param smo     ghmm_cmodel
    @param tab      format: leading tab
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void ghmm_c_U_print (FILE * file, smodel * smo, char *tab, char *separator,
+  void ghmm_c_U_print (FILE * file, ghmm_cmodel * smo, char *tab, char *separator,
                        char *ending);
 /**
    Prints initial prob vector of an smodel.
    @param file       output file
-   @param smo     smodel
+   @param smo     ghmm_cmodel
    @param tab      format: leading tab
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void ghmm_c_Pi_print (FILE * file, smodel * smo, char *tab, char *separator,
+  void ghmm_c_Pi_print (FILE * file, ghmm_cmodel * smo, char *tab, char *separator,
                         char *ending);
 /**
    Prints vector of fix\_states.
    @param file       output file
-   @param smo     smodel
+   @param smo     ghmm_cmodel
    @param tab      format: leading tab
    @param separator  format: seperator
    @param ending     format: end of data in line
 */
-  void ghmm_c_fix_print (FILE * file, smodel * smo, char *tab,
+  void ghmm_c_fix_print (FILE * file, ghmm_cmodel * smo, char *tab,
                          char *separator, char *ending);
 
 /** Computes the density of one symbol (omega) in a given state and a 
     given output component
     @return calculated density
-    @param smo smodel
+    @param smo ghmm_cmodel
     @param state state 
     @param m output component
     @param omega given symbol
 */
-  double ghmm_c_calc_cmbm (smodel * smo, int state, int m, double omega);
+  double ghmm_c_calc_cmbm (ghmm_cmodel * smo, int state, int m, double omega);
 
 /** Computes the density of one symbol (omega) in a given state (sums over
     all output components
     @return calculated density
-    @param smo smodel
+    @param smo ghmm_cmodel
     @param state state 
     @param omega given symbol
 */
-  double ghmm_c_calc_b (smodel * smo, int state, double omega);
+  double ghmm_c_calc_b (ghmm_cmodel * smo, int state, double omega);
 
 /** Computes probabilistic distance of two models
     @return the distance
-    @param cm0  smodel used for generating random output
-    @param cm   smodel to compare with
+    @param cm0  ghmm_cmodel used for generating random output
+    @param cm   ghmm_cmodel to compare with
     @param maxT  maximum output length (for HMMs with absorbing states multiple
                  sequences with a toal length of at least maxT will be 
 		 generated)
@@ -360,39 +360,39 @@ extern "C" {
     @param verbose  flag, whether to monitor distance in 40 steps. 
                     Prints to stdout (yuk!)
 */
-  double ghmm_c_prob_distance (smodel * cm0, smodel * cm, int maxT,
+  double ghmm_c_prob_distance (ghmm_cmodel * cm0, ghmm_cmodel * cm, int maxT,
                                int symmetric, int verbose);
 
 /** 
     Computes value of distribution function for a given symbol omega, a given
-    state and a given output component.
+    ghmm_dstate and a given output component.
     @return   value of distribution function
-    @param smo   smodel
+    @param smo   ghmm_cmodel
     @param state  state
     @param m      component
     @param omega symbol
 */
-  double ghmm_c_calc_cmBm (smodel * smo, int state, int m, double omega);
+  double ghmm_c_calc_cmBm (ghmm_cmodel * smo, int state, int m, double omega);
 
 /** 
     Computes value of distribution function for a given symbol omega and
     a given  state. Sums over all components.
     @return   value of distribution function
-    @param smo   smodel
+    @param smo   ghmm_cmodel
     @param state  state
     @param omega symbol
 */
-  double ghmm_c_calc_B (smodel * smo, int state, double omega);
+  double ghmm_c_calc_B (ghmm_cmodel * smo, int state, double omega);
 
 /** Computes the number of free parameters in an array of
    smodels. E.g. if the number of parameter from pi is N - 1.
    Counts only those parameters, that can be changed during  
    training. If pi[i] = 0 it is not counted, since it can't be changed.
    @return number of free parameters
-   @param smo smodel
+   @param smo ghmm_cmodel
    @param smo\_number number of smodels
 */
-  int ghmm_c_count_free_parameter (smodel ** smo, int smo_number);
+  int ghmm_c_count_free_parameter (ghmm_cmodel ** smo, int smo_number);
 
 
 /*============================================================================*/
@@ -408,7 +408,7 @@ extern "C" {
     @param a      return-value: left side
     @param b      return-value: right side
 */
-  void ghmm_c_get_interval_B (smodel * smo, int state, double *a, double *b);
+  void ghmm_c_get_interval_B (ghmm_cmodel * smo, int state, double *a, double *b);
 
 
 #ifdef __cplusplus

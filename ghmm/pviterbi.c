@@ -68,7 +68,7 @@ typedef struct plocal_store_t {
   /** traceback matrix **/
   int ***psi;
   /** for convinience store a pointer to the model **/
-  pmodel * mo;
+  ghmm_dpmodel * mo;
   /** for the debug mode store information of matrix sizes **/
   /** length of sequence X determines size of psi **/
   int len_x;
@@ -82,27 +82,27 @@ typedef struct plocal_store_t {
 
   static void ghmm_dp_print_viterbi_store(plocal_store_t * pv);
 
-  static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y);
+  static plocal_store_t *pviterbi_alloc(ghmm_dpmodel *mo, int len_x, int len_y);
 
   static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y,
 			   int max_offset_x, int max_offset_y);
 
-  static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y);
+  static void init_phi(plocal_store_t * pv, ghmm_dpseq * X, ghmm_dpseq * Y);
 
   static double get_phi(plocal_store_t * pv, int x, int y, int offset_x,
 			int offset_y, int state);
 
-  static void set_phi(plocal_store_t * pv, int x, int y, int state,
+  static void set_phi(plocal_store_t * pv, int x, int y, int ghmm_dstate,
 		      double prob);
 
   static void push_back_phi(plocal_store_t * pv, int length_y);
 
-  static void set_psi(plocal_store_t * pv, int x, int y, int state,
+  static void set_psi(plocal_store_t * pv, int x, int y, int ghmm_dstate,
 		      int from_state);
 
 
 /*============================================================================*/
-static plocal_store_t *pviterbi_alloc(pmodel *mo, int len_x, int len_y) {
+static plocal_store_t *pviterbi_alloc(ghmm_dpmodel *mo, int len_x, int len_y) {
 #define CUR_PROC "pviterbi_alloc"
   plocal_store_t* v = NULL;
   int i, j;
@@ -173,7 +173,7 @@ static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y,
 /*============================================================================*/
 static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
   int j, k;
-  pmodel * mo;
+  ghmm_dpmodel * mo;
 
   printf("Local store for pair HMM viterbi algorithm\n");
   printf("Log in a:\n");
@@ -192,7 +192,7 @@ static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
 }
 
 /*============================================================================*/
-static void pviterbi_precompute( pmodel *mo, plocal_store_t *v) {
+static void pviterbi_precompute( ghmm_dpmodel *mo, plocal_store_t *v) {
 #define CUR_PROC "pviterbi_precompute"
   int i, j, emission, t_class;
   
@@ -227,7 +227,7 @@ static void pviterbi_precompute( pmodel *mo, plocal_store_t *v) {
 
 /*============================================================================*/
 /** */
-/* static void p__viterbi_silent( model *mo, int t, plocal_store_t *v ) */
+/* static void p__viterbi_silent( ghmm_dmodel *mo, int t, plocal_store_t *v ) */
 /* { */
 /*   int topocount; */
 /*   int i, k; */
@@ -265,8 +265,8 @@ static void pviterbi_precompute( pmodel *mo, plocal_store_t *v) {
 /* } */
 
 /*============================================================================*/
-static double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, psequence * Y, int index_x, int index_y) {
-  /* determine the transition class for the source state */
+static double sget_log_in_a(plocal_store_t * pv, int i, int j, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y) {
+  /* determine the transition class for the source ghmm_dstate */
   int id = pv->mo->s[i].in_id[j];
   int cl = pv->mo->s[id].class_change->get_class(pv->mo, X, Y, index_x,index_y,
 				   pv->mo->s[id].class_change->user_data);
@@ -276,17 +276,17 @@ static double sget_log_in_a(plocal_store_t * pv, int i, int j, psequence * X, ps
 /*============================================================================*/
 static double log_b(plocal_store_t * pv, int state, int emission) {
 #ifdef DEBUG
-  if (state > pv->mo->N) 
-    fprintf(stderr, "log_b: State index out of bounds %i > %i\n", state, pv->mo->N);
+  if (ghmm_dstate > pv->mo->N) 
+    fprintf(stderr, "log_b: State index out of bounds %i > %i\n", ghmm_dstate, pv->mo->N);
   if (emission > ghmm_dp_emission_table_size(pv->mo, state))
-    fprintf(stderr, "log_b: Emission index out of bounds %i > %i for state %i\n",
+    fprintf(stderr, "log_b: Emission index out of bounds %i > %i for ghmm_dstate %i\n",
 	    emission, ghmm_dp_emission_table_size(pv->mo, state), state); 
 #endif
   return pv->log_b[state][emission];
 }
 
 /*============================================================================*/
-static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
+static void init_phi(plocal_store_t * pv, ghmm_dpseq * X, ghmm_dpseq * Y) {
 #ifdef DEBUG
   int emission;
 #endif
@@ -294,8 +294,8 @@ static void init_phi(plocal_store_t * pv, psequence * X, psequence * Y) {
   double log_in_a_ij;
   double value, max_value, previous_prob, log_b_i;  
   /* printf("ghmm_dp_viterbi init\n"); */
-  pmodel * mo = pv->mo;
-  double (*log_in_a)(plocal_store_t*, int, int, psequence*, psequence*, 
+  ghmm_dpmodel * mo = pv->mo;
+  double (*log_in_a)(plocal_store_t*, int, int, ghmm_dpseq*, ghmm_dpseq*, 
 		     int, int);
   log_in_a = &sget_log_in_a;
 
@@ -506,7 +506,7 @@ static int get_psi(plocal_store_t * pv, int x, int y, int state) {
 }
 
 /*============================================================================*/
-int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y,
+int *ghmm_dp_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			  double *log_p, int *path_length) {
   plocal_store_t *pv;
   printf("---- viterbi test -----\n");
@@ -521,13 +521,13 @@ int *ghmm_dp_viterbi_test(pmodel *mo, psequence * X, psequence * Y,
 
 
 /*============================================================================*/
-int *ghmm_dp_viterbi(pmodel *mo, psequence * X, psequence * Y, double *log_p,
+int *ghmm_dp_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p,
 		     int *path_length) {
   return ghmm_dp_viterbi_variable_tb(mo, X, Y, log_p, path_length, -1);
 }
 
 /*============================================================================*/
-int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y,
+int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				 double *log_p, int *path_length,
 				 int start_traceback_with) {
 #define CUR_PROC "ghmm_dp_viterbi"
@@ -537,7 +537,7 @@ int *ghmm_dp_viterbi_variable_tb(pmodel *mo, psequence * X, psequence * Y,
   int *state_seq = NULL;
   int emission;
   double log_b_i, log_in_a_ij;
-  double (*log_in_a)(plocal_store_t*, int, int, psequence*, psequence*, int, int);
+  double (*log_in_a)(plocal_store_t*, int, int, ghmm_dpseq*, ghmm_dpseq*, int, int);
 
   /* printf("---- viterbi -----\n"); */
   i_list * state_list;
@@ -748,7 +748,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   
   
 /*============================================================================*/
-double ghmm_dp_viterbi_logp(pmodel *mo, psequence * X, psequence * Y,
+double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			    int *state_seq, int state_seq_len) {
 #define CUR_PROC "ghmm_dp_viterbi_logp"
   int s, t, i, j, u, v;

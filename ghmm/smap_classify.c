@@ -136,7 +136,7 @@ static int smap_classify_free (local_store_t ** map, int mo_number, int T)
    (1995)
 */
 
-int ghmm_smap_classify (smodel ** smo, double *result, int smo_number,
+int ghmm_smap_classify (ghmm_cmodel ** smo, double *result, int smo_number,
                    double *O, int T)
 {
 #define CUR_PROC "ghmm_smap_classify"
@@ -240,7 +240,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    Same result?
 */
 
-int ghmm_smap_bayes (smodel ** smo, double *result, int smo_number, double *O,
+int ghmm_smap_bayes (ghmm_cmodel ** smo, double *result, int smo_number, double *O,
                 int T)
 {
 #define CUR_PROC "ghmm_smap_bayes"

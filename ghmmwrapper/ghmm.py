@@ -587,7 +587,7 @@ class EmissionSequence:
 
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
 
-            # necessary C functions for accessing the sequence_t struct
+            # necessary C functions for accessing the ghmm_dseq struct
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayint
             self.setSymbol = ghmmwrapper.set_2d_arrayint
@@ -595,7 +595,7 @@ class EmissionSequence:
             self.addSeqFunction = ghmmwrapper.ghmm_dseq_add
             self.freeSubSetFunction = ghmmwrapper.call_ghmm_dseq_subseq_free
 
-            #create a sequence_t with state_labels, if the appropiate parameters are set
+            #create a ghmm_dseq with state_labels, if the appropiate parameters are set
             if (isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None )):
                 assert len(sequenceInput)==len(labelInput)
                 assert isinstance(labelInput, list)
@@ -647,7 +647,7 @@ class EmissionSequence:
                 else:
                     self.cseq  = ghmmwrapper.seq_read(sequenceInput)
 
-            elif isinstance(sequenceInput, ghmmwrapper.sequence_t):# internal use
+            elif isinstance(sequenceInput, ghmmwrapper.ghmm_dseq):# internal use
                 if sequenceInput.seq_number > 1:
                     raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
@@ -660,7 +660,7 @@ class EmissionSequence:
 
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
 
-            # necessary C functions for accessing the sequence_d_t struct
+            # necessary C functions for accessing the ghmm_cseq struct
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.getSymbol = ghmmwrapper.get_2d_arrayd
             self.setSymbol = ghmmwrapper.set_2d_arrayd
@@ -684,7 +684,7 @@ class EmissionSequence:
                     self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
 
 
-            elif isinstance(sequenceInput, ghmmwrapper.sequence_d_t): # internal use
+            elif isinstance(sequenceInput, ghmmwrapper.ghmm_cseq): # internal use
                 if sequenceInput.seq_number > 1:
                     raise badCPointer, "Use SequenceSet for multiple sequences."
                 self.cseq = sequenceInput
@@ -815,7 +815,7 @@ class SequenceSet:
             raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-            # necessary C functions for accessing the sequence_t struct
+            # necessary C functions for accessing the ghmm_dseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
@@ -888,7 +888,7 @@ class SequenceSet:
                     ghmmwrapper.set_arrayint(self.cseq.seq_len,i ,lenghts[i])
 
 
-            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_t): # inputType == sequence_t*
+            elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq): # inputType == ghmm_dseq*
                 self.cseq = sequenceSetInput
                 if labelDomain is not None:
                     self.labelDomain = labelDomain
@@ -903,7 +903,7 @@ class SequenceSet:
 
 
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
-            # necessary C functions for accessing the sequence_d_t struct
+            # necessary C functions for accessing the ghmm_cseq struct
             self.sequenceAllocationFunction =  ghmmwrapper.ghmm_cseq_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
             self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
@@ -938,7 +938,7 @@ class SequenceSet:
                     self.cseq = ghmmwrapper.get_seq_d_ptr(self.__s,0)
 
                                                      
-            elif isinstance(sequenceSetInput, ghmmwrapper.sequence_d_t): # i# inputType == sequence_d_t**, internal use
+            elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq): # i# inputType == ghmm_cseq**, internal use
 
                 self.cseq = sequenceSetInput
             else:    
@@ -3719,11 +3719,11 @@ class GaussianEmissionHMM(HMM):
 
             training_sequences can either be a SequenceSet or a Sequence
 
-            Return: a C-array of type smosqd_t
+            Return: a C-array of type ghmm_c_baum_welch_context
         """
         self.BWcontext = ghmmwrapper.smosqd_t_array(1)
         self.BWcontext.smo  = self.cmodel
-        self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to sequence_d_t
+        self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to ghmm_cseq
         self.BWcontext.logp = ghmmwrapper.double_array(1) # place holder for sum of log-likelihood
         self.BWcontext.eps  = 10e-6
         self.BWcontext.max_iter = nrSteps
@@ -4291,7 +4291,7 @@ class ComplexEmissionSequence:
                 self.continuousDomains.append(emissionDomains[i])
                 self.continuousInputs.append(sequenceInputs[i])
                 
-        # necessary C functions for accessing the psequence struct
+        # necessary C functions for accessing the ghmm_dpseq struct
         self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
         self.getSymbol = ghmmwrapper.get_2d_arrayint
         self.setSymbol = ghmmwrapper.set_2d_arrayint
@@ -4464,7 +4464,7 @@ class PairHMM(HMM):
     def __str__(self):
         """
         string representation (more for debuging) shows the contents of the C
-        structure pmodel
+        structure ghmm_dpmodel
         @return: string representation
         """
         hmm = self.cmodel

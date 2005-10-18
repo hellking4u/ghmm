@@ -61,11 +61,11 @@ extern "C" {
   struct scluster_t {
   /** 
   Vector of SHMMs pointers */
-    smodel **smo;
+    ghmm_cmodel **smo;
   /** 
-    Vector of sequence_t pointers; to store the sequences, that 
+    Vector of ghmm_dseq pointers; to store the sequences, that 
     belong to the models */
-    sequence_d_t **smo_seq;
+    ghmm_cseq **smo_seq;
   /** 
     Number of models to read in */
     int smo_number;
@@ -100,7 +100,7 @@ extern "C" {
    @param outfile output file
    @param out_filename name of the output file
  */
-  int ghmm_scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile,
+  int ghmm_scluster_out (scluster_t * cl, ghmm_cseq * sqd, FILE * outfile,
                     char *argv[]);
 
 /**
@@ -112,7 +112,7 @@ extern "C" {
    @param sqd sequences to generate the model from
    @param cl cluster for the models
  */
-  int ghmm_scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl);
+  int ghmm_scluster_avoid_empty_smodel (ghmm_cseq * sqd, scluster_t * cl);
 
 /**
    Makes a cluster and reestimates the HMMs.
@@ -128,7 +128,7 @@ extern "C" {
    @param cl cluster to update
    @param sqd sequences to update the cluster with
  */
-  int ghmm_scluster_update (scluster_t * cl, sequence_d_t * sqd);
+  int ghmm_scluster_update (scluster_t * cl, ghmm_cseq * sqd);
 
 /**
    Updates a label
@@ -166,9 +166,9 @@ extern "C" {
    Calculates the logarithmic probability of sequences for a model.
    @param cs sequences and model 
  */
-  void ghmm_scluster_prob (smosqd_t * cs);
+  void ghmm_scluster_prob (ghmm_c_baum_welch_context * cs);
 
-/* int scluster_labels_from_kmeans(sequence_d_t *sqd, int smo_number); */
+/* int scluster_labels_from_kmeans(ghmm_cseq *sqd, int smo_number); */
 
 /**
    Creates random labels for a vector of sequences
@@ -177,7 +177,7 @@ extern "C" {
    @param smo_number number of models (needed to determine the interval
    for the random numbers)
 */
-  int ghmm_scluster_random_labels (sequence_d_t * sqd, int smo_number);
+  int ghmm_scluster_random_labels (ghmm_cseq * sqd, int smo_number);
 
 /** Calculates the aposteriori prob. $\log(p(\lambda_best | O[seq\_id]))$, 
     where $\lambda_best$ is the model with highest apost. prob.
@@ -187,7 +187,7 @@ extern "C" {
     @param seq_id the ID of the sequence
     @param lob_apo the results
 */
-  int ghmm_scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
+  int ghmm_scluster_log_aposteriori (scluster_t * cl, ghmm_cseq * sqd,
                                 int seq_id, double *log_apo);
 
 /**

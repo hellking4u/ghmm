@@ -86,14 +86,14 @@ static void ighmm_hlist_remove (hypoList ** plist);
    the possible new hypotheses depending on the states in which the old
    hypothesis could end and the reachable labels
    @return number of old hypotheses
-   @param mo:         pointer to the model
+   @param mo:         pointer to the ghmm_dmodel
    @param h:          pointer to list of hypotheses
    @param hplus:      address of a pointer to store the propagated hypotheses
    @param labels:     number of labels
    @param nr_s:       number states which have assigned the index aa label
    @param max_out:    maximum number of out_states over all states with the index aa label
  */
-static int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus, int labels,
+static int ighmm_hlist_prop_forward (ghmm_dmodel * mo, hypoList * h, hypoList ** hplus, int labels,
                      int *nr_s, int *max_out);
 
 
@@ -103,10 +103,10 @@ static int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus
    which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
    @return log. sum for products of a row from gamma and a row from matrix A
    @param log_a:      transition matrix with logarithmic values (1.0 for log(0))
-   @param s:          state whose gamma-value is calculated
+   @param s:          ghmm_dstate whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
-static double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent);
+static double ighmm_log_gamma_sum (double *log_a, ghmm_dstate * s, hypoList * parent);
 
 
 /*============================================================================*/
@@ -117,7 +117,7 @@ static double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent);
   @param s:           array of all states of the model
   @param N:           number of states in the model
  */
-static double **kbest_buildLogMatrix (state * s, int N)
+static double **kbest_buildLogMatrix (ghmm_dstate * s, int N)
 {
 #define CUR_PROC "kbest_buildLogMatrix"
   int i, j;
@@ -145,13 +145,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    Labels must be from interval [0:max_label] without gaps!!! (not checked)
    Model must not have silent states. (checked in Python wrapper)
    @return array of labels (internal representation)
-   @param mo:         pointer to a model
+   @param mo:         pointer to a ghmm_dmodel
    @param o_seq:      output sequence (array of internal representation chars)
    @param seq_len:    length of output sequence
    @param k:          number of hypotheses to keep for each state
    @param log_p:      variable reference to store the log prob. of the labeling
  */
-int *ghmm_dl_kbest (model * mo, int *o_seq, int seq_len, int k, double *log_p)
+int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *log_p)
 {
 #define CUR_PROC "ghmm_dl_kbest"
   int i, t, c, l, m;            /* counters */
@@ -463,7 +463,7 @@ static void ighmm_hlist_remove (hypoList ** plist) {
 }
 
 /*============================================================================*/
-static int ighmm_hlist_prop_forward (model * mo, hypoList * h, hypoList ** hplus,
+static int ighmm_hlist_prop_forward (ghmm_dmodel * mo, hypoList * h, hypoList ** hplus,
 				     int labels, int *nr_s, int *max_out) {
 #define CUR_PROC "ighmm_hlist_prop_forward"
   int i, j, c, k;
@@ -547,10 +547,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
    @return ighmm_log_sum for products of a row from gamma and a row from matrix A
    @param log_a:      row of the transition matrix with logarithmic values (1.0 for log(0))
-   @param s:          state whose gamma-value is calculated
+   @param s:          ghmm_dstate whose gamma-value is calculated
    @param parent:     a pointer to the parent hypothesis
 */
-static double ighmm_log_gamma_sum (double *log_a, state * s, hypoList * parent) {
+static double ighmm_log_gamma_sum (double *log_a, ghmm_dstate * s, hypoList * parent) {
 #define CUR_PROC "ighmm_log_gamma_sum"
   double result;
   int j, j_id, k;

@@ -27,9 +27,9 @@
 /****** smodel_suite *********************************************************/
 START_TEST (smodel_read_free) /* Add smodel_read_free in  smodel_suite() below */
 {
-  /* Test whether we can read an smodel, iterate over it, and free it again */
+  /* Test whether we can read an ghmm_cmodel, iterate over it, and free it again */
 
-  smodel **model_array;
+  ghmm_cmodel **model_array;
   int model_counter, result;
   char *inFileName = kSMODEL_SAMPLE_SMO_FILE;
   model_array = ghmm_c_read(inFileName, &model_counter);
@@ -103,7 +103,7 @@ END_TEST
 START_TEST (pviterbi_path_test) /* Add ghmm_dp_viterbi_test in  pmodel_suite() below */
 {
   /* test whether the computed viterbi path correctly aligns the two sequences */
-  pmodel * mo = get_test_pmodel();
+  ghmm_dpmodel * mo = get_test_pmodel();
 
   /* first get two complex sequences */
   mysequence * x;
@@ -150,7 +150,7 @@ END_TEST
 START_TEST (pviterbi_propagate_test) /* Add ghmm_dp_viterbi_test in  pmodel_suite() below */
 {
   /* test whether the computed viterbi path correctly aligns the two sequences */
-  pmodel * mo = get_test_pmodel();
+  ghmm_dpmodel * mo = get_test_pmodel();
 
   /* first get two complex sequences */
   mysequence * x;

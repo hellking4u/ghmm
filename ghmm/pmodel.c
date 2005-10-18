@@ -43,7 +43,7 @@
 #include "ghmm_internals.h"
 
 
-int ghmm_dp_state_alloc(pstate * s, int M, int in_states, int out_states) {
+int ghmm_dp_state_alloc(ghmm_dpstate * s, int M, int in_states, int out_states) {
 # define CUR_PROC "ghmm_dp_state_alloc"
   int res = -1;
   ARRAY_CALLOC (s->b, M);
@@ -61,7 +61,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 # undef CUR_PROC
 } /* ghmm_dp_state_alloc */
 
-void ghmm_dp_state_clean(pstate *my_state) {
+void ghmm_dp_state_clean(ghmm_dpstate *my_state) {
 #define CUR_PROC "ghmm_dp_state_clean"
   if (!my_state) return;
   
@@ -96,10 +96,10 @@ void ghmm_dp_state_clean(pstate *my_state) {
 #undef CUR_PROC
 } /* ghmm_dp_state_clean */
 
-/* use this to allocate the memory for a pmodel and set the pointers to NULL */
-pmodel * ghmm_dp_init() {
+/* use this to allocate the memory for a ghmm_dpmodel and set the pointers to NULL */
+ghmm_dpmodel * ghmm_dp_init() {
 #define CUR_PROC "ghmm_dp_init"
-  pmodel * mo;
+  ghmm_dpmodel * mo;
   ARRAY_CALLOC (mo, 1);
 
   return mo;
@@ -108,9 +108,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-pclass_change_context * ghmm_dp_init_class_change() {
+ghmm_dp_class_change_context * ghmm_dp_init_class_change() {
 #define CUR_PROC "ghmm_dp_init_class_change"
-  pclass_change_context * pccc;
+  ghmm_dp_class_change_context * pccc;
   ARRAY_CALLOC (pccc, 1);
 
   pccc->get_class = &ghmm_dp_default_transition_class;
@@ -121,7 +121,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-int ghmm_dp_free(pmodel *mo) {
+int ghmm_dp_free(ghmm_dpmodel *mo) {
 #define CUR_PROC "ghmm_dp_free"
   int i;
   mes_check_ptr(mo, return(-1));
@@ -170,7 +170,7 @@ int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int o
   return(symbol_x * alphabet_size + symbol_y);
 }
 
-int ghmm_dp_emission_table_size(pmodel* mo, int state_index) {
+int ghmm_dp_emission_table_size(ghmm_dpmodel* mo, int state_index) {
   /* the alphabet is over single sequences so get the maximal index for the
      lookup of emission probabilities and use it to determine the size of
      the lookup table */
@@ -178,7 +178,7 @@ int ghmm_dp_emission_table_size(pmodel* mo, int state_index) {
   return ghmm_dp_pair(size - 1, size - 1, size, mo->s[state_index].offset_x, mo->s[state_index].offset_y) + 1;
 }
  
-void ghmm_dp_state_print(pstate * s) {
+void ghmm_dp_state_print(ghmm_dpstate * s) {
   int i;
 
   printf("offset x: %i\n", s->offset_x);
@@ -192,7 +192,7 @@ void ghmm_dp_state_print(pstate * s) {
   printf("probabilities...\n");
 }
  
-void ghmm_dp_print(pmodel* mo) {
+void ghmm_dp_print(ghmm_dpmodel* mo) {
   int i;
 
   printf("Pair HMM model\n");
@@ -205,11 +205,11 @@ void ghmm_dp_print(pmodel* mo) {
   }
 }
 
-int ghmm_dp_default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) {
+int ghmm_dp_default_transition_class(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data) {
   return 0;
 }
 
-void ghmm_dp_set_to_default_transition_class(pclass_change_context * pccc) {
+void ghmm_dp_set_to_default_transition_class(ghmm_dp_class_change_context * pccc) {
   if (pccc){
     pccc->get_class = &ghmm_dp_default_transition_class;
     pccc->user_data = NULL;

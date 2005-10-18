@@ -74,9 +74,9 @@ int main (int argc, char *argv[])
 {
 #define CUR_PROC "smixturehmm_main"
   int exitcode = -1;
-  sequence_d_t *sqd = NULL, *sqd_train = NULL, *sqd_test = NULL;
-  sequence_d_t **sqd_dummy = NULL;
-  smodel **smo_initial = NULL, **smo = NULL;
+  ghmm_cseq *sqd = NULL, *sqd_train = NULL, *sqd_test = NULL;
+  ghmm_cseq **sqd_dummy = NULL;
+  ghmm_cmodel **smo_initial = NULL, **smo = NULL;
   int i, k, iter, iterations, field_number, min_smo, max_smo, smo_number,
     total_smo_number, print_models, mode, free_parameter;
   long errors_train = 0, errors_test = 0;
@@ -377,8 +377,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
  /* Original version, without attempt to avoid lokal traps */
-int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
-                         smodel ** smo, int smo_number)
+int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
+                         ghmm_cmodel ** smo, int smo_number)
 {
 #define CUR_PROC "ghmm_smixturehmm_cluster"
   int i, k, iter = 0;
@@ -387,7 +387,7 @@ int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, sequence_d_t * sqd,
   char *str;
   double *save_w;
   double model_weight, log_p, sum = 0.0;
-  smosqd_t *smo_sqd;            /* this structure is used by sreestimate() */
+  ghmm_c_baum_welch_context *smo_sqd;            /* this structure is used by sreestimate() */
 
   ARRAY_CALLOC (smo_sqd, 1);
   /*  smo_sqd->max_iter = MAX_ITER_BW; */
@@ -469,7 +469,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    and (depending on cp): model priors for all models 
 */
 
-int ghmm_smixturehmm_init (double **cp, sequence_d_t * sqd, smodel ** smo,
+int ghmm_smixturehmm_init (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
                       int smo_number, int mode)
 {
 #define CUR_PROC "ghmm_smixturehmm_init"
@@ -555,7 +555,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*============================================================================*/
 /* currently not activated */
 # if 0
-int smixturehmm_calc_priors (double **cp, sequence_d_t * sqd, smodel ** smo,
+int smixturehmm_calc_priors (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
                              int smo_number)
 {
 #define CUR_PROC "smixturehmm_calc_priors"
@@ -587,7 +587,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /* also recalculate total_train_w; if a seq has cp = 0 don't add its weigth to 
    total_train_w, otherwise errors in calculating model priors occur
 */
-int ghmm_smixturehmm_calc_cp (double **cp, sequence_d_t * sqd, smodel ** smo,
+int ghmm_smixturehmm_calc_cp (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
                          int smo_number, double *total_train_w)
 {
 #define CUR_PROC "ghmm_smixturehmm_calc_cp"
@@ -626,8 +626,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    later on (saves half of the ghmm_c_logp() calls).
    Danger: Is it neccessary to take seq_w into account? 
 */
-void ghmm_smixture_calc_logp (double **logp, int **error, sequence_d_t * sqd,
-                         smodel ** smo, int smo_number)
+void ghmm_smixture_calc_logp (double **logp, int **error, ghmm_cseq * sqd,
+                         ghmm_cmodel ** smo, int smo_number)
 {
   int i, k;
 
@@ -690,8 +690,8 @@ void ghmm_smixturehmm_print_header (FILE * file, char *argv[], int flag)
    Usefull for identifying models with poor likelihood
 */
 
-double *ghmm_smixturehmm_avg_like (double **cp, sequence_d_t * sqd,
-                              smodel ** smo, int smo_number)
+double *ghmm_smixturehmm_avg_like (double **cp, ghmm_cseq * sqd,
+                              ghmm_cmodel ** smo, int smo_number)
 {
 #define CUR_PROC "ghmm_smixturehmm_avg_like"
   double *avg_like = NULL;

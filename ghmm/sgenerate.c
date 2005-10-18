@@ -72,12 +72,12 @@
 
 
 
-sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
+ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
                                     int seed, int global_len,
                                     sgeneration_mode_t mode)
 {
 #define CUR_PROC "ghmm_sgenerate_extensions"
-  sequence_d_t *sq = NULL;
+  ghmm_cseq *sq = NULL;
   int i, j, t, n, m, len = global_len, short_len, max_short_len = 0, up = 0;
 #ifdef bausparkasse
   int tilgphase = 0;
@@ -325,7 +325,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
+double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
                               int *new_len, double **alpha,
                               sgeneration_mode_t mode)
 {
@@ -513,7 +513,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    to optimize some more.
 */
 
-double ghmm_sgenerate_next_value (smodel * smo, double *O, const int len)
+double ghmm_sgenerate_next_value (ghmm_cmodel * smo, double *O, const int len)
 {
 # define CUR_PROC "ghmm_sgenerate_next_value"
   double **alpha = NULL;

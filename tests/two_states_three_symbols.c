@@ -30,9 +30,9 @@
 int my_model()
 {
   /* model structure, that contains states */
-  model my_model;
+  ghmm_dmodel my_model;
   /* array of states */
-  state model_states[2];
+  ghmm_dstate model_states[2];
 
   /* first state */
   /*  probability of emmission of 0,1 or 2 */
@@ -49,7 +49,7 @@ int my_model()
   int trans_id_1_state[2]={0,1};
   double trans_prob_1_state[2]={0.1,0.9};
   double trans_prob_1_state_rev[2]={0.1,0.9};
-  sequence_t* my_output;
+  ghmm_dseq* my_output;
 
   int pow_look[2] = {1,3};
 

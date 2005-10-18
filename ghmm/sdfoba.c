@@ -47,7 +47,7 @@
 #include "ghmm_internals.h"
 
 
-static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,
+static int sdfoba_initforward (ghmm_dsmodel * mo, double *alpha_1, int symb,
                                double *scale)
 {
 # define CUR_PROC "sdfoba_initforward"
@@ -95,7 +95,7 @@ static int sdfoba_initforward (sdmodel * mo, double *alpha_1, int symb,
 
 /*----------------------------------------------------------------------------*/
 
-static double sdfoba_stepforward (sdstate * s, double *alpha_t,
+static double sdfoba_stepforward (ghmm_dsstate * s, double *alpha_t,
                                   const double b_symb, int class)
 {
   int i, id;
@@ -113,7 +113,7 @@ static double sdfoba_stepforward (sdstate * s, double *alpha_t,
 
 /*============================================================================*/
 
-int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
+int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                     double *scale, double *log_p)
 {
 # define CUR_PROC "ghmm_ds_forward"
@@ -199,7 +199,7 @@ int ghmm_ds_forward (sdmodel * mo, const int *O, int len, double **alpha,
 
 #if 0 /* unused */
 /*============================================================================*/
-static int sdfobau_initforward (sdmodel * mo, double *alpha_1, int symb,
+static int sdfobau_initforward (ghmm_dsmodel * mo, double *alpha_1, int symb,
                                 double *scale)
 {
 # define CUR_PROC "sdfoba_initforward"
@@ -239,7 +239,7 @@ static int sdfobau_initforward (sdmodel * mo, double *alpha_1, int symb,
 
 /*----------------------------------------------------------------------------*/
 
-int sdfobau_forward (sdmodel * mo, const int *O, int len, double **alpha,
+int sdfobau_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                      double *scale, double *log_p)
 {
 # define CUR_PROC "ghmm_ds_forward"
@@ -324,7 +324,7 @@ int ghmm_ds_forward_descale (double **alpha, double *scale, int t, int n,
 
 /*============================================================================*/
 
-int ghmm_ds_backward (sdmodel * mo, const int *O, int len, double **beta,
+int ghmm_ds_backward (ghmm_dsmodel * mo, const int *O, int len, double **beta,
                      const double *scale)
 {
 # define CUR_PROC "ghmm_ds_backward"
@@ -363,7 +363,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_ds_logp (sdmodel * mo, const int *O, int len, double *log_p)
+int ghmm_ds_logp (ghmm_dsmodel * mo, const int *O, int len, double *log_p)
 {
 #define CUR_PROC "ghmm_ds_logp"
   int res = -1;

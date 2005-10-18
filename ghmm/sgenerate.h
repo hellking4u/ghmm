@@ -81,7 +81,7 @@ extern "C" {
    @param global_len:  wanted length of sequences (=0: automatically over final states)
    @param mode:        which method to use for the generator
  */
-  sequence_d_t *ghmm_sgenerate_extensions (smodel * smo, sequence_d_t * sqd_short,
+  ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
                                       int seed, int global_len,
                                       sgeneration_mode_t mode);
 
@@ -89,14 +89,14 @@ extern "C" {
 /** 
     Makes one sequences longer given a model. See ghmm_sgenerate_extensions for details.
     @return pointer to the whole sequence
-    @param smo:        given model
+    @param smo:        model
     @param O:          given sequence to make longer
     @param len:        original length of sequence
     @param new_len:    wanted length of sequence
     @param alpha:
     @param mode:
 */
-  double *ghmm_sgenerate_single_ext (smodel * smo, double *O, const int len,
+  double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
                                 int *new_len, double **alpha,
                                 sgeneration_mode_t mode);
 
@@ -108,7 +108,7 @@ extern "C" {
    @param O:          given sequence 
    @param len:        length of sequence
 */
-  double ghmm_sgenerate_next_value (smodel * smo, double *O, const int len);
+  double ghmm_sgenerate_next_value (ghmm_cmodel * smo, double *O, const int len);
 
 /*@} sgenerate section */
 

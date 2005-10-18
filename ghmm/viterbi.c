@@ -60,11 +60,11 @@ typedef struct local_store_t {
   int topo_order_length;
 } local_store_t;
 
-static local_store_t *viterbi_alloc (model * mo, int len);
+static local_store_t *viterbi_alloc (ghmm_dmodel * mo, int len);
 static int viterbi_free (local_store_t ** v, int n, int len);
 
 /*----------------------------------------------------------------------------*/
-static local_store_t *viterbi_alloc (model * mo, int len)
+static local_store_t *viterbi_alloc (ghmm_dmodel * mo, int len)
 {
 #define CUR_PROC "sdviterbi_alloc"
   local_store_t *v = NULL;
@@ -125,7 +125,7 @@ static int viterbi_free (local_store_t ** v, int n, int len)
 }                               /* viterbi_free */
 
 
-static void Viterbi_precompute (model * mo, int *o, int len, local_store_t * v)
+static void Viterbi_precompute (ghmm_dmodel * mo, int *o, int len, local_store_t * v)
 {
 #define CUR_PROC "viterbi_precompute"
   int i, j, t;
@@ -158,7 +158,7 @@ static void Viterbi_precompute (model * mo, int *o, int len, local_store_t * v)
 }                               /* viterbi_precompute */
 
 /** */
-static void __viterbi_silent (model * mo, int t, local_store_t * v)
+static void __viterbi_silent (ghmm_dmodel * mo, int t, local_store_t * v)
 {
   int topocount;
   int i, k;
@@ -224,7 +224,7 @@ STOP:
 
 
 /** Return the viterbi path of the sequence.  */
-int * ghmm_d_viterbi (model * mo, int *o, int len, double *log_p)
+int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
 {
 #define CUR_PROC "ghmm_d_viterbi"
 
@@ -523,7 +523,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-double ghmm_d_viterbi_logp (model * mo, int *o, int len, int *state_seq)
+double ghmm_d_viterbi_logp (ghmm_dmodel * mo, int *o, int len, int *state_seq)
 {
 #define CUR_PROC "ghmm_d_viterbi_logp"
 

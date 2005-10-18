@@ -51,7 +51,7 @@
 
 
 /*----------------------------------------------------------------------------*/
-static int sfoba_initforward (smodel * smo, double *alpha_1, double omega,
+static int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double omega,
                               double *scale, double **b)
 {
 # define CUR_PROC "sfoba_initforward"
@@ -80,7 +80,7 @@ static int sfoba_initforward (smodel * smo, double *alpha_1, double omega,
 }                               /* sfoba_initforward */
 
 /*----------------------------------------------------------------------------*/
-static double sfoba_stepforward (sstate * s, double *alpha_t, int osc,
+static double sfoba_stepforward (ghmm_cstate * s, double *alpha_t, int osc,
                                  double b_omega)
 {
   int i, id;
@@ -95,7 +95,7 @@ static double sfoba_stepforward (sstate * s, double *alpha_t, int osc,
 
 
 /*============================================================================*/
-int ghmm_c_forward (smodel * smo, double *O, int T, double ***b,
+int ghmm_c_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
                    double **alpha, double *scale, double *log_p)
 {
 # define CUR_PROC "ghmm_c_forward"
@@ -196,7 +196,7 @@ STOP:
 }                               /* ghmm_c_forward */
 
 /*============================================================================*/
-int ghmm_c_backward (smodel * smo, double *O, int T, double ***b,
+int ghmm_c_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
                     double **beta, const double *scale)
 {
 # define CUR_PROC "ghmm_c_backward"
@@ -300,7 +300,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_c_backward */
 
 /*============================================================================*/
-int ghmm_c_logp (smodel * smo, double *O, int T, double *log_p)
+int ghmm_c_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
 {
 # define CUR_PROC "ghmm_c_logp"
   int res = -1;
