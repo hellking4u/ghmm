@@ -47,14 +47,14 @@ extern "C" {
 
 /**@name sequences  (double and int) */
 /*@{ (Doc++-Group: sequence) */
-/** @name struct sequence_t
+/** @name struct ghmm_dseq
     Sequence structure for integer sequences. 
     Contains an array of sequences and corresponding
     data like sequence label, sequence weight, etc. Sequences may have different
     length.    
  */
 
-  struct sequence_t {
+  struct ghmm_dseq {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
     int **seq;
@@ -83,15 +83,15 @@ extern "C" {
     /* number of labels for each sequence */
     int *state_labels_len;
   };
-  typedef struct sequence_t sequence_t;
+  typedef struct ghmm_dseq ghmm_dseq;
 
-/** @name struct sequence_d_t
+/** @name struct ghmm_cseq
     Sequence structure for double sequences. 
     Contains an array of sequences and corresponding
     data like sequnce label, sequence weight, etc. Sequences may have different
     length.    
  */
-  struct sequence_d_t {
+  struct ghmm_cseq {
   /** sequence array. sequence[i][j] = j-th symbol of i-th seq. */
     double **seq;
   /** array of sequence length */
@@ -109,13 +109,13 @@ extern "C" {
   /** sum of sequence weights */
     double total_w;
   };
-  typedef struct sequence_d_t sequence_d_t;
+  typedef struct ghmm_cseq ghmm_cseq;
 
 
 #ifdef __cplusplus
 }
 #endif
-/* don't include model.h at the beginning of this file. struct sequence_t has
+/* don't include model.h at the beginning of this file. struct ghmm_dseq has
    to be known in model.h */
 #include "model.h"
 #include "smodel.h"
@@ -132,42 +132,42 @@ extern "C" {
    @param seed rng seed
 */
 
-  sequence_d_t **ghmm_cseq_truncate (sequence_d_t ** sqd_in, int sqd_arrays,
+  ghmm_cseq **ghmm_cseq_truncate (ghmm_cseq ** sqd_in, int sqd_arrays,
                                       double trunc_ratio, int seed);
 
 
 
 /**
-  Extract a single sequence from a larger sequence_t into a new struct.
+  Extract a single sequence from a larger ghmm_dseq into a new struct.
   
-  @return sequence_t struct containing a single sequence
-  @param sq   source sequence_t
+  @return ghmm_dseq struct containing a single sequence
+  @param sq   source ghmm_dseq
   @param index   index of sequence to extract
 */
-sequence_t *ghmm_dseq_get_singlesequence(sequence_t *sq, int index);
+ghmm_dseq *ghmm_dseq_get_singlesequence(ghmm_dseq *sq, int index);
 
 /**
-  Extract a single sequence_d from a larger sequence_d_t into a new struct.
+  Extract a single sequence_d from a larger ghmm_cseq into a new struct.
   
-  @return sequence_d_t struct containing a single sequence
-  @param sq   source sequence_d_t
+  @return ghmm_cseq struct containing a single sequence
+  @param sq   source ghmm_cseq
   @param index   index of sequence to extract
 */
-sequence_d_t *ghmm_cseq_get_singlesequence(sequence_d_t *sq, int index);
+ghmm_cseq *ghmm_cseq_get_singlesequence(ghmm_cseq *sq, int index);
 
 /*XXX TEST: frees everything but the seq field */
 
 /**
-  Free a sequence_t struct which holds as sequence a reference to a sequence in a different
+  Free a ghmm_dseq struct which holds as sequence a reference to a sequence in a different
   sequence_t. The function deallocates everything but the reference.
 */
-int ghmm_dseq_subseq_free (sequence_t ** sq);
+int ghmm_dseq_subseq_free (ghmm_dseq ** sq);
 
 /**
-  Free a sequence_d_t struct which holds as sequence a reference to a sequence in a different
+  Free a ghmm_cseq struct which holds as sequence a reference to a sequence in a different
   sequence_d_t. The function deallocates everything but the reference.
 */
-int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
+int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
 
 
 
@@ -180,7 +180,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
     @param M     size of alphabet
     @return array of generated integer sequences
 */
-  sequence_t *ghmm_dseq_lexWords (int n, int M);
+  ghmm_dseq *ghmm_dseq_lexWords (int n, int M);
 
 /**
    Determine best model for a given integer sequence. 
@@ -193,7 +193,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param log\_p         log likelihood of the sequence given the best model
    @return index of best\_model (between 0 and model\_number - 1)
 */
-  int ghmm_dseq_best_model (model ** mo, int model_number, int *sequence,
+  int ghmm_dseq_best_model (ghmm_dmodel ** mo, int model_number, int *sequence,
                            int seq_len, double *log_p);
 
 /**
@@ -203,7 +203,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param max_symb    number of different symbols
    @return            -1 for error, 0 for no errors
 */
-  int ghmm_dseq_check (sequence_t * sq, int max_symb);
+  int ghmm_dseq_check (ghmm_dseq * sq, int max_symb);
 
 /**
   copy one integer sequence. Memory for target has to be allocated outside.
@@ -228,7 +228,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
   @param source  source sequence structure
   @return -1 for error, 0 for success
   */
-  int ghmm_dseq_add (sequence_t * target, sequence_t * source);
+  int ghmm_dseq_add (ghmm_dseq * target, ghmm_dseq * source);
 
 
 /**
@@ -238,21 +238,21 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
   @param source  source sequence structure
   @return -1 for error, 0 for success
   */
-  int ghmm_cseq_add (sequence_d_t * target, sequence_d_t * source);
+  int ghmm_cseq_add (ghmm_cseq * target, ghmm_cseq * source);
 
 /**
   Prints one array of integer sequences in a file.
   @param file       output file
   @param sequence    array of sequences
   */
-  void ghmm_dseq_print (FILE * file, sequence_t * sequence);
+  void ghmm_dseq_print (FILE * file, ghmm_dseq * sequence);
 
 /**
   Prints one array of integer sequences in a xml file
   @param file       output file
   @param sequence   array of sequences
   */
-  void ghmm_dseq_print_xml (FILE * file, sequence_t * sequence);
+  void ghmm_dseq_print_xml (FILE * file, ghmm_dseq * sequence);
 
 /**
    Prints one array of integer sequences in Mathematica format.
@@ -261,7 +261,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param sq    array of sequences
    @param name arbitrary sequence name for usage in Mathematica.
  */
-  void ghmm_dseq_mathematica_print (FILE * file, sequence_t * sq, char *name);
+  void ghmm_dseq_mathematica_print (FILE * file, ghmm_dseq * sq, char *name);
 
 /**
   Prints one array of double sequences in a file.
@@ -270,7 +270,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
   @param discrete   switch: 0 means double output for symbols,  
      1 means truncate symbols to integer
   */
-  void ghmm_cseq_print (FILE * file, sequence_d_t * sqd, int discrete);
+  void ghmm_cseq_print (FILE * file, ghmm_cseq * sqd, int discrete);
 
 /**
    Prints one array of double sequences in Mathematica format.
@@ -279,7 +279,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param sqd    array of sequences
    @param name arbitrary sequence name for usage in Mathematica.
  */
-  void ghmm_cseq_mathematica_print (FILE * file, sequence_d_t * sqd,
+  void ghmm_cseq_mathematica_print (FILE * file, ghmm_cseq * sqd,
                                      char *name);
 
 /** Output of double sequences suitable for gnuplot. One symbol per line,
@@ -287,7 +287,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
     @param file output file
     @param sqd array of double sequences
 */
-  void ghmm_cseq_gnu_print (FILE * file, sequence_d_t * sqd);
+  void ghmm_cseq_gnu_print (FILE * file, ghmm_cseq * sqd);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
@@ -295,7 +295,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    Differs from sequence\_free since memory is not freed here. 
    @param sq sequence structure
   */
-  void ghmm_dseq_clean (sequence_t * sq);
+  void ghmm_dseq_clean (ghmm_dseq * sq);
 
 /**
    Cleans double sequence pointers in sequence struct. sets 
@@ -303,28 +303,28 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    Differs from sequence\_free since memory is not freed here. 
    @param sqd sequence structure
   */
-  void ghmm_cseq_clean (sequence_d_t * sqd);
+  void ghmm_cseq_clean (ghmm_cseq * sqd);
 
 /**
   Frees all memory in a given array of integer sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
   */
-  int ghmm_dseq_free (sequence_t ** sq);
+  int ghmm_dseq_free (ghmm_dseq ** sq);
 
 /**
   Frees all memory in a given array of double sequences.
   @param sq sequence  structure
   @return 0 for succes, -1 for error
   */
-  int ghmm_cseq_free (sequence_d_t ** sq);
+  int ghmm_cseq_free (ghmm_cseq ** sq);
 
 /**
    Return biggest symbol in an interger sequence.
    @param sq sequence structure
    @return max value
  */
-  int ghmm_dseq_max_symbol (sequence_t * sq);
+  int ghmm_dseq_max_symbol (ghmm_dseq * sq);
 
 /**
    Memory allocation for an integer sequence struct. Allocates arrays of lenght
@@ -333,7 +333,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param seq\_number:  number of sequences
    @return:     pointer of sequence struct
 */
-  sequence_t *ghmm_dseq_calloc (long seq_number);
+  ghmm_dseq *ghmm_dseq_calloc (long seq_number);
 
 /**
    Memory allocation for a double  sequence struct. Allocates arrays of lenght
@@ -342,14 +342,14 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param seq\_number:  number of sequences
    @return:     pointer of sequence struct
 */
-  sequence_d_t *ghmm_cseq_calloc (long seq_number);
+  ghmm_cseq *ghmm_cseq_calloc (long seq_number);
 
 /**
    Copies array of integer sequences to double sequences.
    @return       double sequence struct (target)
    @param sq    integer sequence struct (source)
    */
-  sequence_d_t *ghmm_cseq_create_from_dseq (const sequence_t * sq);
+  ghmm_cseq *ghmm_cseq_create_from_dseq (const ghmm_dseq * sq);
 
 /**
    Copies array of double sequences into an array of integer
@@ -357,7 +357,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @return       integer sequence struct (target)
    @param sq    double sequence struct (source)
    */
-  sequence_t *ghmm_dseq_create_from_cseq (const sequence_d_t * sqd);
+  ghmm_dseq *ghmm_dseq_create_from_cseq (const ghmm_cseq * sqd);
 
 /** 
     Determines max sequence length in a given int sequence struct.
@@ -365,14 +365,14 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
     @param sqd sequence struct
     @return max sequence length
  */
-  int ghmm_dseq_max_len (const sequence_t * sqd);
+  int ghmm_dseq_max_len (const ghmm_dseq * sqd);
 
 /** 
     Determines max sequence length in a given double sequence struct.
     @param sqd sequence struct
     @return max sequence length
  */
-  int ghmm_cseq_max_len (const sequence_d_t * sqd);
+  int ghmm_cseq_max_len (const ghmm_cseq * sqd);
 
 /**
   Calculates a mean sequence of a given array of double sequences.
@@ -380,7 +380,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
   @param sqd sequence struct
   @return pointer of sequence struct containing the mean sequence
   */
-  sequence_d_t *ghmm_cseq_mean (const sequence_d_t * sqd);
+  ghmm_cseq *ghmm_cseq_mean (const ghmm_cseq * sqd);
 
 /**
    Calculates the scatter matrix of an array of double sequences. 
@@ -389,7 +389,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @param sqd     sequence struct
    @param sqd     (calculated) dimension of scatter matrix
   */
-  double **ghmm_cseq_scatter_matrix (const sequence_d_t * sqd, int *dim);
+  double **ghmm_cseq_scatter_matrix (const ghmm_cseq * sqd, int *dim);
 
 /**
    Calculates transition class for a given double sequence
@@ -402,7 +402,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
    @return currently always 0
  */
   int ghmm_cseq_class (const double *O, int index, double *osum);
-  /*int ghmm_cseq_class(const sequence_d_t *sqd, const int seq_number, int index, double *osum, );*/
+  /*int ghmm_cseq_class(const ghmm_cseq *sqd, const int seq_number, int index, double *osum, );*/
 
 /** Divides randomly a given array of double sequences into two sets. 
     Useful if a training and test set is needed. Memory allocation is done 
@@ -413,8 +413,8 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
     @param train\_ratio ratio of number of train vs number of test sequences
     @return 0 for success, -1 for error
 */
-  int ghmm_cseq_partition (sequence_d_t * sqd, sequence_d_t * sqd_train,
-                            sequence_d_t * sqd_test, double train_ratio);
+  int ghmm_cseq_partition (ghmm_cseq * sqd, ghmm_cseq * sqd_train,
+                            ghmm_cseq * sqd_test, double train_ratio);
 
 
 /** 
@@ -425,8 +425,8 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
     @param t_num position in target array
     @param s_num position in source array
 */
-  void ghmm_cseq_copy_all (sequence_d_t * target, long t_num,
-                            sequence_d_t * source, long s_num);
+  void ghmm_cseq_copy_all (ghmm_cseq * target, long t_num,
+                            ghmm_cseq * source, long s_num);
 
 /** Log-Likelihood function in a mixture model:
     (mathe mode?)
@@ -436,7 +436,7 @@ int ghmm_cseq_subseq_free (sequence_d_t ** sqd);
     @param sqd sequence struct
     @param like log likelihood
 */
-  int ghmm_cseq_mix_like (smodel ** smo, int smo_number, sequence_d_t * sqd,
+  int ghmm_cseq_mix_like (ghmm_cmodel ** smo, int smo_number, ghmm_cseq * sqd,
                            double *like);
 
 #ifdef __cplusplus

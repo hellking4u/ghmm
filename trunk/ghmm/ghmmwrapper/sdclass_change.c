@@ -60,7 +60,7 @@ int cp_class_change(int *seq, int len) {
 } 		
 		
 
-void setSwitchingFunction( sdmodel *smd ) {
+void setSwitchingFunction( ghmm_dsmodel *smd ) {
   smd->get_class = cp_class_change;
 }
 

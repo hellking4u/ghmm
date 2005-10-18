@@ -65,7 +65,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
 {
 # define CUR_PROC "ghmm_cluster_hmm"
   int res = -1, i, iter = 0, sq_number;
-  sequence_t *sq = NULL, **sq_vec = NULL;
+  ghmm_dseq *sq = NULL, **sq_vec = NULL;
   long j, changes = 1;
   long *oldlabel;
   double log_p;
@@ -185,12 +185,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_cluster_hmm */
 
 /*============================================================================*/
-int ghmm_cluster_update (cluster_t * cl, sequence_t * sq)
+int ghmm_cluster_update (cluster_t * cl, ghmm_dseq * sq)
 {
 #define CUR_PROC "ghmm_cluster_update"
   int i, res = -1;
   long *seq_counter;
-  sequence_t *seq_t;
+  ghmm_dseq *seq_t;
   ARRAY_CALLOC (seq_counter, cl->mo_number);
   /* Fix the number of associated sequences */
   for (i = 0; i < sq->seq_number; i++)
@@ -296,13 +296,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_cluster_avoid_empty_model */
 
 /*============================================================================*/
-int ghmm_cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
+int ghmm_cluster_out (cluster_t * cl, ghmm_dseq * sq, FILE * outfile,
                  char *out_filename)
 {
 #define CUR_PROC "ghmm_cluster_out"
   int res = -1;
   int i;
-  sequence_d_t *sqd = NULL;
+  ghmm_cseq *sqd = NULL;
 
   fprintf (outfile, "\nFinal Models:\n");
   for (i = 0; i < cl->mo_number; i++)

@@ -36,4 +36,4 @@
 #include <ghmm/model.h>
 
 /* XML to C data structure Wrapper */
-extern sdmodel* graphmlTosdModel(char *filename);
+extern ghmm_dsmodel* graphmlTosdModel(char *filename);

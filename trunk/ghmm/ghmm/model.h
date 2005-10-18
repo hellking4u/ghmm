@@ -43,12 +43,12 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-/** @name background_distributions
+/** @name ghmm_d_background_distributions
     A container for background distributions to be used in the reestimation. Model
     has an ID (== index) to be used for the arrays background_distributions.order
     and background_distributions.b
 */
-  struct background_distributions {
+  struct ghmm_d_background_distributions {
   /** Number of distributions */
     int n;
   /** Number of symbols in alphabet */
@@ -58,13 +58,13 @@ extern "C" {
   /** The probabilities */
     double **b;
   };
-  typedef struct background_distributions background_distributions;
+  typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
 
 
-/** @name state
+/** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
 */
-  struct state {
+  struct ghmm_dstate {
   /** Initial probability */
     double pi;
   /** Output probability */
@@ -91,26 +91,26 @@ extern "C" {
     int label;
 
   };
-  typedef struct state state;
+  typedef struct ghmm_dstate ghmm_dstate;
 
 
-struct coord {
+struct ghmm_coord_t {
   double x;
   double y;
 };
-typedef struct coord coord;
+typedef struct ghmm_coord_t ghmm_coord_t;
 
 
-/** @name model
+/** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-  struct model {
+  struct ghmm_dmodel {
   /** Number of states */
     int N;
   /** Number of outputs */
     int M;
   /** Vector of the states */
-    state *s;
+    ghmm_dstate *s;
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
@@ -162,8 +162,8 @@ typedef struct coord coord;
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
 
-  /** background_distributions is a pointer to a
-      background_distributions structure, which holds (essentially) an
+  /** ghmm_d_background_distributions is a pointer to a
+      ghmm_d_background_distributions structure, which holds (essentially) an
       array of background distributions (which are just vectors of floating
       point numbers like state.b).
 
@@ -174,7 +174,7 @@ typedef struct coord coord;
 
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
     int *background_id;
-    background_distributions *bp;
+    ghmm_d_background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
@@ -191,7 +191,7 @@ typedef struct coord coord;
     
     
     
-    /*  storage of model representation information ( read in from XML ) */
+    /*  storage model representation information ( read in from XML ) */
     
     /* emission alphabet  */ 
     char*** alphabet;
@@ -203,7 +203,7 @@ typedef struct coord coord;
     int S;
     
     /* an arry of positions of states for graphical representation */ 
-    coord *position;
+    ghmm_coord_t *position;
     
     /* state label alphabet (only for labelled HMMs)  */ 
     char** label_alphabet;
@@ -212,7 +212,7 @@ typedef struct coord coord;
     int label_size;
 
   };
-  typedef struct model model;
+  typedef struct ghmm_dmodel ghmm_dmodel;
 
 #ifdef __cplusplus
 }
@@ -231,13 +231,13 @@ extern "C" {
 /** 
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
-    uses if appropiate lookup table from struct model */
-   int ghmm_d_ipow (const model * mo, int x, unsigned int n);
+    uses if appropiate lookup table from struct ghmm_dmodel */
+   int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n);
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
-    @param mo:  pointer to a model */
-  int ghmm_d_free (model ** mo);
+    @param mo:  pointer to a ghmm_dmodel */
+  int ghmm_d_free (ghmm_dmodel ** mo);
 
 /** 
     Produces simple left-right models given sequences. The sequences
@@ -245,46 +245,46 @@ extern "C" {
     @return vector of models
     @param s:          scanner
     @param new_models: number of models to produce */
-  model **ghmm_d_from_sequence (sequence_t * sq, long *mo_number);
+  ghmm_dmodel **ghmm_d_from_sequence (ghmm_dseq * sq, long *mo_number);
 
 /**
    Copies a given model. Allocates the necessary memory.
    @return copy of the model
    @param mo:  model to copy */
-  model *ghmm_d_copy (const model * mo);
+  ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo);
 
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
    @return 0 for success; -1 for error
-   @param mo:  model to test */
-  int ghmm_d_check (const model * mo);
+   @param mo:  ghmm_dmodel to test */
+  int ghmm_d_check (const ghmm_dmodel * mo);
 
 /**
    Tests if number of states and number of outputs in the models match.
    @return 0 for succes; -1 for error
    @param mo:           vector of models
    @param model_number: numbr of models */
-  int ghmm_d_check_compatibility (model ** mo, int model_number);
+  int ghmm_d_check_compatibility (ghmm_dmodel ** mo, int model_number);
 
 /**
    Test if to models are compatible. That means their states and outputs match.
    @return 0 for succes; -1 for error
-   @param mo:     first model
-   @param m2:     second model */
-int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
+   @param mo:     first ghmm_dmodel
+   @param m2:     second ghmm_dmodel */
+int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * m2);
 
 /**
    Produces a model, which generates the given sequence with probability 1.
    The model is a strict left-right model with one state for each element 
    in the sequence and the output in state i is the i-th value in the sequence 
    with probability 1. The model also has a final state, a state with no output.
-   @return         pointer to the produced model 
+   @return         pointer to the produced ghmm_dmodel 
    @param seq:      sequence
    @param seq_len:  length of the sequence
    @param anz_symb: number of symbols in the sequence
 */
-  model *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
+  ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
                                        int anz_symb);
 
 /** 
@@ -302,36 +302,36 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-  sequence_t *ghmm_d_generate_sequences (model * mo, int seed, int global_len,
+  ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
                                         long seq_number, int Tmax);
 
 /**
    Calculates the sum log( P( O | lambda ) ).
-   Sequences, that can not be generated from the given model, are neglected.
+   Sequences, that can not be generated from the given ghmm_dmodel, are neglected.
    @return    log(P)
    @param mo model
    @param sq sequences       
 */
-  double ghmm_d_likelihood (model * mo, sequence_t * sq);
+  double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq);
 
 
 /**
     Set transition from state 'i' to state 'j' to value 'prob'.
-    NOTE: No internal checks - model might get broken if used carelessly.
+    NOTE: No internal checks - model might get broken if used without care.
     @param mo model
-    @param i state index
-    @param j state index
+    @param i  state index
+    @param j  state index
     @param prob probabilitys
     
 */
-  void ghmm_d_transition_set (model * mo, int i, int j, double prob);
+  void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob);
 
 /**
    Writes a model in matrix format.
    @param file: output file
    @param mo:   model
 */
-  void ghmm_d_print (FILE * file, model * mo);
+  void ghmm_d_print (FILE * file, ghmm_dmodel * mo);
 
 /**
    Writes transition matrix of a model.
@@ -341,7 +341,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_A_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                       char *ending);
 /**
    Writes output matrix of a model.
@@ -351,7 +351,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_B_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                       char *ending);
 /**
    Writes initial allocation vector of a matrix.
@@ -361,7 +361,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_Pi_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                        char *ending);
 /**
    Writes fix vector of a matrix.
@@ -371,7 +371,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_fix_print (FILE * file, model * mo, char *tab, char *separator,
+  void ghmm_d_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                         char *ending);
 /**
    Writes transposed transition matrix of a model.
@@ -381,7 +381,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_A_print_transp (FILE * file, model * mo, char *tab,
+  void ghmm_d_A_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                              char *separator, char *ending);
 /**
    Writes transposed output matrix of a model.
@@ -391,7 +391,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_B_print_transp (FILE * file, model * mo, char *tab,
+  void ghmm_d_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                              char *separator, char *ending);
 
 /**
@@ -402,16 +402,16 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_Pi_print_transp (FILE * file, model * mo, char *tab,
+  void ghmm_d_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                               char *ending);
 
 /** 
-    Writes the parameters of a model sorted by states. 
+    Writes the parameters of a ghmm_dmodel sorted by states. 
     Is not very concise.   
     @param file: output file
     @param mo:   model
 */
-  void ghmm_d_states_print (FILE * file, model * mo);
+  void ghmm_d_states_print (FILE * file, ghmm_dmodel * mo);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -424,19 +424,19 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
     @param verbose  flag, whether to monitor distance in 40 steps.
                     Prints to stdout (yuk!)
 */
-  double ghmm_d_prob_distance (model * m0, model * m, int maxT, int symmetric,
+  double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int symmetric,
                               int verbose);
 
 /** 
-    Frees all memory from a state, sets the pointers to NULL and 
+    Frees all memory from a ghmm_dstate, sets the pointers to NULL and 
     variables to zero.
     @author Peter Pipenbacher
-    @param my_state  state to clean (\Ref{struct state})
+    @param my_state  state to clean (\Ref{struct ghmm_dstate})
 */
-  void ghmm_d_state_clean (state * my_state);
+  void ghmm_d_state_clean (ghmm_dstate * my_state);
 
 
-  sequence_t *ghmm_dl_generate_sequences (model * mo, int seed,
+  ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
                                               int global_len, long seq_number,
                                               int Tmax);
 
@@ -492,7 +492,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
     @return 0 if normalization went through
     @param mo: model to be normalized
 */
-  int ghmm_d_normalize (model * mo);
+  int ghmm_d_normalize (ghmm_dmodel * mo);
 
 /**
    Add a specific level of noise to the model parameters
@@ -502,11 +502,11 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
                         a noise level of 0.0 doesn't change the model
    @param seed :        seed for ramdom number generator
 */
-  int ghmm_d_add_noise (model * mo, double level, int seed);
+  int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed);
 
 
 /** 
-   Allocates a new background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
@@ -515,7 +515,7 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-  int ghmm_d_duration_apply (model * mo, int cur, int times);
+  int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times);
 
 
 /**
@@ -523,44 +523,44 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    the model which have one specified (background_id[state_id] != kNoBackgroundDistribution).
 
    @return    :                -1 on error, 0 else
-   @param mo  :                a pointer to the model
+   @param mo  :                a pointer to the ghmm_dmodel
    @param background_weight:   a parameter controlling the weight given to the
                                background. Note, should be between 0 and 1.
 */
-  int ghmm_d_background_apply (model * mo, double *background_weight);
+  int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight);
 
 
 /** 
-   Allocates a new background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
-   @return    :               new pointer to a background_distributions struct
+   @return    :               new pointer to a ghmm_d_background_distributions struct
    @param n   :               number of distributions
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-  background_distributions *ghmm_d_background_alloc (int n,
+  ghmm_d_background_distributions *ghmm_d_background_alloc (int n,
                                                                   int m,
                                                                   int *orders,
                                                                   double **B);
 
-  background_distributions
-    *ghmm_d_background_copy (background_distributions * bg);
-  int ghmm_d_background_free (background_distributions * bg);
+  ghmm_d_background_distributions
+    *ghmm_d_background_copy (ghmm_d_background_distributions * bg);
+  int ghmm_d_background_free (ghmm_d_background_distributions * bg);
 
 /**
-   Calculates the background distribution for a sequence_t
-   the calculated distribution is uniform, every state with the same order
+   Calculates the background distribution for a ghmm_dseq
+   the calculated distribution is uniform, every ghmm_dstate with the same order
    has the same background distribution.
    Set more sophisticated background distribution from python.
    Caution: overwrites the pointer to previous defined background distributions!
    @return    : -1 on error, 0 else
-   @param mo  :	a pointer to the model
-   @param sq  : a pointer to a sequence_t struct
+   @param mo  :	a pointer to the ghmm_dmodel
+   @param sq  : a pointer to a ghmm_dseq struct
    
 */
-  int ghmm_d_background_get_uniform (model * mo, sequence_t * sq);
+  int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq);
 
 /**
    Calculates the squared distance between two compatible models.
@@ -569,21 +569,21 @@ int ghmm_d_check_compatibel_models (const model * mo, const model * m2);
    @param mo:    first model
    @param m2:    second model
 */
-  double ghmm_d_distance(const model * mo, const model * m2);
+  double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2);
 
 /**
    Calculates a topological ordering of the silent states
    and saves it in the model. Detects cycles of silent states.
    @param mo:      model
 */
-  void ghmm_d_topo_order (model * mo);
+  void ghmm_d_topo_order (ghmm_dmodel * mo);
 
 /**
    Update the emissions according to the tie groups by computing the mean
    values within all groups.
    @param mo:      model
 */
-  void ghmm_d_update_tied_groups (model * mo);
+  void ghmm_d_update_tied_groups (ghmm_dmodel * mo);
 
 #ifdef __cplusplus
 }

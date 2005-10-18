@@ -51,7 +51,7 @@
 #include "ghmm_internals.h"
 
 
-static double compute_performance (model * mo, sequence_t * sq);
+static double compute_performance (ghmm_dmodel * mo, ghmm_dseq * sq);
 
 /*----------------------------------------------------------------------------*/
 static void gradient_descent_gfree (double **matrix_b, double *matrix_a,
@@ -77,7 +77,7 @@ static void gradient_descent_gfree (double **matrix_b, double *matrix_a,
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
 static int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
-                             double **matrix_pi, model * mo)
+                             double **matrix_pi, ghmm_dmodel * mo)
 {
 #define CUR_PROC "gradient_descent_galloc"
 
@@ -110,7 +110,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    certain parameter from A or B is used)
    computes Baum-Welch variables implicit 
    @return                 nothing
-   @param mo:              pointer to a model
+   @param mo:              pointer to a ghmm_dmodel
    @param alpha:           matrix of forward variables
    @param backward:        matrix of backward variables
    @param scale:           scaling vector from forward-backward-algorithm
@@ -120,7 +120,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
  */
-int ghmm_dl_gradient_expectations (model * mo, double **alpha,
+int ghmm_dl_gradient_expectations (ghmm_dmodel * mo, double **alpha,
                                      double **beta, double *scale, int *seq,
                                      int seq_len, double **matrix_b,
                                      double *matrix_a, double *vec_pi)
@@ -198,7 +198,7 @@ int ghmm_dl_gradient_expectations (model * mo, double **alpha,
 
 
 /*----------------------------------------------------------------------------*/
-static double compute_performance (model * mo, sequence_t * sq)
+static double compute_performance (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 #define CUR_PROC "compute_performance"
 
@@ -247,11 +247,11 @@ static double compute_performance (model * mo, sequence_t * sq)
    Trains the model with a set of annotated sequences using gradient descent.
    Model must not have silent states. (one iteration)
    @return            0/-1 success/error
-   @param mo:         pointer to a model
+   @param mo:         pointer to a ghmm_dmodel
    @param sq:         struct of annotated sequences
    @param eta:        training parameter for gradient descent
  */
-static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
+static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double eta)
 {
 #define CUR_PROC "gradient_descent_onestep"
 
@@ -445,24 +445,24 @@ static int gradient_descent_onestep (model * mo, sequence_t * sq, double eta)
 
 /*----------------------------------------------------------------------------*/
 /**
-   Trains the model with a set of annotated sequences till convergence using
+   Trains the ghmm_dmodel with a set of annotated sequences till convergence using
    gradient descent.
    Model must not have silent states. (checked in Python wrapper)
    @return            0/-1 success/error
-   @param mo:         pointer to a model
+   @param mo:         pointer to a ghmm_dmodel
    @param sq:         struct of annotated sequences
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps)
+int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int no_steps)
 {
 #define CUR_PROC "ghmm_dl_gradient_descent"
 
   int runs = 0;
   double cur_perf, last_perf;
-  model *last;
+  ghmm_dmodel *last;
 
-  last = (model *) ghmm_d_copy (*mo);
+  last = ghmm_d_copy (*mo);
   last_perf = compute_performance (last, sq);
 
   while (eta > EPS_PREC && runs < no_steps) {
@@ -478,7 +478,7 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
       if (cur_perf > 0.0) {
         printf ("current performance = %g\n", cur_perf);
         ghmm_d_free (mo);
-        *mo = (model *) ghmm_d_copy (last);
+        *mo = ghmm_d_copy (last);
         eta *= .5;
       }
       else {
@@ -495,7 +495,7 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
 
         /* significant improvement, next iteration */
         ghmm_d_free (&last);
-        last = (model *) ghmm_d_copy (*mo);
+        last = ghmm_d_copy (*mo);
         last_perf = cur_perf;
         eta *= 1.07;
       }
@@ -520,14 +520,14 @@ int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_s
       /* improvement, save and proceed with next iteration */
       if (last_perf < cur_perf && cur_perf < 0.0) {
         ghmm_d_free (&last);
-        last = (model *) ghmm_d_copy (*mo);
+        last = ghmm_d_copy (*mo);
         last_perf = cur_perf;
       }
       /* still no improvement, revert to saved model */
       else {
         runs--;
         ghmm_d_free (mo);
-        *mo = (model *) ghmm_d_copy (last);
+        *mo = ghmm_d_copy (last);
         eta *= .9;
       }
     }

@@ -26,8 +26,8 @@ static int viterbi_test(char* argv[]);
 static int viterbi_test(char* argv[]) {
 #define CUR_PROC "viterbi_test"
   FILE *outfile = NULL;
-  sequence_d_t **sqd = NULL;
-  smodel** smo = NULL;
+  ghmm_cseq **sqd = NULL;
+  ghmm_cmodel** smo = NULL;
   char outfilename[256];
   int smo_number, sqd_number, *state_seq = NULL, model, t, cnt = 0;
   long i, j;

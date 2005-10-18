@@ -55,12 +55,12 @@ typedef struct local_store_topo {
   int head, tail;
 } local_store_topo;
 
-static local_store_topo *topo_alloc (model * mo, int len);
+static local_store_topo *topo_alloc (ghmm_dmodel * mo, int len);
 static int topo_free (local_store_topo ** v, int n, int len);
 
 
 /*----------------------------------------------------------------------------*/
-static local_store_topo *topo_alloc (model * mo, int len)
+static local_store_topo *topo_alloc (ghmm_dmodel * mo, int len)
 {
 #define CUR_PROC "sdtopo_alloc"
   local_store_topo *v = NULL;
@@ -103,7 +103,7 @@ static int topo_free (local_store_topo ** v, int n, int len)
  * Implementation of DFSVisit with recursion (WS)
  *
  */
-static void model_DFSVisit (model * c_model, int nodev, int *timevisit,
+static void model_DFSVisit (ghmm_dmodel * c_model, int nodev, int *timevisit,
                             int *parents, int *colors, int **edge_classes)
 {
 #define CUR_PROC "DFSVisit"
@@ -132,7 +132,7 @@ static void model_DFSVisit (model * c_model, int nodev, int *timevisit,
     GRAY EDGE  => edges that form cycles which must be removed 
                   before running topological sort
 */
-int **ghmm_d_DFS (model * c_model)
+int **ghmm_d_DFS (ghmm_dmodel * c_model)
 {
 #define CUR_PROC "ghmm_d_DFS"
   int i, j, initials=0;
@@ -178,7 +178,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-static void __topological_sort (model * c_model, local_store_topo * v,
+static void __topological_sort (ghmm_dmodel * c_model, local_store_topo * v,
                                 int **edge_classes)
 {
   int i, j;
@@ -225,7 +225,7 @@ static void __topological_sort (model * c_model, local_store_topo * v,
 }
 
 /*----------------------------------------------------------------------------*/
-void ghmm_d_topo_order (model * mo)
+void ghmm_d_topo_order (ghmm_dmodel * mo)
 {
 #define CUR_PROC "ghmm_d_topo_order"
   int i;

@@ -79,23 +79,23 @@ static double C_PHI;
 static double CC_PHI;
 /***/
 
-static local_store_t *sreestimate_alloc (const smodel * smo);
+static local_store_t *sreestimate_alloc (const ghmm_cmodel * smo);
 static int sreestimate_free (local_store_t ** r, int N);
-static int sreestimate_init (local_store_t * r, const smodel * smo);
+static int sreestimate_init (local_store_t * r, const ghmm_cmodel * smo);
 static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
                                      double **scale, double ****b,
                                      int T, int N, int M);
-static int sreestimate_precompute_b (smodel * smo, double *O, int T,
+static int sreestimate_precompute_b (ghmm_cmodel * smo, double *O, int T,
                                      double ***b);
 static int sreestimate_free_matvec (double **alpha, double **beta,
                                     double *scale, double ***b, int T, int N);
-static int sreestimate_setlambda (local_store_t * r, smodel * smo);
-static int sreestimate_one_step (smodel * smo, local_store_t * r,
+static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo);
+static int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r,
                                  int seq_number, int *T, double **O,
                                  double *log_p, double *seq_w);
 /*----------------------------------------------------------------------------*/
 /* various allocations */
-static local_store_t *sreestimate_alloc (const smodel * smo)
+static local_store_t *sreestimate_alloc (const ghmm_cmodel * smo)
 {
 # define CUR_PROC "sreestimate_alloc"
   int i;
@@ -183,7 +183,7 @@ static int sreestimate_free (local_store_t ** r, int N)
 }                               /* sreestimate_free */
 
 /*----------------------------------------------------------------------------*/
-static int sreestimate_init (local_store_t * r, const smodel * smo)
+static int sreestimate_init (local_store_t * r, const ghmm_cmodel * smo)
 {
 # define CUR_PROC "sreestimate_init"
   int i, j, m, osc;
@@ -261,7 +261,7 @@ static int sreestimate_free_matvec (double **alpha, double **beta,
 }                               /* sreestimate_free_matvec */
 
 /*----------------------------------------------------------------------------*/
-static int sreestimate_precompute_b (smodel * smo, double *O, int T,
+static int sreestimate_precompute_b (ghmm_cmodel * smo, double *O, int T,
                                      double ***b)
 {
 # define CUR_PROC "sreestimate_precompute_b"
@@ -283,7 +283,7 @@ static int sreestimate_precompute_b (smodel * smo, double *O, int T,
 
 
 /*----------------------------------------------------------------------------*/
-static int sreestimate_setlambda (local_store_t * r, smodel * smo)
+static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
 {
 # define CUR_PROC "sreestimate_setlambda"
   int res = -1;
@@ -542,7 +542,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-int sreestimate_one_step (smodel * smo, local_store_t * r, int seq_number,
+int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
                           int *T, double **O, double *log_p, double *seq_w)
 {
 # define CUR_PROC "sreestimate_one_step"
@@ -787,8 +787,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-/* int ghmm_c_baum_welch(smodel *smo, sequence_d_t *sqd) {*/
-int ghmm_c_baum_welch (smosqd_t * cs)
+/* int ghmm_c_baum_welch(ghmm_cmodel *smo, ghmm_cseq *sqd) {*/
+int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
 {
 # define CUR_PROC "ghmm_c_baum_welch"
   int i, j, n, valid, valid_old, max_iter_bw;

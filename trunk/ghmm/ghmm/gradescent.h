@@ -46,12 +46,12 @@ extern "C" {
    gradient descent.
    Model must not have silent states. (checked in Python wrapper)
    @return            0/-1 success/error
-   @param mo:         pointer to a model
+   @param mo:         pointer to a ghmm_dmodel
    @param sq:         struct of annotated sequences
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-int ghmm_dl_gradient_descent (model ** mo, sequence_t * sq, double eta, int no_steps);
+int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int no_steps);
 
 
 #ifdef __cplusplus

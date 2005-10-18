@@ -60,11 +60,11 @@ int main(int argc, char* argv[]) {
 #endif
   int discrete = 0, smodelflag = 0;
   int T, i, j;
-  model **mo = NULL;
+  ghmm_dmodel **mo = NULL;
 #ifdef CMODEL_INCLUDED
   cmodel **cmo = NULL;
 #endif
-  smodel **smo = NULL;
+  ghmm_cmodel **smo = NULL;
   double d;
   /*  double dangle, ddiff, s1, s2; */
 

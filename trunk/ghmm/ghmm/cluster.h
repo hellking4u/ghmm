@@ -56,12 +56,12 @@ extern "C" {
   struct cluster_t {
   /** 
     Vector of HMM-Model pointers */
-    model **mo;
+    ghmm_dmodel **mo;
   /** 
-    Vector of sequence_t pointers: for saving the sequence data
+    Vector of ghmm_dseq pointers: for saving the sequence data
     that belongs to the models
   */
-    sequence_t **mo_seq;
+    ghmm_dseq **mo_seq;
   /** 
     Number of models read in */
     int mo_number;
@@ -78,7 +78,7 @@ extern "C" {
    @param outfile output file
    @param out_filename name of the output file
  */
-  int ghmm_cluster_out (cluster_t * cl, sequence_t * sq, FILE * outfile,
+  int ghmm_cluster_out (cluster_t * cl, ghmm_dseq * sq, FILE * outfile,
                    char *out_filename);
 
 /**
@@ -109,7 +109,7 @@ extern "C" {
    @param cl cluster to update
    @param sq sequences to update the cluster with
  */
-  int ghmm_cluster_update (cluster_t * cl, sequence_t * sq);
+  int ghmm_cluster_update (cluster_t * cl, ghmm_dseq * sq);
 
 /**
    Updates a label

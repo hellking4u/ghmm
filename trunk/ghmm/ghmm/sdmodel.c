@@ -64,7 +64,7 @@
 
 #ifdef sdmodelSTATIC
 /*----------------------------------------------------------------------------*/
-static int sdmodel_state_alloc (sdstate * state, int M, int in_states,
+static int sdmodel_state_alloc (ghmm_dsstate * ghmm_dstate, int M, int in_states,
                                 int out_states, int cos)
 {
 #define CUR_PROC "sdmodel_state_alloc"
@@ -96,7 +96,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #endif
 
 /*----------------------------------------------------------------------------*/
-double ghmm_ds_likelihood (sdmodel * mo, sequence_t * sq)
+double ghmm_ds_likelihood (ghmm_dsmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "ghmm_ds_likelihood"
   double log_p_i, log_p;
@@ -125,7 +125,7 @@ double ghmm_ds_likelihood (sdmodel * mo, sequence_t * sq)
 
 #ifdef sdmodelSTATIC
 /*----------------------------------------------------------------------------*/
-static int sdmodel_copy_vectors (sdmodel * mo, int index, double ***a_matrix,
+static int sdmodel_copy_vectors (ghmm_dsmodel * mo, int index, double ***a_matrix,
                                  double **b_matrix, double *pi, int *fix)
 {
 #define CUR_PROC "sdmodel_copy_vectors"
@@ -165,17 +165,17 @@ static int sdmodel_copy_vectors (sdmodel * mo, int index, double ***a_matrix,
 
 /* Old prototyp:
 
-model **ghmm_d_read(char *filename, int *mo_number, int **seq,
+ghmm_dmodel **ghmm_d_read(char *filename, int *mo_number, int **seq,
 			 const int *seq_len, int seq_number) { */
 
 
 
 /*============================================================================*/
 
-int ghmm_ds_free (sdmodel ** mo)
+int ghmm_ds_free (ghmm_dsmodel ** mo)
 {
 #define CUR_PROC "ghmm_ds_free"
-  sdstate *my_state;
+  ghmm_dsstate *my_state;
   int i;
   mes_check_ptr (mo, return (-1));
   if (!*mo)
@@ -217,11 +217,11 @@ int ghmm_ds_free (sdmodel ** mo)
 
 
 /*============================================================================*/
-sdmodel *ghmm_ds_copy (const sdmodel * mo)
+ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo)
 {
 # define CUR_PROC "ghmm_ds_copy"
   int i, j, k, nachf, vorg, m;
-  sdmodel *m2 = NULL;
+  ghmm_dsmodel *m2 = NULL;
   ARRAY_CALLOC (m2, 1);
   ARRAY_CALLOC (m2->s, mo->N);
   for (i = 0; i < mo->N; i++) {
@@ -288,7 +288,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-void ghmm_ds_topo_order (sdmodel * mo)
+void ghmm_ds_topo_order (ghmm_dsmodel * mo)
 {
 #define CUR_PROC "ghmm_ds_topo_order"
   fprintf (stderr, "ghmm_ds_topo_order will be implemented using DFS.\n");
@@ -297,7 +297,7 @@ void ghmm_ds_topo_order (sdmodel * mo)
 
 #ifdef sdmodelSTATIC
 /*============================================================================*/
-static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
+static ghmm_dseq *__sdmodel_generate_sequences (ghmm_dsmodel * mo, int seed,
                                                  int global_len,
                                                  long seq_number, int Tmax)
 {
@@ -305,7 +305,7 @@ static sequence_t *__sdmodel_generate_sequences (sdmodel * mo, int seed,
 
   /* An end state is characterized by not having an output probabiliy. */
   unsigned long tm;             /* Time seed */
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
   int state, n, i, j, m, reject_os, reject_tmax, badseq, class;
   double p, sum, osum = 0.0;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
@@ -470,7 +470,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* data */
 #endif
 
-int ghmm_ds_init_silent_states (sdmodel * mo)
+int ghmm_ds_init_silent_states (ghmm_dsmodel * mo)
 {
 #define CUR_PROC "ghmm_ds_init_silent_states"
   int nSilentStates = 0;
@@ -514,7 +514,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
  *
  */
 /*returns the extended sequence struct with state matrix*/
-sequence_t *ghmm_ds_generate_sequences (sdmodel * mo, int seed,
+ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
                                         int global_len, long seq_number,
                                         int Tmax)
 {
@@ -522,7 +522,7 @@ sequence_t *ghmm_ds_generate_sequences (sdmodel * mo, int seed,
 
   /* An end state is characterized by not having out-going transition. */
   unsigned long tm;             /* Time seed */
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
   int state, n, i, j, m, reject_os, reject_tmax, badseq, trans_class;
   double p, sum;
   int len = global_len, up = 0, stillbadseq = 0, reject_os_tmp = 0;
@@ -773,7 +773,7 @@ generate sequences by calling generate_sequences_ext
 ========================================*/
 
 /*
-sequence_t *ghmm_ds_generate_sequences(sdmodel* mo, int seed, int global_len,
+ghmm_dseq *ghmm_ds_generate_sequences(ghmm_dsmodel* mo, int seed, int global_len,
 				     long seq_number, int Tmax) {
   sequence_ext_t *sq = sdmodel_generate_sequences_ext(mo,seed,global_len,seq_number,Tmax);
   printf("jaja\n\n");
@@ -784,7 +784,7 @@ sequence_t *ghmm_ds_generate_sequences(sdmodel* mo, int seed, int global_len,
 /* Some outputs */
 /*============================================================================*/
 
-void ghmm_ds_states_print (FILE * file, sdmodel * mo)
+void ghmm_ds_states_print (FILE * file, ghmm_dsmodel * mo)
 {
   int i, j;
   fprintf (file, "Modelparameters: \n M = %d \t N = %d\n", mo->M, mo->N);
@@ -809,7 +809,7 @@ void ghmm_ds_states_print (FILE * file, sdmodel * mo)
 
 /*============================================================================*/
 
-void ghmm_ds_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
+void ghmm_ds_Ak_print (FILE * file, ghmm_dsmodel * mo, int k, char *tab,
                        char *separator, char *ending)
 {
   int i, j, out_state;
@@ -836,7 +836,7 @@ void ghmm_ds_Ak_print (FILE * file, sdmodel * mo, int k, char *tab,
 
 /*============================================================================*/
 
-void ghmm_ds_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+void ghmm_ds_B_print (FILE * file, ghmm_dsmodel * mo, char *tab, char *separator,
                       char *ending)
 {
   int i, j;
@@ -851,7 +851,7 @@ void ghmm_ds_B_print (FILE * file, sdmodel * mo, char *tab, char *separator,
 
 /*============================================================================*/
 
-void ghmm_ds_Pi_print (FILE * file, sdmodel * mo, char *tab, char *separator,
+void ghmm_ds_Pi_print (FILE * file, ghmm_dsmodel * mo, char *tab, char *separator,
                        char *ending)
 {
   int i;
@@ -862,7 +862,7 @@ void ghmm_ds_Pi_print (FILE * file, sdmodel * mo, char *tab, char *separator,
 }                               /* ghmm_d_Pi_print */
 
 
-void ghmm_ds_from_dmodel (const model * mo, sdmodel * smo, int klass)
+void ghmm_ds_from_dmodel (const ghmm_dmodel * mo, ghmm_dsmodel * smo, int klass)
 {
 #define CUR_PROC "ghmm_ds_from_dmodel"
   int i, j, m, nachf, vorg;
@@ -890,14 +890,14 @@ void ghmm_ds_from_dmodel (const model * mo, sdmodel * smo, int klass)
 }
 
 
-model *ghmm_ds_to_dmodel (const sdmodel * mo, int kclass)
+ghmm_dmodel *ghmm_ds_to_dmodel (const ghmm_dsmodel * mo, int kclass)
 {
 #define CUR_PROC "ghmm_ds_to_dmodel"
   /*
    * Set the pointer appropriately
    */
   int i, j, nachf, vorg, m;
-  model *m2 = NULL;
+  ghmm_dmodel *m2 = NULL;
   ARRAY_CALLOC (m2, 1);
   ARRAY_CALLOC (m2->s, mo->N);
   for (i = 0; i < mo->N; i++) {
@@ -953,8 +953,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-/*state* state_copy(state *my_state) {
-  state* new_state = (state*) malloc(sizeof(state));
+/*state* state_copy(ghmm_dstate *my_state) {
+  ghmm_dstate* new_state = (ghmm_dstate*) malloc(sizeof(state));
 
   state_copy_to(my_state,new_state);
 
@@ -964,7 +964,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-/*void state_copy_to(state *source, state* dest) {
+/*void state_copy_to(ghmm_dstate *source, ghmm_dstate* dest) {
   dest->pi         = source->pi;
   dest->out_states = source->out_states;
   dest->in_states  = source->in_states;

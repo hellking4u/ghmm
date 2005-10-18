@@ -63,11 +63,11 @@ typedef struct local_store_t {
   int topo_order_length;
 } local_store_t;
 
-static local_store_t *sdviterbi_alloc (sdmodel * mo, int len);
+static local_store_t *sdviterbi_alloc (ghmm_dsmodel * mo, int len);
 static int sdviterbi_free (local_store_t ** v, int n, int cos, int len);
 
 /*----------------------------------------------------------------------------*/
-static local_store_t *sdviterbi_alloc (sdmodel * mo, int len)
+static local_store_t *sdviterbi_alloc (ghmm_dsmodel * mo, int len)
 {
 #define CUR_PROC "sdviterbi_alloc"
   local_store_t *v = NULL;
@@ -126,7 +126,7 @@ static int sdviterbi_free (local_store_t ** v, int n, int cos, int len)
 
 /*----------------------------------------------------------------------------*/
 
-static void Viterbi_precompute (sdmodel * mo, int *o, int len,
+static void Viterbi_precompute (ghmm_dsmodel * mo, int *o, int len,
                                 local_store_t * v)
 {
 #define CUR_PROC "viterbi_precompute"
@@ -165,7 +165,7 @@ static void Viterbi_precompute (sdmodel * mo, int *o, int len,
 }                               /* viterbi_precompute */
 
 /** */
-static void __viterbi_silent (sdmodel * mo, int t, local_store_t * v,
+static void __viterbi_silent (ghmm_dsmodel * mo, int t, local_store_t * v,
                               int *recent_matchcount, int *countstates,
                               int nr_of_countstates)
 {
@@ -218,7 +218,7 @@ static void __viterbi_silent (sdmodel * mo, int t, local_store_t * v,
 }
 
 /** Return the log score of the sequence */
-int *ghmm_ds_viterbi (sdmodel * mo, int *o, int len, double *log_p)
+int *ghmm_ds_viterbi (ghmm_dsmodel * mo, int *o, int len, double *log_p)
 {
 #define CUR_PROC "ghmm_ds_viterbi"
 
@@ -451,7 +451,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* viterbi */
 
 
-int *ghmm_ds_viterbi_silent (sdmodel * mo, int *o, int len, double *log_p)
+int *ghmm_ds_viterbi_silent (ghmm_dsmodel * mo, int *o, int len, double *log_p)
 {
 #define CUR_PROC "ghmm_ds_viterbi_silent"
 

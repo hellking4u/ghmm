@@ -87,8 +87,8 @@ int ghmm_scluster_hmm (char *argv[])
   char *seq_file = argv[1], *smo_file = argv[2], *out_filename = argv[3];
   int labels = atoi (argv[4]);
   int res = -1, i, iter = 0, sqd_number, idummy;
-  sequence_d_t * sqd = NULL;
-  sequence_d_t ** sqd_vec = NULL;      /* only temp. pointer */
+  ghmm_cseq * sqd = NULL;
+  ghmm_cseq ** sqd_vec = NULL;      /* only temp. pointer */
   long j, changes = 1;
   long *oldlabel, *smo_changed;
   double log_p, log_apo;
@@ -101,7 +101,7 @@ int ghmm_scluster_hmm (char *argv[])
   int max_iter_bw;
   
     /* ghmm_c_baum_welch needs this structure (introduced for parallel mode) */ 
-    smosqd_t * cs;
+    ghmm_c_baum_welch_context * cs;
   
 #if POUT == 0
   int *return_value;
@@ -510,7 +510,7 @@ int ghmm_scluster_t_free (scluster_t * scl)
 
 
 /*============================================================================*/ 
-int ghmm_scluster_out (scluster_t * cl, sequence_d_t * sqd, FILE * outfile, 
+int ghmm_scluster_out (scluster_t * cl, ghmm_cseq * sqd, FILE * outfile, 
                   char *argv[])
 {
   
@@ -607,12 +607,12 @@ STOP:if (out_model)
 /*============================================================================*/ 
 /* Memory for sequences for each model is allocated only once and not done with
    realloc for each sequence as before. */ 
-int ghmm_scluster_update (scluster_t * cl, sequence_d_t * sqd)
+int ghmm_scluster_update (scluster_t * cl, ghmm_cseq * sqd)
 {
   
 #define CUR_PROC "ghmm_scluster_update"
   int i;
-  sequence_d_t * seq_ptr;
+  ghmm_cseq * seq_ptr;
   
     /* Allocate memoery block by block */ 
     for (i = 0; i < cl->smo_number; i++) {
@@ -684,7 +684,7 @@ void ghmm_scluster_print_likelihood (FILE * outfile, scluster_t * cl)
    sequence. This may lead to a produce of a new empty model - therefore
    change out sequences until a non empty model is found. (Quit after 100 
    iterations to avoid a infinite loop). */ 
-int ghmm_scluster_avoid_empty_smodel (sequence_d_t * sqd, scluster_t * cl)
+int ghmm_scluster_avoid_empty_smodel (ghmm_cseq * sqd, scluster_t * cl)
 {
   
 #define CUR_PROC "ghmm_scluster_avoid_empty_smodel"
@@ -836,7 +836,7 @@ int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
 
 
 /*============================================================================*/ 
-void ghmm_scluster_prob (smosqd_t * cs)
+void ghmm_scluster_prob (ghmm_c_baum_welch_context * cs)
 {
   int i;
   
@@ -850,7 +850,7 @@ void ghmm_scluster_prob (smosqd_t * cs)
 
   
 /*============================================================================*/ 
-int ghmm_scluster_random_labels (sequence_d_t * sqd, int smo_number)
+int ghmm_scluster_random_labels (ghmm_cseq * sqd, int smo_number)
 {
   
 #define CUR_PROC "ghmm_scluster_random_labels"
@@ -866,7 +866,7 @@ int ghmm_scluster_random_labels (sequence_d_t * sqd, int smo_number)
 
 
 /*============================================================================*/ 
-int ghmm_scluster_log_aposteriori (scluster_t * cl, sequence_d_t * sqd,
+int ghmm_scluster_log_aposteriori (scluster_t * cl, ghmm_cseq * sqd,
                                int seq_id, double *log_apo)
 {
   

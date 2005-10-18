@@ -45,9 +45,9 @@
 #include "matrix.h"
 #include "ghmm_internals.h"
 
-psequence * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d_seqs) {
+ghmm_dpseq * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_d_seqs) {
 #define CUR_PROC "ghmm_dpseq_init"
-  psequence * seq;
+  ghmm_dpseq * seq;
 
   ARRAY_MALLOC (seq, 1);
 
@@ -72,7 +72,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
-int ghmm_dpseq_free(psequence * seq, int number_of_alphabets, int number_of_d_seqs) {
+int ghmm_dpseq_free(ghmm_dpseq * seq, int number_of_alphabets, int number_of_d_seqs) {
 #define CUR_PROC "ghmm_dpseq_free"
   int i;
   mes_check_ptr(seq, return(-1));
@@ -92,25 +92,25 @@ int ghmm_dpseq_free(psequence * seq, int number_of_alphabets, int number_of_d_se
 #undef CUR_PROC
 }
 
-void ghmm_dpseq_set_discrete(psequence * seq_pointer, int index, int * int_seq) {
+void ghmm_dpseq_set_discrete(ghmm_dpseq * seq_pointer, int index, int * int_seq) {
   seq_pointer->seq[index] = int_seq;
 }
   
-void ghmm_dpseq_set_continuous(psequence * seq_pointer, int index, double * d_seq) {
+void ghmm_dpseq_set_continuous(ghmm_dpseq * seq_pointer, int index, double * d_seq) {
   seq_pointer->d_value[index] = d_seq;
 }
 
-int * ghmm_dpseq_get_discrete(psequence * seq_pointer, int index){
+int * ghmm_dpseq_get_discrete(ghmm_dpseq * seq_pointer, int index){
   return seq_pointer->seq[index];
 }
 
-double * ghmm_dpseq_get_continuous(psequence * seq_pointer, int index){
+double * ghmm_dpseq_get_continuous(ghmm_dpseq * seq_pointer, int index){
   return seq_pointer->d_value[index];
 }
 
-psequence * ghmm_dpseq_slice(psequence * seq_pointer, int start, int stop){
+ghmm_dpseq * ghmm_dpseq_slice(ghmm_dpseq * seq_pointer, int start, int stop){
   int i, j;
-  psequence * slice;
+  ghmm_dpseq * slice;
 
   if (stop > seq_pointer->length) {
     fprintf(stderr, "Slice: sequence index (%i) out of bounds (%i)\n", 
@@ -127,7 +127,7 @@ psequence * ghmm_dpseq_slice(psequence * seq_pointer, int start, int stop){
   return slice;
 }
 
-int ghmm_dpseq_get_char(psequence * seq_pointer, int alphabet, int index){
+int ghmm_dpseq_get_char(ghmm_dpseq * seq_pointer, int alphabet, int index){
   if (alphabet < seq_pointer->number_of_alphabets) {
     if (index < 0)
       return -1;
@@ -146,7 +146,7 @@ int ghmm_dpseq_get_char(psequence * seq_pointer, int alphabet, int index){
   }
 }
 
-double ghmm_dpseq_get_double(psequence * seq_pointer, int seq_index, int index){
+double ghmm_dpseq_get_double(ghmm_dpseq * seq_pointer, int seq_index, int index){
   if (seq_index < seq_pointer->number_of_d_seqs) {
     if (index < 0)
       return 0;

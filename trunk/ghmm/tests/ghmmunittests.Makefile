@@ -1,6 +1,6 @@
 # Note: Name of the executable defined by EXECNAME below
 EXECNAME     = ghmmunittests
-CHECKPREFIX  = /project/algorithmics
+CHECKPREFIX  = /home/janne/local
 GHMMPREFIX   = ../ghmm
 
 

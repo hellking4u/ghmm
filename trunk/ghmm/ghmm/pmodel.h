@@ -38,9 +38,9 @@
 #include "model.h" 
 #include "psequence.h"
 
-struct pmodel;
+struct ghmm_dpmodel;
 
-struct pclass_change_context{
+struct ghmm_dp_class_change_context{
 
     /* Names of class change module/function (for python callback) */
     char* python_module;
@@ -48,14 +48,14 @@ struct pclass_change_context{
     
     /** pointer to class function called with seq X, Y and resp indices 
      in the void you can pass the user data */
-    int (*get_class)(struct pmodel*, psequence*, psequence*, int, int,void*);
+    int (*get_class)(struct ghmm_dpmodel*, ghmm_dpseq*, ghmm_dpseq*, int, int,void*);
     
     /* space for any data necessary for class switch, USER is RESPONSIBLE */
     void* user_data;
 };
-typedef struct pclass_change_context pclass_change_context;
+typedef struct ghmm_dp_class_change_context ghmm_dp_class_change_context;
 
-struct pstate {
+struct ghmm_dpstate {
   /** Initial probability */ 
   double pi;
   /** Log of the initial probability */
@@ -76,7 +76,7 @@ struct pstate {
   /** number of transition classes in this state **/
   int kclasses;
   /** pointer to class function   */
-  pclass_change_context *class_change; 
+  ghmm_dp_class_change_context *class_change; 
   /** int (*get_class)(int*,int); */
   
   /** Transition probability to a successor 
@@ -101,18 +101,18 @@ struct pstate {
   /** which emission alphabet **/
   int alphabet;
 };
-typedef struct pstate pstate;
+typedef struct ghmm_dpstate ghmm_dpstate;
 
-/** @name model
+/** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct pmodel {
+struct ghmm_dpmodel {
   /** Number of states */
   int N;
   /** Number of outputs */   
   int M;   
   /** Vector of the states */
-  pstate *s; 
+  ghmm_dpstate *s; 
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
@@ -164,8 +164,8 @@ struct pmodel {
 
       Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
   
-  /** background_distributions is a pointer to a
-      background_distributions structure, which holds (essentially) an
+  /** ghmm_d_background_distributions is a pointer to a
+      ghmm_d_background_distributions structure, which holds (essentially) an
       array of background distributions (which are just vectors of floating
       point numbers like state.b).
 
@@ -176,7 +176,7 @@ struct pmodel {
 
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
   int *background_id;
-  background_distributions* bp; 
+  ghmm_d_background_distributions* bp; 
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
@@ -199,27 +199,27 @@ struct pmodel {
   int debug;
 
 };
-typedef struct pmodel pmodel;
+typedef struct ghmm_dpmodel ghmm_dpmodel;
 
-int ghmm_dp_state_alloc(pstate *state, int M, int in_states, int out_states);
+int ghmm_dp_state_alloc(ghmm_dpstate *state, int M, int in_states, int out_states);
 
-pmodel * ghmm_dp_init();
+ghmm_dpmodel * ghmm_dp_init();
 
-pclass_change_context * ghmm_dp_init_class_change();
+ghmm_dp_class_change_context * ghmm_dp_init_class_change();
 
-void ghmm_dp_state_clean(pstate *my_state);
+void ghmm_dp_state_clean(ghmm_dpstate *my_state);
 
-int ghmm_dp_free(pmodel *mo);
+int ghmm_dp_free(ghmm_dpmodel *mo);
 
-pstate *get_pstateptr(pstate *ary, int index); 
+ghmm_dpstate *get_pstateptr(ghmm_dpstate *ary, int index); 
 
 /** functions dealing with the emission indices **/
 int ghmm_dp_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
 
-int ghmm_dp_emission_table_size(pmodel * mo, int state_index);
+int ghmm_dp_emission_table_size(ghmm_dpmodel * mo, int state_index);
   
-int ghmm_dp_default_transition_class(pmodel * mo, psequence * X, psequence * Y, int index_x, int index_y, void * user_data) ;
+int ghmm_dp_default_transition_class(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data) ;
 
-void ghmm_dp_set_to_default_transition_class(pclass_change_context * pccc);
+void ghmm_dp_set_to_default_transition_class(ghmm_dp_class_change_context * pccc);
 
 #endif

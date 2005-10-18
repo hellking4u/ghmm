@@ -62,7 +62,7 @@
 } 		
 		
 
-void setSwitchingFunction( sdmodel *smd ) {
+void setSwitchingFunction( ghmm_dsmodel *smd ) {
   smd->get_class = cp_class_change;
 } */
 
@@ -70,7 +70,7 @@ void setSwitchingFunction( sdmodel *smd ) {
 /*========================================================================*/
 
 
-/* the actual pointer to C struct model */
+/* the actual pointer to C struct ghmm_dmodel */
 
 void mat_2d_print(double **mat, int rows, int cols) {
   int i,j;
@@ -89,10 +89,10 @@ int __seq_d_class(const double *O, int index, double *osum) {
   return 0; 
 }
 
-sdmodel *graphmlTosdModel(char *filename)
+ghmm_dsmodel *graphmlTosdModel(char *filename)
 {
   model_t   *mymodel;
-  sdmodel     *cmodel;
+  ghmm_dsmodel     *cmodel;
   int nsilents=0;
 
   mymodel = graphmldoc_cwrapper(filename);
@@ -101,7 +101,7 @@ sdmodel *graphmlTosdModel(char *filename)
     {
       if (mymodel->model_id == DISCRETE)
 	{
-	  cmodel = (sdmodel*)(mymodel->model_pt); /* the actual pointer to C struct model */
+	  cmodel = (ghmm_dsmodel*)(mymodel->model_pt); /* the actual pointer to C struct ghmm_dmodel */
 	  nsilents = ghmm_ds_init_silent_states (cmodel);
 	  fprintf(stderr, "In Main: # Silent States %d\n", nsilents);
 

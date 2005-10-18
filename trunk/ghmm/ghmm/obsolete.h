@@ -242,16 +242,16 @@
    @return array of pointers to the models
    @param filename:   the ASCII input file
    @param mo_number:  filled with number of models read */
-  model **ghmm_d_read (char *filename, int *mo_number);
+  ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number);
 
 /**
    Reads in a model, where the model parameters are explicit given in
    matrix form. Memory allocation for the model is also done here.
-   @return pointer to the model
+   @return pointer to the ghmm_dmodel
    @param s:       scanner
    @param multip:  multiplicity; gives how many copies should 
    be made of the model */
-  model *ghmm_d_direct_read (scanner_t * s, int *multip);
+  ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip);
 
 /**
    Writes a HMM in matrix format. The input model must be of type
@@ -286,7 +286,7 @@
    @return vector of models
    @param s:          scanner
    @param new_models: number of models to produce */
-  model **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number);
+  ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number);
 
 
 
@@ -338,19 +338,19 @@
     All parameters in matrix or vector form.
     This is necessary whenever an initial model is needed (e.g. 
     training) or sequences have to be generated from trained models.
-    For each smodel block smodel\_read\_block() is called.
+    For each ghmm_cmodel block smodel\_read\_block() is called.
    @return vector of read smodels
    @param filename   input ascii file
    @param smo_number  number of smodels to read*/
-  smodel **ghmm_c_read (const char *filename, int *smo_number);
+  ghmm_cmodel **ghmm_c_read (const char *filename, int *smo_number);
 
-/** Reads one smodel block. It is possible to generate multiple
+/** Reads one ghmm_cmodel block. It is possible to generate multiple
     identical copies of the model read. Memory allocation is here.
    @return pointer of smode read
    @param s        scanner for reading
    @param multip   number ob identical copies
 */
-  smodel *ghmm_c_read_block (scanner_t * s, int *multip);
+  ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip);
 
 
 /*============ sequence.h ===================================================*/
@@ -362,14 +362,14 @@
    @param filename    input filename
    @param seq\_arrays number of sequence arrays read
 */
-  sequence_t **ghmm_dseq_read (const char *filename, int *seq_arrays);
+  ghmm_dseq **ghmm_dseq_read (const char *filename, int *seq_arrays);
 
 /**
    Reading of one integer sequence field. Memory alloc here.
    @param s scanner
    @return array of sequences
 */
-  sequence_t *ghmm_dseq_read_alloc (scanner_t * s);
+  ghmm_dseq *ghmm_dseq_read_alloc (scanner_t * s);
 
 /**
    Reads one or several arrays of double sequences. 
@@ -378,14 +378,14 @@
    @return pointer to sequence array
    @param filename    input filename
 */
-  sequence_d_t **ghmm_cseq_read (const char *filename, int *sqd_number);
+  ghmm_cseq **ghmm_cseq_read (const char *filename, int *sqd_number);
 
 /**
    Reading of one double sequence field. Memory alloc here.
    @param s scanner
    @return array of sequences
 */
-  sequence_d_t *ghmm_cseq_read_alloc (scanner_t * s);
+  ghmm_cseq *ghmm_cseq_read_alloc (scanner_t * s);
 
 
 

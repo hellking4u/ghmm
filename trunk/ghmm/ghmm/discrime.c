@@ -62,12 +62,12 @@
 #endif
 
 /* forward declaration */
-static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_galloc (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                      double ******matrix_b, double *****matrix_a,
                      double *****matrix_pi, long double ***omega,
                      long double ****omegati, double ****log_p);
 
-static void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_gfree (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                      double *****matrix_b, double ****matrix_a,
                      double ****matrix_pi, long double **omega,
                      long double ***omegati, double ***log_p);
@@ -80,7 +80,7 @@ static double discrime_alpha = 1.0;
 
 /*----------------------------------------------------------------------------*/
 /** allocates memory for m and n matrices: */
-static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_galloc (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                      double ******matrix_b, double *****matrix_a,
                      double *****matrix_pi, long double ***omega,
                      long double ****omegati, double ****log_p)
@@ -127,7 +127,7 @@ static int discrime_galloc (model ** mo, sequence_t ** sqs, int noC,
 
   /* allocate memory for matrices of likelihoods 
      log_p[k][l][m] =
-     log_prob of l-th sequence of k-th class under the m-th model */
+     log_prob of l-th sequence of k-th class under the m-th ghmm_dmodel */
   ARRAY_CALLOC (*log_p, noC);
   for (k = 0; k < noC; k++) {
     ARRAY_CALLOC ((*log_p)[k], sqs[k]->seq_number);
@@ -159,7 +159,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /** frees memory for expectation matrices for all classes & training sequences*/
-static void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_gfree (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                      double *****matrix_b, double ****matrix_a,
                      double ****matrix_pi, long double **omega,
                      long double ***omegati, double ***log_p)
@@ -225,7 +225,7 @@ static void discrime_gfree (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-static int discrime_calculate_omega (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_calculate_omega (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                               long double **omega, long double ***omegati,
                               double ***log_p)
 {
@@ -292,7 +292,7 @@ static int discrime_calculate_omega (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
+static int discrime_precompute (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                          double *****expect_b, double ****expect_a,
                          double ****expect_pi, double ***log_p)
 {
@@ -304,7 +304,7 @@ static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
   /* forward, backward variables and scaler */
   double **alpha, **beta, *scale;
 
-  sequence_t *sq;
+  ghmm_dseq *sq;
 
   /* iterate over all classes */
   for (k = 0; k < noC; k++) {
@@ -358,7 +358,7 @@ static int discrime_precompute (model ** mo, sequence_t ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-double ghmm_d_discrim_performance (model ** mo, sequence_t ** sqs, int noC)
+double ghmm_d_discrim_performance (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC)
 {
 #define CUR_PROC "ghmm_d_discrim_performance"
 
@@ -370,7 +370,7 @@ double ghmm_d_discrim_performance (model ** mo, sequence_t ** sqs, int noC)
   long double sigmoid;
   double performance = 0.0;
 
-  sequence_t *sq;
+  ghmm_dseq *sq;
 
   ARRAY_CALLOC (logp, noC);
 
@@ -425,7 +425,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_print_statistics (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                 int *falseP, int *falseN)
 {
 #define CUR_PROC "discrime_print_statistics"
@@ -434,7 +434,7 @@ static void discrime_print_statistics (model ** mo, sequence_t ** sqs, int noC,
   int argmax;
   double *logp, max;
 
-  sequence_t *sq;
+  ghmm_dseq *sq;
 
   ARRAY_CALLOC (logp, noC);
 
@@ -519,7 +519,7 @@ static void discrime_trim_gradient (double *new, int length)
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_pi_gradient (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                   int class, double ****expect_pi,
                                   long double **omega, long double ***omegati)
 {
@@ -532,12 +532,12 @@ static void discrime_update_pi_gradient (model ** mo, sequence_t ** sqs, int noC
 
   double sum;
 
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
 
   ARRAY_CALLOC (pi_old, mo[class]->N);
   ARRAY_CALLOC (pi_new, mo[class]->N);
 
-  /* itarate over alls state of the current model */
+  /* itarate over all states of the current model */
   for (i = 0; i < mo[class]->N; i++) {
     /* iterate over all classes */
     sum = 0.0;
@@ -579,7 +579,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_a_gradient (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                  int class, double ****expect_a,
                                  long double **omega, long double ***omegati)
 {
@@ -594,7 +594,7 @@ static void discrime_update_a_gradient (model ** mo, sequence_t ** sqs, int noC,
 
   double sum;
 
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
 
   ARRAY_CALLOC (a_old, mo[class]->N);
   ARRAY_CALLOC (a_new, mo[class]->N);
@@ -657,7 +657,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_b_gradient (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                  int class, double *****expect_b,
                                  long double **omega, long double ***omegati)
 {
@@ -677,7 +677,7 @@ static void discrime_update_b_gradient (model ** mo, sequence_t ** sqs, int noC,
 
   /* updating current class */
 
-  /* itarate over alls state of the current model */
+  /* itarate over all states of the current model */
   for (i = 0; i < mo[class]->N; i++) {
     if (mo[class]->s[i].fix)
       continue;
@@ -727,7 +727,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_update_pi_closed (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_pi_closed (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                 int class, double lfactor,
                                 double ****expect_pi, long double **omega,
                                 long double ***omegati)
@@ -741,14 +741,14 @@ static void discrime_update_pi_closed (model ** mo, sequence_t ** sqs, int noC,
 
   double sum, lagrangian;
 
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
 
   ARRAY_CALLOC (pi_old, mo[class]->N);
   ARRAY_CALLOC (pi_new, mo[class]->N);
 
   /* updating current class (all or only specified) */
 
-  /* itarate over alls state of the k-th model to compute lagrangian multiplier */
+  /* itarate over all states of the k-th model to compute lagrangian multiplier */
   lagrangian = 0.0;
   for (i = 0; i < mo[class]->N; i++) {
 
@@ -805,7 +805,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_update_a_closed (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_a_closed (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                int class, double lfactor, double ****expect_a,
                                long double **omega, long double ***omegati)
 {
@@ -820,7 +820,7 @@ static void discrime_update_a_closed (model ** mo, sequence_t ** sqs, int noC,
 
   double sum, lagrangian;
 
-  sequence_t *sq = NULL;
+  ghmm_dseq *sq = NULL;
 
   ARRAY_CALLOC (a_old, mo[class]->N);
   ARRAY_CALLOC (a_new, mo[class]->N);
@@ -908,7 +908,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_update_b_closed (model ** mo, sequence_t ** sqs, int noC,
+static void discrime_update_b_closed (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
                                int class, double lfactor,
                                double *****expect_b, long double **omega,
                                long double ***omegati)
@@ -927,7 +927,7 @@ static void discrime_update_b_closed (model ** mo, sequence_t ** sqs, int noC,
   ARRAY_CALLOC (b_old, mo[class]->M);
   ARRAY_CALLOC (b_new, mo[class]->M);
 
-  /* itarate over alls state of the k-th model */
+  /* itarate over all states of the k-th model */
   for (i = 0; i < mo[class]->N; i++) {
     if (mo[class]->s[i].fix)
       continue;
@@ -990,7 +990,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
+static void discrime_find_factor (ghmm_dmodel * mo, ghmm_dseq ** sqs, int noC, int k,
                            double lfactor, double ****expect_pi,
                            double ****expect_a, double *****expect_b,
                            long double **omega, long double ***omegati)
@@ -1000,7 +1000,7 @@ static void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
   int h, i, j, l, m;
   int size, hist, j_id;
   double self, other;
-  sequence_t *sq;
+  ghmm_dseq *sq;
 
   /* itarate over all states of the k-th model */
   for (i = 0; i < mo->N; i++) {
@@ -1075,7 +1075,7 @@ static void discrime_find_factor (model * mo, sequence_t ** sqs, int noC, int k,
 
 
 /*----------------------------------------------------------------------------*/
-static int discrime_onestep (model ** mo, sequence_t ** sqs, int noC, int grad,
+static int discrime_onestep (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int grad,
                       int class)
 {
 #define CUR_PROC "discrime_onestep"
@@ -1161,7 +1161,7 @@ FREE:
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps, 
+int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max_steps, 
 		    int gradient)
 {
 #define CUR_PROC "ghmm_d_discriminative"
@@ -1181,7 +1181,7 @@ int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_step
 
   int i, k, step;
 
-  model * last;
+  ghmm_dmodel * last;
 
   ARRAY_CALLOC (falseP, noC);
   ARRAY_CALLOC (falseN, noC);

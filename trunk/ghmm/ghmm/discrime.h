@@ -54,7 +54,7 @@ extern "C" {
    @param gradient:        if gradient == 0 try a closed form solution
                            otherwise a gradient descent
  */
-  int ghmm_d_discriminative (model ** mo, sequence_t ** sqs, int noC, int max_steps,
+  int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max_steps,
 		      int gradient);
 
 /*----------------------------------------------------------------------------*/
@@ -66,7 +66,7 @@ extern "C" {
    @param sqs:             array of annotated sequence sets
    @param noC:             number of classes
 */
-  double ghmm_d_discrim_performance (model ** mo, sequence_t ** sqs,
+  double ghmm_d_discrim_performance (ghmm_dmodel ** mo, ghmm_dseq ** sqs,
                                        int noC);
 
 

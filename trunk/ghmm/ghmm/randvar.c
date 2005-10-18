@@ -285,7 +285,7 @@ STOP:
 
 
 /*============================================================================*/
-/* special smodel pdf need it: smo->density==normal_approx: */
+/* special ghmm_cmodel pdf need it: smo->density==normal_approx: */
 /* generates a table of of aequidistant samples of gaussian pdf */
 
 static int randvar_init_pdf_stdnormal ()

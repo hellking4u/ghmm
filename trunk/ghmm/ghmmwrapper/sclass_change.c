@@ -47,12 +47,12 @@
 
 
 
-/* smo is a smodel struct
+/* smo is a ghmm_cmodel struct
    seq is a double matrix of observations 
    k is the first current sequence index (corresponding to the rows in seq)
    t is the second current sequence index (corresponding to seq[k] )
 */
-int cp_class_change( smodel *smo, double* seq, int k, int t) {
+int cp_class_change( ghmm_cmodel *smo, double* seq, int k, int t) {
   int res;
   
   if((t%2) == 0){
@@ -68,10 +68,10 @@ int cp_class_change( smodel *smo, double* seq, int k, int t) {
 } 		
 		
 /*
-   setSwitchingFunction assigns cp_class_change as switching function in model smo.
+   setSwitchingFunction assigns cp_class_change as switching function in ghmm_dmodel smo.
    Needs to be modified for user defined C switching function.
 */
-void setSwitchingFunction( smodel *smd ) {
+void setSwitchingFunction( ghmm_cmodel *smd ) {
   smd->class_change->get_class = cp_class_change;
 }
 
@@ -79,7 +79,7 @@ void setSwitchingFunction( smodel *smd ) {
    Arguments ( which are analogue to cp_class_change (s.a.)) are parsed into Python data structures
    before the call-back.
 */
-int python_class_change( smodel* smo, double *seq, int k, int t ){
+int python_class_change( ghmm_cmodel* smo, double *seq, int k, int t ){
    char* ModuleName = smo->class_change->python_module;
    char* FunctionName = smo->class_change->python_function;
    int class,i;
@@ -153,7 +153,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
 
 /* Assignment of Python module and function for class change. The values are stored in smo->class_change.
    
-   smo: smodel struct with multiple transition classes
+   smo: ghmm_cmodel struct with multiple transition classes
    python_module: Name of the module the switching function is defined in
    python_function: Name of the Python function to be used. 
    IMPORTANT: python_function must have a signature compatible to cp_class_change (that means three arguments:
@@ -161,7 +161,7 @@ int python_class_change( smodel* smo, double *seq, int k, int t ){
    See class_change.py in the ghmmwrapper directory for an example.)
 
 */
-void setPythonSwitching( smodel *smd, char* python_module, char* python_function ){
+void setPythonSwitching( ghmm_cmodel *smd, char* python_module, char* python_function ){
    if(!smd->class_change) {
      printf("setPythonSwitching ERROR: class_change struct not initialized.\n");
    }     
@@ -189,13 +189,13 @@ static PyObject *pyCallback = NULL;
    assigned to pyCallback.
 
     Arguments:
-     smo: pointer on the smodel
+     smo: pointer on the ghmm_cmodel
      seq: current sequence
      k:   index of current sequence in the sequence set it originated from
      t:   current time step (e.q seq[t] is the current observation)
    
 */
-int executePythonCallback(smodel* smo, double *seq, int k, int t){
+int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t){
    int class,i;
 
    /*printf("k=%d, t=%d\n",k,t); */
@@ -242,7 +242,7 @@ int executePythonCallback(smodel* smo, double *seq, int k, int t){
    in the smodel-class_change context.
 
  */
-void setPythonCallback(smodel *smo, PyObject *py_cb){
+void setPythonCallback(ghmm_cmodel *smo, PyObject *py_cb){
   pyCallback = py_cb;
   smo->class_change->get_class = executePythonCallback;
 }
