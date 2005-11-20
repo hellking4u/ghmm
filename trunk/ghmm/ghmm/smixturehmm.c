@@ -392,7 +392,7 @@ int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
   ARRAY_CALLOC (smo_sqd, 1);
   /*  smo_sqd->max_iter = MAX_ITER_BW; */
   smo_sqd->max_iter = 10;
-  smo_sqd->eps = EPS_ITER_BW;
+  smo_sqd->eps = GHMM_EPS_ITER_BW;
   smo_sqd->logp = &log_p;
   smo_sqd->sqd = sqd;
 

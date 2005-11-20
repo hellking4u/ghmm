@@ -662,7 +662,7 @@ static void init_phi_prop (plocal_propagate_store_t * pv, ghmm_dpseq * X,
 	  /* m_free(pv->end_of_first[off_x][y][j]); */
 	  pv->end_of_first[off_x][y][j] = NULL;
 	}
-  if (mo->model_type & kSilentStates) { /* could go into silent state at t=0 */
+  if (mo->model_type & GHMM_kSilentStates) { /* could go into silent state at t=0 */
     /*p__viterbi_silent( mo, t=0, v);*/
   }
   /*for (j = 0; j < mo->N; j++)
@@ -694,7 +694,7 @@ static void init_phi_prop (plocal_propagate_store_t * pv, ghmm_dpseq * X,
       for (i = 0; i < mo->N; i++) {
 	/* Determine the maximum */
 	/* max_phi = phi[i] + log_in_a[j][i] ... */
-	if (!(mo->model_type & kSilentStates) || !mo->silent[i] ) {
+	if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[i] ) {
 	  max_value = -DBL_MAX;
 	  set_end_of_first(pv, u, v, i, NULL);
 	  for (j = 0; j < mo->s[i].in_states; j++) {
@@ -890,7 +890,7 @@ static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dp
       for (i = 0; i < mo->N; i++) {
 	/* Determine the maximum */
 	/* max_phi = phi[i] + log_in_a[j][i] ... */
-	if (!(mo->model_type & kSilentStates) || !mo->silent[i]) {
+	if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[i]) {
 	  max_value = -DBL_MAX;
 	  set_end_of_first(pv, 0, v, i, NULL);
 	  for (j = 0; j < mo->s[i].in_states; j++) {

@@ -194,7 +194,7 @@ ghmm_dseq *ghmm_dseq_read_alloc (scanner_t * s)
 
         sq->seq[sq->seq_number] =
           scanner_get_int_array (s, sq->seq_len + sq->seq_number);
-        if (sq->seq_len[sq->seq_number] > MAX_SEQ_LEN) {
+        if (sq->seq_len[sq->seq_number] > GHMM_MAX_SEQ_LEN) {
           ighmm_scanner_error (s, "sequence too long");
           goto STOP;
         }
@@ -204,7 +204,7 @@ ghmm_dseq *ghmm_dseq_read_alloc (scanner_t * s)
         sq->total_w += sq->seq_w[sq->seq_number];
         sq->seq_number++;
       }                         /* while( !s->eof...) */
-      if ((sq->seq_number == 0) || (sq->seq_number > MAX_SEQ_NUMBER)) {
+      if ((sq->seq_number == 0) || (sq->seq_number > GHMM_MAX_SEQ_NUMBER)) {
         str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range",
                              sq->seq_number);
         mes_prot (str);
@@ -410,7 +410,7 @@ ghmm_cseq *ghmm_cseq_read_alloc (scanner_t * s)
         }
         sqd->seq[sqd->seq_number] =
           scanner_get_double_earray (s, sqd->seq_len + sqd->seq_number);
-        if (sqd->seq_len[sqd->seq_number] > MAX_SEQ_LEN) {
+        if (sqd->seq_len[sqd->seq_number] > GHMM_MAX_SEQ_LEN) {
           ighmm_scanner_error (s, "sequence too long");
           goto STOP;
         }
@@ -420,7 +420,7 @@ ghmm_cseq *ghmm_cseq_read_alloc (scanner_t * s)
         sqd->total_w += sqd->seq_w[sqd->seq_number];
         sqd->seq_number++;
       }                         /* while( !s->eof...) */
-      if ((sqd->seq_number == 0) || (sqd->seq_number > MAX_SEQ_NUMBER)) {
+      if ((sqd->seq_number == 0) || (sqd->seq_number > GHMM_MAX_SEQ_NUMBER)) {
         str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range",
                              sqd->seq_number);
         mes_prot (str);
@@ -513,7 +513,7 @@ ghmm_cseq *ghmm_cseq_calloc (long seq_number)
 
   /*printf("*** ghmm_cseq *sequence_d_calloc, nr: %d\n",seq_number);*/
   ghmm_cseq *sqd = NULL;
-  if (seq_number > MAX_SEQ_NUMBER) {
+  if (seq_number > GHMM_MAX_SEQ_NUMBER) {
     str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
     mes_prot (str);
     m_free (str);
@@ -553,7 +553,7 @@ ghmm_dseq *ghmm_dseq_calloc (long seq_number)
   char * str;
   ghmm_dseq *sq = NULL;
 
-  if (seq_number > MAX_SEQ_NUMBER) {
+  if (seq_number > GHMM_MAX_SEQ_NUMBER) {
     str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
     mes_prot (str);
     m_free (str);
@@ -1496,7 +1496,7 @@ int ghmm_cseq_mix_like (ghmm_cmodel ** smo, int smo_number, ghmm_cseq * sqd,
     /* no model fits */
     if (seq_like == 0.0) {
       error_seqs++;
-      *like += (PENALTY_LOGP * sqd->seq_w[i]);
+      *like += (GHMM_PENALTY_LOGP * sqd->seq_w[i]);
     }
     else
       *like += (log (seq_like) * sqd->seq_w[i]);

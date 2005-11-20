@@ -58,10 +58,10 @@ void generateModel (ghmm_dmodel *mo, int noStates, unsigned int seed) {
   mo->prior = -1;
 
   /* Model has Higher order Emissions and labeled states*/
-  mo->model_type =  kLabeledStates;
+  mo->model_type = GHMM_kLabeledStates;
   if (mo->maxorder>0)
-    mo->model_type += kHigherOrderEmissions;
-  /* kHigherOrderEmissions + kHasBackgroundDistributions*/
+    mo->model_type += GHMM_kHigherOrderEmissions;
+  /* GHMM_kHigherOrderEmissions + GHMM_kBackgroundDistributions*/
 
   /* allocate memory for pow look-up table and fill it */
   if (!(mo->pow_lookup = malloc (sizeof (int) * (mo->maxorder+2)))) 

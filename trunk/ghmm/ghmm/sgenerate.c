@@ -95,7 +95,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
 
   if (len <= 0)
     /* no global length; model should have a final state */
-    len = (int) MAX_SEQ_LEN;
+    len = (int) GHMM_MAX_SEQ_LEN;
   max_short_len = ghmm_cseq_max_len (sqd_short);
 
   /*---------------alloc-------------------------------------------------*/
@@ -345,7 +345,7 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
     mes_prot ("Error: sequence with zero or negativ length\n");
     goto STOP;
   }
-  ARRAY_CALLOC (new_O, (int) MAX_SEQ_LEN);
+  ARRAY_CALLOC (new_O, (int) GHMM_MAX_SEQ_LEN);
   ARRAY_CALLOC (scale, len);
   ARRAY_CALLOC (initial_distribution, smo->N);
   ghmm_cseq_copy (new_O, O, len);
@@ -409,7 +409,7 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
     }
 
   t = len;
-  while (t < (int) MAX_SEQ_LEN) {
+  while (t < (int) GHMM_MAX_SEQ_LEN) {
     if (smo->s[i].out_states == 0)
       /* reached final state, exit while loop */
       break;
@@ -486,7 +486,7 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
     t++;
     up = 0;
   }                             /* while (t < MAX_SEQ_LEN) */
-  if (t < (int) MAX_SEQ_LEN)
+  if (t < (int) GHMM_MAX_SEQ_LEN)
     ARRAY_REALLOC (new_O, t);
 
   *new_len = t;

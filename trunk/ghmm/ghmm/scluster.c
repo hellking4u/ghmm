@@ -215,7 +215,7 @@ int ghmm_scluster_hmm (char *argv[])
 /*------------------------main loop-------------------------------------------*/ 
     /* do it until no sequence changes model; 
        attention: error function values are not used directly as a stopping criterion */ 
-    while (changes > 0 || eps_bw > EPS_ITER_BW || max_iter_bw < MAX_ITER_BW) {
+    while (changes > 0 || eps_bw > GHMM_EPS_ITER_BW || max_iter_bw < GHMM_MAX_ITER_BW) {
     iter++;
     
       /* reset error functions and counters */ 
@@ -316,7 +316,7 @@ int ghmm_scluster_hmm (char *argv[])
                     sqd->seq_id[j]);
             mes_prot (str);
             m_free (str);
-            cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * PENALTY_LOGP;
+            cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * GHMM_PENALTY_LOGP;
             continue;
           }
           if (idummy != sqd->seq_label[j]) {
@@ -344,8 +344,8 @@ int ghmm_scluster_hmm (char *argv[])
     
       /* NEW: If no changes anymore: increase max_iter
          ( Alternative: change eps ) */ 
-      if (changes == 0 && max_iter_bw < MAX_ITER_BW) {
-      max_iter_bw = MAX_ITER_BW;
+      if (changes == 0 && max_iter_bw < GHMM_MAX_ITER_BW) {
+      max_iter_bw = GHMM_MAX_ITER_BW;
       changes = 1;             /* so that reestimated and assigned again  */
       for (i = 0; i < cl.smo_number; i++)
         smo_changed[i] = 1;
@@ -803,7 +803,7 @@ int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
     /* MD-Classify: argmax_i (log(p(O | \lambda_i ))) */ 
     if (CLASSIFY == 0) {
     for (i = 0; i < cl->smo_number; i++) {
-      if (all_log_p[i][seq_id] == PENALTY_LOGP)
+      if (all_log_p[i][seq_id] == GHMM_PENALTY_LOGP)
         continue;               /* model and seq. don't fit */
       if (*log_p < all_log_p[i][seq_id]) {
         *log_p = all_log_p[i][seq_id];
@@ -819,7 +819,7 @@ int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
         mes_prot ("Error! Need model prior for MAW-classification\n");
       }
       if (cl->smo[i]->prior != 0) {
-        if (all_log_p[i][seq_id] == PENALTY_LOGP)
+        if (all_log_p[i][seq_id] == GHMM_PENALTY_LOGP)
           continue;             /* model and seq. don't fit */
         if (save < all_log_p[i][seq_id] + log (cl->smo[i]->prior)) {
           save = all_log_p[i][seq_id] + log (cl->smo[i]->prior);
@@ -845,7 +845,7 @@ void ghmm_scluster_prob (ghmm_c_baum_welch_context * cs)
     if (ghmm_c_logp
          (cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i],
           &(cs->logp[i])) == -1)
-      cs->logp[i] = (double) PENALTY_LOGP;     /*  Penalty costs */
+      cs->logp[i] = (double) GHMM_PENALTY_LOGP;     /*  Penalty costs */
 } /* ghmm_scluster_prob */ 
 
   

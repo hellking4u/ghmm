@@ -119,7 +119,7 @@ double ighmm_gtail_pmue_interpol (double mue, double A, double B, double eps)
 double ighmm_gtail_pmue_umin (double mue, double A, double B, double eps)
 {
   double feps, u;
-  u = EPS_U;
+  u = GHMM_EPS_U;
   feps = ighmm_rand_normal_density_trunc (-eps, mue, u, -eps);
   return (A - mue - u * feps);
 }

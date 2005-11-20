@@ -263,7 +263,7 @@ ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo)
   m2->prior = mo->prior;
   m2->cos = mo->cos;
   m2->model_type = mo->model_type;
-  if (mo->model_type & kSilentStates) {
+  if (mo->model_type & GHMM_kSilentStates) {
     assert (mo->silent != NULL);
     ARRAY_CALLOC (m2->silent, mo->N);
     for (i = 0; i < mo->N; i++) {
@@ -493,11 +493,11 @@ int ghmm_ds_init_silent_states (ghmm_dsmodel * mo)
   }
 
   if (nSilentStates) {
-    mo->model_type = kSilentStates;
+    mo->model_type = GHMM_kSilentStates;
     mo->silent = __silents;
   }
   else {
-    mo->model_type = kNotSpecified;
+    mo->model_type = GHMM_kNotSpecified;
     mo->silent = NULL;
     m_free (__silents);
   }
@@ -540,7 +540,7 @@ ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
        an end state, the konstant MAX_SEQ_LEN is used. */
-    len = (int) MAX_SEQ_LEN;
+    len = (int) GHMM_MAX_SEQ_LEN;
 
   if (seed > 0) {
     GHMM_RNG_SET (RNG, seed);
@@ -572,7 +572,7 @@ ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
     }
     /* assert( !mo->silent[i] ); */
 
-    if (mo->model_type & kSilentStates) {
+    if (mo->model_type & GHMM_kSilentStates) {
 
       if (!mo->silent[i]) {     /* fDte emits */
         lastStateSilent = 0;
@@ -670,7 +670,7 @@ ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
 
       i = mo->s[i].out_id[j];
 
-      if ((mo->model_type & kSilentStates) && mo->silent[i]) {   /* Get a silent state i */
+      if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {   /* Get a silent state i */
         silent_len++;
         if (silent_len >= Tmax) {
           badSilentStates = 1;
@@ -928,7 +928,7 @@ ghmm_dmodel *ghmm_ds_to_dmodel (const ghmm_dsmodel * mo, int kclass)
   m2->prior = mo->prior;
 
   m2->model_type = mo->model_type;
-  if (mo->model_type & kSilentStates) {
+  if (mo->model_type & GHMM_kSilentStates) {
     assert (mo->silent != NULL);
     ARRAY_CALLOC (m2->silent, mo->N);
     for (i = 0; i < m2->N; i++) {

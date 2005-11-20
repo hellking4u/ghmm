@@ -643,13 +643,13 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   ARRAY_CALLOC (m2, 1);
   ARRAY_CALLOC (m2->s, mo->N);
   ARRAY_CALLOC (m2->silent, mo->N);
-  if (mo->model_type & kTiedEmissions) {
+  if (mo->model_type & GHMM_kTiedEmissions) {
     ARRAY_CALLOC (m2->tied_to, mo->N);
   }
   else
     m2->tied_to = NULL;
 
-  if (mo->model_type & kHasBackgroundDistributions) {
+  if (mo->model_type & GHMM_kBackgroundDistributions) {
     ARRAY_CALLOC (m2->background_id, mo->N);
     m2->bp = mo->bp;
   }
@@ -685,15 +685,15 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
 
     m2->s[i].pi = mo->s[i].pi;
     m2->s[i].fix = mo->s[i].fix;
-    if (mo->model_type & kSilentStates)
+    if (mo->model_type & GHMM_kSilentStates)
       m2->silent[i] = mo->silent[i];
-    if (mo->model_type & kTiedEmissions)
+    if (mo->model_type & GHMM_kTiedEmissions)
       m2->tied_to[i] = mo->tied_to[i];
-    if (mo->model_type & kLabeledStates)
+    if (mo->model_type & GHMM_kLabeledStates)
       m2->s[i].label = mo->s[i].label;
-    if (mo->model_type & kHigherOrderEmissions)
+    if (mo->model_type & GHMM_kHigherOrderEmissions)
       m2->s[i].order = mo->s[i].order;
-    if (mo->model_type & kHasBackgroundDistributions)
+    if (mo->model_type & GHMM_kBackgroundDistributions)
       m2->background_id[i] = mo->background_id[i];
     m2->s[i].out_states = nachf;
     m2->s[i].in_states = vorg;
@@ -733,7 +733,7 @@ int ghmm_d_check (const ghmm_dmodel * mo)
     sum += mo->s[i].pi;
   }
 
-  if (fabs (sum - 1.0) >= EPS_PREC) {
+  if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
     mes_prot ("sum Pi[i] != 1.0\n");
     goto STOP;
   }
@@ -750,7 +750,7 @@ int ghmm_d_check (const ghmm_dmodel * mo)
       sum += mo->s[i].out_a[j];
       /* printf ("    out_a[%d][%d] = %8.5f\n", i, j, mo->s[i].out_a[j]); */
     }
-    if (fabs (sum - 1.0) >= EPS_PREC) {
+    if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
       str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n",
                            sum, i);
       mes_prot (str);
@@ -768,7 +768,7 @@ int ghmm_d_check (const ghmm_dmodel * mo)
       mes_prot (str);
       m_free (str);
     }
-    else if (fabs (sum-1.0) >= EPS_PREC) {
+    else if (fabs (sum-1.0) >= GHMM_EPS_PREC) {
       str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.5f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
@@ -778,13 +778,13 @@ int ghmm_d_check (const ghmm_dmodel * mo)
     for (j = 0; j < mo->M; j++)
       sum += mo->s[i].b[j];
     /* silent states */
-    if ((mo->model_type & kSilentStates) && mo->silent[i] && (sum != 0.0))
+    if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i] && (sum != 0.0))
       goto STOP;
     /* not reachable states */
-    else if (imag && (fabs (sum + mo->M) >= EPS_PREC))
+    else if (imag && (fabs (sum + mo->M) >= GHMM_EPS_PREC))
       goto STOP;
     /* normal states */
-    if (fabs (sum - 1.0) >= EPS_PREC) {
+    if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
       str = ighmm_mprintf (NULL, 0, "sum b[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
@@ -863,7 +863,7 @@ ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
   mo->N = seq_len;
   mo->M = anz_symb;
   /* All models generated from sequences have to be LeftRight-models */
-  mo->model_type = kLeftRight;
+  mo->model_type = GHMM_kLeftRight;
 
   /* Allocate memory for all vectors */
   ARRAY_CALLOC (mo->s, mo->N);
@@ -994,7 +994,7 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
        an end state, the konstant MAX_SEQ_LEN is used. */
-    len = (int) MAX_SEQ_LEN;
+    len = (int) GHMM_MAX_SEQ_LEN;
 
   if (seed > 0) {
     GHMM_RNG_SET (RNG, seed);
@@ -1018,14 +1018,14 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
         break;
     }
 
-    if ((mo->model_type & kHigherOrderEmissions) && (mo->s[i].order > 0)) {
+    if ((mo->model_type & GHMM_kHigherOrderEmissions) && (mo->s[i].order > 0)) {
       fprintf (stderr,
                "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n",
                i, mo->s[i].order);
       exit (1);
     }
 
-    if (mo->model_type & kSilentStates && mo->silent[i]) {
+    if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
       /* silent state: we do nothing, no output */
       /* printf("first state %d silent\n",i);
          state = 0; 
@@ -1068,7 +1068,7 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
       }
 
       i = mo->s[i].out_id[j];
-      if ((mo->model_type & kSilentStates) && mo->silent[i]) {  /* Get a silent state i */
+      if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {  /* Get a silent state i */
         /* printf("silent state \n");
            silent_len += 1; */
         /*if (silent_len >= Tmax) {
@@ -1238,7 +1238,7 @@ void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
   for (i = 0; i < mo->N; i++) {
     fprintf (file, "%s", tab);
     fprintf (file, "%.2f", mo->s[i].b[0]);
-    if (!(mo->model_type & kHigherOrderEmissions)) {
+    if (!(mo->model_type & GHMM_kHigherOrderEmissions)) {
       for (j = 1; j < mo->M; j++)
         fprintf (file, "%s %.2f", separator, mo->s[i].b[j]);
       fprintf (file, "%s\n", ending);
@@ -1740,7 +1740,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
        an end state, the konstant MAX_SEQ_LEN is used. */
-    len = (int) MAX_SEQ_LEN;
+    len = (int) GHMM_MAX_SEQ_LEN;
 
   if (seed > 0) {
     GHMM_RNG_SET (RNG, seed);
@@ -1754,7 +1754,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
 
     ARRAY_CALLOC (sq->seq[n], len);
     
-    if (mo->model_type & kSilentStates) {
+    if (mo->model_type & GHMM_kSilentStates) {
       
       /* printf("Model has silent states.\n"); */
       /* for silent models we have to allocate for the maximal possible number of lables */
@@ -1776,7 +1776,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
         break;
     }
 
-    if (!(mo->model_type & kHigherOrderEmissions) && 0 < mo->s[i].order) {
+    if (!(mo->model_type & GHMM_kHigherOrderEmissions) && 0 < mo->s[i].order) {
       fprintf (stderr,
                "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n",
                i, mo->s[i].order);
@@ -1786,7 +1786,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
     /* add label of fist state to the label list */
     sq->state_labels[n][label_index++] = mo->s[i].label;
 
-    if (mo->model_type & kSilentStates && mo->silent[i]) {
+    if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
       /* silent state: we do nothing, no output */
       /* printf("first state %d silent\n",i);
          pos = 0; 
@@ -1812,7 +1812,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
 
       /* printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
 
-      if (mo->model_type & kSilentStates) {
+      if (mo->model_type & GHMM_kSilentStates) {
         printf ("reallocating\n");
         ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
       }
@@ -1872,7 +1872,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
 	break;
       }
 
-      if (mo->model_type & kSilentStates && mo->silent[i]) {    /* Got a silent state i */
+      if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {    /* Got a silent state i */
         /* printf("silent state \n");
            silent_len += 1;
            if (silent_len >= Tmax) {
@@ -1892,7 +1892,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
 
         /* printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
 
-        if (mo->model_type & kSilentStates) {
+        if (mo->model_type & GHMM_kSilentStates) {
           printf ("reallocating\n");
           ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
         }
@@ -1923,7 +1923,7 @@ int ghmm_d_normalize (ghmm_dmodel * mo)
   for (i = 0; i < mo->N; i++) {
 
     /* check model_type before using state order */
-    if (mo->model_type & kHigherOrderEmissions)
+    if (mo->model_type & GHMM_kHigherOrderEmissions)
       size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
 
     /* normalize transition probabilities */
@@ -1976,7 +1976,7 @@ int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed)
       /* add noise only to out_a, in_a is updated on normalisation */
       mo->s[i].out_a[j] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level);
 
-    if (mo->model_type & kHigherOrderEmissions)
+    if (mo->model_type & GHMM_kHigherOrderEmissions)
       size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
     for (hist = 0; hist < size; hist++)
       for (h = hist * mo->M; h < hist * mo->M + mo->M; h++)
@@ -2099,7 +2099,7 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
 
   int i, j, last, size, failed=0;
 
-  if (mo->model_type & kSilentStates) {
+  if (mo->model_type & GHMM_kSilentStates) {
     mes_prot ("Sorry, apply_duration doesn't support silent states yet\n");
     return -1;
   }
@@ -2108,13 +2108,13 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
   mo->N += times - 1;
 
   ARRAY_REALLOC (mo->s, mo->N);
-  if (mo->model_type & kSilentStates) {
+  if (mo->model_type & GHMM_kSilentStates) {
     ARRAY_REALLOC (mo->silent, mo->N);
     ARRAY_REALLOC (mo->topo_order, mo->N);
   }
-  if (mo->model_type & kTiedEmissions)
+  if (mo->model_type & GHMM_kTiedEmissions)
     ARRAY_REALLOC (mo->tied_to, mo->N);
-  if (mo->model_type & kHasBackgroundDistributions)
+  if (mo->model_type & GHMM_kBackgroundDistributions)
     ARRAY_REALLOC (mo->background_id, mo->N);
 
   size = ghmm_d_ipow (mo, mo->M, mo->s[cur].order + 1);
@@ -2135,18 +2135,18 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
     for (j = 0; j < size; j++)
       mo->s[i].b[j] = mo->s[cur].b[j];
 
-    if (mo->model_type & kSilentStates) {
+    if (mo->model_type & GHMM_kSilentStates) {
       mo->silent[i] = mo->silent[cur];
       /* XXX what to do with topo_order
          mo->topo_order[i] = ????????????; */
     }
-    if (mo->model_type & kTiedEmissions)
+    if (mo->model_type & GHMM_kTiedEmissions)
       /* XXX is there a clean solution for tied states?
          what if the current state is a tie group leader?
          the last added state should probably become
          the new tie group leader */
-      mo->tied_to[i] = kUntied;
-    if (mo->model_type & kHasBackgroundDistributions)
+      mo->tied_to[i] = GHMM_kUntied;
+    if (mo->model_type & GHMM_kBackgroundDistributions)
       mo->background_id[i] = mo->background_id[cur];
   }
 
@@ -2264,13 +2264,13 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 
   int i, j, size;
 
-  if (!mo->model_type && kHasBackgroundDistributions) {
+  if (!mo->model_type && GHMM_kBackgroundDistributions) {
     mes_prot ("Error: No background distributions");
     return -1;
   }
 
   for (i = 0; i < mo->N; i++) {
-    if (mo->background_id[i] != kNoBackgroundDistribution) {
+    if (mo->background_id[i] != GHMM_kNoBackgroundDistribution) {
       if (mo->s[i].order != mo->bp->order[mo->background_id[i]]) {
         mes_prot ("Error: State and background order do not match\n");
         return -1;
@@ -2298,7 +2298,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
   int e_index, size;
   double sum=0.0;
 
-  if (!(mo->model_type & kHasBackgroundDistributions)) {
+  if (!(mo->model_type & GHMM_kBackgroundDistributions)) {
     mes_prot ("Error: Model has no background distribution");
     return -1;
   }
@@ -2320,7 +2320,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
 
   /* set br->order */
   for (i = 0; i < mo->N; i++)
-    if (mo->background_id[i] != kNoBackgroundDistribution)
+    if (mo->background_id[i] != GHMM_kNoBackgroundDistribution)
       mo->bp->order[mo->background_id[i]] = mo->s[i].order;
 
   /* allocate and initialize br->b with zeros */

@@ -449,7 +449,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 	@param  O:  integer observation to be updated with
 	@param  T:  position of obs in sequence (time)
 */
-#define get_emission_index(MO, S, O, T)   (((MO)->model_type & kHigherOrderEmissions) ? \
+#define get_emission_index(MO, S, O, T)   (((MO)->model_type & GHMM_kHigherOrderEmissions) ? \
                                             ((MO)->s[S].order > (T)) ?                    \
                                               -1 :                                         \
                                               (((MO)->emission_history*(MO)->M) %           \
@@ -464,7 +464,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 	@param MO:  model to be updated
 	@param  O:  integer observation to be updated with
 */
-#define update_emission_history(MO, O)   if ((MO)->model_type & kHigherOrderEmissions)                  \
+#define update_emission_history(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)                  \
                                               (MO)->emission_history = ((MO)->emission_history*(MO)->M) % \
                                                                   (MO)->pow_lookup[(MO)->maxorder] + (O)
 
@@ -479,7 +479,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 	@param MO:  model to be updated
 	@param  O:  integer observation to be updated with
 */
-#define update_emission_history_front(MO, O)   if ((MO)->model_type & kHigherOrderEmissions)  \
+#define update_emission_history_front(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)  \
                                                   (MO)->emission_history =                      \
                                                     ((MO)->pow_lookup[(MO)->maxorder-1] * (O)) + \
                                                     (MO)->emission_history / (MO)->M

@@ -253,7 +253,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
 
   /* printf("---- ghmm_d_viterbi -----\n");*/
 
-  if (mo->model_type & kSilentStates){
+  if (mo->model_type & GHMM_kSilentStates){
     /* for silent states: initializing path length with a multiple
        of the sequence length */
     len_path = length_factor * len;
@@ -265,7 +265,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
   
   
   
-  if (mo->model_type & kSilentStates &&
+  if (mo->model_type & GHMM_kSilentStates &&
       mo->silent != NULL && mo->topo_order == NULL) {
     ghmm_d_topo_order (mo);   /* Should we call it here ???? */
   }
@@ -281,7 +281,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
   ARRAY_CALLOC (state_seq, len_path);
   
   /* initialization of state_seq with -1, only necessary for silent state models */
-  if (mo->model_type & kSilentStates){
+  if (mo->model_type & GHMM_kSilentStates){
     for (i = 0; i < len_path; i++) {
       state_seq[i] = -1;
     }
@@ -297,7 +297,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
     else
       v->phi[j] = log (mo->s[j].pi) + v->log_b[j][0];
   }
-  if (mo->model_type & kSilentStates) {        /* could go into silent state at t=0 */
+  if (mo->model_type & GHMM_kSilentStates) {        /* could go into silent state at t=0 */
     __viterbi_silent (mo, t = 0, v);
   }
   
@@ -315,7 +315,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
 
       /* Determine the maximum */
       /* max_phi = phi[i] + log_in_a[j][i] ... */
-      if (mo->model_type & kSilentStates || !mo->silent[k]) {
+      if (mo->model_type & GHMM_kSilentStates || !mo->silent[k]) {
         St = k;
         max_value = -DBL_MAX;
         v->psi[t][St] = -1;
@@ -349,7 +349,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
       v->phi[j] = v->phi_new[j];
       /*printf("\npsi[%d],%d, phi, %f\n", t, v->psi[t][j], v->phi[j]); */
     }
-    if (mo->model_type & kSilentStates) {
+    if (mo->model_type & GHMM_kSilentStates) {
       __viterbi_silent (mo, t, v);
     }                           /* complete time step for silent states */
 
@@ -385,7 +385,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
   printf("--------------------\n"); */
 
 
-  if (! (mo->model_type & kSilentStates)){
+  if (! (mo->model_type & GHMM_kSilentStates)){
     state_seq_index= len_path - 1;
   }
   else {
@@ -405,7 +405,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
     /* Sequence can't be generated from the model! */
     *log_p = +1;
     
-    if (! (mo->model_type & kSilentStates)){
+    if (! (mo->model_type & GHMM_kSilentStates)){
       /* Backtracing doesn't work, insert -1 values in state_seq */
       for (t = len - 2; t >= 0; t--){
          state_seq[t] = -1;
@@ -417,7 +417,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
     /* Backtracing, should put DEL path nicely */
     
     /* for models without silent states traceback is straightforward */
-    if (! (mo->model_type & kSilentStates)){
+    if (! (mo->model_type & GHMM_kSilentStates)){
       *log_p = max_value;
       lastemState = state_seq[len_path - 1];
       
@@ -493,7 +493,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
      We have to realloc to the actual path length and reverse the order.
      The final element of the state path is marked with a -1 entry
      at the following array position */
-    if (mo->model_type & kSilentStates) {
+    if (mo->model_type & GHMM_kSilentStates) {
       /* reallocating */
       if (cur_len_path+1 != len_path ){
         ARRAY_REALLOC(state_seq, cur_len_path+1 );

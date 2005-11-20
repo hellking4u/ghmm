@@ -197,7 +197,7 @@ STOP:
 double ighmm_rand_normal_density_pos (double x, double mean, double u)
 {
 # define CUR_PROC "ighmm_rand_normal_density_pos"
-  return ighmm_rand_normal_density_trunc (x, mean, u, -EPS_NDT);
+  return ighmm_rand_normal_density_trunc (x, mean, u, -GHMM_EPS_NDT);
 # undef CUR_PROC
 }                               /* double ighmm_rand_normal_density_pos */
 
