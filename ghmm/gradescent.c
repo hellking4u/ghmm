@@ -149,10 +149,10 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel * mo, double **alpha,
     foba_sum = 0.0;
     for (i = 0; i < mo->N; i++)
       foba_sum += alpha[t][i] * beta[t][i];
-    if (EPS_PREC > fabs (foba_sum)) {
+    if (GHMM_EPS_PREC > fabs (foba_sum)) {
       printf
         ("gradescent_compute_expect: foba_sum (%g) smaller as EPS_PREC (%g). t = %d.\n",
-         foba_sum, EPS_PREC, t);
+         foba_sum, GHMM_EPS_PREC, t);
       return -1;
     }
 
@@ -330,16 +330,16 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
 
       if (mo->s[i].pi > 0.0) {
         gradient = eta * (m_pi[i] - n_pi[i]);
-        if (mo->s[i].pi + gradient > EPS_PREC)
+        if (mo->s[i].pi + gradient > GHMM_EPS_PREC)
           mo->s[i].pi += gradient;
         else
-          mo->s[i].pi = EPS_PREC;
+          mo->s[i].pi = GHMM_EPS_PREC;
       }
 
       /* sum over new PI vector */
       pi_sum += mo->s[i].pi;
     }
-    if (pi_sum < EPS_PREC) {
+    if (pi_sum < GHMM_EPS_PREC) {
       /* never get here */
       fprintf (stderr, "Training ruined the model. You lose.\n");
       k = sq->seq_number;
@@ -359,16 +359,16 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
         gradient =
           eta * (m_a[i * mo->N + j_id] - n_a[i * mo->N + j_id]) / (seq_len -
                                                                    1);
-        if (mo->s[i].out_a[j] + gradient > EPS_PREC)
+        if (mo->s[i].out_a[j] + gradient > GHMM_EPS_PREC)
           mo->s[i].out_a[j] += gradient;
         else
-          mo->s[i].out_a[j] = EPS_PREC;
+          mo->s[i].out_a[j] = GHMM_EPS_PREC;
 
         /* sum over rows of new A matrix */
         a_row_sum += mo->s[i].out_a[j];
       }
 
-      if (a_row_sum < EPS_PREC) {
+      if (a_row_sum < GHMM_EPS_PREC) {
         /* never get here */
         fprintf (stderr, "Training ruined the model. You lose.\n");
         k = sq->seq_number;
@@ -404,15 +404,15 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
           gradient = eta * (m_b[i][hist] - n_b[i][hist]) / seq_len;
           /* printf("gradient[%d][%d] = %g, m_b = %g, n_b = %g\n"
              , i, hist, gradient, m_b[i][hist], n_b[i][hist]); */
-          if (gradient + mo->s[i].b[hist] > EPS_PREC)
+          if (gradient + mo->s[i].b[hist] > GHMM_EPS_PREC)
             mo->s[i].b[hist] += gradient;
           else
-            mo->s[i].b[hist] = EPS_PREC;
+            mo->s[i].b[hist] = GHMM_EPS_PREC;
 
           /* sum over M-length blocks of new B matrix */
           b_block_sum += mo->s[i].b[hist];
         }
-        if (b_block_sum < EPS_PREC) {
+        if (b_block_sum < GHMM_EPS_PREC) {
           /* never get here */
           fprintf (stderr, "Training ruined the model. You lose.\n");
           k = sq->seq_number;
@@ -427,7 +427,7 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
     }
 
     /* restore "tied_to" property */
-    if (mo->model_type & kTiedEmissions)
+    if (mo->model_type & GHMM_kTiedEmissions)
       ghmm_d_update_tied_groups (mo);
 
   FREE:
@@ -465,7 +465,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
   last = ghmm_d_copy (*mo);
   last_perf = compute_performance (last, sq);
 
-  while (eta > EPS_PREC && runs < no_steps) {
+  while (eta > GHMM_EPS_PREC && runs < no_steps) {
     runs++;
     if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
       ghmm_d_free (&last);

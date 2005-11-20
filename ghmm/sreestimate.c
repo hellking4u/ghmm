@@ -343,7 +343,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
       for (j = 0; j < smo->s[i].out_states; j++) {
         j_id = smo->s[i].out_id[j];
         /* TEST: denom. < numerator */
-        if ((r->a_denom[i][osc] - r->a_num[i][osc][j]) < -EPS_PREC) {
+        if ((r->a_denom[i][osc] - r->a_num[i][osc][j]) < -GHMM_EPS_PREC) {
 #if MCI
           ighmm_mes (MESCONTR, "a[%d][%d][%d]: numerator > denom.!\n", i, osc,
                j_id);
@@ -461,8 +461,8 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
       }
       else {
         u_im = r->u_num[i][m] / r->mue_u_denom[i][m];
-        if (u_im <= EPS_U)
-          u_im = (double) EPS_U;
+        if (u_im <= GHMM_EPS_U)
+          u_im = (double) GHMM_EPS_U;
         smo->s[i].u[m] = u_im;
       }
 
@@ -474,44 +474,44 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
         B = r->sum_gt_otot[i][m] / r->mue_u_denom[i][m];
 
         /* A^2 ~ B -> search max at border of EPS_U */
-        if (B - A * A < EPS_U) {
-          mue_left = -EPS_NDT;  /* attention: only works if  EPS_NDT > EPS_U ! */
+        if (B - A * A < GHMM_EPS_U) {
+          mue_left = -GHMM_EPS_NDT;  /* attention: only works if  EPS_NDT > EPS_U ! */
           mue_right = A;
 
-          if ((ighmm_gtail_pmue_umin (mue_left, A, B, EPS_NDT) > 0.0 &&
-               ighmm_gtail_pmue_umin (mue_right, A, B, EPS_NDT) > 0.0) ||
-              (ighmm_gtail_pmue_umin (mue_left, A, B, EPS_NDT) < 0.0 &&
-               ighmm_gtail_pmue_umin (mue_right, A, B, EPS_NDT) < 0.0))
+          if ((ighmm_gtail_pmue_umin (mue_left, A, B, GHMM_EPS_NDT) > 0.0 &&
+               ighmm_gtail_pmue_umin (mue_right, A, B, GHMM_EPS_NDT) > 0.0) ||
+              (ighmm_gtail_pmue_umin (mue_left, A, B, GHMM_EPS_NDT) < 0.0 &&
+               ighmm_gtail_pmue_umin (mue_right, A, B, GHMM_EPS_NDT) < 0.0))
             fprintf (stderr,
                      "umin:fl:%.3f\tfr:%.3f\t; left %.3f\t right %3f\t A %.3f\t B %.3f\n",
-                     ighmm_gtail_pmue_umin (mue_left, A, B, EPS_NDT),
-                     ighmm_gtail_pmue_umin (mue_right, A, B, EPS_NDT), mue_left,
+                     ighmm_gtail_pmue_umin (mue_left, A, B, GHMM_EPS_NDT),
+                     ighmm_gtail_pmue_umin (mue_right, A, B, GHMM_EPS_NDT), mue_left,
                      mue_right, A, B);
 
           mue_im =
-            ghmm_zbrent_AB (ighmm_gtail_pmue_umin, mue_left, mue_right, ACC, A, B, EPS_NDT);
-          u_im = EPS_U;
+            ghmm_zbrent_AB (ighmm_gtail_pmue_umin, mue_left, mue_right, ACC, A, B, GHMM_EPS_NDT);
+          u_im = GHMM_EPS_U;
         }
         else {
-          Atil = A + EPS_NDT;
-          Btil = B + EPS_NDT * A;
-          mue_left = (-C_PHI * sqrt (Btil + EPS_NDT * Atil
+          Atil = A + GHMM_EPS_NDT;
+          Btil = B + GHMM_EPS_NDT * A;
+          mue_left = (-C_PHI * sqrt (Btil + GHMM_EPS_NDT * Atil
                                      + CC_PHI * m_sqr (Atil) / 4.0)
-                      - CC_PHI * Atil / 2.0 - EPS_NDT) * 0.99;
+                      - CC_PHI * Atil / 2.0 - GHMM_EPS_NDT) * 0.99;
           mue_right = A;
-          if (A < Btil * ighmm_rand_normal_density_pos (-EPS_NDT, 0, Btil))
-            mue_right = m_min (EPS_NDT, mue_right);
+          if (A < Btil * ighmm_rand_normal_density_pos (-GHMM_EPS_NDT, 0, Btil))
+            mue_right = m_min (GHMM_EPS_NDT, mue_right);
           else
-            mue_left = m_max (-EPS_NDT, mue_left);
+            mue_left = m_max (-GHMM_EPS_NDT, mue_left);
           mue_im =
             ghmm_zbrent_AB (ighmm_gtail_pmue_interpol, mue_left, mue_right, ACC, A, B,
-                       EPS_NDT);
+                       GHMM_EPS_NDT);
           u_im = Btil - mue_im * Atil;
         }
         /* set modified values of mue and u */
         smo->s[i].mue[m] = mue_im;
-        if (u_im < (double) EPS_U)
-          u_im = (double) EPS_U;
+        if (u_im < (double) GHMM_EPS_U)
+          u_im = (double) GHMM_EPS_U;
         smo->s[i].u[m] = u_im;
       }                         /* end modifikation truncated density */
 
@@ -594,7 +594,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
       ighmm_mes (MESCONTR, "O(%2d) can't be build from smodel smo!\n", k);
 #endif
       /* penalty costs */
-      *log_p += seq_w[k] * (double) PENALTY_LOGP;
+      *log_p += seq_w[k] * (double) GHMM_PENALTY_LOGP;
 
       continue;
     }
@@ -820,8 +820,8 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
   valid_old = cs->sqd->seq_number;
   n = 1;
 
-  max_iter_bw = m_min (MAX_ITER_BW, cs->max_iter);
-  eps_iter_bw = m_max (EPS_ITER_BW, cs->eps);
+  max_iter_bw = m_min (GHMM_MAX_ITER_BW, cs->max_iter);
+  eps_iter_bw = m_max (GHMM_EPS_ITER_BW, cs->eps);
 
   /*printf("  *** ghmm_c_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );*/
 
@@ -847,7 +847,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
 
     diff = log_p - log_p_old;
 
-    if (diff < -EPS_PREC) {
+    if (diff < -GHMM_EPS_PREC) {
       if (valid > valid_old) {
         str = ighmm_mprintf (NULL, 0,
                 "log P < log P-old (more sequences (%d) , n = %d)\n",

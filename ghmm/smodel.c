@@ -612,7 +612,7 @@ ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip)
     smo->M = M;
     for (j=0; j < smo->M; j++){
       smo->s[i].density[j] = (ghmm_density_t)density;
-      smo->s[i].a[j] = -EPS_NDT;
+      smo->s[i].a[j] = -GHMM_EPS_NDT;
       smo->s[i].M = M;
     }
     /* copy values read to smodel */
@@ -774,7 +774,7 @@ int ghmm_c_check (const ghmm_cmodel * smo)
   for (i = 0; i < smo->N; i++) {
     sum += smo->s[i].pi;
   }
-  if (fabs (sum - 1.0) >= EPS_PREC) {
+  if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
     mes_prot ("sum Pi[i] != 1.0\n");
     valid = -1;
     /*goto STOP; */
@@ -799,7 +799,7 @@ int ghmm_c_check (const ghmm_cmodel * smo)
       for (j = 0; j < smo->s[i].out_states; j++) {
         sum += smo->s[i].out_a[k][j];
       }
-      if (fabs (sum - 1.0) >= EPS_PREC) {
+      if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
         str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
         mes_prot (str);
         m_free (str);
@@ -811,7 +811,7 @@ int ghmm_c_check (const ghmm_cmodel * smo)
     sum = 0.0;
     for (j = 0; j < smo->s[i].M; j++)
       sum += smo->s[i].c[j];
-    if (fabs (sum - 1.0) >= EPS_PREC) {
+    if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
       str = ighmm_mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
       mes_prot (str);
       m_free (str);
@@ -908,11 +908,11 @@ ghmm_cseq *ghmm_c_generate_sequences (ghmm_cmodel * smo, int seed,
   /* A specific length of the sequences isn't given. As a model should have
      an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
-    len = (int) MAX_SEQ_LEN;
+    len = (int) GHMM_MAX_SEQ_LEN;
 
   /* Maximum length of a sequence not given */
   if (Tmax <= 0)
-    Tmax = (int) MAX_SEQ_LEN;
+    Tmax = (int) GHMM_MAX_SEQ_LEN;
 
 
   /* rng is also used by ighmm_rand_std_normal 
@@ -1149,7 +1149,7 @@ int ghmm_c_likelihood (ghmm_cmodel * smo, ghmm_cseq * sqd, double *log_p)
     }
     else {
       /* Test: high costs for each unmatched Seq. */
-      *log_p += PENALTY_LOGP * sqd->seq_w[i];
+      *log_p += GHMM_PENALTY_LOGP * sqd->seq_w[i];
       matched++;
       ighmm_mes (MES_WIN, "sequence[%d] can't be build.\n", i);
     }

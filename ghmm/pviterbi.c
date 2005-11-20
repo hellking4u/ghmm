@@ -305,7 +305,7 @@ static void init_phi(plocal_store_t * pv, ghmm_dpseq * X, ghmm_dpseq * Y) {
       for (j=0; j<mo->N; j++) {
 	pv->phi[off_x][y][j] = +1;
       }
-    if ( mo->model_type & kSilentStates ) { /* could go into silent state at t=0 */
+    if ( mo->model_type & GHMM_kSilentStates ) { /* could go into silent state at t=0 */
 
     /*p__viterbi_silent( mo, t=0, v);*/
   }
@@ -341,7 +341,7 @@ static void init_phi(plocal_store_t * pv, ghmm_dpseq * X, ghmm_dpseq * Y) {
 	for (i = 0; i < mo->N; i++) {
 	/* Determine the maximum */
 	/* max_phi = phi[i] + log_in_a[j][i] ... */
-	  if (!(mo->model_type & kSilentStates) || !mo->silent[i] ) {
+	  if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[i] ) {
 	    max_value = -DBL_MAX;
 	    set_psi(pv, u, v, i, -1);
 	    for (j = 0; j < mo->s[i].in_states; j++) {
@@ -576,7 +576,7 @@ int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * 
       for (i = 0; i < mo->N; i++) {
 	/* Determine the maximum */
 	/* max_phi = phi[i] + log_in_a[j][i] ... */
-	if (!(mo->model_type & kSilentStates) || !mo->silent[i] ) {
+	if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[i] ) {
 	  max_value = -DBL_MAX;
 	  set_psi(pv, u, v, i, -1);
 	  for (j = 0; j < mo->s[i].in_states; j++) {
