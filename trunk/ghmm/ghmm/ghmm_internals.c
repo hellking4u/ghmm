@@ -1,3 +1,4 @@
+/*******************************************************************************
 *
 *       This file is part of the General Hidden Markov Model Library,
 *       GHMM version __VERSION__, see http://ghmm.org
@@ -33,6 +34,11 @@
 *
 *******************************************************************************/
 
+
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +51,10 @@ static char * qmessage;
 
 static int maxlevel = 3;
 
-static void (* logfunc)(int level, const char * message);
+static void (* logfunc)(int level, const char * message, void * clientdata);
+
+static void * logfunc_data;
+
 
 void ighmm_logging (int level, const char * proc, const char * str) {
 
@@ -76,7 +85,7 @@ void ighmm_logging (int level, const char * proc, const char * str) {
 
   /* if defined use external logging function */
   if (logfunc) {
-    logfunc(level, message);
+    logfunc(level, message, logfunc_data);
   }
   /* otherwise simmple logging stderr */
   else 
@@ -115,9 +124,10 @@ void ighmm_queue_mes(char * text) {
   }
 }
 
-void ghmm_set_logfunc(void (* fptr)(int, const char *)) {
+void ghmm_set_logfunc(void (* fptr)(int, const char *, void *), void * clientdata) {
 
   logfunc = fptr;
+  logfunc_data = clientdata;
 
 }
 

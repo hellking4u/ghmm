@@ -4,7 +4,8 @@
 #       GHMM version __VERSION__, see http://ghmm.org
 #
 #       Filename: ghmm/ghmm/Makefile.am
-#       Authors:  Wasinee Rungsarityotin, Benjamin Georgi, Alexander Schliep, Benjamin Rich
+#       Authors:  Wasinee Rungsarityotin, Benjamin Georgi, Alexander Schliep,
+#                 Benjamin Rich, Janne Grunau
 #
 #       Copyright (C) 1998-2004 Alexander Schliep
 #       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -46,7 +47,7 @@ libghmm_la_SOURCES= ghmm.h \
                     randvar.c randvar.h \
                     gauss_tail.c \
                     mes.c mes.h \
-                    ghmm_internal.c ghmm_internal.h \
+                    ghmm_internals.c ghmm_internals.h \
                     mprintf.c mprintf.h \
                     vector.c vector.h \
                     matrix.c  matrix.h \
