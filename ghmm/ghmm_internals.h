@@ -149,6 +149,29 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel *mo, double **alpha, double **bet
 				   double *vec_pi);
 
 
+
+/*==============  logging  ===================================================*/
+#define LDEBUG      4
+#define LINFO       3
+#define LWARN       2
+#define LERROR      1
+#define LCRITIC     0
+
+#define LOCUS         __FILE__":"CUR_PROC"(" TOSTRING(__LINE__) "): "
+#define TOSTRING(x) STRINGIFY(x)
+#define STRINGIFY(x) # x
+
+
+#define GHMM_LOG(level)            ighmm_logging(level, LOCUS , NULL)
+
+#define GHMM_LOG_TEXT(level, str)  ighmm_logging(level, LOCUS, str)
+
+
+void ighmm_logging (int level, const char * proc, const char * str);
+
+void ighmm_queue_mes(char * text);
+
+
 #ifdef __cplusplus
 }
 #endif /*__cplusplus*/

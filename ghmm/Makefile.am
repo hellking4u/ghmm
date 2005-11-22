@@ -46,6 +46,7 @@ libghmm_la_SOURCES= ghmm.h \
                     randvar.c randvar.h \
                     gauss_tail.c \
                     mes.c mes.h \
+                    ghmm_internal.c ghmm_internal.h \
                     mprintf.c mprintf.h \
                     vector.c vector.h \
                     matrix.c  matrix.h \
