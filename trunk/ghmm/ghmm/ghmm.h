@@ -119,6 +119,11 @@ extern "C" {
 /*@} (Doc++-Group: Constants) */
 
 
+/*@{ (Doc++-Group: Logging) */
+void ghmm_set_logfunc(void (* fptr)(int, const char *));
+
+void ghmm_set_loglevel(int level);
+/*@} (Doc++-Group: Logging) */
 
 #ifdef __cplusplus
 }
