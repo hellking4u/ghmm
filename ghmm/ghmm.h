@@ -120,7 +120,7 @@ extern "C" {
 
 
 /*@{ (Doc++-Group: Logging) */
-void ghmm_set_logfunc(void (* fptr)(int, const char *));
+void ghmm_set_logfunc(void (* fptr)(int, const char *, void *), void * clientdata);
 
 void ghmm_set_loglevel(int level);
 /*@} (Doc++-Group: Logging) */
