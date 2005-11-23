@@ -105,8 +105,6 @@ pkginclude_HEADERS = ghmm.h \
 		  pmodel.h \
 		  pviterbi.h \
 		  pviterbi_propagate.h \
-		  vector.h \
-		  matrix.h \
 		  rng.h \
 		  scanner.h \
 		  obsolete.h \

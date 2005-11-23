@@ -44,7 +44,6 @@
 #include "../config.h"
 #include <stdio.h>
 #include <ghmm/ghmm.h>
-#include <ghmm/vector.h>
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
 #include <ghmm/sreestimate.h>
@@ -167,67 +166,6 @@ static void set_pylogging(PyObject *pyfunc) {
   Py_INCREF(pyfunc);
 }
 %}
-
-	
-/*=============================================================================================
-  ================= Utility functions: Matrix allocation and destruction  =====================*/
-
-/*
-  Allocation of a double matrix. 
-  @return pointer to a matrix
-  @param rows: number of rows
-  @param columns: number of columns
-  */
-extern double** ighmm_cmatrix_alloc(int rows, int columns);
-
-/**
-  Copying and allocation of a double matrix.
-  @return pointer to a matrix
-  @param rows: number of rows
-  @param columns: number of columns
-  @param copymatrix: matrix to copy 
-  */
-extern double** ighmm_cmatrix_alloc_copy(int rows, int columns, double **copymatrix);
-
-/**
-  Free the memory of a double matrix.
-  @return 0 for succes; -1 for error
-  @param  matrix: matrix to free
-  @param  rows: number of rows
-  */
-extern int ighmm_cmatrix_free (double ***matrix,int row);
-
-/**
-  Allocation of a integer matrix.
-  @return pointer to a matrix
-  @param rows: number of rows
-  @param columns: number of columns
-  */
-extern int** ighmm_dmatrix_alloc(int rows, int columns);
-
-/**
-  Free the memory of a integer matrix.
-  @return 0 for succes; -1 for error
-  @param  matrix: matrix to free
-  @param  rows: number of rows
-  */
-extern int ighmm_dmatrix_free (int ***matrix, long rows); 
-
-#ifdef GHMM_OBSOLETE
-/**
-  Writes a double matrix (without parenthesis).
-  @param file:       output file
-  @param matrix:     matrix to write
-  @param rows:       number of rows
-  @param columns:    number of columns
-  @param tab:        format: leading tabs
-  @param separator:  format: separator for columns
-  @param ending:     format: end of a row  
-  */
-extern void ighmm_cmatrix_print(FILE *file, double **matrix, int rows, int columns, 
-		    char *tab, char *separator, char *ending);
-#endif /* GHMM_OBSOLETE */
-
 
 
 				
@@ -2159,85 +2097,100 @@ ghmm_dseq * seqarray_getptr (ghmm_dseq ** seqs, int pos)
    
 
   /************  Create and access double[size1][size2] arrays ************/
- 
-  double **double_2d_array(int rows, int cols) {
-    return ighmm_cmatrix_alloc(rows,cols);
+
+  double * * double_2d_array(int rows, int cols) {
+
+    double **matrix;
+    int i;
+
+    matrix = calloc(rows, sizeof(double*));
+    if (matrix)
+      for (i=0; i<rows; i++) {
+        matrix[i] = calloc(cols, sizeof(double));
+        /* clean up and abort if an allocation fails */
+        if (!matrix[i]) {
+          for (i=i-1; i>=0; --i)
+            free(matrix[i]);
+          free(matrix);
+          matrix = NULL;
+          break;
+        }
+      }
+    return matrix;
   }
-  
-  double **double_2d_array_nocols(int rows){
-	return (double **) malloc(rows*sizeof(double*));
-  }	  
-  
-  void set_2d_arrayd_col(double **ary, int index, double *col){
-	  ary[index] = col;
-  }	  
-  
+
+  double * * double_2d_array_nocols(int rows) {
+    return (double **) malloc(rows*sizeof(double*));
+  }
+
+  void set_2d_arrayd_col(double **ary, int index, double *col) {
+    ary[index] = col;
+  }
+
   void set_2d_arrayd(double **ary, int index1,int index2, double value) {
     ary[index1][index2] = value;
   }
-  
-  double get_2d_arrayd(double **ary, int index1, int index2) { return ary[index1][index2]; }
 
+  double get_2d_arrayd(double **ary, int index1, int index2) {
+    return ary[index1][index2];
+  }
 
   double *get_col_pointer_d(double **ary, int index) {
-	  return ary[index];
-  }
-  
-  void double_2d_print(double **ary, int row, int col){
-	int i,j;
-	printf("(%dx%d) Matrix", row, col);
-	for(i =0;i<row;i++){		  
-      printf("\n");
-      for(j =0;j<col;j++){		  		 
-        printf("%f ",ary[i][j]);
-	  }
-	}
-	printf("\n");  	
+    return ary[index];
   }
 
-  double** cast_ptr_d(double* array){
-     double ** res = (double **) malloc(sizeof(double*));
-	 res[0] = array;
-	 return res;
-  }	  
-  
-  void free_2darrayd(double **pt,int row) {ighmm_cmatrix_free (&pt,row);}
-   
-  /************  Create and access int[size1][size2] arrays ************/
-  
-   int **int_2d_array_nocols(int rows){
-	return (int **) malloc(rows*sizeof(int*));
-  }	  
-  
-  void set_2d_arrayint_col(int **ary, int index, int *col){
-	  ary[index] = col;
-  }	  
-  
-  int *get_col_pointer_int(int **ary, int index) {
-	  return ary[index];
+  void double_2d_print(double **ary, int row, int col) {
+    int i,j;
+    printf("(%dx%d) Matrix", row, col);
+    for (i =0;i<row;i++) {
+      printf("\n");
+      for (j =0;j<col;j++){
+        printf("%f ",ary[i][j]);
+      }
+    }
+    printf("\n");
   }
-  
-  
+
+  void free_2darrayd(double **pt, int row) {
+    unsigned int i;
+
+    if (pt)
+      for (i=0; i<row; i++)
+        free(pt[i]);
+    free (pt);
+    return;
+  }
+
+  /************  Create and access int[size1][size2] arrays ************/
+
+  int * * int_2d_array_nocols(int rows) {
+    int * * matrix = malloc(rows*sizeof(int*));
+    return matrix;
+  }
+
+  void set_2d_arrayint_col(int **ary, int index, int *col) {
+    ary[index] = col;
+  }
+
+  int *get_col_pointer_int(int **ary, int index) {
+    return ary[index];
+  }
+
   void set_2d_arrayint(int **ary, int index1,int index2, int value) {
     ary[index1][index2] = value;
   }
-  
+
   /* Get two dimensional array entry */
-  int  get_2d_arrayint (int **ary, int index1, int index2) {return ary[index1][index2];}
-   
-   int** cast_ptr_int(int* array){
-
-	 int ** res = (int **) malloc(sizeof(int*));
-	 res[0] = array;
-	 return res; 
-  }	 
-  
-  void free_2darrayint(int **pt, int rows,int cols) {ighmm_dmatrix_free (&pt, rows);}
+  int  get_2d_arrayint (int **ary, int index1, int index2) {
+    return ary[index1][index2];
+  }
 
 
-  /**************** generalized deallocation *******************/  
-  void freearray(void *pt) {free (pt);}
-   
+  /**************** generalized deallocation *******************/
+  void freearray(void *pt) {
+    free(pt);
+  }
+
 %}
 
 

@@ -42,7 +42,6 @@
 #include <float.h>
 #include <assert.h>
 
-#include <ghmm/matrix.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
@@ -53,7 +52,7 @@
 
 static double *log_p_pt;
 static int seq_rank(const void *a1, const void *a2);
-  
+
 int seq_rank(const void *a1, const void *a2) {
   
   int i, j;
@@ -67,6 +66,30 @@ int seq_rank(const void *a1, const void *a2) {
     else
       return 1;
 }
+
+/* taken from matrix.c ighmm_cmatrix_alloc */
+static double * * cmatrix_alloc(int rows, int cols) {
+
+  double **matrix;
+  int i;
+
+  matrix = calloc(rows, sizeof(double*));
+  if (matrix)
+    for (i=0; i<rows; i++) {
+      matrix[i] = calloc(cols, sizeof(double));
+      /* clean up and abort if an allocation fails */
+      if (!matrix[i]) {
+        for (i=i-1; i>=0; --i)
+          free(matrix[i]);
+        free(matrix);
+        matrix = NULL;
+        break;
+      }
+    }
+
+  return matrix;
+}
+
 
 static int ghmm_c_state_alloc(ghmm_cstate *state,
 			      int M,
@@ -89,13 +112,13 @@ static int ghmm_c_state_alloc(ghmm_cstate *state,
   if (out_states > 0) {
     if (!((state->out_id) = calloc(sizeof(*(state->out_id)), out_states)))
       {goto STOP;}
-    state->out_a = ighmm_cmatrix_alloc(cos, out_states);
+    state->out_a = cmatrix_alloc(cos, out_states);
     if(!state->out_a) {goto STOP;}
   }
   if (in_states > 0) {
     if (!((state->in_id) = calloc(sizeof(*(state->in_id)), in_states))) 
       {goto STOP;}
-    state->in_a = ighmm_cmatrix_alloc(cos, in_states);
+    state->in_a = cmatrix_alloc(cos, in_states);
     if(!state->in_a) {goto STOP;}
   }
   res = 0;
@@ -142,7 +165,7 @@ void smodel_set_transition(ghmm_cmodel *smo, int i, int j, int cos, double prob)
   int in, out;
   if (cos >= smo->cos) {
     fprintf(stderr, "smodel_set_transition(cos): cos > state->cos\n");
-    exit(-1);	
+    exit(-1);
   }
   if (smo->s && smo->s[i].out_a && smo->s[j].in_a) {
     for(out=0; out < smo->s[i].out_states; out++) {
@@ -167,7 +190,7 @@ double smodel_get_transition(ghmm_cmodel *smo, int i, int j, int cos) {
   int out;
   if (cos >= smo->cos) {
     fprintf(stderr, "smodel_get_transition(0): cos > state->cos\n");
-    exit(-1);	
+    exit(-1);
   }
   if (smo->s && smo->s[i].out_a && smo->s[j].in_a) {
     for(out=0; out < smo->s[i].out_states; out++) {

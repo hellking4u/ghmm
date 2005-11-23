@@ -110,7 +110,10 @@ void ighmm_logging (int level, const char * proc, const char * str) {
 	break;
       }
       fputs(message, stderr);
+      fputc('\n', stderr);
     }
+
+  free(message);
 }
 
 void ighmm_queue_mes(char * text) {

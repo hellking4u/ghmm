@@ -478,7 +478,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
     if (last_perf < cur_perf) {
       /* if model is degenerated, lower eta and try again */
       if (cur_perf > 0.0) {
-        str = ighmm_mprintf(NULL, 0, "current performance = %g\n", cur_perf);
+        str = ighmm_mprintf(NULL, 0, "current performance = %g", cur_perf);
 	GHMM_LOG(LINFO, str);
 	m_free(str);
         ghmm_d_free (mo);
@@ -489,14 +489,14 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
         /* Improvement insignificant, assume convergence */
         if (fabs (last_perf - cur_perf) < cur_perf * (-1e-8)) {
           ghmm_d_free (&last);
-          str = ighmm_mprintf(NULL, 0, "convergence after %d steps.\n", runs);
+          str = ighmm_mprintf(NULL, 0, "convergence after %d steps.", runs);
 	  GHMM_LOG(LINFO, str);
 	  m_free(str);
           return 0;
         }
 
         if (runs < 175 || 0 == runs % 50) {
-          str = ighmm_mprintf(NULL, 0, "Performance: %g\t improvement: %g\t step %d\n", cur_perf,
+          str = ighmm_mprintf(NULL, 0, "Performance: %g\t improvement: %g\t step %d", cur_perf,
 			       cur_perf - last_perf, runs);
 	  GHMM_LOG(LINFO, str);
 	  m_free(str);
@@ -513,7 +513,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
     else {
 
       if (runs < 175 || 0 == runs % 50) {
-        str = ighmm_mprintf(NULL, 0, "Performance: %g\t !IMPROVEMENT: %g\t step %d\n", cur_perf,
+        str = ighmm_mprintf(NULL, 0, "Performance: %g\t !IMPROVEMENT: %g\t step %d", cur_perf,
                 cur_perf - last_perf, runs);
 	GHMM_LOG(LINFO, str);
 	m_free(str);
@@ -527,7 +527,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
         return -1;
       }
       cur_perf = compute_performance (*mo, sq);
-      str = ighmm_mprintf(NULL, 0, "Performance: %g\t ?Improvement: %g\t step %d\n", cur_perf,
+      str = ighmm_mprintf(NULL, 0, "Performance: %g\t ?Improvement: %g\t step %d", cur_perf,
               cur_perf - last_perf, runs);
       GHMM_LOG(LINFO, str);
       m_free(str);

@@ -370,12 +370,14 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
     }
   }
   /* dispose of temporary arrays: */
-  free (states_wlabel);
-  free (label_max_out);
-  free (argmaxs);
-  free (maxima);
+  m_free(states_wlabel);
+  m_free(label_max_out);
+  m_free(argmaxs);
+  m_free(maxima);
   /* transition matrix is no longer needed from here on */
-  free (log_a);
+  for (i=0; i<mo->N; i++)
+    m_free(log_a[i]);
+  m_free(log_a);
 
   /** 4. Save the hypothesis with the highest probability over all states: */
   hP = h[seq_len - 1];
