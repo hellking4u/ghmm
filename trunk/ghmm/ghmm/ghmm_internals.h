@@ -151,6 +151,7 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel *mo, double **alpha, double **bet
 
 
 /*==============  logging  ===================================================*/
+
 #define LDEBUG      4
 #define LINFO       3
 #define LWARN       2
@@ -162,9 +163,9 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel *mo, double **alpha, double **bet
 #define STRINGIFY(x) # x
 
 
-#define GHMM_LOG(level)            ighmm_logging(level, LOCUS , NULL)
+#define GHMM_LOG_QUEUED(level)      ighmm_logging(level, LOCUS , NULL)
 
-#define GHMM_LOG_TEXT(level, str)  ighmm_logging(level, LOCUS, str)
+#define GHMM_LOG(level, str)        ighmm_logging(level, LOCUS, str)
 
 
 void ighmm_logging (int level, const char * proc, const char * str);
