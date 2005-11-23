@@ -39,7 +39,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <ghmm/mes.h>
+#include <float.h>
+#include <assert.h>
+
 #include <ghmm/matrix.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
@@ -47,8 +49,6 @@
 #include <ghmm/sfoba.h>
 #include <ghmm/obsolete.h>
 /*#include <ghmm++/GHMM_convertXMLtoC.h>*/
-#include <float.h>
-#include <assert.h>
 
 
 static double *log_p_pt;
@@ -76,27 +76,27 @@ static int ghmm_c_state_alloc(ghmm_cstate *state,
 #define CUR_PROC "ghmm_c_state_alloc"
   int res = -1;
   if (!((state->c) = calloc(sizeof(*(state->c)), M)))
-    {mes_proc(); goto STOP;}
+    {goto STOP;}
   if (!((state->mue) = calloc(sizeof(*(state->mue)), M)))
-    {mes_proc(); goto STOP;}
+    {goto STOP;}
   if (!((state->u) = calloc(sizeof(*(state->u)), M)))
-    {mes_proc(); goto STOP;}
+    {goto STOP;}
   if (!((state->a) = calloc(sizeof(*(state->a)), M)))
-    {mes_proc(); goto STOP;}
+    {goto STOP;}
   if (!((state->density) = calloc(sizeof(*(state->density)), M)))
-    {mes_proc(); goto STOP;}
+    {goto STOP;}
     
   if (out_states > 0) {
     if (!((state->out_id) = calloc(sizeof(*(state->out_id)), out_states)))
-      {mes_proc(); goto STOP;}
+      {goto STOP;}
     state->out_a = ighmm_cmatrix_alloc(cos, out_states);
-    if(!state->out_a) {mes_proc(); goto STOP;}
+    if(!state->out_a) {goto STOP;}
   }
   if (in_states > 0) {
     if (!((state->in_id) = calloc(sizeof(*(state->in_id)), in_states))) 
-      {mes_proc(); goto STOP;}
+      {goto STOP;}
     state->in_a = ighmm_cmatrix_alloc(cos, in_states);
-    if(!state->in_a) {mes_proc(); goto STOP;}
+    if(!state->in_a) {goto STOP;}
   }
   res = 0;
 STOP:
@@ -108,13 +108,13 @@ ghmm_cmodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density)
 #define CUR_PROC "smodel_alloc_fill"
   int i;
   ghmm_cmodel *smo=NULL;
-  if (!(smo = malloc (sizeof (ghmm_cmodel)))) {mes_proc(); goto STOP;}  
+  if (!(smo = malloc(sizeof(ghmm_cmodel)))) {goto STOP;}  
   smo->M   = M;
   smo->N   = N;
   smo->cos = cos;
   smo->prior = prior;
-  if (!(smo->s = ighmm_calloc(sizeof(*(smo->s)) * (smo->N))))
-    {mes_proc(); goto STOP;}
+  if (!(smo->s = calloc(sizeof(*(smo->s)), (smo->N))))
+    {goto STOP;}
 
   for(i=0; i < smo->N; i++) {
     ghmm_c_state_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
@@ -224,7 +224,6 @@ int smodel_sorted_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, doubl
     else  {
       /* Test: very small log score for sequence cannot be produced */
       log_ps[i] = -DBL_MAX;
-      /*      ighmm_mes(MES_WIN, "sequence[%d] can't be build.\n", i); */
     }
   }
 
