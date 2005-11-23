@@ -40,10 +40,10 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/smodel.h>
-#include <ghmm/mes.h>
 
 
 
