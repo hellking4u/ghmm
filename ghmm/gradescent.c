@@ -479,7 +479,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
       /* if model is degenerated, lower eta and try again */
       if (cur_perf > 0.0) {
         str = ighmm_mprintf(NULL, 0, "current performance = %g\n", cur_perf);
-	GHMM_LOG_TEXT(LINFO, str);
+	GHMM_LOG(LINFO, str);
 	m_free(str);
         ghmm_d_free (mo);
         *mo = ghmm_d_copy (last);
@@ -490,7 +490,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
         if (fabs (last_perf - cur_perf) < cur_perf * (-1e-8)) {
           ghmm_d_free (&last);
           str = ighmm_mprintf(NULL, 0, "convergence after %d steps.\n", runs);
-	  GHMM_LOG_TEXT(LINFO, str);
+	  GHMM_LOG(LINFO, str);
 	  m_free(str);
           return 0;
         }
@@ -498,7 +498,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
         if (runs < 175 || 0 == runs % 50) {
           str = ighmm_mprintf(NULL, 0, "Performance: %g\t improvement: %g\t step %d\n", cur_perf,
 			       cur_perf - last_perf, runs);
-	  GHMM_LOG_TEXT(LINFO, str);
+	  GHMM_LOG(LINFO, str);
 	  m_free(str);
 	}
 
@@ -515,7 +515,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
       if (runs < 175 || 0 == runs % 50) {
         str = ighmm_mprintf(NULL, 0, "Performance: %g\t !IMPROVEMENT: %g\t step %d\n", cur_perf,
                 cur_perf - last_perf, runs);
-	GHMM_LOG_TEXT(LINFO, str);
+	GHMM_LOG(LINFO, str);
 	m_free(str);
       }
 
@@ -529,7 +529,7 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
       cur_perf = compute_performance (*mo, sq);
       str = ighmm_mprintf(NULL, 0, "Performance: %g\t ?Improvement: %g\t step %d\n", cur_perf,
               cur_perf - last_perf, runs);
-      GHMM_LOG_TEXT(LINFO, str);
+      GHMM_LOG(LINFO, str);
       m_free(str);
 
       /* improvement, save and proceed with next iteration */
