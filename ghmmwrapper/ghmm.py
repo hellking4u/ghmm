@@ -168,6 +168,23 @@ log.setLevel(logging.INFO)
 
 log.info( " I'm the ghmm in "+ __file__)
 
+
+def logwrapper(level, message):
+
+    if level == 4:
+        log.debug(message)
+    if level == 3:
+        log.info(message)
+    if level == 2:
+        log.warning(message)
+    if level == 1:
+        log.error(message)
+    if level == 0:
+        log.critical(message)
+
+
+ghmmwrapper.set_pylogging(logwrapper)
+
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
