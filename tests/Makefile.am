@@ -19,13 +19,14 @@ CLEANFILES = ghmm.log ghmm.sum site.exp site.bak
 MAINTAINERCLEANFILES = Makefile.in
 # stuff from dejagnu
 
-INCLUDES=-I$(top_srcdir)
+INCLUDES=-I$(top_srcdir) @libxml2_CFLAGS@
 
 #these tests will not be installed
 # in progress: test_sdfoba nullmodel ciscreen test_sdmodel 
 noinst_PROGRAMS = root_finder_test \
                   coin_toss_test \
                   two_states_three_symbols \
+                  libxml-test \
                   chmm \
                   shmm_viterbi_test \
                   generate_PHI \
@@ -34,7 +35,7 @@ noinst_PROGRAMS = root_finder_test \
                   sequences_old_format \
                   label_higher_order_test
 
-LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
+LDADD = $(top_builddir)/ghmm/.libs/libghmm.a @libxml2_LIBS@
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
