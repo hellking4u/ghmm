@@ -566,51 +566,49 @@ int ghmm_d_free (ghmm_dmodel ** mo)
   int i,j;
   mes_check_ptr (mo, return (-1));
 
-  for (i = 0; i < (*mo)->N; i++)
-    ghmm_d_state_clean (&(*mo)->s[i]);
+  for (i=0; i < (*mo)->N; i++)
+    ghmm_d_state_clean(&(*mo)->s[i]);
 
   if ((*mo)->s){
-    m_free ((*mo)->s);
+    m_free((*mo)->s);
+  }
+  if ((*mo)->name){
+    m_free((*mo)->name);
   }
   if ((*mo)->silent){
-    m_free ((*mo)->silent);
+    m_free((*mo)->silent);
   }
   if ((*mo)->tied_to) {
-    m_free ((*mo)->tied_to);
+    m_free((*mo)->tied_to);
   }
   if ((*mo)->topo_order){
-    m_free ((*mo)->topo_order);
+    m_free((*mo)->topo_order);
   }
   if ((*mo)->pow_lookup){
-    m_free ((*mo)->pow_lookup);
+    m_free((*mo)->pow_lookup);
   }
-  
-  
 
   /* Optional attributes for storing representation information from the XML */  
   if ((*mo)->alphabet){
-    for(i=0; i < (*mo)->S; i++) {
-      for(j=0; j < (*mo)->alphabet_size[i]; j++) {
-	m_free ((*mo)->alphabet[i][j]);	
+    for (i=0; i < (*mo)->S; i++) {
+      for (j=0; j < (*mo)->alphabet_size[i]; j++) {
+	m_free((*mo)->alphabet[i][j]);	
       }
     }
-    m_free ((*mo)->alphabet);
-    m_free ((*mo)->alphabet_size);
+    m_free((*mo)->alphabet);
+    m_free((*mo)->alphabet_size);
   }
   if ((*mo)->position){
-    m_free ((*mo)->position);
+    m_free((*mo)->position);
   }
   if ((*mo)->label_alphabet){
-    for(i=0; i < (*mo)->label_size; i++) {
-      m_free ((*mo)->label_alphabet[i]);
+    for (i=0; i < (*mo)->label_size; i++) {
+      m_free((*mo)->label_alphabet[i]);
     }
-    m_free ((*mo)->label_alphabet); 
+    m_free((*mo)->label_alphabet); 
   }
 
-  
-  
-  
-  m_free (*mo);
+  m_free(*mo);
   return (0);
 #undef CUR_PROC
 }  /* ghmm_d_free */

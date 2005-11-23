@@ -554,22 +554,22 @@ ghmm_dseq *ghmm_dseq_calloc (long seq_number)
   ghmm_dseq *sq = NULL;
 
   if (seq_number > GHMM_MAX_SEQ_NUMBER) {
-    str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
-    mes_prot (str);
-    m_free (str);
+    str = ighmm_mprintf(NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
+    mes_prot(str);
+    m_free(str);
     goto STOP;
   }
-  ARRAY_CALLOC (sq, 1);
-  ARRAY_CALLOC (sq->seq, seq_number);
+  ARRAY_CALLOC(sq, 1);
+  ARRAY_CALLOC(sq->seq, seq_number);
   /*ARRAY_CALLOC (sq->states, seq_number);*/
-  ARRAY_CALLOC (sq->seq_len, seq_number);
+  ARRAY_CALLOC(sq->seq_len, seq_number);
 #ifdef GHMM_OBSOLETE
-  ARRAY_CALLOC (sq->seq_label, seq_number);
+  ARRAY_CALLOC(sq->seq_label, seq_number);
 #endif /* GHMM_OBSOLETE */
-  ARRAY_CALLOC (sq->seq_id, seq_number);
-  ARRAY_CALLOC (sq->seq_w, seq_number);
+  ARRAY_CALLOC(sq->seq_id, seq_number);
+  ARRAY_CALLOC(sq->seq_w, seq_number);
   sq->seq_number = seq_number;
-  for (i = 0; i < seq_number; i++) {
+  for (i=0; i < seq_number; i++) {
 #ifdef GHMM_OBSOLETE
     sq->seq_label[i] = -1;
 #endif /* GHMM_OBSOLETE */
@@ -584,7 +584,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_dseq_calloc */
 
 /*============================================================================*/
-
 ghmm_cseq *ghmm_cseq_get_singlesequence(ghmm_cseq *sq, int index)
 {
   ghmm_cseq *res;
@@ -631,6 +630,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }
+
 /*XXX TEST: frees everything but the seq field */
 int ghmm_dseq_subseq_free (ghmm_dseq ** sq)
 {
@@ -1139,54 +1139,33 @@ void ghmm_cseq_clean (ghmm_cseq * sqd)
 }                               /* ghmm_cseq_clean */
 
 /*============================================================================*/
-int ghmm_dseq_free (ghmm_dseq ** sq)
-{
+int ghmm_dseq_free (ghmm_dseq ** sq) {
 # define CUR_PROC "ghmm_dseq_free"
-  /*int i,j;*/
 
   mes_check_ptr (sq, return (-1));
   if (!*sq)
     return (0);
 
-  /*for (i= 0;i<(*sq)->seq_number;i++){
-     for (j= 0;j<(*sq)->seq_len[i];j++){
-     printf("seq[%d][%d] = %d\n",i,j,(*sq)->seq[i][j]);
-     }  
-     } */
+  /* ighmm_dmatrix_free also takes care of (*sq)->seq */
+  if (ighmm_dmatrix_free(&(*sq)->seq, (*sq)->seq_number) == -1)
+    mes_prot("Error in ghmm_dseq_free!");
 
-  /* ighmm_dmatrix_free also takes care of  (*sq)->seq */
-  if (ighmm_dmatrix_free (&(*sq)->seq, (*sq)->seq_number) == -1) {
-    printf ("Error in ghmm_dseq_free !\n");
-  }
-
-  /* XXX The allocation of state must be fixed XXX*/
-  /*** Added attribute to the sequence_t
-  if (&(*sq)->states) { 
-    ighmm_dmatrix_free(&(*sq)->states, (*sq)->seq_number);
-   }
-  ***/
-
-  m_free ((*sq)->seq_len);
+  m_free((*sq)->seq_len);
 #ifdef GHMM_OBSOLETE
-  m_free ((*sq)->seq_label);
+  m_free((*sq)->seq_label);
 #endif /* GHMM_OBSOLETE */
-  m_free ((*sq)->seq_id);
-  m_free ((*sq)->seq_w);
+  m_free((*sq)->seq_id);
+  m_free((*sq)->seq_w);
 
-  if ((*sq)->states) {
-    ighmm_dmatrix_free (&(*sq)->states, (*sq)->seq_number);
-    /*m_free((*sq)->states); */
-  }
-
+  if ((*sq)->states)
+    ighmm_dmatrix_free(&(*sq)->states, (*sq)->seq_number);
 
   if ((*sq)->state_labels) {
     ighmm_dmatrix_free (&(*sq)->state_labels, (*sq)->seq_number);
-    m_free ((*sq)->state_labels_len);
-
-    /*m_free((*sq)->states); */
+    m_free((*sq)->state_labels_len);
   }
 
-  m_free (*sq);
+  m_free(*sq);
   return 0;
 # undef CUR_PROC
 }                               /* ghmm_dseq_free */

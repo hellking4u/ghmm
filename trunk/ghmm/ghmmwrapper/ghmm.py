@@ -847,7 +847,6 @@ class SequenceSet:
             # necessary C functions for accessing the ghmm_dseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_int # defines C function to be used to access a single sequence
-            self.castPtr = ghmmwrapper.cast_ptr_int # cast int* to int** pointer
             self.emptySeq = ghmmwrapper.int_2d_array_nocols # allocate an empty int**
             self.allocSingleSeq = ghmmwrapper.int_array
             self.copySingleSeq = ghmmwrapper.ghmm_dseq_copy
@@ -935,7 +934,6 @@ class SequenceSet:
             # necessary C functions for accessing the ghmm_cseq struct
             self.sequenceAllocationFunction =  ghmmwrapper.ghmm_cseq_calloc
             self.getPtr = ghmmwrapper.get_col_pointer_d # defines C function to be used to access a single sequence
-            self.castPtr = ghmmwrapper.cast_ptr_d # cast double* to double** pointer
             self.emptySeq = ghmmwrapper.double_2d_array_nocols  # cast double* to int** pointer
             self.allocSingleSeq = ghmmwrapper.double_array
             self.copySingleSeq = ghmmwrapper.ghmm_cseq_copy
@@ -1045,15 +1043,8 @@ class SequenceSet:
         if index >= self.cseq.seq_number:
             raise IndexError
         
-        #seq = self.sequenceAllocationFunction(1)
-        #seqPtr = self.getPtr(self.cseq.seq,index)
-        #seq.seq = self.castPtr(seqPtr)  
-        #ghmmwrapper.set_arrayint(seq.seq_len,0,ghmmwrapper.get_arrayint(self.cseq.seq_len,index))
-        #seq.seq_number = 1
-        #return EmissionSequence(self.emissionDomain, seq,ParentSequenceSet=self)        
-
         seq = self.getSingleSeq(self.cseq,index) 
-        return EmissionSequence(self.emissionDomain, seq,ParentSequenceSet=self) 
+        return EmissionSequence(self.emissionDomain, seq, ParentSequenceSet=self) 
     
     
     def getSeqLabel(self,index):
@@ -2203,13 +2194,13 @@ class HMM:
                     else:
                         break
                         
-
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
+            ghmmwrapper.free_arrayi(viterbiPath) 
+            viterbiPath = None
+
         
         ghmmwrapper.free_arrayd(log_p)
-        ghmmwrapper.free_arrayi(viterbiPath)  
-        viterbiPath = None
         log_p = None
             
         if emissionSequences.cseq.seq_number > 1:
@@ -3132,7 +3123,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             else:
                 raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
 
-            log_p = ghmmwrapper.double_array(0)
+            log_p = ghmmwrapper.double_array(1)
 
             allLogs = []
             allLabels = []
