@@ -875,6 +875,7 @@ double ighmm_scanner_get_edouble (scanner_t * s)
 /*============================================================================*/
 void *ighmm_scanner_get_array (scanner_t * s, int *len, char *type)
 {
+#define CUR_PROC "ighmm_scanner_get_array"
   int size = 0;
   int typ = scanner_type (type, &size);
   int maxlen = 16 * size;
