@@ -241,6 +241,11 @@ void ghmm_d_topo_order (ghmm_dmodel * mo)
   edge_cls = ghmm_d_DFS (mo);
   __topological_sort (mo, v, edge_cls);
   mo->topo_order_length = v->topo_order_length;
+
+  /* free topo_order if existing. XXX maybe safe to skip sorting if topo_order
+     exists? Can a model change topological? */
+  if (mo->topo_order)
+    m_free(mo->topo_order);
   ARRAY_CALLOC (mo->topo_order, mo->topo_order_length);
 
   for (i = 0; i < v->topo_order_length; i++) {
