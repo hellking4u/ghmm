@@ -635,6 +635,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*============================================================================*/
 static void init_phi_prop (plocal_propagate_store_t * pv, ghmm_dpseq * X,
 			   ghmm_dpseq * Y, cell * start, cell * stop) {
+#define CUR_PROC "init_phi_prop"
   int u, v, j, i, off_x, y;
   double value, max_value, previous_prob, log_b_i, log_in_a_ij ;
   int start_x, start_y, stop_x, stop_y, middle_x;
@@ -836,7 +837,8 @@ static void init_phi_prop (plocal_propagate_store_t * pv, ghmm_dpseq * X,
 	     i, start_x + u - (off_x - 1), y, get_phi_prop(pv, u, y, off_x, 0, i));
     }
 #endif
-  } /* End for u in X */ 
+  } /* End for u in X */
+#undef CUR_PROC
 }
 
 /*============================================================================*/

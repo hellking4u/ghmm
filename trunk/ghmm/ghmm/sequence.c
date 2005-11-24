@@ -1109,6 +1109,7 @@ void ghmm_cseq_mathematica_print (FILE * file, ghmm_cseq * sqd,
 /*============================================================================*/
 void ghmm_dseq_clean (ghmm_dseq * sq)
 {
+#define CUR_PROC "ghmm_dseq_clean"
   /* keep data, only delete references */
   m_free (sq->seq);
   m_free (sq->seq_len);
@@ -1120,11 +1121,13 @@ void ghmm_dseq_clean (ghmm_dseq * sq)
   /* m_free(sq->states);*/
   sq->seq_number = 0;
   sq->total_w = 0.0;
+#undef CUR_PROC
 }                               /* ghmm_dseq_clean */
 
 /*============================================================================*/
 void ghmm_cseq_clean (ghmm_cseq * sqd)
 {
+#define CUR_PROC "ghmm_cseq_clean"
   /* keep data, only delete references */
   m_free (sqd->seq);
   m_free (sqd->seq_len);
@@ -1135,6 +1138,7 @@ void ghmm_cseq_clean (ghmm_cseq * sqd)
   m_free (sqd->seq_w);
   sqd->seq_number = 0;
   sqd->total_w = 0.0;
+#undef CUR_PROC
 }                               /* ghmm_cseq_clean */
 
 /*============================================================================*/
