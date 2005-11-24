@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "ghmm_internals.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /*__cplusplus*/
@@ -140,7 +142,7 @@ extern "C" {
 
 /* */
 #ifndef m_free
-#define m_free( p )  {if(p) { free(p); (p) = NULL; } else { printf("ERROR: Attempted m_free on NULL pointer.  Bad program. BAD ! No cookie for you.\n\n");abort();}}
+#define m_free( p )  {if(p) {free(p); (p) = NULL;} else {GHMM_LOG(LCRITIC, "Attempted m_free on NULL pointer. Aborting!"); abort();}}
 #endif
 
 #ifndef m_strlen
@@ -230,9 +232,11 @@ extern "C" {
   /**
    */
 #define mes_proc()      ighmm_mes( MES_PROT, NULL )
+  /*#define mes_proc()        GHMM_LOG_QUEUED(LWARN)*/
   /**
    */
 #define mes_prot( txt ) ighmm_mes( MES_PROT_TIME, txt )
+  /*#define mes_prot(txt)     GHMM_LOG(LWARN, txt)*/
 
   /**
    */

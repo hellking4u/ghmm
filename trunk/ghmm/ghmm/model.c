@@ -472,7 +472,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ighmm_cmatrix_free (&a_matrix, mo->N);
   ighmm_cmatrix_free (&b_matrix, mo->N);
   m_free (pi_vector);
-  ghmm_d_free (&mo);
+  ghmm_d_free(&mo);
   return NULL;
 #undef CUR_PROC
 }                               /* ghmm_d_direct_read */
@@ -495,7 +495,7 @@ ghmm_dmodel **ghmm_d_from_sequence (ghmm_dseq * sq, long *mo_number)
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   for (i = 0; i < *mo_number; i++)
-    ghmm_d_free (&(mo[i]));
+    ghmm_d_free(&(mo[i]));
   return NULL;
 #undef CUR_PROC
 }                               /* ghmm_d_from_sequence */
@@ -552,7 +552,7 @@ ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_dseq_free (&sq);
   for (i = 0; i < *mo_number; i++)
-    ghmm_d_free (&(mo[i]));
+    ghmm_d_free(&(mo[i]));
   return NULL;
 #undef CUR_PROC
 }                               /* ghmm_d_from_sequence_ascii */
@@ -560,8 +560,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-int ghmm_d_free (ghmm_dmodel ** mo)
-{
+int ghmm_d_free(ghmm_dmodel ** mo) {
 #define CUR_PROC "ghmm_d_free"
   int i,j;
   mes_check_ptr (mo, return (-1));
@@ -569,30 +568,25 @@ int ghmm_d_free (ghmm_dmodel ** mo)
   for (i=0; i < (*mo)->N; i++)
     ghmm_d_state_clean(&(*mo)->s[i]);
 
-  if ((*mo)->s){
+  if ((*mo)->s)
     m_free((*mo)->s);
-  }
-  if ((*mo)->name){
+  if ((*mo)->name)
     m_free((*mo)->name);
-  }
-  if ((*mo)->silent){
+  if ((*mo)->silent)
     m_free((*mo)->silent);
-  }
-  if ((*mo)->tied_to) {
+  if ((*mo)->tied_to)
     m_free((*mo)->tied_to);
-  }
-  if ((*mo)->topo_order){
+  if ((*mo)->topo_order)
     m_free((*mo)->topo_order);
-  }
-  if ((*mo)->pow_lookup){
+  if ((*mo)->pow_lookup)
     m_free((*mo)->pow_lookup);
-  }
+ 
 
   /* Optional attributes for storing representation information from the XML */  
   if ((*mo)->alphabet){
     for (i=0; i < (*mo)->S; i++) {
       for (j=0; j < (*mo)->alphabet_size[i]; j++) {
-	m_free((*mo)->alphabet[i][j]);	
+	m_free((*mo)->alphabet[i][j]);
       }
     }
     m_free((*mo)->alphabet);
@@ -1017,9 +1011,9 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
     }
 
     if ((mo->model_type & GHMM_kHigherOrderEmissions) && (mo->s[i].order > 0)) {
-      fprintf (stderr,
-               "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n",
-               i, mo->s[i].order);
+      str = ighmm_mprintf(NULL, 0, "State %d has emission order %d, but it's initial probability is not 0.", i, mo->s[i].order);
+      GHMM_LOG(LCRITIC, str);
+      m_free(str);
       exit (1);
     }
 
