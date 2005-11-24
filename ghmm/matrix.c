@@ -281,15 +281,16 @@ int ighmm_cmatrix_3d_free(double **** matrix, int i, int j) {
 # undef CUR_PROC
 } /* ighmm_cmatrix_3d_free */
 
-int ighmm_cmatrix_free(double ***matrix, long zeilen) {
+int ighmm_cmatrix_free(double ***matrix, long rows) {
 # define CUR_PROC "ighmm_cmatrix_free"
   long i;
-  mes_check_ptr (matrix, return (-1));
-  if (!*matrix)
-    return (0);
-  for (i = zeilen - 1; i >= 0; i--)
-    m_free ((*matrix)[i]);
-  m_free (*matrix);
+  mes_check_ptr(matrix, return (-1));
+
+  if (*matrix) {
+    for (i=0; i<rows; i++)
+      m_free((*matrix)[i]);
+    m_free(*matrix);
+  }
   return (0);
 # undef CUR_PROC
 }                               /* ighmm_cmatrix_free */
@@ -337,17 +338,16 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-int ighmm_dmatrix_free (int ***matrix, long zeilen)
+int ighmm_dmatrix_free (int ***matrix, long rows)
 {
 # define CUR_PROC "ighmm_dmatrix_free"
   long i;
   mes_check_ptr (matrix, return (-1));
-  if (!*matrix)
-    return (0);
-  for (i = 0; i < zeilen; i++) {
-    m_free ((*matrix)[i]);
+  if (*matrix) {
+    for (i=0; i<rows; i++)
+      m_free((*matrix)[i]);
+    m_free(*matrix);
   }
-  m_free (*matrix);
   return (0);
 # undef CUR_PROC
 }                               /* ighmm_dmatrix_free */
