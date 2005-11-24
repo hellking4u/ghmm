@@ -164,6 +164,7 @@ log.addHandler(hdlr)
 # Set the minimal severity of a message to be shown. The levels in
 # increasing severity are: DEBUG, INFO, WARNING, ERROR, CRITICAL
 log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 
 log.info( " I'm the ghmm in "+ __file__)
@@ -645,6 +646,8 @@ class EmissionSequence:
                 (label,l) = ghmmhelper.list2matrixint([internalLabel])
 
                 self.cseq = ghmmwrapper.ghmm_dseq_calloc(1)
+                #delete allocated space for seq pointers
+                ghmmwrapper.freearray(self.cseq.seq)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
@@ -659,6 +662,8 @@ class EmissionSequence:
                 internalInput = map( self.emissionDomain.internal, sequenceInput)
                 (seq,l) = ghmmhelper.list2matrixint([internalInput])
                 self.cseq = ghmmwrapper.ghmm_dseq_calloc(1)
+                #delete allocated space for seq pointers
+                ghmmwrapper.freearray(self.cseq.seq)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
 
@@ -702,6 +707,7 @@ class EmissionSequence:
             if isinstance(sequenceInput, list):
                 (seq,l) = ghmmhelper. list2matrixd([sequenceInput])
                 self.cseq = ghmmwrapper.ghmm_cseq_calloc(1)
+                ghmmwrapper.freearray(self.cseq.seq)
                 self.cseq.seq = seq
                 self.cseq.seq_number = 1
                 ghmmwrapper.set_arrayint(self.cseq.seq_len,0,l[0])
@@ -888,6 +894,8 @@ class SequenceSet:
                 (seq,lenghts) = ghmmhelper.list2matrixint(internalInput)
                 (label,labellen) = ghmmhelper.list2matrixint(internalLabels)
 
+                #delete allocated space for seq pointers
+                ghmmwrapper.freearray(self.cseq.seq)
                 #set pointers
                 self.cseq.seq = seq
                 self.cseq.state_labels = label
@@ -911,6 +919,8 @@ class SequenceSet:
 
                 (seq,lenghts) = ghmmhelper.list2matrixint(internalInput)
                 
+                #delete allocated space for seq pointers
+                ghmmwrapper.freearray(self.cseq.seq)
                 self.cseq.seq = seq
                 for i in range(seq_nr):
                     ghmmwrapper.set_arrayint(self.cseq.seq_len,i ,lenghts[i])
@@ -950,6 +960,8 @@ class SequenceSet:
                 self.cseq.seq_number = seq_nr
 
                 (seq,lenghts) = ghmmhelper.list2matrixd(sequenceSetInput)
+                #delete allocated space for seq pointers
+                ghmmwrapper.freearray(self.cseq.seq)
                 self.cseq.seq = seq
                 for i in range(seq_nr):
                     ghmmwrapper.set_arrayint(self.cseq.seq_len, i, lenghts[i])
@@ -1115,10 +1127,9 @@ class SequenceSet:
             #self.copySingleSeq(seq_i,source_i,len_i)
             
             self.setSeq(seq.seq,i,self.__array[seqIndixes[i]])
-            
-            
+
             ghmmwrapper.set_arrayint(seq.seq_len,i,len_i)
-            
+
             # Above doesnt copy seq_id or seq_label or seq_w
             seq_id = int(ghmmwrapper.get_arrayd(self.cseq.seq_id, seqIndixes[i]))
             ghmmwrapper.set_arrayd(seq.seq_id, i, seq_id)
@@ -1132,12 +1143,12 @@ class SequenceSet:
             # setting labels if appropriate
             # XXX needs to be real copy! XXX
             if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
-                self.setSeq(seq.state_labels,i, ghmmwrapper.get_col_pointer_int( self.cseq.state_labels,seqIndixes[i] ) )
-                ghmmwrapper.set_arrayint(seq.state_labels_len,i,ghmmwrapper.get_arrayint(self.cseq.state_labels_len, seqIndixes[i]) )            
+                self.setSeq(seq.state_labels, i, ghmmwrapper.get_col_pointer_int(self.cseq.state_labels, seqIndixes[i]))
+                ghmmwrapper.set_arrayint(seq.state_labels_len, i, ghmmwrapper.get_arrayint(self.cseq.state_labels_len, seqIndixes[i]))
 
         seq.seq_number = seqNumber
         
-        return SequenceSetSubset(self.emissionDomain, seq,self)
+        return SequenceSetSubset(self.emissionDomain, seq, self)
         
     def write(self,fileName):
         "Writes (appends) the SequenceSet into file 'fileName'."
@@ -1157,7 +1168,11 @@ class SequenceSetSubset(SequenceSet):
         # reference on the parent SequenceSet object
         self.ParentSequenceSet =  ParentSequenceSet
         SequenceSet.__init__(self, emissionDomain, sequenceSetInput, labelDomain, labelInput)
-        
+
+        if self.emissionDomain.CDataType == "int":
+            self.freeFunction = ghmmwrapper.call_ghmm_dseq_subseq_free
+        elif self.emissionDomain.CDataType == "double":
+            self.freeFunction = ghmmwrapper.call_ghmm_cseq_subseq_free
     
     def __del__(self):
         """ Since we do not want to deallocate the sequence memory, the destructor has to be
@@ -1165,8 +1180,9 @@ class SequenceSetSubset(SequenceSet):
         
         """
         
-        # XXX leaks memory ? XXX
-        
+        self.freeFunction(self.cseq)
+        self.cseq = None
+            
         # remove reference on parent SequenceSet object
         self.ParentSequenceSet = None
     

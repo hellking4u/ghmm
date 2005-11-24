@@ -382,7 +382,7 @@ extern int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
 
 
 
-/*** !!!!!!!! TO DO: Free functions for all types of pointers !!!!!!!!***/
+/*** !!!!!!!! TO DO: Free functions for all types of pointers !!!!!!!! Why? free() does not depend on the data type ***/
 
 %inline%{
 
@@ -458,12 +458,11 @@ extern int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
   }	  
 
 
-  void call_ghmm_dseq_free (ghmm_dseq *sq) {ghmm_dseq_free(&sq);}  
-  void call_ghmm_cseq_free (ghmm_cseq *sq) {ghmm_cseq_free(&sq);}  
+  void call_ghmm_dseq_free(ghmm_dseq *sq) {ghmm_dseq_free(&sq);}
+  void call_ghmm_cseq_free(ghmm_cseq *sq) {ghmm_cseq_free(&sq);}
 
-  
-  void call_ghmm_dseq_subseq_free (ghmm_dseq *sq ) {ghmm_dseq_subseq_free (&sq);}  
-  void call_ghmm_cseq_subseq_free (ghmm_cseq *sq ) {ghmm_cseq_subseq_free (&sq);}  
+  void call_ghmm_dseq_subseq_free(ghmm_dseq *sq) {ghmm_dseq_subseq_free (&sq);}
+  void call_ghmm_cseq_subseq_free(ghmm_cseq *sq) {ghmm_cseq_subseq_free (&sq);}
 
    
 %}
