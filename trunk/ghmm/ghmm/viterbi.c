@@ -253,22 +253,17 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
 
   /* printf("---- ghmm_d_viterbi -----\n");*/
 
-  if (mo->model_type & GHMM_kSilentStates){
-    /* for silent states: initializing path length with a multiple
-       of the sequence length */
+  /* for silent states: initializing path length with a multiple
+     of the sequence length
+     and sort the silent states topological */
+  if (mo->model_type & GHMM_kSilentStates) {
     len_path = length_factor * len;
+    ghmm_d_topo_order(mo);
   }
-  else {
-    /* if there are no silent states, path and sequence length are identical */
+  /* if there are no silent states, path and sequence length are identical */
+  else
     len_path = len;
-  }  
-  
-  
-  
-  if (mo->model_type & GHMM_kSilentStates &&
-      mo->silent != NULL && mo->topo_order == NULL) {
-    ghmm_d_topo_order (mo);   /* Should we call it here ???? */
-  }
+
 
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
   v = viterbi_alloc (mo, len);
@@ -281,6 +276,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
   ARRAY_CALLOC (state_seq, len_path);
   
   /* initialization of state_seq with -1, only necessary for silent state models */
+  /* XXX use memset? */
   if (mo->model_type & GHMM_kSilentStates){
     for (i = 0; i < len_path; i++) {
       state_seq[i] = -1;
