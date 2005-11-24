@@ -672,7 +672,6 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd)
 # define CUR_PROC "ghmm_cseq_subseq_free"
   mes_check_ptr (sqd, return (-1));
 
-
   /* ghmm_cseq_print(stdout,*sqd,0);*/
   m_free ((*sqd)->seq);
   m_free ((*sqd)->seq_len);
@@ -1178,14 +1177,14 @@ int ghmm_cseq_free (ghmm_cseq ** sqd)
   mes_check_ptr (sqd, return (-1));
   /* ghmm_cseq_print(stdout,*sqd,0);*/
 
-  ighmm_cmatrix_free (&(*sqd)->seq, (*sqd)->seq_number);
-  m_free ((*sqd)->seq_len);
+  ighmm_cmatrix_free(&(*sqd)->seq, (*sqd)->seq_number);
+  m_free((*sqd)->seq_len);
 #ifdef GHMM_OBSOLETE
-  m_free ((*sqd)->seq_label);
+  m_free((*sqd)->seq_label);
 #endif /* GHMM_OBSOLETE */
-  m_free ((*sqd)->seq_id);
-  m_free ((*sqd)->seq_w);
-  m_free (*sqd);
+  m_free((*sqd)->seq_id);
+  m_free((*sqd)->seq_w);
+  m_free(*sqd);
   return 0;
 # undef CUR_PROC
 }                               /* ghmm_cseq_free */
