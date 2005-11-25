@@ -227,9 +227,18 @@ AC_MSG_RESULT(no)
 ]
 )
 
-PKG_CHECK_MODULES(libxml2, libxml-2.0)
-AC_SUBST(libxml2_CFLAGS)
-AC_SUBST(libxml2_LIBS)
+echo -n "checking for libxml2... "
+if pkg-config --exists libxml-2.0 ; then
+        echo "yes"
+pkg_modules="$pkg_modules libxml-2.0"
+else
+        echo "no"
+        AC_MSG_ERROR(libxml-2.0 not found please install libxml)
+fi
+
+PKG_CHECK_MODULES(GHMM, [$pkg_modules])
+AC_SUBST(GHMM_CFLAGS)
+AC_SUBST(GHMM_LIBS)
 
 
 SUBDIRS="ghmm tools tests doc VisualC"
