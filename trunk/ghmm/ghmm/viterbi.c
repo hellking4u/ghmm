@@ -311,7 +311,7 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
 
       /* Determine the maximum */
       /* max_phi = phi[i] + log_in_a[j][i] ... */
-      if (mo->model_type & GHMM_kSilentStates || !mo->silent[k]) {
+      if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[k]) {
         St = k;
         max_value = -DBL_MAX;
         v->psi[t][St] = -1;
