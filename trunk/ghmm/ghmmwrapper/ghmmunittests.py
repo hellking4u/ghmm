@@ -55,7 +55,6 @@ import unittest
 import ghmm
 import ghmmwrapper
 import random
-import ghmmwrapper
 
 class AlphabetTests(unittest.TestCase):
     """Unittests for Emissiondomains subclasses"""
@@ -230,10 +229,10 @@ class SequenceSetTests(unittest.TestCase):
 
     def tearDown(self):
         #print "*** Tearing down..."
-        pass    
         #del self.i_seq
         #del self.d_seq
         #del self.l_seq
+        pass    
             
     
     def testlabelseqset(self):
@@ -457,8 +456,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.model.baumWelch(seq,5,0.01)
         
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-        self.model.cmodel.model_type = 0
-        ghmmwrapper.set_arrayint(self.model.cmodel.silent,2,0)
+        self.assertEqual(self.model.cmodel.model_type & 4, 0)
         self.model.baumWelch(seq,5,0.01)
         
     def testviterbi(self):
@@ -557,8 +555,8 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
         self.model.updateTieGroups()
         em2 = map(f,self.model.getEmission(2))
-        self.assertEqual(em2, [0.1, 0.0, 0.8, 0.1])
-        
+        self.assertEqual(em2, [0.0, 0.0, 0.0, 0.0])
+
         self.model.setEmission(2,[0.2,0.2,0.2,0.4])
         self.model.updateTieGroups()
         em0 = map(f,self.model.getEmission(0))
@@ -606,8 +604,6 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.assertEqual(e1, [0.02, 0.48, 0.46, 0.04])
         self.assertEqual(e2,[ 0.1, 0.0, 0.8, 0.1])
         self.assertEqual(e3, [ 0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12, 0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
-        
-        
         
 
     def testbackgroundtraining(self):
@@ -723,7 +719,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
         print "model_type = ",self.model.cmodel.model_type
         self.assertEqual(self.model.cmodel.model_type & 4,0)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),0)
+        self.assertEqual(self.model.isSilent(1), False)
         
         # inserting silent state
         self.model.setEmission(0,[0.0,0.0,0.0,0.0])
@@ -853,8 +849,6 @@ class StateLabelHMMTests(unittest.TestCase):
         self.model.baumWelchLabels(seq,5,0.01)
         
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-        self.model.cmodel.model_type = 1
-        ghmmwrapper.set_arrayint(self.model.cmodel.silent,2,0)
         self.model.baumWelchLabels(seq,5,0.01)   
     
    
@@ -1086,7 +1080,7 @@ suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 
 # Call to individual test suites, uncomment to activate as needed.
-#runner = unittest.TextTestRunner()
+runner = unittest.TextTestRunner()
 #runner.run(suiteAlphabet)
 #runner.run(suiteSequenceSet)
 #runner.run(suiteDiscreteEmissionHMM)

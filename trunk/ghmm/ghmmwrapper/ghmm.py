@@ -1580,8 +1580,9 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.fix = 0
 
                 cmodel.s = states
-                cmodel.model_type += silent_flag
-                cmodel.silent = ghmmhelper.list2arrayint(silent_states)
+                if silent_flag == 4:
+                    cmodel.model_type += silent_flag
+                    cmodel.silent = ghmmhelper.list2arrayint(silent_states)
 
                 cmodel.maxorder = maxorder
                 if cmodel.maxorder > 0:
@@ -2024,7 +2025,7 @@ class HMM:
             else:
                 likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
 
-        ghmmwrapper.free_arrayd(likelihood)
+        ghmmwrapper.freearray(likelihood)
         likelihood = None
         return likelihoodList
 
@@ -2212,11 +2213,11 @@ class HMM:
                         
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
-            ghmmwrapper.free_arrayi(viterbiPath) 
+            ghmmwrapper.freearray(viterbiPath) 
             viterbiPath = None
 
         
-        ghmmwrapper.free_arrayd(log_p)
+        ghmmwrapper.freearray(log_p)
         log_p = None
             
         if emissionSequences.cseq.seq_number > 1:
@@ -2440,7 +2441,6 @@ class DiscreteEmissionHMM(HMM):
             strout += "\n\nState number "+ str(k) +":"
             strout += "\nState order: " + str(state.order)
             strout += "\nInitial probability: " + str(state.pi)
-            #strout += "\nsilent state: " + str(get_arrayint(self.cmodel.silent,k))
             strout += "\nOutput probabilites: "
             for outp in range(hmm.M**(state.order+1)):
                 strout+=str(ghmmwrapper.get_arrayd(state.b,outp))
@@ -2456,10 +2456,13 @@ class DiscreteEmissionHMM(HMM):
             for i in range(state.in_states):
                 strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
             strout += "\nint fix:" + str(state.fix) + "\n"
-        strout += "\nSilent states: \n"
-        for k in range(hmm.N):
-            strout += str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", "
-        strout += "\n"
+
+        if hmm.model_type & 4:
+            strout += "\nSilent states: \n"
+            for k in range(hmm.N):
+                strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
+            strout += "\n"
+            
         return strout
     
 
@@ -2482,27 +2485,25 @@ class DiscreteEmissionHMM(HMM):
 
         state = self.getStatePtr(self.cmodel.s,i)
 
-        # updating silent flag if necessary        
-        if sum(distributionParameters) > 0:
-            silentFlag =  0 
-        else:
-            silentFlag =  1 
-        oldFlag = ghmmwrapper.get_arrayint(self.cmodel.silent,i)
-        
-        if silentFlag != oldFlag:
-            ghmmwrapper.set_arrayint(self.cmodel.silent,i,silentFlag)            
-            # checking if model type changes
-            if silentFlag == 0 and self.cmodel.model_type & 4:
-                s = sum(ghmmhelper.arrayint2list(self.cmodel.silent,self.N) )
-                if s == 0:
-                    # model contains no more silent states
+        # updating silent flag and/or model type if necessary 
+        if self.cmodel.model_type & 4:
+            if sum(distributionParameters) == 0.0:
+                ghmmwrapper.set_arrayint(self.cmodel.silent, i, 1)
+            else:                
+                ghmmwrapper.set_arrayint(self.cmodel.silent, i, 0)
+                #change model_type and free array if no silent state is left
+                if 0 == sum(ghmmhelper.arrayint2list(self.cmodel.silent,self.N)):
                     self.cmodel.model_type -= 4
-            elif silentFlag == 1 and (self.cmodel.model_type & 4) == 0:
-                # model contains one silent state
-                self.cmodel.model_type += 4
+                    ghmmwrapper.freearray(self.cmodel.silent)
+                    self.cmodel.silent = None
+        #if the state becomes the first silent state allocate memory and set the silen flag
+        elif sum(distributionParameters) == 0.0:
+            self.cmodel.model_type += 4
+            slist = [0]*self.N
+            slist[i] = 1
+            self.cmodel.silent = ghmmhelper.list2arrayint(slist)
 
-
-        
+        #set the emission probabilities
         for i in range(self.M):
             ghmmwrapper.set_arrayd(state.b,i,distributionParameters[i])
 
@@ -2535,7 +2536,7 @@ class DiscreteEmissionHMM(HMM):
         logp = ghmmwrapper.get_arrayd (log_p, 0)
 
         # deallocation
-        ghmmwrapper.free_arrayd(log_p)
+        ghmmwrapper.freearray(log_p)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(cbeta[0],t)
         cscale = None
@@ -2552,7 +2553,7 @@ class DiscreteEmissionHMM(HMM):
         state = self.getStatePtr( self.cmodel.s, stateSequence[0] )
         emissionProb = ghmmwrapper.get_arrayd(state.b, emissionSequence[0])
         if emissionProb == 0:
-            silent = ghmmwrapper.get_arrayint(self.cmodel.silent, 0)
+            silent = (self.cmodel.model_type & 4) and ghmmwrapper.get_arrayint(self.cmodel.silent, stateSequence[0])
             if silent == 1:
                 emissionProb = 1
             else:
@@ -2574,7 +2575,7 @@ class DiscreteEmissionHMM(HMM):
                         # print "b["+str(emissionSequence[symbolIndex])+"] in state " + str(stateSequence[i+1]) + " = ",emissionProb
                         symbolIndex += 1
                         if emissionProb == 0:
-                            silent = ghmmwrapper.get_arrayint(self.cmodel.silent, stateSequence[i+1] )
+                            silent = (self.cmodel.model_type & 4) and ghmmwrapper.get_arrayint(self.cmodel.silent, stateSequence[i+1] )
                             if silent == 1:
                                 emissionProb = 1
                                 symbolIndex -= 1
@@ -2623,7 +2624,7 @@ class DiscreteEmissionHMM(HMM):
         cweights = ghmmhelper.list2arrayd(backgroundWeight)
         result = ghmmwrapper.ghmm_d_background_apply(self.cmodel, cweights)
         
-        ghmmwrapper.free_arrayd(cweights)
+        ghmmwrapper.freearray(cweights)
         if result is not 0:
             log.error("applyBackground failed.")
 						
@@ -2643,7 +2644,10 @@ class DiscreteEmissionHMM(HMM):
             raise TypeError, "list required got "+ str(type(stateBackground))
             
         assert len(stateBackground) == self.N, "Argument 'stateBackground' does not match number of states."
-        
+
+##        if self.background != None:
+##            del(self.background)
+##            ghmmwrapper.freearray(self.cmodel.background_id)
         self.cmodel.bp = backgroundObject.cbackground
         self.background = backgroundObject
         self.cmodel.background_id = ghmmhelper.list2arrayint(stateBackground)
@@ -2700,7 +2704,7 @@ class DiscreteEmissionHMM(HMM):
                 ghmmwrapper.set_arrayint(self.cmodel.tied_to,i,tieList[i])
 
     def removeTiegroups(self):
-        ghmmwrapper.free_arrayi(self.cmodel.tied_to)
+        ghmmwrapper.freearray(self.cmodel.tied_to)
         self.cmodel.tied_to = None
         self.cmodel.model_type -= 8
     
@@ -2710,7 +2714,10 @@ class DiscreteEmissionHMM(HMM):
         return ghmmhelper.arrayint2list(self.cmodel.tied_to, self.N)
     
     def getSilentFlag(self,state):
-        return ghmmwrapper.get_arrayint(self.cmodel.silent,state)
+        if self.cmodel.model_type & 4:
+            return ghmmwrapper.get_arrayint(self.cmodel.silent,state)
+        else:
+            return 0
     
 
     def normalize(self):
@@ -3013,7 +3020,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
             strout += "\nState order: " + str(state.order)
             strout += "\nInitial probability: " + str(state.pi)
-            #strout += "\nsilent state: " + str(get_arrayint(self.model.silent,k))
             strout += "\nOutput probabilites:\n"
             for outp in range(hmm.M**(state.order+1)):
                 strout+=str(ghmmwrapper.get_arrayd(state.b,outp))
@@ -3029,10 +3035,13 @@ class StateLabelHMM(DiscreteEmissionHMM):
             for i in range(state.in_states):
                 strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
                 strout += "\nint fix:" + str(state.fix) + "\n"
-        strout += "\nSilent states: \n"
-        for k in range(hmm.N):
-            strout += str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", "
-        strout += "\n"
+
+        if hmm.model_type & 4:
+            strout += "\nSilent states: \n"
+            for k in range(hmm.N):
+                strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
+            strout += "\n"
+
         return strout
 
     def setLabels(self,labelList):
@@ -3156,10 +3165,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
                 allLabels.append(oneLabel)
                 allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
-                ghmmwrapper.free_arrayi(labeling)
+                ghmmwrapper.freearray(labeling)
 
                             
-            ghmmwrapper.free_arrayd(log_p)
+            ghmmwrapper.freearray(log_p)
             labeling = None
             log_p = None
 
@@ -3194,7 +3203,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         error = self.gradientDescentFunction(cmodelPTR, emissionsequences.cseq, eta, steps)
 
         self.cmodel = ghmmwrapper.modelarray_getptr(cmodelPTR, 0)
-        ghmmwrapper.modelarray_free(cmodelPTR)
+        ghmmwrapper.freearray(cmodelPTR)
         
         if error == -1:
             log.error("Gradient descent finished not successfully.")
@@ -3245,7 +3254,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             else:
                 likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
 
-        ghmmwrapper.free_arrayd(likelihood)
+        ghmmwrapper.freearray(likelihood)
         likelihood = None
         return likelihoodList
 
@@ -3265,7 +3274,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if t != len(labelSequence):
             raise TypeError, "ERROR: Observation and Labellist must have same length"
 
-        calpha = ghmmwrapper.double_2d_array (t, n_states)
+        calpha = ghmmwrapper.double_2d_array(t, n_states)
         cscale = ghmmwrapper.double_array(t)
 
         seq = emissionSequence.getPtr(emissionSequence.cseq.seq,0)
@@ -3277,13 +3286,13 @@ class StateLabelHMM(DiscreteEmissionHMM):
         error = self.forwardAlphaLabelFunction(self.cmodel, seq, label, t, calpha, cscale, logP)
         if error == -1:
             log.error( "Forward finished with -1: Sequence " + str(i) + " cannot be build.")
-           
 
         # translate alpha / scale to python lists
         pyscale = ghmmhelper.arrayd2list(cscale, t)
         pyalpha = ghmmhelper.matrixd2list(calpha,t,n_states)
         logpval = ghmmwrapper.get_arrayd(logP, 0)
         
+        ghmmwrapper.freearray(label)
         ghmmwrapper.freearray(logP)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.free_2darrayd(calpha,t)
@@ -3327,6 +3336,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         logpval = ghmmwrapper.get_arrayd(logP, 0)
         
         # deallocation
+        ghmmwrapper.freearray(logP)
         ghmmwrapper.freearray(cscale)
         ghmmwrapper.freearray(label)
         ghmmwrapper.free_2darrayd(cbeta,t)
@@ -3611,7 +3621,7 @@ class GaussianEmissionHMM(HMM):
             else:
                 likelihoodList.append(ghmmwrapper.get_arrayd(likelihood,0))
 
-        ghmmwrapper.free_arrayd(likelihood)
+        ghmmwrapper.freearray(likelihood)
         likelihood = None
 
         # resetting class_change->k to default
@@ -3671,8 +3681,8 @@ class GaussianEmissionHMM(HMM):
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.get_arrayd(log_p, 0))
         
-        ghmmwrapper.free_arrayd(log_p)
-        ghmmwrapper.free_arrayi(viterbiPath)  
+        ghmmwrapper.freearray(log_p)
+        ghmmwrapper.freearray(viterbiPath)  
         viterbiPath = None
         log_p = None
 
@@ -3759,7 +3769,7 @@ class GaussianEmissionHMM(HMM):
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
 
-        ghmmwrapper.free_arrayd(self.BWcontext.logp)
+        ghmmwrapper.freearray(self.BWcontext.logp)
         self.BWcontext.logp = None
         ghmmwrapper.free_smosqd_t(self.BWcontext)
         self.BWcontext = None
@@ -4140,8 +4150,8 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
         HMMList[i].cmodel = ghmmwrapper.modelarray_getptr(HMMArray, i)
         SeqList[i].cseq   = ghmmwrapper.seqarray_getptr(SeqArray, i)
 
-    ghmmwrapper.modelarray_free(HMMArray)
-    ghmmwrapper.seqarray_free(SeqArray)
+    ghmmwrapper.freearray(HMMArray)
+    ghmmwrapper.freearray(SeqArray)
 
     return HMMDiscriminativePerformance(HMMList, SeqList)
 
@@ -4166,8 +4176,8 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
 
     retval = ghmmwrapper.ghmm_d_discrim_performance(HMMArray, SeqArray, inplen)
     
-    ghmmwrapper.modelarray_free(HMMArray)
-    ghmmwrapper.seqarray_free(SeqArray)
+    ghmmwrapper.freearray(HMMArray)
+    ghmmwrapper.freearray(SeqArray)
 
     return retval
         
@@ -4495,7 +4505,6 @@ class PairHMM(HMM):
             strout += "\n\nState number "+ str(k) +":"
             #strout += "\nState order: " + str(state.order)
             strout += "\nInitial probability: " + str(state.pi)
-            #strout += "\nsilent state: " + str(get_arrayint(self.model.silent,k))
             strout += "\nOutput probabilites: "
             #strout += str(ghmmwrapper.get_arrayd(state.b,outp))
             strout += "\n"
@@ -4507,10 +4516,13 @@ class PairHMM(HMM):
             for i in range(state.in_states):
                 strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
                 strout += "\nint fix:" + str(state.fix) + "\n"
-        strout += "\nSilent states: \n"
-        for k in range(hmm.N):
-            strout += str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", "
-        strout += "\n"
+
+        if hmm.model_type & 4:
+            strout += "\nSilent states: \n"
+            for k in range(hmm.N):
+                strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
+            strout += "\n"
+
         return strout
 
     def viterbi(self, complexEmissionSequenceX, complexEmissionSequenceY):
@@ -4534,9 +4546,9 @@ class PairHMM(HMM):
         length = ghmmwrapper.get_arrayint(length_ptr, 0)
         path = [ghmmwrapper.get_arrayint(cpath, x) for x in range(length)]
         # free the memory
-        ghmmwrapper.free_arrayd(log_p_ptr)
-        ghmmwrapper.free_arrayi(length_ptr)
-        ghmmwrapper.free_arrayi(cpath)
+        ghmmwrapper.freearray(log_p_ptr)
+        ghmmwrapper.freearray(length_ptr)
+        ghmmwrapper.freearray(cpath)
         return (path, log_p)
     
     def viterbiPropagate(self, complexEmissionSequenceX, complexEmissionSequenceY, startX=None, startY=None, stopX=None, stopY=None, startState=None, startLogp=None, stopState=None, stopLogp=None):
@@ -4583,9 +4595,9 @@ class PairHMM(HMM):
         length = ghmmwrapper.get_arrayint(length_ptr, 0)
         path = [ghmmwrapper.get_arrayint(cpath, x) for x in range(length)]
         # free the memory
-        ghmmwrapper.free_arrayd(log_p_ptr)
-        ghmmwrapper.free_arrayi(length_ptr)
-        ghmmwrapper.free_arrayi(cpath)
+        ghmmwrapper.freearray(log_p_ptr)
+        ghmmwrapper.freearray(length_ptr)
+        ghmmwrapper.freearray(cpath)
         return (path, log_p)
 
     def logP(self, complexEmissionSequenceX, complexEmissionSequenceY, path):
@@ -4602,7 +4614,7 @@ class PairHMM(HMM):
         logP = self.logPFunction(self.cmodel, complexEmissionSequenceX.cseq,
                                  complexEmissionSequenceY.cseq,
                                  cpath, len(path))
-        ghmmwrapper.free_arrayi(cpath)
+        ghmmwrapper.freearray(cpath)
         return logP
 
     def addEmissionDomains(self, emissionDomains):
