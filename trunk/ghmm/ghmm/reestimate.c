@@ -205,86 +205,86 @@ int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale, 
 }                               /* ighmm_reestimate_free_matvek */
 
 /*----------------------------------------------------------------------------*/
-void ghmm_d_update_tied_groups (ghmm_dmodel * mo)
-{
+void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
 #define CUR_PROC "ghmm_d_update_tied_groups"
   int i, j, k;
   int bi_len;
-
+  int nr=0;
   double *new_emissions;
-  double nr = 0.0, non_silent_nr = 0.0;
+  char * str;
 
   /* printf("** Start of ghmm_d_update_tied_groups **\n"); */
 
   /* do nothing if there are no tied emissions */
   if (!(mo->model_type & GHMM_kTiedEmissions)) {
-    printf ("No tied emissions in reestimate_update_tie_groups\n");
+    GHMM_LOG(LWARN, "No tied emissions. Exiting.");
     return;
   }
-
+  
   if (mo->model_type & GHMM_kHigherOrderEmissions) {
-    /*  printf("reestimate_update_tie_groups: Allocating for higher order states\n"); */
-    ARRAY_MALLOC (new_emissions, ghmm_d_ipow (mo, mo->M, mo->maxorder + 1));
+    ARRAY_MALLOC(new_emissions, ghmm_d_ipow(mo, mo->M, mo->maxorder+1));
   }
   else {
-    /* printf("reestimate_update_tie_groups: No higher order states\n"); */
-    ARRAY_MALLOC (new_emissions, mo->M);
+    ARRAY_MALLOC(new_emissions, mo->M);
   }
 
-  for (i = 0; i < mo->N; i++) {
-    bi_len = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
+  for (i=0; i<mo->N; i++) {
+
     /* find tie group leaders */
     if (mo->tied_to[i] == i) {
-      nr = 1.0;
-      if (mo->silent[i] == 0) {
-        non_silent_nr = 1.0;
+
+      bi_len = ghmm_d_ipow(mo, mo->M, mo->s[i].order + 1);
+
+      if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
+	str = ighmm_mprintf(NULL, 0, "Tie group leader %d is silent.", i);
+	GHMM_LOG(LWARN, str);
+	m_free(str);
+	nr = 0;
+	/* initializing with zeros */
+	for (k=0; k<bi_len; k++)
+	  new_emissions[k] = 0.0;
       }
       else {
-        non_silent_nr = 0.0;
-      }
-
-      /* printf("tie group leader %d found.\n",i); */
-
-      /* initializing with tie group leader emissions */
-      for (k = 0; k < bi_len; k++) {
-        new_emissions[k] = mo->s[i].b[k];
+	nr = 1;
+	/* initializing with tie group leader emissions */
+	for (k=0; k<bi_len; k++)
+	  new_emissions[k] = mo->s[i].b[k];
       }
 
       /* finding tie group members */
-      for (j = i + 1; j < mo->N; j++) {
+      for (j=i+1; j<mo->N; j++) {
         if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order) {
           /* silent states have no contribution to the pooled emissions within a group */
-          if (mo->silent[j] == 0) {
-            nr += 1.0;
-            non_silent_nr += 1.0;
+          if (!(mo->model_type & GHMM_kSilentStates) || (mo->silent[j] == 0)) {
+            nr += 1;
             /* printf("  tie group member %d -> leader %d.\n",j,i); */
             /* summing up emissions in the tie group */
-            for (k = 0; k < bi_len; k++) {
+            for (k=0; k<bi_len; k++)
               new_emissions[k] += mo->s[j].b[k];
-            }
           }
-          /* updating silent flag */
           else {
-            if (non_silent_nr > 0.0) {
-              mo->silent[j] = 0;
-            }
-            nr += 1.0;
-          }
+	    str = ighmm_mprintf(NULL, 0, "Tie group member %d is silent.", j);
+	    GHMM_LOG(LWARN, str);
+	    m_free(str);
+	  }
         }
       }
-      /*printf ("i = %d\n", i); */
       
-        /* updating emissions */
-      if (nr > 1.0) {
-        for (j = i; j < mo->N; j++) {
+      /* updating emissions */
+      if (nr > 1)
+        for (j=i; j < mo->N; j++) {
           /* states within one tie group are required to have the same order */
-          if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order) {
+          if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order && 
+	      (!(mo->model_type & GHMM_kSilentStates) || (mo->silent[j] == 0)))
             for (k = 0; k < bi_len; k++) {
-              mo->s[j].b[k] = (new_emissions[k] / non_silent_nr);
+              mo->s[j].b[k] = new_emissions[k] / nr;
               /* printf("s(%d)[%d] -> %f / %f = %f\n", j, k, new_emissions[k], nr,mo->s[j].b[k]);   */
             }
-          }
-        }
+	}
+      else {
+	str = ighmm_mprintf(NULL, 0, "The tie group with leader %d has only one non-silent state. Kind of pointless!", i);
+	GHMM_LOG(LINFO, str);
+	m_free(str);
       }
     }
   }
