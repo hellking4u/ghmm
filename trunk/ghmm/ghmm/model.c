@@ -580,6 +580,8 @@ int ghmm_d_free(ghmm_dmodel ** mo) {
     m_free((*mo)->topo_order);
   if ((*mo)->pow_lookup)
     m_free((*mo)->pow_lookup);
+  if ((*mo)->background_id)
+    m_free((*mo)->background_id);
  
 
   /* Optional attributes for storing representation information from the XML */  
@@ -980,6 +982,7 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
   /* int silent_len = 0; */
   int n = 0;
   int state = 0;
+  char * str;
 
   sq = ghmm_dseq_calloc (seq_number);
   if (!sq) {mes_proc (); goto STOP;}
