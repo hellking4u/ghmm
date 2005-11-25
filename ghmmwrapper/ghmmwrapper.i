@@ -1015,17 +1015,19 @@ extern int ghmm_d_background_apply(ghmm_dmodel *mo, double* background_weight);
 	
   /* allocation of an empty ghmm_dmodel struct */
   ghmm_dmodel *new_model() {
-     return (struct ghmm_dmodel *) calloc(1, sizeof(struct ghmm_dmodel));    
+    ghmm_dmodel * mo = calloc(1, sizeof(struct ghmm_dmodel));
+    return mo;
   }
 
    
   /* allocation of an array of ghmm_dstate structs*/
   ghmm_dstate *arraystate(int size) {
-    return (ghmm_dstate *) calloc(size*sizeof(ghmm_dstate), 1);
+    ghmm_dstate * state = calloc(size*sizeof(ghmm_dstate), 1);
+    return state;
   }
   
   /* extract pointer to a ghmm_dstate */
-  ghmm_dstate *get_stateptr(ghmm_dstate *ary, int index) { return ary + index; }
+  ghmm_dstate *get_stateptr(ghmm_dstate *ary, int index) {return ary + index;}
   
 
   void call_model_print(char *filename, ghmm_dmodel *mo) {
@@ -2006,97 +2008,89 @@ void set_to_boolean_or(ghmm_dp_class_change_context * pccc, int seq_index, int o
   // Some array helpers	
   /* Create any sort of int[size] array */
   int *int_array(int size) {
-     return (int *) malloc(size*sizeof(int));
+     return malloc(size*sizeof(int));
   }
 
-  void set_arrayint(int  *ary, int index, int value) {
+  void set_arrayint(int *ary, int index, int value) {
     ary[index] = value;
   }
 
-  int  get_arrayint(int  *ary, int index) { return ary[index]; }
-
-  void free_arrayi(int *pt ) { 
-          free (pt); 
-          (pt) = NULL;
+  int get_arrayint(int *ary, int index) {
+    return ary[index];
   }
 
+
   /************ Create and access double[size] arrays ************/
- 
-   double *double_array(int size) {
-     return (double *) malloc(size*sizeof(double));
+  double *double_array(int size) {
+     return malloc(size*sizeof(double));
   }
 
   void set_arrayd(double *ary, int index, double value) {
     ary[index] = value;
   }
 
-  double get_arrayd(double *ary, int index) { return ary[index]; }
-  
-  void free_arrayd(double *pt) {free (pt); (pt) = NULL;}
-  
+  double get_arrayd(double *ary, int index) {
+    return ary[index];
+  }
+
   /************  Create and access sort of long[size] arrays **************/
-    
   long *long_array(int size) {
-     return (long *) malloc(size*sizeof(long));
+     return malloc(size*sizeof(long));
   }
 
   void set_arrayl(long *ary, int index, long value) {
     ary[index] = value;
   }
   
-  double get_arrayl(long *ary, int index) { return ary[index]; }
-  
-  void free_arrayl(long *ary) {free (ary); (ary) = NULL;}
-  
+  double get_arrayl(long *ary, int index) {
+    return ary[index];
+  }
+
   /*********** Create and access char** arrays ***********/
   char **char_array(int size) {
-     return (char **) malloc(size*sizeof(char*));
+    return malloc(size*sizeof(char*));
   }
 
   void set_arraychar(char** ary, int index, char* value) {
     ary[index] = value;
   }
 
-  char *get_arraychar(char** ary, int index) { return ary[index]; }
-
-  void free_arraychar (char * * ary) {free (ary);}
+  char *get_arraychar(char** ary, int index) {
+    return ary[index];
+  }
 
   /********** Create and access ghmm_dmodel arrays  ****************************/
-ghmm_dmodel * * modelarray_alloc (int size) {
-  ghmm_dmodel * * retval;
-  retval = calloc (size, sizeof(ghmm_dmodel*));
-  return retval;
-}
+  ghmm_dmodel * * modelarray_alloc (int size) {
+    ghmm_dmodel * * retval;
+    retval = calloc (size, sizeof(ghmm_dmodel*));
+    return retval;
+  }
 
-void modelarray_free (ghmm_dmodel ** mos) {
-  free (mos);
-}
+  void modelarray_setptr (ghmm_dmodel ** mos, ghmm_dmodel * mo, int pos) {
+    mos[pos] = mo;
+  }
 
-void modelarray_setptr (ghmm_dmodel ** mos, ghmm_dmodel * mo, int pos) {mos[pos] = mo;}
-
-ghmm_dmodel * modelarray_getptr (ghmm_dmodel ** mos, int pos) {return mos[pos];}
+  ghmm_dmodel * modelarray_getptr (ghmm_dmodel ** mos, int pos) {
+    return mos[pos];
+  }
 
 
   /********** Create and access sequence* arrays  *************************/
-ghmm_dseq * * seqarray_alloc (int size) {
-  ghmm_dseq * * retval;
-  retval = calloc (size, sizeof(ghmm_dseq*));
-  return retval;
-}
+  ghmm_dseq * * seqarray_alloc (int size) {
+    ghmm_dseq * * retval;
+    retval = calloc (size, sizeof(ghmm_dseq*));
+    return retval;
+  }
 
-void seqarray_free (ghmm_dseq ** seqs) {
-  free (seqs);
-}
+  void seqarray_setptr (ghmm_dseq ** seqs, ghmm_dseq * seq, int pos) {
+    seqs[pos] = seq;
+  }
 
-void seqarray_setptr (ghmm_dseq ** seqs, ghmm_dseq * seq, int pos)
-{seqs[pos] = seq;}
-
-ghmm_dseq * seqarray_getptr (ghmm_dseq ** seqs, int pos)
-{return seqs[pos];}
-   
+  ghmm_dseq * seqarray_getptr (ghmm_dseq ** seqs, int pos) {
+    return seqs[pos];
+  }
 
   /************  Create and access double[size1][size2] arrays ************/
-
   double * * double_2d_array(int rows, int cols) {
 
     double **matrix;
