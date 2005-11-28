@@ -14,7 +14,7 @@ done
 libtoolize --automake --force --copy
 
 #makes aclocal.m4 from acinclude.m4 and other files
-aclocal
+aclocal -I /usr/local/share/aclocal
 
 #scans configure.in and creates config.h.in
 autoheader 
