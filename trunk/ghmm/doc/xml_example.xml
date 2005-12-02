@@ -1,33 +1,37 @@
 <?xml version="1.0"?>
+<!DOCTYPE HMM SYSTEM "ghmm.dtd">
 <HMM name="example" type="discrete">
-  <alphabet id=1>
-      <symbol code="0">A</symbol>
-      <symbol code="1">C</symbol>
-      <symbol code="2">G</symbol>
-      <symbol code="3">T</symbol>
-  </alphabet>
-  <background name="intron_bg" order="0">
+	<alphabet id="1">
+		<symbol code="0">A</symbol>
+		<symbol code="1">C</symbol>
+		<symbol code="2">G</symbol>
+		<symbol code="3">T</symbol>
+	</alphabet>
+	<background name="intron_bg" order="0">
     0.5,0.5,0.0,0.0
   </background>
-  <node id="0" initial="1.0" desc="Node 0">
-     <discrete>0.25,0.25,0.25,0.25</discrete>
-     <position x="100.0" y="200.0"/><!-- optional -->
-     <background>intron_bg</background><!-- optional -->
-  </node>
-  <node id="1" initial="0.0" desc="Node 1">
-     <discrete>0.2,0.2,0.3,0.3</discrete>
-     <position x="300.0" y="300.0"/><!-- optional -->
-  </node>
-  <edge source="0" target="0">
-     <probability>0.2</probability>
-  </edge>
-  <edge source="0" target="1">
-     <probability>0.8</probability>
-  </edge>
-  <edge source="1" target="0">
-     <probability>0.6</probability>
-  </edge>
-  <edge source="1" target="1">
-     <probability>0.4</probability>
-  </edge>
+	<node id="0" initial="1.0" desc="Node 0">
+		<discrete>0.25,0.25,0.25,0.25</discrete>
+		<!-- optional -->
+		<position x="100.0" y="200.0"/>
+		<!-- optional -->
+		<backgroundname>intron_bg</backgroundname>
+	</node>
+	<node id="1" initial="0.0" desc="Node 1">
+		<discrete>0.2,0.2,0.3,0.3</discrete>
+		<!-- optional -->
+		<position x="300.0" y="300.0"/>
+	</node>
+	<edge source="0" target="0">
+		<probability>0.2</probability>
+	</edge>
+	<edge source="0" target="1">
+		<probability>0.8</probability>
+	</edge>
+	<edge source="1" target="0">
+		<probability>0.6</probability>
+	</edge>
+	<edge source="1" target="1">
+		<probability>0.4</probability>
+	</edge>
 </HMM>
