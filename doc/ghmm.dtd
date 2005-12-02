@@ -15,16 +15,25 @@
 >
 <!ELEMENT background (#PCDATA)>
 <!ATTLIST background
-	name CDATA #IMPLIED
-	order CDATA #IMPLIED
+	name CDATA #REQUIRED
+	order CDATA #REQUIRED
 >
+<!ELEMENT backgroundname (#PCDATA)>
 <!ELEMENT discrete (#PCDATA)>
+<!ELEMENT mixture (normal+, someOtherDensity+)>
+<!ELEMENT pair (#PCDATA)>
+<!ELEMENT higherOrder (#PCDATA)>
+<!ATTLIST higherOrder
+	order CDATA #REQUIRED
+>
+<!ELEMENT normal (#PCDATA)>
+<!ELEMENT someOtherDensity (#PCDATA)>
 <!ELEMENT edge (probability)>
 <!ATTLIST edge
 	source CDATA #REQUIRED
 	target CDATA #REQUIRED
 >
-<!ELEMENT node ((discrete | continuous | pair | higherOrder), position?, background?, class?)>
+<!ELEMENT node ((discrete | mixture | pair | higherOrder), position?, backgroundname?, class?)>
 <!ATTLIST node
 	id CDATA #REQUIRED
 	initial CDATA #REQUIRED
