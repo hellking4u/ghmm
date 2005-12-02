@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdio.h>
@@ -5,6 +9,7 @@
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 
+#include <ghmm/ghmm_internals.h>
 
 int getIntAttribute(xmlNodePtr node, const xmlChar *name, int *error)
 {
@@ -78,6 +83,8 @@ parseNode(xmlDocPtr doc, xmlNodePtr cur)
 static void
 parseGraph(xmlDocPtr doc, xmlNodePtr cur)
 {
+#define CUR_PROC "parseGraph"
+
   xmlChar *stuff;
   xmlNode *data = NULL;
   xmlChar* dataKey;
@@ -88,10 +95,9 @@ parseGraph(xmlDocPtr doc, xmlNodePtr cur)
   int *inDegree = NULL;  
   int *outDegree = NULL;
 
-
   cur = cur->xmlChildrenNode;
 
-  printf("parseGraph\n");
+  GHMM_LOG(LINFO, "parseGraph");
   while( cur != NULL) {
 
     /* ========== NODES ==================================================  */
@@ -100,7 +106,7 @@ parseGraph(xmlDocPtr doc, xmlNodePtr cur)
       if(!error)
 	printf("node id = %d\n", id);
 
-      N++;
+      N=id+1;
       parseNode(doc, cur);
     }
     
@@ -108,11 +114,8 @@ parseGraph(xmlDocPtr doc, xmlNodePtr cur)
     if( (!xmlStrcmp(cur->name, (const xmlChar*)"edge"))) {      
 
       if (inDegree == NULL) {
-	inDegree = (int *) calloc( N+1, sizeof(int));
-	outDegree = (int *) calloc(N+1, sizeof(int));
-	
-	memset(inDegree,  0, (N+1)*sizeof(int));
-	memset(outDegree, 0, (N+1)*sizeof(int));
+	inDegree  = calloc(N+1, sizeof(int));
+	outDegree = calloc(N+1, sizeof(int));
       }
 
       source = getIntAttribute(cur, (const xmlChar*)"source", &error); /*\ufffdGet the node ID */
@@ -140,6 +143,7 @@ parseGraph(xmlDocPtr doc, xmlNodePtr cur)
   
   free(inDegree);
   free(outDegree);
+#undef CUR_PROC
 }
 
 
@@ -164,20 +168,13 @@ parseHMMDocument(char *docname) {
     return;
   }
 
-  if( xmlStrcmp(cur -> name, (const xmlChar*)"graphml")) {
-    fprintf(stderr, "Document %s is not of type 'graphml'\n", docname); 
+  if( xmlStrcmp(cur -> name, (const xmlChar*)"HMM")) {
+    fprintf(stderr, "Document %s is not of type 'HMM'\n", docname); 
     xmlFreeDoc(doc);
     return;
   }
-
-  cur = cur->xmlChildrenNode;
-
-  while( cur != NULL) {
-    printf("'%s'\n", (const char*)cur->name);
-    if( !xmlStrcmp(cur->name, (const xmlChar*)"graph")) {
-      parseGraph(doc, cur);
-    }
-    cur = cur -> next;
+  else {
+    parseGraph(doc, cur);
   }
 
   xmlFreeDoc(doc);
