@@ -432,6 +432,7 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
   int res = -1;
   int k, i, j, t, j_id, valid;
   int e_index;
+  char * str;
   double **alpha = NULL;
   double **beta = NULL;
   double *scale = NULL;
@@ -476,28 +477,28 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
       for (i = 0; i < mo->N; i++) {
         /* Pi */
         r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
-        r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];
+        r->pi_denom  += seq_w[k] * alpha[0][i] * beta[0][i];
 
-        for (t = 0; t < T_k - 1; t++) {
+        for (t=0; t < T_k-1; t++) {
           /* B */
           if (!mo->s[i].fix) {
-            e_index = get_emission_index (mo, i, O[k][t], t);
+            e_index = get_emission_index(mo, i, O[k][t], t);
             if (e_index != -1) {
               gamma = seq_w[k] * alpha[t][i] * beta[t][i];
               r->b_num[i][e_index] += gamma;
               r->b_denom[i][e_index / (mo->M)] += gamma;
             }
           }
-          update_emission_history (mo, O[k][t]);
+          update_emission_history(mo, O[k][t]);
 
           /* A */
           r->a_denom[i] += (seq_w[k] * alpha[t][i] * beta[t][i]);
-          for (j = 0; j < mo->s[i].out_states; j++) {
+          for (j=0; j < mo->s[i].out_states; j++) {
             j_id = mo->s[i].out_id[j];
-            e_index = get_emission_index (mo, j_id, O[k][t + 1], t + 1);
+            e_index = get_emission_index(mo, j_id, O[k][t+1], t+1);
             if (e_index != -1)
               r->a_num[i][j] += (seq_w[k] * alpha[t][i] * mo->s[i].out_a[j]
-                                 * mo->s[j_id].b[e_index] * beta[t + 1][j_id]
+                                 * mo->s[j_id].b[e_index] * beta[t+1][j_id]
                                  * (1.0 / scale[t + 1]));       /* c[t] = 1/scale[t] */
           }
         }
@@ -513,17 +514,20 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
         }
       }
     }                           /* if (log_p_k != +1) */
-    else
-      printf ("O(%d) can't be built from model mo!\n", k);
+    else {
+      str = ighmm_mprintf(NULL, 0, "O(%d) can't be built from model mo!\n", k);
+      GHMM_LOG(LWARN, str);
+      m_free(str);
+    }
 
-    ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
+    ighmm_reestimate_free_matvek(alpha, beta, scale, T_k);
 
   }                             /* for (k = 0; k < seq_number; k++) */
 
   if (valid) {
     /* new parameter lambda: set directly in model */
 
-    if (reestimate_setlambda (r, mo) == -1) {
+    if (reestimate_setlambda(r, mo) == -1) {
       mes_proc ();
       goto STOP;
     }
@@ -533,7 +537,7 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
        ghmm_d_B_print(stdout, mo, "\t", " ", "\n");
      */
     /* only test: */
-    if (ghmm_d_check (mo) == -1) {
+    if (ghmm_d_check(mo) == -1) {
       mes_proc ();
       goto STOP;
     }
@@ -541,14 +545,12 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
   else {                        /* NO sequence can be built from model mo! */
     *log_p = +1;
   }
-
   res = 0;
 
-
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+STOP:
    return (res);
 FREE:
-   ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
+   ighmm_reestimate_free_matvek(alpha, beta, scale, T_k);
    return (res);
 # undef CUR_PROC
 }                               /* reestimate_one_step */
