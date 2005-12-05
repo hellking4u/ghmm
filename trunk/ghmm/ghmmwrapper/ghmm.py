@@ -146,6 +146,7 @@ import math
 import sys
 import os
 import logging
+from string import join
 
 # Initialize logging to stderr
 #logging.basicConfig(format="%(asctime)s %(filename)s:%(lineno)d %(levelname)-5s - %(message)s")
@@ -335,7 +336,7 @@ class Alphabet(EmissionDomain):
         strout.append("Number of symbols: " + str(len(self)) + "\n")
         strout.append("External: " + str(self.listOfCharacters) + "\n")
         strout.append("Internal: " + str(range(len(self))) + "\n")
-        return join(strout)
+        return join(strout,'')
     
     def __eq__(self,alph):
         if not isinstance(alph,Alphabet):
@@ -797,7 +798,7 @@ class EmissionSequence:
         strout = []
         strout.append("\nEmissionSequence Instance:\nlength " + str(ghmmwrapper.get_arrayint(seq.seq_len,0))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,0))  + ":\n")
         for j in range(ghmmwrapper.get_arrayint(seq.seq_len,0) ):
-            strout += str( self.emissionDomain.external(self[j]) )   
+            strout.append(str( self.emissionDomain.external(self[j]) )   )
             if self.emissionDomain.CDataType == "double":
                 strout.append(" ")
 
@@ -805,9 +806,9 @@ class EmissionSequence:
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
             strout.append("\nState labels:\n")
             for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,0) ):
-                strout += str( self.labelDomain.external(ghmmwrapper.get_2d_arrayint(seq.state_labels,0,j)))+ ", "
+                strout.append(str( self.labelDomain.external(ghmmwrapper.get_2d_arrayint(seq.state_labels,0,j)))+ ", ")
 
-    	return join(strout)
+    	return join(strout,'')
 
     def sequenceSet(self):
         """ Return a one-element SequenceSet with this sequence."""
@@ -1007,23 +1008,21 @@ class SequenceSet:
            for i in range(seq.seq_number):
                 strout.append("\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n")
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
-                    strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) )) )
-                    if self.emissionDomain.CDataType == "double":
-                       strout.append(" ")
+                    strout.append(str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) )) ))
 
                 # checking for labels 
                 if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
                     strout.append("\nState labels:\n")
                     for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,i) ):
-                        strout += str( self.labelDomain.external(ghmmwrapper.get_2d_arrayint(seq.state_labels,i,j))) +", "
+                        strout.append(str( self.labelDomain.external(ghmmwrapper.get_2d_arrayint(seq.state_labels,i,j))) +", ")
 
         if self.emissionDomain.CDataType == "double":
             for i in range(seq.seq_number):
                 strout.append("\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n")
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
-                    strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) )) ) + " "
+                    strout.append(str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) )) ) + " ")
 
-        return join(strout)
+        return join(strout,'')
     
 
 
@@ -2381,7 +2380,7 @@ class HMM:
             strout.append("kClassLabels ")
         if model_type == 0:         #kNotSpecified
             strout = "kNotSpecified"
-        return join(strout)
+        return join(strout,'')
 
 
 def HMMwriteList(fileName,hmmList):
@@ -2455,11 +2454,13 @@ class DiscreteEmissionHMM(HMM):
             for i in range(state.in_states):
                 strout.append( "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i)))
             strout.append( "\nint fix:" + str(state.fix) + "\n")
-        strout.append("\nSilent states: \n")
-        for k in range(hmm.N):
-            strout.append( str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", ")
+
+        if self.cmodel.model_type &  4:
+            strout.append("\nSilent states: \n")
+            for k in range(hmm.N):
+                strout.append( str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", ")
         strout.append( "\n")
-        return join(strout)
+        return join(strout,'')
 
 
     def extendDurations(self, durationlist):
@@ -3038,7 +3039,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 strout.append(str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", ")
             strout.append("\n")
 
-        return join(strout)
+        return join(strout,'')
 
     def setLabels(self,labelList):
         """  Set the state labels to the values given in labelList.
@@ -3484,7 +3485,7 @@ class GaussianEmissionHMM(HMM):
                     strout.append("\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i)))
 
 
-        return join(strout)
+        return join(strout,'')
 
     # different function signatures require overloading of parent class methods    
     def sample(self, seqNr ,T,seed = -1):
@@ -3979,7 +3980,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
-        return join(strout)
+        return join(strout,'')
 
     def toMatrices(self):
         "Return the parameters in matrix form."
@@ -4092,7 +4093,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 # 
 # 
 #             strout.append("\nint fix:" + str(state.fix) + "\n")
-#         return join(strout)
+#         return join(strout,'')
 # 
 #     def toMatrices(self):
 #         "Return the parameters in matrix form."
@@ -4503,7 +4504,7 @@ class PairHMM(HMM):
             #strout.append("\nState order: " + str(state.order))
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nOutput probabilites: ")
-            #strout += str(ghmmwrapper.get_arrayd(state.b,outp))
+            #strout.append(str(ghmmwrapper.get_arrayd(state.b,outp)))
             strout.append("\n")
 
             strout.append("\nOutgoing transitions:")
@@ -4517,10 +4518,10 @@ class PairHMM(HMM):
         if hmm.model_type & 4:
             strout.append("\nSilent states: \n")
             for k in range(hmm.N):
-                strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
+                strout.append(str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", ")
             strout.append("\n")
 
-        return join(strout)
+        return join(strout,'')
 
     def viterbi(self, complexEmissionSequenceX, complexEmissionSequenceY):
         """
