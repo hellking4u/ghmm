@@ -104,7 +104,7 @@ class AlphabetTests(unittest.TestCase):
         
                             
     def testlen(self):
-        # print"\ntestlen ",
+        #print"\ntestlen ",
         
         self.assertEqual(len(self.binaryAlphabet),2)
         self.assertEqual(len(self.dnaAlphabet),len(self.dna))
@@ -125,7 +125,7 @@ class EmissionSequenceTests(unittest.TestCase):
                                             labelInput= ['E','R','T','T','T','E','R','T','T','T','R'])
         
     def testprint(self):
-        # print"\ntestprint ",
+        #print"\ntestprint ",
         s = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1200034"
         self.assertEqual(str(self.i_seq),s)
         
@@ -134,7 +134,7 @@ class EmissionSequenceTests(unittest.TestCase):
         
         
     def testattributes(self):
-        # print"\ntestattributes ", 
+        #print"\ntestattributes ", 
         self.assertEqual(self.i_seq.cseq.state_labels,None)
         self.assertEqual(self.i_seq.cseq.state_labels_len,None)    
         self.assertEqual(self.i_seq.cseq.seq_number,1)    
@@ -581,10 +581,15 @@ class BackgroundDistributionTests(unittest.TestCase):
                   )
 
     def testprint(self):
+        
+        print "*** testprint"
         s = str(self.bg)
         self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
     def testmodelbackgroundaccessfunctions(self):
+        
+        print "***  testmodelbackgroundaccessfunctions"
+        
         self.model.setBackground(self.bg,[0,-1,1])
         # deleting background
         del(self.bg)
@@ -1080,7 +1085,7 @@ suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 
 # Call to individual test suites, uncomment to activate as needed.
-runner = unittest.TextTestRunner()
+runner = unittest.TextTestRunner(verbosity=2)
 #runner.run(suiteAlphabet)
 #runner.run(suiteSequenceSet)
 #runner.run(suiteDiscreteEmissionHMM)
