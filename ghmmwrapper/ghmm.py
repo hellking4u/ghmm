@@ -155,7 +155,7 @@ log = logging.getLogger("GHMM")
 hdlr = logging.StreamHandler(sys.stderr)
 
 # setting message format
-fmt = logging.Formatter("%(name)s %(asctime)s %(filename)s:%(lineno)d %(levelname)-5s - %(message)s")
+fmt = logging.Formatter("%(name)s %(asctime)s %(filename)s:%(lineno)d %(levelname)s %(thread)-5s - %(message)s")
 hdlr.setFormatter(fmt)
 
 # adding handler to logger object
@@ -163,10 +163,8 @@ log.addHandler(hdlr)
 
 # Set the minimal severity of a message to be shown. The levels in
 # increasing severity are: DEBUG, INFO, WARNING, ERROR, CRITICAL
-log.setLevel(logging.INFO)
-log.setLevel(logging.DEBUG)
 
-
+log.setLevel(logging.WARNING)
 log.info( " I'm the ghmm in "+ __file__)
 
 
@@ -333,11 +331,11 @@ class Alphabet(EmissionDomain):
         self.CDataType = "int" # flag indicating which C data type should be used
 
     def __str__(self):
-        strout = "GHMM Alphabet:\n"
-        strout += "Number of symbols: " + str(len(self)) + "\n"
-        strout += "External: " + str(self.listOfCharacters) + "\n"
-        strout += "Internal: " + str(range(len(self))) + "\n"
-        return strout
+        strout = ["GHMM Alphabet:\n"]
+        strout.append("Number of symbols: " + str(len(self)) + "\n")
+        strout.append("External: " + str(self.listOfCharacters) + "\n")
+        strout.append("Internal: " + str(range(len(self))) + "\n")
+        return join(strout)
     
     def __eq__(self,alph):
         if not isinstance(alph,Alphabet):
@@ -796,20 +794,20 @@ class EmissionSequence:
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
-        strout = ""
-        strout += "\nEmissionSequence Instance:\nlength " + str(ghmmwrapper.get_arrayint(seq.seq_len,0))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,0))  + ":\n"
+        strout = []
+        strout.append("\nEmissionSequence Instance:\nlength " + str(ghmmwrapper.get_arrayint(seq.seq_len,0))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,0))  + ":\n")
         for j in range(ghmmwrapper.get_arrayint(seq.seq_len,0) ):
             strout += str( self.emissionDomain.external(self[j]) )   
             if self.emissionDomain.CDataType == "double":
-                strout += " "
+                strout.append(" ")
 
         # checking for labels
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
-            strout += "\nState labels:\n"
+            strout.append("\nState labels:\n")
             for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,0) ):
                 strout += str( self.labelDomain.external(ghmmwrapper.get_2d_arrayint(seq.state_labels,0,j)))+ ", "
 
-    	return strout
+    	return join(strout)
 
     def sequenceSet(self):
         """ Return a one-element SequenceSet with this sequence."""
@@ -1003,29 +1001,29 @@ class SequenceSet:
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
-        strout =  "\nNumber of sequences: " + str(seq.seq_number)
+        strout =  ["\nNumber of sequences: " + str(seq.seq_number)]
         
         if self.emissionDomain.CDataType == "int":
            for i in range(seq.seq_number):
-                strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n"
+                strout.append("\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n")
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
                     strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayint(self.cseq.seq, i, j) )) )
                     if self.emissionDomain.CDataType == "double":
-                       strout += " "
+                       strout.append(" ")
 
                 # checking for labels 
                 if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
-                    strout += "\nState labels:\n"
+                    strout.append("\nState labels:\n")
                     for j in range(ghmmwrapper.get_arrayint(seq.state_labels_len,i) ):
                         strout += str( self.labelDomain.external(ghmmwrapper.get_2d_arrayint(seq.state_labels,i,j))) +", "
 
         if self.emissionDomain.CDataType == "double":
             for i in range(seq.seq_number):
-                strout += "\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n"
+                strout.append("\nSeq " + str(i)+ ", length " + str(ghmmwrapper.get_arrayint(seq.seq_len,i))+ ", weight " + str(ghmmwrapper.get_arrayd(seq.seq_w,i))  + ":\n")
                 for j in range(ghmmwrapper.get_arrayint(seq.seq_len,i) ):
                     strout += str( self.emissionDomain.external(( ghmmwrapper.get_2d_arrayd(self.cseq.seq, i, j) )) ) + " "
 
-        return strout
+        return join(strout)
     
 
 
@@ -1043,7 +1041,7 @@ class SequenceSet:
         return ghmmwrapper.get_arrayd(self.cseq.seq_w,i)
 
     def setWeight(self, i, w):
-        """ Return the weight of sequence i. Weights are used in Baum-Welch"""
+        """ Set the weight of sequence i. Weights are used in Baum-Welch"""
         return ghmmwrapper.set_arrayd(self.cseq.seq_w,i,w)
         
     def __getitem__(self, index):
@@ -2367,23 +2365,23 @@ class HMM:
         self.fileWriteFunction(fileName,self.cmodel)
 
     def printtypes(self, model_type):
-        strout = ""
+        strout = []
         first = 0
         if model_type &  2:         #kLeftRight
-            strout += "kLeftRight "
+            strout.append("kLeftRight ")
         if model_type &  4:         #kSilentStates
-            strout += "kSilentStates "
+            strout.append("kSilentStates ")
         if model_type &  8:         #kTiedEmissions
-            strout += "kTiedEmissions "
+            strout.append("kTiedEmissions ")
         if model_type & 16:         #kHigherOrderEmissions
-            strout += "kHigherOrderEmissions "
+            strout.append("kHigherOrderEmissions ")
         if model_type & 32:         #kHasBackgroundDistributions
-            strout += "kHasBackgroundDistributions "
+            strout.append("kHasBackgroundDistributions ")
         if model_type & 64:         #kClassLabels
-            strout += "kClassLabels "
+            strout.append("kClassLabels ")
         if model_type == 0:         #kNotSpecified
             strout = "kNotSpecified"
-        return strout
+        return join(strout)
 
 
 def HMMwriteList(fileName,hmmList):
@@ -2431,40 +2429,38 @@ class DiscreteEmissionHMM(HMM):
         
     def __str__(self):
         hmm = self.cmodel
-        strout = "\nGHMM Model\n"
-        strout += "Name: " + str(self.cmodel.name)
-        strout += "\nModelflags: "+ self.printtypes(self.cmodel.model_type)
-        strout += "\nNumber of states: "+ str(hmm.N)
-        strout += "\nSize of Alphabet: "+ str(hmm.M)
+        strout = ["\nGHMM Model\n"]
+        strout.append( "Name: " + str(self.cmodel.name))
+        strout.append( "\nModelflags: "+ self.printtypes(self.cmodel.model_type))
+        strout.append(  "\nNumber of states: "+ str(hmm.N))
+        strout.append(  "\nSize of Alphabet: "+ str(hmm.M))
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
-            strout += "\n\nState number "+ str(k) +":"
-            strout += "\nState order: " + str(state.order)
-            strout += "\nInitial probability: " + str(state.pi)
-            strout += "\nOutput probabilites: "
+            strout.append( "\n\nState number "+ str(k) +":")
+            strout.append( "\nState order: " + str(state.order))
+            strout.append( "\nInitial probability: " + str(state.pi))
+            #strout.append("\nsilent state: " + str(get_arrayint(self.cmodel.silent,k)))
+            strout.append( "\nOutput probabilites: ")
             for outp in range(hmm.M**(state.order+1)):
-                strout+=str(ghmmwrapper.get_arrayd(state.b,outp))
+                strout.append(str(ghmmwrapper.get_arrayd(state.b,outp)))
                 if outp % hmm.M == hmm.M-1:
-                    strout += "\n"
+                    strout.append( "\n")
                 else:
-                    strout += ", "
+                    strout.append( ", ")
 
-            strout += "\nOutgoing transitions:"
+            strout.append( "\nOutgoing transitions:")
             for i in range( state.out_states):
-                strout += "\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i))
-            strout +=  "\nIngoing transitions:"
+                strout.append( "\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i)))
+            strout.append( "\nIngoing transitions:")
             for i in range(state.in_states):
-                strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
-            strout += "\nint fix:" + str(state.fix) + "\n"
+                strout.append( "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i)))
+            strout.append( "\nint fix:" + str(state.fix) + "\n")
+        strout.append("\nSilent states: \n")
+        for k in range(hmm.N):
+            strout.append( str(ghmmwrapper.get_arrayint(self.cmodel.silent,k)) + ", ")
+        strout.append( "\n")
+        return join(strout)
 
-        if hmm.model_type & 4:
-            strout += "\nSilent states: \n"
-            for k in range(hmm.N):
-                strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
-            strout += "\n"
-            
-        return strout
-    
 
     def extendDurations(self, durationlist):
         """ extend states with durations larger one
@@ -3006,43 +3002,43 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
     def __str__(self):
         hmm = self.cmodel
-        strout = "\nGHMM Model\n"
-        strout += "Name: " + str(self.cmodel.name)
-        strout += "\nModelflags: "+ self.printtypes(self.cmodel.model_type)
-        strout += "\nNumber of states: "+ str(hmm.N)
-        strout += "\nSize of Alphabet: "+ str(hmm.M)
+        strout = ["\nGHMM Model\n"]
+        strout.append("Name: " + str(self.cmodel.name))
+        strout.append("\nModelflags: "+ self.printtypes(self.cmodel.model_type))
+        strout.append("\nNumber of states: "+ str(hmm.N))
+        strout.append("\nSize of Alphabet: "+ str(hmm.M))
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
-            strout += "\n\nState number "+ str(k) +":"
+            strout.append("\n\nState number "+ str(k) +":")
 
-            #strout += "\nState label: "+ str(self.r_index[state.label])
-            strout += "\nState label: "+ str(self.labelDomain.external(state.label))
+            #strout.append("\nState label: "+ str(self.r_index[state.label]))
+            strout.append("\nState label: "+ str(self.labelDomain.external(state.label)))
 
-            strout += "\nState order: " + str(state.order)
-            strout += "\nInitial probability: " + str(state.pi)
-            strout += "\nOutput probabilites:\n"
+            strout.append("\nState order: " + str(state.order))
+            strout.append("\nInitial probability: " + str(state.pi))
+            strout.append("\nOutput probabilites:\n")
             for outp in range(hmm.M**(state.order+1)):
                 strout+=str(ghmmwrapper.get_arrayd(state.b,outp))
                 if outp % hmm.M == hmm.M-1:
-                    strout += "\n"
+                    strout.append("\n")
                 else:
-                    strout += ", "
+                    strout.append(", ")
 
-            strout += "Outgoing transitions:"
+            strout.append("Outgoing transitions:")
             for i in range( state.out_states):
-                strout += "\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i))
-            strout +=  "\nIngoing transitions:"
+                strout.append("\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i)))
+            strout.append( "\nIngoing transitions:")
             for i in range(state.in_states):
-                strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
-                strout += "\nint fix:" + str(state.fix) + "\n"
+                strout.append( "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i)))
+                strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & 4:
-            strout += "\nSilent states: \n"
+            strout.append("\nSilent states: \n")
             for k in range(hmm.N):
-                strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
-            strout += "\n"
+                strout.append(str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", ")
+            strout.append("\n")
 
-        return strout
+        return join(strout)
 
     def setLabels(self,labelList):
         """  Set the state labels to the values given in labelList.
@@ -3456,14 +3452,15 @@ class GaussianEmissionHMM(HMM):
     
     def __str__(self):
         hmm = self.cmodel
-        strout = "\nHMM Overview:"
-        strout += "\nNumber of states: " + str(hmm.N)
-        strout += "\nNumber of mixture components: " + str(hmm.M)
+        # TTTTTTTTTTTT XXX
+        strout = ["\nHMM Overview:"]
+        strout.append("\nNumber of states: " + str(hmm.N))
+        strout.append("\nNumber of mixture components: " + str(hmm.M))
 
         for k in range(hmm.N):
             state = ghmmwrapper.get_sstate(hmm, k)
-            strout += "\n\nState number "+ str(k) + ":"
-            strout += "\nInitial probability: " + str(state.pi) + "\n"
+            strout.append("\n\nState number "+ str(k) + ":")
+            strout.append("\nInitial probability: " + str(state.pi) + "\n")
 
             weight = ""
             mue = ""
@@ -3473,21 +3470,21 @@ class GaussianEmissionHMM(HMM):
             mue += str(ghmmwrapper.get_arrayd(state.mue,0))
             u += str(ghmmwrapper.get_arrayd(state.u,0))
 
-            strout += "  mean: " + str(mue) + "\n"
-            strout += "  variance: " + str(u) + "\n"
-            strout += "  fix: " + str(state.fix) + "\n"
+            strout.append("  mean: " + str(mue) + "\n")
+            strout.append("  variance: " + str(u) + "\n")
+            strout.append("  fix: " + str(state.fix) + "\n")
             
             for c in range(self.cmodel.cos):
-                strout += "\n  Class : " + str(c)                
-                strout += "\n    Outgoing transitions:"
+                strout.append("\n  Class : " + str(c)                )
+                strout.append("\n    Outgoing transitions:")
                 for i in range( state.out_states):
-                    strout += "\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i))
-                strout +=  "\n    Ingoing transitions:"
+                    strout.append("\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i)))
+                strout.append("\n    Ingoing transitions:")
                 for i in range(state.in_states):
-                    strout += "\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i))
+                    strout.append("\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i)))
 
 
-        return strout
+        return join(strout)
 
     # different function signatures require overloading of parent class methods    
     def sample(self, seqNr ,T,seed = -1):
@@ -3948,15 +3945,15 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         "defines string representation"
         hmm = self.cmodel
 
-        strout = "\nOverview of HMM:"
-        strout += "\nNumber of states: "+ str(hmm.N)
-        strout += "\nNumber of output distributions per state: "+ str(hmm.M)
+        strout = ["\nOverview of HMM:"]
+        strout.append("\nNumber of states: "+ str(hmm.N))
+        strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
 
         for k in range(hmm.N):
             state = ghmmwrapper.get_sstate(hmm, k)
-            strout += "\n\nState number "+ str(k) +":"
-            strout += "\nInitial probability: " + str(state.pi)
-            strout += "\n"+ str(hmm.M) + " density function(s):\n"
+            strout.append("\n\nState number "+ str(k) +":")
+            strout.append("\nInitial probability: " + str(state.pi))
+            strout.append("\n"+ str(hmm.M) + " density function(s):\n")
 
             weight = ""
             mue = ""
@@ -3967,22 +3964,22 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 mue += str(ghmmwrapper.get_arrayd(state.mue,outp))+", "
                 u += str(ghmmwrapper.get_arrayd(state.u,outp))+", "
 
-            strout += "  pdf component weights : " + str(weight) + "\n"
-            strout += "  mean vector: " + str(mue) + "\n"
-            strout += "  variance vector: " + str(u) + "\n"
+            strout.append("  pdf component weights : " + str(weight) + "\n")
+            strout.append("  mean vector: " + str(mue) + "\n")
+            strout.append("  variance vector: " + str(u) + "\n")
 
             for c in range(self.cmodel.cos):
-                strout += "\n  Class : " + str(c)                
-                strout += "\n    Outgoing transitions:"
+                strout.append("\n  Class : " + str(c)                )
+                strout.append("\n    Outgoing transitions:")
                 for i in range( state.out_states):
-                    strout += "\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i))
-                strout +=  "\n    Ingoing transitions:"
+                    strout.append("\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i)))
+                strout.append("\n    Ingoing transitions:")
                 for i in range(state.in_states):
-                    strout += "\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i))
+                    strout.append("\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i)))
 
 
-            strout += "\nint fix:" + str(state.fix) + "\n"
-        return strout
+            strout.append("\nint fix:" + str(state.fix) + "\n")
+        return join(strout)
 
     def toMatrices(self):
         "Return the parameters in matrix form."
@@ -4062,14 +4059,14 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 #         hmm = self.cmodel
 # 
 #         strout = "\nOverview of HMM:"
-#         strout += "\nNumber of states: "+ str(hmm.N)
-#         strout += "\nNumber of output distributions per state: "+ str(hmm.M)
+#         strout.append("\nNumber of states: "+ str(hmm.N))
+#         strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
 # 
 #         for k in range(hmm.N):
 #             state = ghmmwrapper.get_sstate(hmm, k)
-#             strout += "\n\nState number "+ str(k) +":"
-#             strout += "\nInitial probability: " + str(state.pi)
-#             strout += "\n"+ str(hmm.M) + " density function(s):\n"
+#             strout.append("\n\nState number "+ str(k) +":")
+#             strout.append("\nInitial probability: " + str(state.pi))
+#             strout.append("\n"+ str(hmm.M) + " density function(s):\n")
 # 
 #             weight = ""
 #             mue = ""
@@ -4080,22 +4077,22 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 #                 mue += str(ghmmwrapper.get_arrayd(state.mue,outp))+", "
 #                 u += str(ghmmwrapper.get_arrayd(state.u,outp))+", "
 # 
-#             strout += "  pdf component weights : " + str(weight) + "\n"
-#             strout += "  mean vector: " + str(mue) + "\n"
-#             strout += "  variance vector: " + str(u) + "\n"
+#             strout.append("  pdf component weights : " + str(weight) + "\n")
+#             strout.append("  mean vector: " + str(mue) + "\n")
+#             strout.append("  variance vector: " + str(u) + "\n")
 # 
 #             for c in range(self.cmodel.cos):
-#                 strout += "\n  Class : " + str(c)                
-#                 strout += "\n    Outgoing transitions:"
+#                 strout.append("\n  Class : " + str(c)                )
+#                 strout.append("\n    Outgoing transitions:")
 #                 for i in range( state.out_states):
-#                     strout += "\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i))
-#                 strout +=  "\n    Ingoing transitions:"
+#                     strout.append("\n      transition to state " + str(ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability = " + str(ghmmwrapper.get_2d_arrayd(state.out_a,c,i)))
+#                 strout.append("\n    Ingoing transitions:")
 #                 for i in range(state.in_states):
-#                     strout += "\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i))
+#                     strout.append("\n      transition from state " + str(ghmmwrapper.get_arrayint(state.in_id,i) ) +" with probability = "+ str(ghmmwrapper.get_2d_arrayd(state.in_a,c,i)))
 # 
 # 
-#             strout += "\nint fix:" + str(state.fix) + "\n"
-#         return strout
+#             strout.append("\nint fix:" + str(state.fix) + "\n")
+#         return join(strout)
 # 
 #     def toMatrices(self):
 #         "Return the parameters in matrix form."
@@ -4495,35 +4492,35 @@ class PairHMM(HMM):
         @return: string representation
         """
         hmm = self.cmodel
-        strout = "\nGHMM Model\n"
-        strout += "Name: " + str(self.cmodel.name)
-        strout += "\nModelflags: "+ self.printtypes(self.cmodel.model_type)
-        strout += "\nNumber of states: "+ str(hmm.N)
-        strout += "\nSize of Alphabet: "+ str(hmm.M)
+        strout = ["\nGHMM Model\n"]
+        strout.append("Name: " + str(self.cmodel.name))
+        strout.append("\nModelflags: "+ self.printtypes(self.cmodel.model_type))
+        strout.append("\nNumber of states: "+ str(hmm.N))
+        strout.append("\nSize of Alphabet: "+ str(hmm.M))
         for k in range(hmm.N):
             state = ghmmwrapper.get_pstateptr(hmm.s, k)
-            strout += "\n\nState number "+ str(k) +":"
-            #strout += "\nState order: " + str(state.order)
-            strout += "\nInitial probability: " + str(state.pi)
-            strout += "\nOutput probabilites: "
+            strout.append("\n\nState number "+ str(k) +":")
+            #strout.append("\nState order: " + str(state.order))
+            strout.append("\nInitial probability: " + str(state.pi))
+            strout.append("\nOutput probabilites: ")
             #strout += str(ghmmwrapper.get_arrayd(state.b,outp))
-            strout += "\n"
+            strout.append("\n")
 
-            strout += "\nOutgoing transitions:"
+            strout.append("\nOutgoing transitions:")
             for i in range( state.out_states):
-                strout += "\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i))
-            strout +=  "\nIngoing transitions:"
+                strout.append("\ntransition to state " + str( ghmmwrapper.get_arrayint(state.out_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.out_a,i)))
+            strout.append("\nIngoing transitions:")
             for i in range(state.in_states):
-                strout +=  "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i))
-                strout += "\nint fix:" + str(state.fix) + "\n"
+                strout.append("\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i)))
+                strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & 4:
-            strout += "\nSilent states: \n"
+            strout.append("\nSilent states: \n")
             for k in range(hmm.N):
                 strout += str(ghmmwrapper.get_arrayint(hmm.silent,k)) + ", "
-            strout += "\n"
+            strout.append("\n")
 
-        return strout
+        return join(strout)
 
     def viterbi(self, complexEmissionSequenceX, complexEmissionSequenceY):
         """
