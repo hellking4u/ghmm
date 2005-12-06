@@ -68,6 +68,15 @@ extern "C" {
 /** Model is a class HMM with labeled states */
 #define GHMM_kLabeledStates (1 << 6)
 
+#define GHMM_kTransitionClasses (1 << 7)
+
+#define GHMM_kDiscreteHMM (1 << 8)
+
+#define GHMM_kContinuousHMM (1 << 9)
+
+#define GHMM_kPairHMM (1 << 10)
+
+
 /*@} (Doc++-Group: GHMM-Globals) */
 
 
