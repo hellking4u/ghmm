@@ -49,7 +49,7 @@ gBlinkRepeat      =  4      # One more than you want 4
 
 # Printing
 gPaperHeight      = 1500 # "20i" XXX Should be real paper size
-gPaperWidth       = 1500 # "20i"
+gPaperWidth       = 2500 # "20i"
 
 gInteractive      = 1
 gGridSize         = 50 # Grid size for editor
