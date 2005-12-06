@@ -11,20 +11,20 @@ extern "C" {
 /*==============  Memory allocation macros for mes-functions  ===============*/
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC(ptr, entries) { if (!((ptr) = ighmm_malloc(sizeof(*(ptr)) * (entries)))) \
-                                         {mes_proc(); goto STOP;}                           \
-				   }
+                                         {mes_proc(); goto STOP;}                             \
+                                   }
 #endif
 
 #ifndef ARRAY_CALLOC
-#define ARRAY_CALLOC(ptr, entries) { if (!((ptr) = ighmm_calloc(sizeof(*(ptr)) * (entries))))   \
+#define ARRAY_CALLOC(ptr, entries) { if (!((ptr) = ighmm_calloc(sizeof(*(ptr)) * (entries)))) \
                                          {mes_proc(); goto STOP;}                             \
-				   }
+                                   }
 #endif
 
 #ifndef ARRAY_REALLOC
-#define ARRAY_REALLOC(ptr, entries) { if (ighmm_realloc ((void**)&(ptr), sizeof(*(ptr))*(entries))) \
-                                          {mes_proc(); goto STOP;}                                \
-				    }
+#define ARRAY_REALLOC(ptr, entries) { if (ighmm_realloc((void**)&(ptr), sizeof(*(ptr))*(entries))) \
+                                          {mes_proc(); goto STOP;}                                 \
+                                    }
 #endif
 
 
@@ -41,24 +41,24 @@ extern "C" {
    @param eps 3rd extra parameter
    @return root
  */
-  double ghmm_zbrent_AB (double (*func) (double, double, double, double),
-                    double x1, double x2, double tol, double A, double B,
-                    double eps);
+double ghmm_zbrent_AB(double (*func) (double, double, double, double),
+                      double x1, double x2, double tol, double A,
+                      double B, double eps);
 
 
 /*==============  declarations for gauss_tail.c  ============================*/
 /**
  */
-  double ighmm_gtail_pmue (double mue, double A, double B, double eps);
+double ighmm_gtail_pmue(double mue, double A, double B, double eps);
 
 /**
  */
-  double ighmm_gtail_pmue_umin (double mue, double A, double B, double eps);
+double ighmm_gtail_pmue_umin(double mue, double A, double B, double eps);
 
 /** 
     @name Function to find the roots of the truncated normal density function.
 */
-  double ighmm_gtail_pmue_interpol (double mue, double A, double B, double eps);
+double ighmm_gtail_pmue_interpol(double mue, double A, double B, double eps);
 
 
 /*==============  numeric functions  ========================================*/
@@ -69,50 +69,50 @@ extern "C" {
    @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
    @param length:     length of a
 */
-  double ighmm_cvector_log_sum (double *a, int N);
+double ighmm_cvector_log_sum(double *a, int N);
 
 
 /*==============  linked list  ===============================================*/
 /**
    integer element */
-  struct i_el {
-    int val;
-    struct i_el * next;
-  };
-  typedef struct i_el i_el;
+struct i_el {
+  int val;
+  struct i_el * next;
+};
+typedef struct i_el i_el;
 
 /**
    list header */
-  struct i_list {
-    i_el * first;
-    i_el * last;
-    int length;
-  };
-  typedef struct i_list i_list;
+struct i_list {
+  i_el * first;
+  i_el * last;
+  int length;
+};
+typedef struct i_list i_list;
 
 /**
    inits an empty list */
-  i_list * ighmm_list_init_list();
+i_list * ighmm_list_init_list();
 
 /**
    frees the list and all elements */
-  int ighmm_list_free(i_list * list);
+int ighmm_list_free(i_list * list);
 
 /**
    append an element with value val at the end of the list */
-  void ighmm_list_append(i_list * list, int val);
+void ighmm_list_append(i_list * list, int val);
 
 /**
    insert an element with value val before the first element of the list */
-  void ighmm_list_insert(i_list * list, int val);
+void ighmm_list_insert(i_list * list, int val);
 
 /**
  */
-  int * ighmm_list_to_array(i_list * list);
+int * ighmm_list_to_array(i_list * list);
 
 /**
  */
-  i_el * ighmm_list_init_el(int val);
+i_el * ighmm_list_init_el(int val);
 
 
 
@@ -120,11 +120,11 @@ extern "C" {
 /*==============  allocate forward-backward matrices  ========================*/
 /**
    matrix allocation and free for training algorithms */
-  int ighmm_reestimate_alloc_matvek (double ***alpha, double ***beta,
-				     double **scale, int T, int N);
+int ighmm_reestimate_alloc_matvek(double ***alpha, double ***beta,
+                                  double **scale, int T, int N);
 
-  int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale,
-				    int T);
+int ighmm_reestimate_free_matvek(double **alpha, double **beta, double *scale,
+                                 int T);
 
 
 /*==============  compute expected values  ===================================*/
@@ -143,15 +143,13 @@ extern "C" {
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
 */
-int ghmm_dl_gradient_expectations (ghmm_dmodel *mo, double **alpha, double **beta,
-				   double *scale, int *seq, int seq_len,
-				   double **matrix_b, double *matrix_a,
-				   double *vec_pi);
-
+int ghmm_dl_gradient_expectations(ghmm_dmodel *mo, double **alpha, double **beta,
+                                  double *scale, int *seq, int seq_len,
+                                  double **matrix_b, double *matrix_a,
+                                  double *vec_pi);
 
 
 /*==============  logging  ===================================================*/
-
 #define LDEBUG      4
 #define LINFO       3
 #define LWARN       2
@@ -168,7 +166,7 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel *mo, double **alpha, double **bet
 #define GHMM_LOG(level, str)        ighmm_logging(level, LOCUS, str)
 
 
-void ighmm_logging (int level, const char * proc, const char * str);
+void ighmm_logging(int level, const char * proc, const char * str);
 
 void ighmm_queue_mes(char * text);
 
