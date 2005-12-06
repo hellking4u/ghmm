@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--idden markov model -->
+<!--hidden markov model -->
 <!ELEMENT HMM (alphabet+, labelAlphabet?, background?, node+, edge+)>
 <!ATTLIST HMM
 	name CDATA #REQUIRED
