@@ -158,7 +158,7 @@ class XMLElementWriter:
     def __init__(self):
         import string
         self._string = string
-        self.element_keys = ['id', 'hmm:low', 'hmm:high', 'hmm:type', 'for', 'gd:type', 'code', 'key', 'order', 'x', 'y', 'source', 'target']
+        self.element_keys = ['id', 'hmm:low', 'hmm:high', 'hmm:type', 'for', 'gd:type', 'code', 'key', 'order', 'x', 'y', 'source', 'target', 'xmlns:hmm', 'xmlns:gd']
         
     def _write_data(self, writer, data):
         "Writes datachars to writer."
@@ -713,6 +713,8 @@ class HMM:
 	
     def toDOM(self, XMLDoc, XMLNode):
         graphml = XMLDoc.createElement("graphml")
+        graphml.setAttribute('xmlns:gd',  'gd')
+        graphml.setAttribute('xmlns:hmm', 'hmm')
         XMLNode.appendChild(graphml)
 
         # Create key elements
