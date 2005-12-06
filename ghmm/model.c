@@ -45,6 +45,7 @@
 
 #include <float.h>
 #include <math.h>
+#include <assert.h>
 
 #include "ghmm.h"
 #include "model.h"
@@ -125,6 +126,45 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* model_state_alloc */
+
+
+/*----------------------------------------------------------------------------*/
+ghmm_dmodel * ghmm_dmodel_calloc(int M, int N, int modeltype, int * inDegVec,
+				int * outDegVec) {
+#define CUR_PROC "ghmm_dmodel_calloc"
+  int i;
+  ghmm_dmodel * mo;
+
+  assert(modeltype & GHMM_kDiscreteHMM);
+
+  ARRAY_CALLOC(mo, 1);
+
+  mo->M = M;
+  mo->N = N;
+  mo->model_type = modeltype;
+
+  ARRAY_CALLOC(mo->s, N);
+  for (i=0; i<N; i++) {
+    if (model_state_alloc(&(mo->s[i]), M, inDegVec[i], outDegVec[i]))
+      goto STOP;
+  }
+
+  if (mo->model_type & GHMM_kSilentStates)
+    ARRAY_CALLOC(mo->silent, N);
+
+  if (mo->model_type & GHMM_kTiedEmissions)
+    ARRAY_CALLOC(mo->tied_to, N);
+   
+  if (mo->model_type & GHMM_kBackgroundDistributions)
+    ARRAY_CALLOC(mo->background_id, N);
+
+  return mo;
+STOP:
+  ghmm_d_free(&mo);
+  return NULL;
+#undef CUR_PROC
+}
+
 
 /*----------------------------------------------------------------------------*/
 #ifdef GHMM_OBSOLETE
@@ -562,7 +602,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 int ghmm_d_free(ghmm_dmodel ** mo) {
 #define CUR_PROC "ghmm_d_free"
-  int i,j;
+  int i;
   mes_check_ptr (mo, return (-1));
 
   for (i=0; i < (*mo)->N; i++)
@@ -583,27 +623,6 @@ int ghmm_d_free(ghmm_dmodel ** mo) {
   if ((*mo)->background_id)
     m_free((*mo)->background_id);
  
-
-  /* Optional attributes for storing representation information from the XML */  
-  if ((*mo)->alphabet){
-    for (i=0; i < (*mo)->S; i++) {
-      for (j=0; j < (*mo)->alphabet_size[i]; j++) {
-	m_free((*mo)->alphabet[i][j]);
-      }
-    }
-    m_free((*mo)->alphabet);
-    m_free((*mo)->alphabet_size);
-  }
-  if ((*mo)->position){
-    m_free((*mo)->position);
-  }
-  if ((*mo)->label_alphabet){
-    for (i=0; i < (*mo)->label_size; i++) {
-      m_free((*mo)->label_alphabet[i]);
-    }
-    m_free((*mo)->label_alphabet); 
-  }
-
   m_free(*mo);
   return (0);
 #undef CUR_PROC
@@ -749,7 +768,7 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
       goto STOP;
     }
     /* Sum the a[i][j]'s : normalized in transitions */
-    sum = 0.0;
+    sum = mo->s[i].pi;
     for (j=0; j<mo->s[i].in_states; j++)
       sum += mo->s[i].in_a[j];
 
