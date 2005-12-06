@@ -104,39 +104,39 @@ typedef struct ghmm_coord_t ghmm_coord_t;
 /** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-  struct ghmm_dmodel {
+struct ghmm_dmodel {
   /** Number of states */
-    int N;
+  int N;
   /** Number of outputs */
-    int M;
+  int M;
   /** Vector of the states */
-    ghmm_dstate *s;
+  ghmm_dstate *s;
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
       distributions*/
-    double prior;
+  double prior;
 
-    /* contains a arbitrary name for the model */
-    char *name;
+  /* contains a arbitrary name for the model */
+  char *name;
 
-   /** Contains bit flags for varios model extensions such as
+  /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
-    int model_type;
+  int model_type;
 
   /** Flag variables for each state indicating whether it is emitting
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
-    int *silent;
-      /*AS*/
+  int *silent;
+  /*AS*/
   /** Int variable for the maximum level of higher order emissions */
-    int maxorder;
+  int maxorder;
   /** saves the history of emissions as int, 
       the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
       see ...*/
-    int emission_history;
-
+  int emission_history;
+  
   /** Flag variables for each state indicating whether the states emissions
       are tied to another state. Groups of tied states are represented
       by their tie group leader (the lowest numbered member of the group).
@@ -144,75 +144,40 @@ typedef struct ghmm_coord_t ghmm_coord_t;
       tied_to[s] == kUntied  : s is not a tied state
       
       tied_to[s] == s        : s is a tie group leader
-
+      
       tied_to[t] == s        : t is tied to state s
-
+      
       Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
-    int *tied_to;
-
-  /** Note: State store order information of the emissions.
-      Classic HMMS have emission order 0, that is the emission probability
-      is conditioned only on the state emitting the symbol.
-
-      For higher order emissions, the emission are conditioned on the state s
-      as well as the previous emission_order[s] observed symbols.
-
-      The emissions are stored in the state's usual double* b. The order is
-      set state.order.
-
-      Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
+  int *tied_to;
 
   /** ghmm_d_background_distributions is a pointer to a
       ghmm_d_background_distributions structure, which holds (essentially) an
       array of background distributions (which are just vectors of floating
       point numbers like state.b).
-
+      
       For each state the array background_id indicates which of the background
       distributions to use in parameter estimation. A value of kNoBackgroundDistribution
       indicates that none should be used.
-
-
+      
+      
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
-    int *background_id;
-    ghmm_d_background_distributions *bp;
+  int *background_id;
+  ghmm_d_background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
-   */
-    int *topo_order;
-    int topo_order_length;
-
+  */
+  int *topo_order;
+  int topo_order_length;
+  
   /** pow_lookup is a array of precomputed powers
-
       It contains in the i-th entry M (alphabet size) to the power of i
       The last entry is maxorder+1
   */
-    int *pow_lookup;
+  int *pow_lookup;
     
-    
-    
-    /*  storage model representation information ( read in from XML ) */
-    
-    /* emission alphabet  */ 
-    char*** alphabet;
-    
-    /* sizes of the different alphabets (for pair HMMs there might be more than one)  */
-    int*  alphabet_size;
-    
-    /* number of entries in alphabet_size */
-    int S;
-    
-    /* an arry of positions of states for graphical representation */ 
-    ghmm_coord_t *position;
-    
-    /* state label alphabet (only for labelled HMMs)  */ 
-    char** label_alphabet;
- 
-    /* size of the label_alphabet */
-    int label_size;
-
-  };
-  typedef struct ghmm_dmodel ghmm_dmodel;
+};
+typedef struct ghmm_dmodel ghmm_dmodel;
 
 #ifdef __cplusplus
 }
@@ -234,9 +199,22 @@ extern "C" {
     uses if appropiate lookup table from struct ghmm_dmodel */
    int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n);
 
+
+/*----------------------------------------------------------------------------*/
+/** Allocates a ghmm_dmodel with following parameters:
+    @return pointer to a ghmm_dmodel or NULL on error
+    @param M           number of emissions
+    @param N           number of states
+    @param modeltype   model_type of the model, used to allocate optional arrays
+    @param inDegVec    vector of in degrees of the states
+    @param outDegVec   vector of out degrees of the states */
+  ghmm_dmodel * ghmm_dmodel_calloc(int M, int N, int modeltype, int * inDegVec,
+				 int * outDegVec);
+
+/*----------------------------------------------------------------------------*/
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
-    @param mo:  pointer to a ghmm_dmodel */
+    @param mo:  address of pointer to a ghmm_dmodel */
   int ghmm_d_free (ghmm_dmodel ** mo);
 
 /** 
