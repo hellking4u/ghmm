@@ -22,6 +22,7 @@
 #include <ghmm/pmodel.h>
 #include <ghmm/sdmodel.h>
 
+
 struct alphabet_s {
 
   unsigned int size;
@@ -245,8 +246,9 @@ STOP:
 static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mt) {
 #define CUR_PROC "parseTransition"
 
-  int retval=-1;
+  int i, retval=-1;
   int source, target, error;
+  int in_state, out_state;
   double p;
   char * s;
   xmlNodePtr elem;
@@ -259,7 +261,6 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
   elem = cur->children;
   while (elem!=NULL) {
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"probability"))) {
-      
       s = (char *)xmlNodeGetContent(elem);
       p = atof(s);
       m_free(s)
@@ -267,6 +268,36 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
     }
     elem = elem->next;
   }
+
+  switch (mt & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    out_state = f->model.d->s[source].out_states++;
+    in_state  = f->model.d->s[target].in_states++;
+    f->model.d->s[source].out_id[out_state] = target;
+    f->model.d->s[source].out_a[out_state]  = p;
+    f->model.d->s[target].in_id[in_state]   = source;
+    f->model.d->s[target].in_a[in_state]    = p;
+    break;
+  case (GHMM_kDiscreteHMM + GHMM_kPairHMM):
+    out_state = f->model.dp->s[source].out_states++;
+    in_state  = f->model.dp->s[target].in_states++;
+    f->model.dp->s[source].out_id[out_state]   = target;
+    f->model.dp->s[source].out_a[out_state][0] = p;
+    f->model.dp->s[target].in_id[in_state]     = source;
+    f->model.dp->s[target].in_a[in_state][0]   = p;
+    break;
+  case GHMM_kContinuousHMM:
+    out_state = f->model.c->s[source].out_states++;
+    in_state  = f->model.c->s[target].in_states++;
+    f->model.c->s[source].out_id[out_state]   = target;
+    f->model.c->s[source].out_a[0][out_state] = p;
+    f->model.c->s[target].in_id[in_state]     = source;
+    f->model.c->s[target].in_a[0][in_state]   = p;
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+  
   retval = 0;
 
   return retval;
@@ -277,8 +308,9 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
 static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mt) {
 #define CUR_PROC "parseTransition"
 
-  int retval=-1;
+  int i, retval=-1;
   int source, target, error, nrTransitionClasses;
+  int in_state, out_state;
   double * probs;
   char * s;
   xmlNodePtr elem;
@@ -295,14 +327,47 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f
       s = (char *)xmlNodeGetContent(elem);
       ARRAY_MALLOC(probs, nrTransitionClasses);
       parseCSVList(s, nrTransitionClasses, probs);
+      m_free(s);
       break;
     }
     elem = elem->next;
   }
+
+
+  switch (mt & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case (GHMM_kDiscreteHMM + GHMM_kTransitionClasses):
+    out_state = f->model.ds->s[source].out_states++;
+    in_state  = f->model.ds->s[target].in_states++;
+    f->model.ds->s[source].out_id[out_state] = target;
+    f->model.ds->s[source].out_a[out_state]  = probs;
+    f->model.ds->s[target].in_id[in_state]   = source;
+    f->model.ds->s[target].in_a[in_state]    = probs;
+    break;
+  case (GHMM_kDiscreteHMM + GHMM_kPairHMM + GHMM_kTransitionClasses):
+    out_state = f->model.dp->s[source].out_states++;
+    in_state  = f->model.dp->s[target].in_states++;
+    f->model.dp->s[source].out_id[out_state] = target;
+    f->model.dp->s[source].out_a[out_state]  = probs;
+    f->model.dp->s[target].in_id[in_state]   = source;
+    f->model.dp->s[target].in_a[in_state]    = probs;
+    break;
+  case (GHMM_kContinuousHMM + GHMM_kTransitionClasses):
+    out_state = f->model.ds->s[source].out_states++;
+    in_state  = f->model.ds->s[target].in_states++;
+    f->model.c->s[source].out_id[out_state] = target;
+    f->model.c->s[target].in_id[in_state]   = source;
+    for (i=0; i<nrTransitionClasses; i++) {
+      f->model.c->s[source].out_a[i][out_state] = probs[i];
+      f->model.c->s[target].in_a[i][in_state]   = probs[i];
+    }
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+
   retval = 0;
 
 STOP:
-  m_free(s);
   m_free(probs);
   return retval;
 #undef CUR_PROC
