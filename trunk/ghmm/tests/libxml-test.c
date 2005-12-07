@@ -158,8 +158,7 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
 	GHMM_LOG(LCRITIC, str);
 	m_free(str);
 	/*return -1;*/
-      }
-      else
+      } else
 	M++;
     }
     symbol=symbol->next;
@@ -190,6 +189,14 @@ STOP:
 static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseBackground"
   int retval=-1;
+
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+
   return retval;
 #undef CUR_PROC
 }
@@ -279,7 +286,7 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) 
   }
 
   switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
   case GHMM_kDiscreteHMM:
     out_state = f->model.d->s[source].out_states++;
     in_state  = f->model.d->s[target].in_states++;
@@ -395,12 +402,15 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   int source, target;
 
   int N = 0;
-  int nrBackgrounds, M=4;
+  int nrBackgrounds, M=-1;
   int * inDegree = NULL;  
   int * outDegree = NULL;
 
   int modeltype=0;
   char * modelname;
+
+  int * bg_orders;
+  double * * bg_ptr;
 
   alphabet_s * alfa;
 
@@ -497,23 +507,41 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   modeltype = getIntAttribute(cur, (const xmlChar *)"type", &error);
   f->modelType = modeltype;
 
-  if (modeltype & GHMM_kDiscreteHMM) {
-    if (modeltype & GHMM_kTransitionClasses) {
-      if (modeltype & GHMM_kPairHMM) {
-	f->model.dp = NULL;
-      }
-      else {
-	f->model.ds = NULL;
-      }
-    }
-    else {
-      f->model.d = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree);
-    }
-  }
-  else if (modeltype & GHMM_kContinuousHMM) {
+  /* allocating the different models */
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    M = f->alphabets[0]->size;
+    f->model.d = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree);
+    break;
+  case (GHMM_kDiscreteHMM + GHMM_kTransitionClasses):
+    f->model.ds = NULL;
+    break;
+  case (GHMM_kDiscreteHMM + GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM + GHMM_kPairHMM + GHMM_kTransitionClasses):
+    f->model.dp = NULL;
+    break;
+  case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM + GHMM_kTransitionClasses):
     f->model.c = NULL;
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");
   }
 
+  /* allocating background distributions for approtiate models */
+  if (modeltype & GHMM_kBackgroundDistributions) { 
+    switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			    + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+    case GHMM_kDiscreteHMM:
+      ARRAY_CALLOC(bg_orders, N);
+      ARRAY_CALLOC(bg_ptr, N);
+      f->model.d->bp = ghmm_d_background_alloc(nrBackgrounds, M, bg_orders, bg_ptr);
+      f->model.d->bp->n = 0;
+      break;
+    default:
+      GHMM_LOG(LCRITIC, "invalid modelType");}
+  }
 
   child = cur->xmlChildrenNode;
 
@@ -521,7 +549,11 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   while (child != NULL) {
 
     if ((!xmlStrcmp(child->name, (const xmlChar *)"background"))) {
-      parseBackground(doc, child, f);
+      if (modeltype & GHMM_kBackgroundDistributions) {
+	parseBackground(doc, child, f);
+      } else {
+	GHMM_LOG(LWARN, "Ignoring background distribution.");
+      }
     }
     if ((!xmlStrcmp(child->name, (const xmlChar *)"node"))) {
       parseState(doc, child, f);
@@ -537,6 +569,8 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
 
   retval=0;
 STOP:
+  m_free(bg_orders);
+  m_free(bg_ptr);
   m_free(inDegree);
   m_free(outDegree);
   m_free(f->xPosition);
@@ -546,7 +580,6 @@ STOP:
   return retval;
 #undef CUR_PROC
 }
-
 
 
 /*===========================================================================*/
@@ -572,15 +605,13 @@ static void parseHMMDocument(const char *filename) {
     str = ighmm_mprintf(NULL, 0, "Failed to parse %s", filename);
     GHMM_LOG(LCRITIC, str);
     m_free(str);
-  } 
-  else {
+  } else {
     /* check if validation suceeded */
     if (ctxt->valid == 0) {
       str = ighmm_mprintf(NULL, 0, "Failed to validate %s", filename);
       GHMM_LOG(LERROR, str);
       m_free(str);
-    }
-    else {
+    } else {
       
       cur = xmlDocGetRootElement(doc);
 
