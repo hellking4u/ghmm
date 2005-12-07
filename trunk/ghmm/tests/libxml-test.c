@@ -22,15 +22,20 @@
 #include <ghmm/pmodel.h>
 #include <ghmm/sdmodel.h>
 
+/* we should not need more */
+#define MAX_ALPHABETS 2 
 
 struct alphabet_s {
-
+  int id;
+  char * description;
   unsigned int size;
   char * * symbols;
 };
 typedef struct alphabet_s alphabet_s;
 
 struct fileData_s {
+
+  int modelType;
 
   union {
     ghmm_cmodel * c;
@@ -39,8 +44,9 @@ struct fileData_s {
     ghmm_dsmodel * ds;
   } model;
 
-  alphabet_s alphabet;
-  alphabet_s labelAlphabet;
+  unsigned int nrAlphabets;
+  alphabet_s * * alphabets;
+  alphabet_s * labelAlphabet;
 
   int * xPosition;
   int * yPosition;
@@ -130,50 +136,53 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
+static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseAlphabet"
   
   char * str;
-  int N, code, error;
-  int retval=-1;
+  int M, code, error;
+
   xmlNodePtr symbol;
   xmlChar * s;
-  alphabet_s alfa;
+  alphabet_s * alfa;
+
+  ARRAY_CALLOC(alfa, 1);
 
   symbol = cur->children;
-  N=0;
+  M=0;
   while (symbol!=NULL) {
     if ((!xmlStrcmp(symbol->name, (const xmlChar *)"symbol"))) {
       code = getIntAttribute(symbol, (const xmlChar *)"code", &error);
-      if (error || code!=N) {
-	str = ighmm_mprintf(NULL, 0, "non consecutive code %d == %d", code, N);
+      if (error || code!=M) {
+	str = ighmm_mprintf(NULL, 0, "non consecutive code %d == %d", code, M);
 	GHMM_LOG(LCRITIC, str);
 	m_free(str);
 	/*return -1;*/
       }
       else
-	N++;
+	M++;
     }
     symbol=symbol->next;
   }
 
-  alfa.size = N;
-  ARRAY_MALLOC(alfa.symbols, N);
+  alfa->size = M;
+  ARRAY_MALLOC(alfa->symbols, M);
 
   symbol = cur->xmlChildrenNode;
-  N=0;
+  M=0;
   while (symbol!=NULL) {
     if ((!xmlStrcmp(symbol->name, (const xmlChar *)"symbol"))) {
       s = xmlNodeGetContent(cur);
-      alfa.symbols[N++] = (char *)s;
+      alfa->symbols[M++] = (char *)s;
     }
     symbol=symbol->next;
   }
-  retval=0;
 
+  return alfa;
 STOP:
-  m_free(alfa.symbols);
-  return retval;
+  m_free(alfa->symbols);
+  m_free(alfa)
+  return NULL;
 #undef CUR_PROC
 }
 
@@ -186,7 +195,7 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 }
 
 /*===========================================================================*/
-static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mt) {
+static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseState"
 
   int retval=-1;
@@ -205,12 +214,12 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mt) {
   while (elem!=NULL) {
     /* silent state */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"silent"))) {
-      if (mt & GHMM_kDiscreteHMM)
+      if (f->modelType & GHMM_kDiscreteHMM)
 	f->model.d->silent[state] = 1;
     }
     /* discrete state (possible higher order */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"discrete"))) {
-      assert((mt & GHMM_kDiscreteHMM) && ((mt & GHMM_kPairHMM) == 0));
+      assert((f->modelType & GHMM_kDiscreteHMM) && ((f->modelType & GHMM_kPairHMM) == 0));
       
       /*order = getDoubleAttribute(elem, (const xmlChar *)"order", &error);*/
       s = (char *)xmlNodeGetContent(elem);
@@ -243,17 +252,17 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mt) {
+static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseTransition"
 
-  int i, retval=-1;
+  int retval=-1;
   int source, target, error;
   int in_state, out_state;
   double p;
   char * s;
   xmlNodePtr elem;
 
-  assert((mt & GHMM_kTransitionClasses) == 0);
+  assert((f->modelType & GHMM_kTransitionClasses) == 0);
 
   source = getIntAttribute(cur, (const xmlChar *)"source", &error);
   target = getIntAttribute(cur, (const xmlChar *)"target", &error);
@@ -269,7 +278,7 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
     elem = elem->next;
   }
 
-  switch (mt & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
   case GHMM_kDiscreteHMM:
     out_state = f->model.d->s[source].out_states++;
@@ -305,7 +314,7 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
 }
 
 /*===========================================================================*/
-static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mt) {
+static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseTransition"
 
   int i, retval=-1;
@@ -315,7 +324,7 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f
   char * s;
   xmlNodePtr elem;
 
-  assert(mt & GHMM_kTransitionClasses);
+  assert(f->modelType & GHMM_kTransitionClasses);
 
   source = getIntAttribute(cur, (const xmlChar *)"source", &error);
   target = getIntAttribute(cur, (const xmlChar *)"target", &error);
@@ -333,8 +342,7 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f
     elem = elem->next;
   }
 
-
-  switch (mt & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
   case (GHMM_kDiscreteHMM + GHMM_kTransitionClasses):
     out_state = f->model.ds->s[source].out_states++;
@@ -393,7 +401,8 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
 
   int modeltype=0;
   char * modelname;
-    
+
+  alphabet_s * alfa;
 
   fileData_s * f;
 
@@ -407,12 +416,28 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   GHMM_LOG(LINFO, "parseHMM to count ");
   while (child != NULL) {
 
+    /* ========== ALPHABETS ================================================ */
     if ((!xmlStrcmp(child->name, (const xmlChar *)"alphabet"))) {
-      parseAlphabet(doc, child, f);
+      if (f->alphabets) {
+	alfa = parseAlphabet(doc, child, f);
+	if (alfa && f->nrAlphabets<MAX_ALPHABETS) {
+	  f->alphabets[f->nrAlphabets++] = alfa;
+	} else {
+	  GHMM_LOG(LCRITIC, "Error in parsing alphabets.");
+	}
+      } else {
+	ARRAY_MALLOC(f->alphabets, MAX_ALPHABETS);
+      } 
     }
 
+    /* ========== LABEL ALPHABETS ========================================== */
     if ((!xmlStrcmp(child->name, (const xmlChar *)"labelAlphabet"))) {
-      parseAlphabet(doc, child, f);
+      alfa = parseAlphabet(doc, child, f);
+      if (alfa) {
+	f->labelAlphabet = alfa;
+      } else {
+	GHMM_LOG(LCRITIC, "Error in parsing alphabets.");
+      }
     }
 
     /* ========== NODES ==================================================  */
@@ -470,6 +495,7 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   /* starting real parsing */
   modelname = (char *)getXMLCharAttribute(cur, (const xmlChar *)"name", &error);
   modeltype = getIntAttribute(cur, (const xmlChar *)"type", &error);
+  f->modelType = modeltype;
 
   if (modeltype & GHMM_kDiscreteHMM) {
     if (modeltype & GHMM_kTransitionClasses) {
@@ -498,13 +524,13 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
       parseBackground(doc, child, f);
     }
     if ((!xmlStrcmp(child->name, (const xmlChar *)"node"))) {
-      parseState(doc, child, f, modeltype);
+      parseState(doc, child, f);
     }
     if ((!xmlStrcmp(child->name, (const xmlChar *)"edge"))) {
       if (modeltype & GHMM_kTransitionClasses)
-	parseMultipleTransition(doc, child, f, modeltype);
+	parseMultipleTransition(doc, child, f);
       else
-	parseSingleTransition(doc, child, f, modeltype);
+	parseSingleTransition(doc, child, f);
     }
     child = child->next;
   }
