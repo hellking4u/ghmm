@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--hidden markov model -->
-<!ELEMENT HMM (alphabet+, labelAlphabet?, background?, node+, edge+)>
+<!ELEMENT HMM (alphabet?, labelAlphabet?, background?, state+, transition+)>
 <!ATTLIST HMM
 	name CDATA #REQUIRED
 	type CDATA #REQUIRED
@@ -14,9 +14,7 @@
 >
 <!-- hold a maps class labels to integers -->
 <!ELEMENT labelAlphabet (symbol+)>
-<!ATTLIST labelAlphabet
-	id CDATA #REQUIRED
->
+
 <!-- maps symbols (class labels) to integers -->
 <!ELEMENT symbol (#PCDATA)>
 <!ATTLIST symbol
@@ -30,9 +28,9 @@
 	order CDATA #REQUIRED
 >
 
-<!-- node/state integer id from 0 to N-1 -->
-<!ELEMENT node ((silent | discrete | mixture | pair | higherOrder), backgroundName?, class?, position?)>
-<!ATTLIST node
+<!-- states - integer id from 0 to N-1 -->
+<!ELEMENT state ((silent | discrete | mixture | pair), backgroundName?, class?, position?, tiedTo?)>
+<!ATTLIST state
 	id CDATA #REQUIRED
 	initial CDATA #REQUIRED
 	desc CDATA #REQUIRED
@@ -40,15 +38,30 @@
 <!-- different emission types, must not differ in one model, except discrete is a higherOrder with order=0 -->
 <!ELEMENT silent EMPTY>
 <!ELEMENT discrete (#PCDATA)>
-<!ELEMENT mixture (normal+, truncatedGaussian+)>
-<!ELEMENT pair (#PCDATA)>
-<!ELEMENT higherOrder (#PCDATA)>
-<!ATTLIST higherOrder
-	order CDATA #REQUIRED
+<!ATTLIST discrete
+	order CDATA #IMPLIED
+        fixed CDATA #IMPLIED
 >
+<!ELEMENT mixture (normal+, normalTruncatedLeft+, normalTruncatedRight+, uniform+)>
+<!ELEMENT pair (#PCDATA)>
 <!-- different density functions for mixture-models -->
 <!ELEMENT normal (#PCDATA)>
-<!ELEMENT truncatedGaussian (#PCDATA)>
+<!ATTLIST normal
+        fixed CDATA #IMPLIED
+        approx CDATA #IMPLIED
+>
+<!ELEMENT normalTruncatedLeft (#PCDATA)>
+<!ATTLIST normalTruncatedLeft
+        fixed CDATA #IMPLIED
+>
+<!ELEMENT normalTruncatedRight (#PCDATA)>
+<!ATTLIST normalTruncatedRight
+        fixed CDATA #IMPLIED
+>
+<!ELEMENT uniform (#PCDATA)>
+<!ATTLIST uniform
+        fixed CDATA #IMPLIED
+>
 
 <!-- Name of a background distribution, order of the background diostribution and the states emission must match -->
 <!ELEMENT backgroundName (#PCDATA)>
@@ -63,9 +76,12 @@
 	y CDATA #REQUIRED
 >
 
-<!-- edges/transitions - probability is a float in [0.0,1.0] for transition classes CSV -->
-<!ELEMENT edge (probability)>
-<!ATTLIST edge
+<!-- emissions are tied to state -->
+<!ELEMENT tiedTo (#PCDATA)>
+
+<!-- transitions - probability is a float in [0.0,1.0] for transition classes CSV -->
+<!ELEMENT transition (probability)>
+<!ATTLIST transition
 	source CDATA #REQUIRED
 	target CDATA #REQUIRED
 >
