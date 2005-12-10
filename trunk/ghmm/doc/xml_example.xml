@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE HMM SYSTEM "ghmm.dtd">
-<HMM name="example" type="288"> <!-- xmlns="http://www.ghmm.org/ghmm.schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.ghmm.org/ghmm.xsd"> -->
+<HMM name="example" type="discrete background"> <!-- xmlns="http://www.ghmm.org/ghmm.schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.ghmm.org/ghmm.xsd"> -->
   <alphabet id="1">
     <symbol code="0">A</symbol>
     <symbol code="1">C</symbol>
@@ -18,7 +18,8 @@
     <position x="100.0" y="200.0"/>
   </state>
   <state id="1" initial="0.0" desc="State 1">
-    <discrete <!-- optional -->fixed="1">0.2,0.2,0.3,0.3</discrete>
+    <!-- fixed is optional -->
+    <discrete fixed="1">0.2,0.2,0.3,0.3</discrete>
     <!-- optional -->
     <position x="300.0" y="300.0"/>
   </state>
