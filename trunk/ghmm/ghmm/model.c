@@ -158,6 +158,12 @@ ghmm_dmodel * ghmm_dmodel_calloc(int M, int N, int modeltype, int * inDegVec,
   if (mo->model_type & GHMM_kBackgroundDistributions)
     ARRAY_CALLOC(mo->background_id, N);
 
+  if (mo->model_type & GHMM_kHigherOrderEmissions)
+    ARRAY_CALLOC(mo->order, N);
+   
+  if (mo->model_type & GHMM_kLabeledStates)
+    ARRAY_CALLOC(mo->label, N);
+
   return mo;
 STOP:
   ghmm_d_free(&mo);
