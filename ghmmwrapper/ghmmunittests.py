@@ -443,11 +443,11 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
             
     def testsample(self):
         #print"\ntestsample ",
-        seq = self.model.sampleSingle(100,seed=3586662)
+        seq = self.model.sampleSingle(100, seed=3586662)
         #print "*************" 
         #print seq
         
-        seq2 = self.model.sample(10,100,seed=3586662)
+        seq2 = self.model.sample(10, 100, seed=3586662)
 
 
     def testbaumwelch(self):
@@ -576,9 +576,9 @@ class BackgroundDistributionTests(unittest.TestCase):
                        [0.25,0.25,0.25,0.25, 0.0,0.5,0.5,0.0, 0.1,0.0,0.8,0.1, 0.1,0.35,0.3,0.25 ]],
                        [1.0,0,0])
 
-        self.bg = ghmm.BackgroundDistribution(self.sigma,[[0.2,0.3,0.1,0.4],
-                       [0.1,0.2,0.4,0.3, 0.2,0.3,0.1,0.4, 0.25,0.25,0.25,0.25,0.0,0.5,0.5,0.0 ]]
-                  )
+        self.bg = ghmm.BackgroundDistribution(self.sigma, [[0.2,0.3,0.1,0.4],
+                       [0.1,0.2,0.4,0.3, 0.2,0.3,0.1,0.4, 0.25,0.25,0.25,0.25, 0.0,0.5,0.5,0.0 ]]
+                                              )
 
     def testprint(self):
         
@@ -590,25 +590,25 @@ class BackgroundDistributionTests(unittest.TestCase):
         
         print "***  testmodelbackgroundaccessfunctions"
         
-        self.model.setBackground(self.bg,[0,-1,1])
+        self.model.setBackground(self.bg, [0,-1,1])
         # deleting background
         del(self.bg)
         s = str(self.model.background)
         self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
     def testapplybackground(self):
-        self.model.setBackground(self.bg,[0,-1,1])
-        self.model.applyBackground([0.1,0.2,0.3])
+        self.model.setBackground(self.bg,[0, -1, 1])
+        self.model.applyBackground([0.1, 0.2, .3])
         print self.model
         
         f = lambda x: round(x,15)
-        e1 = map(f,self.model.getEmission(0))
-        e2 = map(f,self.model.getEmission(1))
-        e3 = map(f,self.model.getEmission(2))
+        e1 = map(f, self.model.getEmission(0))
+        e2 = map(f, self.model.getEmission(1))
+        e3 = map(f, self.model.getEmission(2))
                 
         self.assertEqual(e1, [0.02, 0.48, 0.46, 0.04])
-        self.assertEqual(e2,[ 0.1, 0.0, 0.8, 0.1])
-        self.assertEqual(e3, [ 0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12, 0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
+        self.assertEqual(e2, [0.1,  0.0,  0.8,  0.1])
+        self.assertEqual(e3, [0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12, 0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
         
 
     def testbackgroundtraining(self):
@@ -695,19 +695,19 @@ class StateLabelHMMTests(unittest.TestCase):
 
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,4)
-        
+
         pi = self.model.getInitial(2)
         self.assertEqual(pi,0)
         self.model.setInitial(2,0.5,fixProb=1)
         pi = self.model.getInitial(2)
         self.assertEqual(pi,0.5)
-        
+
         trans = self.model.getTransition(0,1)
         self.assertEqual(trans, 0.5)
         self.model.setTransition(0,1,0.6)
         trans = self.model.getTransition(0,1)
         self.assertEqual(trans, 0.6)
-        
+
         emission = self.model.getEmission(1)
         self.assertEqual(emission, [0.3,0.1,0.1,0.5] )
         
@@ -717,7 +717,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
         self.assertEqual(self.model.cmodel.model_type & 4, 4)
         self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),1)
-        
+
         # removing silent state
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
@@ -725,7 +725,7 @@ class StateLabelHMMTests(unittest.TestCase):
         print "model_type = ",self.model.cmodel.model_type
         self.assertEqual(self.model.cmodel.model_type & 4,0)
         self.assertEqual(self.model.isSilent(1), False)
-        
+
         # inserting silent state
         self.model.setEmission(0,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(0)
@@ -738,8 +738,8 @@ class StateLabelHMMTests(unittest.TestCase):
         self.assertEqual(labels,['fst','scd','thr'])
         self.model.setLabels(['fst','thr','fst'])
         labels = self.model.getLabels()
-        self.assertEqual(labels,['fst','thr','fst']) 
-    
+        self.assertEqual(labels, ['fst','thr','fst']) 
+
     def testonelabelcomparebackward(self):
         model = self.oneModel(['One']*11)
 
@@ -775,7 +775,7 @@ class StateLabelHMMTests(unittest.TestCase):
         for i in range(len(bl_beta)):
             i = len(bl_beta)-i-1
             for j in range(len(bl_beta[i])):
-                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_stateptr(model2.cmodel.s,j).label:
+                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_arrayint(model2.cmodel.label, j):
                     self.assertNotEqual(bl_beta[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(bl_beta[i][j]) )
                 else:
@@ -821,7 +821,7 @@ class StateLabelHMMTests(unittest.TestCase):
         for i in range(len(alpha)):
             i = len(alpha)-i-1
             for j in range(len(alpha[i])):
-                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_stateptr(model2.cmodel.s,j).label:
+                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_arrayint(model2.cmodel.label, j):
                     self.assertNotEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]) )
                 else:
@@ -1085,7 +1085,7 @@ suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 
 # Call to individual test suites, uncomment to activate as needed.
-runner = unittest.TextTestRunner(verbosity=2)
+#runner = unittest.TextTestRunner(verbosity=2)
 #runner.run(suiteAlphabet)
 #runner.run(suiteSequenceSet)
 #runner.run(suiteDiscreteEmissionHMM)

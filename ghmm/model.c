@@ -612,16 +612,21 @@ int ghmm_d_free(ghmm_dmodel ** mo) {
     m_free((*mo)->s);
   if ((*mo)->name)
     m_free((*mo)->name);
-  if ((*mo)->silent)
+  if ((*mo)->model_type & GHMM_kSilentStates) {
+    if ((*mo)->topo_order)
+      m_free((*mo)->topo_order);
     m_free((*mo)->silent);
-  if ((*mo)->tied_to)
+  }
+  if ((*mo)->model_type & GHMM_kTiedEmissions)
     m_free((*mo)->tied_to);
-  if ((*mo)->topo_order)
-    m_free((*mo)->topo_order);
   if ((*mo)->pow_lookup)
     m_free((*mo)->pow_lookup);
-  if ((*mo)->background_id)
+  if ((*mo)->model_type & GHMM_kBackgroundDistributions)
     m_free((*mo)->background_id);
+  if ((*mo)->model_type & GHMM_kHigherOrderEmissions)
+    m_free((*mo)->order);
+  if ((*mo)->model_type & GHMM_kLabeledStates)
+    m_free((*mo)->label);
  
   m_free(*mo);
   return (0);
@@ -633,14 +638,11 @@ int ghmm_d_background_free (ghmm_d_background_distributions * bg)
 {
 #define CUR_PROC "ghmm_d_background_free"
 
-  if (bg->order){
-    m_free (bg->order);
-  }
-  if (bg->b){
-    ighmm_cmatrix_free (&(bg->b), bg->n);
-  }
+  if (bg->order)
+    m_free(bg->order);
+  if (bg->b)
+    ighmm_cmatrix_free(&(bg->b), bg->n);
   m_free (bg);
-
   return (0);
 #undef CUR_PROC
 }
@@ -655,20 +657,20 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   ghmm_dmodel *m2 = NULL;
   ARRAY_CALLOC (m2, 1);
   ARRAY_CALLOC (m2->s, mo->N);
-  ARRAY_CALLOC (m2->silent, mo->N);
-  if (mo->model_type & GHMM_kTiedEmissions) {
-    ARRAY_CALLOC (m2->tied_to, mo->N);
-  }
-  else
-    m2->tied_to = NULL;
 
+  if (mo->model_type & GHMM_kTiedEmissions)
+    ARRAY_CALLOC (m2->silent, mo->N);
+  if (mo->model_type & GHMM_kTiedEmissions)
+    ARRAY_CALLOC (m2->tied_to, mo->N);
   if (mo->model_type & GHMM_kBackgroundDistributions) {
     ARRAY_CALLOC (m2->background_id, mo->N);
     m2->bp = mo->bp;
   }
-  else
-    m2->background_id = NULL;
-  
+  if (mo->model_type & GHMM_kHigherOrderEmissions)
+    ARRAY_CALLOC (m2->order, mo->N);
+  if (mo->model_type & GHMM_kLabeledStates)
+    ARRAY_CALLOC (m2->label, mo->N);
+
   ARRAY_MALLOC (m2->pow_lookup, mo->maxorder + 2);
   
   for (i = 0; i < mo->N; i++) {
@@ -680,7 +682,7 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
     ARRAY_CALLOC (m2->s[i].in_id, vorg);
     ARRAY_CALLOC (m2->s[i].in_a, vorg);
     /* allocate enough memory for higher order states */
-    ARRAY_CALLOC (m2->s[i].b, ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1));
+    ARRAY_CALLOC (m2->s[i].b, ghmm_d_ipow (mo, mo->M, mo->order[i] + 1));
 
     /* copy the values */
     for (j = 0; j < nachf; j++) {
@@ -692,7 +694,7 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
       m2->s[i].in_id[j] = mo->s[i].in_id[j];
     }
     /* copy all b values for higher order states */
-    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
+    size = ghmm_d_ipow (mo, mo->M, mo->order[i] + 1);
     for (m = 0; m < size; m++)
       m2->s[i].b[m] = mo->s[i].b[m];
 
@@ -703,9 +705,9 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
     if (mo->model_type & GHMM_kTiedEmissions)
       m2->tied_to[i] = mo->tied_to[i];
     if (mo->model_type & GHMM_kLabeledStates)
-      m2->s[i].label = mo->s[i].label;
+      m2->label[i] = mo->label[i];
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      m2->s[i].order = mo->s[i].order;
+      m2->order[i] = mo->order[i];
     if (mo->model_type & GHMM_kBackgroundDistributions)
       m2->background_id[i] = mo->background_id[i];
     m2->s[i].out_states = nachf;
@@ -962,7 +964,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
     else {
       fprintf (stderr,
                "ERROR: State has order %d, but in the history are only %d emissions.\n",
-               mo->s[i].order, position);
+               mo->order[i], position);
       return -1;
     }
   }
@@ -1025,8 +1027,8 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
         break;
     }
 
-    if ((mo->model_type & GHMM_kHigherOrderEmissions) && (mo->s[i].order > 0)) {
-      str = ighmm_mprintf(NULL, 0, "State %d has emission order %d, but it's initial probability is not 0.", i, mo->s[i].order);
+    if ((mo->model_type & GHMM_kHigherOrderEmissions) && (mo->order[i] > 0)) {
+      str = ighmm_mprintf(NULL, 0, "State %d has emission order %d, but it's initial probability is not 0.", i, mo->order[i]);
       GHMM_LOG(LCRITIC, str);
       m_free(str);
       exit (1);
@@ -1251,7 +1253,7 @@ void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
       fprintf (file, "%s\n", ending);
     }
     else {
-      size = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
+      size = ghmm_d_ipow (mo, mo->M, mo->order[i] + 1);
       for (j = 1; j < size; j++)
         fprintf (file, "%s %.2f", separator, mo->s[i].b[j]);
       fprintf (file, "%s\n", ending);
@@ -1348,9 +1350,9 @@ void ghmm_dl_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                         char *ending)
 {
   int i;
-  fprintf (file, "%s%d", tab, mo->s[0].label);
+  fprintf (file, "%s%d", tab, mo->label[0]);
   for (i = 1; i < mo->N; i++)
-    fprintf (file, "%s %d", separator, mo->s[i].label);
+    fprintf (file, "%s %d", separator, mo->label[i]);
   fprintf (file, "%s\n", ending);
 }                               /* ghmm_dl_print */
 
@@ -1783,15 +1785,15 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
         break;
     }
 
-    if (!(mo->model_type & GHMM_kHigherOrderEmissions) && 0 < mo->s[i].order) {
+    if (!(mo->model_type & GHMM_kHigherOrderEmissions) && 0 < mo->order[i]) {
       fprintf (stderr,
                "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n",
-               i, mo->s[i].order);
+               i, mo->order[i]);
       exit (1);
     }
 
     /* add label of fist state to the label list */
-    sq->state_labels[n][label_index++] = mo->s[i].label;
+    sq->state_labels[n][label_index++] = mo->label[i];
 
     if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
       /* silent state: we do nothing, no output */
@@ -1832,7 +1834,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
         transition_impossible = 1;
         for (j = 0; j < mo->s[i].out_states; j++) {
           j_id = mo->s[i].out_id[j];
-          if ((mo->s[j_id].order) < (pos)) {
+          if ((mo->order[j_id]) < (pos)) {
             transition_impossible = 0;
             break;
           }
@@ -1853,7 +1855,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
             if (sum >= p)
               break;
           }
-        } while (mo->s[j_id].order >= pos);
+        } while (mo->order[j_id] >= pos);
       }
       else {
         /* Get a random state i */
@@ -1868,7 +1870,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
       i = mo->s[i].out_id[j];
 
       /* add label of state to the label list */
-      sq->state_labels[n][label_index] = mo->s[i].label;
+      sq->state_labels[n][label_index] = mo->label[i];
       label_index++;
 
       /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,pos); */
@@ -1931,7 +1933,7 @@ int ghmm_d_normalize (ghmm_dmodel * mo)
 
     /* check model_type before using state order */
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
+      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
 
     /* normalize transition probabilities */
     if (ighmm_cvector_normalize (mo->s[i].out_a, mo->s[i].out_states) == -1) {
@@ -1984,7 +1986,7 @@ int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed)
       mo->s[i].out_a[j] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level);
 
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
+      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
     for (hist = 0; hist < size; hist++)
       for (h = hist * mo->M; h < hist * mo->M + mo->M; h++)
         mo->s[i].b[h] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level);
@@ -2124,13 +2126,13 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
   if (mo->model_type & GHMM_kBackgroundDistributions)
     ARRAY_REALLOC (mo->background_id, mo->N);
 
-  size = ghmm_d_ipow (mo, mo->M, mo->s[cur].order + 1);
+  size = ghmm_d_ipow (mo, mo->M, mo->order[cur] + 1);
   for (i = last; i < mo->N; i++) {
     /* set the new state */
     mo->s[i].pi = 0.0;
-    mo->s[i].order = mo->s[cur].order;
+    mo->order[i] = mo->order[cur];
     mo->s[i].fix = mo->s[cur].fix;
-    mo->s[i].label = mo->s[cur].label;
+    mo->label[i] = mo->label[cur];
     mo->s[i].in_a = NULL;
     mo->s[i].in_id = NULL;
     mo->s[i].in_states = 0;
@@ -2197,14 +2199,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /** 
-   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
-   the respective fields. Note: The arguments need allocation outside of this
-   function.
+   Allocates a new ghmm_d_background_distributions struct and assigns
+   the arguments to the respective fields.
+   Note: The arguments need allocation outside of this function.
    
-   @return    :               new pointer to a ghmm_d_background_distributions struct
-   @param n   :               number of distributions
-   @param order:              orders of the distribtions
-   @param B:                  matrix of distribution parameters
+   @return:      new pointer to a ghmm_d_background_distributions struct or NULL
+   @param n:     number of distributions
+   @param order: orders of the distribtions (optional)
+   @param B:     matrix of distribution parameters (optional)
 */
 ghmm_d_background_distributions *ghmm_d_background_alloc (int n, int m,
                                                                 int *orders,
@@ -2213,18 +2215,15 @@ ghmm_d_background_distributions *ghmm_d_background_alloc (int n, int m,
 #define CUR_PROC "ghmm_d_background_alloc"
   ghmm_d_background_distributions *ptbackground;
 
-  ARRAY_CALLOC (ptbackground, 1);
+  ARRAY_CALLOC(ptbackground, 1);
 
   ptbackground->n = n;
   ptbackground->m = m;
-  if (orders != NULL && B != NULL) {
+  if (orders)
     ptbackground->order = orders;
+  if (B)
     ptbackground->b = B;
-  }
-  else {
-    m_free (ptbackground);
-    return NULL;
-  }
+
   return ptbackground;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
@@ -2271,23 +2270,32 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 
   int i, j, size;
 
-  if (!mo->model_type && GHMM_kBackgroundDistributions) {
+  if (!(mo->model_type & GHMM_kBackgroundDistributions)) {
     mes_prot ("Error: No background distributions");
     return -1;
   }
 
-  for (i = 0; i < mo->N; i++) {
+  for (i=0; i<mo->N; i++) {
     if (mo->background_id[i] != GHMM_kNoBackgroundDistribution) {
-      if (mo->s[i].order != mo->bp->order[mo->background_id[i]]) {
-        mes_prot ("Error: State and background order do not match\n");
-        return -1;
+      if (mo->model_type & GHMM_kHigherOrderEmissions) {
+	if (mo->order[i] != mo->bp->order[mo->background_id[i]]) {
+	  mes_prot("Error: State and background order do not match\n");
+	  return -1;
+	}
+	/* XXX Cache in ghmm_d_background_distributions */
+	size = ghmm_d_ipow(mo, mo->M, mo->order[i]+1);
+	for (j=0; j<size; j++)
+	  mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
+	    + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
+      } else {
+	if (mo->bp->order[mo->background_id[i]] != 0) {
+	  mes_prot("Error: State and background order do not match\n");
+	  return -1;
+	}
+	for (j=0; j<mo->M; j++)
+	  mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
+	    + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
       }
-
-      /* XXX Cache in ghmm_d_background_distributions */
-      size = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
-      for (j = 0; j < size; j++)
-        mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
-          + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
     }
   }
 
@@ -2315,7 +2323,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
 
   /* create a background distribution for each state */
   for (i = 0; i < mo->N; i++) {
-    mo->background_id[i] = mo->s[i].order;
+    mo->background_id[i] = mo->order[i];
   }
 
   /* allocate */
@@ -2328,7 +2336,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
   /* set br->order */
   for (i = 0; i < mo->N; i++)
     if (mo->background_id[i] != GHMM_kNoBackgroundDistribution)
-      mo->bp->order[mo->background_id[i]] = mo->s[i].order;
+      mo->bp->order[mo->background_id[i]] = mo->order[i];
 
   /* allocate and initialize br->b with zeros */
   ARRAY_CALLOC (mo->bp->b, mo->bp->n);
@@ -2340,7 +2348,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
 
     /* find a state with the current order */
     for (j = 0; j < mo->N; j++)
-      if (mo->bp->order[i] == mo->s[j].order)
+      if (mo->bp->order[i] == mo->order[j])
         break;
 
     /* initialize with ones as psoudocounts */
@@ -2410,7 +2418,7 @@ double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
       ++number;
     }
     /* B */
-    for (j=0; j<ghmm_d_ipow(mo, mo->M, mo->s[i].order+1); ++j) {
+    for (j=0; j<ghmm_d_ipow(mo, mo->M, mo->order[i]+1); ++j) {
       tmp = mo->s[i].b[j] - m2->s[i].b[j];
       distance += tmp*tmp;
       ++number;

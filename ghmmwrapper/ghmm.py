@@ -1531,14 +1531,14 @@ class HMMFromMatricesFactory(HMMFactory):
                 silent_flag = 0
                 silent_states = []
 
-                maxorder = 0
+                tmpOrder = []
 
                 #initialize states
                 for i in range(cmodel.N):
                     state = ghmmwrapper.get_stateptr(states,i)
                     # compute state order
                     if cmodel.M > 1:
-                        order = ( math.log(len(B[i]),cmodel.M) -1)
+                        order = math.log(len(B[i]), cmodel.M)-1
                     else:
                         order = len(B[i]) - 1
                         
@@ -1546,19 +1546,13 @@ class HMMFromMatricesFactory(HMMFactory):
                     # check or valid number of emission parameters
                     order = int(order)
                     if  cmodel.M**(order+1) == len(B[i]):
-                        state.order = order
+                        tmpOrder.append(order)
                     else:
                         raise InvalidModelParameters, "The number of "+str(len(B[i]))+ " emission parameters for state "+str(i)+" is invalid. State order can not be determined."
                     
-                    
                     state.b = ghmmhelper.list2arrayd(B[i])
-                    
-                    
+                                        
                     state.pi = pi[i]
-                    if state.order > maxorder:
-                        log.debug( "state "+str(i)+", order "+str(state.order))
-                        
-                        maxorder = state.order
                     
                     if (sum(B[i]) == 0 ): 
                         silent_states.append(1)
@@ -1581,14 +1575,15 @@ class HMMFromMatricesFactory(HMMFactory):
                     cmodel.model_type += silent_flag
                     cmodel.silent = ghmmhelper.list2arrayint(silent_states)
 
-                cmodel.maxorder = maxorder
+                cmodel.maxorder = max(tmpOrder)
                 if cmodel.maxorder > 0:
                     log.debug( "Set kHigherOrderEmissions.")
                     cmodel.model_type += 16     #kHigherOrderEmissions
+                    cmodel.order = ghmmhelper.list2arrayint(tmpOrder)
 
                 # initialize lookup table for powers of the alphabet size,
                 # speeds up models with higher order states
-                powLookUp = [1] * (maxorder+2)
+                powLookUp = [1] * (cmodel.maxorder+2)
                 for i in range(1,len(powLookUp)):
                     powLookUp[i] = powLookUp[i-1] * cmodel.M
                 cmodel.pow_lookup = ghmmhelper.list2arrayint(powLookUp)
@@ -1852,7 +1847,7 @@ HMMFromMatrices = HMMFromMatricesFactory()
 #- Background distribution
 
 class BackgroundDistribution:
-    def __init__(self,emissionDomain, bgInput):
+    def __init__(self, emissionDomain, bgInput):
         
         if type(bgInput) == list:
             self.emissionDomain = emissionDomain
@@ -1862,20 +1857,20 @@ class BackgroundDistribution:
             b = ghmmwrapper.double_2d_array_nocols(distNum)
             for i in range(distNum):
                 if len(emissionDomain) > 1:
-                    o = math.log(len(bgInput[i]),len(emissionDomain)) -1
+                    o = math.log(len(bgInput[i]), len(emissionDomain)) - 1
                 else:
                     o = len(bgInput[i]) - 1
                          
                 assert (o % 1) == 0, "Invalid order of distribution " + str(i) + ": " + str(o)
 
-                ghmmwrapper.set_arrayint(order,i, int(o))
+                ghmmwrapper.set_arrayint(order, i, int(o))
                 # dynamic allocation, rows have different lenghts
                 b_i = ghmmhelper.list2arrayd(bgInput[i])
                 ghmmwrapper.set_2d_arrayd_col(b,i,b_i)
     
-            self.cbackground = ghmmwrapper.ghmm_d_background_alloc(distNum,len(emissionDomain) ,order, b)
+            self.cbackground = ghmmwrapper.ghmm_d_background_alloc(distNum, len(emissionDomain), order, b)
 
-        elif isinstance(bgInput,ghmmwrapper.background_distributions ):
+        elif isinstance(bgInput, ghmmwrapper.background_distributions):
             self.cbackground = bgInput
             self.emissionDomain = emissionDomain
             
@@ -1891,10 +1886,10 @@ class BackgroundDistribution:
         outstr = "BackgroundDistribution instance:\n"
         outstr += "Number of distributions: " + str(self.cbackground.n)+"\n\n"
         outstr += str(self.emissionDomain) + "\n"
-        d = ghmmhelper.matrixd2list(self.cbackground.b,self.cbackground.n,len(self.emissionDomain))
+        d = ghmmhelper.matrixd2list(self.cbackground.b, self.cbackground.n, len(self.emissionDomain))
         outstr += "Distributions:\n"   
         for i in range(self.cbackground.n):
-            outstr += "  Order: " + str(ghmmwrapper.get_arrayint(self.cbackground.order,i))+"\n"
+            outstr += "  Order: " + str(ghmmwrapper.get_arrayint(self.cbackground.order, i))+"\n"
             outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
             
                      
@@ -2318,7 +2313,11 @@ class HMM:
         """
         if self.emissionDomain.CDataType == "int": # discrete emissions.
             state = self.getStatePtr(self.cmodel.s,i)
-            emissions = ghmmhelper.arrayd2list(state.b,self.M**(state.order+1))
+            if self.cmodel.model_type & 16:         #kHigherOrderEmissions
+                order = ghmmwrapper.get_arrayint(self.cmodel.order, i)
+                emissions = ghmmhelper.arrayd2list(state.b, self.M**(order+1))
+            else:                
+                emissions = ghmmhelper.arrayd2list(state.b, self.M)
             return emissions
 
         elif self.emissionDomain.CDataType == "double": # continous emissions
@@ -2374,8 +2373,8 @@ class HMM:
             strout.append("kTiedEmissions ")
         if model_type & 16:         #kHigherOrderEmissions
             strout.append("kHigherOrderEmissions ")
-        if model_type & 32:         #kHasBackgroundDistributions
-            strout.append("kHasBackgroundDistributions ")
+        if model_type & 32:         #kBackgroundDistributions
+            strout.append("kBackgroundDistributions ")
         if model_type & 64:         #kClassLabels
             strout.append("kClassLabels ")
         if model_type == 0:         #kNotSpecified
@@ -2433,14 +2432,15 @@ class DiscreteEmissionHMM(HMM):
         strout.append( "\nModelflags: "+ self.printtypes(self.cmodel.model_type))
         strout.append(  "\nNumber of states: "+ str(hmm.N))
         strout.append(  "\nSize of Alphabet: "+ str(hmm.M))
+        order = ghmmhelper.arrayint2list(self.cmodel.order, self.N)
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
             strout.append( "\n\nState number "+ str(k) +":")
-            strout.append( "\nState order: " + str(state.order))
+            strout.append( "\nState order: " + str(order[k]))
             strout.append( "\nInitial probability: " + str(state.pi))
             #strout.append("\nsilent state: " + str(get_arrayint(self.cmodel.silent,k)))
             strout.append( "\nOutput probabilites: ")
-            for outp in range(hmm.M**(state.order+1)):
+            for outp in range(hmm.M**(order[k]+1)):
                 strout.append(str(ghmmwrapper.get_arrayd(state.b,outp)))
                 if outp % hmm.M == hmm.M-1:
                     strout.append( "\n")
@@ -2642,15 +2642,15 @@ class DiscreteEmissionHMM(HMM):
             
         assert len(stateBackground) == self.N, "Argument 'stateBackground' does not match number of states."
 
-##        if self.background != None:
-##            del(self.background)
-##            ghmmwrapper.freearray(self.cmodel.background_id)
+        if self.background != None:
+            del(self.background)
+            ghmmwrapper.freearray(self.cmodel.background_id)
         self.cmodel.bp = backgroundObject.cbackground
         self.background = backgroundObject
         self.cmodel.background_id = ghmmhelper.list2arrayint(stateBackground)
 
         # updating model type
-        self.cmodel.model_type += 32 #kHasBackgroundDistributions
+        self.cmodel.model_type += 32 #kBackgroundDistributions
     
     def assignAllBackgrounds(self,stateBackground):
         """ Change all the assignments of background distributions to states.
@@ -2755,11 +2755,16 @@ class DiscreteEmissionHMM(HMM):
         A = []
         B = []
         pi = []
+        if self.cmodel.model_type & 16:         #kHigherOrderEmissions
+            order = ghmmhelper.arrayint2list(self.cmodel.order, self.N)
+        else:
+            order = [0]*self.N
+
         for i in range(self.cmodel.N):
             A.append([0.0] * self.N)
             state = self.getStatePtr(self.cmodel.s,i)
             pi.append(state.pi)
-            B.append(ghmmhelper.arrayd2list(state.b,self.M ** (state.order+1)))
+            B.append(ghmmhelper.arrayd2list(state.b,self.M ** (order[i]+1)))
             for j in range(state.out_states):
                 state_index = ghmmwrapper.get_arrayint(state.out_id,j)
                 A[i][state_index] = ghmmwrapper.get_arrayd(state.out_a,j)
@@ -2949,7 +2954,7 @@ class DiscreteEmissionHMM(HMM):
         except AssertionError:
             log.warning( "Ignore tied groups")
             log.warning( "self.cmodel.tied_to not defined")
-            
+
         for i in xrange(self.cmodel.N):
             cstate = self.getStatePtr(self.cmodel.s,i)
             if nalpha > 1:
@@ -2961,7 +2966,7 @@ class DiscreteEmissionHMM(HMM):
             tiedto = None           # XXX
            
             state_dom = xmlutil.HMMState(-1,hmm_dom)
-            state_dom.fromDiscreteState( i, pi[i], B[i], cstate.label, order, tiedto, have_background)
+            state_dom.fromDiscreteState( i, pi[i], B[i], 0, order, tiedto, have_background)
             hmm_dom.state[state_dom.index] = state_dom
             hmm_dom.id2index[i] = state_dom.index
             
@@ -2990,7 +2995,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
     """
     def __init__(self, emissionDomain, distribution, labelDomain, cmodel):
         DiscreteEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
-        assert isinstance(labelDomain,LabelDomain), "Invalid labelDomain"
+        assert isinstance(labelDomain, LabelDomain), "Invalid labelDomain"
         self.labelDomain = labelDomain
         
         # Assignment of the C function names to be used with this model type
@@ -2999,7 +3004,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         self.backwardBetaLabelFunction = ghmmwrapper.ghmm_dl_backward
         self.kbestFunction = ghmmwrapper.ghmm_dl_kbest        
         self.gradientDescentFunction = ghmmwrapper.ghmm_dl_gradient_descent
-        #self.cmodel.state_label = ghmmwrapper.int_array(self.N) # XXX ???
+        self.cmodel.label = ghmmwrapper.int_array(self.N)
 
     def __str__(self):
         hmm = self.cmodel
@@ -3008,17 +3013,18 @@ class StateLabelHMM(DiscreteEmissionHMM):
         strout.append("\nModelflags: "+ self.printtypes(self.cmodel.model_type))
         strout.append("\nNumber of states: "+ str(hmm.N))
         strout.append("\nSize of Alphabet: "+ str(hmm.M))
+        order = ghmmhelper.arrayint2list(hmm.order, self.N)
+        label = ghmmhelper.arrayint2list(hmm.label, self.N)
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
             strout.append("\n\nState number "+ str(k) +":")
 
-            #strout.append("\nState label: "+ str(self.r_index[state.label]))
-            strout.append("\nState label: "+ str(self.labelDomain.external(state.label)))
+            strout.append("\nState label: "+str(self.labelDomain.external(label[k])))
 
-            strout.append("\nState order: " + str(state.order))
+            strout.append("\nState order: " + str(order[k]))
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nOutput probabilites:\n")
-            for outp in range(hmm.M**(state.order+1)):
+            for outp in range(hmm.M**(order[k]+1)):
                 strout+=str(ghmmwrapper.get_arrayd(state.b,outp))
                 if outp % hmm.M == hmm.M-1:
                     strout.append("\n")
@@ -3041,7 +3047,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         return join(strout,'')
 
-    def setLabels(self,labelList):
+    def setLabels(self, labelList):
         """  Set the state labels to the values given in labelList.
              LabelList is in external representation.
         """
@@ -3052,23 +3058,19 @@ class StateLabelHMM(DiscreteEmissionHMM):
         for i in range(self.N):
             if not self.labelDomain.isAdmissable(labelList[i]):
                 raise GHMMOutOfDomain, "Label "+str(labelList[i])+" not included in labelDomain."
-            state = self.getStatePtr(self.cmodel.s, i)
-            state.label = self.labelDomain.internal(labelList[i])
+            
+        ghmmwrapper.freearray(self.cmodel.label)
+        self.cmodel.label = ghmmhelper.list2arrayint([self.labelDomain.internal(l) for l in labelList])
 
     def getLabels(self):
-        labels = []
-        for i in range(self.N):
-            state = self.getStatePtr(self.cmodel.s, i)
-            labels.append(self.labelDomain.external(state.label))
-        
-        return labels    
+        labels = ghmmhelper.arrayint2list(self.cmodel.label, self.N)
+        return [self.labelDomain.external(l) for l in labels]
     
     def getLabel(self,stateIndex):
         """ Returns label of the state 'stateIndex'.
         
         """
-        state = self.getStatePtr(self.cmodel.s, stateIndex)
-        return state.label
+        return ghmmwrapper.get_arrayint(self.cmodel.label, stateIndex)
          
     def externalLabel(self, internal):
         """ Returns label representation of an int or list of int
@@ -4501,7 +4503,6 @@ class PairHMM(HMM):
         for k in range(hmm.N):
             state = ghmmwrapper.get_pstateptr(hmm.s, k)
             strout.append("\n\nState number "+ str(k) +":")
-            #strout.append("\nState order: " + str(state.order))
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nOutput probabilites: ")
             #strout.append(str(ghmmwrapper.get_arrayd(state.b,outp)))

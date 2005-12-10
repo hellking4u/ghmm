@@ -86,20 +86,27 @@ static local_store_t *reestimate_alloc (const ghmm_dmodel * mo)
 # define CUR_PROC "reestimate_alloc"
   int i;
   local_store_t *r = NULL;
-  ARRAY_CALLOC (r, 1);
+  ARRAY_CALLOC(r, 1);
 
-  ARRAY_CALLOC (r->pi_num, mo->N);
-  ARRAY_CALLOC (r->a_num, mo->N);
-  for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC (r->a_num[i], mo->s[i].out_states);
-  ARRAY_CALLOC (r->a_denom, mo->N);
+  ARRAY_CALLOC(r->pi_num, mo->N);
+  ARRAY_CALLOC(r->a_num, mo->N);
+  for (i=0; i<mo->N; i++)
+    ARRAY_CALLOC(r->a_num[i], mo->s[i].out_states);
+  ARRAY_CALLOC(r->a_denom, mo->N);
 
-  ARRAY_MALLOC (r->b_num, mo->N);
-  for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC (r->b_num[i], ghmm_d_ipow(mo, mo->M, mo->s[i].order + 1));
-  ARRAY_MALLOC (r->b_denom, mo->N);
-  for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC (r->b_denom[i], ghmm_d_ipow (mo, mo->M, mo->s[i].order));
+  ARRAY_MALLOC(r->b_num, mo->N);
+  ARRAY_MALLOC(r->b_denom, mo->N);
+
+  if (mo->model_type & GHMM_kHigherOrderEmissions)
+    for (i=0; i<mo->N; i++) {
+      ARRAY_CALLOC(r->b_num[i], ghmm_d_ipow(mo, mo->M, mo->order[i] + 1));
+      ARRAY_CALLOC(r->b_denom[i], ghmm_d_ipow (mo, mo->M, mo->order[i]));
+    }
+  else
+    for (i=0; i<mo->N; i++) {
+      ARRAY_CALLOC(r->b_num[i], mo->M);
+      ARRAY_CALLOC(r->b_denom[i], 1);
+    }
 
   return (r);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -145,26 +152,31 @@ static int reestimate_free (local_store_t ** r, int N)
 }                               /* reestimate_free */
 
 /*----------------------------------------------------------------------------*/
-static int reestimate_init (local_store_t * r, const ghmm_dmodel * mo)
-{
+static int reestimate_init(local_store_t * r, const ghmm_dmodel * mo) {
 # define CUR_PROC "reestimate_init"
 
   int i, j, m, size;
 
   r->pi_denom = 0.0;
 
-  for (i = 0; i < mo->N; i++) {
+  for (i=0; i<mo->N; i++) {
     r->pi_num[i] = 0.0;
     r->a_denom[i] = 0.0;
-    for (j = 0; j < mo->s[i].out_states; j++)
+    for (j=0; j<mo->s[i].out_states; j++)
       r->a_num[i][j] = 0.0;
 
-    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
-    for (m = 0; m < size; m++)
-      r->b_denom[i][m] = 0.0;
-    size *= mo->M;
-    for (m = 0; m < size; m++)
-      r->b_num[i][m] = 0.0;
+    if (mo->model_type & GHMM_kHigherOrderEmissions) {
+      size = ghmm_d_ipow(mo, mo->M, mo->order[i]);
+      for (m=0; m<size; m++)
+	r->b_denom[i][m] = 0.0;
+      size *= mo->M;
+      for (m=0; m<size; m++)
+	r->b_num[i][m] = 0.0;
+    } else {
+      r->b_denom[i][0] = 0.0;
+      for (m=0; m<mo->M; m++)
+	r->b_num[i][m] = 0.0;
+    }
   }
   return (0);
 # undef CUR_PROC
@@ -233,7 +245,11 @@ void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
     /* find tie group leaders */
     if (mo->tied_to[i] == i) {
 
-      bi_len = ghmm_d_ipow(mo, mo->M, mo->s[i].order + 1);
+
+      if (mo->model_type & GHMM_kHigherOrderEmissions)
+	bi_len = ghmm_d_ipow(mo, mo->M, mo->order[i] + 1);
+      else
+	bi_len = mo->M;
 
       if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
 	str = ighmm_mprintf(NULL, 0, "Tie group leader %d is silent.", i);
@@ -253,9 +269,10 @@ void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
 
       /* finding tie group members */
       for (j=i+1; j<mo->N; j++) {
-        if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order) {
-          /* silent states have no contribution to the pooled emissions within a group */
-          if (!(mo->model_type & GHMM_kSilentStates) || (mo->silent[j] == 0)) {
+        if (mo->tied_to[j] == i && (!(mo->model_type & GHMM_kHigherOrderEmissions)
+				    || mo->order[i] == mo->order[j])) {
+	  /* silent states have no contribution to the pooled emissions within a group */
+	  if (!(mo->model_type & GHMM_kSilentStates) || (mo->silent[j] == 0)) {
             nr += 1;
             /* printf("  tie group member %d -> leader %d.\n",j,i); */
             /* summing up emissions in the tie group */
@@ -274,8 +291,9 @@ void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
       if (nr > 1)
         for (j=i; j < mo->N; j++) {
           /* states within one tie group are required to have the same order */
-          if (mo->tied_to[j] == i && mo->s[i].order == mo->s[j].order && 
-	      (!(mo->model_type & GHMM_kSilentStates) || (mo->silent[j] == 0)))
+          if (mo->tied_to[j] == i && (!(mo->model_type & GHMM_kHigherOrderEmissions)
+				      || mo->order[i] == mo->order[j])
+	      && (!(mo->model_type & GHMM_kSilentStates) || (mo->silent[j] == 0)))
             for (k = 0; k < bi_len; k++) {
               mo->s[j].b[k] = new_emissions[k] / nr;
               /* printf("s(%d)[%d] -> %f / %f = %f\n", j, k, new_emissions[k], nr,mo->s[j].b[k]);   */
@@ -368,7 +386,10 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
       continue;
 
     /* B */
-    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
+    if (mo->model_type & GHMM_kHigherOrderEmissions)
+      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
+    else
+      size = 1;
     /* If all in_a's are zero, the state can't be reached.
        Set all b's to -1.0 */
     if (factor == 0.0) {
@@ -565,6 +586,7 @@ static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
   int res = -1;
   int i, t, k, e_index, len;
   int m, j, j_id, g, g_id, l, s, h;
+  int size;
   int * O;
   double c_t;
   
@@ -684,7 +706,11 @@ static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
 #endif
 
 	  /* computes estimates for the numerator of emmission probabilities*/
-	  for (h=0; h<ghmm_d_ipow(mo,mo->M, mo->s[i].order); h++)
+	  if (mo->model_type & GHMM_kHigherOrderEmissions)
+	    size = ghmm_d_ipow(mo,mo->M, mo->order[i]);
+	  else
+	    size = 1;
+	  for (h=0; h<size; h++)
 	    for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
 	      for (g=0; g<mo->s[m].in_states; g++) {
 		g_id = mo->s[m].out_id[g];
@@ -740,7 +766,7 @@ static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
 	r->a_denom[i] += seq_w[k] * curr_est[m]->a_denom[i];
 	
 	/* B */
-	for (h=0; h < ghmm_d_ipow(mo,mo->M, mo->s[i].order); h++) {
+	for (h=0; h<size; h++) {
 	  curr_est[m]->b_denom[i][h] = 0;
 	  for (s=h*mo->M; s<h*mo->M+mo->M; s++) {
 	    r->b_num[i][s] += seq_w[k] * curr_est[m]->b_num[i][s];
@@ -968,7 +994,7 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
 
         for (t = 0; t < T_k - 1; t++) {
           /* B */
-          if (!(mo->s[i].fix) && (mo->s[i].label == label[k][t])) {
+          if (!(mo->s[i].fix) && (mo->label[i] == label[k][t])) {
             e_index = get_emission_index (mo, i, O[k][t], t);
             if (e_index != -1) {
               gamma = seq_w[k] * alpha[t][i] * beta[t][i];
@@ -982,7 +1008,7 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
           r->a_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i];
           for (j = 0; j < mo->s[i].out_states; j++) {
             j_id = mo->s[i].out_id[j];
-            if (label[k][t + 1] != mo->s[j_id].label)
+            if (label[k][t + 1] != mo->label[j_id])
               continue;
             e_index = get_emission_index (mo, j_id, O[k][t + 1], t + 1);
             if (e_index != -1)
@@ -993,7 +1019,7 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
         }
         /* B: last iteration for t==T_k-1 */
         t = T_k - 1;
-        if (!(mo->s[i].fix) && (mo->s[i].label == label[k][t])) {
+        if (!(mo->s[i].fix) && (mo->label[i] == label[k][t])) {
           e_index = get_emission_index (mo, i, O[k][t], t);
           if (e_index != -1) {
             gamma = seq_w[k] * alpha[t][i] * beta[t][i];

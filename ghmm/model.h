@@ -48,57 +48,49 @@ extern "C" {
     has an ID (== index) to be used for the arrays background_distributions.order
     and background_distributions.b
 */
-  struct ghmm_d_background_distributions {
+struct ghmm_d_background_distributions {
   /** Number of distributions */
-    int n;
+  int n;
   /** Number of symbols in alphabet */
-    int m;
+  int m;
   /** Order of the respective distribution */
-    int *order;
+  int *order;
   /** The probabilities */
-    double **b;
-  };
-  typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
+  double **b;
+  /** string ids of the background distributions */
+  char * * name;
+};
+typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
 
 
 /** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
 */
-  struct ghmm_dstate {
+struct ghmm_dstate {
   /** Initial probability */
-    double pi;
+  double pi;
   /** Output probability */
-    double *b;
-    int order;
+  double *b;
 
   /** IDs of the following states */
-    int *out_id;
+  int *out_id;
   /** IDs of the previous states */
-    int *in_id;
+  int *in_id;
 
   /** transition probabilities to successor states. */
-    double *out_a;
+  double *out_a;
   /** transition probabilities from predecessor states. */
-    double *in_a;
+  double *in_a;
 
   /** Number of successor states */
-    int out_states;
+  int out_states;
   /** Number of precursor states */
-    int in_states;
+  int in_states;
   /** if fix == 1 --> b stays fix during the training */
-    int fix;
-
-    int label;
-
-  };
-  typedef struct ghmm_dstate ghmm_dstate;
-
-
-struct ghmm_coord_t {
-  double x;
-  double y;
+  int fix;
 };
-typedef struct ghmm_coord_t ghmm_coord_t;
+typedef struct ghmm_dstate ghmm_dstate;
+
 
 
 /** @name ghmm_dmodel
@@ -145,10 +137,23 @@ struct ghmm_dmodel {
       
       tied_to[s] == s        : s is a tie group leader
       
-      tied_to[t] == s        : t is tied to state s
+      tied_to[t] == s        : t is tied to state s (t>s)
       
-      Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
+      Note: tied_to != NULL iff (model_type & kTiedEmissions) != 0  */
   int *tied_to;
+
+  /** Note: State store order information of the emissions.
+      Classic HMMS have emission order 0, that is the emission probability
+      is conditioned only on the state emitting the symbol.
+
+      For higher order emissions, the emission are conditioned on the state s
+      as well as the previous emission_order[s] observed symbols.
+
+      The emissions are stored in the state's usual double* b. The order is
+      set order.
+
+      Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
+  int * order;
 
   /** ghmm_d_background_distributions is a pointer to a
       ghmm_d_background_distributions structure, which holds (essentially) an
@@ -160,22 +165,24 @@ struct ghmm_dmodel {
       indicates that none should be used.
       
       
-      Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
+      Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
   int *background_id;
   ghmm_d_background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
-      Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
-  */
+      Condition: topo_order != NULL iff (model_type & kSilentStates) != 0  */
   int *topo_order;
   int topo_order_length;
   
   /** pow_lookup is a array of precomputed powers
       It contains in the i-th entry M (alphabet size) to the power of i
-      The last entry is maxorder+1
-  */
+      The last entry is maxorder+1 */
   int *pow_lookup;
-    
+
+  /** Store for each state a class label. Limits the possibly state sequence
+
+      Note: label != NULL iff (model_type & kLabeledStates) != 0  */
+  int * label;
 };
 typedef struct ghmm_dmodel ghmm_dmodel;
 
@@ -428,10 +435,10 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 	@param  T:  position of obs in sequence (time)
 */
 #define get_emission_index(MO, S, O, T)   (((MO)->model_type & GHMM_kHigherOrderEmissions) ? \
-                                            ((MO)->s[S].order > (T)) ?                    \
+                                            ((MO)->order[S] > (T)) ?                      \
                                               -1 :                                         \
                                               (((MO)->emission_history*(MO)->M) %           \
-                                               (MO)->pow_lookup[(MO)->s[S].order+1] + (O)) : \
+                                               (MO)->pow_lookup[(MO)->order[S]+1] + (O)) : \
                                             (O))
 
 /**
@@ -518,13 +525,12 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-  ghmm_d_background_distributions *ghmm_d_background_alloc (int n,
-                                                                  int m,
-                                                                  int *orders,
-                                                                  double **B);
+  ghmm_d_background_distributions *ghmm_d_background_alloc (int n, int m,
+							    int *orders,
+							    double **B);
 
-  ghmm_d_background_distributions
-    *ghmm_d_background_copy (ghmm_d_background_distributions * bg);
+  ghmm_d_background_distributions *ghmm_d_background_copy (ghmm_d_background_distributions * bg);
+
   int ghmm_d_background_free (ghmm_d_background_distributions * bg);
 
 /**
