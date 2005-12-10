@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <limits.h>
 
 #include <libxml/xmlmemory.h>
 #include <libxml/tree.h>
@@ -53,6 +54,39 @@ struct fileData_s {
 
 };
 typedef struct fileData_s fileData_s;
+
+
+/* holds all valid modeltypes sorted */
+static int validModelTypes[28] = {
+  (GHMM_kDiscreteHMM),
+  (GHMM_kDiscreteHMM + GHMM_kLeftRight),
+  (GHMM_kDiscreteHMM + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kTiedEmissions + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kHigherOrderEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kHigherOrderEmissions + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions	+ GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kTiedEmissions + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions + GHMM_kSilentStates),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kHigherOrderEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kTransitionClasses),
+  (GHMM_kContinuousHMM),
+  (GHMM_kContinuousHMM + GHMM_kTransitionClasses),
+  (GHMM_kPairHMM),
+  (GHMM_kPairHMM + GHMM_kTransitionClasses)
+};
 
 
 /*===========================================================================*/
@@ -134,6 +168,77 @@ STOP:
   return retval;
 #undef CUR_PROC
 }
+
+/*===========================================================================*/
+static int matchModelType(const char * data, unsigned int size) {
+#define CUR_PROC "matchModelType"
+
+  if (!strncmp(data, "left-right", size))
+    return GHMM_kLeftRight;
+
+  if (!strncmp(data, "silent", size))
+    return GHMM_kSilentStates;
+
+  if (!strncmp(data, "tied", size))
+    return GHMM_kTiedEmissions;
+
+  if (!strncmp(data, "higher-order", size))
+    return GHMM_kHigherOrderEmissions;
+
+  if (!strncmp(data, "background", size))
+    return GHMM_kBackgroundDistributions;
+
+  if (!strncmp(data, "labeled", size))
+    return GHMM_kLabeledStates;
+
+  if (!strncmp(data, "transition-classes", size))
+    return GHMM_kTransitionClasses;
+
+  if (!strncmp(data, "discrete", size))
+    return GHMM_kDiscreteHMM;
+
+  if (!strncmp(data, "continuous", size))
+    return GHMM_kContinuousHMM;
+
+  if (!strncmp(data, "pair", size))
+    return GHMM_kPairHMM;
+
+  return INT_MIN;
+
+
+#undef CUR_PROC
+}
+/*===========================================================================*/
+static int parseModelType(const char * data, unsigned int size) {
+#define CUR_PROC "parseModelType"
+
+  int i, modelType=0;
+  const char * end = data;
+  char * str;
+
+  while ((end = strchr(data, ' '))) {
+    modelType += matchModelType(data, end-data);
+    size -= (end-data)+1;
+    data = end+1;
+  }
+  
+  modelType += matchModelType(data, size);
+
+  for (i=0; i<sizeof(validModelTypes); i++) {
+    if (modelType == validModelTypes[i])
+      break;
+  }
+  if (i == sizeof(validModelTypes)) {
+    str = ighmm_mprintf(NULL, 0, "%d is no known valid model type", modelType);
+    GHMM_LOG(LERROR, str);
+    m_free(str);
+  }
+
+
+  return modelType;
+#undef CUR_PROC
+}
+
 
 /*===========================================================================*/
 static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
@@ -407,6 +512,7 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   int * outDegree = NULL;
 
   int modeltype=0;
+  char * mt;
   char * modelname;
 
   int * bg_orders;
@@ -504,7 +610,8 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
 
   /* starting real parsing */
   modelname = (char *)getXMLCharAttribute(cur, (const xmlChar *)"name", &error);
-  modeltype = getIntAttribute(cur, (const xmlChar *)"type", &error);
+  mt = (char *)getXMLCharAttribute(cur, (const xmlChar *)"type", &error);
+  modeltype = parseModelType(mt, strlen(mt));
   f->modelType = modeltype;
 
   /* allocating the different models */
@@ -514,15 +621,15 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
     M = f->alphabets[0]->size;
     f->model.d = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree);
     break;
-  case (GHMM_kDiscreteHMM + GHMM_kTransitionClasses):
+  case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
     f->model.ds = NULL;
     break;
-  case (GHMM_kDiscreteHMM + GHMM_kPairHMM):
-  case (GHMM_kDiscreteHMM + GHMM_kPairHMM + GHMM_kTransitionClasses):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
     f->model.dp = NULL;
     break;
   case GHMM_kContinuousHMM:
-  case (GHMM_kContinuousHMM + GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
     f->model.c = NULL;
     break;
   default:
