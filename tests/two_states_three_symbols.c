@@ -74,9 +74,6 @@ int my_model()
   model_states[0].in_a=trans_prob_0_state_rev;
   /* should emission probabilities be changed during reestimation? 1: no, else: yes*/
   model_states[0].fix=0;
-  /* state label */
-  model_states[0].label=0;
-  model_states[0].order = 0;
   
   /* initialise state 1 */
   /* same meaning as above */
@@ -89,8 +86,6 @@ int my_model()
   model_states[1].in_id=trans_id_0_state;
   model_states[1].in_a=trans_prob_1_state_rev;
   model_states[1].fix=0;
-  model_states[1].label=1;
-  model_states[1].order = 0;
   
     /* initialise model */
   my_model.N=2; /* number of states, dimension of model.s */

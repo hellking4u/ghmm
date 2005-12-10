@@ -37,7 +37,7 @@
 void generateModel (ghmm_dmodel *mo, int noStates, unsigned int seed) {
 
   ghmm_dstate * states;
-  int h, i, j;
+  int h, i, j, hsize;
   double rnd;
 
   /* flags indicating whether a state is silent */
@@ -59,12 +59,16 @@ void generateModel (ghmm_dmodel *mo, int noStates, unsigned int seed) {
 
   /* Model has Higher order Emissions and labeled states*/
   mo->model_type = GHMM_kLabeledStates;
-  if (mo->maxorder>0)
+  if (!(mo->label = malloc(sizeof(int) * mo->N))) 
+    {printf ("malloc failed in line %d", __LINE__); exit(1);}
+  if (mo->maxorder>0) {
     mo->model_type += GHMM_kHigherOrderEmissions;
-  /* GHMM_kHigherOrderEmissions + GHMM_kBackgroundDistributions*/
+    if (!(mo->order = malloc(sizeof(int) * mo->N))) 
+      {printf ("malloc failed in line %d", __LINE__); exit(1);}
+  }
 
   /* allocate memory for pow look-up table and fill it */
-  if (!(mo->pow_lookup = malloc (sizeof (int) * (mo->maxorder+2)))) 
+  if (!(mo->pow_lookup = malloc(sizeof(int) * (mo->maxorder+2)))) 
     {printf ("malloc failed in line %d", __LINE__); exit(1);}
   
   mo->pow_lookup[0] = 1;
@@ -75,19 +79,24 @@ void generateModel (ghmm_dmodel *mo, int noStates, unsigned int seed) {
   for (i=0; i < mo->N; i++) {
     states[i].pi = (0==i ? 1.0:0.0);
     states[i].fix = 0;
-    states[i].label = i%4;
-    states[i].order = i%2;
     states[i].out_states = 2;
     states[i].in_states = 2;
+    mo->label[i] = i%4;
+    mo->order[i] = i%2;
+
+    if (mo->model_type & GHMM_kHigherOrderEmissions)
+      hsize = pow(mo->M, mo->order[i]);
+    else
+      hsize = 1;
 
     /* allocate memory for the a, the out- and incoming States and b array for higher emmission order states*/
-    states[i].b      = malloc(sizeof(double) * pow(mo->M, (states[i].order+1) ));
+    states[i].b      = malloc(sizeof(double) * hsize*mo->M);
     states[i].out_id = malloc(sizeof(int)*states[i].out_states);
     states[i].in_id  = malloc(sizeof(int)*states[i].in_states);
     states[i].out_a  = malloc(sizeof(double)*states[i].out_states);
     states[i].in_a   = malloc(sizeof(double)*states[i].in_states);
 
-    for (h=0; h<pow(mo->M,states[i].order); h++) {
+    for (h=0; h<hsize; h++) {
       rnd = random()/(double)RAND_MAX;
       for (j=h*mo->M; j<(h*mo->M+mo->M); j++){
 	states[i].b[j] = ( (0==((i+j)%mo->M)) ? rnd : (1-rnd) / (mo->M-1));
