@@ -98,7 +98,7 @@ static int discrime_galloc (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
       for (m = 0; m < noC; m++) {
         ARRAY_CALLOC ((*matrix_b)[k][l][m], mo[m]->N);
         for (i = 0; i < mo[m]->N; i++)
-          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], ghmm_d_ipow (mo[m], mo[m]->M, mo[m]->s[i].order + 1));
+          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], ghmm_d_ipow (mo[m], mo[m]->M, mo[m]->order[i] + 1));
       }
     }
   }
@@ -682,7 +682,7 @@ static void discrime_update_b_gradient (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int
     if (mo[class]->s[i].fix)
       continue;
 
-    size = (int) pow (mo[class]->M, mo[class]->s[i].order + 1);
+    size = ghmm_d_ipow (mo[class], mo[class]->M, mo[class]->order[i] + 1);
     for (hist = 0; hist < size; hist += mo[class]->M) {
 
       for (h = hist; h < hist + mo[class]->M; h++) {
@@ -932,7 +932,7 @@ static void discrime_update_b_closed (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int n
     if (mo[class]->s[i].fix)
       continue;
 
-    size = (int) pow (mo[class]->M, mo[class]->s[i].order + 1);
+    size = ghmm_d_ipow (mo[class], mo[class]->M, mo[class]->order[i] + 1);
     for (hist = 0; hist < size; hist += mo[class]->M) {
 
       /* compute lagrangian multiplier */
@@ -1047,7 +1047,7 @@ static void discrime_find_factor (ghmm_dmodel * mo, ghmm_dseq ** sqs, int noC, i
     if (mo->s[i].fix)
       continue;
 
-    size = (int) pow (mo->M, mo->s[i].order + 1);
+    size = ghmm_d_ipow(mo, mo->M, mo->order[i] + 1);
     for (hist = 0; hist < size; hist += mo->M) {
       for (h = hist; h < hist + mo->M; h++) {
         self = other = 0.0;

@@ -87,7 +87,7 @@ static int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
   /* first allocate memory for matrix_b */
   ARRAY_MALLOC (*matrix_b, mo->N);
   for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC ((*matrix_b)[i], ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1));
+    ARRAY_CALLOC ((*matrix_b)[i], ghmm_d_ipow (mo, mo->M, mo->order[i] + 1));
 
   /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
   ARRAY_CALLOC (*matrix_a, mo->N * mo->N);
@@ -139,7 +139,7 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel * mo, double **alpha,
   for (i = 0; i < mo->N; i++) {
     for (j = 0; j < mo->N; j++)
       matrix_a[i * mo->N + j] = 0;
-    size = ghmm_d_ipow (mo, mo->M, mo->s[i].order + 1);
+    size = ghmm_d_ipow (mo, mo->M, mo->order[i] + 1);
     for (h = 0; h < size; h++)
       matrix_b[i][h] = 0;
   }
@@ -397,7 +397,7 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
         continue;
 
       /* update */
-      size = ghmm_d_ipow (mo, mo->M, mo->s[i].order);
+      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
       for (h = 0; h < size; h++) {
         b_block_sum = 0;
         for (g = 0; g < mo->M; g++) {

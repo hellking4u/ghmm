@@ -481,9 +481,11 @@ struct ghmm_d_background_distributions {
   /** Number of symbols in alphabet */
   int m;
   /** Order of the respective distribution */
-  int* order;
+  int * order;
   /** The probabilities */ 
-  double **b;
+  double * * b;
+  /** string ids of the background distributions */
+  char * * name;
 };
 typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
 
@@ -496,7 +498,6 @@ struct ghmm_dstate {
   double pi;
   /** Output probability */
   double *b;
-  int order;
   
   /** IDs of the following states */ 
   int *out_id;  
@@ -508,61 +509,48 @@ struct ghmm_dstate {
   /** transition probs from predecessor states. */ 
   double *in_a;
 
-  /** Transition probability to a successor 
-      double *out_a; */
-  /** Transition probablity to a precursor 
-      double *in_a;*/
-
   /** Number of successor states */     
   int out_states; 
   /** Number of precursor states */
   int in_states;  
   /** if fix == 1 --> b stays fix during the training */
   int fix;
-
-  int label;  
 };
 typedef struct ghmm_dstate ghmm_dstate;
-
-
-struct ghmm_coord_t {
-  double x;
-  double y;
-};
-typedef struct ghmm_coord_t ghmm_coord_t;
-
 
 /** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-  struct ghmm_dmodel {
+struct ghmm_dmodel {
   /** Number of states */
-    int N;
+  int N;
   /** Number of outputs */
-    int M;
+  int M;
   /** Vector of the states */
-    ghmm_dstate *s;
+  ghmm_dstate *s;
   /** The a priori probability for the model.
       A value of -1 indicates that no prior is defined. 
       Note: this is not to be confused with priors on emission
       distributions*/
-    double prior;
+  double prior;
 
-    /* contains a arbitrary name for the model */
-    char *name;
+  /* contains a arbitrary name for the model */
+  char *name;
 
    /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
-  */
-    int model_type;
+   */
+  int model_type;
 
   /** Flag variables for each state indicating whether it is emitting
       or not. 
-      Note: silent != NULL iff (model_type & kSilentStates) == 1  */
-    int *silent;
+      Note: silent != NULL iff (model_type & kSilentStates) != 0  */
+  int *silent;
       /*AS*/
+  
   /** Int variable for the maximum level of higher order emissions */
-    int maxorder;
+  int maxorder;
+  
   /** saves the history of emissions as int, 
       the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
       see ...*/
@@ -578,8 +566,8 @@ typedef struct ghmm_coord_t ghmm_coord_t;
 
       tied_to[t] == s        : t is tied to state s
 
-      Note: tied_to != NULL iff (model_type & kTiedEmissions) == 1  */
-    int *tied_to;
+      Note: tied_to != NULL iff (model_type & kTiedEmissions) != 0  */
+  int *tied_to;
 
   /** Note: State store order information of the emissions.
       Classic HMMS have emission order 0, that is the emission probability
@@ -589,9 +577,10 @@ typedef struct ghmm_coord_t ghmm_coord_t;
       as well as the previous emission_order[s] observed symbols.
 
       The emissions are stored in the state's usual double* b. The order is
-      set state.order.
+      set order.
 
-      Note: state.order != NULL iff (model_type & kHigherOrderEmissions) == 1  */
+      Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
+  int * order;
 
   /** bp is a pointer to a ghmm_d_background_distributions structure,
       which holds (essentially) an array of background distributions
@@ -602,47 +591,29 @@ typedef struct ghmm_coord_t ghmm_coord_t;
       indicates that none should be used.
 
 
-      Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
-    int *background_id;
-    ghmm_d_background_distributions *bp;
+      Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
+  int *background_id;
+  ghmm_d_background_distributions *bp;
 
   /** (WR) added these variables for topological ordering of silent states 
-      Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
+      Condition: topo_order != NULL iff (model_type & kSilentStates) != 0
    */
-    int *topo_order;
-    int topo_order_length;
+  int *topo_order;
+  int topo_order_length;
 
   /** pow_lookup is a array of precomputed powers
 
       It contains in the i-th entry M (alphabet size) to the power of i
       The last entry is maxorder+1
   */
-    int *pow_lookup;
-    
-    
-    
-    /*  storage of model representation information ( read in from XML ) */
-    
-    /* emission alphabet  */ 
-    char*** alphabet;
-    
-    /* sizes of the different alphabets (for pair HMMs there might be more than one)  */
-    int*  alphabet_size;
-    
-    /* number of entries in alphabet_size */
-    int S;
-    
-    /* an arry of positions of states for graphical representation */ 
-    ghmm_coord_t *position;
-    
-    /* state label alphabet (only for labelled HMMs)  */ 
-    char** label_alphabet;
- 
-    /* size of the label_alphabet */
-    int label_size;
+  int *pow_lookup;
 
-  };
-  typedef struct ghmm_dmodel ghmm_dmodel;
+  /** Store for each state a class label. Limits the possibly state sequence
+
+      Note: label != NULL iff (model_type & kLabeledStates) != 0  */
+  int * label;
+};
+typedef struct ghmm_dmodel ghmm_dmodel;
   
 
 /** Frees the memory of a model.

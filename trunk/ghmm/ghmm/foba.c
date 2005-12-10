@@ -64,7 +64,7 @@ int ghmm_d_forward_init (ghmm_dmodel * mo, double *alpha_1, int symb, double *sc
   for (i = 0; i < mo->N; i++) {
     if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[i])) {
       /*no starting in states with order > 0 !!!*/
-      if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->s[i].order == 0) {
+      if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[i] == 0) {
         alpha_1[i] = mo->s[i].pi * mo->s[i].b[symb];
         /*printf("\nalpha1[%i]=%f\n",i,alpha_1[i]);*/
 
@@ -419,7 +419,7 @@ int ghmm_d_backward_termination (ghmm_dmodel *mo, const int *O, int length,
 	/* out_state is not silent */
 	if (!mo->silent[j_id]) {
 	  /* no emission history for the first symbol */
-	  if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->s[id].order==0) {
+	  if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[id]==0) {
 	    sum += mo->s[id].out_a[j] * mo->s[j_id].b[O[0]] * beta[0][j_id];
 	  }
 	}
@@ -446,7 +446,7 @@ int ghmm_d_backward_termination (ghmm_dmodel *mo, const int *O, int length,
       /* non-silent states */
       else {
 	/* no emission history for the first symbol */
-	if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->s[i].order==0) {
+	if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[i]==0) {
 	  sum += mo->s[i].pi * mo->s[i].b[O[0]] * beta[0][i];
 	}
       }
@@ -626,7 +626,7 @@ static int foba_label_initforward (ghmm_dmodel * mo, double *alpha_1, int symb,
   /* iterate over non-silent states */
   for (i = 0; i < mo->N; i++) {
     if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[i])) {
-      if (mo->s[i].label == label)
+      if (mo->label[i] == label)
         alpha_1[i] = mo->s[i].pi * mo->s[i].b[symb];
       else
         alpha_1[i] = 0.0;
@@ -684,8 +684,8 @@ int ghmm_dl_forward (ghmm_dmodel * mo, const int *O, const int *label, int len,
       for (i = 0; i < mo->N; i++) {
         if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[i])) {
 
-          /* printf("akt_ state %d, label: %d \t current Label: %d\n",i, mo->s[i].label, label[t]); */
-          if (mo->s[i].label == label[t]) {
+          /* printf("akt_ state %d, label: %d \t current Label: %d\n",i, mo->label[i], label[t]); */
+          if (mo->label[i] == label[t]) {
             e_index = get_emission_index (mo, i, O[t], t);
             if (-1 != e_index) {
               alpha[t][i] =
@@ -811,7 +811,7 @@ int ghmm_dl_backward (ghmm_dmodel * mo, const int *O, const int *label, int len,
   /* initialize */
   for (i = 0; i < mo->N; i++) {
     /* start only in states with the correct label */
-    if (label[len - 1] == mo->s[i].label)
+    if (label[len - 1] == mo->label[i])
       beta[len - 1][i] = 1.0;
     else
       beta[len - 1][i] = 0.0;
@@ -841,7 +841,7 @@ int ghmm_dl_backward (ghmm_dmodel * mo, const int *O, const int *label, int len,
       for (j = 0; j < mo->s[i].out_states; j++) {
         j_id = mo->s[i].out_id[j];
         /* The state has only a emission with probability > 0, if the label matches */
-        if (label[t] == mo->s[i].label) {
+        if (label[t] == mo->label[i]) {
           e_index = get_emission_index (mo, j_id, O[t + 1], t + 1);
           if (e_index != -1)
             emission = mo->s[j_id].b[e_index];
@@ -913,7 +913,7 @@ int ghmm_dl_forward_lean (ghmm_dmodel * mo, const int *O, const int *label,
       if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[i])) {
 
         /* printf("  akt_ state %d\n",i);*/
-        if (mo->s[i].label == label[t]) {
+        if (mo->label[i] == label[t]) {
           e_index = get_emission_index (mo, i, O[t], t);
           if (e_index != -1) {
             alpha_curr_col[i] = ghmm_d_forward_step (&mo->s[i], alpha_last_col,

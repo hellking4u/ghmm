@@ -198,7 +198,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
   ARRAY_CALLOC (states_wlabel, mo->N);
   ARRAY_CALLOC (label_max_out, mo->N);
   for (i = 0; i < mo->N; i++) {
-    c = mo->s[i].label;
+    c = mo->label[i];
     states_wlabel[c]++;
     if (c > no_labels)
       no_labels = c;
@@ -217,7 +217,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
       /* printf("Found State %d with initial probability %f\n", i, mo->s[i].pi); */
       exists = 0;
       while (hP != NULL) {
-        if (hP->hyp_c == mo->s[i].label) {
+        if (hP->hyp_c == mo->label[i]) {
           /* add entry to the gamma list */
           g_nr = hP->gamma_states;
           hP->gamma_id[g_nr] = i;
@@ -232,10 +232,10 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
           hP = hP->next;
       }
       if (!exists) {
-        ighmm_hlist_insert (&(h[0]), mo->s[i].label, NULL);
+        ighmm_hlist_insert (&(h[0]), mo->label[i], NULL);
         /* initiallize gamma-array with safe size (number of states) and add the first entry */
-        ARRAY_MALLOC (h[0]->gamma_a, states_wlabel[mo->s[i].label]);
-        ARRAY_MALLOC (h[0]->gamma_id, states_wlabel[mo->s[i].label]);
+        ARRAY_MALLOC (h[0]->gamma_a, states_wlabel[mo->label[i]]);
+        ARRAY_MALLOC (h[0]->gamma_id, states_wlabel[mo->label[i]]);
         h[0]->gamma_id[0] = i;
         h[0]->gamma_a[0] =
           log (mo->s[i].pi) +
@@ -289,7 +289,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
         b_index = get_emission_index (mo, i_id, o_seq[t], t);
         if (b_index < 0) {
           hP->gamma_a[i] = 1.0;
-          if (mo->s[i_id].order > t)
+          if (mo->order[i_id] > t)
             continue;
           else {
             str = ighmm_mprintf (NULL, 0,
@@ -494,7 +494,7 @@ static int ighmm_hlist_prop_forward (ghmm_dmodel * mo, hypoList * h, hypoList **
       i_id = hP->gamma_id[i];
       for (j = 0; j < mo->s[i_id].out_states; j++) {
         j_id = mo->s[i_id].out_id[j];
-        c = mo->s[j_id].label;
+        c = mo->label[j_id];
 
         /* create a new hypothesis with label c */
         if (!created[c]) {
