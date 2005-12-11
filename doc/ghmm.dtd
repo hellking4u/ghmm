@@ -21,7 +21,7 @@
 	code CDATA #REQUIRED
 >
 
-<!-- background distribution old CSV -->
+<!-- background distribution holds CSV -->
 <!ELEMENT background (#PCDATA)>
 <!ATTLIST background
 	name CDATA #REQUIRED
@@ -63,7 +63,8 @@
         fixed CDATA #IMPLIED
 >
 
-<!-- Name of a background distribution, order of the background diostribution and the states emission must match -->
+<!-- Name of a background distribution,
+     order of the background diostribution and the states emission must match -->
 <!ELEMENT backgroundName (#PCDATA)>
 
 <!-- class label id -->
@@ -80,7 +81,7 @@
 <!ELEMENT tiedTo (#PCDATA)>
 
 <!-- transitions - probability is a float in [0.0,1.0] for transition classes CSV -->
-<!ELEMENT transition (probability)>
+<!ELEMENT transition (probability+)>
 <!ATTLIST transition
 	source CDATA #REQUIRED
 	target CDATA #REQUIRED
