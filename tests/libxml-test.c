@@ -84,8 +84,8 @@ static int validModelTypes[28] = {
   (GHMM_kDiscreteHMM + GHMM_kTransitionClasses),
   (GHMM_kContinuousHMM),
   (GHMM_kContinuousHMM + GHMM_kTransitionClasses),
-  (GHMM_kPairHMM),
-  (GHMM_kPairHMM + GHMM_kTransitionClasses)
+  (GHMM_kPairHMM + GHMM_kDiscreteHMM),
+  (GHMM_kPairHMM + GHMM_kDiscreteHMM + GHMM_kTransitionClasses)
 };
 
 
@@ -143,14 +143,16 @@ static int parseCSVList(const char * data, unsigned int size, double * array) {
 
   int retval=0;
   int i;
-  char * * next;
+  char * * next, * estr;
 
   ARRAY_CALLOC(next, 1);
 
   for (i=0; i<size; i++) {
     array[i] = strtod(data, next);
     if (data == *next) {
-      GHMM_LOG(LCRITIC, "error in parsing CSV.");
+      estr = ighmm_mprintf(NULL, 0, "error in parsing CSV. entry %d of %d. (%s)", i, size, *next);
+      GHMM_LOG(LERROR, estr);
+      m_free(estr);
       retval=-1;
       break;
     }
@@ -160,9 +162,14 @@ static int parseCSVList(const char * data, unsigned int size, double * array) {
       break;
   }
 
-  if (i!=size-1)
+  if (i != size) {
     retval=-1;
+    estr = ighmm_mprintf(NULL, 0, "error in parsing CSV. sizes do not match (%d != %d)", i, size);
+    GHMM_LOG(LERROR, estr);
+    m_free(estr);
     
+  }
+
 STOP:
   m_free(next);
   return retval;
@@ -232,8 +239,8 @@ static int parseModelType(const char * data, unsigned int size) {
     str = ighmm_mprintf(NULL, 0, "%d is no known valid model type", modelType);
     GHMM_LOG(LERROR, str);
     m_free(str);
+    return -1;
   }
-
 
   return modelType;
 #undef CUR_PROC
@@ -260,9 +267,9 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
       code = getIntAttribute(symbol, (const xmlChar *)"code", &error);
       if (error || code!=M) {
 	str = ighmm_mprintf(NULL, 0, "non consecutive code %d == %d", code, M);
-	GHMM_LOG(LCRITIC, str);
+	GHMM_LOG(LERROR, str);
 	m_free(str);
-	/*return -1;*/
+	goto STOP;
       } else
 	M++;
     }
@@ -293,16 +300,45 @@ STOP:
 /*===========================================================================*/
 static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseBackground"
-  int retval=-1;
 
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
-  case GHMM_kDiscreteHMM:
-    break;
-  default:
-    GHMM_LOG(LCRITIC, "invalid modelType");}
+  int error, order;
+  int bgNr;
+  double * b;
+  char * s;
 
-  return retval;
+  assert(f->modelType & GHMM_kDiscreteHMM);
+
+  bgNr = f->model.d->bp->n++;
+
+  /* get order */
+  order = getIntAttribute(cur, (const xmlChar *)"order", &error);
+  if (error)
+    order=0;
+  else if (order && !(f->modelType & GHMM_kHigherOrderEmissions)) {
+    GHMM_LOG(LERROR, "background distribution has order > 0, but model is not higher order");
+    goto STOP;
+  }
+  f->model.d->bp->order[bgNr] = order;
+
+  /* get name */
+  s = (char *)getXMLCharAttribute(cur, (const xmlChar *)"name", &error);
+  f->model.d->bp->name[bgNr] = s;
+
+  /* get distribution */
+  s = (char *)xmlNodeGetContent(cur);
+
+  ARRAY_MALLOC(b, pow(f->model.d->bp->m, order+1));
+  if (-1 !=  parseCSVList(s, pow(f->model.d->bp->m, order+1), b))
+    f->model.d->bp->b[bgNr] = b;
+  else {
+    GHMM_LOG(LERROR, "Can not parse background CSV list.");
+    goto STOP;
+  }
+
+  return 0;
+STOP:
+  m_free(b);
+  return -1;
 #undef CUR_PROC
 }
 
@@ -310,11 +346,10 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 #define CUR_PROC "parseState"
 
-  int retval=-1;
-  int error, order=0, state;
+  int i, error, order=-28, state=-1442, fixed=-985, tied=-9354;
   double pi;
   double * emissions;
-  char * desc, * s;
+  char * desc, * s, * estr, * * serror;
 
   xmlNodePtr elem;
 
@@ -324,42 +359,114 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
 
   elem = cur->children;
   while (elem!=NULL) {
-    /* silent state */
+    /* ======== silent state ============================================== */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"silent"))) {
       if (f->modelType & GHMM_kDiscreteHMM)
 	f->model.d->silent[state] = 1;
     }
-    /* discrete state (possible higher order */
+
+    /* ======== discrete state (possible higher order) ==================== */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"discrete"))) {
       assert((f->modelType & GHMM_kDiscreteHMM) && ((f->modelType & GHMM_kPairHMM) == 0));
-      
-      /*order = getDoubleAttribute(elem, (const xmlChar *)"order", &error);*/
+
+      /* fixed is a propety of the distribution */
+      fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error);
+      f->model.d->s[state].fix = fixed;
+
+      /* order is optional for discrete */
+      if (f->modelType & GHMM_kHigherOrderEmissions) {
+	order = getIntAttribute(elem, (const xmlChar *)"order", &error);
+	if (error)
+	  order = 0;
+	f->model.d->order[state] = order;
+      } else
+	order = 0;
+
       s = (char *)xmlNodeGetContent(elem);
-      /*if (order>0)*/
       ARRAY_MALLOC(emissions, pow(f->model.d->M, order+1));
       parseCSVList(s, pow(f->model.d->M, order+1), emissions);
+      f->model.d->s[state].b = emissions;
+      m_free(s);
     }
-    /* continuous state */
+
+    /* ======== continuous state ========================================== */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"mixture"))) {
     }
-    /*pair hmm state */
+
+    /* ======== pair hmm state ============================================ */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"pair"))) {
     }
-    /* background */
+
+    /* -------- background name  ------------------------------------------ */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"backgroundName"))) {
+      
+      assert(f->modelType & GHMM_kBackgroundDistributions);
+
+      s = (char *)xmlNodeGetContent(elem);
+
+      for (i=0; i<f->model.d->bp->n; i++) {
+	if (!strcmp(s, f->model.d->bp->name[i])) {
+	  if (order != f->model.d->bp->order[i]) {
+	    estr = ighmm_mprintf(NULL, 0, "order of background %s and state %d does not match",
+				 f->model.d->bp->name[i], state);
+	    GHMM_LOG(LERROR, estr);
+	    m_free(estr);
+	    goto STOP;
+	  } else {	    
+	    f->model.d->background_id[state] = i;
+	    break;
+	  }
+	}
+      }
+      if (i == f->model.d->bp->n) {
+	estr = ighmm_mprintf(NULL, 0, "can't find background with name %s in state %d",
+			     s, state);
+	GHMM_LOG(LERROR, estr);
+	m_free(estr);
+	goto STOP;
+      }
+      m_free(s);
     }
-    /* position for graphical editing */
+
+    /* -------- tied to --------------------------------------------------- */
+    if ((!xmlStrcmp(elem->name, (const xmlChar *)"tiedTo"))) {
+
+      assert(f->modelType & GHMM_kTiedEmissions);
+
+      s = (char *)xmlNodeGetContent(elem);
+      tied = strtoul(s, serror, 10);
+      if (s != *serror && !*serror && state>=tied) {
+	f->model.d->tied_to[state] = tied;
+	if (f->model.d->tied_to[tied] != tied) {
+	  estr = ighmm_mprintf(NULL, 0, "state %d not tied to tie group leader", state);
+	  GHMM_LOG(LERROR, estr);
+	  m_free(estr);
+	  goto STOP;
+	}
+      } else {
+	estr = ighmm_mprintf(NULL, 0, "state %d tiedTo is invalid", state);
+	GHMM_LOG(LERROR, estr);
+	m_free(estr);
+	goto STOP;
+      }
+      m_free(s);
+    }
+
+    /* -------- position for graphical editing ---------------------------- */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"position"))) {
       f->xPosition[state] = getIntAttribute(cur, (const xmlChar *)"x", &error);
       f->yPosition[state] = getIntAttribute(cur, (const xmlChar *)"y", &error);
     }
+
     elem = elem->next;
   }
-    
-  retval=0;
+
+  return 0;
 STOP:
+  m_free(s);
+  m_free(desc);
   m_free(emissions)
-  return retval;
+  return -1;
 #undef CUR_PROC
 }
 
@@ -498,8 +605,7 @@ STOP:
 static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
 #define CUR_PROC "parseHMM"
 
-  int retval = -1;
-  char * str;
+  char * estr;
 
   xmlNodePtr child;
 
@@ -534,16 +640,16 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
 
     /* ========== ALPHABETS ================================================ */
     if ((!xmlStrcmp(child->name, (const xmlChar *)"alphabet"))) {
-      if (f->alphabets) {
-	alfa = parseAlphabet(doc, child, f);
-	if (alfa && f->nrAlphabets<MAX_ALPHABETS) {
-	  f->alphabets[f->nrAlphabets++] = alfa;
-	} else {
-	  GHMM_LOG(LCRITIC, "Error in parsing alphabets.");
-	}
-      } else {
+      if (!f->alphabets)
 	ARRAY_MALLOC(f->alphabets, MAX_ALPHABETS);
-      } 
+
+      alfa = parseAlphabet(doc, child, f);
+      if (alfa && f->nrAlphabets<MAX_ALPHABETS) {
+	f->alphabets[f->nrAlphabets++] = alfa;
+      } else {
+	GHMM_LOG(LERROR, "Error in parsing alphabets.");
+	goto STOP;
+      }
     }
 
     /* ========== LABEL ALPHABETS ========================================== */
@@ -552,38 +658,43 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
       if (alfa) {
 	f->labelAlphabet = alfa;
       } else {
-	GHMM_LOG(LCRITIC, "Error in parsing alphabets.");
+	GHMM_LOG(LERROR, "Error in parsing alphabets.");
+	goto STOP;
       }
     }
 
     /* ========== NODES ==================================================  */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"node"))) {
+    if ((!xmlStrcmp(child->name, (const xmlChar *)"state"))) {
       id = getIntAttribute(child, (const xmlChar *)"id", &error);
       if (error || id!=N) {
-        GHMM_LOG(LCRITIC, "non consecutive node ids");
-        return -1;
+        GHMM_LOG(LERROR, "non consecutive node ids");
+        goto STOP;
       }
-
       N++;
     }
+
     /* ========== EDGES ==================================================  */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"edge"))) {
+    if ((!xmlStrcmp(child->name, (const xmlChar *)"transition"))) {
       
       if (inDegree == NULL) {
-        ARRAY_CALLOC(inDegree, N+1);
-        ARRAY_CALLOC(outDegree, N+1);
+        ARRAY_CALLOC(inDegree, N);
+        ARRAY_CALLOC(outDegree, N);
       }
 
       source = getIntAttribute(child, (const xmlChar *)"source", &error);
       if (error || source<0 || source>N) {
-        GHMM_LOG(LCRITIC, "source node not existing");
-        return -1;
+	estr = ighmm_mprintf(NULL, 0, "source (%d) node not existing (%d)", source, error);
+	GHMM_LOG(LERROR, estr);
+	m_free(estr);
+        goto STOP;
       }
 
       target = getIntAttribute(child, (const xmlChar *)"target", &error);
       if (error || target<0 || target>N) {
-        GHMM_LOG(LCRITIC, "source node not existing");
-        return -1;
+	estr = ighmm_mprintf(NULL, 0, "target (%d) node not existing (%d)", target, error);
+        GHMM_LOG(LERROR, estr);
+	m_free(estr);
+        goto STOP;
       }
 
       inDegree[target]++;
@@ -596,13 +707,13 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
     child = child->next;
   }
 
-  str = ighmm_mprintf(NULL, 0, "Found HMM with %d states\n", N);
-  GHMM_LOG(LDEBUG, str);
-  m_free(str);
+  estr = ighmm_mprintf(NULL, 0, "Found HMM with %d states\n", N);
+  GHMM_LOG(LDEBUG, estr);
+  m_free(estr);
   for (i=0; i<N; i++) {
-    str = ighmm_mprintf(NULL, 0, "  %d\t%d\n", inDegree[i], outDegree[i]);
-    GHMM_LOG(LDEBUG, str);
-    m_free(str);
+    estr = ighmm_mprintf(NULL, 0, "  %d\t%d\n", inDegree[i], outDegree[i]);
+    GHMM_LOG(LDEBUG, estr);
+    m_free(estr);
   }
   /* allocating space in the file data struct */
   ARRAY_CALLOC(f->xPosition, N);
@@ -635,6 +746,9 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   default:
     GHMM_LOG(LCRITIC, "invalid modelType");
   }
+  /* freeing temporary data */
+  m_free(inDegree);
+  m_free(outDegree);
 
   /* allocating background distributions for approtiate models */
   if (modeltype & GHMM_kBackgroundDistributions) { 
@@ -644,6 +758,7 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
       ARRAY_CALLOC(bg_orders, N);
       ARRAY_CALLOC(bg_ptr, N);
       f->model.d->bp = ghmm_d_background_alloc(nrBackgrounds, M, bg_orders, bg_ptr);
+      ARRAY_CALLOC(f->model.d->bp->name, N);
       f->model.d->bp->n = 0;
       break;
     default:
@@ -662,10 +777,10 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
 	GHMM_LOG(LWARN, "Ignoring background distribution.");
       }
     }
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"node"))) {
+    if ((!xmlStrcmp(child->name, (const xmlChar *)"state"))) {
       parseState(doc, child, f);
     }
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"edge"))) {
+    if ((!xmlStrcmp(child->name, (const xmlChar *)"transition"))) {
       if (modeltype & GHMM_kTransitionClasses)
 	parseMultipleTransition(doc, child, f);
       else
@@ -674,17 +789,18 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
     child = child->next;
   }
 
-  retval=0;
+  return 0;
 STOP:
+  if (inDegree) {
+    m_free(inDegree);
+    m_free(outDegree);
+  }
   m_free(bg_orders);
   m_free(bg_ptr);
-  m_free(inDegree);
-  m_free(outDegree);
   m_free(f->xPosition);
   m_free(f->yPosition);
-
   m_free(f)
-  return retval;
+  return -1;
 #undef CUR_PROC
 }
 
