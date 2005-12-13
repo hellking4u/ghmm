@@ -7,13 +7,13 @@
     <symbol code="2">G</symbol>
     <symbol code="3">T</symbol>
   </alphabet>
-  <background name="intron_bg" order="0">
+  <background key="intron_bg" order="0">
     0.5,0.5,0.0,0.0
   </background>
   <state id="0" initial="1.0" desc="State 0">
     <discrete>0.25,0.25,0.25,0.25</discrete>
     <!-- optional -->
-    <backgroundName>intron_bg</backgroundName>
+    <backgroundKey>intron_bg</backgroundKey>
     <!-- optional -->
     <position x="100.0" y="200.0"/>
   </state>
@@ -36,3 +36,4 @@
     <probability>0.4</probability>
   </transition>
 </HMM>
+
