@@ -1376,8 +1376,10 @@ void ghmm_d_print (FILE * file, ghmm_dmodel * mo)
   ghmm_d_Pi_print (file, mo, "\t", ",", ";");
   fprintf (file, "\t};\n\tfix_state = vector {\n");
   ghmm_d_fix_print (file, mo, "\t", ",", ";");
-  fprintf (file, "\t};\n\tlabel_state = vector {\n");
-  ghmm_dl_print (file, mo, "\t", ",", ";");
+  if (mo->model_type & GHMM_kLabeledStates) {
+    fprintf (file, "\t};\n\tlabel_state = vector {\n");
+    ghmm_dl_print (file, mo, "\t", ",", ";");
+  }
   fprintf (file, "\t};\n};\n\n");
 }                               /* ghmm_d_print */
 
