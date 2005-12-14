@@ -5,6 +5,8 @@
 <!ATTLIST HMM
 	name CDATA #REQUIRED
 	type CDATA #REQUIRED
+        prior CDATA #IMPLIED
+        transitionClasses CDATA #IMPLIED
 >
 
 <!-- alphabet/emissionDomain can be more than one (pairHMMs) -->
@@ -42,34 +44,38 @@
 	order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
-<!ELEMENT mixture (normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*)>
+<!ELEMENT mixture (HMM*, normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*)>
 <!ELEMENT pair (#PCDATA)>
 <!-- different density functions for mixture-models -->
-<!ELEMENT normal (#PCDATA)>
+<!ELEMENT normal EMPTY>
 <!ATTLIST normal
         mean CDATA #REQUIRED
         variance CDATA #REQUIRED
         fixed CDATA #IMPLIED
         approx CDATA #IMPLIED
+        prior CDATA #IMPLIED
 >
-<!ELEMENT normalTruncatedLeft (#PCDATA)>
+<!ELEMENT normalTruncatedLeft EMPTY>
 <!ATTLIST normalTruncatedLeft
         mean CDATA #REQUIRED
         variance CDATA #REQUIRED
         min CDATA #REQUIRED
         fixed CDATA #IMPLIED
+        prior CDATA #IMPLIED
 >
-<!ELEMENT normalTruncatedRight (#PCDATA)>
+<!ELEMENT normalTruncatedRight EMPTY>
 <!ATTLIST normalTruncatedRight
         mean CDATA #REQUIRED
         variance CDATA #REQUIRED
         max CDATA #REQUIRED
         fixed CDATA #IMPLIED
+        prior CDATA #IMPLIED
 >
-<!ELEMENT uniform (#PCDATA)>
+<!ELEMENT uniform EMPTY>
 <!ATTLIST uniform
         min CDATA #REQUIRED
         max CDATA #REQUIRED
+        prior CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
 

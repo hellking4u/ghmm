@@ -314,8 +314,8 @@ STOP:
 static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDegree, int * outDegree) {
 #define CUR_PROC "parseState"
 
-  int i, error, order=-28, state=-1442, fixed=-985, tied=-9354, M, cos, aprox;
-  double pi;
+  int i, error, order=-28, state=-1442, fixed=-985, tied=-9354, M, aprox;
+  double pi, prior;
   double * emissions;
   char * desc, * s, * estr, * * serror;
 
@@ -371,27 +371,33 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"mixture"))) {
       assert(f->modelType & GHMM_kContinuousHMM);
       M = 0;
-      cos = 1; /*read this*/
       child = elem->children;
       while (child != NULL) {
-        M ++;
+        if ((!xmlStrcmp(child->name, (const xmlChar *)"normal")) || 
+            (!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedLeft")) ||
+            (!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedRight")) ||
+            (!xmlStrcmp(child->name, (const xmlChar *)"uniform"))){
+          M ++;
+          
+        }
         child = child->next;
       }
-      /*ghmm_c_print(stdout,&f->model.c);*/
-      ghmm_c_state_alloc( f->model.c->s + state, M, inDegree[state], outDegree[state], cos);
-           
+      ghmm_c_state_alloc( f->model.c->s + state, M, inDegree[state], outDegree[state], f->model.c->cos);
 
+      f->model.c->M = M;
+           
       fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error);
       if (error) /* optional atribute not defined */          
         fixed = 0;
       
-      f->model.d->s[state].fix = fixed;
+      f->model.c->s[state].fix = fixed;
       f->model.c->s[state].M = M;
       f->model.c->s[state].pi = pi;
       
       child = elem->children;
       
-      for(i=0;i<M;i++){  
+      i = 0;
+      while (child != NULL) {  
         if ((!xmlStrcmp(child->name, (const xmlChar *)"normal"))) {
           f->model.c->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
           f->model.c->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
@@ -401,30 +407,62 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	    f->model.c->s[state].density[i] = (ghmm_density_t)normal_approx;
           }else{
             f->model.c->s[state].density[i] = (ghmm_density_t)normal;
-          }                   
+          }          
+          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          if (error)
+            fixed = 0;
+          f->model.c->s[state].mixture_fix[i] = fixed;
+          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          if (error)
+            prior = 1.0;
+	  f->model.c->s[state].c[i] = prior;
+          i++;                  
         }
         if ((!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedLeft"))) {
           f->model.c->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
           f->model.c->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
           f->model.c->s[state].a[i] = getDoubleAttribute(child, (const xmlChar *)"min", &error);
-          f->model.c->s[state].density[i] = (ghmm_density_t)normal_left;           
+          f->model.c->s[state].density[i] = (ghmm_density_t)normal_left;
+          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          if (error)
+            fixed = 0;
+          f->model.c->s[state].mixture_fix[i] = fixed;
+          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          if (error)
+            prior = 1.0;
+	  f->model.c->s[state].c[i] = prior;
+          i++;          
         }
         if ((!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedRight"))) {
           f->model.c->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
           f->model.c->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
           f->model.c->s[state].a[i] = getDoubleAttribute(child, (const xmlChar *)"max", &error);
-          f->model.c->s[state].density[i] = (ghmm_density_t)normal_right;           
+          f->model.c->s[state].density[i] = (ghmm_density_t)normal_right;
+          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          if (error)
+            fixed = 0;
+          f->model.c->s[state].mixture_fix[i] = fixed;
+          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          if (error)
+            prior = 1.0;
+	  f->model.c->s[state].c[i] = prior;
+          i++;  
         }
         if ((!xmlStrcmp(child->name, (const xmlChar *)"uniform"))) {
           f->model.c->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"max", &error);
           f->model.c->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"min", &error);
-          f->model.c->s[state].density[i] = (ghmm_density_t)uniform;             
+          f->model.c->s[state].density[i] = (ghmm_density_t)uniform;
+          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          if (error)
+            fixed = 0;
+          f->model.c->s[state].mixture_fix[i] = fixed;
+          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          if (error)
+            prior = 1.0;
+	  f->model.c->s[state].c[i] = prior;
+          i++;      
         }
-        fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
-        f->model.c->s[state].mixture_fix[i] = fixed;
-        s = (char *)xmlNodeGetContent(child);
-        f->model.c->s[state].c[i] =  atof(s);
-        m_free(s);
+
         child = child->next;         
       }
     }
@@ -652,6 +690,8 @@ static fileData_s * parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   int nrBackgrounds, M=-1;
   int * inDegree = NULL;  
   int * outDegree = NULL;
+  int cos;
+  float prior;
 
   int modeltype=0;
   char * mt;
@@ -778,6 +818,14 @@ static fileData_s * parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):    
     f->model.c = ghmm_cmodel_calloc(N,modeltype);
+    prior = getDoubleAttribute(cur, (const xmlChar *)"prior", &error);
+    if (error) /* optional atribute not defined */          
+        prior = 0.0;      
+    f->model.c->prior = prior;
+    cos = getIntAttribute(cur, (const xmlChar *)"transitionClasses", &error);
+    if (error) /* optional atribute not defined */          
+        cos = 1;      
+    f->model.c->cos = cos;
     break;
   default:
     GHMM_LOG(LCRITIC, "invalid modelType");
