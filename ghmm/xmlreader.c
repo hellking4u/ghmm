@@ -657,8 +657,8 @@ static fileData_s * parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   char * mt;
   char * modelname;
 
-  int * bg_orders;
-  double * * bg_ptr;
+  int * bg_orders = NULL;
+  double * * bg_ptr = NULL;
 
   alphabet_s * alfa;
 
@@ -828,15 +828,13 @@ static fileData_s * parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   
   return f;
 STOP:
-  if (inDegree) {
-    m_free(inDegree);
-    m_free(outDegree);
-  }
-  m_free(bg_orders);
-  m_free(bg_ptr);
-  m_free(f->xPosition);
-  m_free(f->yPosition);
-  m_free(f)
+  free(inDegree);
+  free(outDegree);
+  free(bg_orders);
+  free(bg_ptr);
+  free(f->xPosition);
+  free(f->yPosition);
+  free(f);
   return NULL;
 #undef CUR_PROC
 }
