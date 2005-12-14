@@ -359,7 +359,14 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
   xmlNodePtr elem, child;
 
   state = getIntAttribute(cur, (const xmlChar *)"id", &error);
-  pi = getDoubleAttribute(cur, (const xmlChar *)"inital", &error);
+  pi = getDoubleAttribute(cur, (const xmlChar *)"initial", &error);
+  if (error) {
+    estr = ighmm_mprintf(NULL, 0, "can't read required intial probability for"
+			 "state %d", state);
+    GHMM_LOG(LERROR, estr);
+    goto STOP;
+  } else
+    
   desc = (char *)getXMLCharAttribute(cur, (const xmlChar *)"desc", &error);
 
   elem = cur->children;
@@ -373,6 +380,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     /* ======== discrete state (possible higher order) ==================== */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"discrete"))) {
       assert((f->modelType & GHMM_kDiscreteHMM) && ((f->modelType & GHMM_kPairHMM) == 0));
+      
+      f->model.d->s[state].pi = pi;
 
       /* fixed is a propety of the distribution */
       fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error);
@@ -414,7 +423,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       
       f->model.d->s[state].fix = fixed;
       f->model.c->s[state].M = M;
-      f->model.c->s[state].pi =pi;
+      f->model.c->s[state].pi = pi;
       
       child = elem->children;
       
