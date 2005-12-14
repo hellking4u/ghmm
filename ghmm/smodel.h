@@ -166,6 +166,12 @@ extern "C" {
 
   int ghmm_c_class_change_alloc (ghmm_cmodel * smo);
 
+/** Alloc d 
+    @return allocated cmodel, -1: error
+    @param N number of states in the model 
+    @param modeltype type of the model
+*/
+  ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype);
 
 /** Free memory ghmm_cmodel 
     @return 0: success, -1: error

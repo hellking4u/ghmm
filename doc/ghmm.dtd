@@ -42,7 +42,7 @@
 	order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
-<!ELEMENT mixture (normal+, normalTruncatedLeft+, normalTruncatedRight+, uniform+)>
+<!ELEMENT mixture (normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*)>
 <!ELEMENT pair (#PCDATA)>
 <!-- different density functions for mixture-models -->
 <!ELEMENT normal (#PCDATA)>
