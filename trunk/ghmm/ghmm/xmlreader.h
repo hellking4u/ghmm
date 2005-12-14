@@ -67,8 +67,6 @@ extern "C" {
       ghmm_dsmodel * ds;
     } model;
     
-    ghmm_cmodel * aux;
-    
     unsigned int nrAlphabets;
     alphabet_s * * alphabets;
     alphabet_s * labelAlphabet;
