@@ -44,6 +44,8 @@
 
 #include <float.h>
 #include <math.h>
+#include <assert.h>
+
 #include "ghmm.h"
 #include "mprintf.h"
 #include "mes.h"
@@ -103,6 +105,26 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 # undef CUR_PROC
 }                               /* ghmm_c_state_alloc */
 
+/*----------------------------------------------------------------------------*/
+ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
+#define CUR_PROC "ghmm_cmodel_calloc"
+  int i;
+  ghmm_cmodel * mo;
+
+  assert(modeltype & GHMM_kContinuousHMM);
+
+  ARRAY_CALLOC(mo, 1);
+
+  mo->N = N;
+  ARRAY_CALLOC(mo->s, N);
+  fprintf(stderr, "%d\n", N);
+  // XXX M, cos, prior to be included
+  return mo;
+STOP:
+  ghmm_c_free(&mo);
+  return NULL;
+#undef CUR_PROC
+}
 
 int ghmm_c_class_change_alloc (ghmm_cmodel * smo)
 {
