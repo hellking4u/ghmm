@@ -118,7 +118,7 @@ ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
   mo->N = N;
   ARRAY_CALLOC(mo->s, N);
   fprintf(stderr, "%d\n", N);
-  // XXX M, cos, prior to be included
+  /* XXX M, cos, prior to be included */
   return mo;
 STOP:
   ghmm_c_free(&mo);

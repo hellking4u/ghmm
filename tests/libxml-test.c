@@ -398,7 +398,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"mixture"))) {
       assert(f->modelType & GHMM_kContinuousHMM);
       M = 0;
-      cos = 1; // read this
+      cos = 1; /*read this*/
       child = elem->children;
       while (child != NULL) {
         M ++;
