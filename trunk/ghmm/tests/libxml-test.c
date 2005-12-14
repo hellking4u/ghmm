@@ -475,7 +475,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	    GHMM_LOG(LERROR, estr);
 	    m_free(estr);
 	    goto STOP;
-	  } else {	    
+	  } else {
 	    f->model.d->background_id[state] = i;
 	    break;
 	  }
@@ -794,6 +794,7 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   case GHMM_kDiscreteHMM:
     M = f->alphabets[0]->size;
     f->model.d = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree);
+    printf("N = %d\n", f->model.d->N);
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
     f->model.ds = NULL;
@@ -822,7 +823,7 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
       f->model.d->bp->n = 0;
       break;
     default:
-      GHMM_LOG(LCRITIC, "invalid modelType");}
+      GHMM_LOG(LERROR, "invalid modelType");}
   }
 
   child = cur->xmlChildrenNode;
@@ -856,10 +857,10 @@ static int parseHMM(xmlDocPtr doc, xmlNodePtr cur) {
   switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
     case GHMM_kContinuousHMM:
-      ghmm_c_print(stdout,&f->model.c);
+      ghmm_c_print(stdout, f->model.c);
     break;
     case GHMM_kDiscreteHMM:
-      ghmm_d_print(stdout,&f->model.d);
+      ghmm_d_print(stdout, f->model.d);
     default:
       break;
   }
@@ -930,6 +931,8 @@ static void parseHMMDocument(const char *filename) {
 int main(int argc, char **argv) {
 
   char *docname;
+
+  ghmm_set_loglevel(LDEBUG+1);
 
   if(argc <= 1) {
     printf("Usage: %s docname.xml", argv[0]);
