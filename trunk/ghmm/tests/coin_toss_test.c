@@ -144,7 +144,7 @@ int two_states_coin_toss()
   fprintf(stdout,"viterbi:\n");
   
   for(i=0;i<my_output->seq_len[0];i++){
-    printf(" %d, ", viterbi_path[i++]);
+    printf(" %d, ", viterbi_path[i]);
   }
   printf("\n");
 
