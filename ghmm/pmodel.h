@@ -100,6 +100,10 @@ struct ghmm_dpstate {
   int offset_y;
   /** which emission alphabet **/
   int alphabet;
+  /** x coordinate position for graph representation plotting **/
+  int xPosition;
+  /** y coordinate position for graph representation plotting **/
+  int yPosition;
 };
 typedef struct ghmm_dpstate ghmm_dpstate;
 

@@ -106,23 +106,17 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_c_state_alloc */
 
 /*----------------------------------------------------------------------------*/
-ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
+int ghmm_cmodel_calloc(ghmm_cmodel * mo, int N, int modeltype) {
 #define CUR_PROC "ghmm_cmodel_calloc"
   int i;
-  ghmm_cmodel * mo;
-
+  int res = -1;
   assert(modeltype & GHMM_kContinuousHMM);
-
-  ARRAY_CALLOC(mo, 1);
-
   mo->N = N;
   ARRAY_CALLOC(mo->s, N);
-  fprintf(stderr, "%d\n", N);
-  /* XXX M, cos, prior to be included */
-  return mo;
-STOP:
-  ghmm_c_free(&mo);
-  return NULL;
+  /* XXX M, cos, prior to be included */  
+  res = 0;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return (res);
 #undef CUR_PROC
 }
 

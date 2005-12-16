@@ -57,8 +57,10 @@ extern "C" {
   typedef struct alphabet_s alphabet_s;
   
   struct fileData_s {
+
+    int noModels;
     
-    int modelType;
+    int modelType;    
     
     union {
       ghmm_cmodel * c;
@@ -67,12 +69,12 @@ extern "C" {
       ghmm_dsmodel * ds;
     } model;
     
-    unsigned int nrAlphabets;
-    alphabet_s * * alphabets;
-    alphabet_s * labelAlphabet;
+/*     unsigned int nrAlphabets; */
+/*     alphabet_s * * alphabets; */
+/*     alphabet_s * labelAlphabet; */
     
-    int * xPosition;
-    int * yPosition;
+/*     int * xPosition; */
+/*     int * yPosition; */
   };
   typedef struct fileData_s fileData_s;
 
