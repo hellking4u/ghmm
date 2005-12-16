@@ -88,6 +88,10 @@ struct ghmm_dstate {
   int in_states;
   /** if fix == 1 --> b stays fix during the training */
   int fix;
+  /** x coordinate position for graph representation plotting **/
+  int xPosition;
+  /** y coordinate position for graph representation plotting **/
+  int yPosition;
 };
 typedef struct ghmm_dstate ghmm_dstate;
 

@@ -45,6 +45,9 @@
         fixed CDATA #IMPLIED
 >
 <!ELEMENT mixture (HMM*, normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*)>
+<!ATTLIST mixture
+        noModels CDATA #IMPLIED
+>
 <!ELEMENT pair (#PCDATA)>
 <!-- different density functions for mixture-models -->
 <!ELEMENT normal EMPTY>

@@ -110,6 +110,10 @@ extern "C" {
   /**  array of flags for fixing mixture components in the reestimation
         mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
     int *mixture_fix;
+  /** x coordinate position for graph representation plotting **/
+    int xPosition;
+  /** y coordinate position for graph representation plotting **/
+    int yPosition;
   };
   typedef struct ghmm_cstate ghmm_cstate;
 
@@ -166,12 +170,12 @@ extern "C" {
 
   int ghmm_c_class_change_alloc (ghmm_cmodel * smo);
 
-/** Alloc d 
+/** Alloc model
     @return allocated cmodel, -1: error
     @param N number of states in the model 
     @param modeltype type of the model
 */
-  ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype);
+  int ghmm_cmodel_calloc(ghmm_cmodel * mo, int N, int modeltype);
 
 /** Free memory ghmm_cmodel 
     @return 0: success, -1: error
