@@ -293,6 +293,7 @@ ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
 {
 #define CUR_PROC "ghmm_d_direct_read"
   int i, m_read, n_read, a_read, b_read, pi_read, len, prior_read, fix_read;
+  int mt_read=0;
   ghmm_dmodel *mo = NULL;
   double **a_matrix = NULL, **b_matrix = NULL;
   double *pi_vector = NULL;
@@ -305,12 +306,11 @@ ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
   if (s->err)
     goto STOP;
   while (!s->err && !s->eof && s->c - '}') {
-    ighmm_scanner_get_name (s);
-    if (strcmp (s->id, "M") && strcmp (s->id, "N") && strcmp (s->id, "Pi")
-        && strcmp (s->id, "A") && strcmp (s->id, "B") &&
-        strcmp (s->id, "multip") && strcmp (s->id, "prior") &&
-        strcmp (s->id, "fix_state")) {
-      ighmm_scanner_error (s, "unknown identifier");
+    ighmm_scanner_get_name(s);
+    if (strcmp(s->id, "M") && strcmp(s->id, "N") && strcmp(s->id, "Pi")
+        && strcmp(s->id, "A") && strcmp(s->id, "B") && strcmp(s->id, "multip")
+	&& strcmp(s->id, "prior") && strcmp(s->id, "fix_state") && strcmp(s->id, "ModelType")) {
+      ighmm_scanner_error(s, "unknown identifier");
       goto STOP;
     }
     ighmm_scanner_consume (s, '=');
@@ -397,6 +397,18 @@ ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
         goto STOP;
       }
       prior_read = 1;
+    }
+    else if (!strcmp (s->id, "ModelType")) {    /* Model type*/
+      if (mt_read) {
+        ighmm_scanner_error(s, "identifier ModelType twice");
+        goto STOP;
+      }
+      mo->model_type = ighmm_scanner_get_int(s);
+      if (mo->model_type & (GHMM_kLabeledStates + GHMM_kHigherOrderEmissions)) {
+	ighmm_scanner_error(s, "unsupported Model Type");
+	goto STOP;
+      }
+      mt_read = 1;
     }
     else if (!strcmp (s->id, "Pi")) {   /*Initial state probabilty */
       if (!n_read) {
@@ -1367,7 +1379,7 @@ void ghmm_d_print (FILE * file, ghmm_dmodel * mo)
 {
   fprintf (file, "HMM = {\n\tM = %d;\n\tN = %d;\n", mo->M, mo->N);
   fprintf (file, "\tprior = %.3f;\n", mo->prior);
-  fprintf (file, "\tModel Type = %d;\n", mo->model_type);
+  fprintf (file, "\tModelType = %d;\n", mo->model_type);
   fprintf (file, "\tA = matrix {\n");
   ghmm_d_A_print (file, mo, "\t", ",", ";");
   fprintf (file, "\t};\n\tB = matrix {\n");
