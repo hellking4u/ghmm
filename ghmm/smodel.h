@@ -175,7 +175,7 @@ extern "C" {
     @param N number of states in the model 
     @param modeltype type of the model
 */
-  int ghmm_cmodel_calloc(ghmm_cmodel * mo, int N, int modeltype);
+  ghmm_cmodel * ghmm_cmodel_calloc( int N, int modeltype);
 
 /** Free memory ghmm_cmodel 
     @return 0: success, -1: error
