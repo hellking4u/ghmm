@@ -5,7 +5,7 @@
 #       GHMM version __VERSION__, see http://ghmm.org
 #
 #       file:    xmlutil.py
-#       authors: Wasinee Rungsarityotin
+#       authors: Wasinee Rungsarityotin, Janne Grunau
 #
 #       Copyright (C) 1998-2004 Alexander Schliep
 #       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -37,7 +37,7 @@ from Graph import Graph, SubGraph
 
 from xml.dom.minidom import *
 import EditObjectAttributesDialog
-from EditObjectAttributesDialog import EditObjectAttributesDialog, ValidatingString, ValidatingInt, ValidatingFloat, PopupableInt, Probability, DefaultedInt, DefaultedString
+from EditObjectAttributesDialog import ValidatingString, ValidatingInt, ValidatingFloat, PopupableInt, Probability, DefaultedInt, DefaultedString
 
 import string
 import types

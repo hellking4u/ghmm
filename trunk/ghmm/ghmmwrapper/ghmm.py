@@ -2448,7 +2448,11 @@ class DiscreteEmissionHMM(HMM):
         strout.append( "\nModelflags: "+ self.printtypes(self.cmodel.model_type))
         strout.append(  "\nNumber of states: "+ str(hmm.N))
         strout.append(  "\nSize of Alphabet: "+ str(hmm.M))
-        order = ghmmhelper.arrayint2list(self.cmodel.order, self.N)
+        if self.cmodel.model_type &  16: #kHigherOrderEmissions
+            order = ghmmhelper.arrayint2list(self.cmodel.order, self.N)
+        else:
+            order = [0]*hmm.N
+
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
             strout.append( "\n\nState number "+ str(k) +":")
