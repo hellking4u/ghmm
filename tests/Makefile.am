@@ -19,7 +19,7 @@ CLEANFILES = ghmm.log ghmm.sum site.exp site.bak
 MAINTAINERCLEANFILES = Makefile.in
 # stuff from dejagnu
 
-INCLUDES=-I$(top_srcdir) @GHMM_CFLAGS@
+INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
 # in progress: test_sdfoba nullmodel ciscreen test_sdmodel 
@@ -35,7 +35,7 @@ noinst_PROGRAMS = root_finder_test \
                   sequences_old_format \
                   label_higher_order_test
 
-LDADD = $(top_builddir)/ghmm/.libs/libghmm.a @GHMM_LIBS@
+LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 

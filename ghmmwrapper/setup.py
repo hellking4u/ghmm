@@ -37,6 +37,7 @@
 
 from distutils.core import setup, Extension,DistutilsExecError
 import os
+import string
 
 # Adapted from Achim Gaedke's pygsl
 def runtool(tool, argument_string):
@@ -54,12 +55,14 @@ ghmmprefix  = runtool('ghmm-config' , '--prefix')
 swiglib = runtool('swig','-swiglib')
 swiglib_path  = os.path.split(swiglib)[0]
 ghmmlib_path  = runtool('ghmm-config','--lib-prefix')
+ghmmlib_libs  = string.split(runtool('ghmm-config','--libs'))[1:]
 
 print "********* PATHS ***********"
 print "ghmmprefix " ,ghmmprefix
 print "swiglib ", swiglib
 print "swiglib_path ",swiglib_path
 print "ghmmlib_path ", ghmmlib_path
+print "ghmmlib_libs ", ghmmlib_libs
 print "**************************"
 
 
@@ -86,7 +89,7 @@ setup(name="ghmmwrapper",
                                 'gql.c', 'ghmmwrapper_wrap.c'],
                                include_dirs = [ghmmprefix + '/include'],
                                library_dirs = [ghmmlib_path, swiglib_path],
-                               libraries = ['stdc++', 'm', 'ghmm', 'swigpy']
+                               libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z', 'swigpy'] #ghmmlib_libs.append('swigpy')
                                )
                      ]
      )

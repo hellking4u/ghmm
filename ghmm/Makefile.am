@@ -38,7 +38,7 @@
 SUBDIRS = .
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir) @GHMM_CFLAGS@
+INCLUDES = -I$(top_srcdir)
 lib_LTLIBRARIES = libghmm.la
 
 libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
