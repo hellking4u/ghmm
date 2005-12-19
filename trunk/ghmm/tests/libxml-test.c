@@ -27,10 +27,10 @@ int main(int argc, char **argv) {
       switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 			    + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
       case GHMM_kContinuousHMM:
-        ghmm_c_print(stdout, &f->model.c[i]);
+        ghmm_c_print(stdout, f->model.c[i]);
         break;
       case GHMM_kDiscreteHMM:
-        ghmm_d_print(stdout, &f->model.d[i]);
+        ghmm_d_print(stdout, f->model.d[i]);
       default:
         break;
       }

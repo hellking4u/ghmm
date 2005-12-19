@@ -60,6 +60,7 @@
 #include <ghmm/pviterbi_propagate.h>
 #include "pclasschange.h"
 #include <ghmm/obsolete.h>
+#include <ghmm/xmlreader.h>
 %}
 
 %include carrays.i
