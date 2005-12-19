@@ -236,10 +236,11 @@ else
         AC_MSG_ERROR(libxml-2.0 not found please install libxml)
 fi
 
-PKG_CHECK_MODULES(GHMM, [$pkg_modules])
-AC_SUBST(GHMM_CFLAGS)
-AC_SUBST(GHMM_LIBS)
-
+PKG_CHECK_MODULES(LIBXML2, [$pkg_modules])
+AC_SUBST(LIBXML2_CFLAGS)
+AC_SUBST(LIBXML2_LIBS)
+LIBS="$LIBS $LIBXML2_LIBS"
+CFLAGS="$CFLAGS $LIBXML2_CFLAGS"
 
 SUBDIRS="ghmm tools tests doc VisualC"
 if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
