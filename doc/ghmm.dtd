@@ -44,9 +44,9 @@
 	order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
-<!ELEMENT mixture (HMM*, normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*)>
+<!ELEMENT mixture (HMM+ | (normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*))>
 <!ATTLIST mixture
-        noModels CDATA #IMPLIED
+        noComponents CDATA #IMPLIED
 >
 <!ELEMENT pair (#PCDATA)>
 <!-- different density functions for mixture-models -->

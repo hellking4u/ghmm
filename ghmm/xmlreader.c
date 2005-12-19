@@ -713,7 +713,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   int * bg_orders = NULL;
   double * * bg_ptr = NULL;
 
-  alphabet_s * alfa;
+  alphabet_s * alfa, * * alphabets;
+  int nrAlphabets=0;
 
   child = cur->children;
 
@@ -722,31 +723,19 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   /* parse HMM for counting */
   GHMM_LOG(LINFO, "parseHMM to count ");
   while (child != NULL) {
-
     /* ========== ALPHABETS ================================================ */
-/*     if ((!xmlStrcmp(child->name, (const xmlChar *)"alphabet"))) { */
-/*       if (!f->alphabets) */
-/* 	ARRAY_MALLOC(f->alphabets, MAX_ALPHABETS); */
+    if ((!xmlStrcmp(child->name, (const xmlChar *)"alphabet"))) {
+      if (alphabets)
+	ARRAY_MALLOC(alphabets, MAX_ALPHABETS);
 
-/*       alfa = parseAlphabet(doc, child, f); */
-/*       if (alfa && f->nrAlphabets<MAX_ALPHABETS) { */
-/* 	f->alphabets[f->nrAlphabets++] = alfa; */
-/*       } else { */
-/* 	GHMM_LOG(LERROR, "Error in parsing alphabets."); */
-/* 	goto STOP; */
-/*       } */
-/*     } */
-
-    /* ========== LABEL ALPHABETS ========================================== */
-/*     if ((!xmlStrcmp(child->name, (const xmlChar *)"labelAlphabet"))) { */
-/*       alfa = parseAlphabet(doc, child, f); */
-/*       if (alfa) { */
-/* 	f->labelAlphabet = alfa; */
-/*       } else { */
-/* 	GHMM_LOG(LERROR, "Error in parsing alphabets."); */
-/* 	goto STOP; */
-/*       } */
-/*     } */
+      alfa = parseAlphabet(doc, child, f);
+      if (alfa && nrAlphabets<MAX_ALPHABETS) {
+	alphabets[nrAlphabets++] = alfa;
+      } else {
+	GHMM_LOG(LERROR, "Error in parsing alphabets.");
+	goto STOP;
+      }
+    }
 
     /* ========== NODES ==================================================  */
     if ((!xmlStrcmp(child->name, (const xmlChar *)"state"))) {
@@ -812,8 +801,10 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
     case GHMM_kDiscreteHMM:
-    case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
       ARRAY_CALLOC(f->model.d,f->noModels);
+      break;
+    case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+      ARRAY_CALLOC(f->model.ds,f->noModels);
       break;
     case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
     case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
@@ -833,15 +824,17 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
   case GHMM_kDiscreteHMM:
-    /*M = f->alphabets[0]->size; XXX*/
-    /*f->model.d[modelNo] = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree); XXX*/
+    assert(nrAlphabets == 1);
+    M = alphabets[0]->size;
+    f->model.d[modelNo] = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree);
+    f->model.d[modelNo]->alphabet = alphabets[0];
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
-     /* f->model.d[modelNo] = NULL; XXX*/
+    f->model.d[modelNo] = NULL;
     break;
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
-     /* f->model.dp[modelNo] = NULL; XXX*/
+    /* f->model.dp[modelNo] = NULL; XXX*/
     break;
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):    
@@ -879,6 +872,17 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   /* parse HMM for real */
   while (child != NULL) {
 
+    /* ========== LABEL ALPHABETS ========================================== */
+    if ((!xmlStrcmp(child->name, (const xmlChar *)"labelAlphabet"))) {
+      alfa = parseAlphabet(doc, child, f);
+      if (alfa) {
+	f->model.d[modelNo]->labelAlphabet = alfa;
+      } else {
+	GHMM_LOG(LERROR, "Error in parsing alphabets.");
+	goto STOP;
+      }
+    }
+    
     if ((!xmlStrcmp(child->name, (const xmlChar *)"background"))) {
       if (modeltype & GHMM_kBackgroundDistributions) {
 	parseBackground(doc, child, f, modelNo);
@@ -907,6 +911,7 @@ STOP:
   free(outDegree);
   free(bg_orders);
   free(bg_ptr);
+  free(alphabets);
   free(f);
   return -1;
 #undef CUR_PROC
@@ -950,12 +955,14 @@ fileData_s * parseHMMDocument(const char *filename) {
       cur = xmlDocGetRootElement(doc);
       if ((!xmlStrcmp(cur->name, (const xmlChar *)"mixture"))) {
         ARRAY_CALLOC(filedata, 1);        
-        filedata->noModels = getIntAttribute(cur, (const xmlChar *)"noModels", &error);                
+        filedata->noModels = getIntAttribute(cur, (const xmlChar *)"noComponents", &error);                
         child = cur->children;
         while (child!=NULL) {
           if ((!xmlStrcmp(child->name, (const xmlChar *)"HMM"))) {
             if (modelNo > filedata->noModels){
               str = ighmm_mprintf(NULL, 0, "The mixture has more models than defined");
+	      GHMM_LOG(LERROR, str);
+	      m_free(str);
             }else{
               parseHMM(filedata,doc, child, modelNo);
               modelNo++;
@@ -965,9 +972,13 @@ fileData_s * parseHMMDocument(const char *filename) {
         }
         if (modelNo < filedata->noModels){
           str = ighmm_mprintf(NULL, 0, "The mixture has less models than defined");
+	  GHMM_LOG(LERROR, str);
+	  m_free(str);
         }
       }else{
         str = ighmm_mprintf(NULL, 0, "The file does not contains the appropriate root %s", filename);
+	GHMM_LOG(LERROR, str);
+	m_free(str);
       }
     }
 
