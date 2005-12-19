@@ -47,14 +47,6 @@ extern "C" {
 
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: xmlreader) */
-
-  struct alphabet_s {
-    int id;
-    char * description;
-    unsigned int size;
-    char * * symbols;
-  };
-  typedef struct alphabet_s alphabet_s;
   
   struct fileData_s {
 
