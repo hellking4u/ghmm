@@ -56,6 +56,7 @@ libghmm_la_SOURCES= ghmm.h \
                     sequence.c sequence.h \
                     psequence.c psequence.h \
                     xmlreader.c xmlreader.h \
+                    xmlwriter.c xmlwriter.h \
                     model.c model.h \
                     foba.c foba.h \
                     viterbi.c viterbi.h \
@@ -86,6 +87,7 @@ pkginclude_HEADERS = ghmm.h \
                   sequence.h \
 		  psequence.h \
                   xmlreader.h \
+                  xmlwriter.h \
                   model.h \
 		  foba.h \
                   viterbi.h \
