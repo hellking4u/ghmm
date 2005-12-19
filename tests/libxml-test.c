@@ -4,12 +4,13 @@
 
 #include <ghmm/ghmm.h>
 #include <ghmm/xmlreader.h>
+#include <ghmm/xmlwriter.h>
 
 
 /*===========================================================================*/
 int main(int argc, char **argv) {
 
-  char *docname;
+  char *docname, *writename;
   fileData_s * f;
   int i;
   ghmm_set_loglevel(5+1);
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
   if (f) {
     for (i=0;i<f->noModels; i++){
       switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			    + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+			      + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
       case GHMM_kContinuousHMM:
         ghmm_c_print(stdout, f->model.c[i]);
         break;
@@ -35,6 +36,11 @@ int main(int argc, char **argv) {
         break;
       }
     }
+  }
+
+  if (argc > 2) {
+    writename = argv[2];
+    writeHMMDocument(f, writename);
   }
 
   return(0);
