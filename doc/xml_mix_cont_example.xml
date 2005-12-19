@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE mixture SYSTEM "ghmm.dtd">
-<mixture noModels="3">
+<mixture noComponents="3">
 <HMM name="example" type="continuous" prior="0.1"> 
   <state id="0" initial="1.0" desc="State 0">
     <mixture>
