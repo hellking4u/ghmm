@@ -347,9 +347,12 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       
       f->model.d[modelNo]->s[state].pi = pi;
 
-      /* fixed is a propety of the distribution */
+      /* fixed is a propety of the distribution and optional */
       fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error);
-      f->model.d[modelNo]->s[state].fix = fixed;
+      if (error)
+	fixed = 0;
+      else
+	f->model.d[modelNo]->s[state].fix = fixed;
 
       /* order is optional for discrete */
       if (f->modelType & GHMM_kHigherOrderEmissions) {
