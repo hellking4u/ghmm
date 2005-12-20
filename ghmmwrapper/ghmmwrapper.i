@@ -107,6 +107,35 @@
 #endif /* GHMM_OBSOLETE */
 
 
+#define kNotSpecified (0)
+
+/** Model is a left-right */
+#define kLeftRight (1)
+
+/** Model contains silent states (i.e., states without emissions) */
+#define kSilentStates (1 << 2)
+
+/** Model has states with tied emission probabilities */
+#define kTiedEmissions (1 << 3)
+
+/** Model has states emission probabilities conditioned on previous orders */
+#define kHigherOrderEmissions (1 << 4)
+
+/** Model has background distributions */
+#define kBackgroundDistributions (1 << 5)
+
+/** Model is a class HMM with labeled states */
+#define kLabeledStates (1 << 6)
+
+#define kTransitionClasses (1 << 7)
+
+#define kDiscreteHMM (1 << 8)
+
+#define kContinuousHMM (1 << 9)
+
+#define kPairHMM (1 << 10)
+
+
 /*=============================================================================================
   =============================== Random Number Generator (RNG) ================================= */
 
@@ -1027,6 +1056,43 @@ extern int ghmm_d_background_apply(ghmm_dmodel *mo, double* background_weight);
 %}
 
 /*=============================================================================================
+  =============================== xml reader (xml_reader.c)  ================================= */
+
+/** @name fileData_s
+    The basic structure that keeps data concerning readed model
+*/
+struct fileData_s {
+
+    int noModels;
+    
+    int modelType;    
+    
+    union {
+      ghmm_cmodel * * c;
+      ghmm_dmodel * * d;
+      ghmm_dpmodel * * dp;
+      ghmm_dsmodel * * ds;
+    } model;
+    
+};
+typedef struct fileData_s fileData_s;
+
+
+extern fileData_s * parseHMMDocument(const char *filename);
+
+
+%inline%{
+
+  ghmm_cmodel * * get_model_c(fileData_s *f) {return f->model.c;}
+
+  ghmm_dmodel * * get_model_d(fileData_s *f) {return f->model.d;}
+
+  ghmm_dpmodel * * get_model_dp(fileData_s *f) {return f->model.dp;}
+  
+%}
+
+
+/*=============================================================================================
   =============================== labeled models (model.c)  ============================================== */
 
 extern ghmm_dseq *ghmm_dl_generate_sequences(ghmm_dmodel* mo, int seed, int global_len, long seq_number, int Tmax);
@@ -1280,6 +1346,13 @@ extern int ghmm_c_class_change_alloc(ghmm_cmodel *smo);
     @return 0: success, -1: error
     @param smo  address of a pointer to a ghmm_cmodel */
 extern int     ghmm_c_free(ghmm_cmodel **smo);
+
+/** Reads an XML file with specifications for one or more smodels.
+    All parameters in matrix or vector form.
+   @return vector of read smodels
+   @param filename   input xml file
+   @param smo_number  number of smodels to read*/
+extern  ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number);
 
 #ifdef GHMM_OBSOLETE
 /** Reads an ascii file with specifications for one or more models.
