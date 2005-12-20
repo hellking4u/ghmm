@@ -425,11 +425,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 
       f->model.c[modelNo]->M = M;
            
-      fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error);
-      if (error) /* optional atribute not defined */          
-        fixed = 0;
-      
-      f->model.c[modelNo]->s[state].fix = fixed;
+/*       fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error); */
+/*       if (error) /* optional atribute not defined */  
+/*         fixed = 0; */      
+/*      f->model.c[modelNo]->s[state].fix = 0;*/
+
       f->model.c[modelNo]->s[state].M = M;
       f->model.c[modelNo]->s[state].pi = pi;
       
@@ -441,12 +441,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
           f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
           f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          aprox = getIntAttribute(child, (const xmlChar *)"aprox", &error);
-          if (aprox){
-	    f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_approx;
-          }else{
+          aprox = getIntAttribute(child, (const xmlChar *)"aproximate", &error);
+/*           if (aprox){ */
+/* 	    f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_approx; */
+/*           }else{ */
             f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          }          
           fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
           if (error)
             fixed = 0;
@@ -504,6 +503,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 
         child = child->next;         
       }
+
+      /*XXX - check if all mixtures are fixed, and set state flag */
     }
 
     /* ======== pair hmm state ============================================ */
@@ -694,9 +695,9 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f
     out_state = f->model.d[modelNo]->s[source].out_states++;
     in_state  = f->model.d[modelNo]->s[target].in_states++;
     f->model.d[modelNo]->s[source].out_id[out_state] = target;
-/*XXX    f->model.d[modelNo]->s[source].out_a[out_state]  = probs; */
+/*     f->model.d[modelNo]->s[source].out_a[out_state]  = probs; */
     f->model.d[modelNo]->s[target].in_id[in_state]   = source;
-/*XXX     f->model.d[modelNo]->s[target].in_a[in_state]    = probs; */
+/*     f->model.d[modelNo]->s[target].in_a[in_state]    = probs; */
     break;
   case (GHMM_kDiscreteHMM + GHMM_kPairHMM + GHMM_kTransitionClasses):
     out_state = f->model.dp[modelNo]->s[source].out_states++;

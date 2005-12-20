@@ -262,6 +262,14 @@ extern "C" {
   int ghmm_c_individual_likelihoods (ghmm_cmodel * smo, ghmm_cseq * sqd,
                                      double *log_ps);
 
+
+/** Reads an XML file with specifications for one or more smodels.
+    All parameters in matrix or vector form.
+   @return vector of read smodels
+   @param filename   input xml file
+   @param smo_number  number of smodels to read*/
+  ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number);
+
 /**
    Prints one ghmm_cmodel in matrix form.
    @param file     output file
