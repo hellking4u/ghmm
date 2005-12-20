@@ -51,7 +51,7 @@ for the same object is observation resp. observation sequence.
 The objects one has to deal with in HMM modelling are the following
 
 1) The domain the emissions come from: the EmissionDomain. Domain
-   is to be understood mathematically and to encompass both discrete,
+is to be understood mathematically and to encompass both discrete,
   finite alphabets and fields such as the real numbers or intervals
    of the reals.
 
@@ -188,6 +188,11 @@ ghmmwrapper.set_pylogging(logwrapper)
 # Initialize global random number generator by system time
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
+
+##NORMAL = 0;
+##NORMAL_RIGHT = 1;
+##NORMAL_LEFT = 3;
+##UNIFORM = 4;
 
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
@@ -483,10 +488,10 @@ class DiscreteDistribution(Distribution):
         return self.prob_vector
 
 
-class ContinousDistribution(Distribution):
+class ContinuousDistribution(Distribution):
     pass
 
-class UniformDistribution(ContinousDistribution):
+class UniformDistribution(ContinuousDistribution):
     
     def __init__(self, domain):
         self.emissionDomain = domain
@@ -500,7 +505,7 @@ class UniformDistribution(ContinousDistribution):
     def get(self):
         return (self.max, self.min)
 
-class GaussianDistribution(ContinousDistribution):
+class GaussianDistribution(ContinuousDistribution):
     # XXX attributes unused at this point
     def __init__(self, domain):
         self.emissionDomain = domain
@@ -528,7 +533,7 @@ class TruncGaussianDistribution(GaussianDistribution):
     def get(self):
         return (self.mu, self.sigma, self.trunc) 
 
-class GaussianMixtureDistribution(ContinousDistribution):
+class GaussianMixtureDistribution(ContinuousDistribution):
     # XXX attributes unused at this point
     def __init__(self, domain):
         self.emissionDomain = domain
@@ -546,7 +551,9 @@ class GaussianMixtureDistribution(ContinousDistribution):
     def get(self):
         pass
 
-class ContinousMixtureDistribution(ContinousDistribution):
+class ContinuousMixtureDistribution(ContinuousDistribution):
+    
+
     
     def __init__(self, domain):
         self.emissionDomain = domain
@@ -556,7 +563,7 @@ class ContinousMixtureDistribution(ContinousDistribution):
         self.fix = []
 
     def add(self,w,fix,distribution):
-        assert isinstance(distribution,ContinousDistribution)
+        assert isinstance(distribution,ContinuousDistribution)
         self.M = self.M + 1
         self.weight.append(w)
         self.component.append(distribution)
@@ -568,7 +575,7 @@ class ContinousMixtureDistribution(ContinousDistribution):
 
     def set(self, index, w, fix, distribution):
         assert M > index
-        assert isinstance(distribution,ContinousDistribution)
+        assert isinstance(distribution,ContinuousDistribution)
         self.weight[i] = w
         self.components[i] = distribution
 	if isinstance(distribution,UniformDistribution): 
@@ -1341,11 +1348,6 @@ class HMMOpenFactory(HMMFactory):
             m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             return m
 
-        elif self.defaultFileType == GHMM_FILETYPE_XML_C:
-            # XXXML - to be done #
-            # check the type of hmm
-            # start the model
-            return None        
         else:   
             # HMMER format models
             h = modhmmer.hmmer(fileName)
@@ -1364,28 +1366,59 @@ class HMMOpenFactory(HMMFactory):
     
     def all(self, fileName):
         
+        result = []
+        
         if not os.path.exists(fileName):
           raise IOError, 'File ' + str(fileName) + ' not found.'
+      
+        if self.defaultFileType == GHMM_FILETYPE_SMO:
+          # MO & SMO Files
+          (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+          nrModelPtr = ghmmwrapper.int_array(1)
+          if hmmClass == DiscreteEmissionHMM:
+              models = hmmwrapper.ghmm_d_read(fileName, nrModelPtr)
+              getPtr = ghmmwrapper.get_model_ptr
+          else:
+              models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
+              getPtr = ghmmwrapper.get_smodel_ptr
 
-        # MO & SMO Files
-        (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
-        nrModelPtr = ghmmwrapper.int_array(1)
-        if hmmClass == DiscreteEmissionHMM:
-            models = hmmwrapper.ghmm_d_read(fileName, nrModelPtr)
-            getPtr = ghmmwrapper.get_model_ptr
-        else:
-            models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
-            getPtr = ghmmwrapper.get_smodel_ptr
+          nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
 
-        nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
-        result = []
-        for i in range(nrModels):
-            cmodel = getPtr(models, i)
-            m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-            result.append(m)
-        return result
+          for i in range(nrModels):
+              cmodel = getPtr(models, i)
+              m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+              result.append(m)
+          return result
         
+        elif self.defaultFileType == GHMM_FILETYPE_XML_C:
+            
+            # check the type of hmm
+            # start the model
+            
+    	    #(hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+            file = ghmmwrapper.parseHMMDocument(fileName)
+            nrModels = file.noModels
+            modelType = file.modelType
 
+            if( modelType == ghmmwrapper.kContinuousHMM):                
+                emission_domain = Float()
+                distribution = ContinuousMixtureDistribution
+                hmmClass = ContinuousMixtureHMM
+                getPtr = ghmmwrapper.get_smodel_ptr
+                models = ghmmwrapper.get_model_c(file)
+            #elif( modelType == ):
+            #    pass
+            else:
+              log.warning("Non-supported model type")
+
+            for i in range(nrModels):
+              cmodel = getPtr(models,i)
+              m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+              result.append(m)
+            return result
+        else:       
+            return None
+        
     def determineHMMClass(self, fileName):
         #
         # smo files 
@@ -1500,6 +1533,7 @@ def readMultipleHMMERModels(fileName):
     
 
 class HMMFromMatricesFactory(HMMFactory):
+    
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None, densities = None):
         if isinstance(emissionDomain,Alphabet):
             
@@ -1766,7 +1800,7 @@ class HMMFromMatricesFactory(HMMFactory):
 		
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
                 
-            elif isinstance(distribution, ContinousMixtureDistribution):
+            elif isinstance(distribution, ContinuousMixtureDistribution):
                  #print " ** mixture model"
                  
                  # Interpretation of B matrix for the mixture case (Example with three states and two components each):
@@ -1776,7 +1810,7 @@ class HMMFromMatricesFactory(HMMFactory):
                  #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
                  #      ]
 
-                assert densities == None, "Continous Mixture Distributions need a density type array"
+                assert densities != None, "Continuous Mixture Distributions need a density type array"
                  
                 cmodel = ghmmwrapper.new_smodel()
                 cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
@@ -1809,7 +1843,7 @@ class HMMFromMatricesFactory(HMMFactory):
 		    state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
-                    state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weights. Unused
+                    state.c = ghmmhelper.list2arrayd([1.0]) # Mixture weight
                     mu_list = B[i][0]
                     sigma_list = B[i][1]
                     a_list = B[i][2]
@@ -1821,13 +1855,14 @@ class HMMFromMatricesFactory(HMMFactory):
 		    state.a = ghmmhelper.list2arrayd(a_list)
 
                     # setting densities types (all normal by default)                    
-                    densities = ghmmwrapper.arraydensity(cmodel.M)
-                    state.density = densities
+                    densit = ghmmwrapper.arraydensity(cmodel.M)
+                    state.density = densit
 
                     mix_fix = [0] * state.M
-                    for j in range(state.M):
+
+                    for j in range(state.M):                   
                       ghmmwrapper.set_density(state,j,densities[i][j])
-                      if densities[i][j] == UNIFORM:
+                      if densities[i][j] == ghmmwrapper.uniform:
                         mix_fix[j] = 1
 
                     # mixture fixing deactivated by default
@@ -1851,7 +1886,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 cmodel.s = states
 		
 		
-                return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
+                return ContinuousMixtureHMM(emissionDomain, distribution, cmodel)
             else:
                 raise GHMMError(type(distribution),
                                 "Cannot construct model for this domain/distribution combination") 
@@ -2323,7 +2358,7 @@ class HMM:
         """ Accessor function for the emission distribution parameters of state 'i'.
 
             For discrete models the distribution over the symbols is returned,
-            for continous models a matrix of the form
+            for continuous models a matrix of the form
             [ [mu_1, sigma_1, weight_1] ... [mu_M, sigma_M, weight_M]  ] is returned.
 
         """
@@ -2336,7 +2371,7 @@ class HMM:
                 emissions = ghmmhelper.arrayd2list(state.b, self.M)
             return emissions
 
-        elif self.emissionDomain.CDataType == "double": # continous emissions
+        elif self.emissionDomain.CDataType == "double": # continuous emissions
             state = self.getStatePtr(self.cmodel.s,i)
             emParam = []
             for i in range(self.M):
@@ -3749,7 +3784,7 @@ class GaussianEmissionHMM(HMM):
         if not isinstance(trainingSequences, SequenceSet) and not isinstance(trainingSequences, EmissionSequence):
             raise TypeError, "baumWelch requires a SequenceSet or EmissionSequence object."
         
-        assert self.emissionDomain.CDataType == "double", "Continous sequence needed."
+        assert self.emissionDomain.CDataType == "double", "Continuous sequence needed."
         
         self.baumWelchSetup(trainingSequences, nrSteps)
         ghmmwrapper.ghmm_c_baum_welch(self.BWcontext)        
@@ -4026,18 +4061,18 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return [A,B,pi]
 
 
-class ContinousMixtureHMM(GaussianMixtureHMM):
-     """ HMMs with mixtures of any Continous Distributions as emissions.
+class ContinuousMixtureHMM(GaussianMixtureHMM):
+     """ HMMs with mixtures of any Continuous Distributions as emissions.
          Optional features:
              - fixing mixture components in training
          
      
      """
 
-     NORMAL = 0
-     NORMAL_RIGHT =1
-     NORMAL_LEFT=3
-     UNIFORM=4
+##     NORMAL = 0
+##     NORMAL_RIGHT =1
+##     NORMAL_LEFT=3
+##     UNIFORM=4
      
      def __init__(self, emissionDomain, distribution, cmodel):
          GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
@@ -4058,10 +4093,11 @@ class ContinousMixtureHMM(GaussianMixtureHMM):
         sigma = ghmmwrapper.get_arrayd(state.u,comp)
         weigth = ghmmwrapper.get_arrayd(state.c,comp)
         type = ghmmwrapper.get_density(state,comp)
-        if ((type == UNIFORM) or (type == NORMAL)):
+        print 'olha o tipo', type
+        if ((type == ghmmwrapper.uniform) or (type == ghmmwrapper.normal)):
           return (type, mu, sigma, weigth)
         else:
-          a = ghmmwrapper.get_arrayint(state.a,comp)
+          a = ghmmwrapper.get_arrayd(state.a,comp)
           return (type, mu, sigma, a, weigth)
 
      def setEmission(self, i, comp, type, (mu, sigma, weight, a)):
