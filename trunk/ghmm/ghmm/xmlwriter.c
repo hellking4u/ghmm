@@ -360,12 +360,13 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, fileData_s * f,
   /* writing positions */
   if ((f->model.d[moNo]->s[sNo].xPosition > 0)
       && (f->model.d[moNo]->s[sNo].xPosition > 0)) {
-
     if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
       GHMM_LOG(LERROR, "failed to start position element"); goto STOP;}
-    if (xmlTextWriterWriteFormatAttribute(writer, "x", "%d", f->model.d[moNo]->s[sNo].xPosition) < 0) {
+    if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",
+					  f->model.d[moNo]->s[sNo].xPosition) < 0) {
       GHMM_LOG(LERROR, "failed to write x position"); goto STOP;    }
-    if (xmlTextWriterWriteFormatAttribute(writer, "y", "%d", f->model.d[moNo]->s[sNo].yPosition) < 0) {
+    if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "y", "%d",
+					  f->model.d[moNo]->s[sNo].yPosition) < 0) {
       GHMM_LOG(LERROR, "failed to write y position"); goto STOP;}
     if (xmlTextWriterEndElement(writer) < 0) {
       GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement"); goto STOP;}
@@ -506,7 +507,22 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
 
   }
 
+  /* writing positions */
+  if ((f->model.c[moNo]->s[sNo].xPosition > 0)
+      && (f->model.c[moNo]->s[sNo].xPosition > 0)) {
+    if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
+      GHMM_LOG(LERROR, "failed to start position element"); goto STOP;}
+    if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",
+					  f->model.c[moNo]->s[sNo].xPosition) < 0) {
+      GHMM_LOG(LERROR, "failed to write x position"); goto STOP;    }
+    if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "y", "%d",
+					  f->model.c[moNo]->s[sNo].yPosition) < 0) {
+      GHMM_LOG(LERROR, "failed to write y position"); goto STOP;}
+    if (xmlTextWriterEndElement(writer) < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement"); goto STOP;}
+  }
 
+  /* end state tag */
   rc = xmlTextWriterEndElement(writer);
   if (rc < 0) {
     GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
