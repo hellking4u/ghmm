@@ -125,6 +125,10 @@ static char * strModeltype(int modelType) {
     GHMM_LOG(LERROR, "can't write models with unspecified modeltype");
     goto STOP;
   }
+
+  /* overwrite the last space */
+  end = strlen(mt);
+  mt[end-1] = '\0':
   
   return mt;
  STOP:
