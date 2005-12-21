@@ -96,6 +96,7 @@ static int writeDoubleAttribute(xmlTextWriterPtr writer, const char * name, doub
 static char * strModeltype(int modelType) {
 #define CUR_PROC "strModelType"
 
+  int end;
   char * mt;
 
   ARRAY_CALLOC(mt, 200);
@@ -128,7 +129,7 @@ static char * strModeltype(int modelType) {
 
   /* overwrite the last space */
   end = strlen(mt);
-  mt[end-1] = '\0':
+  mt[end-1] = '\0';
   
   return mt;
  STOP:
