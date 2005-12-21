@@ -364,7 +364,7 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, fileData_s * f,
       GHMM_LOG(LERROR, "failed to start position element"); goto STOP;}
     if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",
 					  f->model.d[moNo]->s[sNo].xPosition) < 0) {
-      GHMM_LOG(LERROR, "failed to write x position"); goto STOP;    }
+      GHMM_LOG(LERROR, "failed to write x position"); goto STOP;}
     if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "y", "%d",
 					  f->model.d[moNo]->s[sNo].yPosition) < 0) {
       GHMM_LOG(LERROR, "failed to write y position"); goto STOP;}
@@ -890,6 +890,9 @@ void writeHMMDocument(fileData_s * f, const char *file) {
     goto STOP;
   }
 
+  /* indenting writer to circumvent no space between SYSTEM and PUBLIC identifier */
+  xmlTextWriterSetIndent(writer, 1);
+
   /* Start the document with the xml default for the version,
    * encoding ISO 8859-1 and the default for the standalone
    * declaration. */
@@ -899,24 +902,33 @@ void writeHMMDocument(fileData_s * f, const char *file) {
     goto STOP;
   }
 
+  /* Set the Document type declaration at the beginning of the document */
+  rc = xmlTextWriterWriteDTD(writer, BAD_CAST "mixture",
+			     BAD_CAST "-//ghmm.org//DOCUMENT ghmm V1.0//EN",
+			     BAD_CAST "http://ghmm.sourceforge.net/xml/1.0/ghmm.dtd",
+			     NULL);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "failed to write the DocType"); goto STOP;}
+
+
   rc = xmlTextWriterStartElement(writer, BAD_CAST "mixture");
   if (rc < 0) {
     GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement\n");
     goto STOP;;
   }
 
-  if (writeIntAttribute(writer, "noComponents", f->noModels)) {
-    GHMM_LOG_QUEUED(LERROR);
-    goto STOP;
-  }
+  if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "version", "%g", 1.0) < 0) {
+    GHMM_LOG(LERROR, "failed to write version 1.0"); goto STOP;}
 
+  if (f->noModels > 1)
+    if (writeIntAttribute(writer, "noComponents", f->noModels)) {
+      GHMM_LOG_QUEUED(LERROR); goto STOP;}
+
+  /* write all models */
   for (i=0; i<f->noModels; i++)
     writeHMM(writer, f, i);
 
-  /* Here we could close the elements ORDER and EXAMPLE using the
-   * function xmlTextWriterEndElement, but since we do not want to
-   * write any other elements, we simply call xmlTextWriterEndDocument,
-   * which will do all the work. */
+  /* end mixture */
   rc = xmlTextWriterEndDocument(writer);
   if (rc < 0) {
     GHMM_LOG(LERROR, "Error at xmlTextWriterEndDocument");
