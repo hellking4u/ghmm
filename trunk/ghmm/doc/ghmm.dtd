@@ -3,9 +3,9 @@
 <!--hidden markov model -->
 <!ELEMENT HMM (alphabet*, classAlphabet?, background*, state+, transition+)>
 <!ATTLIST HMM
-	name CDATA #REQUIRED
-	type CDATA #REQUIRED
-        prior CDATA #IMPLIED
+	type              CDATA #REQUIRED
+	name              CDATA #IMPLIED
+        prior             CDATA #IMPLIED
         transitionClasses CDATA #IMPLIED
 >
 
@@ -26,21 +26,22 @@
 <!-- background distribution holds CSV -->
 <!ELEMENT background (#PCDATA)>
 <!ATTLIST background
-	key CDATA #REQUIRED
-	order CDATA #REQUIRED
+	key   CDATA #REQUIRED
+	order CDATA #IMPLIED
 >
 
 <!-- states - integer id from 0 to N-1 -->
 <!ELEMENT state ((silent | discrete | mixture | pair), backgroundKey?, class?, duration?, position?, tiedTo?)>
 <!ATTLIST state
-	id CDATA #REQUIRED
+	id      CDATA #REQUIRED
 	initial CDATA #REQUIRED
-	desc CDATA #REQUIRED
+	desc    CDATA #IMPLIED
 >
 <!-- different emission types, must not differ in one model, except discrete is a higherOrder with order=0 -->
 <!ELEMENT silent EMPTY>
 <!ELEMENT discrete (#PCDATA)>
 <!ATTLIST discrete
+        id    CDATA #REQUIRED
 	order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
@@ -52,33 +53,33 @@
 <!-- different density functions for mixture-models -->
 <!ELEMENT normal EMPTY>
 <!ATTLIST normal
-        mean CDATA #REQUIRED
+        mean     CDATA #REQUIRED
         variance CDATA #REQUIRED
-        fixed CDATA #IMPLIED
-        approx CDATA #IMPLIED
-        prior CDATA #IMPLIED
+        prior    CDATA #REQUIRED
+        approx   CDATA #IMPLIED
+        fixed    CDATA #IMPLIED
 >
 <!ELEMENT normalTruncatedLeft EMPTY>
 <!ATTLIST normalTruncatedLeft
-        mean CDATA #REQUIRED
+        mean     CDATA #REQUIRED
         variance CDATA #REQUIRED
-        min CDATA #REQUIRED
-        fixed CDATA #IMPLIED
-        prior CDATA #IMPLIED
+        min      CDATA #REQUIRED
+        prior    CDATA #REQUIRED
+        fixed    CDATA #IMPLIED
 >
 <!ELEMENT normalTruncatedRight EMPTY>
 <!ATTLIST normalTruncatedRight
-        mean CDATA #REQUIRED
+        mean     CDATA #REQUIRED
         variance CDATA #REQUIRED
-        max CDATA #REQUIRED
-        fixed CDATA #IMPLIED
-        prior CDATA #IMPLIED
+        max      CDATA #REQUIRED
+        prior    CDATA #REQUIRED
+        fixed    CDATA #IMPLIED
 >
 <!ELEMENT uniform EMPTY>
 <!ATTLIST uniform
-        min CDATA #REQUIRED
-        max CDATA #REQUIRED
-        prior CDATA #IMPLIED
+        min   CDATA #REQUIRED
+        max   CDATA #REQUIRED
+        prior CDATA #REQUIRED
         fixed CDATA #IMPLIED
 >
 
