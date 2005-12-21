@@ -150,7 +150,7 @@ static char * doubleArrayToCSV(double * array, int size) {
     GHMM_LOG(LERROR, "writing CSV failed");
     goto STOP;
   } else {
-    pos += sprintf(csv+pos, "%.5g", array[i]);
+    pos += sprintf(csv+pos, "%.8g", array[i]);
   }
   /*printf("%d bytes of %d written\n", pos, maxlength);*/
   return csv;
@@ -189,6 +189,7 @@ static int writeAlphabet(xmlTextWriterPtr writer, alphabet_s * alfa) {
       GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw");
       goto STOP;
     }
+
     rc = xmlTextWriterEndElement(writer);
     if (rc < 0) {
       GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
@@ -429,7 +430,91 @@ STOP:
 static int writeTransition(xmlTextWriterPtr writer, fileData_s * f, int moNo,
 			   int sNo) {
 #define CUR_PROC "writeTransition"
+
+  int cos=1, i, j, rc; 
+  int out_states, * out_id;
+  double * * out_a;
+  double * w_out_a;
+  char * tmp;
+
+  ARRAY_MALLOC(w_out_a, cos);
+
+  /* write state contents for different model types */
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    out_states = f->model.d[moNo]->s[sNo].out_states;
+    out_id    = f->model.d[moNo]->s[sNo].out_id;
+    out_a      = &(f->model.d[moNo]->s[sNo].out_a);
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+    /*
+    out_states = f->model.dp[moNo]->s[sNo].out_states;
+    out_id    = f->model.dp[moNo]->s[sNo].out_id;
+    out_a      = &(f->model.dp[moNo]->s[sNo].out_a);
+    */
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
+    /*
+    out_states = f->model.dp[moNo]->s[sNo].out_states;
+    out_id    = f->model.dp[moNo]->s[sNo].out_id;
+    out_a      = &(f->model.dp[moNo]->s[sNo].out_a);
+    */
+    break;
+  case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+    out_states = f->model.c[moNo]->s[sNo].out_states;
+    out_id    = f->model.c[moNo]->s[sNo].out_id;
+    out_a      = f->model.c[moNo]->s[sNo].out_a;
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+
+  for (i=0; i<out_states; i++) {
+    /* start state */
+    rc = xmlTextWriterStartElement(writer, BAD_CAST "transition");
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+      goto STOP;
+    }
+
+    /* write source id (current state attribute */
+    if (writeIntAttribute(writer, "source", sNo))
+      GHMM_LOG_QUEUED(LERROR);
+
+    /* write target id as attribute */
+    if (writeIntAttribute(writer, "target", out_id[i]))
+      GHMM_LOG_QUEUED(LERROR);
+
+    for (j=0; j<cos; j++)
+      w_out_a[j] = out_a[j][i];
+
+    tmp = doubleArrayToCSV(w_out_a, cos);
+    if (tmp) {
+      rc = xmlTextWriterWriteElement(writer, BAD_CAST "probability", BAD_CAST tmp);
+      m_free(tmp);
+      if (rc<0) {
+	GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement");
+	goto STOP;
+      }
+    } else {
+      GHMM_LOG(LERROR, "converting array to CSV failed");
+      m_free(tmp);
+      goto STOP;
+    }
+
+    /* end transition */
+    rc = xmlTextWriterEndElement(writer);
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+      goto STOP;
+    }
+  }
+
   return 0;
+STOP:
+  return -1;
 #undef CUR_PROC
 }
 
