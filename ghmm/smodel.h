@@ -270,6 +270,13 @@ extern "C" {
    @param smo_number  number of smodels to read*/
   ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number);
 
+/** Writes an XML file with specifications for one or more smodels.
+   @return 0:sucess, -1:error
+   @param filename   output xml file
+   @param smo ghmm_cmodel(s)
+   @param smo_number  number of smodels to write*/
+  int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number);
+
 /**
    Prints one ghmm_cmodel in matrix form.
    @param file     output file

@@ -11,12 +11,13 @@ MAINTAINERCLEANFILES = Makefile.in
 
 BUILT_SOURCES = 
 INCLUDES = -I$(top_srcdir)
-bin_PROGRAMS = probdist cluster scluster smix_hmm
+bin_PROGRAMS = probdist cluster scluster smix_hmm smo2xml
 
 probdist_SORUCES = probdist.c
 cluster_SOURCES  = cluster.c
 scluster_SOURCES = scluster.c
 smix_hmm_SOURCES = smix_hmm.c
+smo2xml_SOURCES = smo2xml.c
 
 LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 bin_SCRIPTS = ghmm-config
