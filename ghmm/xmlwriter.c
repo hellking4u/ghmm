@@ -507,6 +507,13 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
 
   }
 
+  /* end mixture tag */
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+    goto STOP;
+  }
+  
   /* writing positions */
   if ((f->model.c[moNo]->s[sNo].xPosition > 0)
       && (f->model.c[moNo]->s[sNo].xPosition > 0)) {
@@ -522,13 +529,6 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
       GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement"); goto STOP;}
   }
 
-  /* end state tag */
-  rc = xmlTextWriterEndElement(writer);
-  if (rc < 0) {
-    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
-    goto STOP;
-  }
-  
   return 0;
 STOP:
   return -1;
