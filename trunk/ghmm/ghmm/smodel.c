@@ -682,12 +682,14 @@ ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number)
   int i;
   f = parseHMMDocument(filename);
   assert( f->modelType &  GHMM_kContinuousHMM);
-  ARRAY_MALLOC(smo,f->noModels);
   *smo_number = (f->noModels);
-  for(i=0;i<*smo_number;i++){
-    smo[i] = f->model.c[i];
-      /*memcpy(smo+i,f->model.c[i],sizeof(ghmm_cmodel));*/
-  }  
+  smo = f->model.c;
+/*   ARRAY_MALLOC(smo,f->noModels); */
+
+/*   for(i=0;i<*smo_number;i++){ */
+/*     smo[i] = f->model.c[i]; */
+/*   } */
+  free(f); /* XXX - by now, we free f */  
   return smo;
 STOP:  
   return NULL;
@@ -695,6 +697,25 @@ STOP:
 }                               /* ghmm_c_read_block */
 
 
+/*============================================================================*/
+/*============================================================================*/
+int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number)
+{
+#define CUR_PROC "ghmm_c_read"
+  fileData_s *f;
+  int i;
+
+  ARRAY_MALLOC(f,1);
+  f->noModels = smo_number;
+  f->modelType = GHMM_kContinuousHMM;
+  f->model.c = smo;
+  writeHMMDocument(f, file);
+  free(f);  
+  return 0;
+STOP:  
+  return -1;
+#undef CUR_PROC
+}                               /* ghmm_c_read_block */
 
 /*============================================================================*/
 int ghmm_c_free (ghmm_cmodel ** smo)
