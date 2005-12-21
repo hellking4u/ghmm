@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<!DOCTYPE mixture SYSTEM "ghmm.dtd">
-<mixture noComponents="1">
+<!DOCTYPE mixture PUBLIC "-//ghmm.org//DOCUMENT ghmm V1.0//EN" "http://ghmm.sourceforge.net/xml/1.0/ghmm.dtd">
+<mixture version="1.0" noComponents="1">
   <HMM name="example" type="discrete background"> <!-- xmlns="http://www.ghmm.org/ghmm.schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.ghmm.org/ghmm.xsd"> -->
     <alphabet id="0">
       <symbol code="0">A</symbol>
