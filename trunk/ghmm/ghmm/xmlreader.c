@@ -215,10 +215,9 @@ static int matchModelType(const char * data, unsigned int size) {
     return GHMM_kPairHMM;
 
   return INT_MIN;
-
-
 #undef CUR_PROC
 }
+
 /*===========================================================================*/
 static int parseModelType(const char * data, unsigned int size) {
 #define CUR_PROC "parseModelType"
@@ -283,11 +282,11 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   alfa->size = M;
   ARRAY_MALLOC(alfa->symbols, M);
 
-  symbol = cur->xmlChildrenNode;
+  symbol = cur->children;
   M=0;
   while (symbol!=NULL) {
     if ((!xmlStrcmp(symbol->name, (const xmlChar *)"symbol"))) {
-      s = xmlNodeGetContent(cur);
+      s = xmlNodeGetContent(symbol);
       alfa->symbols[M++] = (char *)s;
     }
     symbol=symbol->next;
@@ -325,7 +324,7 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mo
   f->model.d[modelNo]->bp->order[bgNr] = order;
 
   /* get name */
-  s = (char *)getXMLCharAttribute(cur, (const xmlChar *)"name", &error);
+  s = (char *)getXMLCharAttribute(cur, (const xmlChar *)"key", &error);
   f->model.d[modelNo]->bp->name[bgNr] = s;
 
   /* get distribution */
