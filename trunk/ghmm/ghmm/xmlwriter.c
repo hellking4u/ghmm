@@ -920,9 +920,8 @@ void writeHMMDocument(fileData_s * f, const char *file) {
   if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "version", "%g", 1.0) < 0) {
     GHMM_LOG(LERROR, "failed to write version 1.0"); goto STOP;}
 
-  if (f->noModels > 1)
-    if (writeIntAttribute(writer, "noComponents", f->noModels)) {
-      GHMM_LOG_QUEUED(LERROR); goto STOP;}
+  if (writeIntAttribute(writer, "noComponents", f->noModels)) {
+    GHMM_LOG_QUEUED(LERROR); goto STOP;}
 
   /* write all models */
   for (i=0; i<f->noModels; i++)
