@@ -1,4 +1,3 @@
-
 /*******************************************************************************
 *
 *       This file is part of the General Hidden Markov Model Library,
@@ -38,6 +37,7 @@
 #  include "../config.h"
 #endif
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <libxml/encoding.h>
@@ -55,10 +55,11 @@
 #define MY_ENCODING "ISO-8859-1"
 
 
-xmlChar *ConvertInput(const char *in, const char *encoding);
+static xmlChar *ConvertInput(const char *in, const char *encoding);
 
 
-int writeIntAttribute(xmlTextWriterPtr writer, const char * name, int value) {
+/* ========================================================================= */
+static int writeIntAttribute(xmlTextWriterPtr writer, const char * name, int value) {
 #define CUR_PROC "writeIntAttribute"
   int rc;
   char * estr, * str = ighmm_mprintf(NULL, 0, "%d", value);
@@ -75,9 +76,408 @@ int writeIntAttribute(xmlTextWriterPtr writer, const char * name, int value) {
 }
 
 /* ========================================================================= */
+static int writeDoubleAttribute(xmlTextWriterPtr writer, const char * name, double value) {
+#define CUR_PROC "writeDoubleAttribute"
+  int rc;
+  char * estr, * str = ighmm_mprintf(NULL, 0, "%g", value);
+  rc = xmlTextWriterWriteAttribute(writer, BAD_CAST name,
+				   BAD_CAST str);
+  m_free(str);
+  if (rc < 0) {
+    estr = ighmm_mprintf(NULL, 0, "Failed to write attribute %s (%d)", name, value);
+    ighmm_queue_mes(estr);
+    return -1;
+  }
+  else return 0;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
+static char * strModeltype(int modelType) {
+#define CUR_PROC "strModelType"
+
+  char * mt;
+
+  ARRAY_CALLOC(mt, 200);
+  
+  if (modelType > 0) {
+    if (modelType & GHMM_kLeftRight)
+      strcat(mt, "left-right ");
+    if (modelType & GHMM_kSilentStates)
+      strcat(mt, "silent ");
+    if (modelType & GHMM_kTiedEmissions)
+      strcat(mt, "tied ");
+    if (modelType & GHMM_kHigherOrderEmissions)
+      strcat(mt, "higher-order ");
+    if (modelType & GHMM_kBackgroundDistributions)
+      strcat(mt, "background ");
+    if (modelType & GHMM_kLabeledStates)
+      strcat(mt, "labeled ");
+    if (modelType & GHMM_kTransitionClasses)
+      strcat(mt, "transition-classes ");
+    if (modelType & GHMM_kDiscreteHMM)
+      strcat(mt, "discrete ");
+    if (modelType & GHMM_kContinuousHMM)
+      strcat(mt, "continuous ");
+    if (modelType & GHMM_kPairHMM)
+      strcat(mt, "pair ");
+  } else {
+    GHMM_LOG(LERROR, "can't write models with unspecified modeltype");
+    goto STOP;
+  }
+  
+  return mt;
+ STOP:
+  m_free(mt);
+  return NULL;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
+static char * doubleArrayToCSV(double * array, int size) {
+#define CUR_PROC "doubleArrayToCSV"
+
+  int i, pos=0;
+  char * csv;
+  int maxlength = (10+2)*size;
+
+  ARRAY_MALLOC(csv, maxlength);
+
+  for (i=0; i<size-1 && pos<maxlength-10; i++) {
+    pos += sprintf(csv+pos, "%.8g, ", array[i]);
+  }
+  if (i<size-1) {
+    GHMM_LOG(LERROR, "writing CSV failed");
+    goto STOP;
+  } else {
+    pos += sprintf(csv+pos, "%.5g", array[i]);
+  }
+  /*printf("%d bytes of %d written\n", pos, maxlength);*/
+  return csv;
+STOP:
+  return NULL;
+#undef  CUR_PROC
+}
+
+
+/* ========================================================================= */
+static int writeAlphabet(xmlTextWriterPtr writer, alphabet_s * alfa) {
+#define CUR_PROC "writeAlphabet"
+
+  int i, rc;
+
+  rc = xmlTextWriterStartElement(writer, BAD_CAST "alphabet");
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+    goto STOP;;
+  }
+
+  if (writeIntAttribute(writer, "id", alfa->id))
+    GHMM_LOG_QUEUED(LERROR);
+
+  for (i=0; i<alfa->size; i++) {
+    rc = xmlTextWriterStartElement(writer, BAD_CAST "symbol");
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+      goto STOP;;
+    }
+    if (writeIntAttribute(writer, "code", i))
+      GHMM_LOG_QUEUED(LERROR);
+
+    rc = xmlTextWriterWriteRaw(writer, (xmlChar *)(alfa->symbols[i]));
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw");
+      goto STOP;
+    }
+    rc = xmlTextWriterEndElement(writer);
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+      goto STOP;
+    }
+  }
+
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+    goto STOP;
+  }
+
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
+static int writeBackground(xmlTextWriterPtr writer, ghmm_d_background_distributions * bg) {
+#define CUR_PROC "writeBackground"
+
+  int i, rc;
+  char * tmp;
+
+  for (i=0; i<bg->n; i++) {
+    rc = xmlTextWriterStartElement(writer, BAD_CAST "background");
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+      goto STOP;;
+    }
+    
+    printf("background %d name: %s\n", i, bg->name[i]);
+    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST (bg->name[i])))
+      GHMM_LOG(LERROR, "Error at xmlTextWriterWriteAttribute");
+      
+    if (writeIntAttribute(writer, "order", bg->order[i]))
+      GHMM_LOG_QUEUED(LERROR);
+    
+    tmp = doubleArrayToCSV(bg->b[i], pow(bg->m, bg->order[i]+1));
+    if (tmp) {
+      rc = xmlTextWriterWriteRaw(writer, BAD_CAST tmp);
+      m_free(tmp);
+      if (rc < 0) {
+	GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw");
+	goto STOP;
+      }
+    } else {
+      GHMM_LOG(LERROR, "converting array to CSV failed");
+      m_free(tmp);
+      goto STOP;
+    }
+
+    rc = xmlTextWriterEndElement(writer);
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+      goto STOP;
+    }
+  }
+  
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
+static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo) {
+#define CUR_PROC "writeState"
+
+  int rc;
+  double w_pi;
+  char * tmp, * w_desc=NULL;
+
+  /* start state */
+  rc = xmlTextWriterStartElement(writer, BAD_CAST "state");
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+    goto STOP;
+  }
+
+  /* write id attribute */
+  if (writeIntAttribute(writer, "id", sNo))
+    GHMM_LOG_QUEUED(LERROR);
+
+  /* read state attribute from different model types */
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    w_pi = f->model.d[moNo]->s[sNo].pi;
+    /*w_desc = f->model.d[moNo]->s[sNo].desc;*/
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+    /*
+    w_pi = f->model.d[moNo]->s[sNo].pi;
+    w_desc = f->model.d[moNo]->s[sNo];
+    */
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
+    /*
+    w_pi = f->model.d[moNo]->s[sNo].pi;
+    w_desc = f->model.d[moNo]->s[sNo];
+    */
+    break;
+  case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+    w_pi = f->model.d[moNo]->s[sNo].pi;
+    /*w_desc = f->model.d[moNo]->s[sNo].desc;*/
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+
+  /* write initial probability as attribute */
+  if (writeDoubleAttribute(writer, "initial", w_pi))
+    GHMM_LOG_QUEUED(LERROR);
+  
+  /* write state description */
+  if (w_desc) {
+    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", BAD_CAST w_desc))
+      GHMM_LOG(LERROR, "writing state description failed");
+  }
+
+  /* end state*/
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+    goto STOP;
+  }
+
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
+static int writeTransition(xmlTextWriterPtr writer, fileData_s * f, int moNo,
+			   int sNo) {
+#define CUR_PROC "writeTransition"
+  return 0;
+#undef CUR_PROC
+}
+
+
+
+/* ========================================================================= */
+static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
+#define CUR_PROC "writeHMM"
+  int rc, i, N;
+  int w_cos;
+  double w_prior;
+  char * estr, * w_name, * w_type;
+
+  rc = xmlTextWriterStartElement(writer, BAD_CAST "HMM");
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+    goto STOP;;
+  }
+
+  /* write HMM attributes applicable */
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    w_name  = f->model.d[number]->name;
+    w_type  = strModeltype(f->model.d[number]->model_type);
+    w_prior = f->model.d[number]->prior;
+    w_cos   = 1;
+    N       =  f->model.d[number]->N;
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+    /*
+    w_name  = f->model.ds[number]->name;
+    w_type  = strModeltype(f->model.ds[number]->model_type);
+    w_prior = f->model.ds[number]->prior;
+    w_cos   = 0;
+    N       =  f->model.ds[number]->N;
+    */
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
+    /*
+    w_name  = f->model.dp[number]->name;
+    w_type  = strModeltype(f->model.dp[number]->model_type);
+    w_prior = f->model.dp[number]->prior;
+    w_cos   = 0;
+    N       =  f->model.dp[number]->N;
+    */
+    break;
+  case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+    w_name  = NULL;/*f->model.c[number]->name;*/
+    w_type  = strModeltype(f->modelType);
+    w_prior = f->model.c[number]->prior;
+    w_cos   = f->model.c[number]->cos;
+    N       =  f->model.c[number]->N;
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+
+  if (w_name) {
+    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST w_name))
+      GHMM_LOG(LERROR, "writing HMM name failed");
+  }
+  if (xmlTextWriterWriteAttribute(writer, BAD_CAST "type", BAD_CAST w_type))
+    GHMM_LOG(LERROR, "writing HMM type failed");
+
+  if (w_prior >= 0.0)
+    if (writeDoubleAttribute(writer, "prior", w_prior))
+      GHMM_LOG_QUEUED(LERROR);
+  
+  if (w_cos > 1)
+    if (writeIntAttribute(writer, "transitionClasses", w_cos))
+      GHMM_LOG_QUEUED(LERROR);
+  
+
+  /* write alphabet if applicable */
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    rc = writeAlphabet(writer, f->model.d[number]->alphabet);
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+    /*rc = writeAlphabet(writer, f->model.ds[number]->alphabet);*/
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
+    /*rc = writeAlphabet(writer, f->model.dp[number]->alphabets[0]);
+    if (rc) {
+      GHMM_LOG(LERROR, "writing first alphabet of discrete pair HMM failed");
+      goto STOP;
+    }
+    rc = writeAlphabet(writer, f->model.dp[number]->alphabets[1]);*/
+    break;
+  case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+    rc=0;
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");} 
+  if (rc) {
+    estr = ighmm_mprintf(NULL, 0, "writing alphabet for HMM %d (type %d) failed");
+    GHMM_LOG(LERROR, estr);
+    m_free(estr);
+  }
+
+  /* write background distributions if applicable */
+  if ((f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+		       + GHMM_kPairHMM + GHMM_kContinuousHMM)) == GHMM_kDiscreteHMM) {
+    if (writeBackground(writer, f->model.d[number]->bp))
+      GHMM_LOG(LERROR, "writing of background distributions failed");
+  }
+
+  /* write all states */
+  for (i=0; i<N; i++)
+    if (writeState(writer, f, number, i)) {
+      estr = ighmm_mprintf(NULL, 0, "writing of state %d in HMM %d failed", i, number);
+      GHMM_LOG(LERROR, estr);
+      m_free(estr);
+      goto STOP;
+    }
+
+  /* write all outgoing transitions */
+  for (i=0; i<N; i++)
+    if (writeTransition(writer, f, number, i)) {
+      estr = ighmm_mprintf(NULL, 0, "writing of state %d in HMM %d failed", i, number);
+      GHMM_LOG(LERROR, estr);
+      m_free(estr);
+      goto STOP;
+    }
+      
+  /*end HMM*/
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+    goto STOP;
+  }
+
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
 void writeHMMDocument(fileData_s * f, const char *file) {
 #define CUR_PROC "writeHMMDocument"
-  int rc;
+  int rc, i;
   xmlTextWriterPtr writer;
   xmlChar *tmp;
   xmlDocPtr doc;
@@ -107,8 +507,8 @@ void writeHMMDocument(fileData_s * f, const char *file) {
 
   rc = xmlTextWriterStartElement(writer, BAD_CAST "mixture");
   if (rc < 0) {
-    printf("testXmlwriterDoc: Error at xmlTextWriterStartElement\n");
-    return;
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement\n");
+    goto STOP;;
   }
 
   if (writeIntAttribute(writer, "noComponents", f->noModels)) {
@@ -116,6 +516,8 @@ void writeHMMDocument(fileData_s * f, const char *file) {
     goto STOP;
   }
 
+  for (i=0; i<f->noModels; i++)
+    writeHMM(writer, f, i);
 
   /* Here we could close the elements ORDER and EXAMPLE using the
    * function xmlTextWriterEndElement, but since we do not want to
@@ -127,10 +529,11 @@ void writeHMMDocument(fileData_s * f, const char *file) {
     goto STOP;
   }
 
+  xmlFreeTextWriter(writer);
+
   xmlSaveFileEnc(file, doc, MY_ENCODING);
 
 STOP:
-  xmlFreeTextWriter(writer);
   xmlFreeDoc(doc);
 
   /*
@@ -153,7 +556,7 @@ STOP:
  *
  * Returns the converted UTF-8 string, or NULL in case of error.
  */
-xmlChar *
+static xmlChar *
 ConvertInput(const char *in, const char *encoding)
 {
     xmlChar *out;
