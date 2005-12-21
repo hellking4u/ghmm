@@ -257,6 +257,74 @@ STOP:
 }
 
 /* ========================================================================= */
+static int writeDiscreteStateContents(xmlTextWriterPtr writer, fileData_s * f,
+				      int moNo, int sNo) {
+#define CUR_PROC "writeDiscreteStateContents"
+
+  int rc, order;
+  char * tmp=NULL;
+
+  /* writing discrete distribution */
+  rc = xmlTextWriterStartElement(writer, BAD_CAST "discrete");
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+    goto STOP;
+  }
+
+  if (f->model.d[moNo]->s[sNo].fix)
+    if (writeIntAttribute(writer, "fixed", 1)) {
+      GHMM_LOG_QUEUED(LERROR);
+      goto STOP;
+    }
+
+  if ((f->model.d[moNo]->model_type & GHMM_kHigherOrderEmissions)
+      && f->model.d[moNo]->order[sNo]) {
+    order = f->model.d[moNo]->order[sNo];
+    if (writeIntAttribute(writer, "order", order)) {
+      GHMM_LOG_QUEUED(LERROR);
+      goto STOP;
+    }
+  } else
+    order = 0;
+
+  tmp = doubleArrayToCSV(f->model.d[moNo]->s[sNo].b, pow(f->model.d[moNo]->M, order+1));
+  if (tmp) {
+    rc = xmlTextWriterWriteRaw(writer, BAD_CAST tmp);
+    m_free(tmp);
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw");
+      goto STOP;
+    }
+  } else {
+    GHMM_LOG(LERROR, "converting array to CSV failed");
+    m_free(tmp);
+    goto STOP;
+  }
+
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+    goto STOP;
+  }
+  
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
+static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
+				      int moNo, int sNo) {
+#define CUR_PROC "writeContinuousStateContents"
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+
+/* ========================================================================= */
 static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo) {
 #define CUR_PROC "writeState"
 
@@ -312,6 +380,37 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
     if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", BAD_CAST w_desc))
       GHMM_LOG(LERROR, "writing state description failed");
   }
+
+
+  /* write state contents for different model types */
+  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
+			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  case GHMM_kDiscreteHMM:
+    rc = writeDiscreteStateContents(writer, f, moNo, sNo);
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+    /*
+    rc = writeDiscreteStateContents(writer, f, moNo, sNo);
+    */
+    break;
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
+    /*
+    rc = writeDiscreteStateContents(writer, f, moNo, sNo);
+    */
+    break;
+  case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+    rc = writeContinuousStateContents(writer, f, moNo, sNo);
+    break;
+  default:
+    GHMM_LOG(LCRITIC, "invalid modelType");}
+
+  if (rc) {
+    GHMM_LOG(LERROR, "writing state contents failed");
+    goto STOP;
+  } 
+
 
   /* end state*/
   rc = xmlTextWriterEndElement(writer);
