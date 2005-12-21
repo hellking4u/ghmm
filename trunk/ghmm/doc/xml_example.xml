@@ -2,7 +2,7 @@
 <!DOCTYPE mixture SYSTEM "ghmm.dtd">
 <mixture noComponents="1">
   <HMM name="example" type="discrete background"> <!-- xmlns="http://www.ghmm.org/ghmm.schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.ghmm.org/ghmm.xsd"> -->
-    <alphabet id="1">
+    <alphabet id="0">
       <symbol code="0">A</symbol>
       <symbol code="1">C</symbol>
       <symbol code="2">G</symbol>
@@ -10,17 +10,17 @@
     </alphabet>
     <background key="intron_bg" order="0">0.5,0.5,0.0,0.0</background>
     <state id="0" initial="1.0" desc="State 0">
-      <discrete>0.25,0.25,0.25,0.25</discrete>
+      <discrete id="0">0.25,0.25,0.25,0.25</discrete>
       <!-- optional -->
       <backgroundKey>intron_bg</backgroundKey>
       <!-- optional -->
-      <position x="100.0" y="200.0"/>
+      <position x="100" y="200"/>
     </state>
     <state id="1" initial="0.0" desc="State 1">
       <!-- fixed is optional -->
-      <discrete fixed="1">0.2,0.2,0.3,0.3</discrete>
+      <discrete id="0" fixed="1">0.2,0.2,0.3,0.3</discrete>
       <!-- optional -->
-      <position x="300.0" y="300.0"/>
+      <position x="300" y="300"/>
     </state>
     <transition source="0" target="0">
       <probability>0.2</probability>
