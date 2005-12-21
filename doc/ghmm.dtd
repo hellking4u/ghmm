@@ -3,8 +3,9 @@
 <!--hidden markov model -->
 <!ELEMENT HMM (alphabet*, classAlphabet?, background*, state+, transition+)>
 <!ATTLIST HMM
-	type              CDATA #REQUIRED
-	name              CDATA #IMPLIED
+        version           CDATA #IMPLIED
+        type              CDATA #REQUIRED
+        name              CDATA #IMPLIED
         prior             CDATA #IMPLIED
         transitionClasses CDATA #IMPLIED
 >
@@ -12,7 +13,7 @@
 <!-- alphabet/emissionDomain can be more than one (pairHMMs) -->
 <!ELEMENT alphabet (symbol+)>
 <!ATTLIST alphabet
-	id CDATA #REQUIRED
+        id CDATA #REQUIRED
 >
 <!-- hold a maps class labels to integers -->
 <!ELEMENT classAlphabet (symbol+)>
@@ -20,33 +21,34 @@
 <!-- maps symbols (class labels) to integers -->
 <!ELEMENT symbol (#PCDATA)>
 <!ATTLIST symbol
-	code CDATA #REQUIRED
+        code CDATA #REQUIRED
 >
 
 <!-- background distribution holds CSV -->
 <!ELEMENT background (#PCDATA)>
 <!ATTLIST background
-	key   CDATA #REQUIRED
-	order CDATA #IMPLIED
+        key   CDATA #REQUIRED
+        order CDATA #IMPLIED
 >
 
 <!-- states - integer id from 0 to N-1 -->
 <!ELEMENT state ((silent | discrete | mixture | pair), backgroundKey?, class?, duration?, position?, tiedTo?)>
 <!ATTLIST state
-	id      CDATA #REQUIRED
-	initial CDATA #REQUIRED
-	desc    CDATA #IMPLIED
+        id      CDATA #REQUIRED
+        initial CDATA #REQUIRED
+        desc    CDATA #IMPLIED
 >
 <!-- different emission types, must not differ in one model, except discrete is a higherOrder with order=0 -->
 <!ELEMENT silent EMPTY>
 <!ELEMENT discrete (#PCDATA)>
 <!ATTLIST discrete
         id    CDATA #REQUIRED
-	order CDATA #IMPLIED
+        order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
 <!ELEMENT mixture (HMM+ | (normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*))>
 <!ATTLIST mixture
+        version      CDATA #IMPLIED
         noComponents CDATA #IMPLIED
 >
 <!ELEMENT pair (#PCDATA)>
@@ -96,8 +98,8 @@
 <!-- position for the graphical editor -->
 <!ELEMENT position EMPTY>
 <!ATTLIST position
-	x CDATA #REQUIRED
-	y CDATA #REQUIRED
+        x CDATA #REQUIRED
+        y CDATA #REQUIRED
 >
 
 <!-- emissions are tied to state -->
@@ -106,7 +108,7 @@
 <!-- transitions - probability is a float in [0.0,1.0] for transition classes CSV -->
 <!ELEMENT transition (probability+)>
 <!ATTLIST transition
-	source CDATA #REQUIRED
+        source CDATA #REQUIRED
 	target CDATA #REQUIRED
 >
 <!ELEMENT probability (#PCDATA)>
