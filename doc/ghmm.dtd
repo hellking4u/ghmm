@@ -109,6 +109,6 @@
 <!ELEMENT transition (probability+)>
 <!ATTLIST transition
         source CDATA #REQUIRED
-	target CDATA #REQUIRED
+        target CDATA #REQUIRED
 >
 <!ELEMENT probability (#PCDATA)>
