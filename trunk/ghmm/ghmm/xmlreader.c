@@ -350,6 +350,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 #define CUR_PROC "parseState"
 
   int i, error, order=-28, state=-1442, fixed=-985, tied=-9354, M, aprox;
+  int curX=0, curY=0;
   double pi, prior;
   double * emissions;
   char * desc, * s, * estr, * * serror;
@@ -566,19 +567,26 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 
     /* -------- position for graphical editing ---------------------------- */
     if ((!xmlStrcmp(elem->name, (const xmlChar *)"position"))) {
+      curX = getIntAttribute(elem, (const xmlChar *)"x", &error);
+      if (error)
+	GHMM_LOG(LWARN, "failed to read x position");
+      curY = getIntAttribute(elem, (const xmlChar *)"y", &error);
+      if (error)
+	GHMM_LOG(LWARN, "failed to read y position");
+
       switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+			      + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
       case GHMM_kDiscreteHMM:
-        f->model.d[modelNo]->s[state].xPosition = getIntAttribute(cur, (const xmlChar *)"x", &error);
-        f->model.d[modelNo]->s[state].yPosition = getIntAttribute(cur, (const xmlChar *)"y", &error);
+        f->model.d[modelNo]->s[state].xPosition = curX;
+        f->model.d[modelNo]->s[state].yPosition = curY;
 	break;
-      case (GHMM_kDiscreteHMM + GHMM_kPairHMM):
-        f->model.dp[modelNo]->s[state].xPosition = getIntAttribute(cur, (const xmlChar *)"x", &error);
-        f->model.dp[modelNo]->s[state].yPosition = getIntAttribute(cur, (const xmlChar *)"y", &error);
+      case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+        f->model.dp[modelNo]->s[state].xPosition = curX;
+        f->model.dp[modelNo]->s[state].yPosition = curY;
 	break;
       case GHMM_kContinuousHMM:
-        f->model.c[modelNo]->s[state].xPosition = getIntAttribute(cur, (const xmlChar *)"x", &error);
-        f->model.c[modelNo]->s[state].yPosition = getIntAttribute(cur, (const xmlChar *)"y", &error);
+        f->model.c[modelNo]->s[state].xPosition = curX;
+        f->model.c[modelNo]->s[state].yPosition = curY;
 	break;
       default:
 	GHMM_LOG(LCRITIC, "invalid modelType");} 
@@ -633,7 +641,7 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
     f->model.d[modelNo]->s[target].in_id[in_state]   = source;
     f->model.d[modelNo]->s[target].in_a[in_state]    = p;
     break;
-  case (GHMM_kDiscreteHMM + GHMM_kPairHMM):
+  case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
     out_state = f->model.dp[modelNo]->s[source].out_states++;
     in_state  = f->model.dp[modelNo]->s[target].in_states++;
     f->model.dp[modelNo]->s[source].out_id[out_state]   = target;
