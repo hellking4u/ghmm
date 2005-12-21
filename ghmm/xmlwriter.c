@@ -318,6 +318,124 @@ STOP:
 static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
 				      int moNo, int sNo) {
 #define CUR_PROC "writeContinuousStateContents"
+
+  int i, rc;
+  char * tmp;
+  int allFixed = 0;
+
+  /* writing continuous distribution */
+  rc = xmlTextWriterStartElement(writer, BAD_CAST "mixture");
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+    goto STOP;
+  }
+
+  if (f->model.c[moNo]->s[sNo].fix)
+    allFixed = 1;
+
+  for(i=0;i<f->model.c[moNo]->s[sNo].M;i++){
+    switch (f->model.c[moNo]->s[sNo].density[i]) {
+      case normal:     
+        rc = xmlTextWriterStartElement(writer, BAD_CAST "normal");
+        if (rc < 0) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+          goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "mean",f->model.c[moNo]->s[sNo].mue[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "variance",f->model.c[moNo]->s[sNo].u[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        break;       
+      case normal_left:     
+        rc = xmlTextWriterStartElement(writer, BAD_CAST "normalTruncatedLeft");
+        if (rc < 0) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+          goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "mean",f->model.c[moNo]->s[sNo].mue[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "variance",f->model.c[moNo]->s[sNo].u[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "min",f->model.c[moNo]->s[sNo].a[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }    
+        break;
+      case normal_right:     
+        rc = xmlTextWriterStartElement(writer, BAD_CAST "normalTruncatedRight");
+        if (rc < 0) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+          goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "mean",f->model.c[moNo]->s[sNo].mue[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "variance",f->model.c[moNo]->s[sNo].u[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "max",f->model.c[moNo]->s[sNo].a[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }    
+        break;
+      case uniform:     
+        rc = xmlTextWriterStartElement(writer, BAD_CAST "uniform");
+        if (rc < 0) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
+          goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "max",f->model.c[moNo]->s[sNo].mue[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }
+        if (writeDoubleAttribute(writer, "min",f->model.c[moNo]->s[sNo].u[i])) {
+  	  GHMM_LOG_QUEUED(LERROR); 
+	  goto STOP;
+        }    
+        break;
+      default:
+        GHMM_LOG(LCRITIC, "invalid modelType");
+        break;
+    }
+  
+    /*optional values */ 
+    if (allFixed || f->model.c[moNo]->s[sNo].mixture_fix[i]){
+      if (writeIntAttribute(writer, "fixed", 1)) {
+	GHMM_LOG_QUEUED(LERROR); 
+	goto STOP;
+      }
+    }
+    if (f->model.c[moNo]->s[sNo].M > 1){
+      if (writeDoubleAttribute(writer, "prior",f->model.c[moNo]->s[sNo].c[i])) {
+	GHMM_LOG_QUEUED(LERROR); 
+	goto STOP;
+      }
+    }
+    rc = xmlTextWriterEndElement(writer);
+    if (rc < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+      goto STOP;
+    }
+
+  }
+
+
+  rc = xmlTextWriterEndElement(writer);
+  if (rc < 0) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
+    goto STOP;
+  }
+  
   return 0;
 STOP:
   return -1;
@@ -366,8 +484,8 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
     break;
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
-    w_pi = f->model.d[moNo]->s[sNo].pi;
-    /*w_desc = f->model.d[moNo]->s[sNo].desc;*/
+    w_pi = f->model.c[moNo]->s[sNo].pi;
+    /* w_desc = f->model.c[moNo]->s[sNo].desc; */
     break;
   default:
     GHMM_LOG(LCRITIC, "invalid modelType");}
