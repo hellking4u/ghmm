@@ -115,6 +115,7 @@ ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
   assert(modeltype & GHMM_kContinuousHMM);
   ARRAY_CALLOC(mo, 1);
   mo->N = N;
+  mo->M = 0;
   ARRAY_CALLOC(mo->s, N);
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */

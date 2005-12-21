@@ -353,6 +353,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
   double pi, prior;
   double * emissions;
   char * desc, * s, * estr, * * serror;
+  int stateFixed=1;
 
 
   xmlNodePtr elem, child;
@@ -421,16 +422,12 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
         child = child->next;
       }
       ghmm_c_state_alloc(f->model.c[modelNo]->s + state, M, inDegree[state], outDegree[state], f->model.c[modelNo]->cos);
-
-      f->model.c[modelNo]->M = M;
            
-/*       fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error); */
-/*       if (error) /* optional atribute not defined */  
-/*         fixed = 0; */      
-/*      f->model.c[modelNo]->s[state].fix = 0;*/
-
       f->model.c[modelNo]->s[state].M = M;
       f->model.c[modelNo]->s[state].pi = pi;
+
+      if( f->model.c[modelNo]->M < M)       
+        f->model.c[modelNo]->M = M; 
       
       child = elem->children;
       
@@ -441,13 +438,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
           f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
           aprox = getIntAttribute(child, (const xmlChar *)"aproximate", &error);
-/*           if (aprox){ */
-/* 	    f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_approx; */
-/*           }else{ */
-            f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
+          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);          
           if (error)
             fixed = 0;
+          stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
           prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
           if (error)
@@ -463,6 +458,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
           fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
           if (error)
             fixed = 0;
+          stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
           prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
           if (error)
@@ -478,6 +474,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
           fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
           if (error)
             fixed = 0;
+          stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
           prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
           if (error)
@@ -492,6 +489,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
           fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
           if (error)
             fixed = 0;
+          stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
           prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
           if (error)
@@ -503,7 +501,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
         child = child->next;         
       }
 
-      /*XXX - check if all mixtures are fixed, and set state flag */
+      f->model.c[modelNo]->s[state].fix = stateFixed;
+
     }
 
     /* ======== pair hmm state ============================================ */
@@ -880,7 +879,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
     f->model.c[modelNo] = ghmm_cmodel_calloc(N,modeltype);
     prior = getDoubleAttribute(cur, (const xmlChar *)"prior", &error);
     if (error) /* optional atribute not defined */          
-        prior = 0.0;      
+        prior = 1.0;      
     f->model.c[modelNo]->prior = prior;
     cos = getIntAttribute(cur, (const xmlChar *)"transitionClasses", &error);
     if (error) /* optional atribute not defined */          

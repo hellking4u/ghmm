@@ -3997,7 +3997,10 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                         break
         except IndexError:
             pass
-        return logP     
+        return logP
+
+    def getPrior(self):
+         return self.cmodel.prior   
     
     def __str__(self):
         "defines string representation"
@@ -4165,6 +4168,9 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
  
              strout.append("\nint fix:" + str(state.fix) + "\n")
          return join(strout,'')
+
+     def getPrior(self):
+         return self.cmodel.prior
  
      def toMatrices(self):
          """Return the parameters in matrix form.
