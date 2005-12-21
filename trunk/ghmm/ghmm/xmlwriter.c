@@ -79,7 +79,7 @@ static int writeIntAttribute(xmlTextWriterPtr writer, const char * name, int val
 static int writeDoubleAttribute(xmlTextWriterPtr writer, const char * name, double value) {
 #define CUR_PROC "writeDoubleAttribute"
   int rc;
-  char * estr, * str = ighmm_mprintf(NULL, 0, "%g", value);
+  char * estr, * str = ighmm_mprintf(NULL, 0, "%.8g", value);
   rc = xmlTextWriterWriteAttribute(writer, BAD_CAST name,
 				   BAD_CAST str);
   m_free(str);
@@ -262,7 +262,7 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, fileData_s * f,
 				      int moNo, int sNo) {
 #define CUR_PROC "writeDiscreteStateContents"
 
-  int rc, order;
+  int bgId, cLabel, rc, order, tied;
   char * tmp=NULL;
 
   /* writing discrete distribution */
@@ -302,12 +302,89 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, fileData_s * f,
     goto STOP;
   }
 
+  /* end discrete distribution */
   rc = xmlTextWriterEndElement(writer);
   if (rc < 0) {
     GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement");
     goto STOP;
   }
+
+  /* writing backgroung key */
+  if (f->model.d[moNo]->model_type & GHMM_kBackgroundDistributions) {
+    bgId = f->model.d[moNo]->background_id[sNo];
+    if (bgId > -1) {
+      if (f->model.d[moNo]->bp->name[bgId]) {
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "backgroundKey",
+				       BAD_CAST f->model.d[moNo]->bp->name[bgId]);
+	if (rc<0) {
+	  GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement");
+	  goto STOP;
+	}
+      } else {
+	GHMM_LOG(LERROR, "background name is NULL pointer, invalid model");
+	goto STOP;
+      }
+    }
+  }
+
+  /* writing class label */
+  if (f->model.d[moNo]->model_type & GHMM_kLabeledStates) {
+    cLabel = f->model.d[moNo]->label[sNo];
+    rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "class","%d", cLabel);
+    if (rc<0) {
+      GHMM_LOG(LERROR, "failed to write class label");
+      goto STOP;
+    }
+  }
   
+  /* duration (not implemented yet, maybe never */
+#if 0
+  if (f->model.d[moNo]->model_type & GHMM_kBackgroundDistributions) {
+    bgId = f->model.d[moNo]->background_id[sNo];
+    if (bgId > -1) {
+      if (f->model.d[moNo]->bp->name[bgId]) {
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "backgroundKey",
+				       BAD_CAST f->model.d[moNo]->bp->name[bgId]);
+	if (rc<0) {
+	  GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement");
+	  goto STOP;
+	}
+      } else {
+	GHMM_LOG(LERROR, "background name is NULL pointer, invalid model");
+	goto STOP;
+      }
+    }
+  }
+#endif
+
+  /* writing positions */
+  if ((f->model.d[moNo]->s[sNo].xPosition > 0)
+      && (f->model.d[moNo]->s[sNo].xPosition > 0)) {
+
+    if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
+      GHMM_LOG(LERROR, "failed to start position element"); goto STOP;}
+    if (xmlTextWriterWriteFormatAttribute(writer, "x", "%d", f->model.d[moNo]->s[sNo].xPosition) < 0) {
+      GHMM_LOG(LERROR, "failed to write x position"); goto STOP;    }
+    if (xmlTextWriterWriteFormatAttribute(writer, "y", "%d", f->model.d[moNo]->s[sNo].yPosition) < 0) {
+      GHMM_LOG(LERROR, "failed to write y position"); goto STOP;}
+    if (xmlTextWriterEndElement(writer) < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement"); goto STOP;}
+  }
+
+
+  /* writing tied states */
+  if (f->model.d[moNo]->model_type & GHMM_kTiedEmissions) {
+    tied = f->model.d[moNo]->tied_to[sNo];
+    if (tied != GHMM_kUntied) {
+      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "tiedTo", "%d", tied);
+      if (rc<0) {
+	GHMM_LOG(LERROR, "failed to write tiedTo element");
+	goto STOP;
+      }
+    }
+  }
+
+
   return 0;
 STOP:
   return -1;
@@ -637,7 +714,6 @@ STOP:
 }
 
 
-
 /* ========================================================================= */
 static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
 #define CUR_PROC "writeHMM"
@@ -833,7 +909,7 @@ void writeHMMDocument(fileData_s * f, const char *file) {
 
   xmlFreeTextWriter(writer);
 
-  xmlSaveFileEnc(file, doc, MY_ENCODING);
+  xmlSaveFormatFileEnc(file, doc, MY_ENCODING, 1);
 
 STOP:
   xmlFreeDoc(doc);
