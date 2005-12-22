@@ -79,12 +79,12 @@ static int writeIntAttribute(xmlTextWriterPtr writer, const char * name, int val
 static int writeDoubleAttribute(xmlTextWriterPtr writer, const char * name, double value) {
 #define CUR_PROC "writeDoubleAttribute"
   int rc;
-  char * estr, * str = ighmm_mprintf(NULL, 0, "%.8g", value);
+  char * estr, * str = ighmm_mprintf(NULL, 0, "%.8f", value);
   rc = xmlTextWriterWriteAttribute(writer, BAD_CAST name,
 				   BAD_CAST str);
   m_free(str);
   if (rc < 0) {
-    estr = ighmm_mprintf(NULL, 0, "Failed to write attribute %s (%d)", name, value);
+    estr = ighmm_mprintf(NULL, 0, "Failed to write attribute %s (%g)", name, value);
     ighmm_queue_mes(estr);
     return -1;
   }
@@ -149,13 +149,13 @@ static char * doubleArrayToCSV(double * array, int size) {
   ARRAY_MALLOC(csv, maxlength);
 
   for (i=0; i<size-1 && pos<maxlength-10; i++) {
-    pos += sprintf(csv+pos, "%.8g, ", array[i]);
+    pos += sprintf(csv+pos, "%.8f, ", array[i]);
   }
   if (i<size-1) {
     GHMM_LOG(LERROR, "writing CSV failed");
     goto STOP;
   } else {
-    pos += sprintf(csv+pos, "%.8g", array[i]);
+    pos += sprintf(csv+pos, "%.8f", array[i]);
   }
   /*printf("%d bytes of %d written\n", pos, maxlength);*/
   return csv;
@@ -922,7 +922,7 @@ void writeHMMDocument(fileData_s * f, const char *file) {
     goto STOP;;
   }
 
-  if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "version", "%g", 1.0) < 0) {
+  if (xmlTextWriterWriteAttribute(writer, BAD_CAST "version", BAD_CAST "1.0") < 0) {
     GHMM_LOG(LERROR, "failed to write version 1.0"); goto STOP;}
 
   if (writeIntAttribute(writer, "noComponents", f->noModels)) {
