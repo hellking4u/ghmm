@@ -759,7 +759,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   int * bg_orders = NULL;
   double * * bg_ptr = NULL;
 
-  alphabet_s * alfa, * * alphabets;
+  alphabet_s * alfa;
+  alphabet_s * * alphabets=NULL;
   int nrAlphabets=0;
 
   child = cur->children;
@@ -771,7 +772,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   while (child != NULL) {
     /* ========== ALPHABETS ================================================ */
     if ((!xmlStrcmp(child->name, (const xmlChar *)"alphabet"))) {
-      if (alphabets)
+      if (!alphabets)
 	ARRAY_MALLOC(alphabets, MAX_ALPHABETS);
 
       alfa = parseAlphabet(doc, child, f);
