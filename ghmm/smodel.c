@@ -77,6 +77,8 @@ int ghmm_c_state_alloc (ghmm_cstate * s,
 
   ARRAY_CALLOC (s->mixture_fix, M);
   ARRAY_CALLOC (s->density,M);
+  s->xPosition = 0.0;
+  s->yPosition = 0.0;
    
 
   /* mixture component fixing deactivated by default */

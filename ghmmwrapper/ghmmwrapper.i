@@ -61,6 +61,8 @@
 #include "pclasschange.h"
 #include <ghmm/obsolete.h>
 #include <ghmm/xmlreader.h>
+#include <ghmm/xmlwriter.h>
+
 %}
 
 %include carrays.i
@@ -1354,6 +1356,13 @@ extern int     ghmm_c_free(ghmm_cmodel **smo);
    @param smo_number  number of smodels to read*/
 extern  ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number);
 
+/** Writes an XML file with specifications for one or more smodels.
+   @return 0:sucess, -1:error
+   @param filename   output xml file
+   @param smo ghmm_cmodel(s)
+   @param smo_number  number of smodels to write*/
+extern int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number);
+
 #ifdef GHMM_OBSOLETE
 /** Reads an ascii file with specifications for one or more models.
     All parameters in matrix or vector form.
@@ -1580,8 +1589,13 @@ extern int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t);
   if (fp == NULL) {
     fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);
   } else {
-    ghmm_c_print(fp, smo);
-    fclose(fp);
+    ghmm_cmodel ** models;
+    models = (ghmm_cmodel**) malloc(sizeof(ghmm_cmodel*));
+    models[0] = smo;
+    ghmm_c_xml_write(filename,models,1);    
+    /*XXX old smo reading function */
+/*     ghmm_c_print(fp, smo); */
+/*     fclose(fp); */
   }
 }
 

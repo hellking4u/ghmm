@@ -521,7 +521,7 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
   
   /* writing positions */
   if ((f->model.c[moNo]->s[sNo].xPosition > 0)
-      && (f->model.c[moNo]->s[sNo].xPosition > 0)) {
+      && (f->model.c[moNo]->s[sNo].yPosition > 0)) {
     if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
       GHMM_LOG(LERROR, "failed to start position element"); goto STOP;}
     if (xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",

@@ -189,10 +189,6 @@ ghmmwrapper.set_pylogging(logwrapper)
 ghmmwrapper.ghmm_rng_init()
 ghmmwrapper.time_seed()
 
-##NORMAL = 0;
-##NORMAL_RIGHT = 1;
-##NORMAL_LEFT = 3;
-##UNIFORM = 4;
 
 #-------------------------------------------------------------------------------
 #- Exceptions ------------------------------------------------------------------
@@ -1397,24 +1393,28 @@ class HMMOpenFactory(HMMFactory):
             
     	    #(hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
             file = ghmmwrapper.parseHMMDocument(fileName)
-            nrModels = file.noModels
-            modelType = file.modelType
-
-            if( modelType == ghmmwrapper.kContinuousHMM):                
-                emission_domain = Float()
-                distribution = ContinuousMixtureDistribution
-                hmmClass = ContinuousMixtureHMM
-                getPtr = ghmmwrapper.get_smodel_ptr
-                models = ghmmwrapper.get_model_c(file)
-            #elif( modelType == ):
-            #    pass
+            if file == None:
+                log.debug( "XML has file format problems!")
+                return None
             else:
-              log.warning("Non-supported model type")
+                nrModels = file.noModels
+                modelType = file.modelType
 
-            for i in range(nrModels):
-              cmodel = getPtr(models,i)
-              m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-              result.append(m)
+                if( modelType == ghmmwrapper.kContinuousHMM):                
+                    emission_domain = Float()
+                    distribution = ContinuousMixtureDistribution
+                    hmmClass = ContinuousMixtureHMM
+                    getPtr = ghmmwrapper.get_smodel_ptr
+                    models = ghmmwrapper.get_model_c(file)
+
+                else:
+                  log.warning("Non-supported model type")
+
+                for i in range(nrModels):
+                  cmodel = getPtr(models,i)
+                  m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+                  result.append(m)
+                ghmmwrapper.free_smodel_array(models)
             return result
         else:       
             return None
@@ -2433,12 +2433,21 @@ class HMM:
         return join(strout,'')
 
 
-def HMMwriteList(fileName,hmmList):
-    if os.path.exists(fileName):
+def HMMwriteList(fileName,hmmList,fileType=GHMM_FILETYPE_SMO):
+    if(fileType==GHMM_FILETYPE_SMO):
+      if os.path.exists(fileName):
         log.warning( "HMMwriteList: File " + str(fileName) + " already exists. New models will be appended.")
-    for model in hmmList:
+      for model in hmmList:
         model.write(fileName)
-
+    else:
+       if os.path.exists(fileName):
+         log.warning( "HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
+       models = ghmmwrapper.smodel_array(len(hmmList))
+       for i,model in enumerate(hmmList):
+         ghmmwrapper.set_smodel_ptr(models,model.cmodel,i)
+       ghmmwrapper.ghmm_c_xml_write(fileName,models,len(hmmList))
+       ghmmwrapper.free_smodel_array(models)
+   
 class DiscreteEmissionHMM(HMM):
     """ HMMs with discrete emissions.
         Optional features:
@@ -3830,6 +3839,10 @@ class GaussianEmissionHMM(HMM):
         self.BWcontext = None
 
 
+    def setPrior(self, prior):
+         self.cmodel.prior = prior
+
+         
     def toMatrices(self):
         "Return the parameters in matrix form."
         A = []
@@ -4000,7 +4013,10 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return logP
 
     def getPrior(self):
-         return self.cmodel.prior   
+         return self.cmodel.prior
+
+    def setPrior(self, prior):
+         self.cmodel.prior = prior  
     
     def __str__(self):
         "defines string representation"
@@ -4096,7 +4112,6 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         sigma = ghmmwrapper.get_arrayd(state.u,comp)
         weigth = ghmmwrapper.get_arrayd(state.c,comp)
         type = ghmmwrapper.get_density(state,comp)
-        print 'olha o tipo', type
         if ((type == ghmmwrapper.uniform) or (type == ghmmwrapper.normal)):
           return (type, mu, sigma, weigth)
         else:
