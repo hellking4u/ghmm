@@ -46,7 +46,7 @@
         order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
-<!ELEMENT mixture (HMM+ | (normal*, normalTruncatedLeft*, normalTruncatedRight*, uniform*))>
+<!ELEMENT mixture (HMM+ | (normal | normalTruncatedLeft | normalTruncatedRight | uniform)+)>
 <!ATTLIST mixture
         version      CDATA #IMPLIED
         noComponents CDATA #IMPLIED
