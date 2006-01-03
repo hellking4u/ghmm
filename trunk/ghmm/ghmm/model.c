@@ -58,6 +58,8 @@
 #include "string.h"
 #include "vector.h"
 #include "ghmm_internals.h"
+#include "xmlreader.h"
+#include "xmlwriter.h"
 
 #include "obsolete.h"
 
@@ -2265,7 +2267,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*----------------------------------------------------------------------------*/
-
 ghmm_d_background_distributions *ghmm_d_background_copy
                                        (ghmm_d_background_distributions * bg)
 {
@@ -2424,6 +2425,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* end get_background */
 
 
+/*============================================================================*/
 double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
 #define CUR_PROC "model_distances"
 
@@ -2464,5 +2466,45 @@ double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
 }
 
 /*============================================================================*/
+ghmm_dmodel * * ghmm_d_xml_read (const char *filename, int * mo_number) {
+#define CUR_PROC "ghmm_d_read"
+  fileData_s *f;
+  ghmm_dmodel * * mo;
+
+  f = parseHMMDocument(filename);
+  if (!f && (f->modelType & GHMM_kDiscreteHMM)
+      && !(f->modelType & (GHMM_kPairHMM+GHMM_kTransitionClasses))) {
+    GHMM_LOG(LERROR, "wrong model type, model in file is not a plain discrete model");
+    goto STOP;
+  }
+  *mo_number = f->noModels;
+  mo = f->model.d;
+
+  free(f); /* XXX - by now, we free f */  
+  return mo;
+STOP:  
+  return NULL;
+#undef CUR_PROC
+}                               /* ghmm_c_read_block */
+
+
+/*============================================================================*/
+int ghmm_d_xml_write (const char *file, ghmm_dmodel * * mo, int mo_number) {
+#define CUR_PROC "ghmm_d_read"
+
+  fileData_s *f;
+
+  ARRAY_MALLOC(f,1);
+  f->noModels = mo_number;
+  f->modelType = mo[0]->model_type;
+  f->model.d = mo;
+  writeHMMDocument(f, file);
+  free(f);  
+  return 0;
+STOP:  
+  return -1;
+#undef CUR_PROC
+}
+
 
 /*===================== E n d   o f  f i l e  "model.c"       ===============*/

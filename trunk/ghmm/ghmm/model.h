@@ -588,6 +588,23 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 */
   void ghmm_d_update_tied_groups (ghmm_dmodel * mo);
 
+/**
+   Writes a xml file and returns an array of dmodel pointer
+   @return           :array of dmodels, NULL on error
+   @param file       :filename of the xml file
+   @param mo_number  :address of an int to store the length of the returned array
+*/
+  ghmm_dmodel * * ghmm_d_xml_read (const char *filename, int * mo_number);
+
+/**
+   Writes an array of dmodel pointer in a xml-file
+   @return           :-1 on error, 0 else
+   @param file       :filename of the xml file
+   @param mo         :an array of pointers to ghmm_dmodel
+   @param mo_number  :length of the array
+*/
+  int ghmm_d_xml_write (const char *file, ghmm_dmodel * * mo, int mo_number);
+
 #ifdef __cplusplus
 }
 #endif
