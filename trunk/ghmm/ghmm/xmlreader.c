@@ -57,7 +57,7 @@
 #include "xmlreader.h"
 
 /* we should not need more than to alphabets, no plan to implement triple HMMs */
-#define MAX_ALPHABETS 2 
+#define MAX_ALPHABETS 2
 
 
 /* holds all valid modeltypes sorted */
@@ -94,12 +94,12 @@ static int validModelTypes[28] = {
 
 
 /*===========================================================================*/
-static int getIntAttribute(xmlNodePtr node, const xmlChar *name, int *error) {
+static int getIntAttribute(xmlNodePtr node, const char *name, int *error) {
   xmlChar *attr;
   int value = -3894;
 
-  if ((attr = xmlGetProp(node, name)) != NULL) {
-    value = atoi((char*)attr);
+  if ((attr = xmlGetProp(node, BAD_CAST name)) != NULL) {
+    value = atoi((char *)attr);
     xmlFree(attr);
     *error = 0;
   } else {
@@ -109,13 +109,13 @@ static int getIntAttribute(xmlNodePtr node, const xmlChar *name, int *error) {
 }
 
 /*===========================================================================*/
-static double getDoubleAttribute(xmlNodePtr node, const xmlChar *name,
+static double getDoubleAttribute(xmlNodePtr node, const char *name,
 				 int *error) {
   xmlChar *attr;
   double value = 0.0;
 
-  if ((attr = xmlGetProp(node, name)) != NULL) {
-    value = atof((char*)attr);
+  if ((attr = xmlGetProp(node, BAD_CAST name)) != NULL) {
+    value = atof((char *)attr);
     xmlFree(attr);
     *error = 0;
   } else {
@@ -126,14 +126,14 @@ static double getDoubleAttribute(xmlNodePtr node, const xmlChar *name,
 
 /*===========================================================================*/
 /* Caller owns return value */
-static xmlChar* getXMLCharAttribute(xmlNodePtr node, const xmlChar *name,
+static char * getXMLCharAttribute(xmlNodePtr node, const char *name,
 				    int *error) {
 
   xmlChar *attr;
 
-  if ((attr = xmlGetProp(node, name)) != NULL) {
+  if ((attr = xmlGetProp(node, BAD_CAST name)) != NULL) {
     *error = 0;
-    return attr;
+    return (char *)attr;
   } else {
     *error = 1;
     return NULL;
@@ -258,7 +258,6 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   int M, code, error;
 
   xmlNodePtr symbol;
-  xmlChar * s;
   alphabet_s * alfa;
 
   ARRAY_CALLOC(alfa, 1);
@@ -266,8 +265,8 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   symbol = cur->children;
   M=0;
   while (symbol!=NULL) {
-    if ((!xmlStrcmp(symbol->name, (const xmlChar *)"symbol"))) {
-      code = getIntAttribute(symbol, (const xmlChar *)"code", &error);
+    if ((!xmlStrcmp(symbol->name, BAD_CAST "symbol"))) {
+      code = getIntAttribute(symbol, "code", &error);
       if (error || code!=M) {
 	str = ighmm_mprintf(NULL, 0, "non consecutive code %d == %d", code, M);
 	GHMM_LOG(LERROR, str);
@@ -285,13 +284,12 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   symbol = cur->children;
   M=0;
   while (symbol!=NULL) {
-    if ((!xmlStrcmp(symbol->name, (const xmlChar *)"symbol"))) {
-      s = xmlNodeGetContent(symbol);
-      alfa->symbols[M++] = (char *)s;
+    if ((!xmlStrcmp(symbol->name, BAD_CAST "symbol"))) {
+      alfa->symbols[M++] = (char *)xmlNodeGetContent(symbol);
     }
     symbol=symbol->next;
   }
-
+  
   return alfa;
 STOP:
   m_free(alfa->symbols);
@@ -314,7 +312,7 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mo
   bgNr = f->model.d[modelNo]->bp->n++;
 
   /* get order */
-  order = getIntAttribute(cur, (const xmlChar *)"order", &error);
+  order = getIntAttribute(cur, "order", &error);
   if (error)
     order=0;
   else if (order && !(f->modelType & GHMM_kHigherOrderEmissions)) {
@@ -324,7 +322,7 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mo
   f->model.d[modelNo]->bp->order[bgNr] = order;
 
   /* get name */
-  s = (char *)getXMLCharAttribute(cur, (const xmlChar *)"key", &error);
+  s = (char *)getXMLCharAttribute(cur, "key", &error);
   f->model.d[modelNo]->bp->name[bgNr] = s;
 
   /* get distribution */
@@ -359,8 +357,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 
   xmlNodePtr elem, child;
 
-  state = getIntAttribute(cur, (const xmlChar *)"id", &error);
-  pi = getDoubleAttribute(cur, (const xmlChar *)"initial", &error);
+  state = getIntAttribute(cur, "id", &error);
+  pi = getDoubleAttribute(cur, "initial", &error);
   if (error) {
     estr = ighmm_mprintf(NULL, 0, "can't read required intial probability for"
 			 "state %d", state);
@@ -368,24 +366,24 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     goto STOP;
   } else
     
-  desc = (char *)getXMLCharAttribute(cur, (const xmlChar *)"desc", &error);
+  desc = (char *)getXMLCharAttribute(cur, "desc", &error);
 
   elem = cur->children;
   while (elem!=NULL) {
     /* ======== silent state ============================================== */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"silent"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "silent"))) {
       if (f->modelType & GHMM_kDiscreteHMM)
 	f->model.d[modelNo]->silent[state] = 1;
     }
 
     /* ======== discrete state (possible higher order) ==================== */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"discrete"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "discrete"))) {
       assert((f->modelType & GHMM_kDiscreteHMM) && ((f->modelType & GHMM_kPairHMM) == 0));
       
       f->model.d[modelNo]->s[state].pi = pi;
 
       /* fixed is a propety of the distribution and optional */
-      fixed = getIntAttribute(elem, (const xmlChar *)"fixed", &error);
+      fixed = getIntAttribute(elem, "fixed", &error);
       if (error)
 	fixed = 0;
       else
@@ -393,7 +391,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 
       /* order is optional for discrete */
       if (f->modelType & GHMM_kHigherOrderEmissions) {
-	order = getIntAttribute(elem, (const xmlChar *)"order", &error);
+	order = getIntAttribute(elem, "order", &error);
 	if (error)
 	  order = 0;
 	f->model.d[modelNo]->order[state] = order;
@@ -408,15 +406,15 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     }
 
     /* ======== continuous state ========================================== */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"mixture"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "mixture"))) {
       assert(f->modelType & GHMM_kContinuousHMM);
       M = 0;
       child = elem->children;
       while (child != NULL) {
-        if ((!xmlStrcmp(child->name, (const xmlChar *)"normal")) || 
-            (!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedLeft")) ||
-            (!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedRight")) ||
-            (!xmlStrcmp(child->name, (const xmlChar *)"uniform"))){
+        if ((!xmlStrcmp(child->name, BAD_CAST "normal")) || 
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "uniform"))){
           M ++;
           
         }
@@ -434,65 +432,65 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       
       i = 0;
       while (child != NULL) {  
-        if ((!xmlStrcmp(child->name, (const xmlChar *)"normal"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
+        if ((!xmlStrcmp(child->name, BAD_CAST "normal"))) {
+          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "mean", &error);
+          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "variance", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          aprox = getIntAttribute(child, (const xmlChar *)"aproximate", &error);
+          aprox = getIntAttribute(child, "aproximate", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);          
+          fixed = getIntAttribute(child, "fixed", &error);          
           if (error)
             fixed = 0;
           stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          prior = getDoubleAttribute(child, "prior", &error);
           if (error)
             prior = 1.0;
 	  f->model.c[modelNo]->s[state].c[i] = prior;
           i++;                  
         }
-        if ((!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedLeft"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
-          f->model.c[modelNo]->s[state].a[i] = getDoubleAttribute(child, (const xmlChar *)"min", &error);
+        if ((!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft"))) {
+          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "mean", &error);
+          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "variance", &error);
+          f->model.c[modelNo]->s[state].a[i] = getDoubleAttribute(child, "min", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_left;
-          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          fixed = getIntAttribute(child, "fixed", &error);
           if (error)
             fixed = 0;
           stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          prior = getDoubleAttribute(child, "prior", &error);
           if (error)
             prior = 1.0;
 	  f->model.c[modelNo]->s[state].c[i] = prior;
           i++;          
         }
-        if ((!xmlStrcmp(child->name, (const xmlChar *)"normalTruncatedRight"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"mean", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"variance", &error);
-          f->model.c[modelNo]->s[state].a[i] = getDoubleAttribute(child, (const xmlChar *)"max", &error);
+        if ((!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight"))) {
+          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "mean", &error);
+          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "variance", &error);
+          f->model.c[modelNo]->s[state].a[i] = getDoubleAttribute(child, "max", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_right;
-          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          fixed = getIntAttribute(child, "fixed", &error);
           if (error)
             fixed = 0;
           stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          prior = getDoubleAttribute(child, "prior", &error);
           if (error)
             prior = 1.0;
 	  f->model.c[modelNo]->s[state].c[i] = prior;
           i++;  
         }
-        if ((!xmlStrcmp(child->name, (const xmlChar *)"uniform"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, (const xmlChar *)"max", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, (const xmlChar *)"min", &error);
+        if ((!xmlStrcmp(child->name, BAD_CAST "uniform"))) {
+          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "max", &error);
+          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "min", &error);
           f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)uniform;
-          fixed = getIntAttribute(child, (const xmlChar *)"fixed", &error);
+          fixed = getIntAttribute(child, "fixed", &error);
           if (error)
             fixed = 0;
           stateFixed = fixed && stateFixed;
           f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, (const xmlChar *)"prior", &error);
+          prior = getDoubleAttribute(child, "prior", &error);
           if (error)
             prior = 1.0;
 	  f->model.c[modelNo]->s[state].c[i] = prior;
@@ -507,11 +505,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     }
 
     /* ======== pair hmm state ============================================ */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"pair"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "pair"))) {
     }
 
     /* -------- background name  ------------------------------------------ */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"backgroundName"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "backgroundName"))) {
       
       assert(f->modelType & GHMM_kBackgroundDistributions);
 
@@ -520,7 +518,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       for (i=0; i<f->model.d[modelNo]->bp->n; i++) {
 	if (!strcmp(s, f->model.d[modelNo]->bp->name[i])) {
 	  if (order != f->model.d[modelNo]->bp->order[i]) {
-	    estr = ighmm_mprintf(NULL, 0, "order of background %s and state %d does not match",
+	    estr = ighmm_mprintf(NULL, 0, "order of background %s and state %d"
+				 " does not match",
 				 f->model.d[modelNo]->bp->name[i], state);
 	    GHMM_LOG(LERROR, estr);
 	    m_free(estr);
@@ -532,8 +531,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	}
       }
       if (i == f->model.d[modelNo]->bp->n) {
-	estr = ighmm_mprintf(NULL, 0, "can't find background with name %s in state %d",
-			     s, state);
+	estr = ighmm_mprintf(NULL, 0, "can't find background with name %s in"
+			     " state %d", s, state);
 	GHMM_LOG(LERROR, estr);
 	m_free(estr);
 	goto STOP;
@@ -542,7 +541,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     }
 
     /* -------- tied to --------------------------------------------------- */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"tiedTo"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "tiedTo"))) {
 
       assert(f->modelType & GHMM_kTiedEmissions);
 
@@ -566,11 +565,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
     }
 
     /* -------- position for graphical editing ---------------------------- */
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"position"))) {
-      curX = getIntAttribute(elem, (const xmlChar *)"x", &error);
+    if ((!xmlStrcmp(elem->name, BAD_CAST "position"))) {
+      curX = getIntAttribute(elem, "x", &error);
       if (error)
 	GHMM_LOG(LWARN, "failed to read x position");
-      curY = getIntAttribute(elem, (const xmlChar *)"y", &error);
+      curY = getIntAttribute(elem, "y", &error);
       if (error)
 	GHMM_LOG(LWARN, "failed to read y position");
 
@@ -579,12 +578,19 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       case GHMM_kDiscreteHMM:
         f->model.d[modelNo]->s[state].xPosition = curX;
         f->model.d[modelNo]->s[state].yPosition = curY;
+      case GHMM_kDiscreteHMM+GHMM_kTransitionClasses:
+	/*
+        f->model.ds[modelNo]->s[state].xPosition = curX;
+        f->model.ds[modelNo]->s[state].yPosition = curY;
+	*/
 	break;
-      case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+      case GHMM_kDiscreteHMM+GHMM_kPairHMM:
+      case GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses:
         f->model.dp[modelNo]->s[state].xPosition = curX;
         f->model.dp[modelNo]->s[state].yPosition = curY;
 	break;
       case GHMM_kContinuousHMM:
+      case GHMM_kContinuousHMM+GHMM_kTransitionClasses:
         f->model.c[modelNo]->s[state].xPosition = curX;
         f->model.c[modelNo]->s[state].yPosition = curY;
 	break;
@@ -605,7 +611,8 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int modelNo) {
+static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f,
+				 int modelNo) {
 #define CUR_PROC "parseTransition"
 
   int retval=-1;
@@ -617,12 +624,12 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
 
   assert((f->modelType & GHMM_kTransitionClasses) == 0);
 
-  source = getIntAttribute(cur, (const xmlChar *)"source", &error);
-  target = getIntAttribute(cur, (const xmlChar *)"target", &error);
+  source = getIntAttribute(cur, "source", &error);
+  target = getIntAttribute(cur, "target", &error);
 
   elem = cur->children;
   while (elem!=NULL) {
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"probability"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "probability"))) {
       s = (char *)xmlNodeGetContent(elem);
       p = atof(s);
       m_free(s)
@@ -667,7 +674,8 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, 
 }
 
 /*===========================================================================*/
-static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int modelNo) {
+static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
+				   fileData_s * f, int modelNo) {
 #define CUR_PROC "parseTransition"
 
   int i, retval=-1;
@@ -679,12 +687,12 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f
 
   assert(f->modelType & GHMM_kTransitionClasses);
 
-  source = getIntAttribute(cur, (const xmlChar *)"source", &error);
-  target = getIntAttribute(cur, (const xmlChar *)"target", &error);
+  source = getIntAttribute(cur, "source", &error);
+  target = getIntAttribute(cur, "target", &error);
 
   elem = cur->children;
   while (elem!=NULL) {
-    if ((!xmlStrcmp(elem->name, (const xmlChar *)"probability"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "probability"))) {
      
       s = (char *)xmlNodeGetContent(elem);
       ARRAY_MALLOC(probs, nrTransitionClasses);
@@ -698,12 +706,12 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f
   switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
   case (GHMM_kDiscreteHMM + GHMM_kTransitionClasses):
-    out_state = f->model.d[modelNo]->s[source].out_states++;
-    in_state  = f->model.d[modelNo]->s[target].in_states++;
-    f->model.d[modelNo]->s[source].out_id[out_state] = target;
-/*     f->model.d[modelNo]->s[source].out_a[out_state]  = probs; */
-    f->model.d[modelNo]->s[target].in_id[in_state]   = source;
-/*     f->model.d[modelNo]->s[target].in_a[in_state]    = probs; */
+    out_state = f->model.ds[modelNo]->s[source].out_states++;
+    in_state  = f->model.ds[modelNo]->s[target].in_states++;
+    f->model.ds[modelNo]->s[source].out_id[out_state] = target;
+/*     f->model.ds[modelNo]->s[source].out_a[out_state]  = probs; */
+    f->model.ds[modelNo]->s[target].in_id[in_state]   = source;
+/*     f->model.ds[modelNo]->s[target].in_a[in_state]    = probs; */
     break;
   case (GHMM_kDiscreteHMM + GHMM_kPairHMM + GHMM_kTransitionClasses):
     out_state = f->model.dp[modelNo]->s[source].out_states++;
@@ -771,7 +779,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   GHMM_LOG(LINFO, "parseHMM to count ");
   while (child != NULL) {
     /* ========== ALPHABETS ================================================ */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"alphabet"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "alphabet"))) {
       if (!alphabets)
 	ARRAY_MALLOC(alphabets, MAX_ALPHABETS);
 
@@ -785,8 +793,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
     }
 
     /* ========== NODES ==================================================  */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"state"))) {
-      id = getIntAttribute(child, (const xmlChar *)"id", &error);
+    if ((!xmlStrcmp(child->name, BAD_CAST "state"))) {
+      id = getIntAttribute(child, "id", &error);
       if (error || id!=N) {
         GHMM_LOG(LERROR, "non consecutive node ids");
         goto STOP;
@@ -795,24 +803,26 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
     }
 
     /* ========== EDGES ==================================================  */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"transition"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "transition"))) {
       
       if (inDegree == NULL) {
         ARRAY_CALLOC(inDegree, N);
         ARRAY_CALLOC(outDegree, N);
       }
 
-      source = getIntAttribute(child, (const xmlChar *)"source", &error);
+      source = getIntAttribute(child, "source", &error);
       if (error || source<0 || source>N) {
-	estr = ighmm_mprintf(NULL, 0, "source (%d) node not existing (%d)", source, error);
+	estr = ighmm_mprintf(NULL, 0, "source (%d) node not existing (%d)",
+			     source, error);
 	GHMM_LOG(LERROR, estr);
 	m_free(estr);
         goto STOP;
       }
 
-      target = getIntAttribute(child, (const xmlChar *)"target", &error);
+      target = getIntAttribute(child, "target", &error);
       if (error || target<0 || target>N) {
-	estr = ighmm_mprintf(NULL, 0, "target (%d) node not existing (%d)", target, error);
+	estr = ighmm_mprintf(NULL, 0, "target (%d) node not existing (%d)",
+			     target, error);
         GHMM_LOG(LERROR, estr);
 	m_free(estr);
         goto STOP;
@@ -822,7 +832,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
       outDegree[source]++;
     }
     /* ========== BACKGROUND DISTRIBUTIONS ================================  */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"background")))
+    if ((!xmlStrcmp(child->name, BAD_CAST "background")))
       nrBackgrounds++;
 
     child = child->next;
@@ -838,8 +848,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   }
 
   /* starting real parsing */
-  modelname = (char *)getXMLCharAttribute(cur, (const xmlChar *)"name", &error);
-  mt = (char *)getXMLCharAttribute(cur, (const xmlChar *)"type", &error);
+  modelname = getXMLCharAttribute(cur, "name", &error);
+  mt = getXMLCharAttribute(cur, "type", &error);
   modeltype = parseModelType(mt, strlen(mt));
   f->modelType = modeltype;
 
@@ -873,7 +883,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   case GHMM_kDiscreteHMM:
     assert(nrAlphabets == 1);
     M = alphabets[0]->size;
-    f->model.d[modelNo] = ghmm_dmodel_calloc(M, N, modeltype, inDegree, outDegree);
+    f->model.d[modelNo] = ghmm_dmodel_calloc(M, N, modeltype, inDegree,
+					     outDegree);
     f->model.d[modelNo]->alphabet = alphabets[0];
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
@@ -886,11 +897,11 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):    
     f->model.c[modelNo] = ghmm_cmodel_calloc(N,modeltype);
-    prior = getDoubleAttribute(cur, (const xmlChar *)"prior", &error);
+    prior = getDoubleAttribute(cur, "prior", &error);
     if (error) /* optional atribute not defined */          
         prior = 1.0;      
     f->model.c[modelNo]->prior = prior;
-    cos = getIntAttribute(cur, (const xmlChar *)"transitionClasses", &error);
+    cos = getIntAttribute(cur, "transitionClasses", &error);
     if (error) /* optional atribute not defined */          
         cos = 1;      
     f->model.c[modelNo]->cos = cos;
@@ -906,7 +917,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
     case GHMM_kDiscreteHMM:
       ARRAY_CALLOC(bg_orders, N);
       ARRAY_CALLOC(bg_ptr, N);
-      f->model.d[modelNo]->bp = ghmm_d_background_alloc(nrBackgrounds, M, bg_orders, bg_ptr);
+      f->model.d[modelNo]->bp = ghmm_d_background_alloc(nrBackgrounds, M,
+							bg_orders, bg_ptr);
       ARRAY_CALLOC(f->model.d[modelNo]->bp->name, N);
       f->model.d[modelNo]->bp->n = 0;
       break;
@@ -920,7 +932,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   while (child != NULL) {
 
     /* ========== LABEL ALPHABETS ========================================== */
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"labelAlphabet"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "labelAlphabet"))) {
       alfa = parseAlphabet(doc, child, f);
       if (alfa) {
 	f->model.d[modelNo]->labelAlphabet = alfa;
@@ -930,17 +942,17 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
       }
     }
     
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"background"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "background"))) {
       if (modeltype & GHMM_kBackgroundDistributions) {
 	parseBackground(doc, child, f, modelNo);
       } else {
 	GHMM_LOG(LWARN, "Ignoring background distribution.");
       }
     }
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"state"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "state"))) {
       parseState(doc, child, f, inDegree, outDegree, modelNo);
     }
-    if ((!xmlStrcmp(child->name, (const xmlChar *)"transition"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "transition"))) {
       if (modeltype & GHMM_kTransitionClasses)
 	parseMultipleTransition(doc, child, f, modelNo);
       else
@@ -998,31 +1010,49 @@ fileData_s * parseHMMDocument(const char *filename) {
       GHMM_LOG(LERROR, str);
       m_free(str);
     } else {
-      /* checking the root node, creating the file structure and iteration over all HMMs */
+      /* checking the root node, creating the file structure and
+	 iteration over all HMMs */
       cur = xmlDocGetRootElement(doc);
-      if ((!xmlStrcmp(cur->name, (const xmlChar *)"mixture"))) {
+      /* file contains a mixture of HMMs */
+      if ((!xmlStrcmp(cur->name, BAD_CAST "mixture"))) {
         ARRAY_CALLOC(filedata, 1);        
-        filedata->noModels = getIntAttribute(cur, (const xmlChar *)"noComponents", &error);                
+        filedata->noModels = getIntAttribute(cur, "noComponents", &error);                
         child = cur->children;
         while (child!=NULL) {
-          if ((!xmlStrcmp(child->name, (const xmlChar *)"HMM"))) {
-            if (modelNo > filedata->noModels){
-              str = ighmm_mprintf(NULL, 0, "The mixture has more models than defined");
-	      GHMM_LOG(LERROR, str);
+          if ((!xmlStrcmp(child->name, BAD_CAST "HMM"))) {
+            if (modelNo >= filedata->noModels) {
+              str = ighmm_mprintf(NULL, 0, "The mixture has more models than"
+				  " defined, ignoring all following HMMs (%d/%d)", 
+				  modelNo, filedata->noModels);
+	      GHMM_LOG(LWARN, str);
 	      m_free(str);
-            }else{
-              parseHMM(filedata,doc, child, modelNo);
+	      break;
+            } else {
+              if (parseHMM(filedata, doc, child, modelNo)) {
+		str = ighmm_mprintf(NULL, 0, "could not parse model no. %d", modelNo);
+		GHMM_LOG(LERROR, str);
+		m_free(str);
+		goto STOP;
+	      }
               modelNo++;
             }
           }
           child=child->next; 
         }
         if (modelNo < filedata->noModels){
-          str = ighmm_mprintf(NULL, 0, "The mixture has less models than defined");
-	  GHMM_LOG(LERROR, str);
-	  m_free(str);
+	  GHMM_LOG(LERROR, "The mixture has less models than defined");
+	  goto STOP;
         }
-      }else{
+      /* only single hmm in file */
+      } else if (!xmlStrcmp(cur->name, BAD_CAST "HMM")) {
+	ARRAY_CALLOC(filedata, 1);
+	filedata->noModels = 1;
+	if (parseHMM(filedata, doc, cur, 0)) {
+	  GHMM_LOG(LERROR, "could not parse the hidden markov model");
+	  goto STOP;
+	}
+      /* invalid root entry */
+      } else {
         str = ighmm_mprintf(NULL, 0, "The file does not contains the appropriate root %s", filename);
 	GHMM_LOG(LERROR, str);
 	m_free(str);
