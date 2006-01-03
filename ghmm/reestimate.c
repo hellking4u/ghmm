@@ -319,12 +319,15 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
   int res = -1;
   int h, i, j, m, l, j_id, positive;
   double factor, p_i;
-  int hist, col, size;
+  int hist, col, size, reachable;
   char *str;
 
   mes_check_0 (r->pi_denom, goto STOP);
 
   for (i = 0; i < mo->N; i++) {
+    reachable = 1;
+    positive = 0;
+
     /* Pi */
     mo->s[i].pi = r->pi_num[i] / r->pi_denom;
 
@@ -336,19 +339,20 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
         p_i += mo->s[i].in_a[h];
       }
       if (p_i == 0.0) {
-        if (mo->s[i].in_states == 0)
+        if (h == 0)
           str = ighmm_mprintf (NULL, 0,
                          "State %d can't be reached (no in_states)\n", i);
         else
           str = ighmm_mprintf (NULL, 0, "State %d can't be reached (prob = 0.0)\n", i);
-        mes_prot (str);
+        GHMM_LOG(LINFO, str);
         m_free (str);
+        reachable = 0;
       }
       factor = 0.0;
     }
     else
       factor = (1 / r->a_denom[i]);
-    positive = 0;
+
 
     for (j = 0; j < mo->s[i].out_states; j++) {
       /* TEST: denom. < numerator */
@@ -392,46 +396,46 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
       size = 1;
     /* If all in_a's are zero, the state can't be reached.
        Set all b's to -1.0 */
-    if (factor == 0.0) {
+    if (!reachable) {
       for (hist = 0; hist < size; hist++) {
-	col = hist * mo->M;
-	for (m = col; m < col + mo->M; m++) {
-	  mo->s[i].b[m] = -1.0;
-	}
+        col = hist * mo->M;
+        for (m = col; m < col + mo->M; m++) {
+          mo->s[i].b[m] = -1.0;
+        }
       }
     }
     else {
       for (hist = 0; hist < size; hist++) {
         /* If the denominator is very small, we have not seen many emissions
-	   in this state with this history.
-	   We are conservative and just skip them. */
-	if (r->b_denom[i][hist] < GHMM_EPS_PREC)
-	  continue;
-	else
-	  factor = (1.0 / r->b_denom[i][hist]);
+           in this state with this history.
+           We are conservative and just skip them. */
+        if (r->b_denom[i][hist] < GHMM_EPS_PREC)
+          continue;
+        else
+          factor = (1.0 / r->b_denom[i][hist]);
 
-	positive = 0;
-	/* TEST: denom. < numerator */
-	col = hist * mo->M;
-	for (m = col; m < col + mo->M; m++) {
-	  if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -GHMM_EPS_PREC) {
-	    str = ighmm_mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
-				 r->b_num[i][m], r->b_denom[i][hist]);
-	    mes_prot (str);
-	    m_free (str);
-	  }
-	  
-	  mo->s[i].b[m] = r->b_num[i][m] * factor;
-	  if (mo->s[i].b[m] >= GHMM_EPS_PREC)
-	    positive = 1;
-	}
+        positive = 0;
+        /* TEST: denom. < numerator */
+        col = hist * mo->M;
+        for (m = col; m < col + mo->M; m++) {
+          if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -GHMM_EPS_PREC) {
+            str = ighmm_mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
+                                 r->b_num[i][m], r->b_denom[i][hist]);
+            mes_prot (str);
+            m_free (str);
+          }
+          
+          mo->s[i].b[m] = r->b_num[i][m] * factor;
+          if (mo->s[i].b[m] >= GHMM_EPS_PREC)
+            positive = 1;
+        }
 
-	if (!positive) {
-	  str = ighmm_mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
-			       i, col, col + mo->M, r->b_denom[i][hist]);
-	  mes_prot (str);
-	  m_free (str);
-	}
+        if (!positive) {
+          str = ighmm_mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
+                               i, col, col + mo->M, r->b_denom[i][hist]);
+          mes_prot (str);
+          m_free (str);
+        }
       }                           /* for each history */
     }
   }                             /* for (i = 0 .. < mo->N)  */
