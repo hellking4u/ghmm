@@ -919,7 +919,7 @@ int ghmm_d_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
 
   /* check new parameter for plausibility */
   /* if (ghmm_d_check(mo) == -1) { mes_proc(); goto STOP; } */
-  res = 1;
+  res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
