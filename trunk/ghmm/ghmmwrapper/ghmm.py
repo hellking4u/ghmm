@@ -239,7 +239,6 @@ class InvalidModelParameters(GHMMError):
     def __str__(self):
         return repr(self.message)
 
-
 class GHMMOutOfDomain(GHMMError):
     def __init__(self,message):
         self.message = message
@@ -251,7 +250,12 @@ class UnsupportedFeature(GHMMError):
        self.message = message
     def __str__(self):
         return repr(self.message)
-
+    
+class WrongFileType(GHMMError):
+    def __init__(self,message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
 
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
@@ -1237,7 +1241,6 @@ class HMMFactory:
 
 GHMM_FILETYPE_SMO = 'smo'
 GHMM_FILETYPE_XML = 'xml'
-GHMM_FILETYPE_XML_C = 'xml_c'
 GHMM_FILETYPE_HMMER = 'hmm'
 
 
@@ -1252,172 +1255,174 @@ class HMMOpenFactory(HMMFactory):
         if not isinstance(fileName,StringIO.StringIO):
             if not os.path.exists(fileName):
                 raise IOError, 'File ' + str(fileName) + ' not found.'
-
-    	if self.defaultFileType == GHMM_FILETYPE_XML: # XML file
-    	    hmm_dom = xmlutil.HMM(fileName)
-    	    emission_domain = hmm_dom.AlphabetType()
             
-    	    if emission_domain == int:
-                [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
-
-    		emission_domain = Alphabet(alphabets)
-    		distribution = DiscreteDistribution(emission_domain)
-    		# build adjacency list
-
-                # check for background distributions
-                (background_dist, orders, code2name) = hmm_dom.getBackgroundDist()
-                # (background_dist, orders) = hmm_dom.getBackgroundDist()
-                bg_list = []
-                # if background distribution exists, set background distribution here
-                if background_dist != {}:
-                    # transformation to list for input into BackgroundDistribution,
-                    # ensure the rigth order
-                    for i in range(len(code2name.keys())-1):
-                        bg_list.append(background_dist[code2name[i]])
-                        
-                    bg = BackgroundDistribution(emission_domain, bg_list)
-                    
-                # check for state labels
-                (label_list, labels) = hmm_dom.getLabels()
-                if labels == ['None']:
-                    labeldom   = None
-                    label_list = None
-                else:
-                    labeldom = LabelDomain(labels)
+        # XML file: both new and old format
+    	if self.defaultFileType == GHMM_FILETYPE_XML:
+            try:
+                m = self.openNewXML(fileName, modelIndex)
+            except WrongFileType:
+                m = self.openOldXML(fileName)
                 
-                m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
-                
-                if background_dist != {}:
-                     ids = [-1]*m.N
-                     for s in hmm_dom.state.values():
-                          ids[s.index-1] = s.background # s.index ranges from [1, m.N]  
-                     
-                     m.setBackground(bg, ids)
-                     log.debug( "model_type %x" % m.cmodel.model_type)
-                     log.debug("background_id" + str( ghmmhelper.arrayint2list(m.cmodel.background_id, m.N)))
-                else:
-                     m.cmodel.bp = None
-                     m.cmodel.background_id = None
-
-                # check for tied states
-                tied = hmm_dom.getTiedStates()
-                if len(tied) > 0:
-                    m.cmodel.model_type += 8  #kTiedEmissions
-                    m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
-
-                durations = hmm_dom.getStateDurations()
-                if len(durations) == m.N: 
-                    log.debug("durations: " + str(durations))
-                    m.extendDurations(durations)
-                        
-	    	return m
+            return m
 	    
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
-            # MO & SMO Files, format is deprecated
-            # check if ghmm is build with smo support
-            if not ghmmwrapper.SMO_FILE_SUPPORT:
-                raise UnsupportedFeature ("smo files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
-            
-    	    (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+            return self.openSMO(fileName, modelIndex)
 
-            log.debug("determineHMMClass = "+ str(  (hmmClass, emission_domain, distribution)))
-
-            nrModelPtr = ghmmwrapper.int_array(1)
-    	    
-            # XXX broken since silent states are not supported by .smo file format 
-            if hmmClass == DiscreteEmissionHMM:
-                models = ghmmwrapper.ghmm_d_read(fileName, nrModelPtr)
-                getPtr = ghmmwrapper.get_model_ptr
-            else:
-                models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
-                getPtr = ghmmwrapper.get_smodel_ptr
-
-            nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
-            if modelIndex == None:
-                cmodel = getPtr(models, 0) 
-            else:
-                if modelIndex < nrModels:
-                    cmodel = getPtr(models, modelIndex) 
-                else:
-		            return None
-
-            m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-            return m
-
-        else:   
+        else:
             # HMMER format models
-            h = modhmmer.hmmer(fileName)
+            return self.openHMMER(fileName)
+
+
+    def openNewXML(self, fileName, modelIndex):
+        # check the type of hmm
+        # start the model
+
+        file = ghmmwrapper.parseHMMDocument(fileName)
+        if file == None:
+            log.debug( "XML has file format problems!")
+            raise WrongFileType("file is not in GHMM xml format")
+
+        nrModels = file.noModels
+        modelType = file.modelType
+
+        if (modelType == ghmmwrapper.kContinuousHMM):                
+            emission_domain = Float()
+            distribution = ContinuousMixtureDistribution
+            hmmClass = ContinuousMixtureHMM
+            getPtr = ghmmwrapper.get_smodel_ptr
+            models = ghmmwrapper.get_model_c(file)
+
+        else:
+            log.warning("Non-supported model type")
+
+        # for a mixture of HMMs return a list of HMMs
+        if nrModels>1:
+            result = []
+            for i in range(nrModels):
+                cmodel = getPtr(models,i)
+                m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+                result.append(m)
+                
+        # for a single HMM just return the HMM
+        else:
+            result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             
-            if h.m == 4:  # DNA model
-                emission_domain = DNA
-            elif h.m == 20:   # Peptide model    
-                emission_domain = AminoAcids
-            else:   # some other model
-                emission_domain = IntegerRange(0,h.m)
+
+        ghmmwrapper.freearray(models)
+        return result
+
+    def openOldXML(self, fileName):
+        hmm_dom = xmlutil.HMM(fileName)
+        emission_domain = hmm_dom.AlphabetType()
+
+        if emission_domain == int:
+            [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
+
+            emission_domain = Alphabet(alphabets)
             distribution = DiscreteDistribution(emission_domain)
-            
-            [A,B,pi,modelName] = h.getGHMMmatrices()
-            return  HMMFromMatrices(emission_domain, distribution, A, B, pi, hmmName=modelName)
+            # build adjacency list
 
-    
-    def all(self, fileName):
-        
-        result = []
-        
-        if not os.path.exists(fileName):
-          raise IOError, 'File ' + str(fileName) + ' not found.'
-      
-        if self.defaultFileType == GHMM_FILETYPE_SMO:
-          # MO & SMO Files
-          (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
-          nrModelPtr = ghmmwrapper.int_array(1)
-          if hmmClass == DiscreteEmissionHMM:
-              models = hmmwrapper.ghmm_d_read(fileName, nrModelPtr)
-              getPtr = ghmmwrapper.get_model_ptr
-          else:
-              models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
-              getPtr = ghmmwrapper.get_smodel_ptr
+            # check for background distributions
+            (background_dist, orders, code2name) = hmm_dom.getBackgroundDist()
+            # (background_dist, orders) = hmm_dom.getBackgroundDist()
+            bg_list = []
+            # if background distribution exists, set background distribution here
+            if background_dist != {}:
+                # transformation to list for input into BackgroundDistribution,
+                # ensure the rigth order
+                for i in range(len(code2name.keys())-1):
+                    bg_list.append(background_dist[code2name[i]])
 
-          nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
+                bg = BackgroundDistribution(emission_domain, bg_list)
 
-          for i in range(nrModels):
-              cmodel = getPtr(models, i)
-              m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-              result.append(m)
-          return result
-        
-        elif self.defaultFileType == GHMM_FILETYPE_XML_C:
-            
-            # check the type of hmm
-            # start the model
-            
-    	    #(hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
-            file = ghmmwrapper.parseHMMDocument(fileName)
-            if file == None:
-                log.debug( "XML has file format problems!")
-                return None
+            # check for state labels
+            (label_list, labels) = hmm_dom.getLabels()
+            if labels == ['None']:
+                labeldom   = None
+                label_list = None
             else:
-                nrModels = file.noModels
-                modelType = file.modelType
+                labeldom = LabelDomain(labels)
 
-                if( modelType == ghmmwrapper.kContinuousHMM):                
-                    emission_domain = Float()
-                    distribution = ContinuousMixtureDistribution
-                    hmmClass = ContinuousMixtureHMM
-                    getPtr = ghmmwrapper.get_smodel_ptr
-                    models = ghmmwrapper.get_model_c(file)
+            m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
 
-                else:
-                  log.warning("Non-supported model type")
+            if background_dist != {}:
+                 ids = [-1]*m.N
+                 for s in hmm_dom.state.values():
+                      ids[s.index-1] = s.background # s.index ranges from [1, m.N]  
 
-                for i in range(nrModels):
-                  cmodel = getPtr(models,i)
-                  m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-                  result.append(m)
-                ghmmwrapper.free_smodel_array(models)
-            return result
-        else:       
-            return None
+                 m.setBackground(bg, ids)
+                 log.debug( "model_type %x" % m.cmodel.model_type)
+                 log.debug("background_id" + str( ghmmhelper.arrayint2list(m.cmodel.background_id, m.N)))
+            else:
+                 m.cmodel.bp = None
+                 m.cmodel.background_id = None
+
+            # check for tied states
+            tied = hmm_dom.getTiedStates()
+            if len(tied) > 0:
+                m.cmodel.model_type += 8  #kTiedEmissions
+                m.cmodel.tied_to = ghmmhelper.list2arrayint(tied)
+
+            durations = hmm_dom.getStateDurations()
+            if len(durations) == m.N: 
+                log.debug("durations: " + str(durations))
+                m.extendDurations(durations)
+
+	    	return m
+
+    def openSMO(self, fileName, modelIndex):
+        # MO & SMO Files, format is deprecated
+        # check if ghmm is build with smo support
+        if not ghmmwrapper.SMO_FILE_SUPPORT:
+            raise UnsupportedFeature ("smo files are deprecated. Please convert your files"
+                                      "to the new xml-format or rebuild the GHMM with the"
+                                      "conditional \"GHMM_OBSOLETE\".")
+            
+        (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
+
+        log.debug("determineHMMClass = "+ str(  (hmmClass, emission_domain, distribution)))
+        
+        nrModelPtr = ghmmwrapper.int_array(1)
+    	    
+        # XXX broken since silent states are not supported by .smo file format 
+        if hmmClass == DiscreteEmissionHMM:
+            models = ghmmwrapper.ghmm_d_read(fileName, nrModelPtr)
+            getPtr = ghmmwrapper.get_model_ptr
+        else:
+            models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
+            getPtr = ghmmwrapper.get_smodel_ptr
+
+        nrModels = ghmmwrapper.get_arrayint(nrModelPtr, 0)
+        if modelIndex == None:
+            result = []
+            for i in range(nrModels):
+                cmodel = getPtr(models, i)
+                m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+                result.append(m)
+        else:
+            if modelIndex < nrModels:
+                cmodel = getPtr(models, modelIndex)
+                result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
+            else:
+                result = None
+
+        return result
+
+    def openHMMER(self, fileName):
+        # HMMER format models
+        h = modhmmer.hmmer(fileName)
+        
+        if h.m == 4:  # DNA model
+            emission_domain = DNA
+        elif h.m == 20:   # Peptide model    
+            emission_domain = AminoAcids
+        else:   # some other model
+            emission_domain = IntegerRange(0,h.m)
+        distribution = DiscreteDistribution(emission_domain)
+
+        [A,B,pi,modelName] = h.getGHMMmatrices()
+        return  HMMFromMatrices(emission_domain, distribution, A, B, pi, hmmName=modelName)
+
         
     def determineHMMClass(self, fileName):
         #
@@ -1496,7 +1501,7 @@ class HMMOpenFactory(HMMFactory):
             
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
 HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
-HMMOpenXML = HMMOpenFactory(GHMM_FILETYPE_XML)
+HMMOpenXML = HMMOpenFactory(GHMM_FILETYPE_XML  )
 
 
 def readMultipleHMMERModels(fileName):
