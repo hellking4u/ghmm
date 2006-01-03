@@ -1254,7 +1254,7 @@ class HMMOpenFactory(HMMFactory):
         
         if not isinstance(fileName,StringIO.StringIO):
             if not os.path.exists(fileName):
-                raise IOError, 'File ' + str(fileName) + ' not found.'
+                raise IOError, "File %s not found."% str(fileName)
             
         # XML file: both new and old format
     	if self.defaultFileType == GHMM_FILETYPE_XML:
@@ -1296,7 +1296,7 @@ class HMMOpenFactory(HMMFactory):
             log.warning("Non-supported model type")
 
         # for a mixture of HMMs return a list of HMMs
-        if nrModels>1:
+        if nrModels>1 and modelIndex == None:
             result = []
             for i in range(nrModels):
                 cmodel = getPtr(models,i)
@@ -1305,6 +1305,13 @@ class HMMOpenFactory(HMMFactory):
                 
         # for a single HMM just return the HMM
         else:
+            if modelIndex == None:
+                cmodel = getPtr(models, 0)
+            elif modelIndex < nrModels:
+                cmodel = getPtr(models, modelIndex)
+            else:
+                raise IndexOutOfBounds("the file %s has only %s models"% fileName, str(nrModels))
+
             result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             
 
@@ -1501,7 +1508,7 @@ class HMMOpenFactory(HMMFactory):
             
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
 HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
-HMMOpenXML = HMMOpenFactory(GHMM_FILETYPE_XML  )
+HMMOpenXML = HMMOpenFactory(GHMM_FILETYPE_XML)
 
 
 def readMultipleHMMERModels(fileName):
