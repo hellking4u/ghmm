@@ -87,14 +87,21 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
 
 
 /*----------------------------------------------------------------------------*/
- int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n)
+int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n)
 {
 #define CUR_PROC "ghmm_d_ipow"
-  int result = 1;
+  int i, result=1;
+  ghmm_dmodel * mc = mo;
 
-  if (mo->pow_lookup && (mo->M == x) && ((int)n <= mo->maxorder + 1))
+  if ((mo->M == x) && (n <= mo->maxorder + 1)) {
+    if (!mo->pow_lookup) {
+      ARRAY_MALLOC(mc->pow_lookup, mo->maxorder+2);
+      mc->pow_lookup[0] = 1;
+      for (i=1; i<mo->maxorder+2; ++i)
+	mc->pow_lookup[i] = mo->M * mo->pow_lookup[i];
+    }
     return mo->pow_lookup[n];
-  else {
+  } else {
     while (n != 0) {
       if (n & 1)
         result *= x;
@@ -103,6 +110,8 @@ static int topo_free(local_store_t **v, int n, int cos, int len); */
     }
     return result;
   }
+STOP:
+  return -1;
 #undef CUR_PROC
 }
 
@@ -622,6 +631,7 @@ int ghmm_d_free(ghmm_dmodel ** mo) {
 #define CUR_PROC "ghmm_d_free"
   int i;
   mes_check_ptr (mo, return (-1));
+  mes_check_ptr (*mo, return (-1));
 
   for (i=0; i < (*mo)->N; i++)
     ghmm_d_state_clean(&(*mo)->s[i]);
@@ -689,9 +699,14 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   if (mo->model_type & GHMM_kLabeledStates)
     ARRAY_CALLOC (m2->label, mo->N);
 
-  ARRAY_MALLOC (m2->pow_lookup, mo->maxorder + 2);
+  ARRAY_MALLOC(m2->pow_lookup, mo->maxorder+2);
   
   for (i = 0; i < mo->N; i++) {
+    if (mo->model_type & GHMM_kHigherOrderEmissions)
+      size = ghmm_d_ipow(mo, mo->M, mo->order[i]+1);
+    else
+      size = mo->M;
+
     nachf = mo->s[i].out_states;
     vorg = mo->s[i].in_states;
     
@@ -699,8 +714,7 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
     ARRAY_CALLOC (m2->s[i].out_a, nachf);
     ARRAY_CALLOC (m2->s[i].in_id, vorg);
     ARRAY_CALLOC (m2->s[i].in_a, vorg);
-    /* allocate enough memory for higher order states */
-    ARRAY_CALLOC (m2->s[i].b, ghmm_d_ipow (mo, mo->M, mo->order[i] + 1));
+    ARRAY_CALLOC (m2->s[i].b, size);
 
     /* copy the values */
     for (j = 0; j < nachf; j++) {
@@ -712,7 +726,6 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
       m2->s[i].in_id[j] = mo->s[i].in_id[j];
     }
     /* copy all b values for higher order states */
-    size = ghmm_d_ipow (mo, mo->M, mo->order[i] + 1);
     for (m = 0; m < size; m++)
       m2->s[i].b[m] = mo->s[i].b[m];
 
@@ -735,11 +748,12 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   m2->N = mo->N;
   m2->M = mo->M;
   m2->prior = mo->prior;
-  m2->maxorder = mo->maxorder;
-  for (i = 0; i < mo->maxorder + 2; i++){
-    m2->pow_lookup[i] = mo->pow_lookup[i];
-  }
-  
+  if (mo->model_type & GHMM_kHigherOrderEmissions) {
+    m2->maxorder = mo->maxorder;
+    for (i=0; i < mo->maxorder+2; i++)
+      m2->pow_lookup[i] = mo->pow_lookup[i];
+  }  
+
   m2->model_type = mo->model_type;
   /* not necessary but the history is at least initialised */
   m2->emission_history = mo->emission_history;
@@ -781,8 +795,8 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
     for (j=0; j < mo->s[i].out_states; j++)
       sum += mo->s[i].out_a[j];
 
-    if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
-      str = ighmm_mprintf(NULL, 0, "sum s[%d].out_a[*] = %f != 1.0", i, sum);
+    if (j>0 && fabs(sum-1.0) >= GHMM_EPS_PREC) {
+      str = ighmm_mprintf(NULL, 0, "sum of s[%d].out_a[*] (%g) not equal 1.0", i, sum);
       GHMM_LOG(LWARN, str);
       m_free(str);
       goto STOP;
