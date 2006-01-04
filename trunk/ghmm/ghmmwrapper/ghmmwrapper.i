@@ -1032,14 +1032,7 @@ extern int ghmm_d_background_apply(ghmm_dmodel *mo, double* background_weight);
   
 
   void call_model_print(char *filename, ghmm_dmodel *mo) {
-    FILE *fp=fopen(filename, "a");
-    if (fp == NULL) {
-      fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
-    } 
-    else {
-      ghmm_d_print(fp, mo);
-      fclose(fp);
-    }
+    ghmm_d_xml_write(filename, &mo, 1);
   }
   
   void call_ghmm_d_free (ghmm_dmodel *mo) {ghmm_d_free(&mo);}
@@ -1088,8 +1081,42 @@ extern fileData_s * parseHMMDocument(const char *filename);
   ghmm_dmodel * * get_model_d(fileData_s *f) {return f->model.d;}
 
   ghmm_dpmodel * * get_model_dp(fileData_s *f) {return f->model.dp;}
+
+  ghmm_dpmodel * * get_model_ds(fileData_s *f) {return f->model.ds;}
   
 %}
+
+
+/** Reads an XML file with specifications for one or more smodels.
+    All parameters in matrix or vector form.
+   @return vector of read smodels
+   @param filename   input xml file
+   @param smo_number  number of smodels to read*/
+extern  ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number);
+
+/** Writes an XML file with specifications for one or more smodels.
+   @return 0:sucess, -1:error
+   @param filename   output xml file
+   @param smo ghmm_cmodel(s)
+   @param smo_number  number of smodels to write*/
+extern int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number);
+
+/**
+   Writes a xml file and returns an array of dmodel pointer
+   @return           :array of dmodels, NULL on error
+   @param file       :filename of the xml file
+   @param mo_number  :address of an int to store the length of the returned array
+*/
+extern ghmm_dmodel * * ghmm_d_xml_read(const char *filename, int * mo_number);
+
+/**
+   Writes an array of dmodel pointer in a xml-file
+   @return           :-1 on error, 0 else
+   @param file       :filename of the xml file
+   @param mo         :an array of pointers to ghmm_dmodel
+   @param mo_number  :length of the array
+*/
+extern int ghmm_d_xml_write(const char *file, ghmm_dmodel * * mo, int mo_number);
 
 
 /*=============================================================================================
@@ -1347,20 +1374,6 @@ extern int ghmm_c_class_change_alloc(ghmm_cmodel *smo);
     @param smo  address of a pointer to a ghmm_cmodel */
 extern int     ghmm_c_free(ghmm_cmodel **smo);
 
-/** Reads an XML file with specifications for one or more smodels.
-    All parameters in matrix or vector form.
-   @return vector of read smodels
-   @param filename   input xml file
-   @param smo_number  number of smodels to read*/
-extern  ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number);
-
-/** Writes an XML file with specifications for one or more smodels.
-   @return 0:sucess, -1:error
-   @param filename   output xml file
-   @param smo ghmm_cmodel(s)
-   @param smo_number  number of smodels to write*/
-extern int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number);
-
 #ifdef GHMM_OBSOLETE
 /** Reads an ascii file with specifications for one or more models.
     All parameters in matrix or vector form.
@@ -1583,19 +1596,16 @@ extern int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t);
 
   // write a ghmm_cmodel to a file
   void call_smodel_print(char *filename, ghmm_cmodel *smo) {
-  FILE *fp=fopen(filename, "a");
-  if (fp == NULL) {
-    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);
-  } else {
-    ghmm_cmodel ** models;
-    models = (ghmm_cmodel**) malloc(sizeof(ghmm_cmodel*));
-    models[0] = smo;
-    ghmm_c_xml_write(filename,models,1);    
-    /*XXX old smo reading function */
-/*     ghmm_c_print(fp, smo); */
-/*     fclose(fp); */
+    FILE *fp=fopen(filename, "a");
+    if (fp == NULL) {
+      fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);
+    } else {
+      ghmm_c_xml_write(filename, &smo, 1);    
+      /*XXX old smo reading function */
+      /*     ghmm_c_print(fp, smo); */
+      fclose(fp);
+    }
   }
-}
 
 %}
 
