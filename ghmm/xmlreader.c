@@ -142,12 +142,13 @@ static char * getXMLCharAttribute(xmlNodePtr node, const char *name,
 
 
 /*===========================================================================*/
-static int parseCSVList(const char * data, unsigned int size, double * array) {
+static int parseCSVList(const char * data, unsigned int size, double * array, int reverse) {
 #define CUR_PROC "parseCSVList"
 
   int retval=0;
   int i;
   char * * next, * estr;
+  double tmp;
 
   ARRAY_CALLOC(next, 1);
 
@@ -171,7 +172,14 @@ static int parseCSVList(const char * data, unsigned int size, double * array) {
     estr = ighmm_mprintf(NULL, 0, "error in parsing CSV. sizes do not match (%d != %d)", i, size);
     GHMM_LOG(LERROR, estr);
     m_free(estr);
-    
+  }
+
+  if (reverse) {
+    for (i=0; i<size/2; i++) {
+      tmp = array[i];
+      array[i] = array[size-i-1];
+      array[size-i-1] = tmp;
+    }
   }
 
 STOP:
@@ -279,6 +287,7 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   }
 
   alfa->size = M;
+  printf("Parsing alphabet with %d symbols\n", alfa->size);
   ARRAY_MALLOC(alfa->symbols, M);
 
   symbol = cur->children;
@@ -286,6 +295,7 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   while (symbol!=NULL) {
     if ((!xmlStrcmp(symbol->name, BAD_CAST "symbol"))) {
       alfa->symbols[M++] = (char *)xmlNodeGetContent(symbol);
+      printf("%d. symbol: %s\n", M, alfa->symbols[M-1]);
     }
     symbol=symbol->next;
   }
@@ -303,7 +313,7 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mo
 #define CUR_PROC "parseBackground"
 
   int error, order;
-  int bgNr;
+  int bgNr, rev;
   double * b;
   char * s;
 
@@ -325,11 +335,15 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int mo
   s = (char *)getXMLCharAttribute(cur, "key", &error);
   f->model.d[modelNo]->bp->name[bgNr] = s;
 
+  rev = getIntAttribute(cur, "rev", &error);
+  if (error)
+    rev = 0;
+
   /* get distribution */
   s = (char *)xmlNodeGetContent(cur);
 
   ARRAY_MALLOC(b, pow(f->model.d[modelNo]->bp->m, order+1));
-  if (-1 !=  parseCSVList(s, pow(f->model.d[modelNo]->bp->m, order+1), b))
+  if (-1 !=  parseCSVList(s, pow(f->model.d[modelNo]->bp->m, order+1), b, rev))
     f->model.d[modelNo]->bp->b[bgNr] = b;
   else {
     GHMM_LOG(LERROR, "Can not parse background CSV list.");
@@ -352,7 +366,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
   double pi, prior;
   double * emissions;
   char * desc, * s, * estr, * * serror;
-  int stateFixed=1;
+  int rev, stateFixed=1;
 
 
   xmlNodePtr elem, child;
@@ -398,9 +412,13 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       } else
 	order = 0;
 
+      rev = getIntAttribute(cur, "rev", &error);
+      if (error)
+	rev = 0;
+
       s = (char *)xmlNodeGetContent(elem);
       ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
-      parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions);
+      parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
       f->model.d[modelNo]->s[state].b = emissions;
       m_free(s);
     }
@@ -546,8 +564,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       assert(f->modelType & GHMM_kTiedEmissions);
 
       s = (char *)xmlNodeGetContent(elem);
-      tied = strtoul(s, serror, 10);
-      if (s != *serror && !*serror && state>=tied) {
+      tied = atoi(s);
+      if (state>=tied) {
 	f->model.d[modelNo]->tied_to[state] = tied;
 	if (f->model.d[modelNo]->tied_to[tied] != tied) {
 	  estr = ighmm_mprintf(NULL, 0, "state %d not tied to tie group leader", state);
@@ -556,7 +574,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	  goto STOP;
 	}
       } else {
-	estr = ighmm_mprintf(NULL, 0, "state %d tiedTo is invalid", state);
+	estr = ighmm_mprintf(NULL, 0, "state %d tiedTo (%d) is invalid", state, tied);
 	GHMM_LOG(LERROR, estr);
 	m_free(estr);
 	goto STOP;
@@ -696,7 +714,7 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
      
       s = (char *)xmlNodeGetContent(elem);
       ARRAY_MALLOC(probs, nrTransitionClasses);
-      parseCSVList(s, nrTransitionClasses, probs);
+      parseCSVList(s, nrTransitionClasses, probs, 0);
       m_free(s);
       break;
     }
@@ -932,7 +950,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   while (child != NULL) {
 
     /* ========== LABEL ALPHABETS ========================================== */
-    if ((!xmlStrcmp(child->name, BAD_CAST "labelAlphabet"))) {
+    if ((!xmlStrcmp(child->name, BAD_CAST "classAlphabet"))) {
       alfa = parseAlphabet(doc, child, f);
       if (alfa) {
 	f->model.d[modelNo]->labelAlphabet = alfa;
@@ -1058,7 +1076,6 @@ fileData_s * parseHMMDocument(const char *filename) {
 	m_free(str);
       }
     }
-
     /* free up the resulting document */
     xmlFreeDoc(doc);
   }
