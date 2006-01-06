@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--hidden markov model -->
-<!ELEMENT HMM (alphabet*, classAlphabet?, background*, state+, transition+)>
+<!ELEMENT HMM (alphabet*, classAlphabet?, background*, state+, transition+, switchingFunction?)>
 <!ATTLIST HMM
         version           CDATA #IMPLIED
         type              CDATA #REQUIRED
@@ -112,3 +112,10 @@
         target CDATA #REQUIRED
 >
 <!ELEMENT probability (#PCDATA)>
+
+<!-- switchingFunction contains an attribute type and 
+     holds optionally data for the switching function -->
+<!ELEMENT switchingFunction (#PCDATA)>
+<!ATTLIST switchingFunction
+        type CDATA #REQUIRED
+>
