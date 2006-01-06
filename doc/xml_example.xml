@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE mixture PUBLIC "-//ghmm.org//DOCUMENT ghmm V1.0//EN" "http://ghmm.sourceforge.net/xml/1.0/ghmm.dtd">
+<!DOCTYPE HMM PUBLIC "-//ghmm.org//DOCUMENT ghmm V1.0//EN" "http://ghmm.sourceforge.net/xml/1.0/ghmm.dtd">
 <HMM version="1.0" name="example" type="discrete background"> 
   <alphabet id="0">
     <symbol code="0">A</symbol>
