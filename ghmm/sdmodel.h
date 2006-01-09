@@ -36,6 +36,8 @@
 #ifndef GHMM_SDMODEL_H
 #define GHMM_SDMODEL_H
 
+#include "ghmm.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,22 +65,20 @@ extern "C" {
    matrix in case of mult. transition matrices (COS > 1) */
     double **in_a;
 
-  /** Transition probability to a successor 
-      double *out_a; */
-  /** Transition probablity to a precursor 
-      double *in_a;*/
-
   /** Number of successor states */
     int out_states;
   /** Number of precursor states */
     int in_states;
   /** if fix == 1 --> b stays fix during the training */
     int fix;
-    char *label;
     /* XXX Specific variable for ProfileHMM to count the number of
        match states. Not elegant solution.
        WS: if 1 then counts me, 0 don't count me */
     int countme;
+
+  /** Position for graphical editing */
+    int xPosition;
+    int yPosition;
   };
   typedef struct ghmm_dsstate ghmm_dsstate;
 
@@ -90,7 +90,7 @@ extern "C" {
     int N;
   /** Number of outputs */
     int M;
- /** ghmm_dsmodel includes continuous model with one transition matrix 
+  /** ghmm_dsmodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
     int cos;
@@ -107,8 +107,6 @@ extern "C" {
   /** pointer to class function   */
     int (*get_class) (int *, int);
 
-    /*int (*get_class)(const double*,int,double*); */
-
   /** Contains bit flags for various model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
   */
@@ -118,9 +116,18 @@ extern "C" {
       or not. 
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
     int *silent;
-      /*AS*/ int topo_order_length;
-      /*WR*/ int *topo_order;
-    /*WR*/};
+
+    int topo_order_length; /*AS*/
+    int *topo_order; /*WR*/
+
+  /** Store for each state a class label. Limits the possibly state sequence
+      
+      Note: label != NULL iff (model_type & kLabeledStates) != 0  */
+    int * label;
+    alphabet_s * labelAlphabet;
+
+    alphabet_s * alphabet;
+  };
   typedef struct ghmm_dsmodel ghmm_dsmodel;
 
 
@@ -162,19 +169,18 @@ extern "C" {
       @param T_max:  maximal number of consecutive silent states in model (used to
 	  identify silent circles).
   */
-  ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
-                                          int global_len, long seq_number,
-                                          int Tmax);
-
+  ghmm_dseq * ghmm_ds_generate_sequences(ghmm_dsmodel * mo, int seed,
+					 int global_len, long seq_number,
+					 int Tmax);
 
   /**
      Copies a given model. Allocates the necessary memory.
      @returns a copy of the model
      @param mo:  dmodel to copy */
-  ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo);
+  ghmm_dsmodel * ghmm_ds_copy(const ghmm_dsmodel * mo);
 
   /** Utility for converting between single discrete model and switching model */
-  ghmm_dmodel *ghmm_ds_to_dmodel (const ghmm_dsmodel * mo, int kclass);
+  ghmm_dmodel * ghmm_ds_to_dmodel(const ghmm_dsmodel * mo, int kclass);
 
   /** */
   void ghmm_ds_from_dmodel (const ghmm_dmodel * mo, ghmm_dsmodel * smo, int klass);

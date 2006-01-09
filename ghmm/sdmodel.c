@@ -4,7 +4,7 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/sdmodel.c
-*       Authors:  Wasinee Rungsarityotin, Utz Pape, Andrea Weisse
+*       Authors:  Wasinee Rungsarityotin, Utz Pape, Andrea Weisse, janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -49,7 +49,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ghmm.h"
 #include "sdmodel.h"
 #include "model.h"
 #include "matrix.h"
@@ -162,18 +161,7 @@ static int sdmodel_copy_vectors (ghmm_dsmodel * mo, int index, double ***a_matri
 #endif
 
 /*============================================================================*/
-
-/* Old prototyp:
-
-ghmm_dmodel **ghmm_d_read(char *filename, int *mo_number, int **seq,
-			 const int *seq_len, int seq_number) { */
-
-
-
-/*============================================================================*/
-
-int ghmm_ds_free (ghmm_dsmodel ** mo)
-{
+int ghmm_ds_free(ghmm_dsmodel ** mo) {
 #define CUR_PROC "ghmm_ds_free"
   ghmm_dsstate *my_state;
   int i;
@@ -188,11 +176,6 @@ int ghmm_ds_free (ghmm_dsmodel ** mo)
       m_free (my_state->out_id);
     if (my_state->in_id != NULL)
       m_free (my_state->in_id);
-    /*
-       if (my_state->out_a)
-       m_free(my_state->out_a);
-       if (my_state->in_a)
-       m_free(my_state->in_a); */
     if (my_state->out_a)
       ighmm_cmatrix_free (&((*mo)->s[i].out_a), (*mo)->cos);
     if (my_state->in_a)
@@ -206,19 +189,24 @@ int ghmm_ds_free (ghmm_dsmodel ** mo)
     my_state->out_states = 0;
     my_state->in_states = 0;
     my_state->fix = 0;
-    m_free (my_state->label);
   }
-  m_free ((*mo)->s);
-  m_free (*mo);
-  fprintf (stderr, "Free sdmodel\n");
+  if ((*mo)->model_type & GHMM_kLabeledStates)
+    m_free((*mo)->label);
+  if ((*mo)->model_type & GHMM_kSilentStates) {
+    m_free((*mo)->silent);
+    if ((*mo)->topo_order)
+      m_free((*mo)->topo_order);
+  }
+  m_free((*mo)->s);
+  m_free(*mo);
+  /*fprintf (stderr, "Free sdmodel\n");*/
   return (0);
 #undef CUR_PROC
 }                               /* ghmm_d_free */
 
 
 /*============================================================================*/
-ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo)
-{
+ghmm_dsmodel * ghmm_ds_copy(const ghmm_dsmodel * mo) {
 # define CUR_PROC "ghmm_ds_copy"
   int i, j, k, nachf, vorg, m;
   ghmm_dsmodel *m2 = NULL;
@@ -254,8 +242,6 @@ ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo)
     m2->s[i].pi = mo->s[i].pi;
     m2->s[i].out_states = nachf;
     m2->s[i].in_states = vorg;
-    m2->s[i].label = (char *) malloc (strlen (mo->s[i].label) + 1);
-    strcpy (m2->s[i].label, mo->s[i].label);
     m2->s[i].countme = mo->s[i].countme;
   }
   m2->N = mo->N;
@@ -275,6 +261,11 @@ ghmm_dsmodel *ghmm_ds_copy (const ghmm_dsmodel * mo)
         m2->topo_order[i] = mo->topo_order[i];
       }
     }
+  }
+  if (mo->model_type & GHMM_kLabeledStates) {
+    ARRAY_MALLOC(m2->label, m2->N);
+    for (i=0; i<mo->N; i++)
+      m2->label[i] = mo->label[i];
   }
   if (mo->get_class) {
     m2->get_class = mo->get_class;
@@ -441,7 +432,6 @@ static ghmm_dseq *__sdmodel_generate_sequences (ghmm_dsmodel * mo, int seed,
       if (state < len)
         ARRAY_REALLOC (sq->seq[n], state);
       sq->seq_len[n] = state;
-      /* sq->seq_label[n] = label; */
       /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }
@@ -734,7 +724,6 @@ ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
             ARRAY_REALLOC (sq->states[n], state);
           }
           sq->seq_len[n] = state;
-          /* sq->seq_label[n] = label; */
           /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
           n++;
         }
@@ -889,8 +878,8 @@ void ghmm_ds_from_dmodel (const ghmm_dmodel * mo, ghmm_dsmodel * smo, int klass)
 #undef CUR_PROC
 }
 
-
-ghmm_dmodel *ghmm_ds_to_dmodel (const ghmm_dsmodel * mo, int kclass)
+/*===========================================================================*/
+ghmm_dmodel * ghmm_ds_to_dmodel(const ghmm_dsmodel * mo, int kclass)
 {
 #define CUR_PROC "ghmm_ds_to_dmodel"
   /*
