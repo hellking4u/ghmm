@@ -36,6 +36,8 @@
 #ifndef GHMM_MODEL_H
 #define GHMM_MODEL_H
 
+#include "ghmm.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,19 +63,6 @@ struct ghmm_d_background_distributions {
   char * * name;
 };
 typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
-
-
-/** @name alphabet_s
-    keeps a mapping between symbols of the distribution and
-    the integer from 0 till M-1 */ 
-struct alphabet_s {
-  int id;
-  char * description;
-  unsigned int size;
-  char * * symbols;
-};
-typedef struct alphabet_s alphabet_s;
-
 
 /** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 

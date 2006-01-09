@@ -134,6 +134,17 @@ void ghmm_set_logfunc(void (* fptr)(int, const char *, void *), void * clientdat
 void ghmm_set_loglevel(int level);
 /*@} (Doc++-Group: Logging) */
 
+/** @name alphabet_s
+    keeps a mapping between symbols of the distribution and
+    the integer from 0 till M-1 */ 
+struct alphabet_s {
+  int id;
+  char * description;
+  unsigned int size;
+  char * * symbols;
+};
+typedef struct alphabet_s alphabet_s;
+
 #ifdef __cplusplus
 }
 #endif
