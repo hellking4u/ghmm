@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE HMM PUBLIC "-//ghmm.org//DOCUMENT ghmm V1.0//EN" "http://ghmm.sourceforge.net/xml/1.0/ghmm.dtd">
-<HMM version="1.0" name="example" type="discrete switching"> 
+<HMM version="1.0" name="example" type="discrete transition-classes"> 
   <alphabet id="0">
     <symbol code="0">A</symbol>
     <symbol code="1">C</symbol>
