@@ -520,6 +520,18 @@ struct ghmm_d_background_distributions {
 typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
 
 
+/** @name alphabet_s
+    keeps a mapping between symbols of the distribution and
+    the integer from 0 till M-1 */ 
+struct alphabet_s {
+  int id;
+  char * description;
+  unsigned int size;
+  char * * symbols;
+};
+typedef struct alphabet_s alphabet_s;
+
+
 /** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
 */
@@ -642,6 +654,9 @@ struct ghmm_dmodel {
 
       Note: label != NULL iff (model_type & kLabeledStates) != 0  */
   int * label;
+  alphabet_s * labelAlphabet;
+
+  alphabet_s * alphabet;
 };
 typedef struct ghmm_dmodel ghmm_dmodel;
   
