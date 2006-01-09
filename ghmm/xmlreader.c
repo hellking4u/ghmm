@@ -622,6 +622,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       case GHMM_kDiscreteHMM:
         f->model.d[modelNo]->s[state].xPosition = curX;
         f->model.d[modelNo]->s[state].yPosition = curY;
+	break;
       case GHMM_kDiscreteHMM+GHMM_kTransitionClasses:
         f->model.ds[modelNo]->s[state].xPosition = curX;
         f->model.ds[modelNo]->s[state].yPosition = curY;
