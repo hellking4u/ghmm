@@ -59,6 +59,9 @@
 /* we should not need more than to alphabets, no plan to implement triple HMMs */
 #define MAX_ALPHABETS 2
 
+/* Bitmask to test the modeltype against to choose the type of the model pointer
+   we use in the union */
+#define PTR_TYPE_MASK (GHMM_kDiscreteHMM + GHMM_kTransitionClasses + GHMM_kPairHMM + GHMM_kContinuousHMM)
 
 /* holds all valid modeltypes sorted */
 static int validModelTypes[28] = {
@@ -230,7 +233,7 @@ static int matchModelType(const char * data, unsigned int size) {
 static int parseModelType(const char * data, unsigned int size) {
 #define CUR_PROC "parseModelType"
 
-  int i, modelType=0;
+  int i, noValidMo, modelType=0;
   const char * end = data;
   char * str;
 
@@ -239,14 +242,14 @@ static int parseModelType(const char * data, unsigned int size) {
     size -= (end-data)+1;
     data = end+1;
   }
-  
   modelType += matchModelType(data, size);
 
-  for (i=0; i<sizeof(validModelTypes); i++) {
+  noValidMo = sizeof(validModelTypes)/sizeof(validModelTypes[0]);
+  for (i=0; i<noValidMo; i++) {
     if (modelType == validModelTypes[i])
       break;
   }
-  if (i == sizeof(validModelTypes)) {
+  if (i == noValidMo) {
     str = ighmm_mprintf(NULL, 0, "%d is no known valid model type", modelType);
     GHMM_LOG(LERROR, str);
     m_free(str);
@@ -287,7 +290,7 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   }
 
   alfa->size = M;
-  printf("Parsing alphabet with %d symbols\n", alfa->size);
+  /*printf("Parsing alphabet with %d symbols\n", alfa->size);*/
   ARRAY_MALLOC(alfa->symbols, M);
 
   symbol = cur->children;
@@ -295,7 +298,7 @@ static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f)
   while (symbol!=NULL) {
     if ((!xmlStrcmp(symbol->name, BAD_CAST "symbol"))) {
       alfa->symbols[M++] = (char *)xmlNodeGetContent(symbol);
-      printf("%d. symbol: %s\n", M, alfa->symbols[M-1]);
+      /*printf("%d. symbol: %s\n", M, alfa->symbols[M-1]);*/
     }
     symbol=symbol->next;
   }
@@ -361,13 +364,12 @@ STOP:
 static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDegree, int * outDegree, int modelNo) {
 #define CUR_PROC "parseState"
 
-  int i, error, order=-28, state=-1442, fixed=-985, tied=-9354, M, aprox;
+  int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox;
   int curX=0, curY=0;
   double pi, prior;
   double * emissions;
   char * desc, * s, * estr, * * serror;
   int rev, stateFixed=1;
-
 
   xmlNodePtr elem, child;
 
@@ -386,40 +388,65 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
   while (elem!=NULL) {
     /* ======== silent state ============================================== */
     if ((!xmlStrcmp(elem->name, BAD_CAST "silent"))) {
-      if (f->modelType & GHMM_kDiscreteHMM)
+      switch (f->modelType & PTR_TYPE_MASK) {
+      case (GHMM_kDiscreteHMM):
 	f->model.d[modelNo]->silent[state] = 1;
+	break;
+      case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+	f->model.ds[modelNo]->silent[state] = 1;
+	break;
+      case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
+      case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
+	f->model.dp[modelNo]->silent[state] = 1;
+	break;
+      default:
+	GHMM_LOG(LCRITIC, "invalid modelType");
+      }
     }
 
     /* ======== discrete state (possible higher order) ==================== */
     if ((!xmlStrcmp(elem->name, BAD_CAST "discrete"))) {
       assert((f->modelType & GHMM_kDiscreteHMM) && ((f->modelType & GHMM_kPairHMM) == 0));
-      
-      f->model.d[modelNo]->s[state].pi = pi;
 
       /* fixed is a propety of the distribution and optional */
       fixed = getIntAttribute(elem, "fixed", &error);
       if (error)
 	fixed = 0;
-      else
-	f->model.d[modelNo]->s[state].fix = fixed;
 
       /* order is optional for discrete */
       if (f->modelType & GHMM_kHigherOrderEmissions) {
 	order = getIntAttribute(elem, "order", &error);
 	if (error)
 	  order = 0;
-	f->model.d[modelNo]->order[state] = order;
-      } else
-	order = 0;
+      }
 
       rev = getIntAttribute(cur, "rev", &error);
       if (error)
 	rev = 0;
 
+      /* parsing emission probabilities */
       s = (char *)xmlNodeGetContent(elem);
-      ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
-      parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
-      f->model.d[modelNo]->s[state].b = emissions;
+
+      switch (f->modelType & PTR_TYPE_MASK) {
+      case (GHMM_kDiscreteHMM):
+	f->model.d[modelNo]->s[state].pi = pi;
+	f->model.d[modelNo]->s[state].fix = fixed;
+	f->model.d[modelNo]->order[state] = order;
+	ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
+	parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
+	f->model.d[modelNo]->s[state].b = emissions;
+	break;
+      case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
+	f->model.ds[modelNo]->s[state].pi = pi;
+	f->model.ds[modelNo]->s[state].fix = fixed;
+	/*f->model.ds[modelNo]->order[state] = order;*/
+	ARRAY_MALLOC(emissions, pow(f->model.ds[modelNo]->M, order+1));
+	parseCSVList(s, pow(f->model.ds[modelNo]->M, order+1), emissions, rev);
+	f->model.ds[modelNo]->s[state].b = emissions;
+	break;
+      default:
+	GHMM_LOG(LCRITIC, "invalid modelType");
+      }
       m_free(s);
     }
 
@@ -591,16 +618,13 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       if (error)
 	GHMM_LOG(LWARN, "failed to read y position");
 
-      switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			      + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+      switch (f->modelType & PTR_TYPE_MASK) {
       case GHMM_kDiscreteHMM:
         f->model.d[modelNo]->s[state].xPosition = curX;
         f->model.d[modelNo]->s[state].yPosition = curY;
       case GHMM_kDiscreteHMM+GHMM_kTransitionClasses:
-	/*
         f->model.ds[modelNo]->s[state].xPosition = curX;
         f->model.ds[modelNo]->s[state].yPosition = curY;
-	*/
 	break;
       case GHMM_kDiscreteHMM+GHMM_kPairHMM:
       case GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses:
@@ -656,8 +680,7 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f,
     elem = elem->next;
   }
 
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case GHMM_kDiscreteHMM:
     out_state = f->model.d[modelNo]->s[source].out_states++;
     in_state  = f->model.d[modelNo]->s[target].in_states++;
@@ -721,8 +744,7 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
     elem = elem->next;
   }
 
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-		+ GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case (GHMM_kDiscreteHMM + GHMM_kTransitionClasses):
     out_state = f->model.ds[modelNo]->s[source].out_states++;
     in_state  = f->model.ds[modelNo]->s[target].in_states++;
