@@ -309,31 +309,42 @@ class Alphabet(EmissionDomain):
     """ Discrete, finite alphabet
 
     """
-    def __init__(self, listOfCharacters):
+    def __init__(self, listOfCharacters, calphabet = None):
         """
         Creates an alphabet out of a listOfCharacters
         @param listOfCharacters: a list of strings (single characters most of
         the time), ints, or other objects that can be used as dictionary keys
         for a mapping of the external sequences to the internal representation
+        Can alternatively be an C alphabet_s struct
         
         Note: Alphabets should be considered as imutable. That means the
         listOfCharacters and the mapping should never be touched after
         construction.
         """
-        self.listOfCharacters = listOfCharacters
-        self._lengthOfCharacters = -1
         self.index = {} # Which index belongs to which character
-        i = 0
-        for c in self.listOfCharacters:
-            if (self._lengthOfCharacters != None and type(c) == type("hallo")):
-                if (self._lengthOfCharacters == -1):
-                    self._lengthOfCharacters = len(c)
-                elif (len(c) != self._lengthOfCharacters):
-                    self._lengthOfCharacters = None                    
-            self.index[c] = i
-            i += 1
-        if (self._lengthOfCharacters == -1):
+
+        if calphabet is None:
+            self.listOfCharacters = listOfCharacters
+            self._lengthOfCharacters = -1
+            i = 0
+            for c in self.listOfCharacters:
+                if (self._lengthOfCharacters != None and type(c) == type("hallo")):
+                    if (self._lengthOfCharacters == -1):
+                        self._lengthOfCharacters = len(c)
+                    elif (len(c) != self._lengthOfCharacters):
+                        self._lengthOfCharacters = None                    
+                self.index[c] = i
+                i += 1
+            if (self._lengthOfCharacters == -1):
+                self._lengthOfCharacters = None
+        else:
+            self.listOfCharacters = []
+            for i in range(calphabet.size):
+                c = ghmmwrapper.get_arraychar(calphabet.symbols, i)
+                self.listOfCharacters.append(c)
+                self.index[c] = i
             self._lengthOfCharacters = None
+
         self.CDataType = "int" # flag indicating which C data type should be used
 
     def __str__(self):
@@ -435,8 +446,8 @@ def IntegerRange(a,b):
 
 # To be used for labelled HMMs. We could use an Alphabet directly but this way it is more explicit.
 class LabelDomain(Alphabet):    
-    def __init__(self, listOfLabels):
-        Alphabet.__init__(self, listOfLabels)
+    def __init__(self, listOfLabels, calphabet = None):
+        Alphabet.__init__(self, listOfLabels, calphabet)
 
 
 class Float(EmissionDomain):
@@ -1285,35 +1296,53 @@ class HMMOpenFactory(HMMFactory):
         nrModels = file.noModels
         modelType = file.modelType
 
-        if (modelType == ghmmwrapper.kContinuousHMM):                
+        if (modelType & ghmmwrapper.kContinuousHMM):
             emission_domain = Float()
             distribution = ContinuousMixtureDistribution
             hmmClass = ContinuousMixtureHMM
             getPtr = ghmmwrapper.get_smodel_ptr
             models = ghmmwrapper.get_model_c(file)
+            
+        elif ((modelType & ghmmwrapper.kDiscreteHMM)
+              and not (modelType & ghmmwrapper.kTransitionClasses)
+              and not (modelType & ghmmwrapper.kPairHMM)):
+            emission_domain = 'd'
+            distribution = DiscreteDistribution
+            getPtr = ghmmwrapper.get_model_ptr
+            models = file.model.d
+            if (modelType & ghmmwrapper.kLabeledStates):
+                hmmClass = StateLabelHMM
+            elif (modelType & ghmmwrapper.kDiscreteHMM):
+                hmmClass = DiscreteEmissionHMM
+            else:
+                raise UnsupportedFeature, "Non-supported model type"
 
         else:
-            log.warning("Non-supported model type")
+            raise UnsupportedFeature, "Non-supported model type"
 
-        # for a mixture of HMMs return a list of HMMs
-        if nrModels>1 and modelIndex == None:
-            result = []
-            for i in range(nrModels):
-                cmodel = getPtr(models,i)
+        # read all models to list at first
+        result = []
+        for i in range(nrModels):
+            cmodel = getPtr(models,i)
+            if emission_domain is 'd':
+                emission_domain = Alphabet([], cmodel.alphabet)
+                print emission_domain
+            if modelType & ghmmwrapper.kLabeledStates:
+                labelDomain = LabelDomain([], cmodel.labelAlphabet)
+                print labelDomain
+                m = hmmClass(emission_domain, distribution(emission_domain), labelDomain, cmodel)
+            else:
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-                result.append(m)
-                
-        # for a single HMM just return the HMM
-        else:
-            if modelIndex == None:
-                cmodel = getPtr(models, 0)
-            elif modelIndex < nrModels:
-                cmodel = getPtr(models, modelIndex)
+            result.append(m)
+
+        # for a single 
+        if modelIndex != None:
+            if modelIndex < nrModels:
+                result = result[modelIndex]
             else:
                 raise IndexOutOfBounds("the file %s has only %s models"% fileName, str(nrModels))
-
-            result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
-            
+        elif nrModels == 1:
+            result = result[0]
 
         ghmmwrapper.freearray(models)
         return result
@@ -3073,16 +3102,17 @@ class StateLabelHMM(DiscreteEmissionHMM):
     """
     def __init__(self, emissionDomain, distribution, labelDomain, cmodel):
         DiscreteEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
+
         assert isinstance(labelDomain, LabelDomain), "Invalid labelDomain"
         self.labelDomain = labelDomain
-        
+
         # Assignment of the C function names to be used with this model type
         self.forwardFunction = ghmmwrapper.ghmm_d_logp
         self.forwardAlphaLabelFunction = ghmmwrapper.ghmm_dl_forward
         self.backwardBetaLabelFunction = ghmmwrapper.ghmm_dl_backward
         self.kbestFunction = ghmmwrapper.ghmm_dl_kbest        
         self.gradientDescentFunction = ghmmwrapper.ghmm_dl_gradient_descent
-        self.cmodel.label = ghmmwrapper.int_array(self.N)
+        #self.cmodel.label = ghmmwrapper.int_array(self.N)
 
     def __str__(self):
         hmm = self.cmodel
