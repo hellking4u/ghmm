@@ -77,31 +77,19 @@ static void __attribute__ ((constructor)) trapfpe (void)
 typedef enum DFSFLAG { DONE, NOTVISITED, VISITED } DFSFLAG;
 
 
-/*typedef struct local_store_t {
-  DFSFLAG *colors;
-  int    *topo_order;
-  int    topo_order_length;
-} local_store_t;
-
-static local_store_t *topo_alloc (ghmm_dmodel *mo, int len);
-static int topo_free(local_store_t **v, int n, int cos, int len); */
-
-
 /*----------------------------------------------------------------------------*/
-int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n)
-{
+int ghmm_d_ipow (ghmm_dmodel * mo, int x, unsigned int n) {
 #define CUR_PROC "ghmm_d_ipow"
-  int i, result=1;
-  ghmm_dmodel * mc = mo;
+  int i, result=1;  
 
   if ((mo->M == x) && (n <= mo->maxorder + 1)) {
-    if (!mo->pow_lookup) {
-      ARRAY_MALLOC(mc->pow_lookup, mo->maxorder+2);
-      mc->pow_lookup[0] = 1;
+    if (!(mo->pow_lookup)) {
+      ARRAY_MALLOC(mo->pow_lookup, mo->maxorder+2);
+      mo->pow_lookup[0] = 1;
       for (i=1; i<mo->maxorder+2; ++i)
-	mc->pow_lookup[i] = mo->M * mo->pow_lookup[i];
+	mo->pow_lookup[i] = mo->M * mo->pow_lookup[i-1];
     }
-    return mo->pow_lookup[n];
+    result = mo->pow_lookup[n];
   } else {
     while (n != 0) {
       if (n & 1)
@@ -109,8 +97,9 @@ int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n)
       x *= x;
       n >>= 1;
     }
-    return result;
   }
+
+  return result;
 STOP:
   return -1;
 #undef CUR_PROC
@@ -162,11 +151,17 @@ ghmm_dmodel * ghmm_dmodel_calloc(int M, int N, int modeltype, int * inDegVec,
   if (mo->model_type & GHMM_kSilentStates)
     ARRAY_CALLOC(mo->silent, N);
 
-  if (mo->model_type & GHMM_kTiedEmissions)
+  if (mo->model_type & GHMM_kTiedEmissions) {
     ARRAY_CALLOC(mo->tied_to, N);
+    for (i=0; i<N; ++i)
+      mo->tied_to[i] = GHMM_kUntied;
+  }
    
-  if (mo->model_type & GHMM_kBackgroundDistributions)
-    ARRAY_CALLOC(mo->background_id, N);
+  if (mo->model_type & GHMM_kBackgroundDistributions) {
+    ARRAY_MALLOC(mo->background_id, N);
+    for (i=0; i<N; ++i)
+      mo->background_id[i] = GHMM_kNoBackgroundDistribution;
+  }
 
   if (mo->model_type & GHMM_kHigherOrderEmissions)
     ARRAY_CALLOC(mo->order, N);
@@ -2303,6 +2298,7 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 # define CUR_PROC "ghmm_d_background_apply"
 
   int i, j, size;
+  char * estr;
 
   if (!(mo->model_type & GHMM_kBackgroundDistributions)) {
     mes_prot ("Error: No background distributions");
@@ -2313,7 +2309,13 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
     if (mo->background_id[i] != GHMM_kNoBackgroundDistribution) {
       if (mo->model_type & GHMM_kHigherOrderEmissions) {
 	if (mo->order[i] != mo->bp->order[mo->background_id[i]]) {
-	  mes_prot("Error: State and background order do not match\n");
+	  estr = ighmm_mprintf(NULL, 0, "State (%d) and background order (%d) "
+			       "do not match in state %d. Background_id = %d",
+			       mo->order[i],
+			       mo->bp->order[mo->background_id[i]], i,
+			       mo->background_id[i]);
+	  GHMM_LOG(LERROR, estr);
+	  m_free(estr);
 	  return -1;
 	}
 	/* XXX Cache in ghmm_d_background_distributions */
