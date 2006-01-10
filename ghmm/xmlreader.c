@@ -431,8 +431,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       case (GHMM_kDiscreteHMM):
 	f->model.d[modelNo]->s[state].pi = pi;
 	f->model.d[modelNo]->s[state].fix = fixed;
-	if (f->modelType & GHMM_kHigherOrderEmissions)
+	if (f->modelType & GHMM_kHigherOrderEmissions) {
 	  f->model.d[modelNo]->order[state] = order;
+	  if (f->model.d[modelNo]->maxorder < order)
+	    f->model.d[modelNo]->maxorder = order;
+	}
 	ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
 	parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
 	f->model.d[modelNo]->s[state].b = emissions;
@@ -563,7 +566,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       s = (char *)xmlNodeGetContent(elem);
 
       for (i=0; i<f->model.d[modelNo]->bp->n; i++) {
-	if (!strcmp(s, f->model.d[modelNo]->bp->name[i])) {
+	if (0 == strcmp(s, f->model.d[modelNo]->bp->name[i])) {
 	  if (order != f->model.d[modelNo]->bp->order[i]) {
 	    estr = ighmm_mprintf(NULL, 0, "order of background %s and state %d"
 				 " does not match",
@@ -790,9 +793,9 @@ STOP:
 static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) {
 #define CUR_PROC "parseHMM"
   char * estr;
-
+  
   xmlNodePtr child;
-
+  
   int i, id, error;
   int source, target;
 
@@ -825,7 +828,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
     if ((!xmlStrcmp(child->name, BAD_CAST "alphabet"))) {
       if (!alphabets)
 	ARRAY_MALLOC(alphabets, MAX_ALPHABETS);
-
+      
       alfa = parseAlphabet(doc, child, f);
       if (alfa && nrAlphabets<MAX_ALPHABETS) {
 	alphabets[nrAlphabets++] = alfa;
@@ -898,8 +901,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
 
   /* if firtst model, initialize model structures */
   if ( modelNo == 0){
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
     case GHMM_kDiscreteHMM:
       ARRAY_CALLOC(f->model.d,f->noModels);
       break;
@@ -921,8 +923,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
   }
 
   /* allocating the different models */
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case GHMM_kDiscreteHMM:
     assert(nrAlphabets == 1);
     M = alphabets[0]->size;
@@ -955,8 +956,7 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
 
   /* allocating background distributions for approtiate models */
   if (modeltype & GHMM_kBackgroundDistributions) { 
-    switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			    + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+    switch (f->modelType & PTR_TYPE_MASK) {
     case GHMM_kDiscreteHMM:
       ARRAY_CALLOC(bg_orders, N);
       ARRAY_CALLOC(bg_ptr, N);
