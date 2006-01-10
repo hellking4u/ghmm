@@ -431,7 +431,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       case (GHMM_kDiscreteHMM):
 	f->model.d[modelNo]->s[state].pi = pi;
 	f->model.d[modelNo]->s[state].fix = fixed;
-	f->model.d[modelNo]->order[state] = order;
+	if (f->modelType & GHMM_kHigherOrderEmissions)
+	  f->model.d[modelNo]->order[state] = order;
 	ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
 	parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
 	f->model.d[modelNo]->s[state].b = emissions;
@@ -439,7 +440,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
       case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
 	f->model.ds[modelNo]->s[state].pi = pi;
 	f->model.ds[modelNo]->s[state].fix = fixed;
-	/*f->model.ds[modelNo]->order[state] = order;*/
+	/*if (f->modelType & GHMM_kHigherOrderEmissions)
+	  f->model.ds[modelNo]->order[state] = order;*/
 	ARRAY_MALLOC(emissions, pow(f->model.ds[modelNo]->M, order+1));
 	parseCSVList(s, pow(f->model.ds[modelNo]->M, order+1), emissions, rev);
 	f->model.ds[modelNo]->s[state].b = emissions;
