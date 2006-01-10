@@ -4,7 +4,8 @@
 *       GHMM version __VERSION__, see http://ghmm.org
 *
 *       Filename: ghmm/ghmm/model.h
-*       Authors:  Benhard Knab, Bernd Wichern, Benjamin Georgi, Alexander Schliep
+*       Authors:  Benhard Knab, Bernd Wichern, Benjamin Georgi,
+*                 Alexander Schliep, Janne Grunau
 *
 *       Copyright (C) 1998-2004 Alexander Schliep 
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -212,7 +213,7 @@ extern "C" {
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
     uses if appropiate lookup table from struct ghmm_dmodel */
-   int ghmm_d_ipow (const ghmm_dmodel * mo, int x, unsigned int n);
+   int ghmm_d_ipow(ghmm_dmodel * mo, int x, unsigned int n);
 
 
 /*----------------------------------------------------------------------------*/
@@ -412,7 +413,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
     @param m  model to compare with
     @param maxT  maximum output length (for HMMs with absorbing states multiple
                  sequences with a toal langth of at least maxT will be 
-		 generated)
+                 generated)
     @param symmetric  flag, whether to symmetrize distance (not implemented yet)
     @param verbose  flag, whether to monitor distance in 40 steps.
                     Prints to stdout (yuk!)
@@ -434,48 +435,47 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
                                               int Tmax);
 
 /** 
-	Calculates the right index for emission array b of state j in model mo
-	given an observation obs and taking the state order into account,
-	returns -1 if state order exceeds number of so far emitted characters
-	@param MO:  model
-	@param  S:  state id 
-	@param  O:  integer observation to be updated with
-	@param  T:  position of obs in sequence (time)
+    Calculates the right index for emission array b of state j in model mo
+    given an observation obs and taking the state order into account,
+    returns -1 if state order exceeds number of so far emitted characters
+    @param MO:  model
+    @param  S:  state id 
+    @param  O:  integer observation to be updated with
+    @param  T:  position of obs in sequence (time)
 */
-#define get_emission_index(MO, S, O, T)   (((MO)->model_type & GHMM_kHigherOrderEmissions) ? \
-                                            ((MO)->order[S] > (T)) ?                      \
-                                              -1 :                                         \
-                                              (((MO)->emission_history*(MO)->M) %           \
-                                               (MO)->pow_lookup[(MO)->order[S]+1] + (O)) : \
-                                            (O))
+#define get_emission_index(MO, S, O, T)   (((MO)->model_type & GHMM_kHigherOrderEmissions) ?    \
+                                            ((MO)->order[S] > (T)) ? -1 :                       \
+                                              (((MO)->emission_history*(MO)->M) %               \
+                                              ghmm_d_ipow((MO), (MO)->M, (MO)->order[S]+1)+(O)) \
+                                            : (O))
 
 /**
-	Updates emission history of model mo, discarding the oldest and 'adding' the
-	new observation by using modulo and multiplication
-	left-shift the history, truncate to history length and
-	add the last observation	
-	@param MO:  model to be updated
-	@param  O:  integer observation to be updated with
+   Updates emission history of model mo, discarding the oldest and 'adding' the
+   new observation by using modulo and multiplication
+   left-shift the history, truncate to history length and
+   add the last observation
+   @param MO:  model to be updated
+   @param  O:  integer observation to be updated with
 */
-#define update_emission_history(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)                  \
+#define update_emission_history(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)               \
                                               (MO)->emission_history = ((MO)->emission_history*(MO)->M) % \
-                                                                  (MO)->pow_lookup[(MO)->maxorder] + (O)
+                                                ghmm_d_ipow((MO), (MO)->M, (MO)->maxorder) + (O)
 
 
 /**
-	Updates emission history of model mo for backward algorithm by 'adding'
-	observation obs to the left,
-	(example: obs = 3
-	          2 0 0 1 --> 3 2 0 0 )
-	removes the most significant position (right-shift) and add the last seen
-	observation (left-shifted with the length of history)
-	@param MO:  model to be updated
-	@param  O:  integer observation to be updated with
+   Updates emission history of model mo for backward algorithm by 'adding'
+   observation obs to the left,
+   (example: obs = 3
+   2 0 0 1 --> 3 2 0 0 )
+   removes the most significant position (right-shift) and add the last seen
+   observation (left-shifted with the length of history)
+   @param MO:  model to be updated
+   @param  O:  integer observation to be updated with
 */
-#define update_emission_history_front(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)  \
-                                                  (MO)->emission_history =                      \
-                                                    ((MO)->pow_lookup[(MO)->maxorder-1] * (O)) + \
-                                                    (MO)->emission_history / (MO)->M
+#define update_emission_history_front(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)       \
+                                                 (MO)->emission_history =                               \
+                                                   ghmm_d_ipow((MO), (MO)->M, (MO)->maxorder-1) * (O) + \
+                                                   (MO)->emission_history / (MO)->M
 
 
 /**
