@@ -49,6 +49,7 @@
 #include "mes.h"
 #include "vector.h"
 #include "rng.h"
+#include "mprintf.h"
 #include "ghmm_internals.h"
 #include "obsolete.h"
 
@@ -60,10 +61,15 @@ int ighmm_cvector_normalize (double *v, int len)
 #define CUR_PROC "ighmm_cvector_normalize"
   int i;
   double sum = 0.0;
+  char * estr;
+
   for (i = 0; i < len; i++)
     sum += v[i];
-  if (i>0 && sum<DBL_MIN) {
-    mes_prot ("Can't normalize vector. Sum eq. zero \n");
+  if (i>0 && sum<GHMM_EPS_PREC) {
+    estr = ighmm_mprintf(NULL, 0, "Can't normalize vector. Sum smaller than %g\n"
+			, GHMM_EPS_PREC);
+    GHMM_LOG(LWARN, estr);
+    m_free(estr);
     return (-1);
   }
   for (i = 0; i < len; i++)

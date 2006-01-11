@@ -213,7 +213,7 @@ extern "C" {
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
     uses if appropiate lookup table from struct ghmm_dmodel */
-   int ghmm_d_ipow(ghmm_dmodel * mo, int x, unsigned int n);
+   int ghmm_d_ipow(const ghmm_dmodel * mo, int x, unsigned int n);
 
 
 /*----------------------------------------------------------------------------*/
