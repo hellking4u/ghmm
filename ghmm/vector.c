@@ -62,7 +62,7 @@ int ighmm_cvector_normalize (double *v, int len)
   double sum = 0.0;
   for (i = 0; i < len; i++)
     sum += v[i];
-  if (sum < DBL_MIN) {
+  if (i>0 && sum<DBL_MIN) {
     mes_prot ("Can't normalize vector. Sum eq. zero \n");
     return (-1);
   }
