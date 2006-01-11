@@ -78,18 +78,13 @@ typedef enum DFSFLAG { DONE, NOTVISITED, VISITED } DFSFLAG;
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_ipow (ghmm_dmodel * mo, int x, unsigned int n) {
+int ghmm_d_ipow(const ghmm_dmodel * mo, int x, unsigned int n) {
 #define CUR_PROC "ghmm_d_ipow"
-  int i, result=1;  
+  int result=1;  
 
   if ((mo->M == x) && (n <= mo->maxorder + 1)) {
-    if (!(mo->pow_lookup)) {
-      ARRAY_MALLOC(mo->pow_lookup, mo->maxorder+2);
-      mo->pow_lookup[0] = 1;
-      for (i=1; i<mo->maxorder+2; ++i)
-	mo->pow_lookup[i] = mo->M * mo->pow_lookup[i-1];
-    }
-    result = mo->pow_lookup[n];
+    if (mo->pow_lookup)
+      result = mo->pow_lookup[n];
   } else {
     while (n != 0) {
       if (n & 1)
@@ -100,8 +95,6 @@ int ghmm_d_ipow (ghmm_dmodel * mo, int x, unsigned int n) {
   }
 
   return result;
-STOP:
-  return -1;
 #undef CUR_PROC
 }
 

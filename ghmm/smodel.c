@@ -60,6 +60,7 @@
 #include "string.h"
 #include "ghmm_internals.h"
 #include "xmlreader.h"
+#include "xmlwriter.h"
 
 #include "obsolete.h"
 
@@ -111,7 +112,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*----------------------------------------------------------------------------*/
 ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
 #define CUR_PROC "ghmm_cmodel_calloc"
-  int i;
   ghmm_cmodel * mo;
 
   assert(modeltype & GHMM_kContinuousHMM);
@@ -681,20 +681,17 @@ ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number)
 #define CUR_PROC "ghmm_c_read"
   fileData_s *f;
   ghmm_cmodel * * smo;
-  int i;
-  f = parseHMMDocument(filename);
-  assert( f->modelType &  GHMM_kContinuousHMM);
-  *smo_number = (f->noModels);
-  smo = f->model.c;
-/*   ARRAY_MALLOC(smo,f->noModels); */
 
-/*   for(i=0;i<*smo_number;i++){ */
-/*     smo[i] = f->model.c[i]; */
-/*   } */
-  free(f); /* XXX - by now, we free f */  
-  return smo;
-STOP:  
-  return NULL;
+  f = parseHMMDocument(filename);
+  if (f) {
+    assert(f->modelType &  GHMM_kContinuousHMM);
+    *smo_number = (f->noModels);
+    smo = f->model.c;
+    
+    free(f); /* XXX - by now, we free f */  
+    return smo;
+  } else
+    return NULL;
 #undef CUR_PROC
 }                               /* ghmm_c_read_block */
 
@@ -705,7 +702,6 @@ int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number)
 {
 #define CUR_PROC "ghmm_c_read"
   fileData_s *f;
-  int i;
 
   ARRAY_MALLOC(f,1);
   f->noModels = smo_number;
@@ -901,7 +897,7 @@ int ghmm_c_check_compatibility (ghmm_cmodel ** smo, int smodel_number)
 {
 #define CUR_PROC "ghmm_c_check_compatibility"
 /* XXX - old function not used any more !!! */
-  int i, j, k;
+  int i, j;
   char * str;
 
   for (i = 0; i < smodel_number; i++)

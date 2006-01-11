@@ -170,6 +170,17 @@ extern "C" {
 
   int ghmm_c_class_change_alloc (ghmm_cmodel * smo);
 
+/** Allocates a cstate 
+    @return 0: success, -1: error
+    @param s           pointer to the allocated states
+    @param M           maximal number of densities of the state
+    @param in_states   number of incoming transitions
+    @param out_states  number of outgoing transitions
+    @param cos         number of transition classes
+*/
+  int ghmm_c_state_alloc (ghmm_cstate * s, int M,
+			  int in_states, int out_states, int cos);
+
 /** Alloc model
     @return allocated cmodel, -1: error
     @param N number of states in the model 
