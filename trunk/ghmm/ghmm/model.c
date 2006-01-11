@@ -682,7 +682,7 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   ARRAY_CALLOC (m2, 1);
   ARRAY_CALLOC (m2->s, mo->N);
 
-  if (mo->model_type & GHMM_kTiedEmissions)
+  if (mo->model_type & GHMM_kSilentStates)
     ARRAY_CALLOC (m2->silent, mo->N);
   if (mo->model_type & GHMM_kTiedEmissions)
     ARRAY_CALLOC (m2->tied_to, mo->N);
@@ -802,9 +802,9 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
     for (j=0; j<mo->s[i].in_states; j++)
       sum += mo->s[i].in_a[j];
 
-    if (fabs(sum) == 0.0) {
+    if (fabs(sum) >= GHMM_EPS_PREC) {
       imag = 1;
-      str = ighmm_mprintf(NULL, 0, "state %d can't be reached\n", i);
+      str = ighmm_mprintf(NULL, 0, "state %d can't be reached", i);
       GHMM_LOG(LINFO, str);
       m_free(str);
     }
@@ -813,18 +813,34 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
     sum = 0.0;
     for (j=0; j<mo->M; j++)
       sum += mo->s[i].b[j];
-    /* silent states */
-    if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i] && (sum != 0.0))
-      goto STOP;
-    /* not reachable states */
-    else if (imag && (fabs(sum + mo->M) >= GHMM_EPS_PREC))
-      goto STOP;
-    /* normal states */
-    if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
-      str = ighmm_mprintf(NULL, 0, "sum s[%d].b[*] = %f != 1.0", i, sum);
-      mes_prot(str);
-      m_free(str);
-      goto STOP;
+
+    if (imag) {
+      /* not reachable states */
+      if ((fabs(sum + mo->M) >= GHMM_EPS_PREC)) {
+        str = ighmm_mprintf(NULL, 0, "state %d can't be reached but is not set"
+                            " as non-reachale state", i);
+        GHMM_LOG(LWARN, str);
+        m_free(str);
+        goto STOP;
+      }
+    } else if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {
+      /* silent states */
+      if (sum != 0.0) {
+        str = ighmm_mprintf(NULL, 0, "state %d is silent but has a non-zero"
+                            " emission probability", i);
+        GHMM_LOG(LWARN, str);
+        m_free(str);
+        goto STOP;
+      }
+    } 
+    else {
+      /* normal states */
+      if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
+        str = ighmm_mprintf(NULL, 0, "sum s[%d].b[*] = %f != 1.0", i, sum);
+        mes_prot(str);
+        m_free(str);
+        goto STOP;
+      }
     }
   }
 
@@ -1986,10 +2002,11 @@ int ghmm_d_normalize (ghmm_dmodel * mo)
       }
       mo->s[j_id].in_a[i_id] = mo->s[i].out_a[j];
     }
-    /* normalize emission probabilities */
-    for (m = 0; m < size; m++) {
-      if (ighmm_cvector_normalize (&(mo->s[i].b[m * mo->M]), mo->M) == -1) {
-        res = -1;
+    /* normalize emission probabilities, but not for silent states */
+    if (!((mo->model_type & GHMM_kSilentStates) && mo->silent[i])) {
+      for (m = 0; m < size; m++) {
+        if (ighmm_cvector_normalize (&(mo->s[i].b[m * mo->M]), mo->M) == -1)
+          res = -1;
       }
     }
   }
