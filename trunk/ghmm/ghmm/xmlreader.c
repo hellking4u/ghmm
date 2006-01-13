@@ -364,11 +364,11 @@ STOP:
 static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDegree, int * outDegree, int modelNo) {
 #define CUR_PROC "parseState"
 
-  int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox;
+  int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox, label;
   int curX=0, curY=0;
   double pi, prior;
   double * emissions;
-  char * desc, * s, * estr, * * serror;
+  char * desc, * s, * estr;
   int rev, stateFixed=1;
 
   xmlNodePtr elem, child;
@@ -588,6 +588,22 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	goto STOP;
       }
       m_free(s);
+    }
+
+    /* -------- tied to --------------------------------------------------- */
+    if ((!xmlStrcmp(elem->name, BAD_CAST "class"))) {
+      
+      assert(f->modelType & GHMM_kTiedEmissions);
+
+      s = (char *)xmlNodeGetContent(elem);
+      label = atoi(s);
+      m_free(s);
+      if ((f->modelType & PTR_TYPE_MASK) == GHMM_kDiscreteHMM) {
+	if (f->model.d[modelNo]->labelAlphabet->size > label)
+	  f->model.d[modelNo]->label[state] = label;
+	else
+	  GHMM_LOG(LWARN, "Ïnvalid label");
+      }
     }
 
     /* -------- tied to --------------------------------------------------- */
