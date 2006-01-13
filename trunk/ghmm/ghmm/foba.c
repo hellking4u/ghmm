@@ -683,16 +683,17 @@ int ghmm_dl_forward (ghmm_dmodel * mo, const int *O, const int *label, int len,
 
       for (i = 0; i < mo->N; i++) {
         if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[i])) {
-
-          /*printf("akt_ state %d, label: %d \t current Label: %d\n",i, mo->label[i], label[t]);*/
           if (mo->label[i] == label[t]) {
+	    /*printf("%d: akt_ state %d, label: %d \t current Label: %d\n",
+	      t, i, mo->label[i], label[t]);*/
             e_index = get_emission_index (mo, i, O[t], t);
             if (-1 != e_index) {
               alpha[t][i] = ghmm_d_forward_step(&mo->s[i], alpha[t-1], mo->s[i].b[e_index]);
               /*if (alpha[t][i] < GHMM_EPS_PREC) {
                 printf("alpha[%d][%d] = %g \t ", t, i, alpha[t][i]);
 		printf("mo->s[%d].b[%d] = %g\n", i, e_index, mo->s[i].b[e_index]);
-		}*/
+		}
+	      else printf("alpha[%d][%d] = %g\n", t, i, alpha[t][i]);*/
             }
             else {
               alpha[t][i] = 0;
