@@ -400,7 +400,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	f->model.dp[modelNo]->silent[state] = 1;
 	break;
       default:
-	GHMM_LOG(LCRITIC, "invalid modelType");
+	GHMM_LOG(LERROR, "invalid modelType");
+	goto STOP;
       }
     }
 
@@ -433,8 +434,13 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	f->model.d[modelNo]->s[state].fix = fixed;
 	if (f->modelType & GHMM_kHigherOrderEmissions) {
 	  f->model.d[modelNo]->order[state] = order;
-	  if (f->model.d[modelNo]->maxorder < order)
+	  if (f->model.d[modelNo]->maxorder < order) {
 	    f->model.d[modelNo]->maxorder = order;
+	    estr = ighmm_mprintf(NULL, 0, "Updated maxorder to %d\n",
+				 f->model.d[modelNo]->maxorder);
+	    GHMM_LOG(LDEBUG, estr);
+	    m_free(estr);
+	  }
 	}
 	ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
 	parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
@@ -450,7 +456,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
 	f->model.ds[modelNo]->s[state].b = emissions;
 	break;
       default:
-	GHMM_LOG(LCRITIC, "invalid modelType");
+	GHMM_LOG(LERROR, "invalid modelType");
+	goto STOP;
       }
       m_free(s);
     }
@@ -659,7 +666,9 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDeg
         f->model.c[modelNo]->s[state].yPosition = curY;
 	break;
       default:
-	GHMM_LOG(LCRITIC, "invalid modelType");} 
+	GHMM_LOG(LERROR, "invalid modelType");
+	goto STOP;
+      }
     }
 
     elem = elem->next;
@@ -728,10 +737,12 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f,
     f->model.c[modelNo]->s[target].in_a[0][in_state]   = p;
     break;
   default:
-    GHMM_LOG(LCRITIC, "invalid modelType");}
+    GHMM_LOG(LERROR, "invalid modelType");
+    goto STOP;
+  }
   
   retval = 0;
-
+STOP:
   return retval;
 #undef CUR_PROC
 }
@@ -794,7 +805,9 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
     }
     break;
   default:
-    GHMM_LOG(LCRITIC, "invalid modelType");}
+    GHMM_LOG(LERROR, "invalid modelType");
+    goto STOP;
+  }
 
   retval = 0;
 
@@ -934,7 +947,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
       break;
     break;
     default:
-      GHMM_LOG(LCRITIC, "invalid modelType");
+      GHMM_LOG(LERROR, "invalid modelType");
+      goto STOP;
     }       
   }
 
@@ -967,7 +981,8 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
     f->model.c[modelNo]->cos = cos;
     break;
   default:
-    GHMM_LOG(LCRITIC, "invalid modelType");
+    GHMM_LOG(LERROR, "invalid modelType");
+    goto STOP;
   }
 
   /* allocating background distributions for approtiate models */
@@ -982,7 +997,9 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
       f->model.d[modelNo]->bp->n = 0;
       break;
     default:
-      GHMM_LOG(LERROR, "invalid modelType");}
+      GHMM_LOG(LERROR, "invalid modelType");
+      goto STOP;
+    }
   }
 
   child = cur->xmlChildrenNode;
@@ -1018,6 +1035,13 @@ static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) 
 	parseSingleTransition(doc, child, f, modelNo);
     }
     child = child->next;
+  }
+
+  if (modeltype & GHMM_kHigherOrderEmissions) { 
+    ARRAY_MALLOC(f->model.d[modelNo]->pow_lookup, f->model.d[modelNo]->maxorder+2);
+    f->model.d[modelNo]->pow_lookup[0] = 1;
+    for (i=1; i < f->model.d[modelNo]->maxorder+2; ++i)
+      f->model.d[modelNo]->pow_lookup[i] = f->model.d[modelNo]->M * f->model.d[modelNo]->pow_lookup[i-1];    
   }
 
   /* freeing temporary data */
