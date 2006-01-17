@@ -340,10 +340,9 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
       }
       if (p_i == 0.0) {
         if (h == 0)
-          str = ighmm_mprintf (NULL, 0,
-                         "State %d can't be reached (no in_states)\n", i);
+          str = ighmm_mprintf(NULL, 0, "State %d can't be reached (no in_states)", i);
         else
-          str = ighmm_mprintf (NULL, 0, "State %d can't be reached (prob = 0.0)\n", i);
+          str = ighmm_mprintf (NULL, 0, "State %d can't be reached (prob = 0.0)", i);
         GHMM_LOG(LINFO, str);
         m_free (str);
         reachable = 0;
