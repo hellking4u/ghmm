@@ -11,6 +11,7 @@ pi = [1.0,0.0,0.0]   # initial probabilities per state
 # generate model from parameters
 model = ghmm.HMMFromMatrices(F,ghmm.GaussianDistribution(F), A, B, pi)
 
+
 # sample single sequence of length 50
 seq = model.sampleSingle(50)
 
