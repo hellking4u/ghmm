@@ -8,7 +8,7 @@
 *
 *       Copyright (C) 1998-2004 Alexander Schliep 
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
-*	Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik, 
+*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik, 
 *                               Berlin
 *                                   
 *       Contact: schliep@ghmm.org             
@@ -100,10 +100,6 @@ extern "C" {
       A value of -1 indicates that no prior is defined. */
     double prior;
 
-  /** Contains bit flags for various model extensions such as
-      kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
-  */
-
   /** pointer to class function   */
     int (*get_class) (int *, int);
 
@@ -117,17 +113,71 @@ extern "C" {
       Note: silent != NULL iff (model_type & kSilentStates) == 1  */
     int *silent;
 
-    int topo_order_length; /*AS*/
-    int *topo_order; /*WR*/
+    /** Int variable for the maximum level of higher order emissions */
+    int maxorder;
+    /** saves the history of emissions as int, 
+        the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
+        see ...*/
+    int emission_history;
+
+    /** Flag variables for each state indicating whether the states emissions
+        are tied to another state. Groups of tied states are represented
+        by their tie group leader (the lowest numbered member of the group).
+
+        tied_to[s] == kUntied  : s is not a tied state
+
+        tied_to[s] == s        : s is a tie group leader
+
+        tied_to[t] == s        : t is tied to state s (t>s)
+
+        Note: tied_to != NULL iff (model_type & kTiedEmissions) != 0  */
+    int *tied_to;
+
+    /** Note: State store order information of the emissions.
+        Classic HMMS have emission order 0, that is the emission probability
+        is conditioned only on the state emitting the symbol.
+
+        For higher order emissions, the emission are conditioned on the state s
+        as well as the previous emission_order[s] observed symbols.
+
+        The emissions are stored in the state's usual double* b. The order is
+        set order.
+
+        Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
+    int * order;
+
+    /** ghmm_d_background_distributions is a pointer to a
+        ghmm_d_background_distributions structure, which holds (essentially) an
+        array of background distributions (which are just vectors of floating
+        point numbers like state.b).
+
+        For each state the array background_id indicates which of the background
+        distributions to use in parameter estimation. A value of kNoBackgroundDistribution
+        indicates that none should be used.
+
+        Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
+    int *background_id;
+    ghmm_d_background_distributions *bp;
+    
+    /** (WR) added these variables for topological ordering of silent states 
+        Condition: topo_order != NULL iff (model_type & kSilentStates) != 0  */
+    int *topo_order;
+    int topo_order_length;
+    
+    /** pow_lookup is a array of precomputed powers
+        It contains in the i-th entry M (alphabet size) to the power of i
+        The last entry is maxorder+1 */
+    int *pow_lookup;
 
   /** Store for each state a class label. Limits the possibly state sequence
-      
+
       Note: label != NULL iff (model_type & kLabeledStates) != 0  */
     int * label;
     alphabet_s * labelAlphabet;
 
     alphabet_s * alphabet;
   };
+
   typedef struct ghmm_dsmodel ghmm_dsmodel;
 
 
@@ -149,6 +199,19 @@ extern "C" {
       @return 0 for succes; -1 for error
       @param mo:  pointer to a ghmm_dsmodel */
   int ghmm_ds_free (ghmm_dsmodel ** mo);
+
+  /** Allocates space for an empty dsmodel.
+      @return   pointer to the created model on succes; 0 on error
+      @param M:         number of emissions
+      @param N:         number of states
+      @param modeltype: bit field for model type
+      @param cos:       number of transition classes
+      @param inDegVec:  array of incomming degree for every state
+      @param outDegVec: array of outgoing degree for every state
+  */
+  ghmm_dsmodel * ghmm_dsmodel_calloc(int M, int N, int modeltype, int cos,
+				     int * inDegVec, int * outDegVec);
+
 
   int ghmm_ds_init_silent_states (ghmm_dsmodel * mo);
 

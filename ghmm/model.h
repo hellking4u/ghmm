@@ -46,25 +46,6 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-/** @name ghmm_d_background_distributions
-    A container for background distributions to be used in the reestimation. Model
-    has an ID (== index) to be used for the arrays background_distributions.order
-    and background_distributions.b
-*/
-struct ghmm_d_background_distributions {
-  /** Number of distributions */
-  int n;
-  /** Number of symbols in alphabet */
-  int m;
-  /** Order of the respective distribution */
-  int *order;
-  /** The probabilities */
-  double **b;
-  /** string ids of the background distributions */
-  char * * name;
-};
-typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
-
 /** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
 */
