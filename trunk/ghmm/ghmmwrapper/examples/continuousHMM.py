@@ -12,6 +12,22 @@ pi = [1.0,0.0,0.0]   # initial probabilities per state
 model = ghmm.HMMFromMatrices(F,ghmm.GaussianDistribution(F), A, B, pi)
 
 
+# modify model parameters
+p = model.getInitial(2)
+model.setInitial(2,0.5)
+model.setInitial(0,0.5)
+ 
+# re-set transition from state 0 to state 1
+trans = model.getTransition(0,1)
+model.setTransition(0,1,0.6)
+
+# re-setting emission of state 1
+model.setEmission(1,[5.0,0.6])
+ 
+# re-normalize model parameters
+model.normalize()
+
+
 # sample single sequence of length 50
 seq = model.sampleSingle(50)
 
