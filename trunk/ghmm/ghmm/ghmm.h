@@ -134,6 +134,8 @@ void ghmm_set_logfunc(void (* fptr)(int, const char *, void *), void * clientdat
 void ghmm_set_loglevel(int level);
 /*@} (Doc++-Group: Logging) */
 
+
+/*@{ (Doc++-Group: Common data structures) */
 /** @name alphabet_s
     keeps a mapping between symbols of the distribution and
     the integer from 0 till M-1 */ 
@@ -144,6 +146,29 @@ struct alphabet_s {
   char * * symbols;
 };
 typedef struct alphabet_s alphabet_s;
+
+
+/** @name ghmm_d_background_distributions
+    A container for background distributions to be used in the reestimation. Model
+    has an ID (== index) to be used for the arrays background_distributions.order
+    and background_distributions.b
+*/
+struct ghmm_d_background_distributions {
+  /** Number of distributions */
+  int n;
+  /** Number of symbols in alphabet */
+  int m;
+  /** Order of the respective distribution */
+  int *order;
+  /** The probabilities */
+  double **b;
+  /** string ids of the background distributions */
+  char * * name;
+};
+
+typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
+
+/*@} (Doc++-Group: Common data structures) */
 
 #ifdef __cplusplus
 }

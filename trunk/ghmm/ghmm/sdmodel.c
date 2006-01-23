@@ -61,27 +61,26 @@
 
 #define  __EPS 10e-6
 
-#ifdef sdmodelSTATIC
 /*----------------------------------------------------------------------------*/
-static int sdmodel_state_alloc (ghmm_dsstate * ghmm_dstate, int M, int in_states,
+static int dsmodel_state_alloc (ghmm_dsstate * s, int M, int in_states,
                                 int out_states, int cos)
 {
 #define CUR_PROC "sdmodel_state_alloc"
   int res = -1;
-  ARRAY_CALLOC (state->b, M);
+  ARRAY_CALLOC (s->b, M);
 
   if (out_states > 0) {
-    ARRAY_CALLOC (state->out_id, out_states);
-    state->out_a = ighmm_cmatrix_alloc (cos, out_states);
-    if (!state->out_a) {
+    ARRAY_CALLOC (s->out_id, out_states);
+    s->out_a = ighmm_cmatrix_alloc (cos, out_states);
+    if (!s->out_a) {
       mes_proc ();
       goto STOP;
     }
   }
   if (in_states > 0) {
-    ARRAY_CALLOC (state->in_id, in_states);
-    state->in_a = ighmm_cmatrix_alloc (cos, in_states);
-    if (!state->in_a) {
+    ARRAY_CALLOC (s->in_id, in_states);
+    s->in_a = ighmm_cmatrix_alloc (cos, in_states);
+    if (!s->in_a) {
       mes_proc ();
       goto STOP;
     }
@@ -92,7 +91,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 #undef CUR_PROC
 }                               /* model_state_alloc */
-#endif
 
 /*----------------------------------------------------------------------------*/
 double ghmm_ds_likelihood (ghmm_dsmodel * mo, ghmm_dseq * sq)
@@ -159,6 +157,55 @@ static int sdmodel_copy_vectors (ghmm_dsmodel * mo, int index, double ***a_matri
 #undef CUR_PROC
 }                               /* model_alloc_vectors */
 #endif
+
+/*============================================================================*/
+ghmm_dsmodel * ghmm_dsmodel_calloc(int M, int N, int modeltype, int cos,
+				   int * inDegVec, int * outDegVec) {
+#define CUR_PROC "ghmm_dsmodel_calloc"
+  int i;
+  ghmm_dsmodel * mo;
+
+  assert((modeltype & GHMM_kDiscreteHMM) && (modeltype & GHMM_kTransitionClasses));
+
+  ARRAY_CALLOC(mo, 1);
+
+  mo->M = M;
+  mo->N = N;
+  mo->model_type = modeltype;
+
+  ARRAY_CALLOC(mo->s, N);
+  for (i=0; i<N; i++) {
+    if (dsmodel_state_alloc(&(mo->s[i]), M, inDegVec[i], outDegVec[i], cos))
+      goto STOP;
+  }
+
+  if (mo->model_type & GHMM_kSilentStates)
+    ARRAY_CALLOC(mo->silent, N);
+
+  if (mo->model_type & GHMM_kTiedEmissions) {
+    ARRAY_CALLOC(mo->tied_to, N);
+    for (i=0; i<N; ++i)
+      mo->tied_to[i] = GHMM_kUntied;
+  }
+   
+  if (mo->model_type & GHMM_kBackgroundDistributions) {
+    ARRAY_MALLOC(mo->background_id, N);
+    for (i=0; i<N; ++i)
+      mo->background_id[i] = GHMM_kNoBackgroundDistribution;
+  }
+
+  if (mo->model_type & GHMM_kHigherOrderEmissions)
+    ARRAY_CALLOC(mo->order, N);
+   
+  if (mo->model_type & GHMM_kLabeledStates)
+    ARRAY_CALLOC(mo->label, N);
+
+  return mo;
+STOP:
+  ghmm_ds_free(&mo);
+  return NULL;
+#undef CUR_PROC
+}
 
 /*============================================================================*/
 int ghmm_ds_free(ghmm_dsmodel ** mo) {
