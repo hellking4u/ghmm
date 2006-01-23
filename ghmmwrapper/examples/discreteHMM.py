@@ -12,10 +12,14 @@ model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), A, B,
 # sample single sequence of length 50
 seq = model.sampleSingle(50)
 
-# sample 10 sequences of length 10
+# sample 10 sequences of length 50
 seq_set = model.sample(10,50)
 
 # get log P(seq | model)
 logp = model.loglikelihood(seq)
 
+# cacluate viterbi path 
+path = model.viterbi(seq)
 
+# train model parameters
+model.baumWelch(seq_set,5,0.01)
