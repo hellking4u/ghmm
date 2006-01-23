@@ -1175,7 +1175,7 @@ ghmm_cseq *ghmm_c_generate_sequences (ghmm_cmodel * smo, int seed,
   if (reject_tmax > 0)
     printf ("%d sequences rejected (Tmax, %d)!\n", reject_tmax, Tmax);
 
-  printf ("End of smodel_generate_sequences.\n");
+  /* printf ("End of smodel_generate_sequences.\n"); */
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
