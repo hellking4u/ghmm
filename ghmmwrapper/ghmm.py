@@ -156,7 +156,8 @@ log = logging.getLogger("GHMM")
 hdlr = logging.StreamHandler(sys.stderr)
 
 # setting message format
-fmt = logging.Formatter("%(name)s %(asctime)s %(filename)s:%(lineno)d %(levelname)s %(thread)-5s - %(message)s")
+#fmt = logging.Formatter("%(name)s %(asctime)s %(filename)s:%(lineno)d %(levelname)s %(thread)-5s - %(message)s")
+fmt = logging.Formatter("%(name)s %(filename)s:%(lineno)d  - %(message)s")
 hdlr.setFormatter(fmt)
 
 # adding handler to logger object
@@ -165,7 +166,7 @@ log.addHandler(hdlr)
 # Set the minimal severity of a message to be shown. The levels in
 # increasing severity are: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-log.setLevel(logging.WARNING)
+log.setLevel(logging.INFO)
 log.info( " I'm the ghmm in "+ __file__)
 
 
@@ -3808,21 +3809,31 @@ class GaussianEmissionHMM(HMM):
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
 
-        for i in range(self.N):
-            # normalizing transitions
-            state = self.getStatePtr(self.cmodel.s,i)
-            pSum = 0.0
-            stateIds = []
-            for j in range(state.out_states):
-                stateIds.append(ghmmwrapper.get_arrayint(state.out_id,j))
-                pSum += ghmmwrapper.get_arrayd(state.out_a,j)
-            for j in range(state.out_states):
-                normP = ghmmwrapper.get_arrayd(state.out_a,j) / pSum
-                ghmmwrapper.set_arrayd(state.out_a,j,normP) # updating out probabilities
+        for c in range(self.cmodel.cos):
+            for i in range(self.N):
+                # normalizing transitions
+                state = self.getStatePtr(self.cmodel.s,i)
+                out_a_i = ghmmwrapper.get_col_pointer_d(state.out_a,c)
+                
+                pSum = 0.0
+                stateIds = []
+                
+                for j in range(state.out_states):
+                    stateIds.append(ghmmwrapper.get_arrayint(state.out_id,j))
+                
+                    pSum += ghmmwrapper.get_arrayd(out_a_i,j)
+                    
+                for j in range(state.out_states):
+                    normP = ghmmwrapper.get_arrayd(out_a_i,j) / pSum
+                    ghmmwrapper.set_arrayd(out_a_i,j,normP) # updating out probabilities
 
-                inState = self.getStatePtr(self.cmodel.s,stateIds[j])
-                for k in range(inState.in_states):
-                    inId = ghmmwrapper.get_arrayint(inState.in_id,k)
+                    inState = self.getStatePtr(self.cmodel.s,stateIds[j])
+                    in_a =  ghmmwrapper.get_col_pointer_d(inState.in_a,c)
+                    for k in range(inState.in_states):
+                        inId = ghmmwrapper.get_arrayint(inState.in_id,k)
+                        if inId == i:
+                            ghmmwrapper.set_arrayd(in_a,k,normP) # updating in probabilities
+                        
 
     def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
         """ Reestimate the model parameters given the training_sequences.
