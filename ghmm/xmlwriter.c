@@ -711,7 +711,7 @@ static int writeTransition(xmlTextWriterPtr writer, fileData_s * f, int moNo,
 			   int sNo) {
 #define CUR_PROC "writeTransition"
 
-  int cos, i, j, rc; 
+  int cos, i, j, rc=0; 
   int out_states, * out_id;
   double * * out_a;
   double * w_out_a;
@@ -800,7 +800,7 @@ STOP:
 /* ========================================================================= */
 static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
 #define CUR_PROC "writeHMM"
-  int rc, i, N;
+  int rc=0, i, N;
   int w_cos;
   double w_prior;
   unsigned char * w_name;
@@ -885,7 +885,7 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
       GHMM_LOG(LERROR, "writing first alphabet of discrete pair HMM failed");
       goto STOP;
     }
-    rc = writeAlphabet(writer, f->model.dp[number]->alphabets[1]);*/
+    rc = writeAlphabet(writer, f->model.dp[number]->alphabets[1]);*/    
     break;
   }
 
