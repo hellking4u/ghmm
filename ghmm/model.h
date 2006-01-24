@@ -71,6 +71,8 @@ struct ghmm_dstate {
   int in_states;
   /** if fix == 1 --> b stays fix during the training */
   int fix;
+  /** contains a description of the state (null terminated utf-8)*/
+  unsigned char * desc;
   /** x coordinate position for graph representation plotting **/
   int xPosition;
   /** y coordinate position for graph representation plotting **/
@@ -96,8 +98,8 @@ struct ghmm_dmodel {
       distributions*/
   double prior;
 
-  /* contains a arbitrary name for the model */
-  char *name;
+  /* contains a arbitrary name for the model (null terminated utf-8) */
+  unsigned char * name;
 
   /** Contains bit flags for varios model extensions such as
       kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
