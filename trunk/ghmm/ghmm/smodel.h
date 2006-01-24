@@ -110,10 +110,12 @@ extern "C" {
   /**  array of flags for fixing mixture components in the reestimation
         mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
     int *mixture_fix;
+  /** contains a description of the state (null terminated utf-8)*/
+  unsigned char * desc;
   /** x coordinate position for graph representation plotting **/
-    int xPosition;
+  int xPosition;
   /** y coordinate position for graph representation plotting **/
-    int yPosition;
+  int yPosition;
   };
   typedef struct ghmm_cstate ghmm_cstate;
 
@@ -153,6 +155,10 @@ extern "C" {
   /** prior for a priori prob. of the model. -1 means no prior specified (all
       models have equal prob. a priori. */
     double prior;
+
+  /* contains a arbitrary name for the model (null terminated utf-8) */
+  unsigned char * name;
+
   /** All states of the model. Transition probs are part of the states. */
     ghmm_cstate *s;
 

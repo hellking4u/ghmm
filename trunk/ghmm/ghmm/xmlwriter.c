@@ -378,6 +378,138 @@ STOP:
 }
 
 /* ========================================================================= */
+static int writeDiscreteSwitchingStateContents(xmlTextWriterPtr writer,
+					       fileData_s * f, int moNo,
+					       int sNo) {
+#define CUR_PROC "writeDiscreteSwitchingStateContents"
+
+  int bgId, cLabel, rc, order, tied;
+  char * tmp=NULL;
+
+  /* writing discrete distribution */
+  if (0 > xmlTextWriterStartElement(writer, BAD_CAST "discrete")) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (discrete)");
+    goto STOP;
+  }
+
+  if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "id", BAD_CAST "0")) {
+    GHMM_LOG(LERROR, "failed to write alphabet id");
+    goto STOP;
+  }
+
+  if (f->model.ds[moNo]->s[sNo].fix)
+    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
+      GHMM_LOG(LERROR, "failed to write fixed attriute");
+      goto STOP;
+    }
+
+  if ((f->model.ds[moNo]->model_type & GHMM_kHigherOrderEmissions)
+      && f->model.ds[moNo]->order[sNo]) {
+    order = f->model.ds[moNo]->order[sNo];
+    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "order", "%d", order)) {
+      GHMM_LOG(LERROR, "failed to write order attribute for discrete distribution");
+      goto STOP;
+    }
+  } else
+    order = 0;
+
+  tmp = doubleArrayToCSV(f->model.ds[moNo]->s[sNo].b, pow(f->model.ds[moNo]->M, order+1));
+  if (tmp) {
+    if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST tmp)) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw while writing"
+	       "discrete distribution CSV");
+      m_free(tmp);
+      goto STOP;
+    }
+    m_free(tmp);
+  } else {
+    GHMM_LOG(LERROR, "converting array to CSV failed for discrete distribution");
+    goto STOP;
+  }
+  
+  /* end discrete distribution */
+  if (0 > xmlTextWriterEndElement(writer)) {
+    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (discrete)");
+    goto STOP;
+  }
+
+  /* writing backgroung key */
+  if (f->model.ds[moNo]->model_type & GHMM_kBackgroundDistributions) {
+    bgId = f->model.ds[moNo]->background_id[sNo];
+    if (bgId != GHMM_kNoBackgroundDistribution) {
+      if (f->model.ds[moNo]->bp->name[bgId]) {
+	rc = xmlTextWriterWriteElement(writer, BAD_CAST "backgroundKey",
+				       BAD_CAST f->model.ds[moNo]->bp->name[bgId]);
+	if (rc<0) {
+	  GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement (backgroundKey)");
+	  goto STOP;
+	}
+      } else {
+	GHMM_LOG(LERROR, "background name is NULL pointer, invalid model");
+	goto STOP;
+      }
+    }
+  }
+
+  /* writing class label */
+  if (f->model.ds[moNo]->model_type & GHMM_kLabeledStates) {
+    cLabel = f->model.ds[moNo]->label[sNo];
+    rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "class", "%d", cLabel);
+    if (rc<0) {
+      GHMM_LOG(LERROR, "failed to write class label");
+      goto STOP;
+    }
+  }
+  
+  /* duration (not implemented yet, maybe never */
+#if 0
+  if (f->model.ds[moNo]->model_type & GHMM_kDurations) {
+    if (f->model.ds[moNo]->duration[sNo] > 0) {
+      rc = xmlTextWriterWriteElement(writer, BAD_CAST "duration",
+				     BAD_CAST f->model.ds[moNo]->duration[sNo]);
+      if (rc<0) {
+	GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement (duration)");
+	goto STOP;
+      }
+    }
+  }
+#endif
+
+  /* writing positions */
+  if ((f->model.ds[moNo]->s[sNo].xPosition > 0)
+      && (f->model.ds[moNo]->s[sNo].xPosition > 0)) {
+    if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
+      GHMM_LOG(LERROR, "failed to start position element (position)"); goto STOP;}
+    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",
+					  f->model.ds[moNo]->s[sNo].xPosition)) {
+      GHMM_LOG(LERROR, "failed to write x position"); goto STOP;}
+    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "y", "%d",
+					  f->model.ds[moNo]->s[sNo].yPosition)) {
+      GHMM_LOG(LERROR, "failed to write y position"); goto STOP;}
+    if (xmlTextWriterEndElement(writer) < 0) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (position)"); goto STOP;}
+  }
+
+
+  /* writing tied states */
+  if (f->model.ds[moNo]->model_type & GHMM_kTiedEmissions) {
+    tied = f->model.ds[moNo]->tied_to[sNo];
+    if (tied != GHMM_kUntied) {
+      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "tiedTo", "%d", tied);
+      if (rc<0) {
+	GHMM_LOG(LERROR, "failed to write tiedTo element");
+	goto STOP;
+      }
+    }
+  }
+
+  return 0;
+STOP:
+  return -1;
+#undef CUR_PROC
+}
+
+/* ========================================================================= */
 static int writeContinuousStateContents(xmlTextWriterPtr writer, fileData_s * f,
 				      int moNo, int sNo) {
 #define CUR_PROC "writeContinuousStateContents"
@@ -486,7 +618,7 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
 
   int rc;
   double w_pi;
-  char * w_desc=NULL;
+  unsigned char * w_desc=NULL;
   char * estr; /* needed for WRITE_DOUBLE_ATTRIBUTE macro */
 
   /* start state */
@@ -504,13 +636,11 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
 			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
   case GHMM_kDiscreteHMM:
     w_pi = f->model.d[moNo]->s[sNo].pi;
-    /*w_desc = f->model.d[moNo]->s[sNo].desc;*/
+    w_desc = f->model.d[moNo]->s[sNo].desc;
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
-    /*
-    w_pi = f->model.d[moNo]->s[sNo].pi;
-    w_desc = f->model.d[moNo]->s[sNo];
-    */
+    w_pi = f->model.ds[moNo]->s[sNo].pi;
+    w_desc = f->model.ds[moNo]->s[sNo].desc;
     break;
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
@@ -522,7 +652,7 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
     w_pi = f->model.c[moNo]->s[sNo].pi;
-    /* w_desc = f->model.c[moNo]->s[sNo].desc; */
+    w_desc = f->model.c[moNo]->s[sNo].desc;
     break;
   default:
     GHMM_LOG(LCRITIC, "invalid modelType");}
@@ -532,7 +662,7 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
   
   /* write state description */
   if (w_desc) {
-    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", BAD_CAST w_desc))
+    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", w_desc))
       GHMM_LOG(LERROR, "writing state description failed");
   }
 
@@ -543,14 +673,12 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
     rc = writeDiscreteStateContents(writer, f, moNo, sNo);
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
-    /*
-    rc = writeDiscreteStateContents(writer, f, moNo, sNo);
-    */
+    rc = writeDiscreteSwitchingStateContents(writer, f, moNo, sNo);
     break;
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
     /*
-    rc = writeDiscreteStateContents(writer, f, moNo, sNo);
+    rc = writeDiscretePairStateContents(writer, f, moNo, sNo);
     */
     break;
   case GHMM_kContinuousHMM:
@@ -601,18 +729,18 @@ static int writeTransition(xmlTextWriterPtr writer, fileData_s * f, int moNo,
     cos        = 1;
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
-    /*
-    out_states = f->model.dp[moNo]->s[sNo].out_states;
-    out_id     = f->model.dp[moNo]->s[sNo].out_id;
-    out_a      = &(f->model.dp[moNo]->s[sNo].out_a);
-    */
+    out_states = f->model.ds[moNo]->s[sNo].out_states;
+    out_id     = f->model.ds[moNo]->s[sNo].out_id;
+    out_a      = f->model.ds[moNo]->s[sNo].out_a;
+    cos        = f->model.ds[moNo]->cos;
     break;
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
     /*
     out_states = f->model.dp[moNo]->s[sNo].out_states;
     out_id     = f->model.dp[moNo]->s[sNo].out_id;
-    out_a      = &(f->model.dp[moNo]->s[sNo].out_a);
+    out_a      = f->model.dp[moNo]->s[sNo].out_a;
+    cos        = f->model.dp[moNo]->cos;
     */
     break;
   case GHMM_kContinuousHMM:
@@ -675,7 +803,8 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
   int rc, i, N;
   int w_cos;
   double w_prior;
-  char * w_name, * w_type;
+  unsigned char * w_name;
+  char * w_type;
   char * estr; /* needed for WRITE_DOUBLE_ATTRIBUTE macro */
 
   /* start HMM */
@@ -695,13 +824,11 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
     w_cos   = 1;
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
-    /*
     w_name  = f->model.ds[number]->name;
     w_type  = strModeltype(f->model.ds[number]->model_type);
     w_prior = f->model.ds[number]->prior;
     N       = f->model.ds[number]->N;
     w_cos   = 0;
-    */
     break;
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
@@ -715,7 +842,7 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
     break;
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
-    w_name  = NULL;/*f->model.c[number]->name;*/
+    w_name  = f->model.c[number]->name;
     w_type  = strModeltype(f->modelType);
     w_prior = f->model.c[number]->prior;
     N       = f->model.c[number]->N;
@@ -726,7 +853,7 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
     goto STOP;}
 
   if (w_name) {
-    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "name", BAD_CAST w_name))
+    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "name", w_name))
       GHMM_LOG(LERROR, "writing HMM name failed");
   }
   if (xmlTextWriterWriteAttribute(writer, BAD_CAST "type", BAD_CAST w_type))
@@ -760,9 +887,7 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
     }
     rc = writeAlphabet(writer, f->model.dp[number]->alphabets[1]);*/
     break;
-  default:
-    GHMM_LOG(LERROR, "invalid modelType");
-    goto STOP;}
+  }
 
   if (rc) {
     estr = ighmm_mprintf(NULL, 0, "writing alphabet for HMM %d (type %d) failed");

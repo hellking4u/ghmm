@@ -59,10 +59,10 @@ extern "C" {
     int *in_id;
 
   /** transition probs to successor states. It is a
-   matrix in case of mult. transition matrices (COS > 1)*/
+      matrix in case of mult. transition matrices (COS > 1)*/
     double **out_a;
   /** transition probs from predecessor states. It is a
-   matrix in case of mult. transition matrices (COS > 1) */
+      matrix in case of mult. transition matrices (COS > 1) */
     double **in_a;
 
   /** Number of successor states */
@@ -71,15 +71,19 @@ extern "C" {
     int in_states;
   /** if fix == 1 --> b stays fix during the training */
     int fix;
-    /* XXX Specific variable for ProfileHMM to count the number of
-       match states. Not elegant solution.
-       WS: if 1 then counts me, 0 don't count me */
+
+  /* XXX Specific variable for ProfileHMM to count the number of
+     match states. Not elegant solution.
+     WS: if 1 then counts me, 0 don't count me */
     int countme;
 
+  /** contains a description of the state (null terminated utf-8)*/
+    unsigned char * desc;
   /** Position for graphical editing */
     int xPosition;
     int yPosition;
   };
+
   typedef struct ghmm_dsstate ghmm_dsstate;
 
 /** @name ghmm_dmodel
@@ -99,6 +103,9 @@ extern "C" {
   /** Prior for the a priori probability for the model.
       A value of -1 indicates that no prior is defined. */
     double prior;
+
+  /* contains a arbitrary name for the model (null terminated utf-8) */
+    unsigned char * name;
 
   /** pointer to class function   */
     int (*get_class) (int *, int);
