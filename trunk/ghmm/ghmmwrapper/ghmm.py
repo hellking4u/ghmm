@@ -3123,7 +3123,11 @@ class StateLabelHMM(DiscreteEmissionHMM):
         strout.append("\nModelflags: "+ self.printtypes(self.cmodel.model_type))
         strout.append("\nNumber of states: "+ str(hmm.N))
         strout.append("\nSize of Alphabet: "+ str(hmm.M))
-        order = ghmmhelper.arrayint2list(hmm.order, self.N)
+
+        if hmm.model_type & ghmmwrapper.kHigherOrderEmissions:
+            order = ghmmhelper.arrayint2list(hmm.order, self.N)
+        else:
+            order = [0]*hmm.N
         label = ghmmhelper.arrayint2list(hmm.label, self.N)
         for k in range(hmm.N):
             state = ghmmwrapper.get_stateptr(hmm.s, k)
