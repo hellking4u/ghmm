@@ -3151,7 +3151,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             strout.append( "\nIngoing transitions:")
             for i in range(state.in_states):
                 strout.append( "\ntransition from state " + str( ghmmwrapper.get_arrayint(state.in_id,i) ) + " with probability " + str(ghmmwrapper.get_arrayd(state.in_a,i)))
-                strout.append("\nint fix:" + str(state.fix) + "\n")
+            strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & 4:
             strout.append("\nSilent states: \n")
