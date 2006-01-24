@@ -1574,7 +1574,7 @@ extern int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t);
 
   /* array of ghmm_cstate structs */
   ghmm_cstate *arraysstate(int size) {
-    return (ghmm_cstate *) malloc(size*sizeof(ghmm_cstate));
+    return (ghmm_cstate *) calloc(size,sizeof(ghmm_cstate));
   }
 
   ghmm_cstate *get_sstate_ptr(ghmm_cstate *states, int k) {
