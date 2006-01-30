@@ -227,13 +227,13 @@ AC_MSG_RESULT(no)
 ]
 )
 
-echo -n "checking for libxml2... "
-if pkg-config --exists libxml-2.0 ; then
-        echo "yes"
+echo -n "checking libxml2 version... "
+if pkg-config --atleast-version=2.6 libxml-2.0; then
+        echo `pkg-config --modversion libxml-2.0` "... ok"
 pkg_modules="$pkg_modules libxml-2.0"
 else
-        echo "no"
-        AC_MSG_ERROR(libxml-2.0 not found please install libxml)
+        echo `pkg-config --modversion libxml-2.0`
+        AC_MSG_ERROR(Failed: please install atleast libxml-2.6.0)
 fi
 
 PKG_CHECK_MODULES(LIBXML2, [$pkg_modules])
