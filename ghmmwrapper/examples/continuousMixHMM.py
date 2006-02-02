@@ -24,7 +24,7 @@ pi = [1.0,0.0,0.0]  # initial probabilities per state
 model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), A, B, pi)
 
 
-# modify model parameters
+# modify model parameters (examples)
 p = model.getInitial(2)
 model.setInitial(2,0.5)
 model.setInitial(0,0.5)
