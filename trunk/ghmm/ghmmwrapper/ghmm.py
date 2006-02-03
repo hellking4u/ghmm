@@ -1846,14 +1846,14 @@ class HMMFromMatricesFactory(HMMFactory):
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
                 
             elif isinstance(distribution, ContinuousMixtureDistribution):
-                 #print " ** mixture model"
+                log.debug( "*** general mixture model")
                  
-                 # Interpretation of B matrix for the mixture case (Example with three states and two components each):
-                 #  B = [ 
-                 #      [ ["mu11","mu12"],["sig11","sig12"],["a11","a12"],["w11","w12"]   ],
-                 #      [  ["mu21","mu22"],["sig21","sig22"],["w21","w22"]  ],
-                 #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
-                 #      ]
+                # Interpretation of B matrix for the mixture case (Example with three states and two components each):
+                #  B = [ 
+                #      [ ["mu11","mu12"],["sig11","sig12"],["a11","a12"],["w11","w12"]   ],
+                #      [  ["mu21","mu22"],["sig21","sig22"],["w21","w22"]  ],
+                #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
+                #      ]
 
                 assert densities != None, "Continuous Mixture Distributions need a density type array"
                  
@@ -3569,7 +3569,6 @@ class GaussianEmissionHMM(HMM):
     
     def __str__(self):
         hmm = self.cmodel
-        # TTTTTTTTTTTT XXX
         strout = ["\nHMM Overview:"]
         strout.append("\nNumber of states: " + str(hmm.N))
         strout.append("\nNumber of mixture components: " + str(hmm.M))
@@ -4138,6 +4137,46 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 A[i][state_index] = ghmmwrapper.get_2d_arrayd(state.out_a,0,j)
 
         return [A,B,pi]
+
+    def normalize(self):
+        """ Normalize transition probs, emission probs (if applicable) """
+
+        for c in range(self.cmodel.cos):
+            for i in range(self.N):
+                # normalizing transitions
+                state = self.getStatePtr(self.cmodel.s,i)
+                out_a_i = ghmmwrapper.get_col_pointer_d(state.out_a,c)
+                
+                pSum = 0.0
+                stateIds = []
+                
+                for j in range(state.out_states):
+                    stateIds.append(ghmmwrapper.get_arrayint(state.out_id,j))
+                
+                    pSum += ghmmwrapper.get_arrayd(out_a_i,j)
+                    
+                for j in range(state.out_states):
+                    normP = ghmmwrapper.get_arrayd(out_a_i,j) / pSum
+                    ghmmwrapper.set_arrayd(out_a_i,j,normP) # updating out probabilities
+
+                    inState = self.getStatePtr(self.cmodel.s,stateIds[j])
+                    in_a =  ghmmwrapper.get_col_pointer_d(inState.in_a,c)
+                    for k in range(inState.in_states):
+                        inId = ghmmwrapper.get_arrayint(inState.in_id,k)
+                        if inId == i:
+                            ghmmwrapper.set_arrayd(in_a,k,normP) # updating in probabilities
+
+                # normalizing mixture weigths
+                pSum = 0.0
+                for k in range(self.cmodel.M):
+                  pSum += ghmmwrapper.get_arrayd(state.c,k)
+               
+
+                for k in range(self.cmodel.M):
+                    v = ghmmwrapper.get_arrayd(state.c,k)
+                    ghmmwrapper.set_arrayd(state.c,k, v / pSum )
+
+                      
 
 
 class ContinuousMixtureHMM(GaussianMixtureHMM):
