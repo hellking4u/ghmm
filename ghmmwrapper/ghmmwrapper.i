@@ -1554,10 +1554,6 @@ extern int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t);
     state->density[m] = (ghmm_density_t)value;
   }
 
-  int blatestbla(ghmm_cmodel* smo,double *seq ,int k, int t){
-      return smo->class_change->get_class(smo,seq,k,t);
-  }
-
   /* allocation of an empty ghmm_cmodel struct */
   ghmm_cmodel *new_smodel() {
      return (struct ghmm_cmodel *)(struct ghmm_cmodel *) calloc(1, sizeof(ghmm_cmodel));
