@@ -795,7 +795,7 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
     for (j=0; j<mo->s[i].in_states; j++)
       sum += mo->s[i].in_a[j];
 
-    if (fabs(sum) >= GHMM_EPS_PREC) {
+    if (fabs(sum) <= GHMM_EPS_PREC) {
       imag = 1;
       str = ighmm_mprintf(NULL, 0, "state %d can't be reached", i);
       GHMM_LOG(LINFO, str);
@@ -809,7 +809,7 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
 
     if (imag) {
       /* not reachable states */
-      if ((fabs(sum + mo->M) >= GHMM_EPS_PREC)) {
+      if ((fabs(sum + mo->M ) >= GHMM_EPS_PREC)) {
         str = ighmm_mprintf(NULL, 0, "state %d can't be reached but is not set"
                             " as non-reachale state", i);
         GHMM_LOG(LWARN, str);
