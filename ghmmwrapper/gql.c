@@ -90,7 +90,7 @@ static double * * cmatrix_alloc(int rows, int cols) {
   return matrix;
 }
 
-
+/* obsoleted by by global ghmm_c_state_alloc in ghmm/smodel.c
 static int ghmm_c_state_alloc(ghmm_cstate *state,
 			      int M,
 			      int in_states,
@@ -125,7 +125,7 @@ static int ghmm_c_state_alloc(ghmm_cstate *state,
 STOP:
   return(res);
 #undef CUR_PROC
-}
+}*/
 
 ghmm_cmodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
 #define CUR_PROC "smodel_alloc_fill"
