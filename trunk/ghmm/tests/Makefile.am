@@ -29,7 +29,6 @@ noinst_PROGRAMS = root_finder_test \
                   libxml-test \
                   chmm \
                   shmm_viterbi_test \
-                  generate_PHI \
                   test_gsl_ran_gaussian_tail \
                   sequences_test \
                   sequences_old_format \
