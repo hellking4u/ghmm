@@ -1038,7 +1038,7 @@ extern int ghmm_d_background_apply(ghmm_dmodel *mo, double* background_weight);
    
   /* allocation of an array of ghmm_dstate structs*/
   ghmm_dstate *arraystate(int size) {
-    ghmm_dstate * state = calloc(size*sizeof(ghmm_dstate), 1);
+    ghmm_dstate * state = calloc(size, sizeof(ghmm_dstate));
     return state;
   }
   
@@ -1271,7 +1271,7 @@ extern int ghmm_ds_forward (ghmm_dsmodel *mo, const int *O, int len, double **al
 	
   /* allocation of an array of ghmm_dsstate structs*/	
   ghmm_dsstate *arraysdstate(int size) {
-    return (ghmm_dsstate *) malloc(size*sizeof(ghmm_dsstate));
+    return calloc(size, sizeof(ghmm_dsstate));
   }	
   
   /* extract pointer to a ghmm_dsstate  */
@@ -1556,7 +1556,7 @@ extern int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t);
 
   /* allocation of an empty ghmm_cmodel struct */
   ghmm_cmodel *new_smodel() {
-     return (struct ghmm_cmodel *)(struct ghmm_cmodel *) calloc(1, sizeof(ghmm_cmodel));
+     return (struct ghmm_cmodel *) calloc(1, sizeof(ghmm_cmodel));
   }
 
   /** allocation of an empty ghmm_cmodel struct */
