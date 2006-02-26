@@ -93,7 +93,7 @@ int single_state_continuous()
   {  
     FILE *my_file;
     ghmm_cseq* new_output;
-    char filename_buffer[]="/tmp/chmm_test.XXXXXX";
+    char filename_buffer[]="chmm_test.XXXXXX";
     int descriptor;
     int model_counter;
     ghmm_cmodel **model_array;
