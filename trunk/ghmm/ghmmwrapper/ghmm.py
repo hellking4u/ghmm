@@ -1408,7 +1408,7 @@ class HMMOpenFactory(HMMFactory):
                 log.debug("durations: " + str(durations))
                 m.extendDurations(durations)
 
-	    	return m
+            return m
 
     def openSMO(self, fileName, modelIndex):
         # MO & SMO Files, format is deprecated
