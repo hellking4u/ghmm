@@ -70,6 +70,7 @@ static double ighmm_erf (double x);
 static double ighmm_erfc (double x);
 #endif /* check for ISO C99 */
 
+
 /* A list of already calculated values of the density function of a 
    N(0,1)-distribution, with x in [0.00, 19.99] */
 #define PDFLEN 2000
@@ -85,10 +86,9 @@ static int pdf_stdnormal_exists = 0;
 static int PHI_len = 0;
 static double x_PHI_1 = -1.0;
 
-#ifndef DO_WITH_GSL
+#ifndef M_SQRT1_2
 #define M_SQRT1_2  0.70710678118654752440084436210
-
-#endif /* DO_WITH_GSL */
+#endif
 
 
 /*============================================================================*/
