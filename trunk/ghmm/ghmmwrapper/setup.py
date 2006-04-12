@@ -73,11 +73,11 @@ print "**************************"
 # defined symbols in link
 
 print "================================================================================"
-print "Please run the following command first: swig -noruntime -python -nodefault ghmmwrapper.i"
+print "Please run the following command first: swig -python -nodefault ghmmwrapper.i"
 print "================================================================================"
    
 setup(name="ghmmwrapper",
-      version="0.6",
+      version="0.8",
       description="Python Distribution Utilities",
       author="GHMM authors",
       author_email="ghmm@sf.net",
