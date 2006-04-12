@@ -37,6 +37,29 @@
 
 %module ghmmwrapper
 
+%nodefault  ghmm_dseq;
+%nodefault  ghmm_cseq;
+%nodefault  ghmm_d_background_distributions;
+%nodefault  alphabet_s;
+%nodefault  ghmm_dstate;
+%nodefault  ghmm_dmodel;
+%nodefault  fileData_s;
+%nodefault fileData_s_model;
+%nodefault  ghmm_dsstate;
+%nodefault  ghmm_dsmodel;
+%nodefault  ghmm_cstate;
+%nodefault  ghmm_cmodel;
+%nodefault  ghmm_c_class_change_context;
+%nodefault  ghmm_cmodel;
+%nodefault  scluster_t;
+%nodefault  ghmm_c_baum_welch_context;
+%nodefault  ghmm_dpseq;
+%nodefault  ghmm_dp_class_change_context;
+%nodefault  ghmm_dpstate;
+%nodefault  ghmm_dpmodel;
+%nodefault  threshold_user_data;
+
+
 /* this will not work if we build ghmmwrapper out of the ghmm tree
    include ../config.h twice, once for swig and once for CC */
 %include "../config.h"
@@ -74,6 +97,8 @@
 %include constraints.i
 %include exception.i    
 %include typemaps.i
+
+//%nodefault;
 
 // Constraints on GHMM date types - no NULL pointers as function arguments
 %apply Pointer NONNULL { ghmm_dmodel * };
@@ -119,12 +144,14 @@
 
 /** Model has states with tied emission probabilities */
 #define kTiedEmissions (1 << 3)
+#define kUntied (-1)
 
 /** Model has states emission probabilities conditioned on previous orders */
 #define kHigherOrderEmissions (1 << 4)
 
 /** Model has background distributions */
 #define kBackgroundDistributions (1 << 5)
+#define kNoBackgroundDistribution (-1)
 
 /** Model is a class HMM with labeled states */
 #define kLabeledStates (1 << 6)
@@ -536,27 +563,33 @@ typedef struct alphabet_s alphabet_s;
     The basic structure, keeps all parameters that belong to a state. 
 */
 struct ghmm_dstate {
-  /** Initial probability */ 
+  /** Initial probability */
   double pi;
   /** Output probability */
   double *b;
-  
-  /** IDs of the following states */ 
-  int *out_id;  
-  /** IDs of the previous states */    
+
+  /** IDs of the following states */
+  int *out_id;
+  /** IDs of the previous states */
   int *in_id;
 
-  /** transition probs to successor states. */
-  double *out_a; 
-  /** transition probs from predecessor states. */ 
+  /** transition probabilities to successor states. */
+  double *out_a;
+  /** transition probabilities from predecessor states. */
   double *in_a;
 
-  /** Number of successor states */     
-  int out_states; 
+  /** Number of successor states */
+  int out_states;
   /** Number of precursor states */
-  int in_states;  
+  int in_states;
   /** if fix == 1 --> b stays fix during the training */
   int fix;
+  /** contains a description of the state (null terminated utf-8)*/
+  unsigned char * desc;
+  /** x coordinate position for graph representation plotting **/
+  int xPosition;
+  /** y coordinate position for graph representation plotting **/
+  int yPosition;
 };
 typedef struct ghmm_dstate ghmm_dstate;
 
@@ -1092,12 +1125,16 @@ extern fileData_s * parseHMMDocument(const char *filename);
 %inline%{
 
   ghmm_cmodel * * get_model_c(fileData_s *f) {return f->model.c;}
+  ghmm_cmodel *   getCModel(fileData_s *f, int i) {return f->model.c[i];}
 
   ghmm_dmodel * * get_model_d(fileData_s *f) {return f->model.d;}
+  ghmm_dmodel *   getDModel(fileData_s *f, int i) {return f->model.d[i];}
 
   ghmm_dpmodel * * get_model_dp(fileData_s *f) {return f->model.dp;}
+  ghmm_dpmodel *   getDPModel(fileData_s *f, int i) {return f->model.dp[i];}
 
-  ghmm_dpmodel * * get_model_ds(fileData_s *f) {return f->model.ds;}
+  ghmm_dsmodel * * get_model_ds(fileData_s *f) {return f->model.ds;}
+  ghmm_dsmodel *   getDSModel(fileData_s *f, int i) {return f->model.ds[i];}
   
 %}
 
