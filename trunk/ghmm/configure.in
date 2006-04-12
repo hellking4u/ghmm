@@ -5,7 +5,7 @@ dnl  $Id$
 dnl __copyright__
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ghmm, 0.7)
+AC_INIT(ghmm, 0.8)
 AC_CONFIG_SRCDIR(ghmm/smodel.c)
 AM_INIT_AUTOMAKE
 
@@ -39,8 +39,8 @@ AM_CONFIG_HEADER(config.h)
 #  6. If any interfaces have been removed since the last public release, then 
 #     set age to 0. 
 
-GHMM_VERSION_CURRENT=0
-GHMM_VERSION_REVISION=7
+GHMM_VERSION_CURRENT=1
+GHMM_VERSION_REVISION=0
 GHMM_VERSION_AGE=0
 GHMM_VERSION=$GHMM_VERSION_CURRENT.$GHMM_VERSION_REVISION.$GHMM_VERSION_AGE
 AC_SUBST(GHMM_VERSION_CURRENT)
@@ -50,14 +50,6 @@ AC_SUBST(GHMM_VERSION_AGE)
 AM_INIT_AUTOMAKE(ghmm,$GHMM_VERSION)
 dnl implicit in AM_INIT_AUTOMAKE...
 dnl AC_PROG_MAKE_SET
-
-dnl load CXXFLAGS from cache
-if test -z "$CXXFLAGS"; then
-  AC_CACHE_CHECK(for CXXFLAGS, ac_cv_cxxflags,[ac_cv_cxxflags="-O2"]);
-  CXXFLAGS="$ac_cv_cxxflags"
-else
-  ac_cv_cxxflags="$CXXFLAGS"; 
-fi
 
 dnl load CFLAGS from cache
 if test -z "$CFLAGS"; then
@@ -69,9 +61,6 @@ fi
 
 dnl Checks for programs.
 AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_CXX
-AC_PROG_CXXCPP
 AC_PROG_RANLIB
 AM_PROG_LIBTOOL
 AC_PROG_AWK
@@ -89,7 +78,10 @@ AC_ARG_ENABLE(experimental,
                              [enable experimental features [[default=no]]]),
               if test "x$enable_experimental" != "xno" ; then
                   AC_DEFINE([__EXPERIMENTAL__], [$enable_experimental], [include experimental features])
-              fi
+                  AC_MSG_NOTICE(experimental features enabled)
+              fi,
+              AC_MSG_NOTICE(experimental features disabled)
+
 )
 
 dnl obsolete features can be switched on or off
@@ -98,8 +90,12 @@ AC_ARG_ENABLE(obsolete,
                              [disable default enabled obsolete features]),
               if test "x$enable_obsolete" != "xno" ; then
                   AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
+                  AC_MSG_NOTICE(obsolete features enabled)
+              else
+                  AC_MSG_NOTICE(obsolete features disabled)
               fi,
               AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
+              AC_MSG_NOTICE(obsolete features enabled)
 )
 
 dnl unsupported features can be switched on or off
@@ -108,36 +104,10 @@ AC_ARG_ENABLE(unsupported,
                              [enable unsupported features [[default=no]]]),
               if test "x$enable_unsupported" != "xno" ; then
                   AC_DEFINE([GHMM_UNSUPPORTED], [], [include unsupported features])
-              fi
+                  AC_MSG_NOTICE(unsupported features enabled)
+              fi,
+              AC_MSG_NOTICE(unsupported features disabled)
 )
-
-dnl preparation for c++ use
-AC_LANG_CPLUSPLUS
-AC_CXX_HAVE_STL
-AC_CXX_NAMESPACES
-AC_CHECK_HEADERS(cstdio cstdlib cstring cerrno cmath cstdarg)
-
-XMLIO_CONFIG=""
-AC_ARG_WITH(xmlio,
-[  --with-xmlio=DIR        with xmlio library available at the given prefix],
-[  if test "x$with_xmlio" != "xno" ; then
-     AC_PATH_PROG(XMLIO_CONFIG,xmlio-config,,"$with_xmlio/bin:$PATH")
-  fi
-],
-[
-  AC_PATH_PROG(XMLIO_CONFIG,xmlio-config)
-]
-)
-if test -z "$XMLIO_CONFIG" ; then
-    AC_WARN("no xml support")
-else
-    XMLIO_PREFIX=`$XMLIO_CONFIG --prefix`
-    XMLIO_INCLUDES=`$XMLIO_CONFIG --cppflags`
-    XMLIO_LIBS=`$XMLIO_CONFIG --libs`
-    AC_SUBST(XMLIO_PREFIX)
-    AC_SUBST(XMLIO_INCLUDES)
-    AC_SUBST(XMLIO_LIBS)
-fi
 
 dnl following tests with C
 AC_LANG_C
@@ -145,19 +115,6 @@ dnl aborts on failure
 
 dnl Checks for libraries.
 AC_CHECK_LIB(pthread, pthread_join)
-
-dnl AC_ARG_WITH(expat,
-dnl [  --with-expat=DIR        with expat available at the given prefix],
-dnl [CPPFLAGS="$CPPFLAGS -I$with_expat/include"
-dnl LIBS="$LIBS -L$with_expat/lib"]
-dnl )
-dnl AC_CHECK_HEADERS(expat.h)
-dnl AC_CHECK_LIB(expat,XML_ParserCreate)
-
-dnl something experimental
-dnl if test "x$enable_experimental" = "x1" || test "x$enable_experimental" = "xyes" ; then
-dnl evaluate experimental flags
-dnl fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -169,64 +126,69 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 
+dnl Checks for libm functions
+AC_CHECK_LIB(m, sqrt)
+AC_CHECK_LIB(m, exp)
+AC_CHECK_LIB(m, pow)
+
 dnl AC_CHECK_FUNCS(tmpnam mkstemp)
 dnl AC_CHECK_FUNCS(gettimeofday)
 
-#AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm interpolation algorithms])
-AC_ARG_WITH(gsl,
-[  --with-gsl         with gsl library],
-[  if test "x$with_gsl" != "xno" ; then
-     AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm equivalents])
+dnl check GSL functions and use it instead of ghmm interpolation algorithms
+AC_ARG_ENABLE(gsl,
+  AC_HELP_STRING([--enable-gsl], [enable gsl library [[default=no]]]),
+  [ if test "x$enable_gsl" != "xno" ; then
+      AC_DEFINE(DO_WITH_GSL,1,[use GSL functions instead of ghmm equivalents])
 
-dnl these macros are from acinclude.m4! (modified gsl.m4)
-AM_PATH_GSL(0.7,,AC_MSG_ERROR("GSL Version 0.7 or higher required."))
-LIBS="$LIBS $GSL_LIBS"
-CFLAGS="$CFLAGS $GSL_CFLAGS"
-CXXFLAGS="$CXXFLAGS $GSL_CFLAGS"
+      dnl these macros are from acinclude.m4! (modified gsl.m4)
+      AM_PATH_GSL(0.7,,AC_MSG_ERROR("GSL Version 0.7 or higher required."))
+      LIBS="$LIBS $GSL_LIBS"
+      CFLAGS="$CFLAGS $GSL_CFLAGS"
+      CXXFLAGS="$CXXFLAGS $GSL_CFLAGS"
 
-dnl checking for gsl_inteval
-AC_MSG_CHECKING([for gsl_inteval])
-AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
-[
-  gsl_interval x;
-],
-AC_MSG_RESULT(yes)
-AC_DEFINE(HAVE_GSL_INTERVAL,1,[struct gsl_interval exists]),
-AC_MSG_RESULT(no)
-)
+      dnl checking for gsl_inteval
+      AC_MSG_CHECKING([for gsl_inteval])
+      AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
+        [
+          gsl_interval x;
+        ],
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_GSL_INTERVAL,1,[struct gsl_interval exists]),
+        AC_MSG_RESULT(no)
+      )
 
-dnl checking which root solver alloc function is used
-AC_MSG_CHECKING([whether gsl_root_fsolver_alloc takes one argument])
-AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
-[
- gsl_root_fsolver* s;
- s = gsl_root_fsolver_alloc (gsl_root_fsolver_bisection);
-],
-AC_MSG_RESULT(yes)
-AC_DEFINE(GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG,1,[root solver allocation takes only one argument]),
-AC_MSG_RESULT(no)
-)
+      dnl checking which root solver alloc function is used
+      AC_MSG_CHECKING([whether gsl_root_fsolver_alloc takes one argument])
+      AC_TRY_COMPILE([#include <gsl/gsl_roots.h>],
+        [
+          gsl_root_fsolver* s;
+          s = gsl_root_fsolver_alloc (gsl_root_fsolver_bisection);
+        ],
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(GSL_ROOT_FSLOVER_ALLOC_WITH_ONE_ARG,1,[root solver allocation takes only one argument]),
+        AC_MSG_RESULT(no)
+      )
 
-dnl checking for gsl_histogram_set_ranges_uniform
-AC_MSG_CHECKING([for gsl_histogram_set_ranges_uniform])
-AC_TRY_LINK([#include <gsl/gsl_histogram.h>],
-[
- gsl_histogram* h;
- (void)gsl_histogram_set_ranges_uniform(h,-10.0,10.0);
-],
-AC_MSG_RESULT(yes)
-AC_DEFINE(GSL_HISTOGRAM_SET_RANGES_UNIFORM,1,[gsl_histogram_set_ranges_uniform is defined]),
-AC_MSG_RESULT(no)
-)
-
-   fi
-],
-[
-    AC_WARN("not using gsl")
+      dnl checking for gsl_histogram_set_ranges_uniform
+      AC_MSG_CHECKING([for gsl_histogram_set_ranges_uniform])
+      AC_TRY_LINK([#include <gsl/gsl_histogram.h>],
+        [
+          gsl_histogram* h;
+          (void)gsl_histogram_set_ranges_uniform(h,-10.0,10.0);
+        ],
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(GSL_HISTOGRAM_SET_RANGES_UNIFORM,1,[gsl_histogram_set_ranges_uniform is defined]),
+        AC_MSG_RESULT(no)
+      )
+    fi
+  ],
+  [
+    AC_MSG_NOTICE("not using gsl")
     AC_CHECK_LIB(m, cos)
-]
+  ]
 )
 
+dnl libxml2 checks
 echo -n "checking libxml2 version... "
 if pkg-config --atleast-version=2.6 libxml-2.0; then
         echo `pkg-config --modversion libxml-2.0` "... ok"
@@ -242,25 +204,79 @@ AC_SUBST(LIBXML2_LIBS)
 LIBS="$LIBS $LIBXML2_LIBS"
 CFLAGS="$CFLAGS $LIBXML2_CFLAGS"
 
+
+dnl final configuration
 SUBDIRS="ghmm tools tests doc VisualC"
-if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
- SUBDIRS="$SUBDIRS ghmm++"
- AC_OUTPUT(ghmm++/Makefile \
-	ghmm++/examples/Makefile)
-fi
+
+dnl optional c++ use
+AC_ARG_ENABLE(ghmmXX,
+              AC_HELP_STRING([--enable-ghmmXX],
+                             [enable unsupported C++ wrapper ghmm++ [[default=no]]]),
+              [ if  test "x$enable_ghmmXX" != "xno" ; then
+                  dnl load CXXFLAGS from cache
+                  if test -z "$CXXFLAGS"; then
+                    AC_CACHE_CHECK(for CXXFLAGS, ac_cv_cxxflags,[ac_cv_cxxflags="-O2"]);
+                    CXXFLAGS="$ac_cv_cxxflags"
+                  else
+                    ac_cv_cxxflags="$CXXFLAGS"; 
+                  fi
+
+                  dnl activate C++ language
+                  AC_PROG_CPP
+                  AC_PROG_CXX
+                  AC_PROG_CXXCPP 
+                  AC_LANG_CPLUSPLUS
+                  AC_CXX_HAVE_STL
+                  AC_CXX_NAMESPACES
+                  AC_CHECK_HEADERS(cstdio cstdlib cstring cerrno cmath cstdarg)
+
+                  AC_LANG_CPLUSPLUS
+
+                  XMLIO_CONFIG=""
+                  AC_ARG_WITH(xmlio,
+                    [  --with-xmlio=DIR        with xmlio library available at the given prefix],
+                    [ if test "x$with_xmlio" != "xno" ; then
+                        AC_PATH_PROG(XMLIO_CONFIG,xmlio-config,,"$with_xmlio/bin:$PATH")
+                      fi
+                    ],
+                    [
+                      AC_PATH_PROG(XMLIO_CONFIG,xmlio-config)
+                    ]
+                  )
+                  if test -z "$XMLIO_CONFIG" ; then
+                    AC_MSG_ERROR("for ghmm++ support xmlio is needed")
+                  else
+                    XMLIO_PREFIX=`$XMLIO_CONFIG --prefix`
+                    XMLIO_INCLUDES=`$XMLIO_CONFIG --cppflags`
+                    XMLIO_LIBS=`$XMLIO_CONFIG --libs`
+                    AC_SUBST(XMLIO_PREFIX)
+                    AC_SUBST(XMLIO_INCLUDES)
+                    AC_SUBST(XMLIO_LIBS)
+                  fi
+
+                  if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
+                    SUBDIRS="$SUBDIRS ghmm++"
+                    AC_OUTPUT(ghmm++/Makefile \
+	                      ghmm++/examples/Makefile)
+                  fi
+                fi
+              ]
+)
+
+dnl finished
 AC_SUBST(SUBDIRS)
 
 AC_OUTPUT(Makefile \
-doc/Makefile \
-ghmm/Makefile \
-tools/Makefile \
-tests/Makefile \
-tests/data/Makefile \
-doc/docu.dxx \
-tools/ghmm-config \
-ghmmwrapper/Makefile \
-VisualC/Makefile \
-VisualC/coin_toss_test/Makefile \
-VisualC/coin_toss_test_pp/Makefile \
-VisualC/ghmm/Makefile \
-VisualC/ghmmpp/Makefile)
+          doc/Makefile \
+          ghmm/Makefile \
+          tools/Makefile \
+          tests/Makefile \
+          tests/data/Makefile \
+          doc/docu.dxx \
+          tools/ghmm-config \
+          ghmmwrapper/Makefile \
+          VisualC/Makefile \
+          VisualC/coin_toss_test/Makefile \
+          VisualC/coin_toss_test_pp/Makefile \
+          VisualC/ghmm/Makefile \
+          VisualC/ghmmpp/Makefile)
