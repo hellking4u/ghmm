@@ -49,6 +49,10 @@
 #include "ghmm_internals.h"
 #include "xmlwriter.h"
 
+/* Bitmask to test the modeltype against to choose the type of the model pointer
+   we use in the union */
+#define PTR_TYPE_MASK (GHMM_kDiscreteHMM + GHMM_kTransitionClasses + GHMM_kPairHMM + GHMM_kContinuousHMM)
+
 
 #if defined(LIBXML_WRITER_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
 
@@ -62,6 +66,7 @@
             estr=ighmm_mprintf(NULL,0, "failed to write attribute %s (%.8f)", \
                                (NAME), (VALUE));                              \
             GHMM_LOG(LERROR, estr); m_free(estr); goto STOP;} else
+
 
 
 /* ========================================================================= */
@@ -632,8 +637,7 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
     GHMM_LOG(LERROR, "failed to write statte id attribute");
 
   /* read state attribute from different model types */
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case GHMM_kDiscreteHMM:
     w_pi = f->model.d[moNo]->s[sNo].pi;
     w_desc = f->model.d[moNo]->s[sNo].desc;
@@ -667,8 +671,7 @@ static int writeState(xmlTextWriterPtr writer, fileData_s * f, int moNo, int sNo
   }
 
   /* write state contents for different model types */
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case GHMM_kDiscreteHMM:
     rc = writeDiscreteStateContents(writer, f, moNo, sNo);
     break;
@@ -720,8 +723,7 @@ static int writeTransition(xmlTextWriterPtr writer, fileData_s * f, int moNo,
   ARRAY_MALLOC(w_out_a, cos);
 
   /* write state contents for different model types */
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case GHMM_kDiscreteHMM:
     out_states = f->model.d[moNo]->s[sNo].out_states;
     out_id     = f->model.d[moNo]->s[sNo].out_id;
@@ -814,8 +816,7 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
   }
 
   /* write HMM attributes applicable */
-  switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-			  + GHMM_kPairHMM + GHMM_kContinuousHMM)) {
+  switch (f->modelType & PTR_TYPE_MASK) {
   case GHMM_kDiscreteHMM:
     w_name  = f->model.d[number]->name;
     w_type  = strModeltype(f->model.d[number]->model_type);
@@ -896,8 +897,7 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
   }
 
   /* write background distributions if applicable */
-  if ((f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
-		       + GHMM_kPairHMM + GHMM_kContinuousHMM)) == GHMM_kDiscreteHMM) {
+  if ((f->modelType & PTR_TYPE_MASK) == GHMM_kDiscreteHMM) {
     if (writeBackground(writer, f->model.d[number]->bp))
       GHMM_LOG(LERROR, "writing of background distributions failed");
   }
