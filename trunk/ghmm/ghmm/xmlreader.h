@@ -45,7 +45,7 @@
 extern "C" {
 #endif
 
-/**@name HMM-Modell */
+/**@name HMM-Model */
 /*@{ (Doc++-Group: xmlreader) */
   
   struct fileData_s {
