@@ -33,6 +33,9 @@ model.setInitial(0,0.5)
 trans = model.getTransition(0,1)
 model.setTransition(0,1,0.6)
 
+# re-setting emission of state 1
+model.setEmission(1,1,[5.0,0.6,0.2])
+
 
 # re-normalize model parameters
 model.normalize()
