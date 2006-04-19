@@ -224,7 +224,7 @@ int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t){
    /*printf("C: The returned class is %d\n",class);*/
    
    if (class == -1)  {
-     printf("ERROR: Python exception has been thrown during call-back\n (class is -1) ");
+     printf("ERROR: Python exception has been thrown during call-back (class is -1)\n.");
      abort();
    }  
      
