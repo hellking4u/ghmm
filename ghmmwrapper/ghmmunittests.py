@@ -1068,7 +1068,7 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
         pass
 
 
-# Run ALL tests
+# Run ALL tests (comment out to deactivate)
 if __name__ == '__main__':
     unittest.main()
 
