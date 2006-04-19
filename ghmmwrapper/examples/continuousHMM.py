@@ -27,6 +27,7 @@ model.setEmission(1,[5.0,0.6])
 # re-normalize model parameters
 model.normalize()
 
+print model
 
 # sample single sequence of length 50
 seq = model.sampleSingle(50)
