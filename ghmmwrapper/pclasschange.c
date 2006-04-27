@@ -37,6 +37,8 @@
 /* XXX FIXME: breaks out of tree build of ghmmwrapper */
 #include "../config.h"
 
+#include <stdlib.h>
+
 #include "pclasschange.h"
 
 /* classification functions for the pairhmm genefinder 
