@@ -71,10 +71,14 @@ print "**************************"
 # 'swig -python -o ghmmwrapper_wrap.c ghmmwrapper.i' to run.
 # We just want: swig -c -python ghmmwrapper.i. Otherwise we get doubly
 # defined symbols in link
+# NOT A BUG ANYMORE? I get only doubly defined symbols if the swig interface file
+#                    and the generated c file are in the extension list.
+#                    I think that is expected behaviour.
+#                    Tested with swig 1.3.19, 1.3.21 and 1.3.25 
 
-print "================================================================================"
-print "Please run the following command first: swig -python -nodefault ghmmwrapper.i"
-print "================================================================================"
+#print "================================================================================"
+#print "Please run the following command first: swig -python -nodefault ghmmwrapper.i"
+#print "================================================================================"
    
 setup(name="ghmmwrapper",
       version="0.8",
@@ -86,10 +90,10 @@ setup(name="ghmmwrapper",
                     'Graph','GraphUtil', 'GatoGlobals','EditObjectAttributesDialog','class_change'],
       ext_modules = [Extension('_ghmmwrapper',
                                ['sclass_change.c', 'pclasschange.c',
-                                'gql.c', 'ghmmwrapper_wrap.c'],
+                                'gql.c', 'ghmmwrapper.i'],
                                include_dirs = [ghmmprefix + '/include'],
                                library_dirs = [ghmmlib_path, swiglib_path],
-                               libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z', 'swigpy'] #ghmmlib_libs.append('swigpy')
+                               libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z']
                                )
                      ]
      )
