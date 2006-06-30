@@ -1091,7 +1091,7 @@ class SequenceSet:
         seq = []
         if self.cseq.seq_number > index:
             for j in range(ghmmwrapper.get_arrayint(self.cseq.seq_len,index) ):
-                seq.append(ghmmwrapper.get_2d_arrayint(self.cseq.seq, index, j))
+                seq.append(self.getSymbol(self.cseq.seq, index, j))
             return seq
         else:
             raise IndexOutOfBounds(str(index) + " is out of bounds, only " + str(self.cseq.seq_number) + "sequences")
