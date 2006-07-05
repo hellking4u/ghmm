@@ -525,7 +525,12 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         
         #print"\ntestfoba "
         #print self.model
-        seq = self.model.sampleSingle(40)
+        seq = ghmm.EmissionSequence(self.model.emissionDomain,
+                                    ['g','g','g','c','t','g','g','c','g','g',
+                                     'g','c','g','g','g','c','c','c','g','c',
+                                     'g','g','c','c','g','c','g','c','c','c',
+                                     'g','c','g','c','g','g','c','t','c','c'])
+
         (alpha,scale) = self.model.forward(seq)
        
         
@@ -829,12 +834,19 @@ class StateLabelHMMTests(unittest.TestCase):
                                         + ", value: " + str(alpha[i][j]))
 
 
-
     def testkbest(self): 
-        seq = self.model.sampleSingle(20, seed=3586662)
-        print seq
+        seq = ghmm.EmissionSequence(self.model.emissionDomain,
+                                    ['a','c','g','t','t','a','a','a','c','g',
+                                     't','g','a','c','g','c','a','t','t','t'],
+                                    self.model.labelDomain,
+                                    ['fst', 'scd', 'thr', 'thr', 'thr', 'thr', 'scd',
+                                     'scd', 'thr', 'thr', 'scd', 'thr', 'scd', 'thr',
+                                     'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
+
         path = self.model.kbest(seq)
-        self.assertEqual(path,(['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'], -35.735009627142446)) 
+        self.assertEqual(path,(['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd',
+                                'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr',
+                                'scd', 'fst', 'scd', 'fst'], -35.735009627142446)) 
 
 
     def testgradientdescent(self):

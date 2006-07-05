@@ -50,55 +50,79 @@
 /* The global RNG */
 GHMM_RNG *RNG;
 
-#ifndef DO_WITH_GSL
+/* ----- Mersenne Twister -------------------------------------------------- */         
+#ifdef GHMM_RNG_MERSENNE_TWISTER
+#include "mt19937ar.c"
 
-ghmm_rng_state_t ighmm_rng_state;
-char ighmm_rng_name[] = "random";
+static ghmm_rng_state_t ighmm_rng_state;
+static char ighmm_rng_name[] = "Mersenne Twister";
 
-void ghmm_rng_set (GHMM_RNG * r, unsigned long int seed)
+void ghmm_rng_set(GHMM_RNG * r, unsigned long int seed)
+{ init_genrand(seed); }
+
+double ghmm_rng_uniform(GHMM_RNG * r)
+{ return genrand_real2(); }
+
+const char *ghmm_rng_name(GHMM_RNG * r)
+{ return ighmm_rng_name; }
+
+void ghmm_rng_init(void)
 {
-  srandom (seed);
+  initstate(1, ighmm_rng_state, sizeof(ghmm_rng_state_t));
+  RNG = &ighmm_rng_state;
+}
+#endif /* GHMM_RNG_MERSENNE_TWISTER */
+
+
+/* ----- BSD --------------------------------------------------------------- */
+#ifdef GHMM_RNG_BSD
+
+static ghmm_rng_state_t ighmm_rng_state;
+static char ighmm_rng_name[] = "random";
+
+void ghmm_rng_set(GHMM_RNG * r, unsigned long int seed)
+{
+  srandom(seed);
 }
 
-double ghmm_rng_uniform (GHMM_RNG * r)
+double ghmm_rng_uniform(GHMM_RNG * r)
 {
-  return ((double) random ()) / (RAND_MAX + 1.0);
+  return ((double)random()) / (RAND_MAX + 1.0);
 }
 
-const char *ghmm_rng_name (GHMM_RNG * r)
+const char *ghmm_rng_name(GHMM_RNG * r)
 {
   return ighmm_rng_name;
 }
 
-void ghmm_rng_init (void)
+void ghmm_rng_init(void)
 {
-  initstate (1, ighmm_rng_state, sizeof (ghmm_rng_state_t));
+  initstate(1, ighmm_rng_state, sizeof(ghmm_rng_state_t));
   RNG = &ighmm_rng_state;
 }
+#endif /* "GHMM_RNG_BSD */
 
-#else
 
-void ghmm_rng_init (void)
+/* ----- GSL --------------------------------------------------------------- */
+#ifdef GHMM_RNG_GSL
+
+void ghmm_rng_init(void)
 {
-  gsl_rng_env_setup ();
-  RNG = gsl_rng_alloc (gsl_rng_default);
+  gsl_rng_env_setup();
+  RNG = gsl_rng_alloc(gsl_rng_default);
 }
+#endif /* GHMM_RNG_GSL */
 
-#endif
 
-void ghmm_rng_timeseed (GHMM_RNG * r)
+void ghmm_rng_timeseed(GHMM_RNG * r)
 {
   unsigned long tm;             /* Time seed */
   unsigned int timeseed;
 
-  timeseed = time (NULL);
-  srand (timeseed);
-  tm = rand ();
-  GHMM_RNG_SET (r, tm);
+  timeseed = time(NULL);
+  srand(timeseed);
+  tm = rand();
+  GHMM_RNG_SET(r, tm);
   /*printf("# using rng '%s' seed=%ld\n", GHMM_RNG_NAME(r), tm);  */
-  fflush (stdout);
+  fflush(stdout);
 }
-
-
-
-/* End of: rng.c */

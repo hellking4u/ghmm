@@ -36,32 +36,43 @@
 #ifndef GHMM_RNG_H
 #define GHMM_RNG_H
 
-#ifndef DO_WITH_GSL
+/* use mersenne twister as default */
+#ifndef GHMM_RNG_BSD
+#ifndef GHMM_RNG_GSL
+#define GHMM_RNG_MERSENNE_TWISTER
+#endif
+#endif
+
+
+/* ----- Mersenne Twister -------------------------------------------------- */         
+#ifdef GHMM_RNG_MERSENNE_TWISTER
+
+typedef char ghmm_rng_state_t;
+typedef ghmm_rng_state_t GHMM_RNG;
+
+#endif /* GHMM_RNG_MERSENNE_TWISTER */
+
+
+/* ----- BSD --------------------------------------------------------------- */
+#ifdef GHMM_RNG_BSD
 
 #include <stdlib.h>
 
 typedef char ghmm_rng_state_t[8];
 typedef ghmm_rng_state_t GHMM_RNG;
 
-/* Functions */
-#define GHMM_RNG_SET ghmm_rng_set
-#define GHMM_RNG_UNIFORM ghmm_rng_uniform
-#define GHMM_RNG_NAME ghmm_rng_name
+#endif /* GHMM_RNG_BSD */
 
-#else
+
+/* ----- GSL --------------------------------------------------------------- */
+#ifdef GHMM_RNG_GSL
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
 /* Types defined in GSL */
 typedef gsl_rng GHMM_RNG;
-
-/* Functions defined in GSL */
-#define GHMM_RNG_SET gsl_rng_set
-#define GHMM_RNG_UNIFORM gsl_rng_uniform
-#define GHMM_RNG_NAME gsl_rng_name
-
-#endif /*  DO_WITH_GSL  */
+#endif /* GHMM_RNG_GSL */
 
 
 /** @name rng Initialization for the random number generator */
@@ -84,11 +95,20 @@ extern "C" {
   void ghmm_rng_timeseed (GHMM_RNG * r);
 
 
-#ifndef DO_WITH_GSL
+/* ----- Mersenne Twister and BSD RNG -------------------------------------- */
+#ifndef GHMM_RNG_GSL
+
+/* Functions */
+#define GHMM_RNG_SET ghmm_rng_set
+#define GHMM_RNG_UNIFORM ghmm_rng_uniform
+#define GHMM_RNG_NAME ghmm_rng_name
+
   void ghmm_rng_set (GHMM_RNG * aState, unsigned long int seed);
+
   double ghmm_rng_uniform (GHMM_RNG * r);
+
   const char *ghmm_rng_name (GHMM_RNG * r);
-#endif
+#endif /* not GHMM_RNG_GSL */
 
 #ifdef __cplusplus
 }
