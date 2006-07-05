@@ -72,18 +72,6 @@ AC_PATH_PROG(DVIPS,dvips)
 AC_PATH_PROG(EXPECT_FOR_DEJAGNU,expect)
 AC_PATH_PROG(RUNTEST_FOR_DEJAGNU,runtest)
 
-dnl experimental things can be switched on or off
-AC_ARG_ENABLE(experimental,
-              AC_HELP_STRING([--enable-experimental],
-                             [enable experimental features [[default=no]]]),
-              if test "x$enable_experimental" != "xno" ; then
-                  AC_DEFINE([__EXPERIMENTAL__], [$enable_experimental], [include experimental features])
-                  AC_MSG_NOTICE(experimental features enabled)
-              fi,
-              AC_MSG_NOTICE(experimental features disabled)
-
-)
-
 dnl obsolete features can be switched on or off
 AC_ARG_ENABLE(obsolete,
               AC_HELP_STRING([--disable-obsolete],
@@ -96,6 +84,18 @@ AC_ARG_ENABLE(obsolete,
               fi,
               AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
               AC_MSG_NOTICE(obsolete features enabled)
+)
+
+dnl experimental things can be switched on or off
+AC_ARG_ENABLE(experimental,
+              AC_HELP_STRING([--enable-experimental],
+                             [enable experimental features [[default=no]]]),
+              if test "x$enable_experimental" != "xno" ; then
+                  AC_DEFINE([__EXPERIMENTAL__], [$enable_experimental], [include experimental features])
+                  AC_MSG_NOTICE(experimental features enabled)
+              fi,
+              AC_MSG_NOTICE(experimental features disabled)
+
 )
 
 dnl unsupported features can be switched on or off
@@ -187,6 +187,33 @@ AC_ARG_ENABLE(gsl,
     AC_CHECK_LIB(m, cos)
   ]
 )
+
+dnl select random number generator
+AC_ARG_WITH(rng,
+            [  --with-rng=XXX          selects random number generator ("mt" (default), "bsd" or "gsl")],
+            [ if test "x$with_rng" = "xbsd"; then
+                AC_DEFINE([GHMM_RNG_BSD], [], [use system RNG (bsd style)])
+                AC_MSG_NOTICE(using BSD random number generator)
+                AC_CHECK_LIB(bsd, random)
+              else
+                if test "x$with_rng" = "xgsl"; then
+                  if test -n "$enable_gsl" && test "x$enable_gsl" != "xno"; then
+                    AC_DEFINE([GHMM_RNG_GSL], [], [use GSL RNG])
+                    AC_MSG_NOTICE(using GSL random number generator)
+                  else
+                    AC_MSG_ERROR(the gsl random number generator is only usable then gsl is enabled)
+                  fi
+                else
+                  if test "x$with_rng" = "xmt"; then
+                    AC_DEFINE([GHMM_RNG_MERSENNE_TWISTER], [], [use internal Mersenne-Twiser RNG])
+                    AC_MSG_NOTICE(using internal Mersenne-Twister random number generator)
+                  else
+                    AC_MSG_ERROR(not a valid random number generator)
+                  fi
+                fi
+              fi],
+            [ AC_DEFINE([GHMM_RNG_MERSENNE_TWISTER], [], [use internal Mersenne-Twiser RNG])])
+
 
 dnl libxml2 checks
 echo -n "checking libxml2 version... "
