@@ -546,6 +546,9 @@ struct ghmm_d_background_distributions {
 };
 typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
 
+%extend ghmm_d_background_distributions{
+}
+
 
 /** @name alphabet_s
     keeps a mapping between symbols of the distribution and
@@ -558,6 +561,25 @@ struct alphabet_s {
 };
 typedef struct alphabet_s alphabet_s;
 
+%inline%{
+        alphabet_s * CreateAlphabet(int size) {
+          alphabet_s *alpha = malloc(sizeof(alphabet_s));
+          alpha->size = size;
+          alpha->symbols = malloc(size * sizeof(char*));
+          return alpha;
+        }
+%}
+
+%extend alphabet_s {
+        char * GetAlphabetSymbol(int index) {
+          return self->symbols[index];
+        }
+
+        void SetAlphabetSymbol(int index, char *symbol) {
+          self->symbols[index] = symbol;
+        }
+}
+        
 
 /** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
@@ -592,6 +614,11 @@ struct ghmm_dstate {
   int yPosition;
 };
 typedef struct ghmm_dstate ghmm_dstate;
+
+%extend ghmm_dstate {
+        char * GetDesc() { return self->desc; }
+        void SetDesc(char *label) {self->desc = label; }
+}
 
 /** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
@@ -693,6 +720,13 @@ struct ghmm_dmodel {
 };
 typedef struct ghmm_dmodel ghmm_dmodel;
   
+%extend ghmm_dmodel {
+        int WriteXML(char *filename) { return ghmm_d_xml_write(filename, &self, 1); }
+
+        void Delete() { ghmm_d_free(&self); }
+
+        ghmm_dstate *GetState(unsigned int index) { return &(self->s[index]); }
+}
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -1206,6 +1240,11 @@ struct ghmm_dsstate {
 };
 typedef struct ghmm_dsstate ghmm_dsstate;
 
+%extend ghmm_dsstate {
+        char * GetDesc() { return self->desc; }
+        void SetDesc(char *label) {self->desc = label; }
+}
+
 /** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
@@ -1239,6 +1278,14 @@ struct ghmm_dsmodel {
 
 };
 typedef struct ghmm_dsmodel ghmm_dsmodel;
+
+%extend ghmm_dsmodel {
+        //int WriteXML(char *filename) { return ghmm_ds_xml_write(filename, &self, 1); }
+
+        void Delete() { ghmm_ds_free(&self); }
+
+        ghmm_dsstate *GetState(unsigned int index) { return &(self->s[index]); }
+}
 
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
@@ -1374,6 +1421,11 @@ struct ghmm_cstate {
 };
 typedef struct ghmm_cstate ghmm_cstate;
 
+%extend ghmm_cstate {
+        char * GetDesc() { return self->desc; }
+        void SetDesc(char *label) {self->desc = label; }
+}
+
 struct ghmm_cmodel;
 
 struct ghmm_c_class_change_context{
@@ -1418,6 +1470,13 @@ struct ghmm_cmodel{
  };
 typedef struct ghmm_cmodel ghmm_cmodel;
 
+%extend ghmm_cmodel {
+        int WriteXML(char *filename) { return ghmm_c_xml_write(filename, &self, 1); }
+
+        void Delete() { ghmm_c_free(&self); }
+
+        ghmm_cstate *GetState(unsigned int index) { return &(self->s[index]); }
+}
 
 extern int ghmm_c_class_change_alloc(ghmm_cmodel *smo);
 
@@ -1916,6 +1975,11 @@ struct ghmm_dpstate {
 };
 typedef struct ghmm_dpstate ghmm_dpstate;
 
+/*%extend ghmm_dpstate {
+        char * GetDesc() { return self->desc; }
+        void SetDesc(char *label) {self->desc = label; }
+}*/
+
 /** @name ghmm_dpmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
@@ -2010,6 +2074,14 @@ struct ghmm_dpmodel {
 
 };
 typedef struct ghmm_dpmodel ghmm_dpmodel;
+
+%extend ghmm_dpmodel {
+        //int WriteXML(char *filename) { return ghmm_dp_xml_write(filename, &self, 1); }
+
+        void Delete() { ghmm_dp_free(&self); }
+
+        ghmm_dpstate *GetState(unsigned int index) { return &(self->s[index]); }
+}
 
 extern void ghmm_dp_state_clean(ghmm_dpstate *my_state);
 
@@ -2346,4 +2418,3 @@ void set_to_boolean_or(ghmm_dp_class_change_context * pccc, int seq_index, int o
       return NULL;
     }
 }
-
