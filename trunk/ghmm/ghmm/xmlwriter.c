@@ -897,7 +897,8 @@ static int writeHMM(xmlTextWriterPtr writer, fileData_s * f, int number) {
   }
 
   /* write background distributions if applicable */
-  if ((f->modelType & PTR_TYPE_MASK) == GHMM_kDiscreteHMM) {
+  if ((f->modelType & PTR_TYPE_MASK) == GHMM_kDiscreteHMM
+      && f->modelType & GHMM_kBackgroundDistributions) {
     if (writeBackground(writer, f->model.d[number]->bp))
       GHMM_LOG(LERROR, "writing of background distributions failed");
   }
