@@ -34,6 +34,8 @@ win_config.h \
 autogen.sh \
 README.Win
 
+pkgdata_DATA = doc/ghmm.dtd.1.0
+
 COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
 dist-hook:

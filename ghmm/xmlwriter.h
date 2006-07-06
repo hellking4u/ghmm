@@ -49,7 +49,7 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: xmlwriter) */
   
-void writeHMMDocument(fileData_s * f, const char *file);
+void ighmm_writeHMMDocument(ghmm_fileData_s * f, const char *file);
 
 #ifdef __cplusplus
 }

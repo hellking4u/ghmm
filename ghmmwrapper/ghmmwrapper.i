@@ -43,7 +43,7 @@
 %nodefault  alphabet_s;
 %nodefault  ghmm_dstate;
 %nodefault  ghmm_dmodel;
-%nodefault  fileData_s;
+%nodefault  ghmm_fileData_s;
 %nodefault fileData_s_model;
 %nodefault  ghmm_dsstate;
 %nodefault  ghmm_dsmodel;
@@ -1133,10 +1133,10 @@ extern int ghmm_d_background_apply(ghmm_dmodel *mo, double* background_weight);
 /*=============================================================================================
   =============================== xml reader (xml_reader.c)  ================================= */
 
-/** @name fileData_s
+/** @name ghmm_fileData_s
     The basic structure that keeps data concerning readed model
 */
-struct fileData_s {
+struct ghmm_fileData_s {
 
     int noModels;
     
@@ -1150,27 +1150,27 @@ struct fileData_s {
     } model;
     
 };
-typedef struct fileData_s fileData_s;
+typedef struct ghmm_fileData_s ghmm_fileData_s;
+
+int ghmm_validateHMMDocument(const char *filename);
+
+extern ghmm_fileData_s * ghmm_parseHMMDocument(const char *filename);
 
 
-extern fileData_s * parseHMMDocument(const char *filename);
+%extend ghmm_fileData_s{
 
+  ghmm_cmodel * * get_model_c() {return self->model.c;}
+  ghmm_cmodel *   getCModel(int i) {return self->model.c[i];}
 
-%inline%{
+  ghmm_dmodel * * get_model_d() {return self->model.d;}
+  ghmm_dmodel *   getDModel(int i) {return self->model.d[i];}
 
-  ghmm_cmodel * * get_model_c(fileData_s *f) {return f->model.c;}
-  ghmm_cmodel *   getCModel(fileData_s *f, int i) {return f->model.c[i];}
+  ghmm_dpmodel * * get_model_dp() {return self->model.dp;}
+  ghmm_dpmodel *   getDPModel(int i) {return self->model.dp[i];}
 
-  ghmm_dmodel * * get_model_d(fileData_s *f) {return f->model.d;}
-  ghmm_dmodel *   getDModel(fileData_s *f, int i) {return f->model.d[i];}
-
-  ghmm_dpmodel * * get_model_dp(fileData_s *f) {return f->model.dp;}
-  ghmm_dpmodel *   getDPModel(fileData_s *f, int i) {return f->model.dp[i];}
-
-  ghmm_dsmodel * * get_model_ds(fileData_s *f) {return f->model.ds;}
-  ghmm_dsmodel *   getDSModel(fileData_s *f, int i) {return f->model.ds[i];}
-  
-%}
+  ghmm_dsmodel * * get_model_ds() {return self->model.ds;}
+  ghmm_dsmodel *   getDSModel(int i) {return self->model.ds[i];}
+}
 
 
 /** Reads an XML file with specifications for one or more smodels.

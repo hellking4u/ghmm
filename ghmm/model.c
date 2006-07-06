@@ -2479,10 +2479,10 @@ double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
 /*============================================================================*/
 ghmm_dmodel * * ghmm_d_xml_read (const char *filename, int * mo_number) {
 #define CUR_PROC "ghmm_d_read"
-  fileData_s *f;
+  ghmm_fileData_s *f;
   ghmm_dmodel * * mo;
 
-  f = parseHMMDocument(filename);
+  f = ghmm_parseHMMDocument(filename);
   if (!f && (f->modelType & GHMM_kDiscreteHMM)
       && !(f->modelType & (GHMM_kPairHMM+GHMM_kTransitionClasses))) {
     GHMM_LOG(LERROR, "wrong model type, model in file is not a plain discrete model");
@@ -2503,13 +2503,13 @@ STOP:
 int ghmm_d_xml_write (const char *file, ghmm_dmodel * * mo, int mo_number) {
 #define CUR_PROC "ghmm_d_read"
 
-  fileData_s *f;
+  ghmm_fileData_s *f;
 
   ARRAY_MALLOC(f,1);
   f->noModels = mo_number;
   f->modelType = mo[0]->model_type;
   f->model.d = mo;
-  writeHMMDocument(f, file);
+  ighmm_writeHMMDocument(f, file);
   free(f);  
   return 0;
 STOP:  

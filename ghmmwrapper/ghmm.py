@@ -1270,9 +1270,10 @@ class HMMOpenFactory(HMMFactory):
             
         # XML file: both new and old format
     	if self.defaultFileType == GHMM_FILETYPE_XML:
-            try:
+            # try to validate against ghmm.dtd
+            if ghmmwrapper.ghmm_validateHMMDocument(fileName):
                 m = self.openNewXML(fileName, modelIndex)
-            except WrongFileType:
+            else:
                 m = self.openOldXML(fileName)
                 
             return m
@@ -1289,7 +1290,7 @@ class HMMOpenFactory(HMMFactory):
         # check the type of hmm
         # start the model
 
-        file = ghmmwrapper.parseHMMDocument(fileName)
+        file = ghmmwrapper.ghmm_parseHMMDocument(fileName)
         if file == None:
             log.debug( "XML has file format problems!")
             raise WrongFileType("file is not in GHMM xml format")

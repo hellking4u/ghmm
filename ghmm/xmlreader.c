@@ -56,7 +56,7 @@
 #include "mprintf.h"
 #include "xmlreader.h"
 
-/* we should not need more than to alphabets, no plan to implement triple HMMs */
+/* we should not need more than two alphabets, no plan to implement triple HMMs */
 #define MAX_ALPHABETS 2
 
 /* Bitmask to test the modeltype against to choose the type of the model pointer
@@ -262,7 +262,7 @@ static int parseModelType(const char * data, unsigned int size) {
 
 
 /*===========================================================================*/
-static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f) {
+static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f) {
 #define CUR_PROC "parseAlphabet"
   
   char * str;
@@ -312,7 +312,7 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int modelNo) {
+static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, int modelNo) {
 #define CUR_PROC "parseBackground"
 
   int error, order;
@@ -361,7 +361,7 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseState(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f, int * inDegree, int * outDegree, int modelNo) {
+static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, int * inDegree, int * outDegree, int modelNo) {
 #define CUR_PROC "parseState"
 
   int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox, label;
@@ -691,7 +691,7 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, fileData_s * f,
+static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f,
 				 int modelNo) {
 #define CUR_PROC "parseTransition"
 
@@ -756,7 +756,7 @@ STOP:
 
 /*===========================================================================*/
 static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
-				   fileData_s * f, int modelNo) {
+				   ghmm_fileData_s * f, int modelNo) {
 #define CUR_PROC "parseTransition"
 
   int i, retval=-1;
@@ -826,7 +826,7 @@ STOP:
 
 
 /*===========================================================================*/
-static int parseHMM(fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) {
+static int parseHMM(ghmm_fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) {
 #define CUR_PROC "parseHMM"
   char * estr;
   
@@ -1080,8 +1080,8 @@ STOP:
 
 
 /*===========================================================================*/
-fileData_s * parseHMMDocument(const char *filename) {
-#define CUR_PROC "parseHMMDocument"
+ghmm_fileData_s * ghmm_parseHMMDocument(const char *filename) {
+#define CUR_PROC "ghmm_parseHMMDocument"
 
   xmlParserCtxtPtr ctxt; /* the parser context */
   xmlDocPtr doc; /* the resulting document tree */
@@ -1089,29 +1089,31 @@ fileData_s * parseHMMDocument(const char *filename) {
   int modelNo = 0;
   int error;
 
-  char * str;
-  fileData_s * filedata = NULL;
+  char * estr;
+  ghmm_fileData_s * filedata = NULL;
+
+  /* validate the document */
+  if (!ghmm_validateHMMDocument(filename)) {
+    estr = ighmm_mprintf(NULL, 0, "Failed to validate document %s", filename);
+    GHMM_LOG(LERROR, estr);
+    m_free(estr);
+    goto STOP;
+  }
 
   /* create a parser context */
   ctxt = xmlNewParserCtxt();
   if (ctxt == NULL) {
     GHMM_LOG(LERROR, "Failed to allocate parser context");
-    return NULL;
+    goto STOP;
   }
   /* parse the file, activating the DTD validation option */
-  doc = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_DTDVALID);
+  doc = xmlCtxtReadFile(ctxt, filename, NULL, 0);
   /* check if parsing suceeded */
   if (doc == NULL) {
-    str = ighmm_mprintf(NULL, 0, "Failed to parse %s", filename);
-    GHMM_LOG(LERROR, str);
-    m_free(str);
+    estr = ighmm_mprintf(NULL, 0, "Failed to parse %s", filename);
+    GHMM_LOG(LERROR, estr);
+    m_free(estr);
   } else {
-    /* check if validation suceeded */
-    if (ctxt->valid == 0) {
-      str = ighmm_mprintf(NULL, 0, "Failed to validate %s", filename);
-      GHMM_LOG(LERROR, str);
-      m_free(str);
-    } else {
       /* checking the root node, creating the file structure and
 	 iteration over all HMMs */
       cur = xmlDocGetRootElement(doc);
@@ -1123,17 +1125,17 @@ fileData_s * parseHMMDocument(const char *filename) {
         while (child!=NULL) {
           if ((!xmlStrcmp(child->name, BAD_CAST "HMM"))) {
             if (modelNo >= filedata->noModels) {
-              str = ighmm_mprintf(NULL, 0, "The mixture has more models than"
+              estr = ighmm_mprintf(NULL, 0, "The mixture has more models than"
 				  " defined, ignoring all following HMMs (%d/%d)", 
 				  modelNo, filedata->noModels);
-	      GHMM_LOG(LWARN, str);
-	      m_free(str);
+	      GHMM_LOG(LWARN, estr);
+	      m_free(estr);
 	      break;
             } else {
               if (parseHMM(filedata, doc, child, modelNo)) {
-		str = ighmm_mprintf(NULL, 0, "could not parse model no. %d", modelNo);
-		GHMM_LOG(LERROR, str);
-		m_free(str);
+		estr = ighmm_mprintf(NULL, 0, "could not parse model no. %d", modelNo);
+		GHMM_LOG(LERROR, estr);
+		m_free(estr);
 		goto STOP;
 	      }
               modelNo++;
@@ -1155,20 +1157,129 @@ fileData_s * parseHMMDocument(const char *filename) {
 	}
       /* invalid root entry */
       } else {
-        str = ighmm_mprintf(NULL, 0, "The file does not contains the appropriate root %s", filename);
-	GHMM_LOG(LERROR, str);
-	m_free(str);
+        estr = ighmm_mprintf(NULL, 0, "The file does not contains the appropriate root %s", filename);
+	GHMM_LOG(LERROR, estr);
+	m_free(estr);
       }
     }
     /* free up the resulting document */
     xmlFreeDoc(doc);
-  }
+
   /* free up the parser context */
   xmlFreeParserCtxt(ctxt);
 
   return filedata;
 STOP:
-  /*do this */ 
   return NULL; 
+#undef CUR_PROC
+}
+
+
+/*===========================================================================*/
+static int silence(FILE *dont_use, ...) {return 0;}
+
+/*===========================================================================*/
+static int validateFixedDTD(const char* filename) {
+#define CUR_PROC "validateFixedDTD"
+#ifndef DTD_LOC
+#define DTD_LOC "/usr/share/ghmm/ghmm.dtd.1.0"
+#endif
+  const char fileDTD[] = DTD_LOC;
+  char * estr;
+  int retval = 0;
+
+  xmlDtdPtr dtd       = NULL;
+  xmlDocPtr doc       = NULL;
+  xmlValidCtxtPtr cvp = NULL;
+
+  if (filename != NULL && fileDTD != NULL) {
+    dtd = xmlParseDTD(NULL, (const xmlChar *)fileDTD);
+    if (dtd == NULL) {
+      estr = ighmm_mprintf(NULL, 0, "Could not parse DTD %s.", fileDTD);
+      GHMM_LOG(LDEBUG, estr);
+      m_free(estr);
+      goto STOP;
+    }
+
+    doc = xmlReadFile(filename, NULL, 0);
+    if (doc == NULL) {
+      estr = ighmm_mprintf(NULL, 0, "Could not parse document %s.", filename);
+      GHMM_LOG(LERROR, estr);
+      m_free(estr);
+      goto STOP;
+    }
+
+    if ((cvp = xmlNewValidCtxt()) == NULL) {
+      GHMM_LOG(LERROR, "Couldn't allocate validation context\n");
+      goto STOP;
+    }
+
+    /* set error and warning functions to NULL to make validation silent */
+    cvp->error   = (xmlValidityErrorFunc) silence;
+    cvp->warning = (xmlValidityWarningFunc) silence;
+    
+    /* check if validation suceeded */
+    if (xmlValidateDtd(cvp, doc, dtd)) {
+      retval = 1;
+    } else {
+      estr = ighmm_mprintf(NULL, 0, "Failed to validate document %s against %s",
+                           filename, fileDTD);
+      GHMM_LOG(LDEBUG, estr);
+      m_free(estr);
+    }
+  }
+
+STOP:
+  if (cvp != NULL)
+    xmlFreeValidCtxt(cvp);
+  if (doc != NULL)
+    xmlFreeDoc(doc);
+  if (dtd != NULL)
+    xmlFreeDtd(dtd);
+
+  return retval;
+#undef CUR_PROC
+}
+
+/*===========================================================================*/
+static int validateDynamicDTD(const char* filename) {
+#define CUR_PROC "validateDynamicDTD"
+
+  int retval = 0;
+  char *estr;
+
+  xmlParserCtxtPtr ctxt = NULL;
+  xmlDocPtr doc         = NULL;
+
+  ctxt = xmlNewParserCtxt();
+  doc = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_DTDVALID);
+  /* check if parsing suceeded */
+  if (doc == NULL) {
+    estr = ighmm_mprintf(NULL, 0, "Failed to parse %s", filename);
+    GHMM_LOG(LDEBUG, estr);
+    GHMM_LOG(LERROR, estr);
+    m_free(estr);
+  } else {
+    if (ctxt->valid == 0) {
+      estr = ighmm_mprintf(NULL, 0, "Failed to validate %s", filename);
+      GHMM_LOG(LDEBUG, estr);
+      GHMM_LOG(LERROR, estr);
+      m_free(estr);
+    }
+    else
+      retval = 1;
+  }
+  
+  xmlFreeDoc(doc);
+  xmlFreeParserCtxt(ctxt);
+
+  return retval;
+#undef CUR_PROC
+}
+
+/*===========================================================================*/
+int ghmm_validateHMMDocument(const char *filename) {
+#define CUR_PROC "ghmm_validateHMMDocument"
+  return (validateFixedDTD(filename));// || validateDynamicDTD(filename));
 #undef CUR_PROC
 }
