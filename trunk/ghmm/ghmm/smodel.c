@@ -679,10 +679,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number)
 {
 #define CUR_PROC "ghmm_c_read"
-  fileData_s *f;
+  ghmm_fileData_s *f;
   ghmm_cmodel * * smo;
 
-  f = parseHMMDocument(filename);
+  f = ghmm_parseHMMDocument(filename);
   if (f) {
     assert(f->modelType &  GHMM_kContinuousHMM);
     *smo_number = (f->noModels);
@@ -701,13 +701,13 @@ ghmm_cmodel **ghmm_c_xml_read (const char *filename, int *smo_number)
 int ghmm_c_xml_write (const char *file, ghmm_cmodel ** smo, int smo_number)
 {
 #define CUR_PROC "ghmm_c_read"
-  fileData_s *f;
+  ghmm_fileData_s *f;
 
   ARRAY_MALLOC(f,1);
   f->noModels = smo_number;
   f->modelType = GHMM_kContinuousHMM;
   f->model.c = smo;
-  writeHMMDocument(f, file);
+  ighmm_writeHMMDocument(f, file);
   free(f);  
   return 0;
 STOP:  

@@ -11,7 +11,7 @@
 int main(int argc, char **argv) {
 
   char *docname, *writename;
-  fileData_s * f;
+  ghmm_fileData_s * f;
   int i;
   ghmm_set_loglevel(5+1);
 
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   }
 
   docname = argv[1];
-  f = parseHMMDocument(docname);
+  f = ghmm_parseHMMDocument(docname);
   /* simple test */
   if (f) {
     for (i=0;i<f->noModels; i++){
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
   if (argc > 2) {
     writename = argv[2];
-    writeHMMDocument(f, writename);
+    ighmm_writeHMMDocument(f, writename);
   }
 
   return(0);

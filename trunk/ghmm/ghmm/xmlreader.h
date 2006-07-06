@@ -48,11 +48,11 @@ extern "C" {
 /**@name HMM-Model */
 /*@{ (Doc++-Group: xmlreader) */
   
-  struct fileData_s {
+  struct ghmm_fileData_s {
 
     int noModels;
     
-    int modelType;    
+    int modelType;
     
     union {
       ghmm_cmodel * * c;
@@ -68,10 +68,12 @@ extern "C" {
 /*     int * xPosition; */
 /*     int * yPosition; */
   };
-  typedef struct fileData_s fileData_s;
+  typedef struct ghmm_fileData_s ghmm_fileData_s;
 
 
-  fileData_s * parseHMMDocument(const char *filename);
+  ghmm_fileData_s * ghmm_parseHMMDocument(const char *filename);
+
+  int ghmm_validateHMMDocument(const char *filename);
 
 #ifdef __cplusplus
 }

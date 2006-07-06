@@ -12,7 +12,7 @@
 int main(int argc, char **argv) {
 
   char *docname, *writename;
-  fileData_s * f;
+  ghmm_fileData_s * f;
   int i;
   int mo_number = 0;
   ghmm_cmodel ** smo;
