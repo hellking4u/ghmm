@@ -231,15 +231,6 @@ extern "C" {
 
   /**
    */
-#define mes_proc()      ighmm_mes( MES_PROT, NULL )
-  /*#define mes_proc()        GHMM_LOG_QUEUED(LWARN)*/
-  /**
-   */
-#define mes_prot( txt ) ighmm_mes( MES_PROT_TIME, txt )
-  /*#define mes_prot(txt)     GHMM_LOG(LWARN, txt)*/
-
-  /**
-   */
   char *ighmm_mes_get_std_path (void);
 
   /**

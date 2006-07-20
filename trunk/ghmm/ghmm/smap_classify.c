@@ -71,23 +71,23 @@ static local_store_t *smap_classify_alloc (int mo_number, int states, int T)
   for (i = 0; i < mo_number; i++) {
     map->alpha[i] = ighmm_cmatrix_alloc (T, states);
     if (!map->alpha[i]) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
   map->scale = ighmm_cmatrix_alloc (mo_number, T);
   if (!map->scale) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   map->p = ighmm_cmatrix_alloc (mo_number, T + 1);
   if (!map->p) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   map->sum_alpha = ighmm_cmatrix_alloc (mo_number, T);
   if (!map->sum_alpha) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (map->prob, mo_number);
@@ -146,7 +146,7 @@ int ghmm_smap_classify (ghmm_cmodel ** smo, double *result, int smo_number,
 
 
   if (smo == NULL || smo_number <= 0 || O == NULL || T < 0) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -162,8 +162,8 @@ int ghmm_smap_classify (ghmm_cmodel ** smo, double *result, int smo_number,
   for (m = 0; m < smo_number; m++)
     sum += map->prior[m];
   if (fabs (1 - sum) > 0.0001) {
-    mes_prot
-      ("Sum of model priors != 1 or mixing of priors and non-priors \n");
+    GHMM_LOG(LCONVERTED,
+      "Sum of model priors != 1 or mixing of priors and non-priors \n");
     goto STOP;
   }
 
@@ -184,13 +184,13 @@ int ghmm_smap_classify (ghmm_cmodel ** smo, double *result, int smo_number,
       for (n = 0; n < smo[0]->N; n++)
         map->sum_alpha[m][t] += map->alpha[m][t][n];    /* Sums (25) */
       if (map->sum_alpha[m][t] == 0) {
-        mes_prot ("sum_alpha = 0\n");
+        GHMM_LOG(LCONVERTED, "sum_alpha = 0\n");
         goto STOP;
       }                         /* Another solution ??? */
     }
   }
   if (!build) {
-    mes_prot ("Prob. = 0 for all models\n");
+    GHMM_LOG(LCONVERTED, "Prob. = 0 for all models\n");
     goto STOP;
   }
 
@@ -212,7 +212,7 @@ int ghmm_smap_classify (ghmm_cmodel ** smo, double *result, int smo_number,
       if (denom_26 != 0)
         map->p[m][t + 1] = map->prob[m] * map->p[m][t] / denom_26;      /* (26) */
       else {
-        mes_prot ("denom_26 == 0!\n");
+        GHMM_LOG(LCONVERTED, "denom_26 == 0!\n");
         goto STOP;
       }
     }
@@ -264,7 +264,7 @@ int ghmm_smap_bayes (ghmm_cmodel ** smo, double *result, int smo_number, double 
   ARRAY_CALLOC (error, smo_number);
 
   if (smo == NULL || smo_number <= 0 || O == NULL || T < 0) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -278,8 +278,8 @@ int ghmm_smap_bayes (ghmm_cmodel ** smo, double *result, int smo_number, double 
   for (m = 0; m < smo_number; m++)
     sum += prior[m];
   if (fabs (1 - sum) > 0.0001) {
-    mes_prot
-      ("Sum of model priors != 1 or mixing of priors and non-priors \n");
+    GHMM_LOG(LCONVERTED,
+      "Sum of model priors != 1 or mixing of priors and non-priors \n");
     for (m = 0; m < smo_number; m++)
       printf ("%.6f  ", prior[m]);
     printf ("\n");
@@ -299,11 +299,11 @@ int ghmm_smap_bayes (ghmm_cmodel ** smo, double *result, int smo_number, double 
     }
 
   if (p_von_O == 0) {
-    mes_prot ("P(O) = 0!\n");
+    GHMM_LOG(LCONVERTED, "P(O) = 0!\n");
     err = 1;
   }
   if (!found_model) {
-    mes_prot ("-1 from ghmm_c_logp for all models\n");
+    GHMM_LOG(LCONVERTED, "-1 from ghmm_c_logp for all models\n");
     err = 1;
   }
   if (err)

@@ -76,7 +76,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   cl.mo_seq = NULL;
 
   if (!(outfile = ighmm_mes_fopen (out_filename, "wt"))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -85,18 +85,18 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   /* Allocate memory and read in data: Sequences and initial model */
   sq_vec = ghmm_dseq_read (seq_file, &sq_number);
   if (!sq_vec[0]) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   if (sq_number > 1)
-    mes_prot ("Warning: seq. file contains multiple seq. arrays. \
+    GHMM_LOG(LCONVERTED, "Warning: seq. file contains multiple seq. arrays. \
                       Only first array is used for clustering\n");
   sq = sq_vec[0];
   fprintf (outfile, "Cluster Sequences\n");
   ghmm_dseq_print (outfile, sq);
   cl.mo = ghmm_d_read (mo_file, &cl.mo_number);
   if (!cl.mo) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (oldlabel, sq->seq_number);
@@ -106,7 +106,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   for (i = 0; i < cl.mo_number; i++)
     cl.mo_seq[i] = NULL;
   if (ghmm_d_check_compatibility (cl.mo, cl.mo_number)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -131,14 +131,14 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
         /* No model fits! */
         str = ighmm_mprintf (NULL, 0, "Seq. %ld: ghmm_dseq_best_model gives %d\n",
                    j, sq->seq_label[j]);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
     }
     if (ghmm_cluster_avoid_empty_model
         (sq->seq_label, sq->seq_number, cl.mo_number)) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     changes = ghmm_cluster_update_label (oldlabel, sq->seq_label, sq->seq_number);
@@ -149,7 +149,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
     /* Reestimate models with the associated sequences */
     if (changes > 0) {
       if (ghmm_cluster_update (&cl, sq)) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
       fprintf (outfile, "\nGes. WS VOR %d.Reestimate:\n", iter);
@@ -157,7 +157,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
       for (i = 0; i < cl.mo_number; i++) {
         if (ghmm_d_baum_welch (cl.mo[i], cl.mo_seq[i])) {
           str = ighmm_mprintf (NULL, 0, "%d.reestimate false, mo[%d]\n", iter, i);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
           /* ghmm_d_print(stdout, cl.mo[i]); */
           goto STOP;
@@ -171,7 +171,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
 /*----------------------------------------------------------------------------*/
 
   if (!ghmm_cluster_out (&cl, sq, outfile, out_filename)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 

@@ -110,7 +110,7 @@ int ghmm_c_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
     sfoba_initforward (smo, alpha[0], O[0], scale, b[0]);
   if (scale[0] <= DBL_MIN) {
     /* means f(O[0], mue, u) << 0, first symbol very unlikely */
-    /* mes_prot("scale[0] == 0.0!\n"); */
+    /* GHMM_LOG(LCONVERTED, "scale[0] == 0.0!\n"); */
     goto STOP;
   }
   else {
@@ -308,13 +308,13 @@ int ghmm_c_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
 
   alpha = ighmm_cmatrix_stat_alloc (T, smo->N);
   if (!alpha) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (scale, T);
   /* run forward alg. */
   if (ghmm_c_forward (smo, O, T, NULL, alpha, scale, log_p) == -1) {
-    /* mes_proc(); */
+    /* GHMM_LOG_QUEUED(LCONVERTED); */
     goto STOP;
   }
   res = 0;

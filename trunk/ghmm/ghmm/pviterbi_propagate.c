@@ -188,9 +188,9 @@ static plocal_propagate_store_t * pviterbi_propagate_alloc (ghmm_dpmodel *mo, in
   for (j=0; j<mo->N; j++) {
     ARRAY_CALLOC (v->log_b[j], ghmm_dp_emission_table_size(mo, j) + 1);
   }
-  if (!(v->log_b)) {mes_proc(); goto STOP;}
+  if (!(v->log_b)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   v->phi = ighmm_cmatrix_3d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
-  if (!(v->phi)) {mes_proc(); goto STOP;}
+  if (!(v->phi)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   ARRAY_CALLOC (v->phi_new, mo->N);
   ARRAY_CALLOC (v->end_of_first, mo->max_offset_x + 1);
   for (j=0; j<mo->max_offset_x + 1; j++) {
@@ -418,7 +418,7 @@ int * ghmm_dp_viterbi_propagate (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * 
      will not be allocated */
   plocal_propagate_store_t * pv = pviterbi_propagate_alloc(mo, Y->length);
   /* check if it worked */
-  if (!pv) { mes_proc(); goto STOP; }
+  if (!pv) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; }
   /* Precomputing the log(a_ij) and log(bj(ot)) */
   pviterbi_prop_precompute(mo, pv);
   

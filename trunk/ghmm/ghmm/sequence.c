@@ -72,7 +72,7 @@ ghmm_dseq **ghmm_dseq_read (const char *filename, int *sq_number)
   *sq_number = 0;
   s = ighmm_scanner_alloc (filename);
   if (!s) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -88,7 +88,7 @@ ghmm_dseq **ghmm_dseq_read (const char *filename, int *sq_number)
       ARRAY_REALLOC (sequence, *sq_number);
       sequence[*sq_number - 1] = ghmm_dseq_read_alloc (s);
       if (!sequence[*sq_number - 1]) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
     }
@@ -207,7 +207,7 @@ ghmm_dseq *ghmm_dseq_read_alloc (scanner_t * s)
       if ((sq->seq_number == 0) || (sq->seq_number > GHMM_MAX_SEQ_NUMBER)) {
         str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range",
                              sq->seq_number);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
@@ -231,13 +231,13 @@ ghmm_dseq *ghmm_dseq_read_alloc (scanner_t * s)
           if (s->err)
             goto STOP;
           if (seq_len_lex <= 0) {
-            mes_prot ("Value for sequence length not allowed");
+            GHMM_LOG(LCONVERTED, "Value for sequence length not allowed");
             goto STOP;
           }
         }
         else if (!strcmp (s->id, "symb")) {
           if (symbols < 0) {
-            mes_prot ("Value for number of symbols not allowed");
+            GHMM_LOG(LCONVERTED, "Value for number of symbols not allowed");
             goto STOP;
           }
           symbols = ighmm_scanner_get_int (s);
@@ -254,8 +254,8 @@ ghmm_dseq *ghmm_dseq_read_alloc (scanner_t * s)
       }
       ighmm_scanner_consume (s, '}');
       if ((seq_len_lex <= 0) || (symbols < 0)) {
-        mes_prot
-          ("Values for seq. length or number of symbols not spezified");
+        GHMM_LOG(LCONVERTED,
+          "Values for seq. length or number of symbols not spezified");
         goto STOP;
       }
       sq = ghmm_dseq_lexWords (seq_len_lex, symbols);
@@ -291,7 +291,7 @@ ghmm_cseq **ghmm_cseq_read (const char *filename, int *sqd_number)
   *sqd_number = 0;
   s = ighmm_scanner_alloc (filename);
   if (!s) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -307,7 +307,7 @@ ghmm_cseq **ghmm_cseq_read (const char *filename, int *sqd_number)
       ARRAY_REALLOC (sequence, *sqd_number);
       sequence[*sqd_number - 1] = ghmm_cseq_read_alloc (s);
       if (!sequence[*sqd_number - 1]) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
     }
@@ -423,7 +423,7 @@ ghmm_cseq *ghmm_cseq_read_alloc (scanner_t * s)
       if ((sqd->seq_number == 0) || (sqd->seq_number > GHMM_MAX_SEQ_NUMBER)) {
         str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range",
                              sqd->seq_number);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
@@ -467,7 +467,7 @@ ghmm_cseq **ghmm_cseq_truncate (ghmm_cseq ** sqd_in, int sqd_fields,
   int i, j, trunc_len;
   /* Hack, use -1 for complete truncation */
   if ((0 > trunc_ratio || 1 < trunc_ratio) && trunc_ratio != -1) {
-    mes_prot ("Error: trunc_ratio not valid\n");
+    GHMM_LOG(LCONVERTED, "Error: trunc_ratio not valid\n");
     goto STOP;
   }
   ARRAY_CALLOC (sq, sqd_fields);
@@ -515,7 +515,7 @@ ghmm_cseq *ghmm_cseq_calloc (long seq_number)
   ghmm_cseq *sqd = NULL;
   if (seq_number > GHMM_MAX_SEQ_NUMBER) {
     str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
-    mes_prot (str);
+    GHMM_LOG(LCONVERTED, str);
     m_free (str);
     goto STOP;
   }
@@ -555,7 +555,7 @@ ghmm_dseq *ghmm_dseq_calloc (long seq_number)
 
   if (seq_number > GHMM_MAX_SEQ_NUMBER) {
     str = ighmm_mprintf(NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
-    mes_prot(str);
+    GHMM_LOG(LCONVERTED, str);
     m_free(str);
     goto STOP;
   }
@@ -698,13 +698,13 @@ ghmm_dseq *ghmm_dseq_lexWords (int n, int M)
   int i;
   int *seq;
   if ((n < 0) || (M <= 0)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   seq_number = (long) pow ((double) M, (double) n);
   sq = ghmm_dseq_calloc (seq_number);
   if (!sq) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   for (i = 0; i < seq_number; i++) {
@@ -914,7 +914,7 @@ int ghmm_dseq_check (ghmm_dseq * sq, int max_symb)
           ighmm_mprintf (NULL, 0, "Wrong symbol \'%d\' in sequence %d at Pos. %d;\
                             Should be within [0..%d]\n",
                    sq->seq[j][i], j + 1, i + 1, max_symb - 1);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         return (-1);
       }
@@ -1151,7 +1151,7 @@ int ghmm_dseq_free (ghmm_dseq ** sq) {
 
   /* ighmm_dmatrix_free also takes care of (*sq)->seq */
   if (ighmm_dmatrix_free(&(*sq)->seq, (*sq)->seq_number) == -1)
-    mes_prot("Error in ghmm_dseq_free!");
+    GHMM_LOG(LCONVERTED, "Error in ghmm_dseq_free!");
 
   m_free((*sq)->seq_len);
 #ifdef GHMM_OBSOLETE
@@ -1200,7 +1200,7 @@ ghmm_cseq *ghmm_cseq_create_from_dseq (const ghmm_dseq * sq)
   int j, i;
   ghmm_cseq *sqd = NULL;     /* target seq. array */
   if (!(sqd = ghmm_cseq_calloc (sq->seq_number))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   for (j = 0; j < sq->seq_number; j++) {
@@ -1230,7 +1230,7 @@ ghmm_dseq *ghmm_dseq_create_from_cseq (const ghmm_cseq * sqd)
   int j, i;
   ghmm_dseq *sq = NULL;        /* target seq. array */
   if (!(sq = ghmm_dseq_calloc (sqd->seq_number))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   for (j = 0; j < sqd->seq_number; j++) {
@@ -1287,7 +1287,7 @@ ghmm_cseq *ghmm_cseq_mean (const ghmm_cseq * sqd)
 
   max_len = ghmm_cseq_max_len (sqd);
   if (!(out_sqd = ghmm_cseq_calloc (1))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (out_sqd->seq[0], max_len);
@@ -1317,7 +1317,7 @@ double **ghmm_cseq_scatter_matrix (const ghmm_cseq * sqd, int *dim)
 
   *dim = ghmm_cseq_max_len (sqd);
   if (!(W = ighmm_cmatrix_alloc (*dim, *dim))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -1387,7 +1387,7 @@ int ghmm_cseq_partition (ghmm_cseq * sqd, ghmm_cseq * sqd_train,
 
   total_seqs = sqd->seq_number;
   if (total_seqs <= 0) {
-    mes_prot ("Error: number of seqs. less or equal zero\n");
+    GHMM_LOG(LCONVERTED, "Error: number of seqs. less or equal zero\n");
     goto STOP;
   }
   /* waste of memory but avoids to many reallocations */

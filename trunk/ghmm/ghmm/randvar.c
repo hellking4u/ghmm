@@ -159,7 +159,7 @@ double ighmm_rand_get_1overa (double x, double mean, double u)
   double erfc_value;
 
   if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
 
@@ -212,7 +212,7 @@ double ighmm_rand_normal_density_trunc (double x, double mean, double u,
 #endif /* DO_WITH_GSL */
 
   if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
   if (x < a)
@@ -224,7 +224,7 @@ double ighmm_rand_normal_density_trunc (double x, double mean, double u,
   return gsl_ran_gaussian_tail_pdf (x - mean, a - mean, sqrt (u));
 #else
   if ((c = ighmm_rand_get_1overa (a, mean, u)) == -1) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   };
   return (c * ighmm_rand_normal_density (x, mean, u));
@@ -244,7 +244,7 @@ double ighmm_rand_normal_density (double x, double mean, double u)
   double expo;
 #endif
   if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
   /* The denominator is possibly < EPS??? Check that ? */
@@ -268,7 +268,7 @@ double ighmm_rand_uniform_density (double x, double max, double min)
 # define CUR_PROC "ighmm_rand_uniform_density"
   double prob;
   if (max <= min) {
-    mes_prot ("max <= min not allowed \n");
+    GHMM_LOG(LCONVERTED, "max <= min not allowed \n");
     goto STOP;
   }
   prob = 1.0/(max-min);
@@ -313,7 +313,7 @@ double ighmm_rand_normal_density_approx (double x, double mean, double u)
   int i;
   double y, z, pdf_x;
   if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
   if (!pdf_stdnormal_exists) {
@@ -423,7 +423,7 @@ double ighmm_rand_normal_right (double a, double mue, double u, int seed)
 #endif
 
   if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
   sigma = sqrt (u);
@@ -509,7 +509,7 @@ double ighmm_rand_uniform_cont (int seed, double max, double min)
 {
 # define CUR_PROC "ighmm_rand_uniform_cont"
   if (max <= min) {
-    mes_prot ("max <= min not allowed\n");
+    GHMM_LOG(LCONVERTED, "max <= min not allowed\n");
     goto STOP;
   }
   if (seed != 0) {
@@ -534,7 +534,7 @@ double ighmm_rand_normal_cdf (double x, double mean, double u)
 {
 # define CUR_PROC "ighmm_rand_normal_cdf"
   if (u <= 0.0) {
-    mes_prot ("u <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
@@ -557,7 +557,7 @@ double ighmm_rand_normal_right_cdf (double x, double mean, double u, double a)
   if (x <= a)
     return (0.0);
   if (u <= a) {
-    mes_prot ("u <= a not allowed\n");
+    GHMM_LOG(LCONVERTED, "u <= a not allowed\n");
     goto STOP;
   }
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
@@ -583,7 +583,7 @@ double ighmm_rand_uniform_cdf (double x, double max, double min)
 {
 # define CUR_PROC "ighmm_rand_uniform_cdf"
   if (max <= min) {
-    mes_prot ("max <= min not allowed\n");
+    GHMM_LOG(LCONVERTED, "max <= min not allowed\n");
     goto STOP;
   }  
   if (x < min) {

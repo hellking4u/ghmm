@@ -184,7 +184,7 @@ static int model_copy_vectors (ghmm_dmodel * mo, int index, double **a_matrix,
   for (i = 0; i < mo->N; i++) {
     if (a_matrix[index][i]) {   /* Transitions to a following state possible */
       if (cnt_out >= mo->s[index].out_states) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         return (-1);
       }
       mo->s[index].out_id[cnt_out] = i;
@@ -193,7 +193,7 @@ static int model_copy_vectors (ghmm_dmodel * mo, int index, double **a_matrix,
     }
     if (a_matrix[i][index]) {   /* Transitions to a previous state possible */
       if (cnt_in >= mo->s[index].in_states) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         return (-1);
       }
       mo->s[index].in_id[cnt_in] = i;
@@ -223,7 +223,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
   *mo_number = 0;
   s = ighmm_scanner_alloc (filename);
   if (!s) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   while (!s->err && !s->eof) {
@@ -237,7 +237,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
       ARRAY_REALLOC (mo, *mo_number);
       mo[*mo_number - 1] = ghmm_d_direct_read (s, (int *) &new_models);
       if (!mo[*mo_number - 1]) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
       /* Copies the model, that has already been read. */
@@ -247,7 +247,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
         for (j = 1; j < new_models; j++) {
           mo[*mo_number] = ghmm_d_copy (mo[*mo_number - 1]);
           if (!mo[*mo_number]) {
-            mes_proc ();
+            GHMM_LOG_QUEUED(LCONVERTED);
             goto STOP;
           }
           (*mo_number)++;
@@ -260,7 +260,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
       ARRAY_REALLOC (mo, (*mo_number + new_models));
       for (j = 0; j < new_models; j++) {
         if (!tmp_mo[j]) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           goto STOP;
         }
         mo[*mo_number] = tmp_mo[j];
@@ -318,7 +318,7 @@ ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
       *multip = ighmm_scanner_get_int (s);
       if (*multip < 1) {        /* Doesn't make any sense! */
         *multip = 1;
-        mes_prot ("Multip < 1 ignored\n");
+        GHMM_LOG(LCONVERTED, "Multip < 1 ignored\n");
       }
     }
     else if (!strcmp (s->id, "M")) {    /*Number of output values */
@@ -493,7 +493,7 @@ ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
     mo->s[i].in_states = ighmm_cmatrix_notzero_rows (a_matrix, i, mo->N);
     if (model_state_alloc (mo->s + i, mo->M, mo->s[i].in_states,
                            mo->s[i].out_states)) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
 
@@ -516,7 +516,7 @@ ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
     }
 
     if (model_copy_vectors (mo, i, a_matrix, b_matrix, pi_vector, fix_vector)) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
@@ -579,7 +579,7 @@ ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
     if (!strcmp (s->id, "SEQ")) {
       sq = ghmm_dseq_read_alloc (s);
       if (!sq) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
     }
@@ -830,7 +830,7 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
       /* normal states */
       if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
         str = ighmm_mprintf(NULL, 0, "sum s[%d].b[*] = %f != 1.0", i, sum);
-        mes_prot(str);
+        GHMM_LOG(LCONVERTED, str);
         m_free(str);
         goto STOP;
       }
@@ -890,7 +890,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 
   return 0;
 STOP:
-  mes_prot (str);
+  GHMM_LOG(LCONVERTED, str);
   m_free (str);
   return (-1);
 #undef CUR_PROC
@@ -915,19 +915,19 @@ ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
   for (i = 0; i < mo->N; i++) {
     if (i == 0) {               /* Initial state */
       if (model_state_alloc (mo->s, mo->M, 0, 1)) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
     }
     else if (i == mo->N - 1) {  /* End state */
       if (model_state_alloc (mo->s + i, mo->M, 1, 0)) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
     }
     else {                      /* others */
       if (model_state_alloc (mo->s + i, mo->M, 1, 1)) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
     }
@@ -967,7 +967,7 @@ ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
   /* No out_id and out_a */
 
   if (ghmm_d_check (mo)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   return mo;
@@ -1036,7 +1036,7 @@ ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len
   char * str;
 
   sq = ghmm_dseq_calloc (seq_number);
-  if (!sq) {mes_proc (); goto STOP;}
+  if (!sq) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   if (len <= 0)
     /* A specific length of the sequences isn't given. As a model should have
        an end state, the konstant MAX_SEQ_LEN is used. */
@@ -1165,7 +1165,7 @@ double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
 
 
     if (ghmm_d_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i) == -1) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
 
@@ -1177,7 +1177,7 @@ double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
     }
     else {
       str = ighmm_mprintf (NULL, 0, "sequence[%d] can't be build.\n", i);
-      mes_prot (str);
+      GHMM_LOG(LCONVERTED, str);
     }
   }
   if (!found)
@@ -1483,7 +1483,7 @@ int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check)
   if (check->r_a != mo_d->N || check->c_a != mo_d->N) {
     str = ighmm_mprintf (NULL, 0, "Incompatible dim. A (%d X %d) and N (%d)\n",
                    check->r_a, check->c_a, mo_d->N);
-    mes_prot (str);
+    GHMM_LOG(LCONVERTED, str);
     m_free (str);
     return (-1);
   }
@@ -1491,21 +1491,21 @@ int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check)
     str = ighmm_mprintf (NULL, 0,
             "Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",
             check->r_b, check->c_b, mo_d->N, mo_d->M);
-    mes_prot (str);
+    GHMM_LOG(LCONVERTED, str);
     m_free (str);
     return (-1);
   }
   if (check->len_pi != mo_d->N) {
     str = ighmm_mprintf (NULL, 0, "Incompatible dim. Pi (%d) and N (%d)\n",
                    check->len_pi, mo_d->N);
-    mes_prot (str);
+    GHMM_LOG(LCONVERTED, str);
     m_free (str);
     return (-1);
   }
   if (check->len_fix != mo_d->N) {
     str = ighmm_mprintf (NULL, 0, "Incompatible dim. fix_state (%d) and N (%d)\n",
                    check->len_fix, mo_d->N);
-    mes_prot (str);
+    GHMM_LOG(LCONVERTED, str);
     m_free (str);
     return (-1);
   }
@@ -1561,7 +1561,7 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
 
 
     if (seq0 == NULL) {
-      mes_prot (" generate_sequences failed !");
+      GHMM_LOG(LCONVERTED, " generate_sequences failed !");
       goto STOP;
     }
 
@@ -1578,7 +1578,7 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
          t++;
          }    
          if (t > 1) {
-         mes_prot("ERROR: No proper left-to-right model. Multiple start states");
+         GHMM_LOG(LCONVERTED, "ERROR: No proper left-to-right model. Multiple start states");
          goto STOP;
          } */
 
@@ -1592,7 +1592,7 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
         /* printf("total=%d generating %d", total, a); */
         tmp = ghmm_d_generate_sequences (mo1, 0, 0, a, a);
         if (tmp == NULL) {
-          mes_prot (" generate_sequences failed !");
+          GHMM_LOG(LCONVERTED, " generate_sequences failed !");
           goto STOP;
         }
         ghmm_dseq_free (&tmp);
@@ -1629,12 +1629,12 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
 
         p0 = ghmm_d_likelihood (mo1, seq0);
         if (p0 == +1 || p0 == -1) {     /* error! */
-          mes_prot ("problem: ghmm_d_likelihood failed !");
+          GHMM_LOG(LCONVERTED, "problem: ghmm_d_likelihood failed !");
           goto STOP;
         }
         p = ghmm_d_likelihood (mo2, seq0);
         if (p == +1 || p == -1) {       /* what shall we do now? */
-          mes_prot ("problem: ghmm_d_likelihood failed !");
+          GHMM_LOG(LCONVERTED, "problem: ghmm_d_likelihood failed !");
           goto STOP;
         }
 
@@ -1668,13 +1668,13 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
         p0 = ghmm_d_likelihood (mo1, seq0);
         /* printf("   P(O|m1) = %f\n",p0); */
         if (p0 == +1) {         /* error! */
-          mes_prot ("seq0 can't be build from mo1!");
+          GHMM_LOG(LCONVERTED, "seq0 can't be build from mo1!");
           goto STOP;
         }
         p = ghmm_d_likelihood (mo2, seq0);
         /* printf("   P(O|m2) = %f\n",p); */
         if (p == +1) {          /* what shall we do now? */
-          mes_prot ("problem: seq0 can't be build from mo2!");
+          GHMM_LOG(LCONVERTED, "problem: seq0 can't be build from mo2!");
           goto STOP;
         }
 
@@ -1777,7 +1777,7 @@ ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
   sq = ghmm_dseq_calloc (seq_number);
 
   if (!sq) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -1990,7 +1990,7 @@ int ghmm_d_normalize (ghmm_dmodel * mo)
       if (i_id == mo->s[j_id].in_states) {
         str = ighmm_mprintf (NULL, 0, "Outgoing transition from state %d to \
            state %d has no corresponding incoming transition.\n", i, j_id);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         return -1;
       }
       mo->s[j_id].in_a[i_id] = mo->s[i].out_a[j];
@@ -2094,7 +2094,7 @@ int ghmm_d_transition_del (ghmm_dstate * s, int start, int dest)
   /* search ... */
   for (j = 0; dest != s[start].out_id[j]; j++)
     if (j == s[start].out_states) {
-      mes_prot ("No such transition");
+      GHMM_LOG(LCONVERTED, "No such transition");
       return -1;
     }
   /* ... and replace outgoing */
@@ -2106,7 +2106,7 @@ int ghmm_d_transition_del (ghmm_dstate * s, int start, int dest)
   /* search ... */
   for (j = 0; start != s[dest].in_id[j]; j++)
     if (j == s[dest].in_states) {
-      mes_prot ("No such transition");
+      GHMM_LOG(LCONVERTED, "No such transition");
       return -1;
     }
   /* ... and replace incoming */
@@ -2149,7 +2149,7 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
   int i, j, last, size, failed=0;
 
   if (mo->model_type & GHMM_kSilentStates) {
-    mes_prot ("Sorry, apply_duration doesn't support silent states yet\n");
+    GHMM_LOG(LCONVERTED, "Sorry, apply_duration doesn't support silent states yet\n");
     return -1;
   }
 
@@ -2311,7 +2311,7 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
   char * estr;
 
   if (!(mo->model_type & GHMM_kBackgroundDistributions)) {
-    mes_prot ("Error: No background distributions");
+    GHMM_LOG(LCONVERTED, "Error: No background distributions");
     return -1;
   }
 
@@ -2335,7 +2335,7 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 	    + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
       } else {
 	if (mo->bp->order[mo->background_id[i]] != 0) {
-	  mes_prot("Error: State and background order do not match\n");
+	  GHMM_LOG(LCONVERTED, "Error: State and background order do not match\n");
 	  return -1;
 	}
 	for (j=0; j<mo->M; j++)
@@ -2360,7 +2360,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
   double sum=0.0;
 
   if (!(mo->model_type & GHMM_kBackgroundDistributions)) {
-    mes_prot ("Error: Model has no background distribution");
+    GHMM_LOG(LCONVERTED, "Error: Model has no background distribution");
     return -1;
   }
 

@@ -81,14 +81,14 @@ static local_store_t *sdviterbi_alloc (ghmm_dsmodel * mo, int len)
   
   v->log_b = ighmm_cmatrix_stat_alloc (mo->N, len);
   if (!(v->log_b)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (v->phi, mo->N);
   ARRAY_CALLOC (v->phi_new, mo->N);
   v->psi = ighmm_dmatrix_alloc (len, mo->N);
   if (!(v->psi)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -248,7 +248,7 @@ int *ghmm_ds_viterbi (ghmm_dsmodel * mo, int *o, int len, double *log_p)
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
   v = sdviterbi_alloc (mo, len);
   if (!v) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (state_seq, len_path);

@@ -93,17 +93,17 @@ int main (int argc, char *argv[])
 
     sprintf (filename, "%s.smo", argv[3]);
     if (!(smofile = ighmm_mes_fopen (filename, "wt"))) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     sprintf (likefilename, "%s.like", argv[3]);
     if (!(likefile = ighmm_mes_fopen (likefilename, "at"))) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     sprintf (filename, "%s", argv[3]);
     if (!(outfile = ighmm_mes_fopen (filename, "at"))) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     iterations = atoi (argv[4]);
@@ -148,17 +148,17 @@ int main (int argc, char *argv[])
   sqd_dummy = ghmm_cseq_read (argv[1], &field_number);
   printf ("Length first Seq: %d\n", sqd_dummy[0]->seq_len[0]);
   if (!sqd_dummy) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   sqd = sqd_dummy[0];
   if (field_number > 1)
-    mes_prot
-      ("Warning: Seq. File contains multiple Seq. Fields; use only the first one\n");
+    GHMM_LOG(LCONVERTED,
+      "Warning: Seq. File contains multiple Seq. Fields; use only the first one\n");
 
   smo_initial = ghmm_c_read (argv[2], &total_smo_number);
   if (!smo_initial) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (smo, total_smo_number);
@@ -166,7 +166,7 @@ int main (int argc, char *argv[])
     str = ighmm_mprintf (NULL, 0,
                    "Need %d initial models, read only %d from model file\n",
                    max_smo, total_smo_number);
-    mes_prot (str);
+    GHMM_LOG(LCONVERTED, str);
     m_free (str);
     goto STOP;
   }
@@ -186,12 +186,12 @@ int main (int argc, char *argv[])
     for (iter = 0; iter < iterations; iter++) {
       if (!outfile)
         if (!(outfile = ighmm_mes_fopen (filename, "at"))) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           goto STOP;
         }
       if (!likefile)
         if (!(likefile = ighmm_mes_fopen (likefilename, "at"))) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           goto STOP;
         }
       fprintf (outfile,
@@ -206,14 +206,14 @@ int main (int argc, char *argv[])
         str =
           ighmm_mprintf (NULL, 0, "Error partitioning seqs, (model %d, iter %d)\n",
                    smo_number, iter);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         if (sqd_train->seq == NULL) {
           str =
             ighmm_mprintf (NULL, 0,
                      "Error: empty train seqs, (model %d, iter %d)\n",
                      smo_number, iter);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
         }
         goto STOP;
@@ -228,7 +228,7 @@ int main (int argc, char *argv[])
           str =
             ighmm_mprintf (NULL, 0, "Error copying models, (model %d, iter %d)\n",
                      smo_number, iter);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
           goto STOP;
         }
@@ -239,7 +239,7 @@ int main (int argc, char *argv[])
 
       cp = ighmm_cmatrix_alloc (sqd_train->seq_number, smo_number);
       if (!cp) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
 
@@ -250,7 +250,7 @@ int main (int argc, char *argv[])
           ighmm_mprintf (NULL, 0,
                    "Error in initialization comp. prob (model %d, iter %d)\n",
                    smo_number, iter);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
@@ -262,7 +262,7 @@ int main (int argc, char *argv[])
       if (ghmm_smixturehmm_cluster (outfile, cp, sqd_train, smo, smo_number) == -1) {
         str = ighmm_mprintf (NULL, 0, "Error in clustering, (model %d, iter %d)\n",
                        smo_number, iter);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
@@ -274,7 +274,7 @@ int main (int argc, char *argv[])
          if (ghmm_smixturehmm_calc_cp(cp, sqd_train, smo, smo_number)  == -1) {
          str = ighmm_mprintf(NULL, 0, "Error after clustering, (model %d, CV Iter %d)\n",
          smo_number, iter + 1);
-         mes_prot(str); m_free(str); goto STOP;
+         GHMM_LOG(LCONVERTED, str); m_free(str); goto STOP;
          }
          fprintf(outfile, "Component Probs. after Clustering:\n");
          ighmm_cmatrix_print(outfile, cp, sqd_train->seq_number, smo_number, " ", ",", ";");
@@ -294,7 +294,7 @@ int main (int argc, char *argv[])
 
       avg_comp_like = ghmm_smixturehmm_avg_like (cp, sqd_train, smo, smo_number);
       if (avg_comp_like == NULL) {
-        mes_prot ("Error calculating avg_like \n");
+        GHMM_LOG(LCONVERTED, "Error calculating avg_like \n");
         goto STOP;
       }
       fprintf (outfile, "\nTrain Set:\nModel Priors \t  Likel. per Seq\n");
@@ -426,7 +426,7 @@ int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
 
       if (ghmm_c_baum_welch (smo_sqd) == -1) {
         str = ighmm_mprintf (NULL, 0, "Error iteration %d, model %d\n", iter, k);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
@@ -441,7 +441,7 @@ int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
     ghmm_cseq_mix_like (smo, smo_number, sqd, &likelihood);
     if (ghmm_smixturehmm_calc_cp (cp, sqd, smo, smo_number, &total_train_w) == -1) {
       str = ighmm_mprintf (NULL, 0, "Error iteration %d\n", iter);
-      mes_prot (str);
+      GHMM_LOG(LCONVERTED, str);
       m_free (str);
       goto STOP;
     }
@@ -485,7 +485,7 @@ int ghmm_smixturehmm_init (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
       cp[i][j] = 0.0;
 
   if (mode < 1 || mode > 5) {
-    mes_prot ("Error: initial mode out of range\n");
+    GHMM_LOG(LCONVERTED, "Error: initial mode out of range\n");
     goto STOP;
   }
 
@@ -495,7 +495,7 @@ int ghmm_smixturehmm_init (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
       p = GHMM_RNG_UNIFORM (RNG);
       j = (int) floor (smo_number * p); /* ??? */
       if (j < 0 || j >= smo_number) {
-        mes_prot ("Error: initial model out of range\n");
+        GHMM_LOG(LCONVERTED, "Error: initial model out of range\n");
         goto STOP;
       }
       cp[i][j] = 1.0;
@@ -510,7 +510,7 @@ int ghmm_smixturehmm_init (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
         str =
           ighmm_mprintf (NULL, 0, "Can't determine comp. prob for seq ID %.0f \n",
                    sqd->seq_id[i]);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);           /* goto STOP; */
       }
   }
@@ -525,7 +525,7 @@ int ghmm_smixturehmm_init (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
         str = ighmm_mprintf (NULL, 0,
                        "Can't determine comp. prob for seq ID %.0f \n",
                        sqd->seq_id[i]);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);           /* goto STOP; */
       }
       cp[i][bm] = 1.0;
@@ -563,7 +563,7 @@ int smixturehmm_calc_priors (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
   double sum;
 
   if (total_train_w == 0) {
-    mes_prot ("total_train_w == 0!\n");
+    GHMM_LOG(LCONVERTED, "total_train_w == 0!\n");
     goto STOP;
   }
 
@@ -602,13 +602,13 @@ int ghmm_smixturehmm_calc_cp (double **cp, ghmm_cseq * sqd, ghmm_cmodel ** smo,
       str = ighmm_mprintf (NULL, 0,
                      "Warning[%d]: Can't determine comp. prob for seq ID %.0f\n",
                      i, sqd->seq_id[i]);
-      mes_prot (str);
+      GHMM_LOG(LCONVERTED, str);
       m_free (str);
       errorseqs++;
       if (errorseqs > 0.1 * (double) sqd->seq_number) {
         printf ("errorseqs %.1f, max false %.1f\n", errorseqs,
                 0.1 * (double) sqd->seq_number);
-        mes_prot ("max. no of errors from ghmm_smap_bayes exceeded\n");
+        GHMM_LOG(LCONVERTED, "max. no of errors from ghmm_smap_bayes exceeded\n");
         goto STOP;
       }
     }

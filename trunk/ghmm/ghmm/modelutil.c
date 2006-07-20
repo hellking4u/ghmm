@@ -234,7 +234,7 @@ void ghmm_d_topo_order (ghmm_dmodel * mo)
 
   v = topo_alloc (mo, 1);
   if (!v) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
