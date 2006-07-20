@@ -317,8 +317,8 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, i
 
   int error, order;
   int bgNr, rev;
-  double * b;
-  char * s;
+  double *b = NULL;
+  char   *s = NULL;
 
   assert(f->modelType & GHMM_kDiscreteHMM);
 
@@ -367,9 +367,9 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, int * 
   int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox, label;
   int curX=0, curY=0;
   double pi, prior;
-  double * emissions;
-  unsigned char * desc;
-  char * s, * estr;
+  double *emissions = NULL;
+  unsigned char *desc = NULL;
+  char *s = NULL, *estr;
   int rev, stateFixed=1;
 
   xmlNodePtr elem, child;
@@ -836,7 +836,7 @@ static int parseHMM(ghmm_fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int mode
   int source, target;
 
   int N = 0;
-  int nrBackgrounds, M=-1;
+  int nrBackgrounds=0, M=-1;
   int * inDegree = NULL;  
   int * outDegree = NULL;
   int cos;
@@ -1280,6 +1280,6 @@ static int validateDynamicDTD(const char* filename) {
 /*===========================================================================*/
 int ghmm_validateHMMDocument(const char *filename) {
 #define CUR_PROC "ghmm_validateHMMDocument"
-  return (validateFixedDTD(filename));// || validateDynamicDTD(filename));
+  return (validateFixedDTD(filename) || validateDynamicDTD(filename));
 #undef CUR_PROC
 }
