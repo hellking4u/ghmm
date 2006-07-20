@@ -73,7 +73,7 @@ static int dsmodel_state_alloc (ghmm_dsstate * s, int M, int in_states,
     ARRAY_CALLOC (s->out_id, out_states);
     s->out_a = ighmm_cmatrix_alloc (cos, out_states);
     if (!s->out_a) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
@@ -81,7 +81,7 @@ static int dsmodel_state_alloc (ghmm_dsstate * s, int M, int in_states,
     ARRAY_CALLOC (s->in_id, in_states);
     s->in_a = ighmm_cmatrix_alloc (cos, in_states);
     if (!s->in_a) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
@@ -111,7 +111,7 @@ double ghmm_ds_likelihood (ghmm_dsmodel * mo, ghmm_dseq * sq)
     /*    else {*/
     /*  char *str =*/
     /*   ighmm_mprintf(NULL, 0, "sequence[%d] can't be build.\n", i);*/
-    /*  mes_prot(str);*/
+    /*  GHMM_LOG(LCONVERTED, str);*/
     /*}*/
   }
   if (!found)
@@ -136,7 +136,7 @@ static int sdmodel_copy_vectors (ghmm_dsmodel * mo, int index, double ***a_matri
     for (i = 0; i < mo->N; i++) {
       if (a_matrix[c][index][i]) {      /* Transitions to a following state possible */
         if (cnt_out >= mo->s[index].out_states) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           return (-1);
         }
         mo->s[index].out_id[cnt_out] = i;
@@ -145,7 +145,7 @@ static int sdmodel_copy_vectors (ghmm_dsmodel * mo, int index, double ***a_matri
       }
       if (a_matrix[i][index]) { /* Transitions to a previous state possible */
         if (cnt_in >= mo->s[index].in_states) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           return (-1);
         }
         mo->s[index].in_id[cnt_in] = i;
@@ -351,7 +351,7 @@ static ghmm_dseq *__sdmodel_generate_sequences (ghmm_dsmodel * mo, int seed,
 
   sq = ghmm_dseq_calloc (seq_number);
   if (!sq) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   if (len <= 0)
@@ -484,7 +484,7 @@ static ghmm_dseq *__sdmodel_generate_sequences (ghmm_dsmodel * mo, int seed,
     }
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
     if (reject_os > 10000) {
-      mes_prot ("Reached max. no. of rejections\n");
+      GHMM_LOG(LCONVERTED, "Reached max. no. of rejections\n");
       break;
     }
     if (!(n % 1000))
@@ -571,7 +571,7 @@ ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
   sq = ghmm_dseq_calloc (seq_number);
 
   if (!sq) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   if (len <= 0)
@@ -780,7 +780,7 @@ ghmm_dseq *ghmm_ds_generate_sequences (ghmm_dsmodel * mo, int seed,
 
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
     if (reject_os > 10000) {
-      mes_prot ("Reached max. no. of rejections\n");
+      GHMM_LOG(LCONVERTED, "Reached max. no. of rejections\n");
       break;
     }
     if (!(n % 1000))

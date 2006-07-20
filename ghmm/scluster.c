@@ -128,7 +128,7 @@ int ghmm_scluster_hmm (char *argv[])
   /*-----------open output file----------------------------------*/ 
     sprintf (filename, "%s%s", out_filename, ".cl");
   if (!(outfile = ighmm_mes_fopen (filename, "wt"))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   
@@ -140,13 +140,13 @@ int ghmm_scluster_hmm (char *argv[])
   /*--- memory alloc and read data ----------------------------*/ 
     sqd_vec = ghmm_cseq_read (seq_file, &sqd_number);
   if (!sqd_vec) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   sqd = sqd_vec[0];
   cl.smo = ghmm_c_read (smo_file, &cl.smo_number);
   if (!cl.smo) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   
@@ -166,12 +166,12 @@ int ghmm_scluster_hmm (char *argv[])
   ARRAY_CALLOC (cl.smo_Z_MAW, cl.smo_number);
   all_log_p = ighmm_cmatrix_alloc (cl.smo_number, (int) sqd->seq_number);
   if (!all_log_p) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   
     /*if (ghmm_c_check_compatibility(cl.smo, cl.smo_number)) { 
-       mes_proc(); goto STOP; 
+       GHMM_LOG_QUEUED(LCONVERTED); goto STOP; 
        } */ 
     ARRAY_CALLOC (smo_changed, cl.smo_number);
   for (i = 0; i < cl.smo_number; i++) {
@@ -254,7 +254,7 @@ int ghmm_scluster_hmm (char *argv[])
             ighmm_mprintf (NULL, 0,
                      "pthread_create returns false (step %d, smo[%d])\n",
                      iter, j);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
           goto STOP;
         }
@@ -294,7 +294,7 @@ int ghmm_scluster_hmm (char *argv[])
             str = ighmm_mprintf (NULL, 0,
                     "Warning: seq. %ld, ID %.0f: ghmm_scluster_best_model returns %d\n",
                     j, sqd->seq_id[j], sqd->seq_label[j]);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
           sqd->seq_label[j] = j % cl.smo_number;
           
@@ -314,7 +314,7 @@ int ghmm_scluster_hmm (char *argv[])
             str = ighmm_mprintf (NULL, 0,
                     "Warn: no model fits to Seq %10.0f, use PENALTY_LOGP\n",
                     sqd->seq_id[j]);
-            mes_prot (str);
+            GHMM_LOG(LCONVERTED, str);
             m_free (str);
             cl.smo_Z_MAW[sqd->seq_label[j]] += sqd->seq_w[j] * GHMM_PENALTY_LOGP;
             continue;
@@ -329,7 +329,7 @@ int ghmm_scluster_hmm (char *argv[])
     }                          /* else */
     if (!(iter == 1 && labels == 1)) {
       if (ghmm_scluster_avoid_empty_smodel (sqd, &cl) == -1) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
       for (i = 0; i < cl.smo_number; i++)
@@ -357,7 +357,7 @@ int ghmm_scluster_hmm (char *argv[])
       if (changes > 0) {
       if (!(iter == 1 && labels == 1))
         if (ghmm_scluster_update (&cl, sqd)) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           goto STOP;
         }
       
@@ -397,7 +397,7 @@ int ghmm_scluster_hmm (char *argv[])
         
         else if (ghmm_c_baum_welch (&cs[i]) == -1) {
           str = ighmm_mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, i);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
           
             /* ghmm_d_print(stdout, cl.mo[i]); */ 
@@ -423,7 +423,7 @@ int ghmm_scluster_hmm (char *argv[])
               ighmm_mprintf (NULL, 0,
                        "pthread_create returns false (step %d, smo[%d])\n",
                        iter, j);
-            mes_prot (str);
+            GHMM_LOG(LCONVERTED, str);
             m_free (str);
             goto STOP;
           }
@@ -436,7 +436,7 @@ int ghmm_scluster_hmm (char *argv[])
             if (return_value[j] == -1) {
               str =
                 ighmm_mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, j);
-              mes_prot (str);
+              GHMM_LOG(LCONVERTED, str);
               m_free (str);
               goto STOP;
             }
@@ -450,7 +450,7 @@ int ghmm_scluster_hmm (char *argv[])
         /* update model priors */ 
         if (CLASSIFY == 1) {
         if (sqd->total_w == 0) {
-          mes_prot ("weights = 0!\n");
+          GHMM_LOG(LCONVERTED, "weights = 0!\n");
           goto STOP;
         }
         for (i = 0; i < cl.smo_number; i++)
@@ -464,7 +464,7 @@ int ghmm_scluster_hmm (char *argv[])
 /*------------------- OUTPUT   -----------------------------------------------*/ 
     if (ghmm_scluster_out (&cl, sqd, outfile, argv) == -1)
      {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
     }
   
@@ -541,7 +541,7 @@ int ghmm_scluster_out (scluster_t * cl, ghmm_cseq * sqd, FILE * outfile,
 
 sprintf (filename, "%s.smo", out_filename);
   if (!(out_model = ighmm_mes_fopen (filename, "wt"))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ghmm_scluster_print_header (out_model, argv);
@@ -556,7 +556,7 @@ sprintf (filename, "%s.smo", out_filename);
     fclose (out_model);
   sprintf (filename, "%s.sqd", out_filename);
   if (!(out_model = ighmm_mes_fopen (filename, "wt"))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ghmm_scluster_print_header (out_model, argv);
@@ -573,7 +573,7 @@ sprintf (filename, "%s.smo", out_filename);
     fclose (out_model);
   sprintf (filename, "%s.numbers", out_filename);
   if (!(out_model = ighmm_mes_fopen (filename, "wt"))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ghmm_scluster_print_header (out_model, argv);
@@ -735,7 +735,7 @@ int ghmm_scluster_avoid_empty_smodel (ghmm_cseq * sqd, scluster_t * cl)
               (cl->smo[i_old], sqd->seq[j], sqd->seq_len[j],
                &log_p_minus) == -1)
            {
-          mes_prot ("ghmm_c_logp returns -1!\n");
+          GHMM_LOG(LCONVERTED, "ghmm_c_logp returns -1!\n");
           goto STOP;
           };
         cl->smo_Z_MD[i_old] -= sqd->seq_w[j] * log_p_minus;
@@ -816,7 +816,7 @@ int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
     else {
     for (i = 0; i < cl->smo_number; i++) {
       if (cl->smo[i]->prior == -1) {
-        mes_prot ("Error! Need model prior for MAW-classification\n");
+        GHMM_LOG(LCONVERTED, "Error! Need model prior for MAW-classification\n");
       }
       if (cl->smo[i]->prior != 0) {
         if (all_log_p[i][seq_id] == GHMM_PENALTY_LOGP)
@@ -878,7 +878,7 @@ int ghmm_scluster_log_aposteriori (scluster_t * cl, ghmm_cseq * sqd,
     ghmm_smap_bayes (cl->smo, result, cl->smo_number, sqd->seq[seq_id],
                 sqd->seq_len[seq_id]);
   if (best_smo == -1) {
-    mes_prot ("best_smo == -1 !\n");
+    GHMM_LOG(LCONVERTED, "best_smo == -1 !\n");
     goto STOP;
   }
   

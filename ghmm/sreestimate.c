@@ -107,13 +107,13 @@ static local_store_t *sreestimate_alloc (const ghmm_cmodel * smo)
   for (i = 0; i < smo->N; i++) {
     r->a_num[i] = ighmm_cmatrix_stat_alloc (smo->cos, smo->s[i].out_states);
     if (!r->a_num[i]) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
   r->a_denom = ighmm_cmatrix_stat_alloc (smo->N, smo->cos);
   if (!r->a_denom) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   /* For sacke of simplicity, a NXmax(M) is being allocated,
@@ -121,32 +121,32 @@ static local_store_t *sreestimate_alloc (const ghmm_cmodel * smo)
   ARRAY_CALLOC (r->c_denom, smo->N);  
   r->c_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->c_num)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   r->mue_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->mue_num)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   r->u_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->u_num)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   r->mue_u_denom = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->mue_u_denom)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   r->sum_gt_otot = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->sum_gt_otot)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   r->sum_gt_logb = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->sum_gt_logb)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   return (r);
@@ -218,12 +218,12 @@ static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
   int t, res = -1;
   *alpha = ighmm_cmatrix_stat_alloc (T, N);
   if (!(*alpha)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   *beta = ighmm_cmatrix_stat_alloc (T, N);
   if (!(*beta)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (*scale, T);
@@ -232,7 +232,7 @@ static int sreestimate_alloc_matvek (double ***alpha, double ***beta,
   for (t = 0; t < T; t++) {
     (*b)[t] = ighmm_cmatrix_stat_alloc (N, M + 1);
     if (!((*b)[t])) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
@@ -296,7 +296,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
   int g, h;
 
   if (r->pi_denom <= DBL_MIN) {
-    mes_prot ("pi: denominator == 0.0!\n");
+    GHMM_LOG(LCONVERTED, "pi: denominator == 0.0!\n");
     goto STOP;
   }
   else
@@ -376,7 +376,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
         if (l == smo->s[j_id].in_states) {
           str = ighmm_mprintf (NULL, 0,
                   "no matching in_a for out_a(=a[%d][%d]) found!\n", i, j_id);
-          mes_prot (str);
+          GHMM_LOG(LCONVERTED, str);
           m_free (str);
           goto STOP;
         }
@@ -567,7 +567,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
       T_k_max = T[k];
   if (sreestimate_alloc_matvek (&alpha, &beta, &scale, &b, T_k_max, smo->N,
                                 smo->M) == -1) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -730,7 +730,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
   if (valid_parameter) {
     /* new parameter lambda: set directly in model */
     if (sreestimate_setlambda (r, smo) == -1) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       return (-1);
     }
     /* only test : */
@@ -755,7 +755,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
 
     
     if (ghmm_c_check(smo) == -1) { 
-        mes_proc(); 
+        GHMM_LOG_QUEUED(LCONVERTED); 
         printf("Model invalid !\n\n");
         
        
@@ -811,7 +811,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
   /* local store for all iterations */
   r = sreestimate_alloc (cs->smo);
   if (!r) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   };
   sreestimate_init (r, cs->smo);
@@ -833,7 +833,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
     printf ("\tBW Iter %d\t log(p) %.4f\n", n, log_p);
     if (valid == -1) {
       str = ighmm_mprintf (NULL, 0, "sreestimate_one_step false (%d.step)\n", n);
-      mes_prot (str);
+      GHMM_LOG(LCONVERTED, str);
       m_free (str);
       goto STOP;
     }
@@ -852,7 +852,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
         str = ighmm_mprintf (NULL, 0,
                 "log P < log P-old (more sequences (%d) , n = %d)\n",
                  valid - valid_old, n);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
       }
       /* no convergence */
@@ -860,7 +860,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
         str = ighmm_mprintf (NULL, 0,
 	        "NO convergence: log P(%e) < log P-old(%e)! (n = %d)\n",
 	        log_p, log_p_old, n);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         break;                  /* goto STOP; ? */
       }
@@ -891,7 +891,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
   *cs->logp = log_p;
 
   /* test plausibility of new parameters */
-  /*  if (ghmm_c_check(mo) == -1) { mes_proc(); goto STOP; } */
+  /*  if (ghmm_c_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   sreestimate_free (&r, cs->smo->N);
   return (0);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */

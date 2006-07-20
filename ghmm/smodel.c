@@ -91,7 +91,7 @@ int ghmm_c_state_alloc (ghmm_cstate * s,
     ARRAY_CALLOC (s->out_id, out_states);
     s->out_a = ighmm_cmatrix_alloc (cos, out_states);
     if (!s->out_a) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
@@ -99,7 +99,7 @@ int ghmm_c_state_alloc (ghmm_cstate * s,
     ARRAY_CALLOC (s->in_id, in_states);
     s->in_a = ighmm_cmatrix_alloc (cos, in_states);
     if (!s->in_a) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
   }
@@ -171,7 +171,7 @@ since it does not take care of het .mixtures densities  */
     /* transition to successor possible at least in one transition class */
     if (exist) {
       if (count_out >= smo->s[index].out_states) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         return (-1);
       }
       smo->s[index].out_id[count_out] = i;
@@ -189,7 +189,7 @@ since it does not take care of het .mixtures densities  */
     /* transition to predecessor possible at least in one transition class */
     if (exist) {
       if (count_in >= smo->s[index].in_states) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         return (-1);
       }
       smo->s[index].in_id[count_in] = i;
@@ -215,7 +215,7 @@ ghmm_cmodel **ghmm_c_read (const char *filename, int *smo_number)
   *smo_number = 0;
   s = ighmm_scanner_alloc (filename);
   if (!s) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   while (!s->err && !s->eof) {
@@ -229,7 +229,7 @@ ghmm_cmodel **ghmm_c_read (const char *filename, int *smo_number)
       ARRAY_REALLOC (smo, *smo_number);
       smo[*smo_number - 1] = ghmm_c_read_block (s, (int *) &new_models);
       if (!smo[*smo_number - 1]) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
       /* copy ghmm_cmodel */
@@ -239,7 +239,7 @@ ghmm_cmodel **ghmm_c_read (const char *filename, int *smo_number)
         for (j = 1; j < new_models; j++) {
           smo[*smo_number] = ghmm_c_copy (smo[*smo_number - 1]);
           if (!smo[*smo_number]) {
-            mes_proc ();
+            GHMM_LOG_QUEUED(LCONVERTED);
             goto STOP;
           }
           (*smo_number)++;
@@ -255,7 +255,7 @@ ghmm_cmodel **ghmm_c_read (const char *filename, int *smo_number)
       goto STOP;
   }                             /* while(!s->err && !s->eof) */
   /*if (ghmm_c_check_compatibility(smo, *smo_number) == -1) {
-     mes_proc(); goto STOP;
+     GHMM_LOG_QUEUED(LCONVERTED); goto STOP;
      } */
 
   ighmm_scanner_free (&s);             
@@ -307,7 +307,7 @@ ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip)
       *multip = ighmm_scanner_get_int (s);
       if (*multip < 1) {        /* ignore: makes no sense */
         *multip = 1;
-        mes_prot ("Multip < 1 ignored\n");
+        GHMM_LOG(LCONVERTED, "Multip < 1 ignored\n");
       }
     }
     else if (!strcmp (s->id, "M")) {    /* number of output components */
@@ -462,7 +462,7 @@ ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip)
       for (i = 1; i < smo->cos; i++) {
         a_3dmatrix[i] = ighmm_cmatrix_alloc_copy (smo->N, smo->N, a_matrix);
         if (!a_3dmatrix[i]) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           goto STOP;
         }
       }
@@ -625,7 +625,7 @@ ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip)
     }
     if (ghmm_c_state_alloc (smo->s + i, M, smo->s[i].in_states,
                             smo->s[i].out_states, smo->cos)) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     /* given no support of the smo file, make all densities of same type and
@@ -641,7 +641,7 @@ ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip)
     if (smodel_copy_vectors
         (smo, i, pi_vektor, fix_vektor, a_3dmatrix, c_matrix, mue_matrix,
          u_matrix)) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
 
@@ -770,13 +770,13 @@ ghmm_cmodel *ghmm_c_copy (const ghmm_cmodel * smo)
     ARRAY_CALLOC (sm2->s[i].out_id, nachf);
     sm2->s[i].out_a = ighmm_cmatrix_alloc (smo->cos, nachf);
     if (!sm2->s[i].out_a) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     ARRAY_CALLOC (sm2->s[i].in_id, vorg);
     sm2->s[i].in_a = ighmm_cmatrix_alloc (smo->cos, vorg);
     if (!sm2->s[i].in_a) {
-      mes_proc ();
+      GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
     ARRAY_CALLOC (sm2->s[i].c, smo->s[i].M);
@@ -838,14 +838,14 @@ int ghmm_c_check (const ghmm_cmodel * smo)
     sum += smo->s[i].pi;
   }
   if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
-    mes_prot ("sum Pi[i] != 1.0\n");
+    GHMM_LOG(LCONVERTED, "sum Pi[i] != 1.0\n");
     valid = -1;
     /*goto STOP; */
   }
   /* only 0/1 in fix? */
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].fix != 0 && smo->s[i].fix != 1) {
-      mes_prot ("in vector fix_state only 0/1 values!\n");
+      GHMM_LOG(LCONVERTED, "in vector fix_state only 0/1 values!\n");
       valid = -1;
       /*goto STOP;*/
     }
@@ -853,7 +853,7 @@ int ghmm_c_check (const ghmm_cmodel * smo)
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].out_states == 0) {
       str = ighmm_mprintf (NULL, 0, "out_states = 0 (state %d -> final state!)\n", i);
-      mes_prot (str);
+      GHMM_LOG(LCONVERTED, str);
       m_free (str);
     }
     /* sum  a[i][k][j] */
@@ -864,7 +864,7 @@ int ghmm_c_check (const ghmm_cmodel * smo)
       }
       if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
         str = ighmm_mprintf (NULL, 0, "sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i,k);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         valid = -1;
         /*goto STOP; */
@@ -876,7 +876,7 @@ int ghmm_c_check (const ghmm_cmodel * smo)
       sum += smo->s[i].c[j];
     if (fabs (sum - 1.0) >= GHMM_EPS_PREC) {
       str = ighmm_mprintf (NULL, 0, "sum c[j] = %.2f != 1.0 (state %d)\n", sum, i);
-      mes_prot (str);
+      GHMM_LOG(LCONVERTED, str);
       m_free (str);
       valid = -1;            
       /* goto STOP; */
@@ -906,7 +906,7 @@ int ghmm_c_check_compatibility (ghmm_cmodel ** smo, int smodel_number)
         str = ighmm_mprintf (NULL, 0,
                 "ERROR: different number of states in smodel %d (%d) and smodel %d (%d)",
                 i, smo[i]->N, j, smo[j]->N);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         return (-1);
       }
@@ -914,7 +914,7 @@ int ghmm_c_check_compatibility (ghmm_cmodel ** smo, int smodel_number)
         str = ighmm_mprintf (NULL, 0,
                 "ERROR: different number of possible outputs in smodel  %d (%d) and smodel %d (%d)",
                 i, smo[i]->s[0].M, j, smo[j]->s[0].M);
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         return (-1);
       }
@@ -964,7 +964,7 @@ ghmm_cseq *ghmm_c_generate_sequences (ghmm_cmodel * smo, int seed,
 
   sq = ghmm_cseq_calloc (seq_number);
   if (!sq) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -1161,7 +1161,7 @@ ghmm_cseq *ghmm_c_generate_sequences (ghmm_cmodel * smo, int seed,
     /*    printf("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax); */
 
     if (reject_os > 10000) {
-      mes_prot ("Reached max. no. of rejections\n");
+      GHMM_LOG(LCONVERTED, "Reached max. no. of rejections\n");
       break;
     }
     if (!(n % 1000))
@@ -1218,7 +1218,7 @@ int ghmm_c_likelihood (ghmm_cmodel * smo, ghmm_cseq * sqd, double *log_p)
     }
   }
   if (!matched) {
-    mes_prot ("NO sequence can be build.\n");
+    GHMM_LOG(LCONVERTED, "NO sequence can be build.\n");
     goto STOP;
   }
   /* return number of "matched" sequences */
@@ -1544,7 +1544,7 @@ double ghmm_c_prob_distance (ghmm_cmodel * cm0, ghmm_cmodel * cm, int maxT,
          t++;
          }    
          if (t > 1) {
-         mes_prot("No proper left-to-right model. Multiple start states");
+         GHMM_LOG(LCONVERTED, "No proper left-to-right model. Multiple start states");
          goto STOP;
          } */
 
@@ -1591,7 +1591,7 @@ double ghmm_c_prob_distance (ghmm_cmodel * cm0, ghmm_cmodel * cm, int maxT,
 
         if (ghmm_c_likelihood (smo1, seq0, &p0) == -1) {
           /* error! */
-          mes_prot ("seq0 can't be build from smo1!");
+          GHMM_LOG(LCONVERTED, "seq0 can't be build from smo1!");
           goto STOP;
 
 
@@ -1635,7 +1635,7 @@ double ghmm_c_prob_distance (ghmm_cmodel * cm0, ghmm_cmodel * cm, int maxT,
 
         if (ghmm_c_likelihood (smo1, seq0, &p0) == -1) {
           /* error case */
-          mes_prot ("seq0 can't be build from smo1!");
+          GHMM_LOG(LCONVERTED, "seq0 can't be build from smo1!");
           goto STOP;
         }
         n = ghmm_c_likelihood (smo2, seq0, &p);/*== -1: KEINE Seq. erzeugbar*/

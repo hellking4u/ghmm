@@ -11,19 +11,19 @@ extern "C" {
 /*==============  Memory allocation macros for mes-functions  ===============*/
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC(ptr, entries) { if (!((ptr) = ighmm_malloc(sizeof(*(ptr)) * (entries)))) \
-                                         {mes_proc(); goto STOP;}                             \
+                                         {GHMM_LOG_QUEUED(LERROR); goto STOP;}                \
                                    }
 #endif
 
 #ifndef ARRAY_CALLOC
 #define ARRAY_CALLOC(ptr, entries) { if (!((ptr) = ighmm_calloc(sizeof(*(ptr)) * (entries)))) \
-                                         {mes_proc(); goto STOP;}                             \
+                                         {GHMM_LOG_QUEUED(LERROR); goto STOP;}                \
                                    }
 #endif
 
 #ifndef ARRAY_REALLOC
 #define ARRAY_REALLOC(ptr, entries) { if (ighmm_realloc((void**)&(ptr), sizeof(*(ptr))*(entries))) \
-                                          {mes_proc(); goto STOP;}                                 \
+                                          {GHMM_LOG_QUEUED(LERROR); goto STOP;}                    \
                                     }
 #endif
 
@@ -153,6 +153,7 @@ int ghmm_dl_gradient_expectations(ghmm_dmodel *mo, double **alpha, double **beta
 #define LDEBUG      4
 #define LINFO       3
 #define LWARN       2
+#define LCONVERTED  2
 #define LERROR      1
 #define LCRITIC     0
 

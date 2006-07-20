@@ -155,7 +155,7 @@ double **ighmm_cmatrix_stat_alloc (int n, int m)
 
 
   if (!(A = ighmm_calloc (n * sizeof (double*) + n * m * sizeof (double)))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   
@@ -193,7 +193,7 @@ int **ighmm_dmatrix_stat_alloc (int n, int m)
   int **A;
   int *tmp;
   if (!(A = ighmm_calloc (n * sizeof(int*) + n * m * sizeof (int)))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
@@ -539,7 +539,7 @@ int ighmm_cmatrix_gaussrows_values (double **matrix, int rows, int cols,
   double *mean;
   int i, j;
   if (u <= 0.0) {
-    mes_prot ("sigma^2 <= 0.0 not allowed\n");
+    GHMM_LOG(LCONVERTED, "sigma^2 <= 0.0 not allowed\n");
     goto STOP;
   }
   if (*mue == NULL) {
@@ -558,7 +558,7 @@ int ighmm_cmatrix_gaussrows_values (double **matrix, int rows, int cols,
     for (j = 0; j < cols; j++) {
       matrix[i][j] = ighmm_rand_normal_density ((double) j, mean[i], u);
       if (matrix[i][j] == -1) {
-        mes_proc ();
+        GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
       }
       /* To avoid zero: (Cheap version!!) */

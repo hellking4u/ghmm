@@ -401,7 +401,7 @@ scanner_t *ighmm_scanner_alloc (const char *filename)
   s->txtlen = 256;
   s->idlen = 256;
   if (!(s->fp = ighmm_mes_fopen (filename, "rt"))) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_MALLOC (s->txt, s->txtlen);
@@ -1060,7 +1060,7 @@ int scanner_tst (void)
   int i;
 
   if (!s) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 

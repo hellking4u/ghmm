@@ -176,7 +176,7 @@ int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
       if (scale[t] < GHMM_EPS_PREC) {
         /*char *str = */
         printf ("numerically questionable: ");
-        /*mes_prot(str);*/
+        /*GHMM_LOG(LCONVERTED, str);*/
         /*printf("\neps = %e\n", EPS_PREC);*/
         /*printf("\nscale kleiner als eps HUHU, Zeit t = %d, scale = %e\n", t, scale[t]);*/
         /*printf("\nlabel: %s, char: %d, ems: %f\n", mo->s[92].label,O[t], mo->s[4].b[O[t]]);*/
@@ -370,13 +370,13 @@ int ghmm_ds_logp (ghmm_dsmodel * mo, const int *O, int len, double *log_p)
   double **alpha, *scale = NULL;
   alpha = ighmm_cmatrix_alloc (len, mo->N);
   if (!alpha) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (scale, len);
   /* run ghmm_ds_forward */
   if (ghmm_ds_forward (mo, O, len, alpha, scale, log_p) == -1) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   res = 0;

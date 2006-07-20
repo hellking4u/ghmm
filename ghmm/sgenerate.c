@@ -89,7 +89,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
 
   /* TEMP */
   if (mode == all_viterbi || mode == viterbi_viterbi || mode == viterbi_all) {
-    mes_prot ("Error: mode not implemented yet\n");
+    GHMM_LOG(LCONVERTED, "Error: mode not implemented yet\n");
     goto STOP;
   }
 
@@ -101,14 +101,14 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
   /*---------------alloc-------------------------------------------------*/
   sq = ghmm_cseq_calloc (sqd_short->seq_number);
   if (!sq) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (initial_distribution, smo->N);
   /* is needed in cfoba_forward() */
   alpha = ighmm_cmatrix_alloc (max_short_len, smo->N);
   if (!alpha) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (scale, max_short_len);
@@ -120,7 +120,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
     ARRAY_CALLOC (sq->seq[n], len);
     short_len = sqd_short->seq_len[n];
     if (len < short_len) {
-      mes_prot ("Error: given sequence is too long\n");
+      GHMM_LOG(LCONVERTED, "Error: given sequence is too long\n");
       goto STOP;
     }
     ghmm_cseq_copy (sq->seq[n], sqd_short->seq[n], short_len);
@@ -135,7 +135,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
     if (mode == viterbi_all || mode == viterbi_viterbi) {
       v_path = cviterbi (smo, sqd_short->seq[n], short_len, &log_p);
       if (v_path[short_len - 1] < 0 || v_path[short_len - 1] >= smo->N) {
-        mes_prot ("Warning:Error: from viterbi()\n");
+        GHMM_LOG(LCONVERTED, "Warning:Error: from viterbi()\n");
         sq->seq_len[n] = short_len;
         m_realloc (sq->seq[n], short_len);
         continue;
@@ -152,7 +152,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
       if (short_len > 0) {
         if (ghmm_c_forward (smo, sqd_short->seq[n], short_len, NULL /* ?? */ ,
                            alpha, scale, &log_p)) {
-          mes_proc ();
+          GHMM_LOG_QUEUED(LCONVERTED);
           goto STOP;
         }
         sum = 0.0;
@@ -338,11 +338,11 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
 
   /* TEMP */
   if (mode == all_viterbi || mode == viterbi_viterbi || mode == viterbi_all) {
-    mes_prot ("Error: mode not implemented yet\n");
+    GHMM_LOG(LCONVERTED, "Error: mode not implemented yet\n");
     goto STOP;
   }
   if (len <= 0) {
-    mes_prot ("Error: sequence with zero or negativ length\n");
+    GHMM_LOG(LCONVERTED, "Error: sequence with zero or negativ length\n");
     goto STOP;
   }
   ARRAY_CALLOC (new_O, (int) GHMM_MAX_SEQ_LEN);
@@ -354,7 +354,7 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
      Pi(i) = alpha_t(i)/P(O|lambda) */
   if (mode == all_all || mode == all_viterbi) {
     if (ghmm_c_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
-      mes_prot ("error from sfoba_forward, unable to extend\n");
+      GHMM_LOG(LCONVERTED, "error from sfoba_forward, unable to extend\n");
       ARRAY_REALLOC (new_O, *new_len);
       return new_O;
     }
@@ -442,7 +442,7 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
       }
       else {
         str = ighmm_mprintf (NULL, 0, "unable to extend seq (all osc empty)\n");
-        mes_prot (str);
+        GHMM_LOG(LCONVERTED, str);
         m_free (str);
         goto STOP;
       }
@@ -522,18 +522,18 @@ double ghmm_sgenerate_next_value (ghmm_cmodel * smo, double *O, const int len)
   int i, j, m, init_state = -1;
 
   if (smo->cos > 1) {
-    mes_prot ("ghmm_sgenerate_next_value only for COS == 1\n");
+    GHMM_LOG(LCONVERTED, "ghmm_sgenerate_next_value only for COS == 1\n");
     goto STOP;
   }
 
   alpha = ighmm_cmatrix_alloc (len, smo->N);
   if (!alpha) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (scale, len);
   if (ghmm_c_forward (smo, O, len, NULL /* ?? */ , alpha, scale, &log_p)) {
-    mes_prot ("error from sfoba_forward\n");
+    GHMM_LOG(LCONVERTED, "error from sfoba_forward\n");
     goto STOP;
   }
 

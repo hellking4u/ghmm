@@ -125,12 +125,12 @@ static plocal_store_t *pviterbi_alloc(ghmm_dpmodel *mo, int len_x, int len_y) {
   for (j=0; j<mo->N; j++) {
     ARRAY_CALLOC (v->log_b[j], ghmm_dp_emission_table_size(mo, j) + 1);
   }
-  if (!(v->log_b)) {mes_proc(); goto STOP;}
+  if (!(v->log_b)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   v->phi = ighmm_cmatrix_3d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
-  if (!(v->phi)) {mes_proc(); goto STOP;}
+  if (!(v->phi)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   ARRAY_CALLOC (v->phi_new, mo->N);
   v->psi = ighmm_dmatrix_3d_alloc(len_x + mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
-  if (!(v->psi)) {mes_proc(); goto STOP;}
+  if (!(v->psi)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
 
   v->topo_order_length = 0;
   ARRAY_CALLOC (v->topo_order, mo->N);
@@ -553,7 +553,7 @@ int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * 
 
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
   pv = pviterbi_alloc(mo, X->length, Y->length);
-  if (!pv)                        { mes_proc(); goto STOP; }
+  if (!pv)                        { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; }
 
   /* Precomputing the log(a_ij) and log(bj(ot)) */
   pviterbi_precompute(mo, pv);

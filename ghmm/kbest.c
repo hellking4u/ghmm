@@ -132,7 +132,7 @@ static double **kbest_buildLogMatrix (ghmm_dstate * s, int N)
   }
   return log_a;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("kbest_buildLogMatrix failed\n");
+  GHMM_LOG(LCONVERTED, "kbest_buildLogMatrix failed\n");
   exit (1);
 #undef CUR_PROC
 }
@@ -295,7 +295,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
             str = ighmm_mprintf (NULL, 0,
                            "i_id: %d, o_seq[%d]=%d\ninvalid emission index!\n",
                            i_id, t, o_seq[t]);
-            mes_prot (str);
+            GHMM_LOG(LCONVERTED, str);
             m_free (str);
           }
         }
@@ -303,7 +303,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
           hP->gamma_a[i] += log (mo->s[i_id].b[b_index]);
         /*printf("%g = %g\n", log(mo->s[i_id].b[b_index]), hP->gamma_a[i]); */
         if (hP->gamma_a[i] > 0.0) {
-          mes_prot ("gamma to large. ghmm_dl_kbest failed\n");
+          GHMM_LOG(LCONVERTED, "gamma to large. ghmm_dl_kbest failed\n");
           exit (1);
         }
       }
@@ -358,7 +358,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
       ighmm_hlist_remove (&(h[t]));
     /* remove all other not chosen hypotheses */
     if (!h[t]) {
-      mes_prot ("No chosen hypothesis. ghmm_dl_kbest failed\n");
+      GHMM_LOG(LCONVERTED, "No chosen hypothesis. ghmm_dl_kbest failed\n");
       exit (1);
     }
     hP = h[t];
@@ -414,7 +414,7 @@ int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *lo
   free (h);
   return hypothesis;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("ghmm_dl_kbest failed\n");
+  GHMM_LOG(LCONVERTED, "ghmm_dl_kbest failed\n");
   exit (1);
 #undef CUR_PROC
 }
@@ -439,7 +439,7 @@ static void ighmm_hlist_insert (hypoList ** plist, int newhyp,
   *plist = newlist;
   return;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("ighmm_hlist_insert failed\n");
+  GHMM_LOG(LCONVERTED, "ighmm_hlist_insert failed\n");
   exit (1);
 #undef CUR_PROC
 }
@@ -537,7 +537,7 @@ static int ighmm_hlist_prop_forward (ghmm_dmodel * mo, hypoList * h, hypoList **
   free (created);
   return (no_oldHyps);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("ighmm_hlist_prop_forward failed\n");
+  GHMM_LOG(LCONVERTED, "ighmm_hlist_prop_forward failed\n");
   exit (1);
 #undef CUR_PROC
 }
@@ -598,7 +598,7 @@ static double ighmm_log_gamma_sum (double *log_a, ghmm_dstate * s, hypoList * pa
   free (logP);
   return result;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  mes_prot ("ighmm_log_gamma_sum failed\n");
+  GHMM_LOG(LCONVERTED, "ighmm_log_gamma_sum failed\n");
   exit (1);
 #undef CUR_PROC
 }

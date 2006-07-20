@@ -70,14 +70,14 @@ static local_store_t *sviterbi_alloc (ghmm_cmodel * smo, int T)
   ARRAY_CALLOC (v, 1);
   v->log_b = ighmm_cmatrix_stat_alloc (smo->N, T);
   if (!(v->log_b)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (v->phi, smo->N);
   ARRAY_CALLOC (v->phi_new, smo->N);
   v->psi = ighmm_dmatrix_alloc (T, smo->N);
   if (!(v->psi)) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   return (v);
@@ -142,7 +142,7 @@ int *ghmm_c_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
 
   v = sviterbi_alloc (smo, T);
   if (!v) {
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   ARRAY_CALLOC (state_seq, T);
@@ -214,7 +214,7 @@ int *ghmm_c_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
   if (max_value == -DBL_MAX) {
     /* sequence can't be build from model, no backtracking possible */
     *log_p = -DBL_MAX;
-    mes_proc ();
+    GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
     /*
        for (t = T - 2; t >= 0; t--)
