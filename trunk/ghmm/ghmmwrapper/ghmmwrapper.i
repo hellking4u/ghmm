@@ -117,6 +117,29 @@
 // XXX certain arguments are supposed to be NULL
 // %apply Pointer NONNULL { int *, double *, int **, double **, void * };
 
+// make from common c arrays python objects with a list compatible interface
+// sequence types
+%array_class(ghmm_cseq,  continuous_seq_array)
+%array_class(ghmm_dseq,  discrete_seq_array)
+%array_class(ghmm_dpseq, discrete_pair_seq_array)
+
+// model types
+%array_class(ghmm_cmodel,  continuous_model_array)
+%array_class(ghmm_dmodel,  discrete_model_array)
+%array_class(ghmm_dpmodel, discrete_pair_model_array)
+%array_class(ghmm_dsmodel, discrete_switch_model_array)
+
+// state types
+%array_class(ghmm_cstate,  continuous_state_array)
+%array_class(ghmm_dstate,  discrete_state_array)
+%array_class(ghmm_dpstate, discrete_pair_state_array)
+%array_class(ghmm_dsstate, discrete_switch_state_array)
+
+typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
+typedef struct alphabet_s alphabet_s;
+typedef struct ghmm_fileData_s ghmm_fileData_s;
+
+
 /*==========================================================================
   ========================== test for obsolete features ==================== */
 #ifdef GHMM_OBSOLETE
