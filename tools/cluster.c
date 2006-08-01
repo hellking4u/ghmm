@@ -36,8 +36,7 @@ int main(int argc, char* argv[]) {
     exitcode = ghmm_cluster_hmm(argv[1], argv[2], argv[3]);
   }
   else {
-    mes_prot
-      ("Insufficient arguments. \
+    GHMM_LOG(LCONVERTED, "Insufficient arguments. \
         Usage: cluster [sequence file][model file][outfile] <seed>\n"); 
   }
   return exitcode;

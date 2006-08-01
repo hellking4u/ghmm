@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
   ghmm_rng_init();
   if (smodelflag) {
     smo = ghmm_c_read(argv[1], &smo_number);
-    if (!smo)  {mes_proc(); return -1;}  
+    if (!smo)  {GHMM_LOG_QUEUED(LCONVERTED); return -1;}  
     if (smo_number < 2) {
       printf("Need at least two HMMs to compare (read %d)\n", smo_number);
       return -1;
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
   else if (discrete) {
 
     mo = ghmm_d_read(argv[1], &mo_number);
-    if (!mo) {mes_proc(); return -1;}        
+    if (!mo) {GHMM_LOG_QUEUED(LCONVERTED); return -1;}        
 
     if (mo_number < 2) {
       printf("Need at least two HMMs to compare\n");
@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
   else {
     
     cmo = cmodel_read(argv[1], &cmo_number);
-    if (!cmo) {mes_proc(); return -1;}        
+    if (!cmo) {GHMM_LOG_QUEUED(LCONVERTED); return -1;}        
     
     if (cmo_number < 2) {
       printf("Need at least two CHMMs to compare\n");

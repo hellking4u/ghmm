@@ -49,8 +49,8 @@ int main(int argc, char* argv[]) {
     exitcode = ghmm_scluster_hmm(argv);
   }
   else {
-    mes_prot
-      ("Insufficient arguments. Usage: scluster [sequence file][model file][outfile][labels]<seed>\n"); 
+    GHMM_LOG(LCONVERTED, "Insufficient arguments. \
+       Usage: scluster [sequence file][model file][outfile][labels]<seed>\n"); 
   }
   /*------------------------------------------------------------------------*/
   ighmm_mes(MES_WIN, "\n(%2.2T): Program finished with exitcode %d.\n", exitcode );

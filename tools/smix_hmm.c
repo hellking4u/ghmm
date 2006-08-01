@@ -38,18 +38,18 @@ static int smix_hmm_run(int argc, char* argv[]) {
 
   /* read sequences and initial models */
   sqd = ghmm_cseq_read(argv[1], &sqd_fields);
-  if (!sqd) {mes_proc(); goto STOP;}
+  if (!sqd) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   if (sqd_fields > 1)
     printf("Warning: Seq. File contains multiple Seq. Fields; use only the first one\n");
   smo = ghmm_c_read(argv[2], &smo_number);
-  if (!smo) {mes_proc(); goto STOP;}
+  if (!smo) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
 
   /* open output file */
-  if(!(outfile = ighmm_mes_fopen(argv[3], "wt"))) {mes_proc(); goto STOP;}
+  if(!(outfile = ighmm_mes_fopen(argv[3], "wt"))) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   
   /* matrix for component probs., */
   cp = ighmm_cmatrix_alloc(sqd[0]->seq_number, smo_number);
-  if (!cp) { mes_proc(); goto STOP;}
+  if (!cp) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
 
   /* set last arg in ghmm_smixturehmm_init() : 
      1 = strict random partition; cp = 0/1
@@ -59,11 +59,11 @@ static int smix_hmm_run(int argc, char* argv[]) {
      5. no start partition == equal cp for each model
   */
   if (ghmm_smixturehmm_init(cp, sqd[0], smo, smo_number, 5) == -1) {
-    mes_proc(); goto STOP;
+    GHMM_LOG_QUEUED(LCONVERTED); goto STOP;
   }
   /* clustering */
   if (ghmm_smixturehmm_cluster(outfile, cp, sqd[0], smo, smo_number) == -1) {
-    mes_proc(); goto STOP;
+    GHMM_LOG_QUEUED(LCONVERTED); goto STOP;
   }
 
   /* print trained models */
