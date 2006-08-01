@@ -36,14 +36,14 @@ static int viterbi_test(char* argv[]) {
 
   /* read array of models */
   smo = ghmm_c_read(argv[1], &smo_number);
-  if (!(smo)) {mes_proc(); goto STOP;}
+  if (!(smo)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   
   /* read sequences */
   sqd = ghmm_cseq_read(argv[2], &sqd_number);
-  if (!sqd) {mes_proc(); goto STOP;}
+  if (!sqd) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   
   strcpy(outfilename, argv[3]);
-  if(!(outfile = ighmm_mes_fopen(outfilename, "wt"))) {mes_proc(); goto STOP;}
+  if(!(outfile = ighmm_mes_fopen(outfilename, "wt"))) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
 
   /* calculate viterbi path for every possible sequence-model combination */
   for (model = 0; model < smo_number; model++) {
@@ -52,7 +52,7 @@ static int viterbi_test(char* argv[]) {
 	cnt++;
 	state_seq = ghmm_c_viterbi(smo[model], sqd[i]->seq[j], sqd[i]->seq_len[j],
 			     &log_p);
-	if (state_seq == NULL) {mes_proc(); goto STOP;}
+	if (state_seq == NULL) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
 	fprintf(outfile, "%d %ld (Seq.ID %d): logp %.4f\t", model, i, 
 		(int) sqd[i]->seq_id[j], log_p);
 	for (t = 0; t < sqd[i]->seq_len[j]; t++)
