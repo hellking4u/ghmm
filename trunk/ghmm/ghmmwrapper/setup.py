@@ -35,38 +35,8 @@
 #
 ################################################################################
 
-from distutils.core import setup, Extension,DistutilsExecError
-import os
-import string
+from distutils.core import setup,Extension
 
-# Adapted from Achim Gaedke's pygsl
-def runtool(tool, argument_string):
-    """ Run tool with the given arguments and return the first line (sans cr)
-        of the output
-    """
-    command = os.popen(tool + ' ' + argument_string)
-    output = command.readline()[:-1]
-    command.close()
-    if not output:
-        raise DistutilsExecError, "could not run %s. Check your path." % tool
-    return output
-
-ghmmprefix  = runtool('ghmm-config' , '--prefix')
-swiglib = runtool('swig','-swiglib')
-swiglib_path  = os.path.split(swiglib)[0]
-ghmmlib_path  = runtool('ghmm-config','--lib-prefix')
-ghmmlib_libs  = string.split(runtool('ghmm-config','--libs'))[1:]
-
-print "********* PATHS ***********"
-print "ghmmprefix " ,ghmmprefix
-print "swiglib ", swiglib
-print "swiglib_path ",swiglib_path
-print "ghmmlib_path ", ghmmlib_path
-print "ghmmlib_libs ", ghmmlib_libs
-print "**************************"
-
-
-    
 # BUG: Including 'ghmmwrapper.i' in Extension source list causes
 # 'swig -python -o ghmmwrapper_wrap.c ghmmwrapper.i' to run.
 # We just want: swig -c -python ghmmwrapper.i. Otherwise we get doubly
@@ -75,24 +45,19 @@ print "**************************"
 #                    and the generated c file are in the extension list.
 #                    I think that is expected behaviour.
 #                    Tested with swig 1.3.19, 1.3.21 and 1.3.25 
-
-#print "================================================================================"
-#print "Please run the following command first: swig -python -nodefault ghmmwrapper.i"
-#print "================================================================================"
    
 setup(name="ghmmwrapper",
       version="0.8",
       description="Python Distribution Utilities",
       author="GHMM authors",
-      author_email="ghmm@sf.net",
+      author_email="ghmm-list@lists.sourceforge.net",
       url="http://ghmm.org",
       py_modules = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','xmlutil','DataStructures',
                     'Graph','GraphUtil', 'GatoGlobals','EditObjectAttributesDialog','class_change'],
       ext_modules = [Extension('_ghmmwrapper',
-                               ['sclass_change.c', 'pclasschange.c',
-                                'gql.c', 'ghmmwrapper.i'],
-                               include_dirs = [ghmmprefix + '/include'],
-                               library_dirs = [ghmmlib_path, swiglib_path],
+                               ['sclass_change.c', 'pclasschange.c', 'gql.c', 'ghmmwrapper.i'],
+                               include_dirs = ['..'],
+                               library_dirs = ['../ghmm/.libs'],
                                libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z']
                                )
                      ]
