@@ -58,21 +58,25 @@ def getClass( seq, k,t):
      
      """
      # dummy function right now
-     return 0
+     #return 0
 
      # The class change could depend on a number of variables.
      # Here are some examples:
     
      # the sequence index k
-     if k < 10:
-         return 0
-     else:
-         return 1    
+     #if k < 10:
+     #    print "k < 10 -> class 0"
+     #    return 0
+     #else:
+     #    print "k > 10 -> class 1"
+     #    return 1    
 
      # the time step t
-     if t < 100:
+     if t < 6:
+         print "t < 6 -> class 0"
          return 0
      else:    
+         print "t > 6 -> class 1"
          return 1
 
      # some cumulative function over the sequence

@@ -94,7 +94,7 @@ def do1():
         [[10.0,10.0],[0.1,0.1],[0.5,0.5]] ]
     swpi = [0.5,0.5]
     swmodel = ghmm.HMMFromMatrices(ghmm.Float(),ghmm.GaussianMixtureDistribution(ghmm.Float), swA, swB, swpi)
-    ghmmwrapper.smodel_class_change_alloc(swmodel.cmodel)
+    ghmmwrapper.ghmm_c_class_change_alloc(swmodel.cmodel)
 
 
     swshort = ghmm.EmissionSequence(ghmm.Float(),[10.0]+[0.0]*5+[0.0]+[10.0]*5)
@@ -125,7 +125,7 @@ def do2():
         [[10.0,10.0],[0.1,0.1],[0.5,0.5]] ]
     swpi = [0.5,0.5]
     swmodel = ghmm.HMMFromMatrices(ghmm.Float(),ghmm.GaussianMixtureDistribution(ghmm.Float), swA, swB, swpi)
-    ghmmwrapper.smodel_class_change_alloc(swmodel.cmodel)
+    ghmmwrapper.ghmm_c_class_change_alloc(swmodel.cmodel)
 
 
 
@@ -138,15 +138,20 @@ def do2():
     unique2 = class_change.testChange()
     unique2.setData("Me too !")
    
+    # switching function is a Python object with __call__ function
     ghmmwrapper.setPythonCallback(swmodel.cmodel, unique)
     
     
     #ghmmwrapper.setPythonSwitching(swmodel.cmodel,"XXXX","unique")   # "class_change","getClass"
     swmodel.baumWelch(swshort,5,0.2)
 
+    # switching function is a Python object with __call__ function
     ghmmwrapper.setPythonCallback(swmodel.cmodel, unique2)
     swmodel.baumWelch(swshort,5,0.2)
 
+    # switching function if a Python function
+    ghmmwrapper.setPythonCallback(swmodel.cmodel, class_change.getClass)
+    swmodel.baumWelch(swshort,5,0.2)
 
 
 
