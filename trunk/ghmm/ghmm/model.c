@@ -1199,8 +1199,8 @@ void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob)
     for (out = 0; out < mo->s[i].out_states; out++) {
       if (mo->s[i].out_id[out] == j) {
         mo->s[i].out_a[out] = prob;
-        fprintf (stderr, "ghmm_d_transition_set(0):State %d, %d, = %f\n", i, j,
-                 prob);
+        /* fprintf (stderr, "ghmm_d_transition_set(0):State %d, %d, = %f\n", i, j,
+                 prob); */
         break;
       }
     }
