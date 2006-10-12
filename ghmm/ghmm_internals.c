@@ -58,9 +58,13 @@ static void * logfunc_data;
 
 void ighmm_logging (int level, const char * proc, const char * str) {
 
-  char * message;
+  char *message, *tmp;
   int len = strlen(proc);
-
+  message = malloc(sizeof(char)*(len+1));
+  if (!message)
+    return;
+  message = strcpy(message, proc);
+  
   /* concatenate the precompiler info with the actual logging text if any */
   if (str || qmessage) {
     
@@ -72,16 +76,16 @@ void ighmm_logging (int level, const char * proc, const char * str) {
 
     len += strlen(str);
     
-    message = malloc(sizeof(char)*(len+1));
-    if (!message)
+    tmp = realloc(message, sizeof(char)*(len+1));
+    if (!tmp) {
+      free(message);
       return;
+    }
+    message = tmp;
+    tmp = NULL;
     
-    message = strcpy(message, proc);
     message = strcat(message, str);
-    
   }
-  else
-    message = (char *)proc;
 
   /* if defined use external logging function */
   if (logfunc) {
