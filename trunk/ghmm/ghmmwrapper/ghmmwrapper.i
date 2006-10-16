@@ -184,6 +184,23 @@ extern void ghmm_rng_timeseed(GHMM_RNG * r);
 %}
 
 
+/*==========================================================================
+  ===== import C structs as shadow classes ================================= */
+%define STRUCT_ARRAY(type, name)
+%inline %{
+        type* name ## _array_alloc(size_t number)  { return calloc(number, sizeof(type)); }
+        type* name ## _array_getRef(type* self, size_t index) { return self+index; }
+%}
+%enddef
+
+%define REFERENCE_ARRAY(type, name)
+%inline %{
+        type** name ## _array_alloc(size_t number)  { return calloc(number, sizeof(type*)); }
+        type*  name ## _array_getitem(type** self, size_t index) { return self[index]; }
+        void   name ## _array_setitem(type** self, size_t index, type* value) { self[index] = value; }
+%}
+%enddef
+
 %include wrapper_cseq.i
 %include wrapper_dseq.i
 %include wrapper_dpseq.i
@@ -192,21 +209,13 @@ extern void ghmm_rng_timeseed(GHMM_RNG * r);
 %include wrapper_dmodel.i
 %include wrapper_dpmodel.i
 
-extern void free(void*);
-
-%inline %{
-        ghmm_dstate* dstate_array_alloc(size_t number)  { return calloc(number, sizeof(ghmm_dstate)); }
-        ghmm_dstate* dstate_array_getitem(ghmm_dstate* self, size_t index) { return self+index; }
-        void         dstate_array_setitem(ghmm_dstate* self, size_t index, ghmm_dstate value) { self[index] = value; }
-
-        ghmm_dpstate* dpstate_array_alloc(size_t number) { return calloc(number, sizeof(ghmm_dpstate)); }
-        ghmm_dpstate* dpstate_array_getitem(ghmm_dpstate* self, size_t index) { return self+index; }
-        void          dpstate_array_setitem(ghmm_dpstate* self, size_t index, ghmm_dpstate value) { self[index] = value; }
-%}
-
 %include wrapper_xmlfile.i
 
-// basic types arrays and matrices
+
+/*==========================================================================
+  ===== general functions, type arrays and matrices ======================== */
+extern void free(void*);
+
 %define ARRAY(type)
 %inline %{
         type* type ## _array_alloc(size_t length) { return malloc(length*sizeof(type)); }

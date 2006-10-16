@@ -1571,7 +1571,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = ghmmwrapper.dstate_array_getitem(states, i)
+                    state = ghmmwrapper.dstate_array_getRef(states, i)
                     # compute state order
                     if cmodel.M > 1:
                         order = math.log(len(B[i]), cmodel.M)-1
@@ -1683,7 +1683,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 #initialize states
                 for i in range(cmodel.N):
 
-                    state = ghmmwrapper.cstate_array_getitem(states, i)
+                    state = ghmmwrapper.cstate_array_getRef(states, i)
                     state.pi = pi[i]
                     state.M = 1
 
@@ -1759,7 +1759,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = ghmmwrapper.cstate_array_getitem(states,i)
+                    state = ghmmwrapper.cstate_array_getRef(states,i)
                     state.pi = pi[i]
 		    state.M = len(B[0][0])
 
@@ -1841,7 +1841,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = ghmmwrapper.cstate_array_getitem(states,i)
+                    state = ghmmwrapper.cstate_array_getRef(states,i)
                     state.pi = pi[i]
 		    state.M = len(B[0][0])
 
@@ -2423,20 +2423,20 @@ class HMM:
         return join(strout,'')
 
 
-def HMMwriteList(fileName,hmmList,fileType=GHMM_FILETYPE_SMO):
-    if(fileType==GHMM_FILETYPE_SMO):
-      if os.path.exists(fileName):
-        log.warning( "HMMwriteList: File " + str(fileName) + " already exists. New models will be appended.")
-      for model in hmmList:
-        model.write(fileName)
+def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
+    if (fileType == GHMM_FILETYPE_XML):
+        if os.path.exists(fileName):
+            log.warning( "HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
+        models = ghmmwrapper.cmodel_ptr_array_alloc(len(hmmList))
+        for i,model in enumerate(hmmList):
+            ghmmwrapper.cmodel_ptr_array_setitem(models, model.cmodel, i)
+        ghmmwrapper.ghmm_cmodel_xml_write(fileName, models, len(hmmList))
+        ghmmwrapper.free(models)
+    elif (fileType==GHMM_FILETYPE_SMO):
+        raise WrongFileType("the smo file format is deprecated, use xml instead")
     else:
-       if os.path.exists(fileName):
-         log.warning( "HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
-       models = ghmmwrapper.smodel_array(len(hmmList))
-       for i,model in enumerate(hmmList):
-         ghmmwrapper.set_smodel_ptr(models,model.cmodel,i)
-       ghmmwrapper.ghmm_c_xml_write(fileName,models,len(hmmList))
-       ghmmwrapper.free_smodel_array(models)
+        raise WrongFileType("unknown file format" + str(fileType))
+        
    
 class DiscreteEmissionHMM(HMM):
     """ HMMs with discrete emissions.
@@ -3398,9 +3398,6 @@ class GaussianEmissionHMM(HMM):
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
 
-        # Assignment of the C function names to be used with this model type
-        self.getStatePtr = ghmmwrapper.cstate_array_getitem
-
         # Baum Welch context, call baumWelchSetup to initalize
         self.BWcontext = ""
 
@@ -4229,18 +4226,18 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
         #initial training with Baum-Welch
         HMMList[i].baumWelch(SeqList[i], 3, 1e-9)
 
-    HMMArray = ghmmwrapper.dmodel_array_alloc(inplen)
-    SeqArray = ghmmwrapper.dseq_array_alloc(inplen)
+    HMMArray = ghmmwrapper.dmodel_ptr_array_alloc(inplen)
+    SeqArray = ghmmwrapper.dseq_ptr_array_alloc(inplen)
     
     for i in range(inplen):
-        ghmmwrapper.dmodel_array_setitem(HMMArray, i, HMMList[i].cmodel)
-        ghmmwrapper.dseq_array_setitem(SeqArray, i, SeqList[i].cseq)
+        ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
+        ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
     ghmmwrapper.ghmm_d_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
-        HMMList[i].cmodel = ghmmwrapper.dmodel_array_getitem(HMMArray, i)
-        SeqList[i].cseq   = ghmmwrapper.dseq_array_getitem(SeqArray, i)
+        HMMList[i].cmodel = ghmmwrapper.dmodel_ptr_array_getitem(HMMArray, i)
+        SeqList[i].cseq   = ghmmwrapper.dseq_ptr_array_getitem(SeqArray, i)
     
     ghmmwrapper.free(HMMArray)
     ghmmwraper.free(SeqArray)
@@ -4257,12 +4254,12 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
     
     single = [0.0] * inplen
 
-    HMMArray = ghmmwrapper.dmodel_array_alloc(inplen)
-    SeqArray = ghmmwrapper.dseq_array_alloc(inplen)
+    HMMArray = ghmmwrapper.dmodel_ptr_array_alloc(inplen)
+    SeqArray = ghmmwrapper.dseq_ptr_array_alloc(inplen)
 
     for i in range(inplen):
-        ghmmwrapper.dmodel_array_setitem(HMMArray, i, HMMList[i].cmodel)
-        ghmmwrapper.dseq_array_setitem(SeqArray, i, SeqList[i].cseq)
+        ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
+        ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
     retval = ghmmwrapper.ghmm_d_discrim_performance(HMMArray, SeqArray, inplen)
     
@@ -4548,12 +4545,7 @@ class PairHMM(HMM):
         self.maxSize = 10000
         self.model_type = self.cmodel.model_type  # model type
         self.background = None
-        
-        # Assignment of the C function names to be used with this model type
-        self.viterbiPropagateFunction = ghmmwrapper.ghmm_dp_viterbi_propagate
-        self.viterbiPropagateSegmentFunction = ghmmwrapper.ghmm_dp_viterbi_propagate_segment
-        self.getStatePtr = ghmmwrapper.get_pstateptr 
-        self.logPFunction = ghmmwrapper.ghmm_dp_viterbi_logp
+
         self.states = {}
 
     def __str__(self):
@@ -4639,8 +4631,7 @@ class PairHMM(HMM):
         length_ptr = ghmmwrapper.int_array_alloc(1)
         # call log_p and length will be passed by reference
         if (not (startX and startY and stopX and stopY and startState and stopState and startLogp)):
-            cpath = self.viterbiPropagateFunction(
-                self.cmodel,
+            cpath = self.cmodel.viterbi_propagate(
                 complexEmissionSequenceX.cseq,
                 complexEmissionSequenceY.cseq,
                 log_p_ptr, length_ptr,
@@ -4648,8 +4639,7 @@ class PairHMM(HMM):
         else:
             if (stopLogp == None):
                 stopLogp = 0
-            cpath = self.viterbiPropagateSegmentFunction(
-                self.cmodel,
+            cpath = self.cmodel.viterbi_propagate_segment(
                 complexEmissionSequenceX.cseq,
                 complexEmissionSequenceY.cseq,
                 log_p_ptr, length_ptr, self.maxSize,
@@ -4677,7 +4667,7 @@ class PairHMM(HMM):
         @return: log probability
         """
         cpath = ghmmhelper.list2int_array(path)
-        logP = self.logPFunction(self.cmodel, complexEmissionSequenceX.cseq,
+        logP = self.cmodel.viterbi_logP(complexEmissionSequenceX.cseq,
                                  complexEmissionSequenceY.cseq,
                                  cpath, len(path))
         ghmmwrapper.free(cpath)

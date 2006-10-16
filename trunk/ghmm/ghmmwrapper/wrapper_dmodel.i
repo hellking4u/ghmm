@@ -73,6 +73,9 @@ typedef struct {
         int getOutState(size_t index) { return self->out_id[index]; }
 }
 
+STRUCT_ARRAY(ghmm_dstate, dstate)
+REFERENCE_ARRAY(ghmm_dstate, dstate_ptr)
+
 
 /*==========================================================================
   ===== discrete emission models =========================================== */
@@ -232,10 +235,8 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
         void setSilent(size_t index, int value) { self->silent[index] = value; }
 }
 
-%inline %{
-        ghmm_dmodel* get_dmodel_ptr(ghmm_dmodel **mo_array, int index)
-                { return mo_array[index]; }
-%}
+STRUCT_ARRAY(ghmm_dmodel, dmodel)
+REFERENCE_ARRAY(ghmm_dmodel, dmodel_ptr)
 
 %newobject ghmm_dmodel_label_generate_sequences;
 %newobject ghmm_dmodel::label_generate_sequences;
