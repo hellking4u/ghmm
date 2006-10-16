@@ -199,3 +199,5 @@ extern int ghmm_dpmodel_free(ghmm_dpmodel *mo);
 
 STRUCT_ARRAY(ghmm_dpmodel, dpmodel)
 REFERENCE_ARRAY(ghmm_dpmodel, dpmodel_ptr)
+
+extern int ghmm_dpmodel_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);

@@ -2401,7 +2401,7 @@ class HMM:
         """ Writes HMM to file 'fileName'.
 
         """
-        self.fileWriteFunction(fileName,self.cmodel)
+        self.cmodel.write_xml(fileName)
 
     def printtypes(self, model_type):
         strout = []
@@ -4293,7 +4293,7 @@ class DiscretePairDistribution(DiscreteDistribution):
         self.offsetX = offsetX
         self.offsetY = offsetY
         self.prob_vector = None
-        self.pairIndexFunction = ghmmwrapper.ghmm_dp_pair
+        self.pairIndexFunction = ghmmwrapper.ghmm_dpmodel_pair
 
     def getPairIndex(self, charX, charY):
         """
