@@ -6,7 +6,9 @@
 
 SUBDIRS = .
 
-all: setup.py ghmmwrapper.i ghmm.py
+SWIG_INTERFACE_FILES = ghmmwrapper.i wrapper_cseq.i wrapper_dseq.i wrapper_dpseq.i wrapper_cmodel.i wrapper_dmodel.i wrapper_xmlfile.i
+
+all: setup.py ghmm.py ${SWIG_INTERFACE_FILES}
 	python setup.py build
 
 clean: setup.py

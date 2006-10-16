@@ -262,14 +262,14 @@ static int parseModelType(const char * data, unsigned int size) {
 
 
 /*===========================================================================*/
-static alphabet_s * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f) {
+static ghmm_alphabet * parseAlphabet(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f) {
 #define CUR_PROC "parseAlphabet"
   
   char * str;
   int M, code, error;
 
   xmlNodePtr symbol;
-  alphabet_s * alfa;
+  ghmm_alphabet * alfa;
 
   ARRAY_CALLOC(alfa, 1);
 
@@ -312,7 +312,7 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, int modelNo) {
+static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int modelNo) {
 #define CUR_PROC "parseBackground"
 
   int error, order;
@@ -361,7 +361,7 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, int * inDegree, int * outDegree, int modelNo) {
+static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDegree, int * outDegree, int modelNo) {
 #define CUR_PROC "parseState"
 
   int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox, label;
@@ -483,7 +483,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f, int * 
         }
         child = child->next;
       }
-      ghmm_c_state_alloc(f->model.c[modelNo]->s + state, M, inDegree[state], outDegree[state], f->model.c[modelNo]->cos);
+      ghmm_cstate_alloc(f->model.c[modelNo]->s + state, M, inDegree[state], outDegree[state], f->model.c[modelNo]->cos);
 
       f->model.c[modelNo]->s[state].desc = desc;
       f->model.c[modelNo]->s[state].M = M;
@@ -691,7 +691,7 @@ STOP:
 }
 
 /*===========================================================================*/
-static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, ghmm_fileData_s * f,
+static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f,
 				 int modelNo) {
 #define CUR_PROC "parseTransition"
 
@@ -756,7 +756,7 @@ STOP:
 
 /*===========================================================================*/
 static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
-				   ghmm_fileData_s * f, int modelNo) {
+				   ghmm_xmlfile* f, int modelNo) {
 #define CUR_PROC "parseTransition"
 
   int i, retval=-1;
@@ -826,7 +826,7 @@ STOP:
 
 
 /*===========================================================================*/
-static int parseHMM(ghmm_fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) {
+static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo) {
 #define CUR_PROC "parseHMM"
   char * estr;
   
@@ -849,8 +849,8 @@ static int parseHMM(ghmm_fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int mode
   int * bg_orders = NULL;
   double * * bg_ptr = NULL;
 
-  alphabet_s * alfa;
-  alphabet_s * * alphabets=NULL;
+  ghmm_alphabet * alfa;
+  ghmm_alphabet * * alphabets=NULL;
   int nrAlphabets=0;
 
   child = cur->children;
@@ -1010,7 +1010,7 @@ static int parseHMM(ghmm_fileData_s * f, xmlDocPtr doc, xmlNodePtr cur, int mode
     case GHMM_kDiscreteHMM:
       ARRAY_CALLOC(bg_orders, N);
       ARRAY_CALLOC(bg_ptr, N);
-      f->model.d[modelNo]->bp = ghmm_d_background_alloc(nrBackgrounds, M,
+      f->model.d[modelNo]->bp = ghmm_dbackground_alloc(nrBackgrounds, M,
 							bg_orders, bg_ptr);
       ARRAY_CALLOC(f->model.d[modelNo]->bp->name, N);
       f->model.d[modelNo]->bp->n = 0;
@@ -1080,8 +1080,8 @@ STOP:
 
 
 /*===========================================================================*/
-ghmm_fileData_s * ghmm_parseHMMDocument(const char *filename) {
-#define CUR_PROC "ghmm_parseHMMDocument"
+ghmm_xmlfile* ghmm_xmlfile_parse(const char *filename) {
+#define CUR_PROC "ghmm_xmlfile_parse"
 
   xmlParserCtxtPtr ctxt; /* the parser context */
   xmlDocPtr doc; /* the resulting document tree */
@@ -1090,10 +1090,10 @@ ghmm_fileData_s * ghmm_parseHMMDocument(const char *filename) {
   int error;
 
   char * estr;
-  ghmm_fileData_s * filedata = NULL;
+  ghmm_xmlfile* filedata = NULL;
 
   /* validate the document */
-  if (!ghmm_validateHMMDocument(filename)) {
+  if (!ghmm_xmlfile_validate(filename)) {
     estr = ighmm_mprintf(NULL, 0, "Failed to validate document %s", filename);
     GHMM_LOG(LERROR, estr);
     m_free(estr);
@@ -1278,8 +1278,8 @@ static int validateDynamicDTD(const char* filename) {
 }
 
 /*===========================================================================*/
-int ghmm_validateHMMDocument(const char *filename) {
-#define CUR_PROC "ghmm_validateHMMDocument"
+int ghmm_xmlfile_validate(const char *filename) {
+#define CUR_PROC "ghmm_xmlfile_validate"
   return (validateFixedDTD(filename) || validateDynamicDTD(filename));
 #undef CUR_PROC
 }

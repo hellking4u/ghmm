@@ -87,7 +87,7 @@ static int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
   /* first allocate memory for matrix_b */
   ARRAY_MALLOC (*matrix_b, mo->N);
   for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC ((*matrix_b)[i], ghmm_d_ipow (mo, mo->M, mo->order[i] + 1));
+    ARRAY_CALLOC ((*matrix_b)[i], ghmm_ipow (mo, mo->M, mo->order[i] + 1));
 
   /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
   ARRAY_CALLOC (*matrix_a, mo->N * mo->N);
@@ -110,7 +110,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    computes matrices of n and m variables (expected values for how often a
    certain parameter from A or B is used)
    computes Baum-Welch variables implicit 
-   @return                 nothing
+   @return                 0/-1 success/error
    @param mo:              pointer to a ghmm_dmodel
    @param alpha:           matrix of forward variables
    @param backward:        matrix of backward variables
@@ -121,12 +121,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
  */
-int ghmm_dl_gradient_expectations (ghmm_dmodel * mo, double **alpha,
+int ghmm_dmodel_label_gradient_expectations (ghmm_dmodel* mo, double **alpha,
                                      double **beta, double *scale, int *seq,
                                      int seq_len, double **matrix_b,
                                      double *matrix_a, double *vec_pi)
 {
-#define CUR_PROC "ghmm_dl_gradient_expectations"
+#define CUR_PROC "ghmm_dmodel_label_gradient_expectations"
 
   int h, i, j, t;
 
@@ -139,7 +139,7 @@ int ghmm_dl_gradient_expectations (ghmm_dmodel * mo, double **alpha,
   for (i = 0; i < mo->N; i++) {
     for (j = 0; j < mo->N; j++)
       matrix_a[i * mo->N + j] = 0;
-    size = ghmm_d_ipow (mo, mo->M, mo->order[i] + 1);
+    size = ghmm_ipow (mo, mo->M, mo->order[i] + 1);
     for (h = 0; h < size; h++)
       matrix_b[i][h] = 0;
   }
@@ -216,15 +216,15 @@ static double compute_performance (ghmm_dmodel * mo, ghmm_dseq * sq)
     seq_len = sq->seq_len[k];
 
     if (-1 !=
-        ghmm_dl_logp (mo, sq->seq[k], sq->state_labels[k], seq_len,
+        ghmm_dmodel_label_logp (mo, sq->seq[k], sq->state_labels[k], seq_len,
                          &log_p)) {
       success = 1;
       log_p_sum += log_p;
 
-      if (-1 != ghmm_d_logp (mo, sq->seq[k], seq_len, &log_p))
+      if (-1 != ghmm_dmodel_logp (mo, sq->seq[k], seq_len, &log_p))
         log_p_sum -= log_p;
       else {
-        printf ("ghmm_d_logp error in sequence %d, length: %d\n", k,
+        printf ("ghmm_dmodel_logp error in sequence %d, length: %d\n", k,
                 seq_len);
         success = 0;
       }
@@ -286,31 +286,31 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
       continue;
 
     /* calculate forward and backward variables without labels: */
-    if (-1 == ghmm_d_forward (mo, sq->seq[k], seq_len, alpha, scale, &log_p)) {
+    if (-1 == ghmm_dmodel_forward (mo, sq->seq[k], seq_len, alpha, scale, &log_p)) {
       printf ("forward error!\n");
       goto FREE;
     }
 
-    if (-1 == ghmm_d_backward (mo, sq->seq[k], seq_len, beta, scale)) {
+    if (-1 == ghmm_dmodel_backward (mo, sq->seq[k], seq_len, beta, scale)) {
       printf ("backward error!\n");
       goto FREE;
     }
 
     /* compute n matrices (no labels): */
     if (-1 ==
-        ghmm_dl_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
+        ghmm_dmodel_label_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
                                          seq_len, m_b, m_a, m_pi))
       printf ("Error in sequence %d, length %d (no labels)\n", k, seq_len);
 
     /* calculate forward and backward variables with labels: */
     if (-1 ==
-        ghmm_dl_forward (mo, sq->seq[k], sq->state_labels[k], seq_len,
+        ghmm_dmodel_label_forward (mo, sq->seq[k], sq->state_labels[k], seq_len,
                             alpha, scale, &log_p)) {
       printf ("forward labels error!\n");
       goto FREE;
     }
     if (-1 ==
-        ghmm_dl_backward (mo, sq->seq[k], sq->state_labels[k], seq_len,
+        ghmm_dmodel_label_backward (mo, sq->seq[k], sq->state_labels[k], seq_len,
                              beta, scale, &log_p)) {
       printf ("backward labels error!\n");
       goto FREE;
@@ -318,7 +318,7 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
 
     /* compute m matrices (labels): */
     if (-1 ==
-        ghmm_dl_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
+        ghmm_dmodel_label_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
                                          seq_len, m_b, m_a, m_pi))
       printf ("Error in sequence %d, length %d (with labels)\n", k, seq_len);
 
@@ -397,7 +397,7 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
         continue;
 
       /* update */
-      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
+      size = ghmm_ipow (mo, mo->M, mo->order[i]);
       for (h = 0; h < size; h++) {
         b_block_sum = 0;
         for (g = 0; g < mo->M; g++) {
@@ -429,7 +429,7 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
 
     /* restore "tied_to" property */
     if (mo->model_type & GHMM_kTiedEmissions)
-      ghmm_d_update_tied_groups (mo);
+      ghmm_dmodel_update_tie_groups (mo);
 
   FREE:
     ighmm_reestimate_free_matvek (alpha, beta, scale, seq_len);
@@ -449,31 +449,31 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
    Trains the ghmm_dmodel with a set of annotated sequences till convergence using
    gradient descent.
    Model must not have silent states. (checked in Python wrapper)
-   @return            0/-1 success/error
+   @return            trained model/NULL pointer success/error
    @param mo:         pointer to a ghmm_dmodel
    @param sq:         struct of annotated sequences
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int no_steps)
+ghmm_dmodel* ghmm_dmodel_label_gradient_descent (ghmm_dmodel* mo, ghmm_dseq * sq, double eta, int no_steps)
 {
-#define CUR_PROC "ghmm_dl_gradient_descent"
+#define CUR_PROC "ghmm_dmodel_label_gradient_descent"
 
   char * str;
   int runs = 0;
   double cur_perf, last_perf;
   ghmm_dmodel *last;
 
-  last = ghmm_d_copy (*mo);
+  last = ghmm_dmodel_copy(mo);
   last_perf = compute_performance (last, sq);
 
   while (eta > GHMM_EPS_PREC && runs < no_steps) {
     runs++;
-    if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
-      ghmm_d_free (&last);
-      return -1;
+    if (-1 == gradient_descent_onestep(mo, sq, eta)) {
+      ghmm_dmodel_free(&last);
+      return NULL;
     }
-    cur_perf = compute_performance (*mo, sq);
+    cur_perf = compute_performance(mo, sq);
 
     if (last_perf < cur_perf) {
       /* if model is degenerated, lower eta and try again */
@@ -481,14 +481,14 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
         str = ighmm_mprintf(NULL, 0, "current performance = %g", cur_perf);
 	GHMM_LOG(LINFO, str);
 	m_free(str);
-        ghmm_d_free (mo);
-        *mo = ghmm_d_copy (last);
+        ghmm_dmodel_free(&mo);
+        mo = ghmm_dmodel_copy(last);
         eta *= .5;
       }
       else {
         /* Improvement insignificant, assume convergence */
         if (fabs (last_perf - cur_perf) < cur_perf * (-1e-8)) {
-          ghmm_d_free (&last);
+          ghmm_dmodel_free(&last);
           str = ighmm_mprintf(NULL, 0, "convergence after %d steps.", runs);
 	  GHMM_LOG(LINFO, str);
 	  m_free(str);
@@ -503,8 +503,8 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
 	}
 
         /* significant improvement, next iteration */
-        ghmm_d_free (&last);
-        last = ghmm_d_copy (*mo);
+        ghmm_dmodel_free(&last);
+        last = ghmm_dmodel_copy(mo);
         last_perf = cur_perf;
         eta *= 1.07;
       }
@@ -522,11 +522,11 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
       /* try another training step */
       runs++;
       eta *= .85;
-      if (-1 == gradient_descent_onestep (*mo, sq, eta)) {
-        ghmm_d_free (&last);
-        return -1;
+      if (-1 == gradient_descent_onestep(mo, sq, eta)) {
+        ghmm_dmodel_free(&last);
+        return NULL;
       }
-      cur_perf = compute_performance (*mo, sq);
+      cur_perf = compute_performance (mo, sq);
       str = ighmm_mprintf(NULL, 0, "Performance: %g\t ?Improvement: %g\t step %d", cur_perf,
               cur_perf - last_perf, runs);
       GHMM_LOG(LINFO, str);
@@ -534,22 +534,22 @@ int ghmm_dl_gradient_descent (ghmm_dmodel ** mo, ghmm_dseq * sq, double eta, int
 
       /* improvement, save and proceed with next iteration */
       if (last_perf < cur_perf && cur_perf < 0.0) {
-        ghmm_d_free (&last);
-        last = ghmm_d_copy (*mo);
+        ghmm_dmodel_free (&last);
+        last = ghmm_dmodel_copy(mo);
         last_perf = cur_perf;
       }
       /* still no improvement, revert to saved model */
       else {
         runs--;
-        ghmm_d_free (mo);
-        *mo = ghmm_d_copy (last);
+        ghmm_dmodel_free(&mo);
+        mo = ghmm_dmodel_copy(last);
         eta *= .9;
       }
     }
   }
 
-  ghmm_d_free (&last);
-  return 0;
+  ghmm_dmodel_free(&last);
+  return mo;
 
 #undef CUR_PROC
 }

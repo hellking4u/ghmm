@@ -12,7 +12,7 @@
 int main(int argc, char **argv) {
 
   char *docname, *writename;
-  ghmm_fileData_s * f;
+  ghmm_xmlfile* f;
   int i;
   int mo_number = 0;
   ghmm_cmodel ** smo;
@@ -25,14 +25,14 @@ int main(int argc, char **argv) {
 
   docname = argv[1];
 
-  smo = ghmm_c_read(docname, &mo_number);
+  smo = ghmm_cmodel_read(docname, &mo_number);
 
   printf("Models %d", mo_number);
   
   /* simple test */
   if (smo) {
     writename = argv[2];
-    ghmm_c_xml_write(writename,smo,mo_number);
+    ghmm_cmodel_xml_write(writename,smo,mo_number);
   }
 
 

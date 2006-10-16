@@ -60,7 +60,7 @@ static int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double omega,
   scale[0] = 0.0;
   if (b == NULL){
     for (i = 0; i < smo->N; i++) {
-      alpha_1[i] = smo->s[i].pi * ghmm_c_calc_b (smo, i, omega);
+      alpha_1[i] = smo->s[i].pi * ghmm_cmodel_calc_b (smo, i, omega);
       scale[0] += alpha_1[i];
     }
   }
@@ -95,10 +95,10 @@ static double sfoba_stepforward (ghmm_cstate * s, double *alpha_t, int osc,
 
 
 /*============================================================================*/
-int ghmm_c_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
+int ghmm_cmodel_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
                    double **alpha, double *scale, double *log_p)
 {
-# define CUR_PROC "ghmm_c_forward"
+# define CUR_PROC "ghmm_cmodel_forward"
   int res = -1;
   int i, t = 0, osc = 0;
   double c_t;
@@ -140,7 +140,7 @@ int ghmm_c_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
       if (b == NULL) {
         for (i = 0; i < smo->N; i++) {
           alpha[t][i] = sfoba_stepforward (&smo->s[i], alpha[t - 1], osc,
-                                           ghmm_c_calc_b (smo, i, O[t]));
+                                           ghmm_cmodel_calc_b (smo, i, O[t]));
           scale[t] += alpha[t][i];
         }
       }
@@ -193,13 +193,13 @@ STOP:
   *log_p = (double) -DBL_MAX;
   return (res);
 # undef CUR_PROC
-}                               /* ghmm_c_forward */
+}                               /* ghmm_cmodel_forward */
 
 /*============================================================================*/
-int ghmm_c_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
+int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
                     double **beta, const double *scale)
 {
-# define CUR_PROC "ghmm_c_backward"
+# define CUR_PROC "ghmm_cmodel_backward"
   double *beta_tmp, sum, c_t;
   int i, j, j_id, t, osc;
   int res = -1;
@@ -248,7 +248,7 @@ int ghmm_c_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
         sum = 0.0;
         for (j = 0; j < smo->s[i].out_states; j++) {
           j_id = smo->s[i].out_id[j];
-          sum += smo->s[i].out_a[osc][j] * ghmm_c_calc_b (smo, j_id, O[t + 1])
+          sum += smo->s[i].out_a[osc][j] * ghmm_cmodel_calc_b (smo, j_id, O[t + 1])
             * beta_tmp[j_id];
         }
         beta[t][i] = sum;
@@ -297,12 +297,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
-}                               /* ghmm_c_backward */
+}                               /* ghmm_cmodel_backward */
 
 /*============================================================================*/
-int ghmm_c_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
+int ghmm_cmodel_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
 {
-# define CUR_PROC "ghmm_c_logp"
+# define CUR_PROC "ghmm_cmodel_logp"
   int res = -1;
   double **alpha, *scale = NULL;
 
@@ -313,7 +313,7 @@ int ghmm_c_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
   }
   ARRAY_CALLOC (scale, T);
   /* run forward alg. */
-  if (ghmm_c_forward (smo, O, T, NULL, alpha, scale, log_p) == -1) {
+  if (ghmm_cmodel_forward (smo, O, T, NULL, alpha, scale, log_p) == -1) {
     /* GHMM_LOG_QUEUED(LCONVERTED); */
     goto STOP;
   }
@@ -324,4 +324,4 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (scale);
   return (res);
 # undef CUR_PROC
-}                               /* ghmm_c_logp */
+}                               /* ghmm_cmodel_logp */

@@ -69,7 +69,7 @@ extern "C" {
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_d_forward (ghmm_dmodel * mo, const int *O, int length, double **alpha,
+  int ghmm_dmodel_forward (ghmm_dmodel * mo, const int *O, int length, double **alpha,
                     double *scale, double *log_p);
 
 /** 
@@ -83,7 +83,7 @@ extern "C" {
   @param scale:   scale factors
   @return 0 for success, -1 for error
   */
-  int ghmm_d_backward (ghmm_dmodel * mo, const int *O, int len, double **beta,
+  int ghmm_dmodel_backward (ghmm_dmodel * mo, const int *O, int len, double **beta,
                      const double *scale);
 
 /** 
@@ -98,7 +98,7 @@ extern "C" {
   @param log\_p:  log probability
   @return 0 for success, -1 for error
   */
-  int ghmm_d_backward_termination (ghmm_dmodel *mo, const int *O, int len,
+  int ghmm_dmodel_backward_termination (ghmm_dmodel *mo, const int *O, int len,
 				 double **beta, double *scale, double *log_p);
 
 /**
@@ -112,7 +112,7 @@ extern "C" {
   @param log\_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_d_logp (ghmm_dmodel * mo, const int *O, int len, double *log_p);
+  int ghmm_dmodel_logp (ghmm_dmodel * mo, const int *O, int len, double *log_p);
 
 
 /** Forward-Algorithm (lean version).
@@ -123,25 +123,25 @@ extern "C" {
   @param log\_p:  log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_d_forward_lean (ghmm_dmodel * mo, const int *O, int len, double *log_p);
+  int ghmm_dmodel_forward_lean (ghmm_dmodel * mo, const int *O, int len, double *log_p);
 
 
 /* Labeled HMMs */
 
-  int ghmm_dl_forward (ghmm_dmodel * mo, const int *O, const int *label, int len,
+  int ghmm_dmodel_label_forward (ghmm_dmodel * mo, const int *O, const int *label, int len,
                           double **alpha, double *scale, double *log_p);
-  int ghmm_dl_logp (ghmm_dmodel * mo, const int *O, const int *label, int len,
+  int ghmm_dmodel_label_logp (ghmm_dmodel * mo, const int *O, const int *label, int len,
                        double *log_p);
 
 
-  int ghmm_dl_backward (ghmm_dmodel * mo, const int *O, const int *label,
+  int ghmm_dmodel_label_backward (ghmm_dmodel * mo, const int *O, const int *label,
                            int len, double **beta, double *scale,
                            double *log_p);
 
 
 
-  int ghmm_d_forward_init (ghmm_dmodel * mo, double *alpha_1, int symb, double *scale);
-  double ghmm_d_forward_step (ghmm_dstate * s, double *alpha_t, const double b_symb);
+  int ghmm_dmodel_forward_init (ghmm_dmodel * mo, double *alpha_1, int symb, double *scale);
+  double ghmm_dmodel_forward_step (ghmm_dstate * s, double *alpha_t, const double b_symb);
 
 /*@} (Doc++-Group: foba) */
 

@@ -100,8 +100,8 @@ int ghmm_scluster_hmm (char *argv[])
   double eps_bw, q;
   int max_iter_bw;
   
-    /* ghmm_c_baum_welch needs this structure (introduced for parallel mode) */ 
-    ghmm_c_baum_welch_context * cs;
+    /* ghmm_cmodel_baum_welch needs this structure (introduced for parallel mode) */ 
+    ghmm_cmodel_baum_welch_context * cs;
   
 #if POUT == 0
   int *return_value;
@@ -144,7 +144,7 @@ int ghmm_scluster_hmm (char *argv[])
     goto STOP;
   }
   sqd = sqd_vec[0];
-  cl.smo = ghmm_c_read (smo_file, &cl.smo_number);
+  cl.smo = ghmm_cmodel_read (smo_file, &cl.smo_number);
   if (!cl.smo) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
@@ -170,7 +170,7 @@ int ghmm_scluster_hmm (char *argv[])
     goto STOP;
   }
   
-    /*if (ghmm_c_check_compatibility(cl.smo, cl.smo_number)) { 
+    /*if (ghmm_cmodel_check_compatibility(cl.smo, cl.smo_number)) { 
        GHMM_LOG_QUEUED(LCONVERTED); goto STOP; 
        } */ 
     ARRAY_CALLOC (smo_changed, cl.smo_number);
@@ -395,12 +395,12 @@ int ghmm_scluster_hmm (char *argv[])
         if (cs[i].sqd == NULL)
           ighmm_mes (MES_WIN, "cluster %d empty, no reestimate!\n", i);
         
-        else if (ghmm_c_baum_welch (&cs[i]) == -1) {
+        else if (ghmm_cmodel_baum_welch (&cs[i]) == -1) {
           str = ighmm_mprintf (NULL, 0, "%d.reestimate false, smo[%d]\n", iter, i);
           GHMM_LOG(LCONVERTED, str);
           m_free (str);
           
-            /* ghmm_d_print(stdout, cl.mo[i]); */ 
+            /* ghmm_dmodel_print(stdout, cl.mo[i]); */ 
             goto STOP;
         }
       }
@@ -494,7 +494,7 @@ int ghmm_scluster_t_free (scluster_t * scl)
   if (!scl)
     return (0);
   for (i = 0; i <= scl->smo_number; i++) {
-    ghmm_c_free (&(scl->smo[i]));
+    ghmm_cmodel_free (&(scl->smo[i]));
     ghmm_cseq_free (&(scl->smo_seq[i]));
   }
   printf ("hier1\n");
@@ -523,7 +523,7 @@ int ghmm_scluster_out (scluster_t * cl, ghmm_cseq * sqd, FILE * outfile,
   /*fprintf(outfile, "\nFinal Models:\n");
     for (i = 0; i < cl->smo_number; i++) {
     fprintf(outfile, "smodel[%d]:\n", i);
-    ghmm_c_print(outfile, cl->smo[i]);
+    ghmm_cmodel_print(outfile, cl->smo[i]);
     fprintf(outfile, "Sequences of smodel[%d] (# %ld, total weight %.0f)\n",
     i, cl->smo_seq[i]->seq_number, 
     cl->smo_seq[i]->total_w);*/
@@ -547,7 +547,7 @@ sprintf (filename, "%s.smo", out_filename);
   ghmm_scluster_print_header (out_model, argv);
   for (i = 0; i < cl->smo_number; i++) {
     fprintf (out_model, "#trained smodel[%d]:\n", i);
-    ghmm_c_print (out_model, cl->smo[i]);
+    ghmm_cmodel_print (out_model, cl->smo[i]);
   }
   fclose (out_model);
   
@@ -711,7 +711,7 @@ int ghmm_scluster_avoid_empty_smodel (ghmm_cseq * sqd, scluster_t * cl)
           j = m_int (GHMM_RNG_UNIFORM (RNG) * (sqd->seq_number - 1));
         
           /* If it's not possible to produce a sequence for an empty model: Quit */ 
-          if (ghmm_c_logp
+          if (ghmm_cmodel_logp
               (cl->smo[i], sqd->seq[j], sqd->seq_len[j], &log_p_plus) == -1)
           continue;
         if (CLASSIFY == 1) {
@@ -731,11 +731,11 @@ int ghmm_scluster_avoid_empty_smodel (ghmm_cseq * sqd, scluster_t * cl)
         sqd->seq_label[j] = i;
         
           /* smo_Z_MD update */ 
-          if (ghmm_c_logp
+          if (ghmm_cmodel_logp
               (cl->smo[i_old], sqd->seq[j], sqd->seq_len[j],
                &log_p_minus) == -1)
            {
-          GHMM_LOG(LCONVERTED, "ghmm_c_logp returns -1!\n");
+          GHMM_LOG(LCONVERTED, "ghmm_cmodel_logp returns -1!\n");
           goto STOP;
           };
         cl->smo_Z_MD[i_old] -= sqd->seq_w[j] * log_p_minus;
@@ -836,13 +836,13 @@ int ghmm_scluster_best_model (scluster_t * cl, long seq_id, double **all_log_p,
 
 
 /*============================================================================*/ 
-void ghmm_scluster_prob (ghmm_c_baum_welch_context * cs)
+void ghmm_scluster_prob (ghmm_cmodel_baum_welch_context * cs)
 {
   int i;
   
     /*printf("seq_num = %d\n", cs->sqd->seq_number);*/
     for (i = 0; i < cs->sqd->seq_number; i++)
-    if (ghmm_c_logp
+    if (ghmm_cmodel_logp
          (cs->smo, cs->sqd->seq[i], cs->sqd->seq_len[i],
           &(cs->logp[i])) == -1)
       cs->logp[i] = (double) GHMM_PENALTY_LOGP;     /*  Penalty costs */

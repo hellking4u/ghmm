@@ -274,7 +274,7 @@ static int sreestimate_precompute_b (ghmm_cmodel * smo, double *O, int T,
   for (t = 0; t < T; t++)
     for (i = 0; i < smo->N; i++)
       for (m = 0; m < smo->s[i].M; m++) {
-        b[t][i][m] = ghmm_c_calc_cmbm (smo, i, m, O[t]);
+        b[t][i][m] = ghmm_cmodel_calc_cmbm (smo, i, m, O[t]);
         b[t][i][smo->s[i].M] += b[t][i][m];
       }
   return (0);
@@ -588,8 +588,8 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
     }
 
 
-    if ((ghmm_c_forward (smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
-        (ghmm_c_backward (smo, O[k], T_k, b, beta, scale) == -1)) {
+    if ((ghmm_cmodel_forward (smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
+        (ghmm_cmodel_backward (smo, O[k], T_k, b, beta, scale) == -1)) {
 #if MCI
       ighmm_mes (MESCONTR, "O(%2d) can't be build from smodel smo!\n", k);
 #endif
@@ -751,10 +751,10 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
          }
      }  
    
-    ghmm_c_print(stdout,smo); */
+    ghmm_cmodel_print(stdout,smo); */
 
     
-    if (ghmm_c_check(smo) == -1) { 
+    if (ghmm_cmodel_check(smo) == -1) { 
         GHMM_LOG_QUEUED(LCONVERTED); 
         printf("Model invalid !\n\n");
         
@@ -787,10 +787,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-/* int ghmm_c_baum_welch(ghmm_cmodel *smo, ghmm_cseq *sqd) {*/
-int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
+/* int ghmm_cmodel_baum_welch(ghmm_cmodel *smo, ghmm_cseq *sqd) {*/
+int ghmm_cmodel_baum_welch (ghmm_cmodel_baum_welch_context * cs)
 {
-# define CUR_PROC "ghmm_c_baum_welch"
+# define CUR_PROC "ghmm_cmodel_baum_welch"
   int i, j, n, valid, valid_old, max_iter_bw;
   double log_p, log_p_old, diff, eps_iter_bw;
   local_store_t *r = NULL;
@@ -823,7 +823,7 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
   max_iter_bw = m_min (GHMM_MAX_ITER_BW, cs->max_iter);
   eps_iter_bw = m_max (GHMM_EPS_ITER_BW, cs->eps);
 
-  /*printf("  *** ghmm_c_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );*/
+  /*printf("  *** ghmm_cmodel_baum_welch  %d,  %f \n",max_iter_bw,eps_iter_bw  );*/
 
   while (n <= max_iter_bw) {
     valid = sreestimate_one_step (cs->smo, r, cs->sqd->seq_number,
@@ -891,14 +891,14 @@ int ghmm_c_baum_welch (ghmm_c_baum_welch_context * cs)
   *cs->logp = log_p;
 
   /* test plausibility of new parameters */
-  /*  if (ghmm_c_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+  /*  if (ghmm_cmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   sreestimate_free (&r, cs->smo->N);
   return (0);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sreestimate_free (&r, cs->smo->N);
   return (-1);
 # undef CUR_PROC
-}                               /* ghmm_c_baum_welch */
+}                               /* ghmm_cmodel_baum_welch */
 
 #undef ACC
 #undef MCI

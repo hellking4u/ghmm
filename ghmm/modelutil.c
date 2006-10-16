@@ -132,9 +132,9 @@ static void model_DFSVisit (ghmm_dmodel * c_model, int nodev, int *timevisit,
     GRAY EDGE  => edges that form cycles which must be removed 
                   before running topological sort
 */
-int **ghmm_d_DFS (ghmm_dmodel * c_model)
+int **ghmm_dmodel_DFS (ghmm_dmodel * c_model)
 {
-#define CUR_PROC "ghmm_d_DFS"
+#define CUR_PROC "ghmm_dmodel_DFS"
   int i, j, initials=0;
   int timevisit = 0;
   int *colors;
@@ -225,9 +225,9 @@ static void __topological_sort (ghmm_dmodel * c_model, local_store_topo * v,
 }
 
 /*----------------------------------------------------------------------------*/
-void ghmm_d_topo_order (ghmm_dmodel * mo)
+void ghmm_dmodel_order_topological (ghmm_dmodel * mo)
 {
-#define CUR_PROC "ghmm_d_topo_order"
+#define CUR_PROC "ghmm_dmodel_topo_order"
   int i;
   local_store_topo *v;
   int **edge_cls;
@@ -238,7 +238,7 @@ void ghmm_d_topo_order (ghmm_dmodel * mo)
     goto STOP;
   }
 
-  edge_cls = ghmm_d_DFS (mo);
+  edge_cls = ghmm_dmodel_DFS (mo);
   __topological_sort (mo, v, edge_cls);
   mo->topo_order_length = v->topo_order_length;
 

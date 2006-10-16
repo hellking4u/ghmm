@@ -63,7 +63,7 @@ extern "C" {
   @param T       sequence length
   @param log_p   log(p) of the sequence using the vitberbi path
   */
-  int *ghmm_c_viterbi (ghmm_cmodel * smo, double *o, int T, double *log_p);
+  int *ghmm_cmodel_viterbi (ghmm_cmodel * smo, double *o, int T, double *log_p);
 
 /* #endif *//* __EXPERIMENTAL__ == 3 */
 

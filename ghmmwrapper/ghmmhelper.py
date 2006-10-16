@@ -4,7 +4,7 @@
 #*       GHMM version __VERSION__, see http://ghmm.org
 #*
 #*       Filename: ghmmhelper.py
-#*       Authors:  Benjamin Georgi
+#*       Authors:  Benjamin Georgi, Janne Grunau
 #*
 #*       Copyright (C) 1998-2004 Alexander Schliep
 #*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
@@ -40,97 +40,88 @@ from modhmmer import *
 from random import *
 
 
-def list2arrayd(lisems):
+def list2double_array(lisems):
     "converts python list to C double array"
-    arrems = ghmmwrapper.double_array(len(lisems))
+    arrems = ghmmwrapper.double_array_alloc(len(lisems))
     for i in range(len(lisems)):
-        ghmmwrapper.set_arrayd(arrems,i,lisems[i])
+        ghmmwrapper.double_array_setitem(arrems, i, lisems[i])
     return arrems
 
-def list2arrayint(lisems):
+def list2int_array(lisems):
     "converts python list to C int array"
-    arrems = ghmmwrapper.int_array(len(lisems))
+    arrems = ghmmwrapper.int_array_alloc(len(lisems))
     for i in range(len(lisems)):
-        ghmmwrapper.set_arrayint(arrems,i,lisems[i])
+        ghmmwrapper.int_array_setitem(arrems, i, lisems[i])
     return arrems
 
 
-def arrayd2list(carray,length):
+def double_array2list(carray,length):
     "converts C double array to python list."
     l = []
     for i in range(length):
-        l.append(ghmmwrapper.get_arrayd(carray,i))
+        l.append(ghmmwrapper.double_array_getitem(carray, i))
     return l
     
-def arrayint2list(carray,length):
+def int_array2list(carray,length):
     "converts C double array to python list."
     l = []
     for i in range(length):
-        l.append(ghmmwrapper.get_arrayint(carray,i))
+        l.append(ghmmwrapper.int_array_getitem(carray, i))
     return l
     
-def matrixd2list(cmatrix,row,col):
+def double_matrix2list(cmatrix, row, col):
     llist = []
     for i in range(row):
         llist.append([])    
      
     for i in range(row):
         for j in range(col):
-            llist[i].append(ghmmwrapper.get_2d_arrayd(cmatrix,i,j) )
-    return llist       
-        
+            llist[i].append(ghmmwrapper.double_matrix_getitem(cmatrix, i, j))
+    return llist
 
 
-def list2matrixd(matrix):
+def list2double_matrix(matrix):
     """ Allocation and initialization of a double** based on a   
         two dimensional Python list (list of lists). The number of elements
         in each column can vary.
     """
-    rows = len(matrix)
+    cols = len(matrix)
     
-    seq = ghmmwrapper.double_2d_array_nocols(rows)
+    seq = ghmmwrapper.double_matrix_alloc_row(cols)
     col_len = []
-    for i in range(rows):
-        l = len(matrix[i])
-        col = ghmmwrapper.double_array(l)
-        for j in range(l):
-            ghmmwrapper.set_arrayd(col,j,matrix[i][j]) 
-        
-        ghmmwrapper.set_2d_arrayd_col(seq,i,col)
-        col_len.append(l)
+    for i in range(cols):
+        col = list2double_array(matrix[i])
+        ghmmwrapper.double_matrix_set_col(seq, i, col)
+        col_len.append(len(matrix[i]))
 
-    return (seq,col_len)    
+    return (seq, col_len)
 
-def list2matrixint(matrix):
+def list2int_matrix(matrix):
     """ Allocation and initialization of an int** based on a   
         two dimensional Python list (list of lists). The number of elements
         in each column can vary.
     """
     rows = len(matrix)
     
-    seq = ghmmwrapper.int_2d_array_nocols(rows)
+    seq = ghmmwrapper.int_matrix_alloc_row(rows)
     col_len = []
     for i in range(rows):
-        l = len(matrix[i])
-        col = ghmmwrapper.int_array(l)
-        for j in range(l):
-            ghmmwrapper.set_arrayint(col,j,matrix[i][j]) 
-        
-        ghmmwrapper.set_2d_arrayint_col(seq,i,col)
-        col_len.append(l)
+        col = list2int_array(matrix[i])
+        ghmmwrapper.int_matrix_set_col(seq, i, col)
+        col_len.append(len(matrix[i]))
 
-    return (seq,col_len)    
+    return (seq, col_len)
 
-def matrixint2list(cmatrix,row,col):
+
+def int_matrix2list(cmatrix,row,col):
     llist = []
     for i in range(row):
         llist.append([])    
      
     for i in range(row):
         for j in range(col):
-            llist[i].append(ghmmwrapper.get_2d_arrayint(cmatrix,i,j) )
-    return llist       
-        
+            llist[i].append(ghmmwrapper.int_matrix_getitem(cmatrix,i,j) )
+    return llist
 
 
 def extract_out(lisprobs):
@@ -147,13 +138,13 @@ def extract_out(lisprobs):
     for i in range(len(lisprobs)):
         if lisprobs[i]!=0:
             lis.append(i)
-    trans_id = ghmmwrapper.int_array(len(lis))
-    trans_prob = ghmmwrapper.double_array(len(lis))
+    trans_id = ghmmwrapper.int_array_alloc(len(lis))
+    trans_prob = ghmmwrapper.double_array_alloc(len(lis))
     for i in range(len(lis)):
-        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
-        ghmmwrapper.set_arrayd(trans_prob,i,lisprobs[lis[i]])
-    return [len(lis),trans_id,trans_prob]
+        ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
+        ghmmwrapper.double_array_setitem(trans_prob, i, lisprobs[lis[i]])
 
+    return [len(lis),trans_id,trans_prob]
 
 
 #def extract_out_probs(lisprobs,cos):
@@ -172,7 +163,7 @@ def extract_out(lisprobs):
 #            if lisprobs[j][i] != 0 and i not in lis:
 #                lis.append(i)
 #    print "lis: ", lis            
-#    trans_id   = ghmmwrapper.int_array(len(lis))
+#    trans_id   = ghmmwrapper.int_array_alloc(len(lis))
 #    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
     # creating list with positive probabilities
 #    for k in range(cos):
@@ -183,7 +174,7 @@ def extract_out(lisprobs):
 #    print trans_prob
     # initializing c state index array
 #    for i in range(len(lis)):
-#        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
+#        ghmmwrapper.int_array_setitem(trans_id,i,lis[i])
 #    return [len(lis),trans_id,trans_prob]
 
 def extract_out_cos(transmat, cos, state):
@@ -206,17 +197,17 @@ def extract_out_cos(transmat, cos, state):
     #lis.sort()
     #print "lis: ", lis            
     
-    trans_id   = ghmmwrapper.int_array(len(lis))
-    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
+    trans_id   = ghmmwrapper.int_array_alloc(len(lis))
+    probsarray = ghmmwrapper.double_matrix_alloc(cos, len(lis)) # C-function
     
     # creating list with positive probabilities
     for k in range(cos):
         for j in range(len(lis)):
-            ghmmwrapper.set_2d_arrayd(probsarray,k,j, transmat[k][state][lis[j]])
+            ghmmwrapper.double_matrix_setitem(probsarray, k, j, transmat[k][state][lis[j]])
     
     # initializing C state index array
     for i in range(len(lis)):
-        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
+        ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
     return [len(lis),trans_id,probsarray]
 
 def extract_in_cos(transmat, cos, state):
@@ -243,17 +234,17 @@ def extract_in_cos(transmat, cos, state):
 
 
     
-    trans_id   = ghmmwrapper.int_array(len(lis))
-    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
+    trans_id   = ghmmwrapper.int_array_alloc(len(lis))
+    probsarray = ghmmwrapper.double_matrix_alloc(cos, len(lis)) # C-function
     
     # creating list with positive probabilities
     for k in range(cos):
         for j in range(len(lis)):
-            ghmmwrapper.set_2d_arrayd(probsarray,k,j, transmat[k][lis[j]][state])
+            ghmmwrapper.double_matrix_setitem(probsarray,k,j, transmat[k][lis[j]][state])
     
     # initializing C state index array
     for i in range(len(lis)):
-        ghmmwrapper.set_arrayint(trans_id,i,lis[i])
+        ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
     return [len(lis),trans_id,probsarray]
 
 class twodim_double_array:
@@ -270,7 +261,7 @@ class twodim_double_array:
         
     def __getitem__(self,index):
         "defines twodim_double_array[index[0],index[1]]"
-        return ghmmwrapper.get_2d_arrayd(self.array,index[0],index[1])
+        return ghmmwrapper.double_matrix_getitem(self.array,index[0],index[1])
 
     def __setitem__(self,index,value):
         "defines twodim_double_array[index[0],index[1]]"
@@ -296,38 +287,38 @@ class twodim_double_array:
         return strout
 
 
-class double_array:
-    """A C-double array"""
+## class double_array:
+##     """A C-double array"""
 
-    def __init__(self, array, columns, columnlabels=None):
-        """Constructor"""
-        self.array = array
-        self.rows = 1
-        self.columns = columns
-        self.size = columns
-        self.columnlabels = columnlabels
+##     def __init__(self, array, columns, columnlabels=None):
+##         """Constructor"""
+##         self.array = array
+##         self.rows = 1
+##         self.columns = columns
+##         self.size = columns
+##         self.columnlabels = columnlabels
 
-    def __getitem__(self,index):
-        """defines double_array[index] """
-        return ghmmwrapper.get_arrayd(self.array,index)
+##     def __getitem__(self,index):
+##         """defines double_array[index] """
+##         return ghmmwrapper.get_arrayd(self.array,index)
 
-    def __setitem__(self,index,value):
-        """ double_array[index] = value """
-        ghmmwrapper.set_arrayd(self.array,index,value)
+##     def __setitem__(self,index,value):
+##         """ double_array[index] = value """
+##         ghmmwrapper.set_arrayd(self.array,index,value)
 
-    def __str__(self):
-        """defines string representation"""
-        strout = "\n"
-        if (self.columnlabels is not None):
-            for k in range(len(self.columnlabels)):
-                strout+="\t"
-                strout+= str(self.columnlabels[k])
-                strout += "\n"
-        for i in range(self.columns):
-            strout += "%2.4f" % self[i]
-            strout += "\t"
-            strout += "\n"
-        return strout
+##     def __str__(self):
+##         """defines string representation"""
+##         strout = "\n"
+##         if (self.columnlabels is not None):
+##             for k in range(len(self.columnlabels)):
+##                 strout+="\t"
+##                 strout+= str(self.columnlabels[k])
+##                 strout += "\n"
+##         for i in range(self.columns):
+##             strout += "%2.4f" % self[i]
+##             strout += "\t"
+##             strout += "\n"
+##         return strout
         
             
 def classNumber(A):

@@ -113,16 +113,16 @@ static double sdfoba_stepforward (ghmm_dsstate * s, double *alpha_t,
 
 /*============================================================================*/
 
-int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
+int ghmm_dsmodel_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                     double *scale, double *log_p)
 {
-# define CUR_PROC "ghmm_ds_forward"
+# define CUR_PROC "ghmm_dsmodel_forward"
   int i, t, id;
   double c_t, dblems;
   int class = 0;
 
   /*if (mo->model_type & kSilentStates)
-     ghmm_ds_topo_order(mo);
+     ghmm_dsmodel_topo_order(mo);
    */
   sdfoba_initforward (mo, alpha[0], O[0], scale);
   if (scale[0] < GHMM_EPS_PREC) {
@@ -195,7 +195,7 @@ int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
 
   return 0;
 # undef CUR_PROC
-}                               /* ghmm_ds_forward */
+}                               /* ghmm_dsmodel_forward */
 
 #if 0 /* unused */
 /*============================================================================*/
@@ -242,13 +242,13 @@ static int sdfobau_initforward (ghmm_dsmodel * mo, double *alpha_1, int symb,
 int sdfobau_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                      double *scale, double *log_p)
 {
-# define CUR_PROC "ghmm_ds_forward"
+# define CUR_PROC "ghmm_dsmodel_forward"
   int i, t, id;
   double c_t;
   int class = 0;
 
   if (mo->model_type & kSilentStates)
-    ghmm_ds_topo_order (mo);
+    ghmm_dsmodel_topo_order (mo);
 
   sdfobau_initforward (mo, alpha[0], O[0], scale);
   if (scale[0] < EPS_PREC) {
@@ -298,10 +298,10 @@ int sdfobau_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
 
 /*============================================================================*/
 
-int ghmm_ds_forward_descale (double **alpha, double *scale, int t, int n,
+int ghmm_dsmodel_forward_descale (double **alpha, double *scale, int t, int n,
                     double **newalpha)
 {
-# define CUR_PROC "ghmm_ds_forward_descale"
+# define CUR_PROC "ghmm_dsmodel_forward_descale"
   int i, j, k;
   /*printf("\nAngekommen, t=%i, n=%i\n",t,n);*/
   for (i = 0; i < t; i++) {
@@ -320,14 +320,14 @@ int ghmm_ds_forward_descale (double **alpha, double *scale, int t, int n,
   /*printf("\ndescale geschafft\n");*/
   return 0;
 # undef CUR_PROC
-}                               /* ghmm_ds_forward_descale */
+}                               /* ghmm_dsmodel_forward_descale */
 
 /*============================================================================*/
 
-int ghmm_ds_backward (ghmm_dsmodel * mo, const int *O, int len, double **beta,
+int ghmm_dsmodel_backward (ghmm_dsmodel * mo, const int *O, int len, double **beta,
                      const double *scale)
 {
-# define CUR_PROC "ghmm_ds_backward"
+# define CUR_PROC "ghmm_dsmodel_backward"
   double *beta_tmp, sum;
   int i, j, j_id, t;
   int res = -1;
@@ -359,13 +359,13 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (beta_tmp);
   return (res);
 # undef CUR_PROC
-}                               /* ghmm_ds_backward */
+}                               /* ghmm_dsmodel_backward */
 
 
 /*============================================================================*/
-int ghmm_ds_logp (ghmm_dsmodel * mo, const int *O, int len, double *log_p)
+int ghmm_dsmodel_logp (ghmm_dsmodel * mo, const int *O, int len, double *log_p)
 {
-#define CUR_PROC "ghmm_ds_logp"
+#define CUR_PROC "ghmm_dsmodel_logp"
   int res = -1;
   double **alpha, *scale = NULL;
   alpha = ighmm_cmatrix_alloc (len, mo->N);
@@ -374,8 +374,8 @@ int ghmm_ds_logp (ghmm_dsmodel * mo, const int *O, int len, double *log_p)
     goto STOP;
   }
   ARRAY_CALLOC (scale, len);
-  /* run ghmm_ds_forward */
-  if (ghmm_ds_forward (mo, O, len, alpha, scale, log_p) == -1) {
+  /* run ghmm_dsmodel_forward */
+  if (ghmm_dsmodel_forward (mo, O, len, alpha, scale, log_p) == -1) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
@@ -388,4 +388,4 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (scale);
   return (res);
 # undef CUR_PROC
-}                               /* ghmm_ds_logp */
+}                               /* ghmm_dsmodel_logp */

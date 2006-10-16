@@ -156,7 +156,7 @@ int main (int argc, char *argv[])
     GHMM_LOG(LCONVERTED,
       "Warning: Seq. File contains multiple Seq. Fields; use only the first one\n");
 
-  smo_initial = ghmm_c_read (argv[2], &total_smo_number);
+  smo_initial = ghmm_cmodel_read (argv[2], &total_smo_number);
   if (!smo_initial) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
@@ -223,7 +223,7 @@ int main (int argc, char *argv[])
 
       /* copy appropriate no. of initial models */
       for (k = 0; k < smo_number; k++) {
-        smo[k] = ghmm_c_copy (smo_initial[k]);
+        smo[k] = ghmm_cmodel_copy (smo_initial[k]);
         if (!smo[k]) {
           str =
             ighmm_mprintf (NULL, 0, "Error copying models, (model %d, iter %d)\n",
@@ -234,7 +234,7 @@ int main (int argc, char *argv[])
         }
       }
       /* find out no. of free parameters;  smo_number - 1 = component weights */
-      free_parameter = ghmm_c_count_free_parameter (smo, smo_number)
+      free_parameter = ghmm_cmodel_count_free_parameter (smo, smo_number)
         + smo_number - 1;
 
       cp = ighmm_cmatrix_alloc (sqd_train->seq_number, smo_number);
@@ -289,7 +289,7 @@ int main (int argc, char *argv[])
                  "# ******************  Models: %d, CV-Iter %d *****************\n",
                  smo_number, iter);
         for (k = 0; k < smo_number; k++)
-          ghmm_c_print (smofile, smo[k]);
+          ghmm_cmodel_print (smofile, smo[k]);
       }
 
       avg_comp_like = ghmm_smixturehmm_avg_like (cp, sqd_train, smo, smo_number);
@@ -349,7 +349,7 @@ int main (int argc, char *argv[])
 
 
       for (k = 0; k < smo_number; k++)
-        ghmm_c_free (&(smo[k]));
+        ghmm_cmodel_free (&(smo[k]));
       ighmm_cmatrix_free (&cp, sqd_train->seq_number);
       ghmm_cseq_free (&sqd_train);
       ghmm_cseq_free (&sqd_test);
@@ -387,7 +387,7 @@ int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
   char *str;
   double *save_w;
   double model_weight, log_p, sum = 0.0;
-  ghmm_c_baum_welch_context *smo_sqd;            /* this structure is used by sreestimate() */
+  ghmm_cmodel_baum_welch_context *smo_sqd;            /* this structure is used by sreestimate() */
 
   ARRAY_CALLOC (smo_sqd, 1);
   /*  smo_sqd->max_iter = MAX_ITER_BW; */
@@ -424,7 +424,7 @@ int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
         model_weight += sqd->seq_w[i];
       }
 
-      if (ghmm_c_baum_welch (smo_sqd) == -1) {
+      if (ghmm_cmodel_baum_welch (smo_sqd) == -1) {
         str = ighmm_mprintf (NULL, 0, "Error iteration %d, model %d\n", iter, k);
         GHMM_LOG(LCONVERTED, str);
         m_free (str);
@@ -623,7 +623,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 /* Is currently not used. Use this function in calc_cp and smixturehmm_like
-   later on (saves half of the ghmm_c_logp() calls).
+   later on (saves half of the ghmm_cmodel_logp() calls).
    Danger: Is it neccessary to take seq_w into account? 
 */
 void ghmm_smixture_calc_logp (double **logp, int **error, ghmm_cseq * sqd,
@@ -633,7 +633,7 @@ void ghmm_smixture_calc_logp (double **logp, int **error, ghmm_cseq * sqd,
 
   for (i = 0; i < sqd->seq_number; i++)
     for (k = 0; k < smo_number; k++) {
-      if (ghmm_c_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &(logp[i][k])) ==
+      if (ghmm_cmodel_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &(logp[i][k])) ==
           -1)
         error[i][k] = 1;
       else
@@ -703,7 +703,7 @@ double *ghmm_smixturehmm_avg_like (double **cp, ghmm_cseq * sqd,
   for (k = 0; k < smo_number; k++) {
     num = denom = 0.0;
     for (i = 0; i < sqd->seq_number; i++) {
-      if (ghmm_c_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &log_p) != -1) {
+      if (ghmm_cmodel_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &log_p) != -1) {
         num += cp[i][k] * sqd->seq_w[i] * log_p;
         denom += cp[i][k] * sqd->seq_w[i];
       }

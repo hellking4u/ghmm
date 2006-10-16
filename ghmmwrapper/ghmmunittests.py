@@ -196,9 +196,7 @@ class EmissionSequenceTests(unittest.TestCase):
         for i in range(len(self.labeled) ):
             sequence += str( self.labeled.emissionDomain.external(self.labeled[i]) )
         self.assertEqual(sequence,'acgttgatgga')
-        label = []
-        for i in range(len(self.labeled) ):
-            label.append(self.labeled.labelDomain.external(self.labeled.getSymbol(self.labeled.cseq.state_labels, 0, i)))
+        label = self.labeled.getStateLabel()
         self.assertEqual(label,['E','R','T','T','T','E','R','T','T','T','R'])
 
 
@@ -721,7 +719,7 @@ class StateLabelHMMTests(unittest.TestCase):
         emission = self.model.getEmission(1)
         self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
         self.assertEqual(self.model.cmodel.model_type & 4, 4)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,1),1)
+        self.assertEqual(ghmmwrapper.int_array_getitem(self.model.cmodel.silent,1),1)
 
         # removing silent state
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
@@ -736,7 +734,7 @@ class StateLabelHMMTests(unittest.TestCase):
         emission = self.model.getEmission(0)
         self.assertEqual(emission,[0.0,0.0,0.0,0.0])  
         self.assertEqual(self.model.cmodel.model_type & 4,4)
-        self.assertEqual(ghmmwrapper.get_arrayint(self.model.cmodel.silent,0),1)
+        self.assertEqual(ghmmwrapper.int_array_getitem(self.model.cmodel.silent,0),1)
 
         # label access
         labels = self.model.getLabels()
@@ -780,7 +778,7 @@ class StateLabelHMMTests(unittest.TestCase):
         for i in range(len(bl_beta)):
             i = len(bl_beta)-i-1
             for j in range(len(bl_beta[i])):
-                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_arrayint(model2.cmodel.label, j):
+                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.int_array_getitem(model2.cmodel.label, j):
                     self.assertNotEqual(bl_beta[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(bl_beta[i][j]) )
                 else:
@@ -826,11 +824,11 @@ class StateLabelHMMTests(unittest.TestCase):
         for i in range(len(alpha)):
             i = len(alpha)-i-1
             for j in range(len(alpha[i])):
-                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.get_arrayint(model2.cmodel.label, j):
-                    self.assertNotEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
+                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.int_array_getitem(model2.cmodel.label, j):
+                    self.assertNotEqual(round(alpha[i][j], 15), 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]) )
                 else:
-                    self.assertEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
+                    self.assertEqual(round(alpha[i][j], 15), 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]))
 
 
@@ -1090,7 +1088,7 @@ suiteAlphabet = unittest.makeSuite(AlphabetTests,'test')
 suiteEmissionSequence = unittest.makeSuite(EmissionSequenceTests,'test')
 suiteSequenceSet = unittest.makeSuite(SequenceSetTests,'test')
 suiteDiscreteEmissionHMM = unittest.makeSuite(DiscreteEmissionHMMTests,'test')
-suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'test')
+#suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'test')
 suiteStateLabelHMM = unittest.makeSuite(StateLabelHMMTests,'test')
 suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
 suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
@@ -1106,11 +1104,4 @@ suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 #runner.run(suiteGaussianEmissionHMM)
 #runner.run(suiteGaussianMixtureHMM)
 #runner.run(suiteXMLIO)
-
-
-
-
-
-
-
 

@@ -1,42 +1,8 @@
-/*******************************************************************************
-*
-*       This file is part of the General Hidden Markov Model Library,
-*       GHMM version __VERSION__, see http://ghmm.org
-*
-*       Filename: sclass_change.c
-*       Authors:  Matthias Heinig
-*
-*       Copyright (C) 1998-2004 Alexander Schliep
-*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
-*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
-*                               Berlin
-*
-*       Contact: schliep@ghmm.org
-*
-*       This library is free software; you can redistribute it and/or
-*       modify it under the terms of the GNU Library General Public
-*       License as published by the Free Software Foundation; either
-*       version 2 of the License, or (at your option) any later version.
-*
-*       This library is distributed in the hope that it will be useful,
-*       but WITHOUT ANY WARRANTY; without even the implied warranty of
-*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*       Library General Public License for more details.
-*
-*       You should have received a copy of the GNU Library General Public
-*       License along with this library; if not, write to the Free
-*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*
-*       This file is version $Revision$
-*                       from $Date$
-*             last change by $Author$.
-*
-*******************************************************************************/
-#ifndef GHMM_PMODEL_H
-#define GHMM_PMODEL_H
-#include "model.h" 
-#include "psequence.h"
+%{
+#include <ghmm/pmodel.h>
+%}
+/*==========================================================================
+  ===== discrete pair model ================================================ */
 
 struct ghmm_dpmodel;
 
@@ -175,10 +141,9 @@ typedef struct ghmm_dpmodel {
       distributions to use in parameter estimation. A value of kNoBackgroundDistribution
       indicates that none should be used.
 
-
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) == 1  */
   int *background_id;
-  ghmm_dbackground* bp;
+  ghmm_dbackground* bp; 
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) == 1
@@ -199,27 +164,14 @@ typedef struct ghmm_dpmodel {
   int max_offset_y;
 
   int debug;
+
 } ghmm_dpmodel;
 
-int ghmm_dpmodel_state_alloc(ghmm_dpstate *state, int M, int in_states, int out_states);
+extern int ghmm_dpmodel_free(ghmm_dpmodel *mo);
 
-ghmm_dpmodel* ghmm_dpmodel_init(void);
+%extend ghmm_dpmodel {
 
-ghmm_dpmodel_class_change_context* ghmm_dpmodel_init_class_change(void);
+        ~ghmm_dpmodel() { ghmm_dpmodel_free(self); }
 
-void ghmm_dpmodel_state_clean(ghmm_dpstate *my_state);
-
-int ghmm_dpmodel_free(ghmm_dpmodel *mo);
-
-ghmm_dpstate* get_pstateptr(ghmm_dpstate *ary, int index); 
-
-/** functions dealing with the emission indices **/
-int ghmm_dpmodel_pair(int symbol_x, int symbol_y, int alphabet_size, int off_x, int off_y);
-
-int ghmm_dpmodel_emission_table_size(ghmm_dpmodel * mo, int state_index);
-  
-int ghmm_dpmodel_default_transition_class(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data) ;
-
-void ghmm_dpmodel_set_to_default_transition_class(ghmm_dpmodel_class_change_context * pccc);
-
-#endif
+        ghmm_dpstate* getState(size_t index) { return self->s + index; }
+}

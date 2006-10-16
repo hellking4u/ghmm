@@ -54,7 +54,7 @@ extern "C" {
     length.    
  */
 
-  struct ghmm_dseq {
+  typedef struct ghmm_dseq {
   /** sequence array. sequence[i] [j] = j-th symbol of i-th seq.
    */
     int **seq;
@@ -82,8 +82,7 @@ extern "C" {
     int **state_labels;
     /* number of labels for each sequence */
     int *state_labels_len;
-  };
-  typedef struct ghmm_dseq ghmm_dseq;
+  } ghmm_dseq;
 
 /** @name struct ghmm_cseq
     Sequence structure for double sequences. 
@@ -91,7 +90,7 @@ extern "C" {
     data like sequnce label, sequence weight, etc. Sequences may have different
     length.    
  */
-  struct ghmm_cseq {
+  typedef struct ghmm_cseq {
   /** sequence array. sequence[i][j] = j-th symbol of i-th seq. */
     double **seq;
   /** array of sequence length */
@@ -108,8 +107,7 @@ extern "C" {
     long seq_number;
   /** sum of sequence weights */
     double total_w;
-  };
-  typedef struct ghmm_cseq ghmm_cseq;
+  } ghmm_cseq;
 
 
 #ifdef __cplusplus
@@ -161,13 +159,13 @@ ghmm_cseq *ghmm_cseq_get_singlesequence(ghmm_cseq *sq, int index);
   Free a ghmm_dseq struct which holds as sequence a reference to a sequence in a different
   sequence_t. The function deallocates everything but the reference.
 */
-int ghmm_dseq_subseq_free (ghmm_dseq ** sq);
+int ghmm_dseq_subseq_free (ghmm_dseq *sq);
 
 /**
   Free a ghmm_cseq struct which holds as sequence a reference to a sequence in a different
   sequence_d_t. The function deallocates everything but the reference.
 */
-int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
+int ghmm_cseq_subseq_free (ghmm_cseq *sqd);
 
 
 
@@ -245,14 +243,14 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
   @param file       output file
   @param sequence    array of sequences
   */
-  void ghmm_dseq_print (FILE * file, ghmm_dseq * sequence);
+  void ghmm_dseq_print (ghmm_dseq * sequence, FILE * file);
 
 /**
   Prints one array of integer sequences in a xml file
   @param file       output file
   @param sequence   array of sequences
   */
-  void ghmm_dseq_print_xml (FILE * file, ghmm_dseq * sequence);
+  void ghmm_dseq_print_xml (ghmm_dseq * sequence, FILE * file);
 
 /**
    Prints one array of integer sequences in Mathematica format.
@@ -261,7 +259,7 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
    @param sq    array of sequences
    @param name arbitrary sequence name for usage in Mathematica.
  */
-  void ghmm_dseq_mathematica_print (FILE * file, ghmm_dseq * sq, char *name);
+  void ghmm_dseq_mathematica_print (ghmm_dseq * sq, FILE * file, char *name);
 
 /**
   Prints one array of double sequences in a file.
@@ -270,7 +268,7 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
   @param discrete   switch: 0 means double output for symbols,  
      1 means truncate symbols to integer
   */
-  void ghmm_cseq_print (FILE * file, ghmm_cseq * sqd, int discrete);
+  void ghmm_cseq_print (ghmm_cseq * sqd, FILE * file, int discrete);
 
 /**
    Prints one array of double sequences in Mathematica format.
@@ -279,7 +277,7 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
    @param sqd    array of sequences
    @param name arbitrary sequence name for usage in Mathematica.
  */
-  void ghmm_cseq_mathematica_print (FILE * file, ghmm_cseq * sqd,
+  void ghmm_cseq_mathematica_print (ghmm_cseq * sqd, FILE * file,
                                      char *name);
 
 /** Output of double sequences suitable for gnuplot. One symbol per line,
@@ -287,7 +285,7 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
     @param file output file
     @param sqd array of double sequences
 */
-  void ghmm_cseq_gnu_print (FILE * file, ghmm_cseq * sqd);
+  void ghmm_cseq_gnu_print (ghmm_cseq * sqd, FILE * file);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
@@ -334,6 +332,13 @@ int ghmm_cseq_subseq_free (ghmm_cseq ** sqd);
    @return:     pointer of sequence struct
 */
   ghmm_dseq *ghmm_dseq_calloc (long seq_number);
+
+/**
+   Completes Memory allocation for an integer sequence struct.
+   NO allocation for the actual sequence, since its length is 
+   unknown.
+*/
+  int ghmm_dseq_calloc_state_labels (ghmm_dseq *sq);
 
 /**
    Memory allocation for a double  sequence struct. Allocates arrays of lenght

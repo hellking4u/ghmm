@@ -99,8 +99,8 @@ static local_store_t *reestimate_alloc (const ghmm_dmodel * mo)
 
   if (mo->model_type & GHMM_kHigherOrderEmissions)
     for (i=0; i<mo->N; i++) {
-      ARRAY_CALLOC(r->b_num[i], ghmm_d_ipow(mo, mo->M, mo->order[i] + 1));
-      ARRAY_CALLOC(r->b_denom[i], ghmm_d_ipow (mo, mo->M, mo->order[i]));
+      ARRAY_CALLOC(r->b_num[i], ghmm_ipow(mo, mo->M, mo->order[i] + 1));
+      ARRAY_CALLOC(r->b_denom[i], ghmm_ipow (mo, mo->M, mo->order[i]));
     }
   else
     for (i=0; i<mo->N; i++) {
@@ -166,7 +166,7 @@ static int reestimate_init(local_store_t * r, const ghmm_dmodel * mo) {
       r->a_num[i][j] = 0.0;
 
     if (mo->model_type & GHMM_kHigherOrderEmissions) {
-      size = ghmm_d_ipow(mo, mo->M, mo->order[i]);
+      size = ghmm_ipow(mo, mo->M, mo->order[i]);
       for (m=0; m<size; m++)
 	r->b_denom[i][m] = 0.0;
       size *= mo->M;
@@ -217,15 +217,15 @@ int ighmm_reestimate_free_matvek (double **alpha, double **beta, double *scale, 
 }                               /* ighmm_reestimate_free_matvek */
 
 /*----------------------------------------------------------------------------*/
-void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
-#define CUR_PROC "ghmm_d_update_tied_groups"
+void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo) {
+#define CUR_PROC "ghmm_dmodel_update_tied_groups"
   int i, j, k;
   int bi_len;
   int nr=0;
   double *new_emissions;
   char * str;
 
-  /* printf("** Start of ghmm_d_update_tied_groups **\n"); */
+  /* printf("** Start of ghmm_dmodel_update_tied_groups **\n"); */
 
   /* do nothing if there are no tied emissions */
   if (!(mo->model_type & GHMM_kTiedEmissions)) {
@@ -234,7 +234,7 @@ void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
   }
   
   if (mo->model_type & GHMM_kHigherOrderEmissions) {
-    ARRAY_MALLOC(new_emissions, ghmm_d_ipow(mo, mo->M, mo->maxorder+1));
+    ARRAY_MALLOC(new_emissions, ghmm_ipow(mo, mo->M, mo->maxorder+1));
   }
   else {
     ARRAY_MALLOC(new_emissions, mo->M);
@@ -247,7 +247,7 @@ void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
 
 
       if (mo->model_type & GHMM_kHigherOrderEmissions)
-	bi_len = ghmm_d_ipow(mo, mo->M, mo->order[i] + 1);
+	bi_len = ghmm_ipow(mo, mo->M, mo->order[i] + 1);
       else
 	bi_len = mo->M;
 
@@ -310,7 +310,7 @@ void ghmm_d_update_tied_groups (ghmm_dmodel * mo) {
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (new_emissions);
 #undef CUR_PROC
-}           /* ghmm_d_update_tied_groups */
+}           /* ghmm_dmodel_update_tied_groups */
 
 /*----------------------------------------------------------------------------*/
 static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
@@ -390,7 +390,7 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
 
     /* B */
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
+      size = ghmm_ipow (mo, mo->M, mo->order[i]);
     else
       size = 1;
     /* If all in_a's are zero, the state can't be reached.
@@ -441,7 +441,7 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
 
   res = 0;
   if (mo->model_type & GHMM_kTiedEmissions)
-    ghmm_d_update_tied_groups (mo);
+    ghmm_dmodel_update_tie_groups (mo);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
@@ -484,7 +484,7 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
       GHMM_LOG_QUEUED(LCONVERTED);
       goto FREE;
     }
-    if (ghmm_d_forward (mo, O[k], T_k, alpha, scale, &log_p_k) == -1) {
+    if (ghmm_dmodel_forward (mo, O[k], T_k, alpha, scale, &log_p_k) == -1) {
       GHMM_LOG_QUEUED(LCONVERTED);
       goto FREE;
     }
@@ -492,7 +492,7 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
     if (log_p_k != +1) {        /* O[k] can be generated */
       *log_p += log_p_k;
       valid = 1;
-      if (ghmm_d_backward (mo, O[k], T_k, beta, scale) == -1) {
+      if (ghmm_dmodel_backward (mo, O[k], T_k, beta, scale) == -1) {
         GHMM_LOG_QUEUED(LCONVERTED);
         goto FREE;
       }
@@ -558,10 +558,10 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
     /* printf ("---- reestimate: after normalization ----\n"); */
     /*
        printf("Emission:\n");
-       ghmm_d_B_print(stdout, mo, "\t", " ", "\n");
+       ghmm_dmodel_B_print(stdout, mo, "\t", " ", "\n");
      */
     /* only test: */
-    if (ghmm_d_check(mo) == -1) {
+    if (ghmm_dmodel_check(mo) == -1) {
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
@@ -615,14 +615,14 @@ static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
 
   /* temporary array to hold logarithmized summands
      for sums over probabilities */
-  ARRAY_CALLOC (summands, m_max(mo->N,ghmm_d_ipow(mo,mo->M,mo->maxorder+1))+1);
+  ARRAY_CALLOC (summands, m_max(mo->N,ghmm_ipow(mo,mo->M,mo->maxorder+1))+1);
 
 
   for (k=0; k<seq_number; k++) {
     len = seq_length[k];
     O = seqs[k];
    
-    ghmm_d_forward_init(mo, alpha_last_col, O[0], &scale);
+    ghmm_dmodel_forward_init(mo, alpha_last_col, O[0], &scale);
     if (scale < GHMM_EPS_PREC) {
       /* means: first symbol can't be generated by hmm */
       *log_p = +1;
@@ -641,7 +641,7 @@ static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
       
 	e_index = get_emission_index(mo, i, O[t], t);
 	if (e_index != -1){
-	  alpha_curr_col[i] = ghmm_d_forward_step(&mo->s[i], alpha_last_col,
+	  alpha_curr_col[i] = ghmm_dmodel_forward_step(&mo->s[i], alpha_last_col,
 					       mo->s[i].b[e_index]);
 	  scale += alpha_curr_col[i];
 	}
@@ -710,7 +710,7 @@ static int reestimate_one_step_lean (ghmm_dmodel * mo, local_store_t * r,
 
 	  /* computes estimates for the numerator of emmission probabilities*/
 	  if (mo->model_type & GHMM_kHigherOrderEmissions)
-	    size = ghmm_d_ipow(mo,mo->M, mo->order[i]);
+	    size = ghmm_ipow(mo,mo->M, mo->order[i]);
 	  else
 	    size = 1;
 	  for (h=0; h<size; h++)
@@ -811,20 +811,20 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-int ghmm_d_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
+int ghmm_dmodel_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
-# define CUR_PROC "ghmm_d_baum_welch"
+# define CUR_PROC "ghmm_dmodel_baum_welch"
 
-  return ghmm_d_baum_welch_nstep (mo, sq, GHMM_MAX_ITER_BW, GHMM_EPS_ITER_BW);
+  return ghmm_dmodel_baum_welch_nstep (mo, sq, GHMM_MAX_ITER_BW, GHMM_EPS_ITER_BW);
 # undef CUR_PROC
-}                               /* ghmm_d_baum_welch */
+}                               /* ghmm_dmodel_baum_welch */
 
 
 /*============================================================================*/
-int ghmm_d_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
+int ghmm_dmodel_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
                                  double likelihood_delta)
 {
-# define CUR_PROC "ghmm_d_baum_welch"
+# define CUR_PROC "ghmm_dmodel_baum_welch"
   int n, k, valid;
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
@@ -907,7 +907,7 @@ int ghmm_d_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
   log_p = 0.0;
   valid = 0;
   for (k = 0; k < sq->seq_number; k++) {
-    if (ghmm_d_logp (mo, sq->seq[k], sq->seq_len[k], &log_p_k) == -1) {
+    if (ghmm_dmodel_logp (mo, sq->seq[k], sq->seq_len[k], &log_p_k) == -1) {
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
@@ -921,14 +921,14 @@ int ghmm_d_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step,
   /*printf("%8.5f (-log_p optimized model)\n", -log_p);*/
 
   /* check new parameter for plausibility */
-  /* if (ghmm_d_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+  /* if (ghmm_dmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   reestimate_free (&r, mo->N);
   return res;
 # undef CUR_PROC
-}                               /* ghmm_d_baum_welch_nstep */
+}                               /* ghmm_dmodel_baum_welch_nstep */
 
 
 
@@ -973,7 +973,7 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
       goto FREE;
     }
 
-    if (ghmm_dl_forward (mo, O[k], label[k], T_k, alpha, scale, &log_p_k)
+    if (ghmm_dmodel_label_forward (mo, O[k], label[k], T_k, alpha, scale, &log_p_k)
         == -1) {
       GHMM_LOG_QUEUED(LCONVERTED);
       goto FREE;
@@ -983,7 +983,7 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
       *log_p += log_p_k;
       valid = 1;
 
-      if (ghmm_dl_backward (mo, O[k], label[k], T_k, beta, scale, &log_p_k)
+      if (ghmm_dmodel_label_backward (mo, O[k], label[k], T_k, beta, scale, &log_p_k)
           == -1) {
         GHMM_LOG_QUEUED(LCONVERTED);
         goto FREE;
@@ -1050,9 +1050,9 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
     }
     /* printf ("---- reestimate: after normalization ----\n"); */
     /*     printf("Emission:\n"); */
-    /*     ghmm_d_B_print(stdout, mo, "\t", " ", "\n"); */
+    /*     ghmm_dmodel_B_print(stdout, mo, "\t", " ", "\n"); */
     /* only test: */
-    /*    if (ghmm_d_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+    /*    if (ghmm_dmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   }
   else {                        /* NO sequence can be built from model mo! */
     *log_p = +1;
@@ -1068,16 +1068,16 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* reestimate_one_step_label */
 
 /*============================================================================*/
-int ghmm_dl_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
+int ghmm_dmodel_label_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "ghmm_dl_baum_welch"
 
-  return ghmm_dl_baum_welch_nstep (mo, sq, GHMM_MAX_ITER_BW, GHMM_EPS_ITER_BW);
+  return ghmm_dmodel_label_baum_welch_nstep (mo, sq, GHMM_MAX_ITER_BW, GHMM_EPS_ITER_BW);
 # undef CUR_PROC
-}                               /* ghmm_d_baum_welch */
+}                               /* ghmm_dmodel_baum_welch */
 
 /*============================================================================*/
-int ghmm_dl_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
+int ghmm_dmodel_label_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
                                        int max_step, double likelihood_delta)
 {
 # define CUR_PROC "ghmm_dl_baum_welch"
@@ -1152,7 +1152,7 @@ int ghmm_dl_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
   log_p = 0.0;
   valid = 0;
   for (k = 0; k < sq->seq_number; k++) {
-    if (ghmm_dl_logp (mo, sq->seq[k], sq->state_labels[k], sq->seq_len[k],
+    if (ghmm_dmodel_label_logp (mo, sq->seq[k], sq->state_labels[k], sq->seq_len[k],
                          &log_p_k) == -1) {
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
@@ -1169,7 +1169,7 @@ int ghmm_dl_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
   printf ("%8.5f (-log_p optimized model)\n", -log_p);
 
   /* check new parameter for plausibility */
-  /* if (ghmm_d_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+  /* if (ghmm_dmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */

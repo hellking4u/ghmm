@@ -242,7 +242,7 @@
    @return array of pointers to the models
    @param filename:   the ASCII input file
    @param mo_number:  filled with number of models read */
-  ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number);
+  ghmm_dmodel **ghmm_dmodel_read (char *filename, int *mo_number);
 
 /**
    Reads in a model, where the model parameters are explicit given in
@@ -251,7 +251,7 @@
    @param s:       scanner
    @param multip:  multiplicity; gives how many copies should 
    be made of the model */
-  ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip);
+  ghmm_dmodel *ghmm_dmodel_direct_read (scanner_t * s, int *multip);
 
 /**
    Writes a HMM in matrix format. The input model must be of type
@@ -260,7 +260,7 @@
    @param mo_d:   model of type model_direct
    @param multip: number of copies to write
 */
-  void ghmm_d_direct_print (FILE * file, model_direct * mo_d, int multip);
+  void ghmm_dmodel_direct_print (FILE * file, model_direct * mo_d, int multip);
 
 /** 
     Frees all memory from a model, sets the pointers to NULL and 
@@ -268,7 +268,7 @@
     @param mo_d  HMM structure (\Ref{struct model_direct})
     @param check Check structure (\Ref{struct hmm_check_t})
 */
-  void ghmm_d_direct_clean (model_direct * mo_d, hmm_check_t * check);
+  void ghmm_dmodel_direct_clean (model_direct * mo_d, hmm_check_t * check);
 
 /** 
     Tests compatibility of the model components.
@@ -276,17 +276,17 @@
     @param mo_d  HMM structure  (\Ref{struct model_direct})
     @param check Check structure  (\Ref{struct hmm_check_t})
 */
-  int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check);
+  int ghmm_dmodel_direct_check_data (model_direct * mo_d, hmm_check_t * check);
 
 /**
    Produces simple left-right models given sequences. 
-   The function "ghmm_d_generate_from_sequence" is called for each 
+   The function "ghmm_dmodel_generate_from_sequence" is called for each 
    model that should be made. The sequences are read in from the
    ASCII file and thrown away again when leaving the function.
    @return vector of models
    @param s:          scanner
    @param new_models: number of models to produce */
-  ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number);
+  ghmm_dmodel **ghmm_dmodel_from_sequence_ascii (scanner_t * s, long *mo_number);
 
 
 
@@ -342,7 +342,7 @@
    @return vector of read smodels
    @param filename   input ascii file
    @param smo_number  number of smodels to read*/
-  ghmm_cmodel **ghmm_c_read (const char *filename, int *smo_number);
+  ghmm_cmodel **ghmm_cmodel_read (const char *filename, int *smo_number);
 
 /** Reads one ghmm_cmodel block. It is possible to generate multiple
     identical copies of the model read. Memory allocation is here.
@@ -350,7 +350,7 @@
    @param s        scanner for reading
    @param multip   number ob identical copies
 */
-  ghmm_cmodel *ghmm_c_read_block (scanner_t * s, int *multip);
+  ghmm_cmodel *ghmm_cmodel_read_block (scanner_t * s, int *multip);
 
 
 /*============ sequence.h ===================================================*/

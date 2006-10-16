@@ -173,7 +173,7 @@ int ghmm_smap_classify (ghmm_cmodel ** smo, double *result, int smo_number,
     map->p[m][0] = map->prior[m];       /* (22) */
     map->alpha_1[m] = 1 / (double) smo_number;  /* (23) */
     /* forward alg.                                     (24) */
-    if (ghmm_c_forward (smo[m], O, T, NULL, map->alpha[m], map->scale[m],
+    if (ghmm_cmodel_forward (smo[m], O, T, NULL, map->alpha[m], map->scale[m],
                        &log_p) == -1) {
       /* The sequence can't be generated from this model. */
       map->error[m] = 1;
@@ -289,7 +289,7 @@ int ghmm_smap_bayes (ghmm_cmodel ** smo, double *result, int smo_number, double 
   /* Calculate log_p for every model; combined with prior gives 
      the likelihood for O, given all models */
   for (m = 0; m < smo_number; m++)
-    if (ghmm_c_logp (smo[m], O, T, &log_p[m]) == -1) {
+    if (ghmm_cmodel_logp (smo[m], O, T, &log_p[m]) == -1) {
       error[m] = 1;
     }
     else {
@@ -303,7 +303,7 @@ int ghmm_smap_bayes (ghmm_cmodel ** smo, double *result, int smo_number, double 
     err = 1;
   }
   if (!found_model) {
-    GHMM_LOG(LCONVERTED, "-1 from ghmm_c_logp for all models\n");
+    GHMM_LOG(LCONVERTED, "-1 from ghmm_cmodel_logp for all models\n");
     err = 1;
   }
   if (err)
