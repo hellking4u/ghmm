@@ -1,9 +1,10 @@
 %{
 #include <ghmm/pmodel.h>
+#include <ghmm/pviterbi.h>
+#include <ghmm/pviterbi_propagate.h>
 %}
 /*==========================================================================
-  ===== discrete pair model ================================================ */
-
+  ===== discrete pair model class change context =========================== */
 struct ghmm_dpmodel;
 
 typedef struct ghmm_dpmodel_class_change_context{
@@ -20,6 +21,9 @@ typedef struct ghmm_dpmodel_class_change_context{
     void* user_data;
 } ghmm_dpmodel_class_change_context;
 
+
+/*==========================================================================
+  ===== discrete pair state ================================================ */
 typedef struct ghmm_dpstate {
   /** Initial probability */ 
   double pi;
@@ -71,10 +75,13 @@ typedef struct ghmm_dpstate {
   int yPosition;
 } ghmm_dpstate;
 
-/** @name ghmm_dmodel
-    The complete HMM. Contains all parameters, that define a HMM.
-*/
-typedef struct ghmm_dpmodel {
+STRUCT_ARRAY(ghmm_dpstate, dpstate)
+REFERENCE_ARRAY(ghmm_dpstate, dpstate_ptr)
+
+
+/*==========================================================================
+  ===== discrete pair model ================================================ */
+typedef struct {
   /** Number of states */
   int N;
   /** Number of outputs */   
@@ -173,5 +180,22 @@ extern int ghmm_dpmodel_free(ghmm_dpmodel *mo);
 
         ~ghmm_dpmodel() { ghmm_dpmodel_free(self); }
 
+        double viterbi_logp(ghmm_dpseq * X, ghmm_dpseq * Y,
+                     int *state_seq, int state_seq_len);
+
+        int* viterbi_propagate( ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p, 
+                               int *path_length, double max_size);
+
+
+        int* viterbi_propagate_segment(ghmm_dpseq * X, ghmm_dpseq * Y,
+                                       double *log_p, int *path_length,
+                                       double max_size, int start_x, int start_y,
+                                       int stop_x, int stop_y, int start_state,
+                                       int stop_state, double start_log_p,
+                                       double stop_log_p);
+
         ghmm_dpstate* getState(size_t index) { return self->s + index; }
 }
+
+STRUCT_ARRAY(ghmm_dpmodel, dpmodel)
+REFERENCE_ARRAY(ghmm_dpmodel, dpmodel_ptr)

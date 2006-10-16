@@ -79,11 +79,8 @@ typedef struct ghmm_cstate {
         void setU(size_t i, double value) { self->u[i] = value; }
 }
 
-%inline %{
-        ghmm_cstate* cstate_array_alloc(size_t number)  { return calloc(number, sizeof(ghmm_cstate)); }
-        ghmm_cstate* cstate_array_getitem(ghmm_cstate* self, size_t index) { return self+index; }
-        void         cstate_array_setitem(ghmm_cstate* self, size_t index, ghmm_cstate value) { self[index] = value; }
-%}
+STRUCT_ARRAY(ghmm_cstate, cstate)
+REFERENCE_ARRAY(ghmm_cstate, cstate_ptr)
 
 
 /*==========================================================================
@@ -207,4 +204,8 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         ghmm_cstate* getState(size_t index) { return self->s + index; }
 }
 
+extern int ghmm_cmodel_xml_write(ghmm_cmodel** smo, const char* file, int smo_number);
 extern int ghmm_cmodel_baum_welch(ghmm_cmodel_baum_welch_context* cs);
+
+STRUCT_ARRAY(ghmm_cmodel, cmodel)
+REFERENCE_ARRAY(ghmm_cmodel, cmodel_ptr)

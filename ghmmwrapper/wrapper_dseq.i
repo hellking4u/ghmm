@@ -84,3 +84,5 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
                 fclose(file);
             }
 }
+
+REFERENCE_ARRAY(ghmm_dseq, dseq_ptr)
