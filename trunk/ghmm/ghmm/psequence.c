@@ -67,23 +67,23 @@ ghmm_dpseq * ghmm_dpseq_init(int length, int number_of_alphabets, int number_of_
 
   return seq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  ghmm_dpseq_free(seq, number_of_alphabets, number_of_d_seqs);
+  ghmm_dpseq_free(seq);
   return NULL;
 #undef CUR_PROC
 }
 
-int ghmm_dpseq_free(ghmm_dpseq * seq, int number_of_alphabets, int number_of_d_seqs) {
+int ghmm_dpseq_free(ghmm_dpseq * seq) {
 #define CUR_PROC "ghmm_dpseq_free"
   int i;
   mes_check_ptr(seq, return(-1));
   if ( seq == NULL ) return(0);
   if (seq->seq != NULL) {
-    for (i=0; i<number_of_alphabets; i++) 
+    for (i=0; i<seq->number_of_alphabets; i++) 
       m_free(seq->seq[i]);
     m_free(seq->seq);
   }
   if (seq->d_value != NULL) {
-    for (i=0; i<number_of_d_seqs; i++)
+    for (i=0; i<seq->number_of_d_seqs; i++)
       m_free(seq->d_value[i]);
     m_free(seq->d_value);
   }

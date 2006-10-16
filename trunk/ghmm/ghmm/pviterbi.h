@@ -59,14 +59,14 @@ extern "C" {
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
-int *ghmm_dp_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p,
+int *ghmm_dpmodel_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p,
 		     int *path_length);
 
-int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+int *ghmm_dpmodel_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				 double *log_p, int *path_length,
 				 int start_traceback_with);
 
-int *ghmm_dp_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+int *ghmm_dpmodel_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			  double *log_p, int *path_length);
 
 /**
@@ -80,7 +80,7 @@ int *ghmm_dp_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
   @return log P
   */
 
-double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+double ghmm_dpmodel_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			    int *state_seq, int state_seq_len);
 
 

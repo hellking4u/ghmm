@@ -90,7 +90,7 @@ int boolean_or(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, i
     return 0;
 }
 
-void set_to_lt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y) {
+void set_to_lt_sum(ghmm_dpmodel_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y) {
   if (pccc) {
     threshold_user_data * td;
     td = calloc (1, sizeof (td));
@@ -105,7 +105,7 @@ void set_to_lt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double th
     fprintf(stderr, "set_to_lt_sum_ka: No class change context\n");
 }
 
-void set_to_gt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y) {
+void set_to_gt_sum(ghmm_dpmodel_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y) {
   if (pccc){
     threshold_user_data * td;
     td = calloc (1, sizeof (td));
@@ -120,7 +120,7 @@ void set_to_gt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double th
     fprintf(stderr, "set_to_gt_sum_deltaka: No class change context\n");
 }
 
-void set_to_boolean_and(ghmm_dp_class_change_context * pccc, int seq_index, int offset_x, int offset_y) {
+void set_to_boolean_and(ghmm_dpmodel_class_change_context * pccc, int seq_index, int offset_x, int offset_y) {
   if (pccc){
     boolean_user_data * td;
     td = calloc (1, sizeof (td));
@@ -134,7 +134,7 @@ void set_to_boolean_and(ghmm_dp_class_change_context * pccc, int seq_index, int 
     fprintf(stderr, "set_to_boolean_and: No class change context\n");
 }
 
-void set_to_boolean_or(ghmm_dp_class_change_context * pccc, int seq_index, int offset_x, int offset_y) {
+void set_to_boolean_or(ghmm_dpmodel_class_change_context * pccc, int seq_index, int offset_x, int offset_y) {
   if (pccc){
     boolean_user_data * td;
     td = calloc (1, sizeof (td));

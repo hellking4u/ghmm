@@ -34,11 +34,12 @@
 *
 *******************************************************************************/
 
+#ifndef PCLASSCHANGE_H
+#define PCLASSCHANGE_H
+
 #include <ghmm/pmodel.h>
 #include <ghmm/psequence.h>
 
-#ifndef PCLASSCHANGE_H
-#define PCLASSCHANGE_H
 
 struct threshold_user_data {
   /** which double value in myseq **/
@@ -62,19 +63,19 @@ struct boolean_user_data {
 };
 typedef struct boolean_user_data boolean_user_data;
 
-int gt_sum(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
+int gt_sum(ghmm_dpmodel *mo, ghmm_dpseq *X, ghmm_dpseq *Y, int index_x, int index_y, void *user_data);
 
-int lt_sum(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
+int lt_sum(ghmm_dpmodel *mo, ghmm_dpseq *X, ghmm_dpseq *Y, int index_x, int index_y, void *user_data);
 
-int boolean_and(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
+int boolean_and(ghmm_dpmodel *mo, ghmm_dpseq *X, ghmm_dpseq *Y, int index_x, int index_y, void *user_data);
 
-int boolean_or(ghmm_dpmodel * mo, ghmm_dpseq * X, ghmm_dpseq * Y, int index_x, int index_y, void * user_data);
+int boolean_or(ghmm_dpmodel *mo, ghmm_dpseq *X, ghmm_dpseq *Y, int index_x, int index_y, void *user_data);
 
-void set_to_lt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
+void set_to_lt_sum(ghmm_dpmodel_class_change_context *pccc, int seq_index, double threshold, int offset_x, int offset_y);
 
-void set_to_gt_sum(ghmm_dp_class_change_context * pccc, int seq_index, double threshold, int offset_x, int offset_y);
+void set_to_gt_sum(ghmm_dpmodel_class_change_context *pccc, int seq_index, double threshold, int offset_x, int offset_y);
 
-void set_to_boolean_and(ghmm_dp_class_change_context * pccc, int seq_index, int offset_x, int offset_y);
+void set_to_boolean_and(ghmm_dpmodel_class_change_context *pccc, int seq_index, int offset_x, int offset_y);
 
-void set_to_boolean_or(ghmm_dp_class_change_context * pccc, int seq_index, int offset_x, int offset_y);
+void set_to_boolean_or(ghmm_dpmodel_class_change_context *pccc, int seq_index, int offset_x, int offset_y);
 #endif

@@ -151,7 +151,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param k:          number of hypotheses to keep for each state
    @param log_p:      variable reference to store the log prob. of the labeling
  */
-int *ghmm_dl_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *log_p)
+int *ghmm_dmodel_label_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *log_p)
 {
 #define CUR_PROC "ghmm_dl_kbest"
   int i, t, c, l, m;            /* counters */

@@ -59,7 +59,7 @@ extern "C" {
   @param len:   length of the sequence
   @param log_p: probability of the sequence in the Viterbi path
   */
-  int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p);
+  int * ghmm_dmodel_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p);
 
 /**
   Calculates the logarithmic probability to a given path through the 
@@ -71,7 +71,7 @@ extern "C" {
   @param state_seq: path through the states
   @return log P
   */
-  double ghmm_d_viterbi_logp (ghmm_dmodel * mo, int *o, int len, int *state_seq);
+  double ghmm_dmodel_viterbi_logp (ghmm_dmodel * mo, int *o, int len, int *state_seq);
 
 #ifdef __cplusplus
 }

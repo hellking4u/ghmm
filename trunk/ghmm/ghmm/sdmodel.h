@@ -153,8 +153,8 @@ extern "C" {
         Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
     int * order;
 
-    /** ghmm_d_background_distributions is a pointer to a
-        ghmm_d_background_distributions structure, which holds (essentially) an
+    /** ghmm_dbackground is a pointer to a
+        ghmm_dbackground structure, which holds (essentially) an
         array of background distributions (which are just vectors of floating
         point numbers like state.b).
 
@@ -164,7 +164,7 @@ extern "C" {
 
         Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
     int *background_id;
-    ghmm_d_background_distributions *bp;
+    ghmm_dbackground *bp;
     
     /** (WR) added these variables for topological ordering of silent states 
         Condition: topo_order != NULL iff (model_type & kSilentStates) != 0  */
@@ -180,9 +180,9 @@ extern "C" {
 
       Note: label != NULL iff (model_type & kLabeledStates) != 0  */
     int * label;
-    alphabet_s * labelAlphabet;
+    ghmm_alphabet * labelAlphabet;
 
-    alphabet_s * alphabet;
+    ghmm_alphabet * alphabet;
   };
 
   typedef struct ghmm_dsmodel ghmm_dsmodel;
@@ -205,7 +205,7 @@ extern "C" {
   /** Frees the memory of a model.
       @return 0 for succes; -1 for error
       @param mo:  pointer to a ghmm_dsmodel */
-  int ghmm_ds_free (ghmm_dsmodel ** mo);
+  int ghmm_dsmodel_free (ghmm_dsmodel ** mo);
 
   /** Allocates space for an empty dsmodel.
       @return   pointer to the created model on succes; 0 on error
@@ -220,7 +220,7 @@ extern "C" {
 				     int * inDegVec, int * outDegVec);
 
 
-  int ghmm_ds_init_silent_states (ghmm_dsmodel * mo);
+  int ghmm_dsmodel_init_silent_states (ghmm_dsmodel * mo);
 
   /** 
       Produces sequences to a given model. All memory that is needed for the 
@@ -239,7 +239,7 @@ extern "C" {
       @param T_max:  maximal number of consecutive silent states in model (used to
 	  identify silent circles).
   */
-  ghmm_dseq * ghmm_ds_generate_sequences(ghmm_dsmodel * mo, int seed,
+  ghmm_dseq * ghmm_dsmodel_generate_sequences(ghmm_dsmodel * mo, int seed,
 					 int global_len, long seq_number,
 					 int Tmax);
 
@@ -247,14 +247,15 @@ extern "C" {
      Copies a given model. Allocates the necessary memory.
      @returns a copy of the model
      @param mo:  dmodel to copy */
-  ghmm_dsmodel * ghmm_ds_copy(const ghmm_dsmodel * mo);
+  ghmm_dsmodel * ghmm_dsmodel_copy(const ghmm_dsmodel * mo);
 
   /** Utility for converting between single discrete model and switching model */
-  ghmm_dmodel * ghmm_ds_to_dmodel(const ghmm_dsmodel * mo, int kclass);
+  ghmm_dmodel * ghmm_dsmodel_to_dmodel(const ghmm_dsmodel * mo, int kclass);
 
   /** */
-  void ghmm_ds_from_dmodel (const ghmm_dmodel * mo, ghmm_dsmodel * smo, int klass);
+  void ghmm_dsmodel_from_dmodel (ghmm_dsmodel * smo, const ghmm_dmodel * mo, int klass);
 
+#ifdef GHMM_OBSOLETE 
   /**
      Writes a model in matrix format.
      @param file: output file
@@ -271,7 +272,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void ghmm_ds_Ak_print (FILE * file, ghmm_dsmodel * mo, int k, char *tab,
+  void ghmm_dsmodel_Ak_print (FILE * file, ghmm_dsmodel * mo, int k, char *tab,
                          char *separator, char *ending);
   /**
      Writes output matrix of a model.
@@ -281,7 +282,7 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void ghmm_ds_B_print (FILE * file, ghmm_dsmodel * mo, char *tab, char *separator,
+  void ghmm_dsmodel_B_print (FILE * file, ghmm_dsmodel * mo, char *tab, char *separator,
                         char *ending);
 
   /**
@@ -292,18 +293,19 @@ extern "C" {
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
   */
-  void ghmm_ds_Pi_print (FILE * file, ghmm_dsmodel * mo, char *tab,
+  void ghmm_dsmodel_Pi_print (FILE * file, ghmm_dsmodel * mo, char *tab,
                          char *separator, char *ending);
+#endif
 
   /*============================================================================*/
-  /** ghmm_ds_viterbi is working for switching discrete model
-   *  ghmm_ds_topo_order -- need to be implemented with DFS (as in model_util.c)
+  /** ghmm_dsmodel_viterbi is working for switching discrete model
+   *  ghmm_dsmodel_topo_order -- need to be implemented with DFS (as in model_util.c)
    *============================================================================
    **/
 
-  void ghmm_ds_topo_order (ghmm_dsmodel * mo);
+  void ghmm_dsmodel_topo_order (ghmm_dsmodel * mo);
 
-  int *ghmm_ds_viterbi (ghmm_dsmodel * mo, int *o, int len, double *log_p);
+  int *ghmm_dsmodel_viterbi (ghmm_dsmodel * mo, int *o, int len, double *log_p);
 
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
@@ -316,7 +318,7 @@ extern "C" {
       @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
       @return 0 for success, -1 for error
   */
-  int ghmm_ds_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
+  int ghmm_dsmodel_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
                       double *scale, double *log_p);
 
 
@@ -329,7 +331,7 @@ extern "C" {
       @param newalpha: unscaled alpha matrix
       @return 0 for success, -1 for error
   */
-  int ghmm_ds_forward_descale (double **alpha, double *scale, int t, int n,
+  int ghmm_dsmodel_forward_descale (double **alpha, double *scale, int t, int n,
                       double **newalpha);
 
 
@@ -340,7 +342,7 @@ extern "C" {
    @param mo model
    @param sq sequences       
 */
-  double ghmm_ds_likelihood (ghmm_dsmodel * mo, ghmm_dseq * sq);
+  double ghmm_dsmodel_likelihood (ghmm_dsmodel * mo, ghmm_dseq * sq);
 
 
 /** 
@@ -349,7 +351,7 @@ extern "C" {
     @param file: output file
     @param mo:   model
 */
-  void ghmm_ds_states_print (FILE * file, ghmm_dsmodel * mo);
+  void ghmm_dsmodel_states_print (FILE * file, ghmm_dsmodel * mo);
 
 
 #ifdef __cplusplus

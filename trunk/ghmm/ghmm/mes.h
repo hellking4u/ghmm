@@ -142,7 +142,7 @@ extern "C" {
 
 /* */
 #ifndef m_free
-#define m_free( p )  {if(p) {free(p); (p) = NULL;} else {GHMM_LOG(LCRITIC, "Attempted m_free on NULL pointer. Bad program, BAD ! No cookie for you ."); abort();}}
+#define m_free( p )  {if(p) {free(p); (p) = NULL;} else {GHMM_LOG(LCRITIC, "Attempted m_free on NULL pointer. Bad program, BAD! No cookie for you."); /*abort();*/}}
 #endif
 
 #ifndef m_strlen

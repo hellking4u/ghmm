@@ -148,7 +148,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*============================================================================*/
-cell * ghmm_dp_copy_cell(cell * c) {
+cell * ghmm_dpmodel_copy_cell(cell * c) {
   if (c)
     return init_cell(c->x, c->y, c->state, c->previous_state, c->log_p, c->log_a);
   else
@@ -156,7 +156,7 @@ cell * ghmm_dp_copy_cell(cell * c) {
 }
 
 /*============================================================================*/
-void ghmm_dp_print_cell(cell * c) {
+void ghmm_dpmodel_print_cell(cell * c) {
   if (c)
     printf("(%i, %i) state: %i previous state: %i log p: %f log a: %f\n", c->x, c->y, c->state, c->previous_state, c->log_p, c->log_a);
   else
@@ -186,7 +186,7 @@ static plocal_propagate_store_t * pviterbi_propagate_alloc (ghmm_dpmodel *mo, in
 
   ARRAY_CALLOC (v->log_b, mo->N);
   for (j=0; j<mo->N; j++) {
-    ARRAY_CALLOC (v->log_b[j], ghmm_dp_emission_table_size(mo, j) + 1);
+    ARRAY_CALLOC (v->log_b[j], ghmm_dpmodel_emission_table_size(mo, j) + 1);
   }
   if (!(v->log_b)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   v->phi = ighmm_cmatrix_3d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
@@ -229,7 +229,7 @@ static void pviterbi_prop_precompute (ghmm_dpmodel *mo, plocal_propagate_store_t
 
   /* Precomputing the log emission probabilities for each state*/
   for (j = 0; j < mo->N; j++) {
-    for (emission = 0; emission < ghmm_dp_emission_table_size(mo,j); emission++) {
+    for (emission = 0; emission < ghmm_dpmodel_emission_table_size(mo,j); emission++) {
       if (1) {
 	if ( mo->s[j].b[emission] == 0.0 )   /* DBL_EPSILON ? */ 
 	  pv->log_b[j][emission] = +1; 
@@ -298,9 +298,9 @@ static double log_b_prop(plocal_propagate_store_t * pv, int state, int emission)
 #ifdef DEBUG
   if (state > pv->mo->N) 
     fprintf(stderr, "log_b_prop: State index out of bounds %i > %i\n", state, pv->mo->N);
-  if (emission > ghmm_dp_emission_table_size(pv->mo, state))
+  if (emission > ghmm_dpmodel_emission_table_size(pv->mo, state))
     fprintf(stderr, "log_b_prop: Emission index out of bounds %i > %i for state %i\n",
-	    emission, ghmm_dp_emission_table_size(pv->mo, state), state);
+	    emission, ghmm_dpmodel_emission_table_size(pv->mo, state), state);
 #endif
   return pv->log_b[state][emission];
 }
@@ -341,7 +341,7 @@ static void set_end_of_first (plocal_propagate_store_t * pv, int x, int y,
     fprintf(stderr, "set_end_of_first: out of bounds %i %i %i\n", 
 	    x + pv->mo->max_offset_x, y + pv->mo->max_offset_y, 
 	    state);
-    ghmm_dp_print_cell(end_of_first);
+    ghmm_dpmodel_print_cell(end_of_first);
   }
 #endif
   pv->end_of_first[0][y + pv->mo->max_offset_y][state] = end_of_first;
@@ -400,9 +400,9 @@ static void init_start_stop (cell * start, cell *stop, ghmm_dpseq * X,
 }
 
 /*============================================================================*/
-int * ghmm_dp_viterbi_propagate (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+int * ghmm_dpmodel_viterbi_propagate (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			  double *log_p, int *path_length, double max_size) {
-#define CUR_PROC "ghmm_dp_viterbi_propagate"
+#define CUR_PROC "ghmm_dpmodel_viterbi_propagate"
   /* Divide and conquer algorithm to reduce the memory requirement */
   
   /* 1. Compute the alignment of X vs Y and propagate the middle point*/
@@ -411,10 +411,10 @@ int * ghmm_dp_viterbi_propagate (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * 
      X[len/2+1:len] vs Y[m+1:len] */
 
   /* Break the recursion if the lengths of both sequences become tractable
-     for the normal ghmm_dp_viterbi algorithm */
+     for the normal ghmm_dpmodel_viterbi algorithm */
 
   /* start of the implementation */
-  /* give sequence length of X = 0 to ghmm_dp_viterbi alloc so traceback matrix 
+  /* give sequence length of X = 0 to ghmm_dpmodel_viterbi alloc so traceback matrix 
      will not be allocated */
   plocal_propagate_store_t * pv = pviterbi_propagate_alloc(mo, Y->length);
   /* check if it worked */
@@ -451,7 +451,7 @@ static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
      X[len/2+1:len] vs Y[m+1:len] */
 
   /* Break the recursion if the lengths of both sequences become tractable
-     for the normal ghmm_dp_viterbi algorithm */
+     for the normal ghmm_dpmodel_viterbi algorithm */
 
   /* start of the implementation */
   int * path_seq = NULL;
@@ -467,24 +467,24 @@ static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
 #ifdef DEBUG
   printf("Recursion: start, stop cells\n");
   if(start)
-    ghmm_dp_print_cell(start);
+    ghmm_dpmodel_print_cell(start);
   else
     printf("(0, 0) first segment\n");
   if(stop)
-    ghmm_dp_print_cell(stop);
+    ghmm_dpmodel_print_cell(stop);
   else
   printf("(%i, %i) last segment\n", stop_x, stop_y);
 #endif
   /* Break the recursion if the lengths of both sequences become tractable
-     for the normal ghmm_dp_viterbi algorithm */
+     for the normal ghmm_dpmodel_viterbi algorithm */
   if ((double)(stop_x - start_x) * (double)(stop_y - start_y) < max_size) {
-    /* to use the unchanged ghmm_dp_viterbi algorithm take slices of the sequences */
+    /* to use the unchanged ghmm_dpmodel_viterbi algorithm take slices of the sequences */
     ghmm_dpseq * tractable_X = ghmm_dpseq_slice(X, start_x, stop_x);
     ghmm_dpseq * tractable_Y = ghmm_dpseq_slice(Y, start_y, stop_y);
     /* if this is not the very first path segment starting at zero:
        temporarily change the initial probabability to go into state k+1 */
 #ifdef DEBUG
-    printf("ghmm_dp_viterbi on slice  x[%i:%i], y[%i:%i]\n", 
+    printf("ghmm_dpmodel_viterbi on slice  x[%i:%i], y[%i:%i]\n", 
 	   start_x, stop_x, start_y, stop_y); 
 #endif
     if (start != NULL) {
@@ -499,9 +499,9 @@ static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
       
       /* compute the partial path */
       if (stop != NULL)
-	path_seq = ghmm_dp_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, stop->previous_state);
+	path_seq = ghmm_dpmodel_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, stop->previous_state);
       else
-	path_seq = ghmm_dp_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, -1);
+	path_seq = ghmm_dpmodel_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, -1);
       /* restore the original model */
       for (i=0; i<mo->N; i++) 
 	mo->s[i].log_pi = original_pi[i];
@@ -509,9 +509,9 @@ static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
     }
     else {
       if (stop != NULL)
-	path_seq = ghmm_dp_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, stop->previous_state);
+	path_seq = ghmm_dpmodel_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, stop->previous_state);
       else
-	path_seq = ghmm_dp_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, -1);
+	path_seq = ghmm_dpmodel_viterbi_variable_tb(mo, tractable_X, tractable_Y, log_p, path_length, -1);
     }
     if (*log_p == 1) {
       fprintf(stderr, "Problem with slice x[%i:%i], y[%i:%i]\n", 
@@ -555,7 +555,7 @@ static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
     else {
       printf("(%i, %i)->(%i, %i) Middlepoint ", start_x, start_y,
 	     stop_x, stop_y);
-      ghmm_dp_print_cell(middle);
+      ghmm_dpmodel_print_cell(middle);
     } 
 #endif
     /* check if there is a path */
@@ -602,11 +602,11 @@ static int * pviterbi_propagate_recursion (ghmm_dpmodel *mo, ghmm_dpseq * X,
 
     printf("Conquer: start, stop cells\n");
     if(start)
-      ghmm_dp_print_cell(start);
+      ghmm_dpmodel_print_cell(start);
     else
       printf("(0, 0) first segment\n");
     if(stop)
-      ghmm_dp_print_cell(stop);
+      ghmm_dpmodel_print_cell(stop);
     else
       printf("(%i, %i) last segment\n", stop_x, stop_y);
     printf("Path 1:\n[");
@@ -735,21 +735,21 @@ static void init_phi_prop (plocal_propagate_store_t * pv, ghmm_dpseq * X,
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 #ifdef DEBUG
-	  int emission = ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u + start_x), 
+	  int emission = ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u + start_x), 
 			      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
-	  if (emission > ghmm_dp_emission_table_size(mo, i)){
+	  if (emission > ghmm_dpmodel_emission_table_size(mo, i)){
 	    printf("State %i\n", i);
-	    ghmm_dp_state_print(&(mo->s[i]));
+	    ghmm_dpmodel_state_print(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
 		   ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
 		   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
-		   ghmm_dp_emission_table_size(mo, i), emission);
+		   ghmm_dpmodel_emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b_prop(pv, i, ghmm_dp_pair(ghmm_dpseq_get_char(X, 
+	  log_b_i = log_b_prop(pv, i, ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, 
 							       mo->s[i].alphabet,
 							       u + start_x),
 					   ghmm_dpseq_get_char(Y, 
@@ -863,7 +863,7 @@ static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dp
 /*   if (mo->model_type & kSilentStates &&  */
 /*       mo->silent != NULL &&  */
 /*       mo->topo_order == NULL) { */
-/*     ghmm_d_topo_order( mo );  */
+/*     ghmm_dmodel_topo_order( mo );  */
 /*   } */
   init_phi_prop(pv, X, Y, start, stop);
 #ifdef DEBUG
@@ -933,21 +933,21 @@ static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dp
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 #ifdef DEBUG
-	  int emission = ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+	  int emission = ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 			      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
-	  if (emission > ghmm_dp_emission_table_size(mo, i)){
+	  if (emission > ghmm_dpmodel_emission_table_size(mo, i)){
 	    printf("State %i\n", i);
-	    ghmm_dp_state_print(&(mo->s[i]));
+	    ghmm_dpmodel_state_print(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
 		   ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
 		   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
-		   ghmm_dp_emission_table_size(mo, i), emission);
+		   ghmm_dpmodel_emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b_prop(pv, i, ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+	  log_b_i = log_b_prop(pv, i, ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 					   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 					   mo->size_of_alphabet[mo->s[i].alphabet],
 					   mo->s[i].offset_x, mo->s[i].offset_y));
@@ -996,7 +996,7 @@ static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dp
     for (j = 0; j < mo->N; j++){
 #ifdef DEBUG
     /* printf("phi(len_x)(len_y)(%i)=%f\n", j, pv->phi[0][stop_y-1][j]);
-       ghmm_dp_print_cell(pv->end_of_first[0][stop_y - 1][j]); */
+       ghmm_dpmodel_print_cell(pv->end_of_first[0][stop_y - 1][j]); */
 #endif
       if ( get_phi_prop(pv, stop_x - 1, stop_y - 1, 0, 0, j) != +1 && 
 	   get_phi_prop(pv, stop_x - 1, stop_y - 1, 0, 0, j) > max_value) { 
@@ -1026,13 +1026,13 @@ static cell * pviterbi_propagate_step (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dp
 
 
 /*===========================================================================*/
-int * ghmm_dp_viterbi_propagate_segment (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+int * ghmm_dpmodel_viterbi_propagate_segment (ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				  double *log_p, int *path_length,
 				  double max_size, int start_x, int start_y,
 				  int stop_x, int stop_y, int start_state,
 				  int stop_state, double start_log_p,
 				  double stop_log_p) {
-#define CUR_PROC "ghmm_dp_viterbi_propagate_segment"
+#define CUR_PROC "ghmm_dpmodel_viterbi_propagate_segment"
   int * path_seq = NULL;
   cell * start, * stop;
   plocal_propagate_store_t * pv = pviterbi_propagate_alloc(mo, Y->length);

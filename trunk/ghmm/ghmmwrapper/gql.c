@@ -140,7 +140,7 @@ ghmm_cmodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density)
     {goto STOP;}
 
   for(i=0; i < smo->N; i++) {
-    ghmm_c_state_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
+    ghmm_cstate_alloc(&smo->s[i], smo->M, smo->N, smo->N, cos);
   }
   return smo;
 STOP:
@@ -240,7 +240,7 @@ int smodel_sorted_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, doubl
   matched=0;
   for ( i = 0; i < sqd->seq_number; i++) {
     seq_rank[i] = i;
-    if (ghmm_c_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
+    if (ghmm_cmodel_logp(smo, sqd->seq[i], sqd->seq_len[i], &log_p_i) != -1) { 
       log_ps[i] = log_p_i;
       matched++;
     }

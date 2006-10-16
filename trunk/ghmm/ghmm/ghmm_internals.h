@@ -143,7 +143,7 @@ int ighmm_reestimate_free_matvek(double **alpha, double **beta, double *scale,
    @param matrix_a:        matrix for parameters from A (n_a or m_a)
    @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
 */
-int ghmm_dl_gradient_expectations(ghmm_dmodel *mo, double **alpha, double **beta,
+int ghmm_dmodel_label_gradient_expectations(ghmm_dmodel *mo, double **alpha, double **beta,
                                   double *scale, int *seq, int seq_len,
                                   double **matrix_b, double *matrix_a,
                                   double *vec_pi);

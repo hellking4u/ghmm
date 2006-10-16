@@ -59,11 +59,11 @@ int single_state_coin_toss()
   my_model.silent = silent_array;
 
   fprintf(stdout,"transition matrix:\n");
-  ghmm_d_A_print(stdout,&my_model,""," ","\n");
+  ghmm_dmodel_A_print(stdout,&my_model,""," ","\n");
   fprintf(stdout,"observation symbol matrix:\n");
-  ghmm_d_B_print(stdout,&my_model,""," ","\n");
+  ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
 
-  my_output=ghmm_d_generate_sequences(&my_model,0,10,10,100);
+  my_output=ghmm_dmodel_generate_sequences(&my_model,0,10,10,100);
   ghmm_dseq_print(stdout,my_output);
 
   ghmm_dseq_free(&my_output);
@@ -128,15 +128,15 @@ int two_states_coin_toss()
   my_model.silent = silent_array;
   
   fprintf(stdout,"transition matrix:\n");
-  ghmm_d_A_print(stdout,&my_model,""," ","\n");
+  ghmm_dmodel_A_print(stdout,&my_model,""," ","\n");
   fprintf(stdout,"observation symbol matrix:\n");
-  ghmm_d_B_print(stdout,&my_model,""," ","\n");
+  ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
 
-  my_output=ghmm_d_generate_sequences(&my_model,0,10,10,100);
+  my_output=ghmm_dmodel_generate_sequences(&my_model,0,10,10,100);
   ghmm_dseq_print(stdout,my_output);
 
   /* try viterbi algorithm in a clear situation */
-  viterbi_path = ghmm_d_viterbi(&my_model, my_output->seq[0],
+  viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],
 				my_output->seq_len[0], &log_p_viterbi);
   if (viterbi_path==NULL)
     {fprintf(stderr,"viterbi failed!"); return 1;}
@@ -161,15 +161,15 @@ int two_states_coin_toss()
       return 1;
     }
 
-  /* run ghmm_d_forward */
-  if (ghmm_d_forward(&my_model,
+  /* run ghmm_dmodel_forward */
+  if (ghmm_dmodel_forward(&my_model,
 		   my_output->seq[0],
 		   my_output->seq_len[0],
 		   forward_alpha,
 		   forward_scale,
 		   &log_p_forward))
     {
-      fprintf(stderr,"ghmm_d_logp failed!");
+      fprintf(stderr,"ghmm_dmodel_logp failed!");
       ighmm_cmatrix_stat_free(&forward_alpha);
       return 1;
     }

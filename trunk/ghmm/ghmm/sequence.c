@@ -506,7 +506,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*============================================================================*/
 ghmm_cseq *ghmm_cseq_calloc (long seq_number)
 {
-#define CUR_PROC "sequence_dcalloc"
+#define CUR_PROC "ghmm_cseq_calloc"
 
   int i;
   char * str;
@@ -584,6 +584,20 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_dseq_calloc */
 
 /*============================================================================*/
+int ghmm_dseq_calloc_state_labels (ghmm_dseq *sq)
+{
+#define CUR_PROC "ghmm_dseq_calloc_state_labels"
+
+  ARRAY_CALLOC(sq->state_labels, sq->seq_number);
+  ARRAY_CALLOC(sq->state_labels_len, sq->seq_number);
+
+  return 0;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return -1;
+#undef CUR_PROC
+}                               /* ghmm_dseq_calloc_state_labels */
+
+/*============================================================================*/
 ghmm_cseq *ghmm_cseq_get_singlesequence(ghmm_cseq *sq, int index)
 {
   ghmm_cseq *res;
@@ -632,55 +646,51 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*XXX TEST: frees everything but the seq field */
-int ghmm_dseq_subseq_free (ghmm_dseq ** sq)
+int ghmm_dseq_subseq_free (ghmm_dseq *sq)
 {
 # define CUR_PROC "ghmm_dseq_subseq_free"
   /*int i,j;*/
 
   mes_check_ptr (sq, return (-1));
-  if (!*sq)
-    return (0);
 
-  m_free ((*sq)->seq_len);
+  m_free (sq->seq_len);
 #ifdef GHMM_OBSOLETE
-  m_free ((*sq)->seq_label);
+  m_free (sq->seq_label);
 #endif /* GHMM_OBSOLETE */
-  m_free ((*sq)->seq_id);
-  m_free ((*sq)->seq_w);
+  m_free (sq->seq_id);
+  m_free (sq->seq_w);
 
-  if ((*sq)->states) {
-    ighmm_dmatrix_free (&(*sq)->states, (*sq)->seq_number);
-    /*m_free((*sq)->states); */
+  if (sq->states) {
+    ighmm_dmatrix_free (&(sq->states), sq->seq_number);
   }
 
-  if ((*sq)->state_labels) {
-    ighmm_dmatrix_free (&(*sq)->state_labels, (*sq)->seq_number);
-    m_free ((*sq)->state_labels_len);
+  if (sq->state_labels) {
+    ighmm_dmatrix_free (&(sq->state_labels), sq->seq_number);
+    m_free (sq->state_labels_len);
 
-    /*m_free((*sq)->states); */
   }
 
-  m_free ((*sq)->seq);
-  m_free (*sq);
+  m_free (sq->seq);
+  m_free (sq);
   return 0;
 # undef CUR_PROC
 }                               /* ghmm_dseq_subseq_free */
 
 
-int ghmm_cseq_subseq_free (ghmm_cseq ** sqd)
+int ghmm_cseq_subseq_free (ghmm_cseq * sqd)
 {
 # define CUR_PROC "ghmm_cseq_subseq_free"
   mes_check_ptr (sqd, return (-1));
 
   /* ghmm_cseq_print(stdout,*sqd,0);*/
-  m_free ((*sqd)->seq);
-  m_free ((*sqd)->seq_len);
+  m_free (sqd->seq);
+  m_free (sqd->seq_len);
 #ifdef GHMM_OBSOLETE
-  m_free ((*sqd)->seq_label);
+  m_free (sqd->seq_label);
 #endif /* GHMM_OBSOLETE */
-  m_free ((*sqd)->seq_id);
-  m_free ((*sqd)->seq_w);
-  m_free (*sqd);
+  m_free (sqd->seq_id);
+  m_free (sqd->seq_w);
+  m_free (sqd);
   return 0;
 # undef CUR_PROC
 }   /* ghmm_cseq_subseq_free */
@@ -934,7 +944,7 @@ int ghmm_dseq_best_model (ghmm_dmodel ** mo, int model_number, int *sequence,
   *log_p = -DBL_MAX;
   model_index = -1;
   for (i = 0; i < model_number; i++) {
-    ghmm_d_logp (mo[i], sequence, seq_len, &log_ptmp);
+    ghmm_dmodel_logp (mo[i], sequence, seq_len, &log_ptmp);
     if (log_ptmp != +1 && log_ptmp > *log_p) {
       *log_p = log_ptmp;
       model_index = i;
@@ -948,7 +958,7 @@ int ghmm_dseq_best_model (ghmm_dmodel ** mo, int model_number, int *sequence,
 
 
 /*============================================================================*/
-void ghmm_dseq_print (FILE * file, ghmm_dseq * sq)
+void ghmm_dseq_print (ghmm_dseq * sq, FILE * file)
 {
   int i, j;
   fprintf (file, "SEQ = {\n\tO = {\n");
@@ -973,7 +983,7 @@ void ghmm_dseq_print (FILE * file, ghmm_dseq * sq)
 }                               /* ghmm_dseq_print */
 
 /*============================================================================*/
- /**/ void ghmm_dseq_print_xml (FILE * file, ghmm_dseq * sq)
+ /**/ void ghmm_dseq_print_xml (ghmm_dseq * sq, FILE * file)
 {
   int i, j;
   /* coding missing */
@@ -1027,7 +1037,7 @@ void ghmm_cseq_print_xml (FILE * file, ghmm_cseq * sq)
 
 /*============================================================================*/
 
-void ghmm_dseq_mathematica_print (FILE * file, ghmm_dseq * sq, char *name)
+void ghmm_dseq_mathematica_print (ghmm_dseq * sq, FILE * file, char *name)
 {
   int i;
   fprintf (file, "%s = {\n", name);
@@ -1041,7 +1051,7 @@ void ghmm_dseq_mathematica_print (FILE * file, ghmm_dseq * sq, char *name)
 
 /*============================================================================*/
 
-void ghmm_cseq_gnu_print (FILE * file, ghmm_cseq * sqd)
+void ghmm_cseq_gnu_print (ghmm_cseq * sqd, FILE * file)
 {
   int i, j;
   for (i = 0; i < sqd->seq_number; i++) {
@@ -1052,7 +1062,7 @@ void ghmm_cseq_gnu_print (FILE * file, ghmm_cseq * sqd)
 }
 
 /*============================================================================*/
-void ghmm_cseq_print (FILE * file, ghmm_cseq * sqd, int discrete)
+void ghmm_cseq_print (ghmm_cseq * sqd, FILE * file, int discrete)
 {
   int i, j;
   fprintf (file, "SEQD = {\n\tO = {\n");
@@ -1093,7 +1103,7 @@ void ghmm_cseq_print (FILE * file, ghmm_cseq * sqd, int discrete)
 
 /*============================================================================*/
 
-void ghmm_cseq_mathematica_print (FILE * file, ghmm_cseq * sqd,
+void ghmm_cseq_mathematica_print (ghmm_cseq * sqd, FILE * file,
                                    char *name)
 {
   int i;
@@ -1144,10 +1154,9 @@ void ghmm_cseq_clean (ghmm_cseq * sqd)
 /*============================================================================*/
 int ghmm_dseq_free (ghmm_dseq ** sq) {
 # define CUR_PROC "ghmm_dseq_free"
-
-  mes_check_ptr (sq, return (-1));
+  mes_check_ptr(sq, return -1);
   if (!*sq)
-    return (0);
+    return -1;
 
   /* ighmm_dmatrix_free also takes care of (*sq)->seq */
   if (ighmm_dmatrix_free(&(*sq)->seq, (*sq)->seq_number) == -1)
@@ -1178,8 +1187,9 @@ int ghmm_dseq_free (ghmm_dseq ** sq) {
 int ghmm_cseq_free (ghmm_cseq ** sqd)
 {
 # define CUR_PROC "ghmm_cseq_free"
-  mes_check_ptr (sqd, return (-1));
-  /* ghmm_cseq_print(stdout,*sqd,0);*/
+  mes_check_ptr(sqd, return -1);
+  if (!*sqd)
+    return -1;
 
   ighmm_cmatrix_free(&(*sqd)->seq, (*sqd)->seq_number);
   m_free((*sqd)->seq_len);
@@ -1470,7 +1480,7 @@ int ghmm_cseq_mix_like (ghmm_cmodel ** smo, int smo_number, ghmm_cseq * sqd,
   for (i = 0; i < sqd->seq_number; i++) {
     seq_like = 0.0;
     for (k = 0; k < smo_number; k++) {
-      if (ghmm_c_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &log_p) != -1) {
+      if (ghmm_cmodel_logp (smo[k], sqd->seq[i], sqd->seq_len[i], &log_p) != -1) {
         if (log_p > -100)
           seq_like += exp (log_p) * smo[k]->prior;
       }

@@ -49,7 +49,7 @@ extern "C" {
 /** @name ghmm_dstate
     The basic structure, keeps all parameters that belong to a state. 
 */
-struct ghmm_dstate {
+typedef struct {
   /** Initial probability */
   double pi;
   /** Output probability */
@@ -77,15 +77,14 @@ struct ghmm_dstate {
   int xPosition;
   /** y coordinate position for graph representation plotting **/
   int yPosition;
-};
-typedef struct ghmm_dstate ghmm_dstate;
+} ghmm_dstate;
 
 
 
 /** @name ghmm_dmodel
     The complete HMM. Contains all parameters, that define a HMM.
 */
-struct ghmm_dmodel {
+typedef struct {
   /** Number of states */
   int N;
   /** Number of outputs */
@@ -144,8 +143,8 @@ struct ghmm_dmodel {
       Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
   int * order;
 
-  /** ghmm_d_background_distributions is a pointer to a
-      ghmm_d_background_distributions structure, which holds (essentially) an
+  /** ghmm_dbackground is a pointer to a
+      ghmm_dbackground structure, which holds (essentially) an
       array of background distributions (which are just vectors of floating
       point numbers like state.b).
       
@@ -156,7 +155,7 @@ struct ghmm_dmodel {
       
       Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
   int *background_id;
-  ghmm_d_background_distributions *bp;
+  ghmm_dbackground* bp;
 
   /** (WR) added these variables for topological ordering of silent states 
       Condition: topo_order != NULL iff (model_type & kSilentStates) != 0  */
@@ -172,11 +171,10 @@ struct ghmm_dmodel {
 
       Note: label != NULL iff (model_type & kLabeledStates) != 0  */
   int * label;
-  alphabet_s * labelAlphabet;
+  ghmm_alphabet * labelAlphabet;
 
-  alphabet_s * alphabet;
-};
-typedef struct ghmm_dmodel ghmm_dmodel;
+  ghmm_alphabet * alphabet;
+} ghmm_dmodel;
 
 #ifdef __cplusplus
 }
@@ -196,7 +194,7 @@ extern "C" {
     binary algorithm to compute powers of integers efficiently
     see Knuth, TAOCP, Vol 2, 4.6.3 
     uses if appropiate lookup table from struct ghmm_dmodel */
-   int ghmm_d_ipow(const ghmm_dmodel * mo, int x, unsigned int n);
+   int ghmm_ipow(const ghmm_dmodel * mo, int x, unsigned int n);
 
 
 /*----------------------------------------------------------------------------*/
@@ -214,7 +212,7 @@ extern "C" {
 /** Frees the memory of a model.
     @return 0 for succes; -1 for error
     @param mo:  address of pointer to a ghmm_dmodel */
-  int ghmm_d_free (ghmm_dmodel ** mo);
+  int ghmm_dmodel_free (ghmm_dmodel ** mo);
 
 /** 
     Produces simple left-right models given sequences. The sequences
@@ -222,34 +220,34 @@ extern "C" {
     @return vector of models
     @param s:          scanner
     @param new_models: number of models to produce */
-  ghmm_dmodel **ghmm_d_from_sequence (ghmm_dseq * sq, long *mo_number);
+  ghmm_dmodel **ghmm_dmodel_from_sequence (ghmm_dseq * sq, long *mo_number);
 
 /**
    Copies a given model. Allocates the necessary memory.
    @return copy of the model
    @param mo:  model to copy */
-  ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo);
+  ghmm_dmodel *ghmm_dmodel_copy (const ghmm_dmodel * mo);
 
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
    @return 0 for success; -1 for error
    @param mo:  ghmm_dmodel to test */
-  int ghmm_d_check (const ghmm_dmodel * mo);
+  int ghmm_dmodel_check (const ghmm_dmodel * mo);
 
 /**
    Tests if number of states and number of outputs in the models match.
    @return 0 for succes; -1 for error
    @param mo:           vector of models
    @param model_number: numbr of models */
-  int ghmm_d_check_compatibility (ghmm_dmodel ** mo, int model_number);
+  int ghmm_dmodel_check_compatibility (ghmm_dmodel ** mo, int model_number);
 
 /**
    Test if to models are compatible. That means their states and outputs match.
    @return 0 for succes; -1 for error
    @param mo:     first ghmm_dmodel
    @param m2:     second ghmm_dmodel */
-int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * m2);
+int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * m2);
 
 /**
    Produces a model, which generates the given sequence with probability 1.
@@ -261,7 +259,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param seq_len:  length of the sequence
    @param anz_symb: number of symbols in the sequence
 */
-  ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
+  ghmm_dmodel *ghmm_dmodel_generate_from_sequence (const int *seq, int seq_len,
                                        int anz_symb);
 
 /** 
@@ -279,7 +277,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
 */
-  ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
+  ghmm_dseq *ghmm_dmodel_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
                                         long seq_number, int Tmax);
 
 /**
@@ -289,26 +287,35 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param mo model
    @param sq sequences       
 */
-  double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq);
+  double ghmm_dmodel_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq);
 
+/**
+    Get transition probabality from state 'i' to state 'j' to value 'prob'.
+    NOTE: No internal checks
+    @return  transition probability from state i to state j
+    @param mo model
+    @param i  state index (source)
+    @param j  state index (target)
+*/
+  double ghmm_dmodel_get_transition(ghmm_dmodel* mo, int i, int j);
 
 /**
     Set transition from state 'i' to state 'j' to value 'prob'.
     NOTE: No internal checks - model might get broken if used without care.
     @param mo model
-    @param i  state index
-    @param j  state index
+    @param i  state index (source)
+    @param j  state index (target)
     @param prob probabilitys
     
 */
-  void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob);
+  void ghmm_dmodel_set_transition (ghmm_dmodel * mo, int i, int j, double prob);
 
 /**
    Writes a model in matrix format.
    @param file: output file
    @param mo:   model
 */
-  void ghmm_d_print (FILE * file, ghmm_dmodel * mo);
+  void ghmm_dmodel_print (FILE * file, ghmm_dmodel * mo);
 
 /**
    Writes transition matrix of a model.
@@ -318,7 +325,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+  void ghmm_dmodel_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                       char *ending);
 /**
    Writes output matrix of a model.
@@ -328,7 +335,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+  void ghmm_dmodel_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                       char *ending);
 /**
    Writes initial allocation vector of a matrix.
@@ -338,7 +345,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+  void ghmm_dmodel_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                        char *ending);
 /**
    Writes fix vector of a matrix.
@@ -348,7 +355,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+  void ghmm_dmodel_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                         char *ending);
 /**
    Writes transposed transition matrix of a model.
@@ -358,7 +365,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_A_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
+  void ghmm_dmodel_A_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                              char *separator, char *ending);
 /**
    Writes transposed output matrix of a model.
@@ -368,7 +375,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
+  void ghmm_dmodel_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                              char *separator, char *ending);
 
 /**
@@ -379,7 +386,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
-  void ghmm_d_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
+  void ghmm_dmodel_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                               char *ending);
 
 /** 
@@ -388,7 +395,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
     @param file: output file
     @param mo:   model
 */
-  void ghmm_d_states_print (FILE * file, ghmm_dmodel * mo);
+  void ghmm_dmodel_states_print (FILE * file, ghmm_dmodel * mo);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -401,7 +408,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
     @param verbose  flag, whether to monitor distance in 40 steps.
                     Prints to stdout (yuk!)
 */
-  double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int symmetric,
+  double ghmm_dmodel_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int symmetric,
                               int verbose);
 
 /** 
@@ -410,10 +417,10 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
     @author Peter Pipenbacher
     @param my_state  state to clean (\Ref{struct ghmm_dstate})
 */
-  void ghmm_d_state_clean (ghmm_dstate * my_state);
+  void ghmm_dstate_clean (ghmm_dstate * my_state);
 
 
-  ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
+  ghmm_dseq *ghmm_dmodel_label_generate_sequences (ghmm_dmodel * mo, int seed,
                                               int global_len, long seq_number,
                                               int Tmax);
 
@@ -429,7 +436,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 #define get_emission_index(MO, S, O, T)   (((MO)->model_type & GHMM_kHigherOrderEmissions) ?    \
                                             ((MO)->order[S] > (T)) ? -1 :                       \
                                               (((MO)->emission_history*(MO)->M) %               \
-                                              ghmm_d_ipow((MO), (MO)->M, (MO)->order[S]+1)+(O)) \
+                                              ghmm_ipow((MO), (MO)->M, (MO)->order[S]+1)+(O)) \
                                             : (O))
 
 /**
@@ -442,7 +449,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 */
 #define update_emission_history(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)               \
                                               (MO)->emission_history = ((MO)->emission_history*(MO)->M) % \
-                                                ghmm_d_ipow((MO), (MO)->M, (MO)->maxorder) + (O)
+                                                ghmm_ipow((MO), (MO)->M, (MO)->maxorder) + (O)
 
 
 /**
@@ -457,7 +464,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
 */
 #define update_emission_history_front(MO, O)   if ((MO)->model_type & GHMM_kHigherOrderEmissions)       \
                                                  (MO)->emission_history =                               \
-                                                   ghmm_d_ipow((MO), (MO)->M, (MO)->maxorder-1) * (O) + \
+                                                   ghmm_ipow((MO), (MO)->M, (MO)->maxorder-1) * (O) + \
                                                    (MO)->emission_history / (MO)->M
 
 
@@ -468,7 +475,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
     @return 0 if normalization went through
     @param mo: model to be normalized
 */
-  int ghmm_d_normalize (ghmm_dmodel * mo);
+  int ghmm_dmodel_normalize (ghmm_dmodel * mo);
 
 /**
    Add a specific level of noise to the model parameters
@@ -478,11 +485,11 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
                         a noise level of 0.0 doesn't change the model
    @param seed :        seed for ramdom number generator
 */
-  int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed);
+  int ghmm_dmodel_add_noise (ghmm_dmodel * mo, double level, int seed);
 
 
 /** 
-   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_dbackground struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
@@ -491,7 +498,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-  int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times);
+  int ghmm_dmodel_duration_apply (ghmm_dmodel * mo, int cur, int times);
 
 
 /**
@@ -503,26 +510,26 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param background_weight:   a parameter controlling the weight given to the
                                background. Note, should be between 0 and 1.
 */
-  int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight);
+  int ghmm_dmodel_background_apply (ghmm_dmodel * mo, double *background_weight);
 
 
 /** 
-   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_dbackground struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
-   @return    :               new pointer to a ghmm_d_background_distributions struct
+   @return    :               new pointer to a ghmm_dbackground struct
    @param n   :               number of distributions
    @param order:              orders of the distribtions
    @param B:                  matrix of distribution parameters
 */
-  ghmm_d_background_distributions *ghmm_d_background_alloc (int n, int m,
+  ghmm_dbackground *ghmm_dbackground_alloc (int n, int m,
 							    int *orders,
 							    double **B);
 
-  ghmm_d_background_distributions *ghmm_d_background_copy (ghmm_d_background_distributions * bg);
+  ghmm_dbackground *ghmm_dbackground_copy (ghmm_dbackground * bg);
 
-  int ghmm_d_background_free (ghmm_d_background_distributions * bg);
+  int ghmm_dbackground_free (ghmm_dbackground * bg);
 
 /**
    Calculates the background distribution for a ghmm_dseq
@@ -535,7 +542,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param sq  : a pointer to a ghmm_dseq struct
    
 */
-  int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq);
+  int ghmm_dmodel_get_uniform_background (ghmm_dmodel * mo, ghmm_dseq * sq);
 
 /**
    Calculates the squared distance between two compatible models.
@@ -544,21 +551,21 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param mo:    first model
    @param m2:    second model
 */
-  double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2);
+  double ghmm_dmodel_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2);
 
 /**
    Calculates a topological ordering of the silent states
    and saves it in the model. Detects cycles of silent states.
    @param mo:      model
 */
-  void ghmm_d_topo_order (ghmm_dmodel * mo);
+  void ghmm_dmodel_order_topological (ghmm_dmodel * mo);
 
 /**
    Update the emissions according to the tie groups by computing the mean
    values within all groups.
    @param mo:      model
 */
-  void ghmm_d_update_tied_groups (ghmm_dmodel * mo);
+  void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo);
 
 /**
    Writes a xml file and returns an array of dmodel pointer
@@ -566,7 +573,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param file       :filename of the xml file
    @param mo_number  :address of an int to store the length of the returned array
 */
-  ghmm_dmodel * * ghmm_d_xml_read (const char *filename, int * mo_number);
+  ghmm_dmodel** ghmm_dmodel_xml_read(const char *filename, int* mo_number);
 
 /**
    Writes an array of dmodel pointer in a xml-file
@@ -575,7 +582,7 @@ int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * 
    @param mo         :an array of pointers to ghmm_dmodel
    @param mo_number  :length of the array
 */
-  int ghmm_d_xml_write (const char *file, ghmm_dmodel * * mo, int mo_number);
+  int ghmm_dmodel_xml_write(ghmm_dmodel** mo, const char *file, int mo_number);
 
 #ifdef __cplusplus
 }

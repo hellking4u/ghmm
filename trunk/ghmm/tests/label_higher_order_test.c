@@ -146,7 +146,7 @@ void generateModel (ghmm_dmodel *mo, int noStates, unsigned int seed) {
   }
 #endif
 
-  /* ghmm_d_print(stdout, mo); */
+  /* ghmm_dmodel_print(stdout, mo); */
 
 }
 
@@ -174,36 +174,36 @@ void testBaumwelch(int seqlen){
   generateModel(mo_mem,  5, 1704);
 
   /*generate a random sequence*/
-  my_output = ghmm_dl_generate_sequences(mo_gen, 0, seqlen, NR_SEQUENCES, seqlen);
-  /* ghmm_d_add_noise(mo_time, .499, 0); */
+  my_output = ghmm_dmodel_label_generate_sequences(mo_gen, 0, seqlen, NR_SEQUENCES, seqlen);
+  /* ghmm_dmodel_add_noise(mo_time, .499, 0); */
   /* randomize the second */
-  /* ghmm_d_add_noise(mo_mem, .499, 0); */
+  /* ghmm_dmodel_add_noise(mo_mem, .499, 0); */
 
-  ghmm_d_print(stdout, mo_time);
-  ghmm_d_print(stdout, mo_mem);
-  printf("Distance between the two models: %g\n\n", ghmm_d_distance(mo_time, mo_mem));
+  ghmm_dmodel_print(stdout, mo_time);
+  ghmm_dmodel_print(stdout, mo_mem);
+  printf("Distance between the two models: %g\n\n", ghmm_dmodel_distance(mo_time, mo_mem));
 
   /* shifting both models in diffrent directions */
   /* train the first */	 
-  /*ghmm_dl_baum_welch(mo_time, my_output);*/
-  error = ghmm_d_baum_welch(mo_time, my_output);
+  /*ghmm_dmodel_label_baum_welch(mo_time, my_output);*/
+  error = ghmm_dmodel_baum_welch(mo_time, my_output);
 
   /* train the second and hope they are equal */
-  error = ghmm_d_baum_welch(mo_mem, my_output);
+  error = ghmm_dmodel_baum_welch(mo_mem, my_output);
 
-  ghmm_d_print(stdout, mo_time);
-  ghmm_d_print(stdout, mo_mem);
-  printf("Distance between the two trained models: %g\n", ghmm_d_distance(mo_time, mo_mem));
+  ghmm_dmodel_print(stdout, mo_time);
+  ghmm_dmodel_print(stdout, mo_mem);
+  printf("Distance between the two trained models: %g\n", ghmm_dmodel_distance(mo_time, mo_mem));
 
-  printf("Log-Likelyhood generating:    %g\n", ghmm_d_likelihood (mo_gen, my_output));
-  printf("Log-Likelyhood fb-Baum-Welch: %g\n", ghmm_d_likelihood (mo_time, my_output));
-  printf("Log-Likelyhood me-Baum-Welch: %g\n", ghmm_d_likelihood (mo_mem, my_output));
+  printf("Log-Likelyhood generating:    %g\n", ghmm_dmodel_likelihood (mo_gen, my_output));
+  printf("Log-Likelyhood fb-Baum-Welch: %g\n", ghmm_dmodel_likelihood (mo_time, my_output));
+  printf("Log-Likelyhood me-Baum-Welch: %g\n", ghmm_dmodel_likelihood (mo_mem, my_output));
 
 
   /* freeing memory */
-  ghmm_d_free(&mo_gen);
-  ghmm_d_free(&mo_time);
-  ghmm_d_free(&mo_mem);
+  ghmm_dmodel_free(&mo_gen);
+  ghmm_dmodel_free(&mo_time);
+  ghmm_dmodel_free(&mo_mem);
   
   ghmm_dseq_free(&my_output);
 }

@@ -48,7 +48,7 @@ extern "C" {
 /**@name HMM-Model */
 /*@{ (Doc++-Group: xmlreader) */
   
-  struct ghmm_fileData_s {
+  typedef struct ghmm_xmlfile {
 
     int noModels;
     
@@ -61,19 +61,12 @@ extern "C" {
       ghmm_dsmodel * * ds;
     } model;
     
-/*     unsigned int nrAlphabets; */
-/*     alphabet_s * * alphabets; */
-/*     alphabet_s * labelAlphabet; */
-    
-/*     int * xPosition; */
-/*     int * yPosition; */
-  };
-  typedef struct ghmm_fileData_s ghmm_fileData_s;
+  } ghmm_xmlfile;
 
 
-  ghmm_fileData_s * ghmm_parseHMMDocument(const char *filename);
+  ghmm_xmlfile* ghmm_xmlfile_parse(const char *filename);
 
-  int ghmm_validateHMMDocument(const char *filename);
+  int ghmm_xmlfile_validate(const char *filename);
 
 #ifdef __cplusplus
 }

@@ -80,7 +80,7 @@ typedef struct plocal_store_t {
 } plocal_store_t;
 
 
-  static void ghmm_dp_print_viterbi_store(plocal_store_t * pv);
+  static void ghmm_dpmodel_print_viterbi_store(plocal_store_t * pv);
 
   static plocal_store_t *pviterbi_alloc(ghmm_dpmodel *mo, int len_x, int len_y);
 
@@ -123,7 +123,7 @@ static plocal_store_t *pviterbi_alloc(ghmm_dpmodel *mo, int len_x, int len_y) {
   }
   ARRAY_CALLOC (v->log_b, mo->N);
   for (j=0; j<mo->N; j++) {
-    ARRAY_CALLOC (v->log_b[j], ghmm_dp_emission_table_size(mo, j) + 1);
+    ARRAY_CALLOC (v->log_b[j], ghmm_dpmodel_emission_table_size(mo, j) + 1);
   }
   if (!(v->log_b)) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
   v->phi = ighmm_cmatrix_3d_alloc(mo->max_offset_x + 1, len_y + mo->max_offset_y + 1, mo->N);
@@ -171,7 +171,7 @@ static int pviterbi_free(plocal_store_t **v, int n, int len_x, int len_y,
 } /* viterbi_free */
 
 /*============================================================================*/
-static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
+static void ghmm_dpmodel_print_viterbi_store(plocal_store_t * pv) {
   int j, k;
   ghmm_dpmodel * mo;
 
@@ -185,8 +185,8 @@ static void ghmm_dp_print_viterbi_store(plocal_store_t * pv) {
   }
   printf("Log b:\n");
   for (j = 0; j < mo->N; j++){
-    printf("state %i #chars: %i\n", j, ghmm_dp_emission_table_size(mo, j));
-    for (k=0; k<ghmm_dp_emission_table_size(mo, j); k++)
+    printf("state %i #chars: %i\n", j, ghmm_dpmodel_emission_table_size(mo, j));
+    for (k=0; k<ghmm_dpmodel_emission_table_size(mo, j); k++)
       printf("Emission prob char: %i %f\n", k, pv->log_b[j][k]);
   } 
 }
@@ -209,7 +209,7 @@ static void pviterbi_precompute( ghmm_dpmodel *mo, plocal_store_t *v) {
 	
   /* Precomputing the log emission probabilities for each state*/
   for (j = 0; j < mo->N; j++) {
-    for (emission = 0; emission < ghmm_dp_emission_table_size(mo,j); emission++) {
+    for (emission = 0; emission < ghmm_dpmodel_emission_table_size(mo,j); emission++) {
       if (1) {
 	if ( mo->s[j].b[emission] == 0.0 )   /* DBL_EPSILON ? */ 
 	  v->log_b[j][emission] = +1; 
@@ -278,9 +278,9 @@ static double log_b(plocal_store_t * pv, int state, int emission) {
 #ifdef DEBUG
   if (ghmm_dstate > pv->mo->N) 
     fprintf(stderr, "log_b: State index out of bounds %i > %i\n", ghmm_dstate, pv->mo->N);
-  if (emission > ghmm_dp_emission_table_size(pv->mo, state))
+  if (emission > ghmm_dpmodel_emission_table_size(pv->mo, state))
     fprintf(stderr, "log_b: Emission index out of bounds %i > %i for ghmm_dstate %i\n",
-	    emission, ghmm_dp_emission_table_size(pv->mo, state), state); 
+	    emission, ghmm_dpmodel_emission_table_size(pv->mo, state), state); 
 #endif
   return pv->log_b[state][emission];
 }
@@ -293,7 +293,7 @@ static void init_phi(plocal_store_t * pv, ghmm_dpseq * X, ghmm_dpseq * Y) {
   int u, v, j, i, off_x, y;
   double log_in_a_ij;
   double value, max_value, previous_prob, log_b_i;  
-  /* printf("ghmm_dp_viterbi init\n"); */
+  /* printf("ghmm_dpmodel_viterbi init\n"); */
   ghmm_dpmodel * mo = pv->mo;
   double (*log_in_a)(plocal_store_t*, int, int, ghmm_dpseq*, ghmm_dpseq*, 
 		     int, int);
@@ -360,21 +360,21 @@ static void init_phi(plocal_store_t * pv, ghmm_dpseq * X, ghmm_dpseq * Y) {
 		{;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	    }
 #ifdef DEBUG
-	    emission = ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+	    emission = ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 				ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y);
-	    if (emission > ghmm_dp_emission_table_size(mo, i)){
+	    if (emission > ghmm_dpmodel_emission_table_size(mo, i)){
 	      printf("State %i\n", i);
-	      ghmm_dp_state_print(&(mo->s[i]));
+	      ghmm_dpmodel_state_print(&(mo->s[i]));
 	      printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
 		     ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
 		     ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		     mo->size_of_alphabet[mo->s[i].alphabet],
-		     ghmm_dp_emission_table_size(mo, i), emission);
+		     ghmm_dpmodel_emission_table_size(mo, i), emission);
 	    }
 #endif
-	    log_b_i = log_b(pv, i, ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+	    log_b_i = log_b(pv, i, ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 					ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 					mo->size_of_alphabet[mo->s[i].alphabet],
 					mo->s[i].offset_x, mo->s[i].offset_y));
@@ -506,11 +506,11 @@ static int get_psi(plocal_store_t * pv, int x, int y, int state) {
 }
 
 /*============================================================================*/
-int *ghmm_dp_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+int *ghmm_dpmodel_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			  double *log_p, int *path_length) {
   plocal_store_t *pv;
   printf("---- viterbi test -----\n");
-  /*ghmm_dp_print(mo);*/
+  /*ghmm_dpmodel_print(mo);*/
   pv = pviterbi_alloc(mo, X->length, Y->length);
   printf("try free within pviterbi_test\n");
   pviterbi_free(&pv, mo->N, X->length, Y->length, mo->max_offset_x , 
@@ -521,16 +521,16 @@ int *ghmm_dp_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 
 
 /*============================================================================*/
-int *ghmm_dp_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p,
+int *ghmm_dpmodel_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p,
 		     int *path_length) {
-  return ghmm_dp_viterbi_variable_tb(mo, X, Y, log_p, path_length, -1);
+  return ghmm_dpmodel_viterbi_variable_tb(mo, X, Y, log_p, path_length, -1);
 }
 
 /*============================================================================*/
-int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+int *ghmm_dpmodel_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 				 double *log_p, int *path_length,
 				 int start_traceback_with) {
-#define CUR_PROC "ghmm_dp_viterbi"
+#define CUR_PROC "ghmm_dpmodel_viterbi"
   int u, v, j, i, off_x, off_y, current_state_index;
   double value, max_value, previous_prob;  
   plocal_store_t *pv;
@@ -548,7 +548,7 @@ int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * 
 /*   if (mo->model_type & kSilentStates &&  */
 /*       mo->silent != NULL &&  */
 /*       mo->topo_order == NULL) { */
-/*     ghmm_d_topo_order( mo );  */
+/*     ghmm_dmodel_topo_order( mo );  */
 /*   } */
 
   /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
@@ -594,22 +594,22 @@ int *ghmm_dp_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * 
 	      {;} /* fprintf(stderr, " %d --> %d = %f, \n", i,i,v->log_in_a[i][i]); */
 	  }
 
-	  emission = ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+	  emission = ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 			      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 			      mo->size_of_alphabet[mo->s[i].alphabet],
 			      mo->s[i].offset_x, mo->s[i].offset_y);
 #ifdef DEBUG
-	  if (emission > ghmm_dp_emission_table_size(mo, i)){
+	  if (emission > ghmm_dpmodel_emission_table_size(mo, i)){
 	    printf("State %i\n", i);
-	    ghmm_dp_state_print(&(mo->s[i]));
+	    ghmm_dpmodel_state_print(&(mo->s[i]));
 	    printf("charX: %i charY: %i alphabet size: %i emission table: %i emission index: %i\n", 
 		   ghmm_dpseq_get_char(X, mo->s[i].alphabet, u),
 		   ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 		   mo->size_of_alphabet[mo->s[i].alphabet],
-		   ghmm_dp_emission_table_size(mo, i), emission);
+		   ghmm_dpmodel_emission_table_size(mo, i), emission);
 	  }
 #endif
-	  log_b_i = log_b(pv, i, ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+	  log_b_i = log_b(pv, i, ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 				      ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				      mo->size_of_alphabet[mo->s[i].alphabet],
 				      mo->s[i].offset_x, mo->s[i].offset_y));
@@ -748,9 +748,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   
   
 /*============================================================================*/
-double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+double ghmm_dpmodel_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			    int *state_seq, int state_seq_len) {
-#define CUR_PROC "ghmm_dp_viterbi_logp"
+#define CUR_PROC "ghmm_dpmodel_viterbi_logp"
   int s, t, i, j, u, v;
   double log_p = 0.0;
   double log_b_i = 1.0;
@@ -776,7 +776,7 @@ double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
     u += mo->s[i].offset_x;
     v += mo->s[i].offset_y;
     /* get the emission probability */
-    log_b_i = log_b(pv, i, ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+    log_b_i = log_b(pv, i, ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 				ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y));
@@ -820,7 +820,7 @@ double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
       return 1.0; /* transition not possible */
     }
     /* emission probability */
-    log_b_i = log_b(pv, i, ghmm_dp_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
+    log_b_i = log_b(pv, i, ghmm_dpmodel_pair(ghmm_dpseq_get_char(X, mo->s[i].alphabet, u), 
 				ghmm_dpseq_get_char(Y, mo->s[i].alphabet, v),
 				mo->size_of_alphabet[mo->s[i].alphabet],
 				mo->s[i].offset_x, mo->s[i].offset_y));
@@ -844,5 +844,5 @@ double ghmm_dp_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
   return log_p;
 
 #undef CUR_PROC
-} /* ghmm_dp_viterbi_logp */
+} /* ghmm_dpmodel_viterbi_logp */
 

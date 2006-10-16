@@ -101,20 +101,20 @@ int my_model()
   
     /* consistency check */
   fprintf(stdout,"checking model:\n");
-  if (ghmm_d_check(&my_model))
+  if (ghmm_dmodel_check(&my_model))
     {
-      fprintf(stderr,"ghmm_d_check failed!\n");
+      fprintf(stderr,"ghmm_dmodel_check failed!\n");
       return 1;
     }
   fprintf(stdout,"model is ok\n");
 
   /* print model parameters */
   fprintf(stdout,"two_states_three_symbols model:\n");
-  ghmm_d_print(stdout,&my_model);
+  ghmm_dmodel_print(stdout,&my_model);
 
   /* generate sequences */
   fprintf(stdout,"generating sequences:...");
-  my_output=ghmm_d_generate_sequences(&my_model, /* model */
+  my_output=ghmm_dmodel_generate_sequences(&my_model, /* model */
 				     0,   /* random seed */
 				     100, /* length of each sequence */
 				     100, /* no of sequences */
@@ -129,11 +129,11 @@ int my_model()
 
   /* reestimation */
   fprintf(stdout,"reestimating with Baum-Welch-algorithm...");
-  ghmm_d_baum_welch(&my_model,my_output);
+  ghmm_dmodel_baum_welch(&my_model,my_output);
 
   /* print the result */
   fprintf(stdout,"Done\nthe result is:\n");
-  ghmm_d_print(stdout,&my_model);
+  ghmm_dmodel_print(stdout,&my_model);
 
   ghmm_dseq_free(&my_output);
 

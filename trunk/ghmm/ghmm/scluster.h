@@ -166,7 +166,7 @@ extern "C" {
    Calculates the logarithmic probability of sequences for a model.
    @param cs sequences and model 
  */
-  void ghmm_scluster_prob (ghmm_c_baum_welch_context * cs);
+  void ghmm_scluster_prob (ghmm_cmodel_baum_welch_context * cs);
 
 /* int scluster_labels_from_kmeans(ghmm_cseq *sqd, int smo_number); */
 

@@ -143,7 +143,7 @@ STOP:
 
 
 /* ========================================================================= */
-static int writeAlphabet(xmlTextWriterPtr writer, alphabet_s * alfa) {
+static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa) {
 #define CUR_PROC "writeAlphabet"
 
   int i;
@@ -204,7 +204,7 @@ static int writeAlphabet(xmlTextWriterPtr writer, alphabet_s * alfa) {
 }
 
 /* ========================================================================= */
-static int writeBackground(xmlTextWriterPtr writer, ghmm_d_background_distributions * bg) {
+static int writeBackground(xmlTextWriterPtr writer, ghmm_dbackground* bg) {
 #define CUR_PROC "writeBackground"
   
   int i;
@@ -252,7 +252,7 @@ static int writeBackground(xmlTextWriterPtr writer, ghmm_d_background_distributi
 }
 
 /* ========================================================================= */
-static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_fileData_s * f,
+static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
 				      int moNo, int sNo) {
 #define CUR_PROC "writeDiscreteStateContents"
 
@@ -384,7 +384,7 @@ STOP:
 
 /* ========================================================================= */
 static int writeDiscreteSwitchingStateContents(xmlTextWriterPtr writer,
-					       ghmm_fileData_s * f, int moNo,
+					       ghmm_xmlfile* f, int moNo,
 					       int sNo) {
 #define CUR_PROC "writeDiscreteSwitchingStateContents"
 
@@ -515,7 +515,7 @@ STOP:
 }
 
 /* ========================================================================= */
-static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_fileData_s * f,
+static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
 				      int moNo, int sNo) {
 #define CUR_PROC "writeContinuousStateContents"
 
@@ -618,7 +618,7 @@ STOP:
 
 
 /* ========================================================================= */
-static int writeState(xmlTextWriterPtr writer, ghmm_fileData_s * f, int moNo, int sNo) {
+static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sNo) {
 #define CUR_PROC "writeState"
 
   int rc;
@@ -710,7 +710,7 @@ STOP:
 }
 
 /* ========================================================================= */
-static int writeTransition(xmlTextWriterPtr writer, ghmm_fileData_s * f, int moNo,
+static int writeTransition(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo,
 			   int sNo) {
 #define CUR_PROC "writeTransition"
 
@@ -800,7 +800,7 @@ STOP:
 
 
 /* ========================================================================= */
-static int writeHMM(xmlTextWriterPtr writer, ghmm_fileData_s * f, int number) {
+static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
 #define CUR_PROC "writeHMM"
   int rc=0, i, N;
   int w_cos;
@@ -935,8 +935,8 @@ STOP:
 }
 
 /* ========================================================================= */
-void ighmm_writeHMMDocument(ghmm_fileData_s * f, const char *file) {
-#define CUR_PROC "ighmm_writeHMMDocument"
+void ghmm_xmlfile_write(ghmm_xmlfile* f, const char *file) {
+#define CUR_PROC "ghmm_xmlfile_write"
   int rc, i;
   xmlTextWriterPtr writer;
   xmlDocPtr doc;

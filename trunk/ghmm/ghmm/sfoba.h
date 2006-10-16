@@ -65,7 +65,7 @@ extern "C" {
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_c_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
+  int ghmm_cmodel_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
                      double **alpha, double *scale, double *log_p);
 
 /** 
@@ -80,7 +80,7 @@ extern "C" {
   @param scale    scale factors
   @return 0 for success, -1 for error
   */
-  int ghmm_c_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
+  int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
                       double **beta, const double *scale);
 
 /**
@@ -94,7 +94,7 @@ extern "C" {
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
-  int ghmm_c_logp (ghmm_cmodel * smo, double *O, int T, double *log_p);
+  int ghmm_cmodel_logp (ghmm_cmodel * smo, double *O, int T, double *log_p);
 
 
 #ifdef __cplusplus

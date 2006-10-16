@@ -94,7 +94,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   sq = sq_vec[0];
   fprintf (outfile, "Cluster Sequences\n");
   ghmm_dseq_print (outfile, sq);
-  cl.mo = ghmm_d_read (mo_file, &cl.mo_number);
+  cl.mo = ghmm_dmodel_read (mo_file, &cl.mo_number);
   if (!cl.mo) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
@@ -105,7 +105,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
   ARRAY_CALLOC (cl.mo_seq, cl.mo_number);
   for (i = 0; i < cl.mo_number; i++)
     cl.mo_seq[i] = NULL;
-  if (ghmm_d_check_compatibility (cl.mo, cl.mo_number)) {
+  if (ghmm_dmodel_check_compatibility (cl.mo, cl.mo_number)) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
@@ -113,7 +113,7 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
 /*----------------------------------------------------------------------------*/
   fprintf (outfile, "\nInitial Models:\n");
   for (i = 0; i < cl.mo_number; i++)
-    ghmm_d_print (outfile, cl.mo[i]);
+    ghmm_dmodel_print (outfile, cl.mo[i]);
 /*----------------------------------------------------------------------------*/
 
   while (changes > 0) {
@@ -155,11 +155,11 @@ int ghmm_cluster_hmm (char *seq_file, char *mo_file, char *out_filename)
       fprintf (outfile, "\nGes. WS VOR %d.Reestimate:\n", iter);
       ghmm_cluster_print_likelihood (outfile, &cl);
       for (i = 0; i < cl.mo_number; i++) {
-        if (ghmm_d_baum_welch (cl.mo[i], cl.mo_seq[i])) {
+        if (ghmm_dmodel_baum_welch (cl.mo[i], cl.mo_seq[i])) {
           str = ighmm_mprintf (NULL, 0, "%d.reestimate false, mo[%d]\n", iter, i);
           GHMM_LOG(LCONVERTED, str);
           m_free (str);
-          /* ghmm_d_print(stdout, cl.mo[i]); */
+          /* ghmm_dmodel_print(stdout, cl.mo[i]); */
           goto STOP;
         }
       }
@@ -227,7 +227,7 @@ void ghmm_cluster_print_likelihood (FILE * outfile, cluster_t * cl)
   double ges_prob = 0.0, mo_prob;
   int i;
   for (i = 0; i < cl->mo_number; i++) {
-    mo_prob = ghmm_d_likelihood (cl->mo[i], cl->mo_seq[i]);
+    mo_prob = ghmm_dmodel_likelihood (cl->mo[i], cl->mo_seq[i]);
     ges_prob += mo_prob;
     fprintf (outfile, "mo %d (#Seq. %ld): %.4f\n", i,
              cl->mo_seq[i]->seq_number, mo_prob);
@@ -306,7 +306,7 @@ int ghmm_cluster_out (cluster_t * cl, ghmm_dseq * sq, FILE * outfile,
 
   fprintf (outfile, "\nFinal Models:\n");
   for (i = 0; i < cl->mo_number; i++)
-    ghmm_d_print (outfile, cl->mo[i]);
+    ghmm_dmodel_print (outfile, cl->mo[i]);
 
   res = 0;
   ghmm_cseq_free (&sqd);

@@ -78,8 +78,8 @@ typedef enum DFSFLAG { DONE, NOTVISITED, VISITED } DFSFLAG;
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_ipow(const ghmm_dmodel * mo, int x, unsigned int n) {
-#define CUR_PROC "ghmm_d_ipow"
+int ghmm_ipow(const ghmm_dmodel * mo, int x, unsigned int n) {
+#define CUR_PROC "ghmm_ipow"
   int result=1;  
 
   if ((mo->M == x) && (n <= mo->maxorder + 1)) {
@@ -164,7 +164,7 @@ ghmm_dmodel * ghmm_dmodel_calloc(int M, int N, int modeltype, int * inDegVec,
 
   return mo;
 STOP:
-  ghmm_d_free(&mo);
+  ghmm_dmodel_free(&mo);
   return NULL;
 #undef CUR_PROC
 }
@@ -210,12 +210,12 @@ static int model_copy_vectors (ghmm_dmodel * mo, int index, double **a_matrix,
 
 /* Old prototype:
 
-ghmm_dmodel **ghmm_d_read(char *filename, int *mo_number, int **seq,
+ghmm_dmodel **ghmm_dmodel_read(char *filename, int *mo_number, int **seq,
 			 const int *seq_len, int seq_number) { */
 
-ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
+ghmm_dmodel **ghmm_dmodel_read (char *filename, int *mo_number)
 {
-#define CUR_PROC "ghmm_d_read"
+#define CUR_PROC "ghmm_dmodel_read"
   int j;
   long new_models = 0;
   scanner_t *s = NULL;
@@ -235,7 +235,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
       (*mo_number)++;
       /* more mem */
       ARRAY_REALLOC (mo, *mo_number);
-      mo[*mo_number - 1] = ghmm_d_direct_read (s, (int *) &new_models);
+      mo[*mo_number - 1] = ghmm_dmodel_direct_read (s, (int *) &new_models);
       if (!mo[*mo_number - 1]) {
         GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
@@ -245,7 +245,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
         /* "-1" because mo_number++ has already been done. */
         ARRAY_REALLOC (mo, *mo_number - 1 + new_models);
         for (j = 1; j < new_models; j++) {
-          mo[*mo_number] = ghmm_d_copy (mo[*mo_number - 1]);
+          mo[*mo_number] = ghmm_dmodel_copy (mo[*mo_number - 1]);
           if (!mo[*mo_number]) {
             GHMM_LOG_QUEUED(LCONVERTED);
             goto STOP;
@@ -256,7 +256,7 @@ ghmm_dmodel **ghmm_d_read (char *filename, int *mo_number)
     }
     else if (!strcmp (s->id, "HMM_SEQ")) {
       ghmm_dmodel **tmp_mo = NULL;
-      tmp_mo = ghmm_d_from_sequence_ascii (s, &new_models);
+      tmp_mo = ghmm_dmodel_from_sequence_ascii (s, &new_models);
       ARRAY_REALLOC (mo, (*mo_number + new_models));
       for (j = 0; j < new_models; j++) {
         if (!tmp_mo[j]) {
@@ -282,14 +282,14 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ighmm_scanner_free(&s);
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_read */
+}                               /* ghmm_dmodel_read */
 
 
 
 /*============================================================================*/
-ghmm_dmodel *ghmm_d_direct_read (scanner_t * s, int *multip)
+ghmm_dmodel *ghmm_dmodel_direct_read (scanner_t * s, int *multip)
 {
-#define CUR_PROC "ghmm_d_direct_read"
+#define CUR_PROC "ghmm_dmodel_direct_read"
   int i, m_read, n_read, a_read, b_read, pi_read, len, prior_read, fix_read;
   int mt_read=0;
   ghmm_dmodel *mo = NULL;
@@ -528,40 +528,40 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ighmm_cmatrix_free (&a_matrix, mo->N);
   ighmm_cmatrix_free (&b_matrix, mo->N);
   m_free (pi_vector);
-  ghmm_d_free(&mo);
+  ghmm_dmodel_free(&mo);
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_direct_read */
+}                               /* ghmm_dmodel_direct_read */
 #endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 /* Produces models from given sequences */
-ghmm_dmodel **ghmm_d_from_sequence (ghmm_dseq * sq, long *mo_number)
+ghmm_dmodel **ghmm_dmodel_from_sequence (ghmm_dseq * sq, long *mo_number)
 {
-#define CUR_PROC "ghmm_d_from_sequence"
+#define CUR_PROC "ghmm_dmodel_from_sequence"
   long i;
   int max_symb;
   ghmm_dmodel **mo = NULL;
   ARRAY_CALLOC (mo, sq->seq_number);
   max_symb = ghmm_dseq_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
-    mo[i] = ghmm_d_generate_from_sequence (sq->seq[i], sq->seq_len[i],
+    mo[i] = ghmm_dmodel_generate_from_sequence (sq->seq[i], sq->seq_len[i],
                                           max_symb + 1);
   *mo_number = sq->seq_number;
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   for (i = 0; i < *mo_number; i++)
-    ghmm_d_free(&(mo[i]));
+    ghmm_dmodel_free(&(mo[i]));
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_from_sequence */
+}                               /* ghmm_dmodel_from_sequence */
 
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
 /* Produces models form given sequences */
-ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
+ghmm_dmodel **ghmm_dmodel_from_sequence_ascii (scanner_t * s, long *mo_number)
 {
-#define CUR_PROC "ghmm_d_from_sequence_ascii"
+#define CUR_PROC "ghmm_dmodel_from_sequence_ascii"
   long i;
   int max_symb;
   ghmm_dmodel **mo = NULL;
@@ -599,7 +599,7 @@ ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
   /* The biggest symbol that occurs */
   max_symb = ghmm_dseq_max_symbol (sq);
   for (i = 0; i < sq->seq_number; i++)
-    mo[i] = ghmm_d_generate_from_sequence (sq->seq[i], sq->seq_len[i],
+    mo[i] = ghmm_dmodel_generate_from_sequence (sq->seq[i], sq->seq_len[i],
                                           max_symb + 1);
 
   *mo_number = sq->seq_number;
@@ -608,22 +608,22 @@ ghmm_dmodel **ghmm_d_from_sequence_ascii (scanner_t * s, long *mo_number)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_dseq_free (&sq);
   for (i = 0; i < *mo_number; i++)
-    ghmm_d_free(&(mo[i]));
+    ghmm_dmodel_free(&(mo[i]));
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_from_sequence_ascii */
+}                               /* ghmm_dmodel_from_sequence_ascii */
 #endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
 
-int ghmm_d_free(ghmm_dmodel ** mo) {
-#define CUR_PROC "ghmm_d_free"
+int ghmm_dmodel_free(ghmm_dmodel ** mo) {
+#define CUR_PROC "ghmm_dmodel_free"
   int i;
   mes_check_ptr (mo, return (-1));
   mes_check_ptr (*mo, return (-1));
 
-  for (i=0; i < (*mo)->N; i++)
-    ghmm_d_state_clean(&(*mo)->s[i]);
+  for (i=0; i < (*mo)->N && (*mo)->s; i++)
+    ghmm_dstate_clean(&(*mo)->s[i]);
 
   if ((*mo)->s)
     m_free((*mo)->s);
@@ -648,12 +648,12 @@ int ghmm_d_free(ghmm_dmodel ** mo) {
   m_free(*mo);
   return (0);
 #undef CUR_PROC
-}  /* ghmm_d_free */
+}  /* ghmm_dmodel_free */
 
 
-int ghmm_d_background_free (ghmm_d_background_distributions * bg)
+int ghmm_dbackground_free (ghmm_dbackground * bg)
 {
-#define CUR_PROC "ghmm_d_background_free"
+#define CUR_PROC "ghmm_dbackground_free"
 
   if (bg->order)
     m_free(bg->order);
@@ -667,9 +667,9 @@ int ghmm_d_background_free (ghmm_d_background_distributions * bg)
 
 
 /*============================================================================*/
-ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
+ghmm_dmodel *ghmm_dmodel_copy (const ghmm_dmodel * mo)
 {
-# define CUR_PROC "ghmm_d_copy"
+# define CUR_PROC "ghmm_dmodel_copy"
   int i, j, nachf, vorg, m, size;
   ghmm_dmodel *m2 = NULL;
   ARRAY_CALLOC (m2, 1);
@@ -692,7 +692,7 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   
   for (i = 0; i < mo->N; i++) {
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      size = ghmm_d_ipow(mo, mo->M, mo->order[i]+1);
+      size = ghmm_ipow(mo, mo->M, mo->order[i]+1);
     else
       size = mo->M;
 
@@ -748,15 +748,15 @@ ghmm_dmodel *ghmm_d_copy (const ghmm_dmodel * mo)
   m2->emission_history = mo->emission_history;
   return (m2);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  ghmm_d_free (&m2);
+  ghmm_dmodel_free (&m2);
   return (NULL);
 # undef CUR_PROC
-}                               /* ghmm_d_copy */
+}                               /* ghmm_dmodel_copy */
 
 
 /*============================================================================*/
-int ghmm_d_check(const ghmm_dmodel * mo) {
-# define CUR_PROC "ghmm_d_check"
+int ghmm_dmodel_check(const ghmm_dmodel * mo) {
+# define CUR_PROC "ghmm_dmodel_check"
   int res = -1;
   double sum;
   int i, j, imag=0;
@@ -841,15 +841,15 @@ int ghmm_d_check(const ghmm_dmodel * mo) {
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
-}                               /* ghmm_d_check */
+}                               /* ghmm_dmodel_check */
 
 /*============================================================================*/
-int ghmm_d_check_compatibility (ghmm_dmodel ** mo, int model_number)
+int ghmm_dmodel_check_compatibility (ghmm_dmodel ** mo, int model_number)
 {
-#define CUR_PROC "ghmm_d_check_compatibility"
+#define CUR_PROC "ghmm_dmodel_check_compatibility"
   int i;
   for (i = 1; i < model_number; i++)
-    if (-1 == ghmm_d_check_compatibel_models (mo[0], mo[i]))
+    if (-1 == ghmm_dmodel_check_compatibel_models (mo[0], mo[i]))
       return -1;
 
   return 0;
@@ -857,9 +857,9 @@ int ghmm_d_check_compatibility (ghmm_dmodel ** mo, int model_number)
 }
 
 /*============================================================================*/
-int ghmm_d_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * m2)
+int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmodel * m2)
 {
-#define CUR_PROC "ghmm_d_check_compatibel_models"
+#define CUR_PROC "ghmm_dmodel_check_compatibel_models"
   int i, j;
   char *str;
 
@@ -894,13 +894,13 @@ STOP:
   m_free (str);
   return (-1);
 #undef CUR_PROC
-}                               /* ghmm_d_check_compatibility */
+}                               /* ghmm_dmodel_check_compatibility */
 
 /*============================================================================*/
-ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
+ghmm_dmodel *ghmm_dmodel_generate_from_sequence (const int *seq, int seq_len,
                                      int anz_symb)
 {
-#define CUR_PROC "ghmm_d_generate_from_sequence"
+#define CUR_PROC "ghmm_dmodel_generate_from_sequence"
   int i;
   ghmm_dmodel *mo = NULL;
   ghmm_dstate *s = NULL;
@@ -966,16 +966,16 @@ ghmm_dmodel *ghmm_d_generate_from_sequence (const int *seq, int seq_len,
   *(s->in_a) = 1.0;
   /* No out_id and out_a */
 
-  if (ghmm_d_check (mo)) {
+  if (ghmm_dmodel_check (mo)) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  ghmm_d_free (&mo);
+  ghmm_dmodel_free (&mo);
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_generate_from_sequence */
+}                               /* ghmm_dmodel_generate_from_sequence */
 
 
 /*===========================================================================*/
@@ -1019,10 +1019,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-ghmm_dseq *ghmm_d_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
+ghmm_dseq *ghmm_dmodel_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
                                       long seq_number, int Tmax)
 {
-# define CUR_PROC "ghmm_d_generate_sequences"
+# define CUR_PROC "ghmm_dmodel_generate_sequences"
 
   /* An end state is characterized by not having an output probabiliy. */
 
@@ -1144,9 +1144,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
+double ghmm_dmodel_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
-# define CUR_PROC "ghmm_d_likelihood"
+# define CUR_PROC "ghmm_dmodel_likelihood"
   double log_p_i, log_p;
   int found, i;
   char *str;
@@ -1164,7 +1164,7 @@ double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
 /* 	printf("\n"); */
 
 
-    if (ghmm_d_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i) == -1) {
+    if (ghmm_dmodel_logp (mo, sq->seq[i], sq->seq_len[i], &log_p_i) == -1) {
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
@@ -1186,21 +1186,34 @@ double ghmm_d_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return -1;
 # undef CUR_PROC
-}                               /* ghmm_d_likelihood */
+}                               /* ghmm_dmodel_likelihood */
 
-
-
-void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob)
+double ghmm_dmodel_get_transition(ghmm_dmodel* mo, int i, int j)
 {
-# define CUR_PROC "ghmm_d_transition_set"
+# define CUR_PROC "ghmm_dmodel_get_transition"
+  int out;
+
+  if (mo->s && mo->s[i].out_a && mo->s[j].in_a) {
+    for (out=0; out < mo->s[i].out_states; out++) {
+      if (mo->s[i].out_id[out] == j)
+        return mo->s[i].out_a[out];
+    }
+  }
+  return 0.0;
+# undef CUR_PROC
+}   /* ghmm_dmodel_get_transition */
+
+void ghmm_dmodel_set_transition (ghmm_dmodel * mo, int i, int j, double prob)
+{
+# define CUR_PROC "ghmm_dmodel_set_transition"
   int in, out;
 
   if (mo->s && mo->s[i].out_a && mo->s[j].in_a) {
     for (out = 0; out < mo->s[i].out_states; out++) {
       if (mo->s[i].out_id[out] == j) {
         mo->s[i].out_a[out] = prob;
-        /* fprintf (stderr, "ghmm_d_transition_set(0):State %d, %d, = %f\n", i, j,
-                 prob); */
+        /* fprintf(stderr, CUR_PROC": State %d, %d, = %f\n", i, j,
+                prob); */
         break;
       }
     }
@@ -1213,9 +1226,7 @@ void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob)
     }
   }
 # undef CUR_PROC
-}
-
-/* ghmm_d_transition_set */
+}   /* ghmm_dmodel_set_transition */
 
 
 
@@ -1224,7 +1235,7 @@ void ghmm_d_transition_set (ghmm_dmodel * mo, int i, int j, double prob)
 /* Some outputs */
 /*============================================================================*/
 
-void ghmm_d_states_print (FILE * file, ghmm_dmodel * mo)
+void ghmm_dmodel_states_print (FILE * file, ghmm_dmodel * mo)
 {
   int i, j;
   fprintf (file, "Modelparameters: \n M = %d \t N = %d\n", mo->M, mo->N);
@@ -1245,11 +1256,11 @@ void ghmm_d_states_print (FILE * file, ghmm_dmodel * mo)
       fprintf (file, "(%d, %.3f) \t", mo->s[i].in_id[j], mo->s[i].in_a[j]);
     fprintf (file, "\n");
   }
-}                               /* ghmm_d_states_print */
+}                               /* ghmm_dmodel_states_print */
 
 /*============================================================================*/
 
-void ghmm_d_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+void ghmm_dmodel_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                     char *ending)
 {
   int i, j, out_state;
@@ -1272,11 +1283,11 @@ void ghmm_d_A_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
     }
     fprintf (file, "%s\n", ending);
   }
-}                               /* ghmm_d_A_print */
+}                               /* ghmm_dmodel_A_print */
 
 /*============================================================================*/
 
-void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+void ghmm_dmodel_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                     char *ending)
 {
   int i, j, size;
@@ -1290,17 +1301,17 @@ void ghmm_d_B_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
       fprintf (file, "%s\n", ending);
     }
     else {
-      size = ghmm_d_ipow (mo, mo->M, mo->order[i] + 1);
+      size = ghmm_ipow (mo, mo->M, mo->order[i] + 1);
       for (j = 1; j < size; j++)
         fprintf (file, "%s %.2f", separator, mo->s[i].b[j]);
       fprintf (file, "%s\n", ending);
     }
   }
-}                               /* ghmm_d_B_print */
+}                               /* ghmm_dmodel_B_print */
 
 /*============================================================================*/
 
-void ghmm_d_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+void ghmm_dmodel_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                      char *ending)
 {
   int i;
@@ -1308,9 +1319,9 @@ void ghmm_d_Pi_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
   for (i = 1; i < mo->N; i++)
     fprintf (file, "%s %.2f", separator, mo->s[i].pi);
   fprintf (file, "%s\n", ending);
-}                               /* ghmm_d_Pi_print */
+}                               /* ghmm_dmodel_Pi_print */
 
-void ghmm_d_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
+void ghmm_dmodel_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
                       char *ending)
 {
   int i;
@@ -1318,14 +1329,14 @@ void ghmm_d_fix_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator
   for (i = 1; i < mo->N; i++)
     fprintf (file, "%s %d", separator, mo->s[i].fix);
   fprintf (file, "%s\n", ending);
-}                               /* ghmm_d_Pi_print */
+}                               /* ghmm_dmodel_Pi_print */
 
 /*============================================================================*/
 
-void ghmm_d_A_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
+void ghmm_dmodel_A_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                            char *separator, char *ending)
 {
-# define CUR_PROC "ghmm_d_A_print_transp"
+# define CUR_PROC "ghmm_dmodel_A_print_transp"
   int i, j;
   int *out_state;
 
@@ -1355,11 +1366,11 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (out_state);
   return;
 # undef CUR_PROC
-}                               /* ghmm_d_A_print_transp */
+}                               /* ghmm_dmodel_A_print_transp */
 
 /*============================================================================*/
 
-void ghmm_d_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
+void ghmm_dmodel_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
                            char *separator, char *ending)
 {
   int i, j;
@@ -1370,16 +1381,16 @@ void ghmm_d_B_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
       fprintf (file, "%s %.2f", separator, mo->s[i].b[j]);
     fprintf (file, "%s\n", ending);
   }
-}                               /* ghmm_d_B_print_transp */
+}                               /* ghmm_dmodel_B_print_transp */
 
 /*============================================================================*/
 
-void ghmm_d_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab, char *ending)
+void ghmm_dmodel_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab, char *ending)
 {
   int i;
   for (i = 0; i < mo->N; i++)
     fprintf (file, "%s%.2f%s\n", tab, mo->s[i].pi, ending);
-}                               /* ghmm_d_Pi_print_transp */
+}                               /* ghmm_dmodel_Pi_print_transp */
 
 /*============================================================================*/
 
@@ -1394,30 +1405,30 @@ void ghmm_dl_print (FILE * file, ghmm_dmodel * mo, char *tab, char *separator,
 }                               /* ghmm_dl_print */
 
 /*============================================================================*/
-void ghmm_d_print (FILE * file, ghmm_dmodel * mo)
+void ghmm_dmodel_print (FILE * file, ghmm_dmodel * mo)
 {
   fprintf (file, "HMM = {\n\tM = %d;\n\tN = %d;\n", mo->M, mo->N);
   fprintf (file, "\tprior = %.3f;\n", mo->prior);
   fprintf (file, "\tModelType = %d;\n", mo->model_type);
   fprintf (file, "\tA = matrix {\n");
-  ghmm_d_A_print (file, mo, "\t", ",", ";");
+  ghmm_dmodel_A_print (file, mo, "\t", ",", ";");
   fprintf (file, "\t};\n\tB = matrix {\n");
-  ghmm_d_B_print (file, mo, "\t", ",", ";");
+  ghmm_dmodel_B_print (file, mo, "\t", ",", ";");
   fprintf (file, "\t};\n\tPi = vector {\n");
-  ghmm_d_Pi_print (file, mo, "\t", ",", ";");
+  ghmm_dmodel_Pi_print (file, mo, "\t", ",", ";");
   fprintf (file, "\t};\n\tfix_state = vector {\n");
-  ghmm_d_fix_print (file, mo, "\t", ",", ";");
+  ghmm_dmodel_fix_print (file, mo, "\t", ",", ";");
   if (mo->model_type & GHMM_kLabeledStates) {
     fprintf (file, "\t};\n\tlabel_state = vector {\n");
     ghmm_dl_print (file, mo, "\t", ",", ";");
   }
   fprintf (file, "\t};\n};\n\n");
-}                               /* ghmm_d_print */
+}                               /* ghmm_dmodel_print */
 
 /*============================================================================*/
 
 #ifdef GHMM_OBSOLETE
-void ghmm_d_direct_print (FILE * file, model_direct * mo_d, int multip)
+void ghmm_dmodel_direct_print (FILE * file, model_direct * mo_d, int multip)
 {
   int i, j;
   for (i = 0; i < multip; i++) {
@@ -1439,13 +1450,13 @@ void ghmm_d_direct_print (FILE * file, model_direct * mo_d, int multip)
     fprintf (file, ";\n\t};\n");
     fprintf (file, "};\n\n");
   }
-}                               /* ghmm_d_direct_print */
+}                               /* ghmm_dmodel_direct_print */
 
 /*============================================================================*/
 
-void ghmm_d_direct_clean (model_direct * mo_d, hmm_check_t * check)
+void ghmm_dmodel_direct_clean (model_direct * mo_d, hmm_check_t * check)
 {
-#define CUR_PROC "ghmm_d_direct_clean"
+#define CUR_PROC "ghmm_dmodel_direct_clean"
   int i;
   if (!mo_d)
     return;
@@ -1472,13 +1483,13 @@ void ghmm_d_direct_clean (model_direct * mo_d, hmm_check_t * check)
   mo_d->Pi = NULL;
   mo_d->fix_state = NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_direct_clean */
+}                               /* ghmm_dmodel_direct_clean */
 
 /*============================================================================*/
 
-int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check)
+int ghmm_dmodel_direct_check_data (model_direct * mo_d, hmm_check_t * check)
 {
-#define CUR_PROC "ghmm_d_direct_check_data"
+#define CUR_PROC "ghmm_dmodel_direct_check_data"
   char *str;
   if (check->r_a != mo_d->N || check->c_a != mo_d->N) {
     str = ighmm_mprintf (NULL, 0, "Incompatible dim. A (%d X %d) and N (%d)\n",
@@ -1512,16 +1523,16 @@ int ghmm_d_direct_check_data (model_direct * mo_d, hmm_check_t * check)
 
   return 0;
 #undef CUR_PROC
-}                               /* ghmm_d_direct_check_data */
+}                               /* ghmm_dmodel_direct_check_data */
 #endif /* GHMM_OBSOLETE */
 
 
 /*============================================================================*/
 /* XXX symmetric not implemented yet */
-double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int symmetric,
+double ghmm_dmodel_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int symmetric,
                             int verbose)
 {
-#define CUR_PROC "ghmm_d_prob_distance"
+#define CUR_PROC "ghmm_dmodel_prob_distance"
 
 #define STEPS 40
 
@@ -1556,7 +1567,7 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
   for (k = 0; k < 2; k++) {     /* Two passes for the symmetric case */
 
     /* seed = 0 -> no reseeding. Call  ghmm_rng_timeseed(RNG) externally */
-    seq0 = ghmm_d_generate_sequences (mo1, 0, maxT + 1, 1, maxT + 1);
+    seq0 = ghmm_dmodel_generate_sequences (mo1, 0, maxT + 1, 1, maxT + 1);
 
 
 
@@ -1590,7 +1601,7 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
         /* create a additional sequences at once */
         a = (maxT - total) / (total / seq0->seq_number) + 1;
         /* printf("total=%d generating %d", total, a); */
-        tmp = ghmm_d_generate_sequences (mo1, 0, 0, a, a);
+        tmp = ghmm_dmodel_generate_sequences (mo1, 0, 0, a, a);
         if (tmp == NULL) {
           GHMM_LOG(LCONVERTED, " generate_sequences failed !");
           goto STOP;
@@ -1627,14 +1638,14 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
           seq0->seq_len[index] = total - t;
         seq0->seq_number = index;
 
-        p0 = ghmm_d_likelihood (mo1, seq0);
+        p0 = ghmm_dmodel_likelihood (mo1, seq0);
         if (p0 == +1 || p0 == -1) {     /* error! */
-          GHMM_LOG(LCONVERTED, "problem: ghmm_d_likelihood failed !");
+          GHMM_LOG(LCONVERTED, "problem: ghmm_dmodel_likelihood failed !");
           goto STOP;
         }
-        p = ghmm_d_likelihood (mo2, seq0);
+        p = ghmm_dmodel_likelihood (mo2, seq0);
         if (p == +1 || p == -1) {       /* what shall we do now? */
-          GHMM_LOG(LCONVERTED, "problem: ghmm_d_likelihood failed !");
+          GHMM_LOG(LCONVERTED, "problem: ghmm_dmodel_likelihood failed !");
           goto STOP;
         }
 
@@ -1665,13 +1676,13 @@ double ghmm_d_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, int sy
       for (t = step_width, i = 0; t <= maxT; t += step_width, i++) {
         seq0->seq_len[0] = t;
 
-        p0 = ghmm_d_likelihood (mo1, seq0);
+        p0 = ghmm_dmodel_likelihood (mo1, seq0);
         /* printf("   P(O|m1) = %f\n",p0); */
         if (p0 == +1) {         /* error! */
           GHMM_LOG(LCONVERTED, "seq0 can't be build from mo1!");
           goto STOP;
         }
-        p = ghmm_d_likelihood (mo2, seq0);
+        p = ghmm_dmodel_likelihood (mo2, seq0);
         /* printf("   P(O|m2) = %f\n",p); */
         if (p == +1) {          /* what shall we do now? */
           GHMM_LOG(LCONVERTED, "problem: seq0 can't be build from mo2!");
@@ -1721,9 +1732,11 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-void ghmm_d_state_clean (ghmm_dstate * my_state)
+void ghmm_dstate_clean (ghmm_dstate * my_state)
 {
-#define CUR_PROC "ghmm_d_state_clean"
+#define CUR_PROC "ghmm_dstate_clean"
+
+  mes_check_ptr (my_state, return;);
 
   if (my_state->b){
     m_free (my_state->b);
@@ -1751,13 +1764,13 @@ void ghmm_d_state_clean (ghmm_dstate * my_state)
   my_state->fix = 0;
 
 #undef CUR_PROC
-}                               /* ghmm_d_state_clean */
+}                               /* ghmm_dstate_clean */
 
 
 
 /*==========================  Labeled HMMs  ================================*/
 
-ghmm_dseq *ghmm_dl_generate_sequences (ghmm_dmodel * mo, int seed,
+ghmm_dseq *ghmm_dmodel_label_generate_sequences (ghmm_dmodel * mo, int seed,
                                             int global_len, long seq_number,
                                             int Tmax)
 {
@@ -1960,9 +1973,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /* Scales the output and transitions probs of all states in a given model */
-int ghmm_d_normalize (ghmm_dmodel * mo)
+int ghmm_dmodel_normalize (ghmm_dmodel * mo)
 {
-#define CUR_PROC "ghmm_d_normalize"
+#define CUR_PROC "ghmm_dmodel_normalize"
 
   int i, j, m, j_id, i_id=0, res=0;
   int size = 1;
@@ -1972,7 +1985,7 @@ int ghmm_d_normalize (ghmm_dmodel * mo)
 
     /* check model_type before using state order */
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
+      size = ghmm_ipow (mo, mo->M, mo->order[i]);
 
     /* normalize transition probabilities */
     if (ighmm_cvector_normalize (mo->s[i].out_a, mo->s[i].out_states) == -1) {
@@ -2006,11 +2019,11 @@ int ghmm_d_normalize (ghmm_dmodel * mo)
 
   return res;
 #undef CUR_PROC
-}                               /* ghmm_d_normalize */
+}                               /* ghmm_dmodel_normalize */
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed)
+int ghmm_dmodel_add_noise (ghmm_dmodel * mo, double level, int seed)
 {
 #define CUR_PROC "model_add_noise_A"
 
@@ -2026,21 +2039,21 @@ int ghmm_d_add_noise (ghmm_dmodel * mo, double level, int seed)
       mo->s[i].out_a[j] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level);
 
     if (mo->model_type & GHMM_kHigherOrderEmissions)
-      size = ghmm_d_ipow (mo, mo->M, mo->order[i]);
+      size = ghmm_ipow (mo, mo->M, mo->order[i]);
     for (hist = 0; hist < size; hist++)
       for (h = hist * mo->M; h < hist * mo->M + mo->M; h++)
         mo->s[i].b[h] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level);
   }
 
-  return ghmm_d_normalize (mo);
+  return ghmm_dmodel_normalize (mo);
 
 #undef CUR_PROC
 }
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_transition_add (ghmm_dstate * s, int start, int dest, double prob)
+static int ghmm_dstate_transition_add(ghmm_dstate * s, int start, int dest, double prob)
 {
-#define CUR_PROC "ghmm_d_transition_add"
+#define CUR_PROC "ghmm_dmodel_transition_add"
 
   int i;
 
@@ -2085,9 +2098,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_transition_del (ghmm_dstate * s, int start, int dest)
+static int ghmm_dstate_transition_del(ghmm_dstate * s, int start, int dest)
 {
-#define CUR_PROC "ghmm_d_transition_del"
+#define CUR_PROC "ghmm_dmodel_transition_del"
 
   int i, j;
 
@@ -2133,7 +2146,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /** 
-   Allocates a new ghmm_d_background_distributions struct and assigs the arguments to
+   Allocates a new ghmm_dbackground struct and assigs the arguments to
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
@@ -2142,9 +2155,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param cur  :               a id of a state
    @param times:               number of times the state cur is at least evaluated
 */
-int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
+int ghmm_dmodel_duration_apply (ghmm_dmodel * mo, int cur, int times)
 {
-#define CUR_PROC "ghmm_d_duration_apply"
+#define CUR_PROC "ghmm_dmodel_duration_apply"
 
   int i, j, last, size, failed=0;
 
@@ -2166,7 +2179,7 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
   if (mo->model_type & GHMM_kBackgroundDistributions)
     ARRAY_REALLOC (mo->background_id, mo->N);
 
-  size = ghmm_d_ipow (mo, mo->M, mo->order[cur] + 1);
+  size = ghmm_ipow (mo, mo->M, mo->order[cur] + 1);
   for (i = last; i < mo->N; i++) {
     /* set the new state */
     mo->s[i].pi = 0.0;
@@ -2202,23 +2215,23 @@ int ghmm_d_duration_apply (ghmm_dmodel * mo, int cur, int times)
   /* move the outgoing transitions to the last state */
   while (mo->s[cur].out_states > 0) {
     if (mo->s[cur].out_id[0] == cur) {
-      ghmm_d_transition_add (mo->s, mo->N - 1, mo->N - 1, mo->s[cur].out_a[0]);
-      ghmm_d_transition_del (mo->s, cur, mo->s[cur].out_id[0]);
+      ghmm_dstate_transition_add (mo->s, mo->N - 1, mo->N - 1, mo->s[cur].out_a[0]);
+      ghmm_dstate_transition_del (mo->s, cur, mo->s[cur].out_id[0]);
     }
     else {
-      ghmm_d_transition_add (mo->s, mo->N - 1, mo->s[cur].out_id[0],
+      ghmm_dstate_transition_add (mo->s, mo->N - 1, mo->s[cur].out_id[0],
                             mo->s[cur].out_a[0]);
-      ghmm_d_transition_del (mo->s, cur, mo->s[cur].out_id[0]);
+      ghmm_dstate_transition_del (mo->s, cur, mo->s[cur].out_id[0]);
     }
   }
 
   /* set the linear transitions through all added states */
-  ghmm_d_transition_add (mo->s, cur, last, 1.0);
+  ghmm_dstate_transition_add (mo->s, cur, last, 1.0);
   for (i = last + 1; i < mo->N; i++) {
-    ghmm_d_transition_add (mo->s, i - 1, i, 1.0);
+    ghmm_dstate_transition_add (mo->s, i - 1, i, 1.0);
   }
 
-  if (ghmm_d_normalize (mo))
+  if (ghmm_dmodel_normalize (mo))
     goto STOP;
 
   return 0;
@@ -2239,21 +2252,21 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*----------------------------------------------------------------------------*/
 /** 
-   Allocates a new ghmm_d_background_distributions struct and assigns
+   Allocates a new ghmm_dbackground struct and assigns
    the arguments to the respective fields.
    Note: The arguments need allocation outside of this function.
    
-   @return:      new pointer to a ghmm_d_background_distributions struct or NULL
+   @return:      new pointer to a ghmm_dbackground struct or NULL
    @param n:     number of distributions
    @param order: orders of the distribtions (optional)
    @param B:     matrix of distribution parameters (optional)
 */
-ghmm_d_background_distributions *ghmm_d_background_alloc (int n, int m,
+ghmm_dbackground *ghmm_dbackground_alloc (int n, int m,
                                                                 int *orders,
                                                                 double **B)
 {
-#define CUR_PROC "ghmm_d_background_alloc"
-  ghmm_d_background_distributions *ptbackground;
+#define CUR_PROC "ghmm_dbackground_alloc"
+  ghmm_dbackground *ptbackground;
 
   ARRAY_CALLOC(ptbackground, 1);
 
@@ -2271,10 +2284,10 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*----------------------------------------------------------------------------*/
-ghmm_d_background_distributions *ghmm_d_background_copy
-                                       (ghmm_d_background_distributions * bg)
+ghmm_dbackground *ghmm_dbackground_copy
+                                       (ghmm_dbackground * bg)
 {
-#define CUR_PROC "ghmm_d_background_copy"
+#define CUR_PROC "ghmm_dbackground_copy"
   int i, j, b_i_len;
   int *new_order;
   double **new_b;
@@ -2291,7 +2304,7 @@ ghmm_d_background_distributions *ghmm_d_background_copy
     }
   }
 
-  return ghmm_d_background_alloc (bg->n, bg->m, new_order,
+  return ghmm_dbackground_alloc (bg->n, bg->m, new_order,
                                                new_b);
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -2303,9 +2316,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
+int ghmm_dmodel_background_apply (ghmm_dmodel * mo, double *background_weight)
 {
-# define CUR_PROC "ghmm_d_background_apply"
+# define CUR_PROC "ghmm_dmodel_apply_background"
 
   int i, j, size;
   char * estr;
@@ -2328,8 +2341,8 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 	  m_free(estr);
 	  return -1;
 	}
-	/* XXX Cache in ghmm_d_background_distributions */
-	size = ghmm_d_ipow(mo, mo->M, mo->order[i]+1);
+	/* XXX Cache in ghmm_dbackground */
+	size = ghmm_ipow(mo, mo->M, mo->order[i]+1);
 	for (j=0; j<size; j++)
 	  mo->s[i].b[j] = (1.0 - background_weight[i]) * mo->s[i].b[j]
 	    + background_weight[i] * mo->bp->b[mo->background_id[i]][j];
@@ -2347,11 +2360,11 @@ int ghmm_d_background_apply (ghmm_dmodel * mo, double *background_weight)
 
   return 0;
 #undef CUR_PROC
-}                               /* ghmm_d_background_apply */
+}                               /* ghmm_dmodel_apply_background */
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
+int ghmm_dmodel_get_uniform_background (ghmm_dmodel * mo, ghmm_dseq * sq)
 {
 # define CUR_PROC "get_background"
 
@@ -2388,7 +2401,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
   ARRAY_CALLOC (mo->bp->b, mo->bp->n);
 
   for (i = 0; i < mo->bp->n; i++)
-    ARRAY_MALLOC (mo->bp->b[i], ghmm_d_ipow (mo, mo->M, mo->bp->order[i] + 1));
+    ARRAY_MALLOC (mo->bp->b[i], ghmm_ipow (mo, mo->M, mo->bp->order[i] + 1));
 
   for (i = 0; i < mo->bp->n; i++) {
 
@@ -2398,7 +2411,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
         break;
 
     /* initialize with ones as psoudocounts */
-    size = ghmm_d_ipow (mo, mo->M, mo->bp->order[n] + 1);
+    size = ghmm_ipow (mo, mo->M, mo->bp->order[n] + 1);
     for (m = 0; m < size; m++)
       mo->bp->b[i][m] = 1.0;
 
@@ -2416,7 +2429,7 @@ int ghmm_d_background_get_uniform (ghmm_dmodel * mo, ghmm_dseq * sq)
     }
 
     /* normalise */
-    size = ghmm_d_ipow (mo, mo->M, mo->bp->order[n]);
+    size = ghmm_ipow (mo, mo->M, mo->bp->order[n]);
     for (h = 0; h < size; h += mo->M) {
       for (m = h; m < h + mo->M; m++)
         sum += mo->bp->b[i][m];
@@ -2437,17 +2450,17 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
+double ghmm_dmodel_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
 #define CUR_PROC "model_distances"
 
   int i, j, number=0;
   double tmp, distance=0.0;
 
-/*   if (!ghmm_d_check_compatibility(mo, m2)) */
+/*   if (!ghmm_dmodel_check_compatibility(mo, m2)) */
 /*     exit(1); */
-/*   if (!ghmm_d_check(mo)) */
+/*   if (!ghmm_dmodel_check(mo)) */
 /*     exit(1); */
-/*   if (!ghmm_d_check(m2)) */
+/*   if (!ghmm_dmodel_check(m2)) */
 /*     exit(1); */
 
 
@@ -2465,7 +2478,7 @@ double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
       ++number;
     }
     /* B */
-    for (j=0; j<ghmm_d_ipow(mo, mo->M, mo->order[i]+1); ++j) {
+    for (j=0; j<ghmm_ipow(mo, mo->M, mo->order[i]+1); ++j) {
       tmp = mo->s[i].b[j] - m2->s[i].b[j];
       distance += tmp*tmp;
       ++number;
@@ -2477,12 +2490,12 @@ double ghmm_d_distance(const ghmm_dmodel * mo, const ghmm_dmodel * m2) {
 }
 
 /*============================================================================*/
-ghmm_dmodel * * ghmm_d_xml_read (const char *filename, int * mo_number) {
-#define CUR_PROC "ghmm_d_read"
-  ghmm_fileData_s *f;
-  ghmm_dmodel * * mo;
+ghmm_dmodel** ghmm_dmodel_xml_read(const char* filename, int* mo_number) {
+#define CUR_PROC "ghmm_dmodel_xml_read"
+  ghmm_xmlfile* f;
+  ghmm_dmodel** mo;
 
-  f = ghmm_parseHMMDocument(filename);
+  f = ghmm_xmlfile_parse(filename);
   if (!f && (f->modelType & GHMM_kDiscreteHMM)
       && !(f->modelType & (GHMM_kPairHMM+GHMM_kTransitionClasses))) {
     GHMM_LOG(LERROR, "wrong model type, model in file is not a plain discrete model");
@@ -2496,20 +2509,20 @@ ghmm_dmodel * * ghmm_d_xml_read (const char *filename, int * mo_number) {
 STOP:  
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_c_read_block */
+}
 
 
 /*============================================================================*/
-int ghmm_d_xml_write (const char *file, ghmm_dmodel * * mo, int mo_number) {
-#define CUR_PROC "ghmm_d_read"
+int ghmm_dmodel_xml_write(ghmm_dmodel** mo, const char *file, int mo_number) {
+#define CUR_PROC "ghmm_dmodel_xml_write"
 
-  ghmm_fileData_s *f;
+  ghmm_xmlfile* f;
 
   ARRAY_MALLOC(f,1);
   f->noModels = mo_number;
   f->modelType = mo[0]->model_type;
   f->model.d = mo;
-  ighmm_writeHMMDocument(f, file);
+  ghmm_xmlfile_write(f, file);
   free(f);  
   return 0;
 STOP:  

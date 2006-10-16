@@ -224,9 +224,9 @@ STOP:
 
 
 /** Return the viterbi path of the sequence.  */
-int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
+int * ghmm_dmodel_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
 {
-#define CUR_PROC "ghmm_d_viterbi"
+#define CUR_PROC "ghmm_dmodel_viterbi"
 
   int *state_seq = NULL;
   int t, j, i, k, St;
@@ -251,14 +251,14 @@ int * ghmm_d_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p)
   int state_seq_index;
 
 
-  /* printf("---- ghmm_d_viterbi -----\n");*/
+  /* printf("---- ghmm_dmodel_viterbi -----\n");*/
 
   /* for silent states: initializing path length with a multiple
      of the sequence length
      and sort the silent states topological */
   if (mo->model_type & GHMM_kSilentStates) {
     len_path = length_factor * len;
-    ghmm_d_topo_order(mo);
+    ghmm_dmodel_order_topological(mo);
   }
   /* if there are no silent states, path and sequence length are identical */
   else
@@ -513,26 +513,26 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (state_seq);
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_d_viterbi */
+}                               /* ghmm_dmodel_viterbi */
 
 
 
 
 /*============================================================================*/
-double ghmm_d_viterbi_logp (ghmm_dmodel * mo, int *o, int len, int *state_seq)
+double ghmm_dmodel_viterbi_logp (ghmm_dmodel * mo, int *o, int len, int *state_seq)
 {
-#define CUR_PROC "ghmm_d_viterbi_logp"
+#define CUR_PROC "ghmm_dmodel_viterbi_logp"
 
   double log_p = 0.0;
   int *vpath;
 
-  vpath = ghmm_d_viterbi (mo, o, len, &log_p);
+  vpath = ghmm_dmodel_viterbi (mo, o, len, &log_p);
 
   m_free (vpath);
 
   return log_p;
 
 #undef CUR_PROC
-}                               /* ghmm_d_viterbi_logp */
+}                               /* ghmm_dmodel_viterbi_logp */
 
 /*============================================================================*/

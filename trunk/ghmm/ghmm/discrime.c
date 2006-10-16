@@ -98,7 +98,7 @@ static int discrime_galloc (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
       for (m = 0; m < noC; m++) {
         ARRAY_CALLOC ((*matrix_b)[k][l][m], mo[m]->N);
         for (i = 0; i < mo[m]->N; i++)
-          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], ghmm_d_ipow (mo[m], mo[m]->M, mo[m]->order[i] + 1));
+          ARRAY_CALLOC ((*matrix_b)[k][l][m][i], ghmm_ipow (mo[m], mo[m]->M, mo[m]->order[i] + 1));
       }
     }
   }
@@ -325,13 +325,13 @@ static int discrime_precompute (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
           return -1;
 
         /* calculate forward and backward variables without labels: */
-        if (-1 == ghmm_d_forward (mo[m], sq->seq[l], seq_len, alpha, scale,
+        if (-1 == ghmm_dmodel_forward (mo[m], sq->seq[l], seq_len, alpha, scale,
                                 &(log_p[k][l][m]))) {
           success = 0;
           printf ("forward\n");
           goto FREE;
         }
-        if (-1 == ghmm_d_backward (mo[m], sq->seq[l], seq_len, beta, scale)) {
+        if (-1 == ghmm_dmodel_backward (mo[m], sq->seq[l], seq_len, beta, scale)) {
           success = 0;
           printf ("backward\n");
           goto FREE;
@@ -340,7 +340,7 @@ static int discrime_precompute (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
         /* compute expectation matrices
            expect_*[k][l][m] holds the expected number how ofter a particular
            parameter of model m is used by l-th training sequence of class k */
-        ghmm_dl_gradient_expectations (mo[m], alpha, beta, scale,
+        ghmm_dmodel_label_gradient_expectations (mo[m], alpha, beta, scale,
                                          sq->seq[l], seq_len,
                                          expect_b[k][l][m], expect_a[k][l][m],
                                          expect_pi[k][l][m]);
@@ -358,9 +358,9 @@ static int discrime_precompute (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-double ghmm_d_discrim_performance (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC)
+double ghmm_dmodel_label_discrim_perf (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC)
 {
-#define CUR_PROC "ghmm_d_discrim_performance"
+#define CUR_PROC "ghmm_dmodel_discrim_performance"
 
   int k, l, m, temp;
   int argmax = 0;
@@ -382,11 +382,11 @@ double ghmm_d_discrim_performance (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC)
 
       /* iterate over all classes */
       for (m = 0; m < noC; m++) {
-        temp = ghmm_d_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
+        temp = ghmm_dmodel_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
         if (0 != temp)
-          printf ("ghmm_d_logp error in sequence[%d][%d] under model %d (%g)\n",
+          printf ("ghmm_dmodel_logp error in sequence[%d][%d] under model %d (%g)\n",
                   k, l, m, logp[m]);
-        /*printf("ghmm_d_logp sequence[%d][%d] under model %d (%g)\n", k, l, m, logp[m]);*/
+        /*printf("ghmm_dmodel_logp sequence[%d][%d] under model %d (%g)\n", k, l, m, logp[m]);*/
       }
 
       max = 1.0;
@@ -449,7 +449,7 @@ static void discrime_print_statistics (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int 
     for (l = 0; l < sq->seq_number; l++) {
       argmax = 0, max = -DBL_MAX;
       for (m = 0; m < noC; m++) {
-        ghmm_d_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
+        ghmm_dmodel_logp (mo[m], sq->seq[l], sq->seq_len[l], &(logp[m]));
         if (m == 0 || max < logp[m]) {
           max = logp[m];
           argmax = m;
@@ -682,7 +682,7 @@ static void discrime_update_b_gradient (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int
     if (mo[class]->s[i].fix)
       continue;
 
-    size = ghmm_d_ipow (mo[class], mo[class]->M, mo[class]->order[i] + 1);
+    size = ghmm_ipow (mo[class], mo[class]->M, mo[class]->order[i] + 1);
     for (hist = 0; hist < size; hist += mo[class]->M) {
 
       for (h = hist; h < hist + mo[class]->M; h++) {
@@ -932,7 +932,7 @@ static void discrime_update_b_closed (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int n
     if (mo[class]->s[i].fix)
       continue;
 
-    size = ghmm_d_ipow (mo[class], mo[class]->M, mo[class]->order[i] + 1);
+    size = ghmm_ipow (mo[class], mo[class]->M, mo[class]->order[i] + 1);
     for (hist = 0; hist < size; hist += mo[class]->M) {
 
       /* compute lagrangian multiplier */
@@ -1047,7 +1047,7 @@ static void discrime_find_factor (ghmm_dmodel * mo, ghmm_dseq ** sqs, int noC, i
     if (mo->s[i].fix)
       continue;
 
-    size = ghmm_d_ipow(mo, mo->M, mo->order[i] + 1);
+    size = ghmm_ipow(mo, mo->M, mo->order[i] + 1);
     for (hist = 0; hist < size; hist += mo->M) {
       for (h = hist; h < hist + mo->M; h++) {
         self = other = 0.0;
@@ -1161,10 +1161,10 @@ FREE:
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max_steps, 
+int ghmm_dmodel_label_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max_steps, 
 		    int gradient)
 {
-#define CUR_PROC "ghmm_d_discriminative"
+#define CUR_PROC "ghmm_dmodel_discriminative"
 
   double last_perf, cur_perf;
   int retval=-1, last_cer, cur_cer;
@@ -1201,14 +1201,14 @@ int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max
     printf("original prior: %g \t new prior %g\n", prior_backup[i], mo[i]->prior);
   }
 
-  last_perf = ghmm_d_discrim_performance (mo, sqs, noC);
+  last_perf = ghmm_dmodel_label_discrim_perf (mo, sqs, noC);
   cur_perf = last_perf;
 
   discrime_print_statistics (mo, sqs, noC, falseP, falseN);
   fp = fn = 0;
   for (i = 0; i < noC; i++) {
     printf ("Model %d likelihood: %g, \t false positives: %d\n", i,
-            ghmm_d_likelihood (mo[i], sqs[i]), falseP[i]);
+            ghmm_dmodel_likelihood (mo[i], sqs[i]), falseP[i]);
     fn += falseN[i];
     fp += falseP[i];
   }
@@ -1226,10 +1226,10 @@ int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max
 
     do {
       if (last)
-        ghmm_d_free (&last);
+        ghmm_dmodel_free (&last);
 
       /* save a copy of the currently trained model */
-      last = ghmm_d_copy (mo[k]);
+      last = ghmm_dmodel_copy (mo[k]);
       last_cer = cur_cer;
       last_perf = cur_perf;
 
@@ -1243,17 +1243,17 @@ int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max
          k, step, discrime_lambda, noiselevel, gradient);
 
 /*       if (gradient)   */
-/* 	ghmm_d_add_noise(mo[k], noiselevel, 0); */
+/* 	ghmm_dmodel_add_noise(mo[k], noiselevel, 0); */
 
       discrime_onestep (mo, sqs, noC, gradient, k);
 
-      cur_perf = ghmm_d_discrim_performance (mo, sqs, noC);
+      cur_perf = ghmm_dmodel_label_discrim_perf (mo, sqs, noC);
       discrime_print_statistics (mo, sqs, noC, falseP, falseN);
 
       fp = fn = 0;
       for (i = 0; i < noC; i++) {
         printf ("Model %d likelihood: %g, \t false positives: %d\n", i,
-                ghmm_d_likelihood (mo[i], sqs[i]), falseP[i]);
+                ghmm_dmodel_likelihood (mo[i], sqs[i]), falseP[i]);
         fn += falseN[i];
         fp += falseP[i];
       }
@@ -1265,8 +1265,8 @@ int ghmm_d_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max
 
     } while ((last_perf < cur_perf || cur_cer < last_cer) && (step++ < max_steps));
 
-    mo[k] = ghmm_d_copy (last);
-    ghmm_d_free (&last);
+    mo[k] = ghmm_dmodel_copy (last);
+    ghmm_dmodel_free (&last);
     cur_perf = last_perf;
     cur_cer = last_cer;
   }

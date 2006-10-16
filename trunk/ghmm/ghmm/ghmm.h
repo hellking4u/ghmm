@@ -116,7 +116,7 @@ extern "C" {
 
 /**
    A value that is put in for log_p in the calculation of
-   the objective function if ghmm_c_logp returns -1 (error).
+   the objective function if ghmm_cmodel_logp returns -1 (error).
 */
 #define GHMM_PENALTY_LOGP -500.0
 
@@ -136,24 +136,23 @@ void ghmm_set_loglevel(int level);
 
 
 /*@{ (Doc++-Group: Common data structures) */
-/** @name alphabet_s
+/** @name ghmm_alphabet
     keeps a mapping between symbols of the distribution and
-    the integer from 0 till M-1 */ 
-struct alphabet_s {
+    the integer from 0 until M-1 */ 
+typedef struct {
   int id;
-  char * description;
+  char* description;
   unsigned int size;
-  char * * symbols;
-};
-typedef struct alphabet_s alphabet_s;
+  char** symbols;
+} ghmm_alphabet;
 
 
-/** @name ghmm_d_background_distributions
+/** @name ghmm_dbackground
     A container for background distributions to be used in the reestimation. Model
     has an ID (== index) to be used for the arrays background_distributions.order
     and background_distributions.b
 */
-struct ghmm_d_background_distributions {
+typedef struct {
   /** Number of distributions */
   int n;
   /** Number of symbols in alphabet */
@@ -164,9 +163,7 @@ struct ghmm_d_background_distributions {
   double **b;
   /** string ids of the background distributions */
   char * * name;
-};
-
-typedef struct ghmm_d_background_distributions ghmm_d_background_distributions;
+} ghmm_dbackground;
 
 /*@} (Doc++-Group: Common data structures) */
 

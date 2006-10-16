@@ -119,7 +119,7 @@ static void sviterbi_precompute (ghmm_cmodel * smo, double *O, int T,
     for (t = 0; t < T; t++) {
       cb = 0.0;
       for (m = 0; m < smo->M; m++)
-        cb += ghmm_c_calc_cmbm (smo, j, m, O[t]);
+        cb += ghmm_cmodel_calc_cmbm (smo, j, m, O[t]);
       if (cb == 0.0)            /* DBL_EPSILON ? */
         v->log_b[j][t] = -DBL_MAX;
       else
@@ -132,9 +132,9 @@ static void sviterbi_precompute (ghmm_cmodel * smo, double *O, int T,
 
 
 /*============================================================================*/
-int *ghmm_c_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
+int *ghmm_cmodel_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
 {
-#define CUR_PROC "ghmm_c_viterbi"
+#define CUR_PROC "ghmm_cmodel_viterbi"
   int *state_seq = NULL;
   int t, j, i, osc;
   double value, max_value;
@@ -236,7 +236,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   m_free (state_seq);
   return NULL;
 #undef CUR_PROC
-}                               /* ghmm_c_viterbi */
+}                               /* ghmm_cmodel_viterbi */
 
 
 /*  #endif */ /* __EXPERIMENTAL__ == 3 */

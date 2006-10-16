@@ -33,6 +33,10 @@
 *             last change by $Author$.
 *
 *******************************************************************************/
+
+#ifndef SCLASS_CHANGE_H
+#define SCLASS_CHANGE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ghmm/rng.h>
@@ -75,9 +79,4 @@ int python_class_change( ghmm_cmodel* smo, int* seq, int k, int t );
 */
 void setPythonSwitching( ghmm_cmodel *smd, char* python_module, char* python_function);
 
-
-
-
-
-
-
+#endif
