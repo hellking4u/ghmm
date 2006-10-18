@@ -18,8 +18,11 @@ clean: setup.py
 install: setup.py all
 	python setup.py install --prefix=${prefix}
 
+test: ghmmunittests.py all
+	python ghmmunittests.py > /dev/null
+
 distclean: setup.py
 	python setup.py clean --all
 	rm -f message.txt
 
-.PHONY: all clean install distclean
+.PHONY: all clean install distclean test

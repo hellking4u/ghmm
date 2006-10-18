@@ -162,8 +162,8 @@ class EmissionSequenceTests(unittest.TestCase):
     
     def testwrite(self):
         # print"\ntestwrite ",
-        self.i_seq.write("ghmmunittests_testwrite.seq")
-        self.d_seq.write("ghmmunittests_testwrite.seq")
+        self.i_seq.write("testdata/ghmmunittests_testwrite.seq")
+        self.d_seq.write("testdata/ghmmunittests_testwrite.seq")
         
     def testweightaccess(self):
         # print"\ntestweightaccess ",
@@ -346,8 +346,8 @@ class SequenceSetTests(unittest.TestCase):
         
     def testwrite(self):
        #print"\n-----------------testwrite "
-       self.i_seq.write("ghmmunittests_testwrite.seq") 
-       self.d_seq.write("ghmmunittests_testwrite.seq") 
+       self.i_seq.write("testdata/ghmmunittests_testwrite.seq") 
+       self.d_seq.write("testdata/ghmmunittests_testwrite.seq") 
 
        
     def testlabelaccess(self):
@@ -361,9 +361,9 @@ class SequenceSetTests(unittest.TestCase):
 
     def testfilereading(self):
         dom = ghmm.IntegerRange(0,12)
-        seqs = ghmm.SequenceSetOpen(dom,'d_seq.sqd')
+        seqs = ghmm.SequenceSetOpen(dom,'testdata/d_seq.sqd')
         print seqs[0]
-        seqs = ghmm.SequenceSetOpen(self.d_alph,'test10.sqd')
+        seqs = ghmm.SequenceSetOpen(self.d_alph,'testdata/test10.sqd')
 
 
 class DiscreteEmissionHMMTests(unittest.TestCase):
@@ -1033,9 +1033,9 @@ class XMLIOTests(unittest.TestCase):
         #print self.tSeq
 
     def testReadHMMed(self):
-        model = ghmm.HMMOpenXML('multexon-4.xml')
+        model = ghmm.HMMOpenXML('testdata/multexon-4.xml')
         del model
-        model = ghmm.HMMOpenXML('test2.xml')
+        model = ghmm.HMMOpenXML('testdata/test2.xml')
         del model
 
     def testWriteReadXML(self):
@@ -1043,11 +1043,11 @@ class XMLIOTests(unittest.TestCase):
         Test writing from matrices to XML.
         Ignored attributes: tied_to and background.
         """
-        self.model.toXML('./discrete.xml')
-        model2 = ghmm.HMMOpenXML('./discrete.xml')
+        self.model.toXML('testdata/discrete.xml')
+        model2 = ghmm.HMMOpenXML('testdata/discrete.xml')
 
-        self.label_model.toXML('./model_label.xml')
-        model3 = ghmm.HMMOpenXML('./model_label.xml')
+        self.label_model.toXML('testdata/model_label.xml')
+        model3 = ghmm.HMMOpenXML('testdata/model_label.xml')
 
 ########### PAIR HMM TESTS ##############
 
