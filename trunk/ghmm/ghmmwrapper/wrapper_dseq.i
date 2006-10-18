@@ -33,9 +33,6 @@ typedef struct ghmm_dseq {
 extern int ghmm_dseq_free(ghmm_dseq **sq);
 extern ghmm_dseq* ghmm_dseq_calloc(long number);
 
-%delobject ghmm_dseq::subseq_free;
-%delobject ghmm_dseq_subseq_free;
-
 %extend ghmm_dseq {
         ghmm_dseq(long number) { return ghmm_dseq_calloc(number); }
         ~ghmm_dseq() { ghmm_dseq_free(&self); }
@@ -44,7 +41,9 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
 
         ghmm_dseq* get_singlesequence(int index);
 
+%apply SWIGTYPE* DISOWN {ghmm_dseq* self};
         int subseq_free();
+%clear ghmm_dseq* self;
 
         int max_symbol();
 
