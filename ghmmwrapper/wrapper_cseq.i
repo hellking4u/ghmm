@@ -23,9 +23,6 @@ typedef struct ghmm_cseq {
 extern int ghmm_cseq_free(ghmm_cseq **csq);
 extern ghmm_cseq* ghmm_cseq_calloc(long number);
 
-%delobject ghmm_cseq::subseq_free;
-%delobject ghmm_cseq_subseq_free;
-
 %extend ghmm_cseq {
         ghmm_cseq(long number) { return ghmm_cseq_calloc(number); }
         ~ghmm_cseq() { ghmm_cseq_free(&self); }
@@ -34,7 +31,9 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
 
         ghmm_cseq* get_singlesequence(int index);
 
+%apply SWIGTYPE * DISOWN {ghmm_cseq* self};
         int subseq_free();
+%clear ghmm_cseq* self;
 
         int add(ghmm_cseq *source);
 
