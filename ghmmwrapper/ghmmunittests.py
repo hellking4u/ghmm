@@ -56,6 +56,11 @@ import ghmm
 import ghmmwrapper
 import random
 
+# adjust verbosity level
+import logging
+ghmm.log.setLevel(logging.WARN)
+
+
 class AlphabetTests(unittest.TestCase):
     """Unittests for Emissiondomains subclasses"""
 
@@ -316,7 +321,7 @@ class SequenceSetTests(unittest.TestCase):
         s = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111\nSeq 5, length 6, weight 1.0:\n140453\nSeq 6, length 4, weight 1.0:\n1230"
         self.assertEqual(str(self.i_seq),s)
 
-        print self.i_seq
+        #print self.i_seq
 
         d_mseq = ghmm.SequenceSet(self.d_alph,[ [7.5,4.0,1.2],[0.4,0.93,3.3,2.54] ])    
         self.d_seq.merge(d_mseq)
@@ -353,7 +358,13 @@ class SequenceSetTests(unittest.TestCase):
        self.d_seq.setSeqLabel(3,8)
        l = self.d_seq.getSeqLabel(3)
        self.assertEqual(l,8)
-  
+
+    def testfilereading(self):
+        dom = ghmm.IntegerRange(0,12)
+        seqs = ghmm.SequenceSetOpen(dom,'d_seq.sqd')
+        print seqs[0]
+        seqs = ghmm.SequenceSetOpen(self.d_alph,'test10.sqd')
+
 
 class DiscreteEmissionHMMTests(unittest.TestCase):
     def setUp(self):
@@ -449,7 +460,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
 
     def testbaumwelch(self):
-        print"\n**** testbaumwelch ",
+        #print"\n**** testbaumwelch ",
         seq = self.model.sample(100,100,seed=3586662)
         self.model.baumWelch(seq,5,0.01)
         
@@ -585,13 +596,13 @@ class BackgroundDistributionTests(unittest.TestCase):
 
     def testprint(self):
         
-        print "*** testprint"
+        #print "*** testprint"
         s = str(self.bg)
         self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
 
     def testmodelbackgroundaccessfunctions(self):
         
-        print "***  testmodelbackgroundaccessfunctions"
+        #print "***  testmodelbackgroundaccessfunctions"
         
         self.model.setBackground(self.bg, [0,-1,1])
         # deleting background
@@ -602,7 +613,7 @@ class BackgroundDistributionTests(unittest.TestCase):
     def testapplybackground(self):
         self.model.setBackground(self.bg,[0, -1, 1])
         self.model.applyBackground([0.1, 0.2, .3])
-        print self.model
+        #print self.model
         
         f = lambda x: round(x,15)
         e1 = map(f, self.model.getEmission(0))
@@ -725,7 +736,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
         self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
-        print "model_type = ",self.model.cmodel.model_type
+        #print "model_type = ",self.model.cmodel.model_type
         self.assertEqual(self.model.cmodel.model_type & 4,0)
         self.assertEqual(self.model.isSilent(1), False)
 
@@ -840,6 +851,7 @@ class StateLabelHMMTests(unittest.TestCase):
                                     ['fst', 'scd', 'thr', 'thr', 'thr', 'thr', 'scd',
                                      'scd', 'thr', 'thr', 'scd', 'thr', 'scd', 'thr',
                                      'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
+
 
         path = self.model.kbest(seq)
         self.assertEqual(path,(['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd',
@@ -959,10 +971,10 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.pi = [1.0,0.0,0.0]
         
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
-        print "** GaussianMixtureHMMTests **"
+        #print "** GaussianMixtureHMMTests **"
 
     def testcomponentfixing(self):
-        print "testcomponentfixing"
+        #print "testcomponentfixing"
         f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,0,0])
         self.model.setMixtureFix(0,[0,1,0])    
@@ -975,7 +987,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         # XXX check mu,v,u
 
     def testtomatrices(self):
-        print"\ntesttomatrices "
+        #print"\ntesttomatrices "
         tA,tB,tpi = self.model.toMatrices()
         
         self.assertEqual(self.A,tA)
@@ -984,7 +996,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         
         
     def testsample(self):
-        print"\ntestsample "
+        #print"\ntestsample "
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
         
@@ -1017,8 +1029,8 @@ class XMLIOTests(unittest.TestCase):
         for i in range(slength):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
         self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelDomain=self.l_domain,labelInput=self.labels)
-        print "** XMLIOTests **"
-        print self.tSeq
+        #print "** XMLIOTests **"
+        #print self.tSeq
 
     def testReadHMMed(self):
         model = ghmm.HMMOpenXML('multexon-4.xml')
