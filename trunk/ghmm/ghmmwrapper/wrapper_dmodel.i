@@ -215,8 +215,6 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int get_uniform_background(ghmm_dseq *sq);
 
-        int** DFS();
-
         void order_topological();
 
         void update_tie_groups();
@@ -247,8 +245,6 @@ REFERENCE_ARRAY(ghmm_dmodel, dmodel_ptr)
         int label_logp(const int *O, const int *label, int len, double *log_p);
         int label_backward(const int *O, const int *label, int len, double **beta, double *scale, double *log_p);
         //int label_forward_lean(const int *O, const int *label, int len, double *log_p);
-        int label_gradient_expectations(double **alpha, double **beta, double *scale,
-                                 int *seq, int seq_len, double **matrix_b, double *matrix_a, double *vec_pi);
         int label_gradient_descent(ghmm_dseq *sq, double eta, int no_steps);
         int* label_kbest(int *o_seq, int seq_len, int k, double *log_p);
         int label_baum_welch(ghmm_dseq *sq);

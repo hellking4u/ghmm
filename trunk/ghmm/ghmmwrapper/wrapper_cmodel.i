@@ -197,8 +197,6 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         double get_transition(int i, int j, int c);
         void   set_transition(int i, int j, int c, double prob);
 
-        double ifunc(int state, double c, double x);
-
         int* viterbi(double *O, int T, double *log_p);
 
         ghmm_cstate* getState(size_t index) { return self->s + index; }
