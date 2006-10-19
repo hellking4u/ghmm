@@ -169,7 +169,7 @@ log.addHandler(hdlr)
 log.setLevel(logging.ERROR)
 log.info( " I'm the ghmm in "+ __file__)
 
-
+#list
 def logwrapper(level, message):
 
     if level == 4:
@@ -329,6 +329,7 @@ class Alphabet(EmissionDomain):
             self._lengthOfCharacters = -1
             i = 0
             for c in self.listOfCharacters:
+                #XXX
                 if (self._lengthOfCharacters != None and type(c) == type("hallo")):
                     if (self._lengthOfCharacters == -1):
                         self._lengthOfCharacters = len(c)
@@ -339,6 +340,7 @@ class Alphabet(EmissionDomain):
             if (self._lengthOfCharacters == -1):
                 self._lengthOfCharacters = None
         else:
+            #XXX jg:check
             self.listOfCharacters = []
             for i in range(calphabet.size):
                 c = ghmmwrapper.get_arraychar(calphabet.symbols, i)
@@ -368,11 +370,13 @@ class Alphabet(EmissionDomain):
         return len(self.listOfCharacters)
 
     def __hash__(self):
+        #XXX rewrite 
         # defining hash and eq is not recommended for mutable types.
         # => listOfCharacters should be considered imutable
         return id(self)
 
     def size(self):
+        #XXX
         """ Deprecated """
         log.warning( "Warning: The use of .size() is deprecated. Use len() instead.")
         return len(self.listOfCharacters)
@@ -389,7 +393,6 @@ class Alphabet(EmissionDomain):
 
             Raises KeyError
         """
-        
         result = copy.deepcopy(emissionSequence)
         try:
             result = map(lambda i: self.index[i], result)
@@ -406,7 +409,6 @@ class Alphabet(EmissionDomain):
 
             Raises KeyError
         """
-        # this is a gap
         if internal == -1:
             return "-"
         if internal < -1 or len(self.listOfCharacters) < internal:
@@ -416,6 +418,8 @@ class Alphabet(EmissionDomain):
     def externalSequence(self, internalSequence):
         """ Given a sequence with the internal representation return the
             external representation
+
+            Raises KeyError
         """
         result = copy.deepcopy(internalSequence)
         try:
@@ -486,9 +490,7 @@ class DiscreteDistribution(Distribution):
     """ A DiscreteDistribution over an Alphabet: The discrete distribution
         is parameterized by the vectors of probabilities.
 
-
     """
-
     def __init__(self, alphabet):
         self.alphabet = alphabet
         self.prob_vector = None
@@ -504,7 +506,6 @@ class ContinuousDistribution(Distribution):
     pass
 
 class UniformDistribution(ContinuousDistribution):
-    
     def __init__(self, domain):
         self.emissionDomain = domain
         self.max = None
@@ -556,17 +557,11 @@ class GaussianMixtureDistribution(ContinuousDistribution):
 
     def set(self, index, (mu, sigma,w)):
         pass
-        # assert M > index
-        # self.mu = mu
-        # self.sigma = sigma
 
     def get(self):
         pass
 
 class ContinuousMixtureDistribution(ContinuousDistribution):
-    
-
-    
     def __init__(self, domain):
         self.emissionDomain = domain
         self.M = 0   # number of mixture components
@@ -597,7 +592,7 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
           self.fix[i](fix)
 
     def get(self,i):
-        assert M > index
+        assert M > i
         return (self.weigth[i],self.fix[i],self.component[i])
 
     def check(self):        
@@ -622,7 +617,8 @@ class EmissionSequence:
         self.emissionDomain = emissionDomain
 
         if ParentSequenceSet is not None:
-            # optional reference to a parent equenceSet. Is needed for reference counting with respect to SequenceSet.__getitem__
+            # optional reference to a parent equenceSet. Is needed for reference counting
+            #XXX exception
             assert isinstance(ParentSequenceSet,SequenceSet), "Error: Invalid reference. Only SequenceSet is valid."    
             self.ParentSequenceSet = ParentSequenceSet
         else:
@@ -630,15 +626,17 @@ class EmissionSequence:
 
             
         # check if ghmm is build with asci sequence file support
-        if (((isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)))
-            and not ghmmwrapper.ASCI_SEQ_FILE):
-            raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
-        
+        if ((isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode))) \
+               and not ghmmwrapper.ASCI_SEQ_FILE:
+            raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files"
+                                      + " to the new xml-format or rebuild the GHMM with"
+                                      + " the conditional \"GHMM_OBSOLETE\".")
 
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
 
             #create a ghmm_dseq with state_labels, if the appropiate parameters are set
-            if (isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None )):
+            if isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None ):
+                #XXX add messages to assert 
                 assert len(sequenceInput)==len(labelInput)
                 assert isinstance(labelInput, list)
                 assert isinstance(labelDomain, LabelDomain)
@@ -646,6 +644,8 @@ class EmissionSequence:
                 self.labelDomain = labelDomain
                 
                 internalInput = []
+                #XXX self.emissionDomain.internal(sequenceInput) should be enough
+                #internalInput = [self.emissionDomain.internal(s) for s in sequenceInput]
                 for i in range(len(sequenceInput)):
                     internalInput.append(self.emissionDomain.internal(sequenceInput[i]))
 
@@ -656,6 +656,7 @@ class EmissionSequence:
                 #make c-array of internal labels
                 (label,l) = ghmmhelper.list2int_matrix([internalLabel])
 
+                #XXX write constructor with sequence as argument
                 self.cseq = ghmmwrapper.ghmm_dseq(1)
                 ghmmwrapper.free(self.cseq.seq)
                 self.cseq.seq = seq
@@ -668,7 +669,7 @@ class EmissionSequence:
                 self.cseq.setLabelsLength(0, l[0])
 
             elif isinstance(sequenceInput, list):
-
+                #XXXX see above
                 internalInput = map( self.emissionDomain.internal, sequenceInput)
                 (seq,l) = ghmmhelper.list2int_matrix([internalInput])
                 self.cseq = ghmmwrapper.ghmm_dseq(1)
@@ -698,6 +699,7 @@ class EmissionSequence:
                             seq = ghmmwrapper.dseq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
+                        #XXX check exception type
                         raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
 
                     ghmmwrapper.free(tmp)
@@ -710,14 +712,14 @@ class EmissionSequence:
                 self.cseq = sequenceInput
                 if labelDomain != None:
                     self.labelDomain = labelDomain
-                
-                
+
             else:
                 raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
 
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
 
             if isinstance(sequenceInput, list):
+                #XXX constructor
                 (seq,l) = ghmmhelper. list2double_matrix([sequenceInput])
                 self.cseq = ghmmwrapper.ghmm_cseq(1)
                 ghmmwrapper.free(self.cseq.seq)
@@ -730,6 +732,7 @@ class EmissionSequence:
                 if  not os.path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
+                    #XXX see SequenceSet and replace
                     self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
 
 
@@ -744,8 +747,6 @@ class EmissionSequence:
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
-        #print "__init__ EmissionSequence: ",self.cseq
-
     def __del__(self):
         "Deallocation of C sequence struct."
         log.debug( "__del__ EmissionSequence " + str(self.cseq))
@@ -755,6 +756,7 @@ class EmissionSequence:
         if self.ParentSequenceSet is not None:
             self.ParentSequenceSet = None
             self.emissionDomain = None
+            #XXX check if single self.cseq.subseq_free() is enough
             self.cseq.subseq_free()
             # set labelDomain attribute to None, if applicable
             try:
@@ -796,10 +798,11 @@ class EmissionSequence:
         ghmmwrapper.long_array_setitem(self.cseq.seq_label,0,value)
     
     def getStateLabel(self):
-        """ Returns the labeling of the sequence in internal representation"""
+        """ Returns the labeling of the sequence in external representation"""
         label = []
         if self.cseq.state_labels != None:
             for j in range(self.cseq.getLabelsLength(0)):
+                #XXX use getStateLabel
                 label.append(self.labelDomain.external(ghmmwrapper.int_matrix_getitem(self.cseq.state_labels, 0, j)))
             return label
         else:
@@ -809,7 +812,8 @@ class EmissionSequence:
         "Defines string representation."
         seq = self.cseq
         strout = []
-        strout.append("\nEmissionSequence Instance:\nlength " + str(seq.getLength(0))+ ", weight " + str(seq.getWeight(0))  + ":\n")
+        strout.append("\nEmissionSequence Instance:\nlength " + str(seq.getLength(0)))
+        strout.append(", weight " + str(seq.getWeight(0))  + ":\n")
         for j in range(seq.getLength(0)):
             strout.append(str( self.emissionDomain.external(self[j]) )   )
             if self.emissionDomain.CDataType == "double":
@@ -830,13 +834,12 @@ class EmissionSequence:
         # add 'self'
         seqSet = SequenceSet(self.emissionDomain, [])
         seqSet.cseq.add(self.cseq)
-        #XXX del(self)
         return seqSet
 
     def write(self,fileName):
         "Writes the EmissionSequence into file 'fileName'."
 
-        # different function signatures require explicit check for C data type
+        #XXX use default parameter for double different function signatures require explicit check for C data type
         if self.emissionDomain.CDataType == "int":
             self.cseq.write(fileName)
         if self.emissionDomain.CDataType == "double":
@@ -850,7 +853,7 @@ class EmissionSequence:
     def getWeight(self):
         return self.cseq.getWeight(0)
 
-
+#XXX try to remove type if, elif
 class SequenceSet:
     def __init__(self, emissionDomain, sequenceSetInput, labelDomain = None, labelInput = None):
         self.emissionDomain = emissionDomain
@@ -872,7 +875,6 @@ class SequenceSet:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
 
-
         # reads in the first sequence struct in the input file
         if isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode):
             # check if ghmm is build with asci sequence file support
@@ -891,6 +893,7 @@ class SequenceSet:
                             seq = self.seq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
+                        #XXX appropiate ecxception
                         raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
 
                     ghmmwrapper.free(tmp)
@@ -905,12 +908,14 @@ class SequenceSet:
 
                 self.labelDomain = labelDomain                
                 seq_nr = len(sequenceSetInput)
+                #XXX use constructor
                 self.cseq = ghmmwrapper.ghmm_dseq(seq_nr)
                 self.cseq.seq_number = seq_nr
                 
                 internalInput = []
                 internalLabels = []
                 #translate sequences and labels to internal representation
+                #XXX use list comprehensions and emissionDomain.internal() with lists 
                 for i in range(seq_nr):
                     sequenceInput = []
                     for j in range(len(sequenceSetInput[i])):
@@ -941,6 +946,7 @@ class SequenceSet:
                 self.cseq.seq_number = seq_nr
                 
                 internalInput = []
+                #XXX use list comprehensions and emissionDomain.internal() with lists 
                 for i in range(seq_nr):
                     internalInput.append( map( self.emissionDomain.internal, sequenceSetInput[i]))
 
@@ -958,8 +964,9 @@ class SequenceSet:
                 
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
-    
-            self.__array = []    
+
+            #XXX replace __array with getSequence
+            self.__array = []
             for index in range(len(self)):
                 oneseq = self.cseq.getSequence(index)
                 self.__array.append(oneseq)
