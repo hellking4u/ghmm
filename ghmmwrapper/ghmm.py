@@ -689,7 +689,20 @@ class EmissionSequence:
                 if  not os.path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
-                    self.cseq  = ghmmwrapper.seq_read(sequenceInput)
+                    i = ghmmwrapper.int_array_alloc(1)
+                    tmp = ghmmwrapper.ghmm_dseq_read(sequenceSetInput, i)
+                    seq_number = ghmmwrapper.int_array_getitem(i, 0)
+                    if seq_number > 0:
+                        self.cseq = ghmmwrapper.dseq_ptr_array_getitem(tmp, 0)
+                        for n in range(1, seq_number):
+                            seq = ghmmwrapper.dseq_ptr_array_getitem(tmp, n)
+                            del seq
+                    else:
+                        raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
+
+                    ghmmwrapper.free(tmp)
+                    ghmmwrapper.free(i)
+
 
             elif isinstance(sequenceInput, ghmmwrapper.ghmm_dseq):# internal use
                 if sequenceInput.seq_number > 1:
@@ -843,25 +856,51 @@ class SequenceSet:
         self.emissionDomain = emissionDomain
         self.cseq = None
 
-        # check if ghmm is build with asci sequence file support
-        if ((isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode))
-            and not ghmmwrapper.ASCI_SEQ_FILE):
-            raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
-        
-        if self.emissionDomain.CDataType == "int": # underlying C data type is integer
+        if self.emissionDomain.CDataType == "int":
             # necessary C functions for accessing the ghmm_dseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq
             self.allocSingleSeq = ghmmwrapper.int_array_alloc
-            
-            if (isinstance(sequenceSetInput, str)  and labelInput == None): # from file
-                # reads in the first sequence struct in the input file
+            self.seq_read = ghmmwrapper.ghmm_dseq_read
+            self.seq_ptr_array_getitem = ghmmwrapper.dseq_ptr_array_getitem
+        elif self.emissionDomain.CDataType == "double":
+            # necessary C functions for accessing the ghmm_cseq struct
+            self.sequenceAllocationFunction = ghmmwrapper.ghmm_cseq
+            self.allocSingleSeq = ghmmwrapper.double_array_alloc
+            self.seq_read = ghmmwrapper.ghmm_cseq_read
+            self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
+        else:
+            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+
+
+
+        # reads in the first sequence struct in the input file
+        if isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode):
+            # check if ghmm is build with asci sequence file support
+            if not ghmmwrapper.ASCI_SEQ_FILE:
+                raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            else:
                 if  not os.path.exists(sequenceSetInput):
                      raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
-                     self.cseq  = ghmmwrapper.seq_read(sequenceSetInput)
+                    i = ghmmwrapper.int_array_alloc(1)
+                    tmp = self.seq_read(sequenceSetInput, i)
+                    seq_number = ghmmwrapper.int_array_getitem(i, 0)
+                    if seq_number > 0:
+                        self.cseq = self.seq_ptr_array_getitem(tmp, 0)
+                        for n in range(1, seq_number):
+                            seq = self.seq_ptr_array_getitem(tmp, n)
+                            del seq
+                    else:
+                        raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
 
-            #generate a a labeled sequenceSet from a list of lists (sequences), emissionDomain, a list of list (labels) and a model
-            elif isinstance(sequenceSetInput, list) and isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
+                    ghmmwrapper.free(tmp)
+                    ghmmwrapper.free(i)
+
+
+        if self.emissionDomain.CDataType == "int": # underlying C data type is integer
+            #generate a a labeled sequenceSet from a list of lists (sequences),
+            #emissionDomain, a list of list (labels) and a model
+            if isinstance(sequenceSetInput, list) and isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
                 assert len(sequenceSetInput)==len(labelInput)
 
                 self.labelDomain = labelDomain                
@@ -896,9 +935,7 @@ class SequenceSet:
                     self.cseq.setLength(i, lenghts[i])
                     self.cseq.setLabelsLength(i, labellen[i])
 
-                    
             elif isinstance(sequenceSetInput, list) and labelInput == None:
-
                 seq_nr = len(sequenceSetInput)
                 self.cseq = ghmmwrapper.ghmm_dseq(seq_nr)
                 self.cseq.seq_number = seq_nr
@@ -913,7 +950,6 @@ class SequenceSet:
                 self.cseq.seq = seq
                 for i in range(seq_nr):
                     ghmmwrapper.int_array_setitem(self.cseq.seq_len, i, lenghts[i])
-
 
             elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq): # inputType == ghmm_dseq*
                 self.cseq = sequenceSetInput
@@ -930,9 +966,6 @@ class SequenceSet:
 
 
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
-            # necessary C functions for accessing the ghmm_cseq struct
-            self.sequenceAllocationFunction = ghmmwrapper.ghmm_cseq
-            self.allocSingleSeq = ghmmwrapper.double_array_alloc
 
             if isinstance(sequenceSetInput, list): 
                 seq_nr = len(sequenceSetInput)
@@ -945,17 +978,6 @@ class SequenceSet:
                 for i in range(seq_nr):
                     ghmmwrapper.int_array_setitem(self.cseq.seq_len, i, lenghts[i])
 
-            elif isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode): # from file
-                log.debug( "SequenceSet fromFile" + str (sequenceSetInput))
-                if  not os.path.exists(sequenceSetInput):
-                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
-                else:
-                    #self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
-                    i = ghmmwrapper.int_array_alloc(1)
-                    self.__s = ghmmwrapper.ghmm_cseq_read(sequenceSetInput,i)
-                    self.cseq = ghmmwrapper.get_seq_d_ptr(self.__s,0)
-
-                                                     
             elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq): # i# inputType == ghmm_cseq**, internal use
 
                 self.cseq = sequenceSetInput
@@ -966,10 +988,6 @@ class SequenceSet:
             for index in range(len(self)):
                 oneset = self.cseq.getSequence(index)
                 self.__array.append(oneset)                
-
-        
-        else:
-            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
 
     def __del__(self):
@@ -1165,18 +1183,17 @@ def SequenceSetOpen(emissionDomain, fileName):
     if not os.path.exists(fileName):
         raise IOError, 'File ' + str(fileName) + ' not found.'
 
-    
     if emissionDomain.CDataType == "int":
         readFile = ghmmwrapper.ghmm_dseq_read
-        seqPtr = ghmmwrapper.get_seq_ptr
+        seqPtr   = ghmmwrapper.dseq_ptr_array_getitem
     elif emissionDomain.CDataType == "double":
         readFile = ghmmwrapper.ghmm_cseq_read
-        seqPtr = ghmmwrapper.get_seq_d_ptr
+        seqPtr   = ghmmwrapper.cseq_ptr_array_getitem
             
     dArr = ghmmwrapper.int_array_alloc(1)
 
     structArray = readFile(fileName, dArr)
-    setNr = dArr[0]
+    setNr = ghmmwrapper.int_array_getitem(dArr, 0)
 
     sequenceSets = []
     for i in range(setNr):

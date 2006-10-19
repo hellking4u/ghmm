@@ -1,3 +1,8 @@
+%{
+#include <ghmm/sequence.h>
+#include <ghmm/obsolete.h>
+%}
+
 /*==========================================================================
   ===== continous sequences ================================================ */
 
@@ -62,3 +67,7 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
                 fclose(file);
             }
 }
+
+extern ghmm_cseq** ghmm_cseq_read(const char* filename, int* sqd_number);
+
+REFERENCE_ARRAY(ghmm_cseq, cseq_ptr)

@@ -1,3 +1,8 @@
+%{
+#include <ghmm/sequence.h>
+#include <ghmm/obsolete.h>
+%}
+
 /*==========================================================================
   ===== discrete sequences ================================================= */
 typedef struct ghmm_dseq {
@@ -83,5 +88,7 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
                 fclose(file);
             }
 }
+
+extern ghmm_dseq** ghmm_dseq_read(const char* filename, int* seq_arrays);
 
 REFERENCE_ARRAY(ghmm_dseq, dseq_ptr)
