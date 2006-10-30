@@ -692,23 +692,9 @@ class EmissionSequence:
         log.debug( "__del__ EmissionSequence " + str(self.cseq))
 
         # if a parent SequenceSet exits, we use cseq.subseq_free() to free memory
-        # and clean up the other python-side attributes
         if self.ParentSequenceSet is not None:
-            self.ParentSequenceSet = None
-            self.emissionDomain = None
-            #XXX check if single self.cseq.subseq_free() is enough
             self.cseq.subseq_free()
-            # set labelDomain attribute to None, if applicable
-            try:
-                hasattr(self,labelDomain)
-                self.labelDomain = None
-            except:
-                pass           
 
-        # otherwise the memory is freed        
-        elif self.cseq is not None:
-            del self.cseq
-            self.cseq = None
 
     def __len__(self):
         "Returns the length of the sequence."
