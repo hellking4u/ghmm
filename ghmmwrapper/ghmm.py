@@ -169,20 +169,9 @@ log.addHandler(hdlr)
 log.setLevel(logging.ERROR)
 log.info( " I'm the ghmm in "+ __file__)
 
-#list
+c_log = [log.critical, log.error, log.warning, log.info, log.debug]
 def logwrapper(level, message):
-
-    if level == 4:
-        log.debug(message)
-    if level == 3:
-        log.info(message)
-    if level == 2:
-        log.warning(message)
-    if level == 1:
-        log.error(message)
-    if level == 0:
-        log.critical(message)
-
+    clog_[level](message)
 
 ghmmwrapper.set_pylogging(logwrapper)
 
