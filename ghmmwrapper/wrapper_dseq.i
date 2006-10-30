@@ -91,11 +91,19 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
         int  getLength(int i) { return self->seq_len[i]; }
         void setLength(int i, int len) { self->seq_len[i] = len; }
 
-        int  getLabelsLength(int i) { return self->state_labels_len[i]; }
-        void setLabelsLength(int i, int len) { self->state_labels_len[i] = len; }
-
         double getWeight(int i) { return self->seq_w[i]; }
         void   setWeight(int i, double w) { self->seq_w[i] = w; }
+
+        int* getLabels(int index) {
+            if (self->state_labels) return self->state_labels[index];
+            else return NULL;
+        }
+        void setLabels(int index, int* labels) {
+            if (self->state_labels) self->state_labels[index] = labels;
+        }
+
+        int  getLabelsLength(int i) { return self->state_labels_len[i]; }
+        void setLabelsLength(int i, int len) { self->state_labels_len[i] = len; }
 
         void copyStateLabel(int index, ghmm_dseq *target, int no)
             {
