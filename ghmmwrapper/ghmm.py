@@ -171,7 +171,7 @@ log.info( " I'm the ghmm in "+ __file__)
 
 c_log = [log.critical, log.error, log.warning, log.info, log.debug]
 def logwrapper(level, message):
-    clog_[level](message)
+    c_log[level](message)
 
 ghmmwrapper.set_pylogging(logwrapper)
 
@@ -613,90 +613,79 @@ class EmissionSequence:
         else:
             self.ParentSequenceSet = None
 
-            
+        if self.emissionDomain.CDataType == "int":
+            # necessary C functions for accessing the ghmm_dseq struct
+            self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq
+            self.allocSingleSeq = ghmmwrapper.int_array_alloc
+            self.seq_read = ghmmwrapper.ghmm_dseq_read
+            self.seq_ptr_array_getitem = ghmmwrapper.dseq_ptr_array_getitem
+            self.sequence_carray = ghmmhelper.list2int_array
+        elif self.emissionDomain.CDataType == "double":
+            # necessary C functions for accessing the ghmm_cseq struct
+            self.sequenceAllocationFunction = ghmmwrapper.ghmm_cseq
+            self.allocSingleSeq = ghmmwrapper.double_array_alloc
+            self.seq_read = ghmmwrapper.ghmm_cseq_read
+            self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
+            self.sequence_carray = ghmmhelper.list2double_array
+        else:
+            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+
+
         # check if ghmm is build with asci sequence file support
-        if ((isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode))) \
-               and not ghmmwrapper.ASCI_SEQ_FILE:
-            raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files"
-                                      + " to the new xml-format or rebuild the GHMM with"
-                                      + " the conditional \"GHMM_OBSOLETE\".")
-
-        if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-
-            #create a ghmm_dseq with state_labels, if the appropiate parameters are set
-            if isinstance(sequenceInput, list):
-                internalInput = self.emissionDomain.internalSequence(sequenceInput)
-                seq = ghmmhelper.list2int_array(internalInput)
-                self.cseq = ghmmwrapper.ghmm_dseq(seq, len(internalInput))
-
-                if labelInput is not None and labelDomain is not None:
-                    assert len(sequenceInput)==len(labelInput), "Length of the sequence and labels don't match."
-                    assert isinstance(labelInput, list), "expected a list of labels."
-                    assert isinstance(labelDomain, LabelDomain), "labelDomain is not a LabelDomain class."
-                
-                    self.labelDomain = labelDomain
-
-                    #translate the external labels in internal 
-                    internalLabel = self.labelDomain.internalSequence(labelInput)
-                    label = ghmmhelper.list2int_array(internalLabel)
-                    self.cseq.init_labels(label, len(internalInput))
-
-            elif (isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)): # from file
-                # reads in the first sequence struct in the input file
-                if  not os.path.exists(sequenceInput):
-                     raise IOError, 'File ' + str(sequenceInput) + ' not found.'
+        if isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode):
+            if ghmmwrapper.ASCI_SEQ_FILE:
+                if  not os.path.exists(sequenceSetInput):
+                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
                     i = ghmmwrapper.int_array_alloc(1)
-                    tmp = ghmmwrapper.ghmm_dseq_read(sequenceSetInput, i)
+                    tmp = self.seq_read(sequenceInput, i)
                     seq_number = ghmmwrapper.int_array_getitem(i, 0)
                     if seq_number > 0:
-                        self.cseq = ghmmwrapper.dseq_ptr_array_getitem(tmp, 0)
+                        self.cseq = self.seq_ptr_array_getitem(tmp, 0)
                         for n in range(1, seq_number):
-                            seq = ghmmwrapper.dseq_ptr_array_getitem(tmp, n)
+                            seq = self.seq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
-                        #XXX check exception type
+                        #XXX appropiate ecxception
                         raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
 
                     ghmmwrapper.free(tmp)
                     ghmmwrapper.free(i)
 
-
-            elif isinstance(sequenceInput, ghmmwrapper.ghmm_dseq):# internal use
-                if sequenceInput.seq_number > 1:
-                    raise badCPointer, "Use SequenceSet for multiple sequences."
-                self.cseq = sequenceInput
-                if labelDomain != None:
-                    self.labelDomain = labelDomain
-
             else:
-                raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
+                raise UnsupportedFeature("asci sequence files are deprecated. Please convert your files"
+                                       + " to the new xml-format or rebuild the GHMM with"
+                                       + " the conditional \"GHMM_OBSOLETE\".")
 
-        elif self.emissionDomain.CDataType == "double": # underlying C data type is double
+        #create a ghmm_dseq with state_labels, if the appropiate parameters are set
+        if isinstance(sequenceInput, list):
+            internalInput = self.emissionDomain.internalSequence(sequenceInput)
+            seq = self.sequence_carray(internalInput)
+            self.cseq = self.sequenceAllocationFunction(seq, len(sequenceInput))
 
-            if isinstance(sequenceInput, list):
-                seq = ghmmhelper.list2double_array(sequenceInput)
-                self.cseq = ghmmwrapper.ghmm_cseq(seq, len(sequenceInput))
+            if labelInput is not None and labelDomain is not None:
+                assert len(sequenceInput)==len(labelInput), "Length of the sequence and labels don't match."
+                assert isinstance(labelInput, list), "expected a list of labels."
+                assert isinstance(labelDomain, LabelDomain), "labelDomain is not a LabelDomain class."
+                
+                self.labelDomain = labelDomain
 
-            elif isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode): # from file
-                # reads in the first sequence struct in the input file
-                if  not os.path.exists(sequenceInput):
-                     raise IOError, 'File ' + str(sequenceInput) + ' not found.'
-                else:
-                    #XXX see SequenceSet and replace
-                    self.cseq  = ghmmwrapper.seq_d_read(sequenceSetInput)
-
-
-            elif isinstance(sequenceInput, ghmmwrapper.ghmm_cseq): # internal use
-                if sequenceInput.seq_number > 1:
-                    raise badCPointer, "Use SequenceSet for multiple sequences."
-                self.cseq = sequenceInput
-            else:
-                raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
-
+                #translate the external labels in internal 
+                internalLabel = self.labelDomain.internalSequence(labelInput)
+                label = ghmmhelper.list2int_array(internalLabel)
+                self.cseq.init_labels(label, len(internalInput))
+                
+        # internal use
+        elif isinstance(sequenceInput, ghmmwrapper.ghmm_dseq) or isinstance(sequenceInput, ghmmwrapper.ghmm_cseq):
+            if sequenceInput.seq_number > 1:
+                raise badCPointer, "Use SequenceSet for multiple sequences."
+            self.cseq = sequenceInput
+            if labelDomain != None:
+                self.labelDomain = labelDomain
 
         else:
-            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+            raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
+
 
     def __del__(self):
         "Deallocation of C sequence struct."
