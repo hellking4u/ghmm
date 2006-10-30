@@ -576,6 +576,8 @@ ghmm_dseq *ghmm_dseq_calloc (long seq_number)
     sq->seq_id[i] = -1.0;
     sq->seq_w[i] = 1;
   }
+  sq->state_labels = NULL;
+  sq->state_labels_len = NULL;
   return sq;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_dseq_free (&sq);
