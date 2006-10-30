@@ -40,7 +40,32 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
 
 %extend ghmm_dseq {
         ghmm_dseq(long number) { return ghmm_dseq_calloc(number); }
+        ghmm_dseq(int* seq, int length) {
+            ghmm_dseq* self = ghmm_dseq_calloc(1);
+            self->seq[0] = seq;
+            self->seq_len[0] = length;
+            return self;
+        }
+        ghmm_dseq(int** seqs, int* lengths, int number) {
+            ghmm_dseq* self = ghmm_dseq_calloc(number);
+            free(self->seq);
+            free(self->seq_len);
+            self->seq = seqs;
+            self->seq_len = lengths;
+            return self;
+        }
         ~ghmm_dseq() { ghmm_dseq_free(&self); }
+
+        void init_labels(int* label, int length) {
+            self->state_labels = malloc(sizeof(int*));
+            self->state_labels_len = malloc(sizeof(int));
+            self->state_labels[0] = label;
+            self->state_labels_len[0] = length;
+        }
+        void init_labels(int** labels, int* lengths) {
+            self->state_labels = labels;
+            self->state_labels_len = lengths;
+        }
 
         int calloc_state_labels(); 
 

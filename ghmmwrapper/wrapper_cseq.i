@@ -30,6 +30,20 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
 
 %extend ghmm_cseq {
         ghmm_cseq(long number) { return ghmm_cseq_calloc(number); }
+        ghmm_cseq(double* seq, int length) {
+            ghmm_cseq* self = ghmm_cseq_calloc(1);
+            self->seq[0] = seq;
+            self->seq_len[0] = length;
+            return self;
+        }
+        ghmm_cseq(double** seqs, int* lengths, int number) {
+            ghmm_cseq* self = ghmm_cseq_calloc(number);
+            free(self->seq);
+            free(self->seq_len);
+            self->seq = seqs;
+            self->seq_len = lengths;
+            return self;
+        }
         ~ghmm_cseq() { ghmm_cseq_free(&self); }
 
         //ghmm_cseq** truncate(int sqd_fields, double trunc_ratio, int seed);
