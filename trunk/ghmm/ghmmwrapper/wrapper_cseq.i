@@ -73,7 +73,7 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
         double getWeight(int i) { return self->seq_w[i]; }
         void   setWeight(int i, double w) { self->seq_w[i] = w; }
 
-        void write(char* filename, int discrete)
+        void write(char* filename, int discrete = 0)
             {
                 FILE* file;
                 file = fopen(filename, "at");

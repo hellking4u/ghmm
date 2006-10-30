@@ -725,13 +725,11 @@ class EmissionSequence:
     
     def getStateLabel(self):
         """ Returns the labeling of the sequence in external representation"""
-        label = []
         if self.cseq.state_labels != None:
-            for j in range(self.cseq.getLabelsLength(0)):
-                #XXX use getStateLabel
-                label.append(self.labelDomain.external(ghmmwrapper.int_matrix_getitem(self.cseq.state_labels, 0, j)))
-            return label
+            iLabel = ghmmhelper.int_array2list(self.cseq.getLabels(0), self.cseq.getLabelsLength(0))
+            return self.labelDomain.externalSequence(iLabel)
         else:
+            #XXX appropiate exception
             raise IndexOutOfBounds(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
 
     def __str__(self):
@@ -764,12 +762,7 @@ class EmissionSequence:
 
     def write(self,fileName):
         "Writes the EmissionSequence into file 'fileName'."
-
-        #XXX use default parameter for double different function signatures require explicit check for C data type
-        if self.emissionDomain.CDataType == "int":
-            self.cseq.write(fileName)
-        if self.emissionDomain.CDataType == "double":
-            self.cseq.write(fileName, 0)
+        self.cseq.write(fileName)
 
     def setWeight(self, value):
         self.cseq.setWeight(0, value)
@@ -998,13 +991,8 @@ class SequenceSet:
         
     def write(self,fileName):
         "Writes (appends) the SequenceSet into file 'fileName'."
+        self.cseq.write(fileName)
         
-        # different function signatures require explicit check for C data type
-        if self.emissionDomain.CDataType == "int":
-            self.cseq.write(fileName)
-        if self.emissionDomain.CDataType == "double":    
-            self.cseq.write(fileName, 0)
-
 class SequenceSetSubset(SequenceSet):
     """ 
     SequenceSetSubset contains a subset of the sequences from a SequenceSet object.
