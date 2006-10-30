@@ -785,7 +785,6 @@ class EmissionSequence:
         if self.emissionDomain.CDataType == "double":
             self.cseq.write(fileName, 0)
 
-    
     def setWeight(self, value):
         self.cseq.setWeight(0, value)
         self.cseq.total_w  = value
@@ -793,7 +792,7 @@ class EmissionSequence:
     def getWeight(self):
         return self.cseq.getWeight(0)
 
-#XXX try to remove type if, elif
+
 class SequenceSet:
     def __init__(self, emissionDomain, sequenceSetInput, labelDomain = None, labelInput = None):
         self.emissionDomain = emissionDomain
@@ -805,12 +804,14 @@ class SequenceSet:
             self.allocSingleSeq = ghmmwrapper.int_array_alloc
             self.seq_read = ghmmwrapper.ghmm_dseq_read
             self.seq_ptr_array_getitem = ghmmwrapper.dseq_ptr_array_getitem
+            self.sequence_cmatrix = ghmmhelper.list2int_matrix
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the ghmm_cseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_cseq
             self.allocSingleSeq = ghmmwrapper.double_array_alloc
             self.seq_read = ghmmwrapper.ghmm_cseq_read
             self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
+            self.sequence_cmatrix = ghmmhelper.list2double_matrix
         else:
             raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
 
@@ -840,55 +841,30 @@ class SequenceSet:
                     ghmmwrapper.free(i)
 
 
-        if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-            if isinstance(sequenceSetInput, list):
-                internalInput = [self.emissionDomain.internalSequence(seq) for seq in sequenceSetInput]
-                (seq, lengths) = ghmmhelper.list2int_matrix(internalInput)
-                lens = ghmmhelper.list2int_array(lengths)
+        if isinstance(sequenceSetInput, list):
+            internalInput = [self.emissionDomain.internalSequence(seq) for seq in sequenceSetInput]
+            (seq, lengths) = self.sequence_cmatrix(internalInput)
+            lens = ghmmhelper.list2int_array(lengths)
                     
-                self.cseq = ghmmwrapper.ghmm_dseq(seq, lens, len(sequenceSetInput))
+            self.cseq = self.sequenceAllocationFunction(seq, lens, len(sequenceSetInput))
 
-                if isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
-                    assert len(sequenceSetInput)==len(labelInput), "no. of sequences and labels do not match."
+            if isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
+                assert len(sequenceSetInput)==len(labelInput), "no. of sequences and labels do not match."
                     
-                    self.labelDomain = labelDomain
-                    internalLabels = [self.labelDomain.internalSequence(oneLabel) for oneLabel in labelInput]
-                    (label,labellen) = ghmmhelper.list2int_matrix(internalLabels)
-                    lens = ghmmhelper.list2int_array(labellen)
-                    self.cseq.init_labels(label, lens)
+                self.labelDomain = labelDomain
+                internalLabels = [self.labelDomain.internalSequence(oneLabel) for oneLabel in labelInput]
+                (label,labellen) = ghmmhelper.list2int_matrix(internalLabels)
+                lens = ghmmhelper.list2int_array(labellen)
+                self.cseq.init_labels(label, lens)
 
-            elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq): # inputType == ghmm_dseq*
-                self.cseq = sequenceSetInput
-                if labelDomain is not None:
-                    self.labelDomain = labelDomain
+        #internal use
+        elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq) or isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq):
+            self.cseq = sequenceSetInput
+            if labelDomain is not None:
+                self.labelDomain = labelDomain
                 
-            else:    
-                raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
-
-            #XXX replace __array with getSequence
-            self.__array = []
-            for index in range(len(self)):
-                oneseq = self.cseq.getSequence(index)
-                self.__array.append(oneseq)
-
-
-        elif self.emissionDomain.CDataType == "double": # underlying C data type is double
-
-            if isinstance(sequenceSetInput, list): 
-                (seq,lengths) = ghmmhelper.list2double_matrix(sequenceSetInput)
-                lens = ghmmhelper.list2int_array(lengths)
-                self.cseq = ghmmwrapper.ghmm_cseq(seq, lens, len(sequenceSetInput))
-
-            elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq): # i# inputType == ghmm_cseq**, internal use
-                self.cseq = sequenceSetInput
-
-            else:    
-                raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
-
-            self.__array = []
-            for index in range(len(self)):
-                oneset = self.cseq.getSequence(index)
-                self.__array.append(oneset)                
+        else:    
+            raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
 
 
     def __del__(self):
@@ -904,30 +880,23 @@ class SequenceSet:
         "Defines string representation."
         seq = self.cseq
         strout =  ["\nNumber of sequences: " + str(seq.seq_number)]
-        print strout
-        if self.emissionDomain.CDataType == "int":
-           for i in range(seq.seq_number):
-                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)))
-                strout.append(", weight " + str(seq.getWeight(i))  + ":\n")
-                print strout
-                for j in range(seq.getLength(i)):
+
+        for i in range(seq.seq_number):
+            strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)))
+            strout.append(", weight " + str(seq.getWeight(i))  + ":\n")
+            for j in range(seq.getLength(i)):
+                if self.emissionDomain.CDataType == "int":
                     strout.append(str( self.emissionDomain.external(( ghmmwrapper.int_matrix_getitem(self.cseq.seq, i, j) )) ))
-
-                # checking for labels 
-                if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
-                    strout.append("\nState labels:\n")
-                    for j in range(seq.getLabelsLength(i)):
-                        strout.append(str( self.labelDomain.external(ghmmwrapper.int_matrix_getitem(seq.state_labels,i,j))) +", ")
-
-        if self.emissionDomain.CDataType == "double":
-            for i in range(seq.seq_number):
-                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i))+ ", weight " + str(seq.getWeight(i))  + ":\n")
-                print strout
-                for j in range(seq.getLength(i)):
+                elif self.emissionDomain.CDataType == "double":
                     strout.append(str( self.emissionDomain.external(( ghmmwrapper.double_matrix_getitem(self.cseq.seq, i, j) )) ) + " ")
 
+            # checking for labels 
+            if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:            
+                strout.append("\nState labels:\n")
+                for j in range(seq.getLabelsLength(i)):
+                    strout.append(str( self.labelDomain.external(ghmmwrapper.int_matrix_getitem(seq.state_labels,i,j))) +", ")
+
         return join(strout,'')
-    
 
 
     def __len__(self):
@@ -1020,7 +989,7 @@ class SequenceSet:
 
             len_i = self.cseq.getLength(seqIndixes[i])
             
-            seq.setSequence(i, self.__array[seqIndixes[i]])
+            seq.setSequence(i, self.cseq.getSequence(seqIndixes[i]))
 
             seq.setLength(i, len_i)
 
