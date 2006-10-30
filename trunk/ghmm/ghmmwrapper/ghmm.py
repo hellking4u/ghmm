@@ -635,57 +635,24 @@ class EmissionSequence:
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
 
             #create a ghmm_dseq with state_labels, if the appropiate parameters are set
-            if isinstance(sequenceInput, list) and (labelInput is not None or labelDomain is not None ):
-                #XXX add messages to assert 
-                assert len(sequenceInput)==len(labelInput)
-                assert isinstance(labelInput, list)
-                assert isinstance(labelDomain, LabelDomain)
+            if isinstance(sequenceInput, list):
+                internalInput = self.emissionDomain.internalSequence(sequenceInput)
+                seq = ghmmhelper.list2int_array(internalInput)
+                self.cseq = ghmmwrapper.ghmm_dseq(seq, len(internalInput))
+
+                if labelInput is not None and labelDomain is not None:
+                    assert len(sequenceInput)==len(labelInput), "Length of the sequence and labels don't match."
+                    assert isinstance(labelInput, list), "expected a list of labels."
+                    assert isinstance(labelDomain, LabelDomain), "labelDomain is not a LabelDomain class."
                 
-                self.labelDomain = labelDomain
-                
-                internalInput = []
-                #XXX self.emissionDomain.internal(sequenceInput) should be enough
-                #internalInput = [self.emissionDomain.internal(s) for s in sequenceInput]
-                for i in range(len(sequenceInput)):
-                    internalInput.append(self.emissionDomain.internal(sequenceInput[i]))
+                    self.labelDomain = labelDomain
 
-                #translate the external labels in internal 
-                internalLabel = self.labelDomain.internalSequence(labelInput)
-                
-                (seq,l) = ghmmhelper.list2int_matrix([internalInput])
-                #make c-array of internal labels
-                (label,l) = ghmmhelper.list2int_matrix([internalLabel])
+                    #translate the external labels in internal 
+                    internalLabel = self.labelDomain.internalSequence(labelInput)
+                    label = ghmmhelper.list2int_array(internalLabel)
+                    self.cseq.init_labels(label, len(internalInput))
 
-                #XXX write constructor with sequence as argument
-                self.cseq = ghmmwrapper.ghmm_dseq(1)
-                ghmmwrapper.free(self.cseq.seq)
-                self.cseq.seq = seq
-                self.cseq.seq_number = 1
-                self.cseq.setLength(0, l[0])
-
-                #set the state labels and length
-                self.cseq.state_labels = label
-                self.cseq.state_labels_len = ghmmwrapper.int_array_alloc(1)
-                self.cseq.setLabelsLength(0, l[0])
-
-            elif isinstance(sequenceInput, list):
-                #XXXX see above
-                internalInput = map( self.emissionDomain.internal, sequenceInput)
-                (seq,l) = ghmmhelper.list2int_matrix([internalInput])
-                self.cseq = ghmmwrapper.ghmm_dseq(1)
-                ghmmwrapper.free(self.cseq.seq)
-                self.cseq.seq = seq
-                self.cseq.seq_number = 1
-
-                # deactivating labels
-                self.cseq.state_labels = None
-                self.cseq.state_labels_len = None                
-                
-                self.cseq.setLength(0, l[0]) 
-
-        
             elif (isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode)): # from file
-
                 # reads in the first sequence struct in the input file
                 if  not os.path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
@@ -719,13 +686,8 @@ class EmissionSequence:
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
 
             if isinstance(sequenceInput, list):
-                #XXX constructor
-                (seq,l) = ghmmhelper. list2double_matrix([sequenceInput])
-                self.cseq = ghmmwrapper.ghmm_cseq(1)
-                ghmmwrapper.free(self.cseq.seq)
-                self.cseq.seq = seq
-                self.cseq.seq_number = 1
-                self.cseq.setLength(0, l[0])
+                seq = ghmmhelper.list2double_array(sequenceInput)
+                self.cseq = ghmmwrapper.ghmm_cseq(seq, len(sequenceInput))
 
             elif isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode): # from file
                 # reads in the first sequence struct in the input file
@@ -901,61 +863,21 @@ class SequenceSet:
 
 
         if self.emissionDomain.CDataType == "int": # underlying C data type is integer
-            #generate a a labeled sequenceSet from a list of lists (sequences),
-            #emissionDomain, a list of list (labels) and a model
-            if isinstance(sequenceSetInput, list) and isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
-                assert len(sequenceSetInput)==len(labelInput)
+            if isinstance(sequenceSetInput, list):
+                internalInput = [self.emissionDomain.internalSequence(seq) for seq in sequenceSetInput]
+                (seq, lengths) = ghmmhelper.list2int_matrix(internalInput)
+                lens = ghmmhelper.list2int_array(lengths)
+                    
+                self.cseq = ghmmwrapper.ghmm_dseq(seq, lens, len(sequenceSetInput))
 
-                self.labelDomain = labelDomain                
-                seq_nr = len(sequenceSetInput)
-                #XXX use constructor
-                self.cseq = ghmmwrapper.ghmm_dseq(seq_nr)
-                self.cseq.seq_number = seq_nr
-                
-                internalInput = []
-                internalLabels = []
-                #translate sequences and labels to internal representation
-                #XXX use list comprehensions and emissionDomain.internal() with lists 
-                for i in range(seq_nr):
-                    sequenceInput = []
-                    for j in range(len(sequenceSetInput[i])):
-                        sequenceInput.append(self.emissionDomain.internal(sequenceSetInput[i][j]))
-
-                    internalInput.append(sequenceInput)
-                    internalLabels.append( self.labelDomain.internalSequence( labelInput[i]))
-
-                #generate c-arrays
-                (seq,lenghts) = ghmmhelper.list2int_matrix(internalInput)
-                (label,labellen) = ghmmhelper.list2int_matrix(internalLabels)
-
-                #delete allocated space for seq pointers
-                ghmmwrapper.free(self.cseq.seq)
-                #set pointers
-                self.cseq.seq = seq
-                self.cseq.state_labels = label
-                self.cseq.state_labels_len = ghmmwrapper.int_array_alloc(seq_nr)
-
-                #set lenghts
-                for i in range(seq_nr):
-                    self.cseq.setLength(i, lenghts[i])
-                    self.cseq.setLabelsLength(i, labellen[i])
-
-            elif isinstance(sequenceSetInput, list) and labelInput == None:
-                seq_nr = len(sequenceSetInput)
-                self.cseq = ghmmwrapper.ghmm_dseq(seq_nr)
-                self.cseq.seq_number = seq_nr
-                
-                internalInput = []
-                #XXX use list comprehensions and emissionDomain.internal() with lists 
-                for i in range(seq_nr):
-                    internalInput.append( map( self.emissionDomain.internal, sequenceSetInput[i]))
-
-                (seq,lenghts) = ghmmhelper.list2int_matrix(internalInput)
-
-                ghmmwrapper.free(self.cseq.seq)
-                self.cseq.seq = seq
-                for i in range(seq_nr):
-                    ghmmwrapper.int_array_setitem(self.cseq.seq_len, i, lenghts[i])
+                if isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain): 
+                    assert len(sequenceSetInput)==len(labelInput), "no. of sequences and labels do not match."
+                    
+                    self.labelDomain = labelDomain
+                    internalLabels = [self.labelDomain.internalSequence(oneLabel) for oneLabel in labelInput]
+                    (label,labellen) = ghmmhelper.list2int_matrix(internalLabels)
+                    lens = ghmmhelper.list2int_array(labellen)
+                    self.cseq.init_labels(label, lens)
 
             elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq): # inputType == ghmm_dseq*
                 self.cseq = sequenceSetInput
@@ -975,19 +897,13 @@ class SequenceSet:
         elif self.emissionDomain.CDataType == "double": # underlying C data type is double
 
             if isinstance(sequenceSetInput, list): 
-                seq_nr = len(sequenceSetInput)
-                self.cseq = ghmmwrapper.ghmm_cseq(seq_nr)
-                self.cseq.seq_number = seq_nr
-
-                (seq,lenghts) = ghmmhelper.list2double_matrix(sequenceSetInput)
-                ghmmwrapper.free(self.cseq.seq)
-                self.cseq.seq = seq
-                for i in range(seq_nr):
-                    ghmmwrapper.int_array_setitem(self.cseq.seq_len, i, lenghts[i])
+                (seq,lengths) = ghmmhelper.list2double_matrix(sequenceSetInput)
+                lens = ghmmhelper.list2int_array(lengths)
+                self.cseq = ghmmwrapper.ghmm_cseq(seq, lens, len(sequenceSetInput))
 
             elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq): # i# inputType == ghmm_cseq**, internal use
-
                 self.cseq = sequenceSetInput
+
             else:    
                 raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
 
