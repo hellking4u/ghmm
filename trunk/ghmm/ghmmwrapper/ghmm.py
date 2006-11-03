@@ -2499,7 +2499,7 @@ class DiscreteEmissionHMM(HMM):
             log.critical( "Sorry, training of models containing silent states not yet supported.")
         else:
             if nrSteps == None:
-                ghmmwrapper.ghmm_d_baum_welch(self.cmodel, trainingSequences.cseq)
+                self.cmodel.baum_welch(trainingSequences.cseq)
             else:
                 assert loglikelihoodCutoff != None
                 self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
