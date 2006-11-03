@@ -2366,10 +2366,11 @@ class DiscreteEmissionHMM(HMM):
 
         for i in range(len(durationlist)):
             if durationlist[i] > 1:
-                error = ghmmwrapper.ghmm_d_duration_apply(self.cmodel, i, durationlist[i])
-                self.N = self.cmodel.N
+                error = self.cmodel.duration_apply(i, durationlist[i])
                 if error:
                     log.error( "durations not applied")
+                else:
+                    self.N = self.cmodel.N
 
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
