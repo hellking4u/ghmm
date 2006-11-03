@@ -4644,7 +4644,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
 
         alphabets = hmm_dom.getAlphabets()
         cmodel.number_of_alphabets = len(alphabets.keys())
-        sizes = [alphabets[alphabet].size() for alphabet in alphabets.keys()]
+        sizes = [len(alphabets[k]) for k in alphabets.keys()]
         cmodel.size_of_alphabet = ghmmhelper.list2int_array(sizes)
 
         # set number of d_seqs to zero. If you want to use them you have to
@@ -4677,7 +4677,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
         for i in range(cmodel.N):
             cstate = ghmmwrapper.dpstate_array_getitem(cstates, i)
             pystate = pystates[i]
-            size = pystate.itsHMM.hmmAlphabets[pystate.alphabet_id].size()
+            size = len(pystate.itsHMM.hmmAlphabets[pystate.alphabet_id])
             if (pystate.offsetX != 0 and pystate.offsetY != 0):
                 size = size**2
             if (len(B[i]) != size):
