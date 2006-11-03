@@ -254,8 +254,8 @@ REFERENCE_ARRAY(ghmm_dmodel, dmodel_ptr)
         int getLabel(size_t index) { return self->label[index]; }
 }
 
-extern double ghmm_dmodel_label_discrim_perf(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC)
-extern int ghmm_dmodel_label_discriminative(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC, int max_steps, int gradient)
+extern double ghmm_dmodel_label_discrim_perf(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC);
+extern int ghmm_dmodel_label_discriminative(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC, int max_steps, int gradient);
 
 
 /* obsolete stuff */
