@@ -358,9 +358,9 @@ static int discrime_precompute (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
 
 
 /*----------------------------------------------------------------------------*/
-double ghmm_dmodel_label_discrim_perf (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC)
+double ghmm_dmodel_label_discrim_perf(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC)
 {
-#define CUR_PROC "ghmm_dmodel_discrim_performance"
+#define CUR_PROC "ghmm_dmodel_label_discrim_perf"
 
   int k, l, m, temp;
   int argmax = 0;
@@ -425,8 +425,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*----------------------------------------------------------------------------*/
-static void discrime_print_statistics (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC,
-                                int *falseP, int *falseN)
+static void discrime_print_statistics(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC,
+                                int* falseP, int* falseN)
 {
 #define CUR_PROC "discrime_print_statistics"
 
@@ -1161,10 +1161,10 @@ FREE:
 
 
 /*----------------------------------------------------------------------------*/
-int ghmm_dmodel_label_discriminative (ghmm_dmodel ** mo, ghmm_dseq ** sqs, int noC, int max_steps, 
+int ghmm_dmodel_label_discriminative(ghmm_dmodel** mo, ghmm_dseq** sqs, int noC, int max_steps, 
 		    int gradient)
 {
-#define CUR_PROC "ghmm_dmodel_discriminative"
+#define CUR_PROC "ghmm_dmodel_label_discriminative"
 
   double last_perf, cur_perf;
   int retval=-1, last_cer, cur_cer;
