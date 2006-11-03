@@ -467,6 +467,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         self.assertEqual(self.model.cmodel.model_type & 4, 0)
         self.model.baumWelch(seq,5,0.01)
+        self.model.baumWelch(seq)
         
     def testviterbi(self):
         
