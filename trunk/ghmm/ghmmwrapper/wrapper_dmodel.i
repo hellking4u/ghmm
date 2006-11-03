@@ -254,7 +254,11 @@ REFERENCE_ARRAY(ghmm_dmodel, dmodel_ptr)
         int getLabel(size_t index) { return self->label[index]; }
 }
 
-/*
-        double discrim_performance(ghmm_dmodel **mo, ghmm_dseq **sqs, int noC);
-        int discriminative(ghmm_dmodel **mo, ghmm_dseq **sqs, int noC, int max_steps, int gradient);
-*/
+extern double ghmm_dmodel_discrim_performance(ghmm_dmodel **mo, ghmm_dseq **sqs, int noC);
+extern int ghmm_dmodel_discriminative(ghmm_dmodel **mo, ghmm_dseq **sqs, int noC, int max_steps, int gradient);
+
+
+/* obsolete stuff */
+#ifdef GHMM_OBSOLETE
+extern ghmm_dmodel** ghmm_dmodel_read(char* filename, int* mo_number);
+#endif
