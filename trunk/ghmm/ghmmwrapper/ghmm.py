@@ -2156,9 +2156,9 @@ class HMM:
         state = self.cmodel.getState(i)
         return state.pi
 
-    def setInitial(self, i, prob, fixProb=0):
+    def setInitial(self, i, prob, fixProb=False):
         """ Accessor function for the initial probability \pi_i
-            For 'fixProb' = 1 \pi will be rescaled to 1 with 'pi[i]' fixed to the
+            For 'fixProb' = True \pi will be rescaled to 1 with 'pi[i]' fixed to the
             arguement value of 'prob'.
 
          """
@@ -2168,7 +2168,7 @@ class HMM:
         state.pi = prob
 
         # renormalizing pi, pi(i) is fixed on value 'prob'
-        if fixProb == 1:
+        if fixProb:
             coeff = (1.0 - old_pi) / prob
             for j in range(self.N):
                 if i != j:
@@ -2611,40 +2611,15 @@ class DiscreteEmissionHMM(HMM):
             return self.cmodel.getSilent(state)
         else:
             return 0
-    
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
-        
+
         log.debug( "Normalizing now.")
 
-        for i in range(self.N):
-            # normalizing transitions
-            state = self.cmodel.getState(i)
-            pSum = 0.0
-            stateIds = []
-            for j in range(state.out_states):
-                stateIds.append(state.out_id[j])
-                pSum += ghmmwrapper.double_array_getitem(state.out_a,j)
-            for j in range(state.out_states):
-                normP = ghmmwrapper.double_array_getitem(state.out_a,j) / pSum
-                state.out_a[j] = normP # updating out probabilities
-                
-                inState = self.cmodel.getState(stateIds[j])
-                for k in range(inState.in_states):
-                    inId = inState.in_id[k]
-                    if inId == i:
-                        inState.in_a[k] = normP # updating in probabilities
-
-            # normalizing emissions    
-            pSum = 0.0
-            for j in range(self.M):
-                pSum += ghmmwrapper.double_array_getitem(state.b,j)
-
-            for j in range(self.M):
-                if pSum >0:  # check for silent state
-                    normP = ghmmwrapper.double_array_getitem(state.b,j) / pSum
-                    state.b[j] = normP
+        i_error = self.cmodel.normalize()
+        if i_error == -1:
+            log.error("normalization failed")
 
     def toMatrices(self):
         "Return the parameters in matrix form."
@@ -3093,14 +3068,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         else:
             self.cmodel = tmp_model
             return True
-        
-    def modelNormalize(self):
-       i_error = ghmmwrapper.ghmm_d_normalize(self.cmodel)
-       if i_error == -1:
-            log.error("normalize finished with -1")
-       
 
-        
     def labelSeqLikelihoods(self, emissionSequences):
         """ Compute a vector ( log( P[s,l| model]) )_{s} of log-likelihoods of the
             individual emission_sequences using the forward algorithm

@@ -578,6 +578,11 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(em0, [0.0,0.5,0.5,0.0])
         em2 = map(f,self.model.getEmission(2))
         self.assertEqual(em2, [0.15, 0.1, 0.5, 0.25])
+
+    def testnormalization(self):
+        self.model.setInitial(0, 2.0)
+        self.model.normalize()
+        self.assertEqual(1.0, self.model.getInitial(0))
         
 class BackgroundDistributionTests(unittest.TestCase):
     " Tests for background distributions "

@@ -1976,12 +1976,16 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 int ghmm_dmodel_normalize (ghmm_dmodel * mo)
 {
 #define CUR_PROC "ghmm_dmodel_normalize"
-
+  double pi_sum=0.0;
   int i, j, m, j_id, i_id=0, res=0;
   int size = 1;
   char *str;
 
   for (i = 0; i < mo->N; i++) {
+    if (mo->s[i].pi >= 0.0)
+      pi_sum += mo->s[i].pi;
+    else
+      mo->s[i].pi = 0.0;
 
     /* check model_type before using state order */
     if (mo->model_type & GHMM_kHigherOrderEmissions)
@@ -2016,6 +2020,8 @@ int ghmm_dmodel_normalize (ghmm_dmodel * mo)
       }
     }
   }
+  for (i = 0; i < mo->N; i++)
+    mo->s[i].pi /= pi_sum;
 
   return res;
 #undef CUR_PROC
