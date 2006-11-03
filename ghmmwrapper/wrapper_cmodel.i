@@ -207,3 +207,9 @@ extern int ghmm_cmodel_baum_welch(ghmm_cmodel_baum_welch_context* cs);
 
 STRUCT_ARRAY(ghmm_cmodel, cmodel)
 REFERENCE_ARRAY(ghmm_cmodel, cmodel_ptr)
+
+
+/* obsolete stuff */
+#ifdef GHMM_OBSOLETE
+extern ghmm_cmodel** ghmm_cmodel_read(const char* filename, int* smo_number);
+#endif

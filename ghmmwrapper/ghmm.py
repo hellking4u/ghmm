@@ -1237,10 +1237,10 @@ class HMMOpenFactory(HMMFactory):
     	    
         # XXX broken since silent states are not supported by .smo file format 
         if hmmClass == DiscreteEmissionHMM:
-            models = ghmmwrapper.ghmm_d_read(fileName, nrModelPtr)
+            models = ghmmwrapper.ghmm_dmodel_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.get_dmodel_ptr
         else:
-            models = ghmmwrapper.ghmm_c_read(fileName, nrModelPtr)
+            models = ghmmwrapper.ghmm_cmodel_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.get_cmodel_ptr
 
         nrModels = nrModelPtr[0]
@@ -1526,7 +1526,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     cmodel.N = len(A[0])
                     
                     # allocating class switching context
-                    ghmmwrapper.ghmm_c_class_change_alloc(cmodel)
+                    cmodel.class_change_alloc()
                 else: 
                     cos = 1
                     cmodel.N = len(A)
@@ -1604,7 +1604,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     cos = len(A)
                     cmodel.N = len(A[0])
                     # allocating class switching context
-                    ghmmwrapper.ghmm_c_class_change_alloc(cmodel)
+                    cmodel.class_change_alloc()
                     
                 else: 
                     cos = 1
@@ -1686,7 +1686,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     cos = len(A)
                     cmodel.N = len(A[0])
                     # allocating class switching context
-                    ghmmwrapper.ghmm_c_class_change_alloc(cmodel)
+                    cmodel.class_change_alloc()
                     
                 else: 
                     cos = 1
@@ -1783,7 +1783,7 @@ class BackgroundDistribution:
                 b_i = ghmmhelper.list2double_array(bgInput[i])
                 ghmmwrapper.double_matrix_set_col(b, i, b_i)
     
-            self.cbackground = ghmmwrapper.ghmm_dbackground_alloc(distNum, len(emissionDomain), order, b)
+            self.cbackground = ghmmwrapper.ghmm_dbackground(distNum, len(emissionDomain), order, b)
 
         elif isinstance(bgInput, ghmmwrapper.background_distributions):
             self.cbackground = bgInput
@@ -3098,10 +3098,9 @@ class StateLabelHMM(DiscreteEmissionHMM):
             seq = emissionSequences.cseq.getSequence(i)
             labels = ghmmwrapper.get_col_pointer_int(emissionSequences.cseq.state_labels,i)
             tmp = emissionSequences.cseq.getLength(i)
-            ret_val = ghmmwrapper.ghmm_dl_logp(self.cmodel, seq, labels, tmp, likelihood)
+            ret_val = self.cmodel.label_logp(seq, labels, tmp, likelihood)
 
             if ret_val == -1:
-
                 log.warning("forward returned -1: Sequence"+ str(i) +"cannot be build.")
                 likelihoodList.append(-float('Inf'))
             else:
@@ -3758,8 +3757,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         state.c[comp] = float(weight)
 	
     def getEmissionProbability(self, value, state):
-        return ghmmwrapper.ghmm_c_calc_b (self.cmodel, state, value)
-      
+        return self.cmodel.calc_b(state, value)
+
 
     def logprob(self, emissionSequence, stateSequence):
         """ log P[ emissionSequence, stateSequence| m] """
@@ -3921,7 +3920,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
  	
  
      def getEmissionProbability(self,value,st):
-         return ghmmwrapper.ghmm_c_calc_b(self.cmodel, state, value)       
+         return self.cmodel.calc_b(state, value)       
  
      def getEmission(self, i, comp):
         """ Return the paramenters of component 'comp' in state 'i'
@@ -3955,7 +3954,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         state.setDensity(comp, int(type))
 	
      def getEmissionProbability(self, value, state):
-        return ghmmwrapper.ghmm_c_calc_b (self.cmodel, state, value)
+        return self.cmodel.calc_b(state, value)
          
      def __str__(self):
          "defines string representation"
@@ -4063,7 +4062,7 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
         ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
         ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
-    ghmmwrapper.ghmm_d_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
+    ghmmwrapper.ghmm_dmodel_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
         HMMList[i].cmodel = ghmmwrapper.dmodel_ptr_array_getitem(HMMArray, i)
@@ -4091,7 +4090,7 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
         ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
         ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
-    retval = ghmmwrapper.ghmm_d_discrim_performance(HMMArray, SeqArray, inplen)
+    retval = ghmmwrapper.ghmm_dmodel_discrim_performance(HMMArray, SeqArray, inplen)
     
     ghmmwrapper.free(HMMArray)
     ghmmwraper.free(SeqArray)
