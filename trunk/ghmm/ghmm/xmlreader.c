@@ -1257,13 +1257,11 @@ static int validateDynamicDTD(const char* filename) {
   if (doc == NULL) {
     estr = ighmm_mprintf(NULL, 0, "Failed to parse %s", filename);
     GHMM_LOG(LDEBUG, estr);
-    GHMM_LOG(LERROR, estr);
     m_free(estr);
   } else {
     if (ctxt->valid == 0) {
       estr = ighmm_mprintf(NULL, 0, "Failed to validate %s", filename);
       GHMM_LOG(LDEBUG, estr);
-      GHMM_LOG(LERROR, estr);
       m_free(estr);
     }
     else
