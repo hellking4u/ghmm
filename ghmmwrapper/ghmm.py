@@ -4062,7 +4062,7 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
         ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
         ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
-    ghmmwrapper.ghmm_dmodel_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
+    ghmmwrapper.ghmm_dmodel_label_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
         HMMList[i].cmodel = ghmmwrapper.dmodel_ptr_array_getitem(HMMArray, i)
@@ -4090,7 +4090,7 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
         ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
         ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
-    retval = ghmmwrapper.ghmm_dmodel_discrim_performance(HMMArray, SeqArray, inplen)
+    retval = ghmmwrapper.ghmm_dmodel_label_discrim_perf(HMMArray, SeqArray, inplen)
     
     ghmmwrapper.free(HMMArray)
     ghmmwraper.free(SeqArray)
