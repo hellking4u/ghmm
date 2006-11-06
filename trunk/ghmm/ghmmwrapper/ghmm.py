@@ -332,7 +332,7 @@ class Alphabet(EmissionDomain):
             #XXX jg:check
             self.listOfCharacters = []
             for i in range(calphabet.size):
-                c = ghmmwrapper.get_arraychar(calphabet.symbols, i)
+                c = calphabet.getSymbol(i)
                 self.listOfCharacters.append(c)
                 self.index[c] = i
             self._lengthOfCharacters = None

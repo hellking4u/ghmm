@@ -3,7 +3,7 @@
 #include <ghmm/xmlwriter.h>
 %}
 
-struct ghmm_xmlfile {
+typedef struct {
 
     int noModels;
     
@@ -16,8 +16,7 @@ struct ghmm_xmlfile {
       ghmm_dsmodel** ds;
     } model;
     /* stupid swig */
-};
-typedef struct ghmm_xmlfile ghmm_xmlfile;
+} ghmm_xmlfile;
 
 extern ghmm_xmlfile* ghmm_xmlfile_parse(const char *filename);
 

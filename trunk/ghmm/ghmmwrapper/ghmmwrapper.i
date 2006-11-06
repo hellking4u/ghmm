@@ -201,6 +201,8 @@ extern void ghmm_rng_timeseed(GHMM_RNG * r);
 %}
 %enddef
 
+%include wrapper_alphabet.i
+
 %include wrapper_cseq.i
 %include wrapper_dseq.i
 %include wrapper_dpseq.i
