@@ -365,6 +365,53 @@ class SequenceSetTests(unittest.TestCase):
         print seqs[0]
         seqs = ghmm.SequenceSetOpen(self.d_alph,'testdata/test10.sqd')
 
+class HMMBaseClassTests(unittest.TestCase):
+    def setUp(self):
+        A   = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
+        B   = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
+        pi  = [1.0,0.0,0.0]
+        tmp = ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA), A, B, pi)
+        self.model = ghmm.HMM(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA), tmp.cmodel)
+
+    def testpathPosteriorExeption(self):
+        self.assertRaises(NotImplementedError, self.model.pathPosterior, [1,2], 34)
+
+    def teststatePosteriorExeption(self):
+        self.assertRaises(NotImplementedError, self.model.statePosterior, "sequence", "state", "time")
+
+    def testposteriorExeption(self):
+        self.assertRaises(NotImplementedError, self.model.posterior, "sequence")
+
+    def testlogprobExeption(self):
+        self.assertRaises(NotImplementedError, self.model.logprob, "emissionSequence", "stateSequence")
+
+    def testbaumWelchExeption(self):
+        self.assertRaises(NotImplementedError, self.model.baumWelch, "trainingSequences", "nrSteps", "loglikelihoodCutoff")
+
+    def testbaumWelchSetupExeption(self):
+        self.assertRaises(NotImplementedError, self.model.baumWelchSetup, "trainingSequences", "nrSteps")
+
+    def testbaumWelchStepExeption(self):
+        self.assertRaises(NotImplementedError, self.model.baumWelchStep, "nrSteps", "loglikelihoodCutoff")
+    
+    def testbaumWelchDeleteExeption(self):
+        self.assertRaises(NotImplementedError, self.model.baumWelchDelete)
+
+    def teststateExeption(self):
+        self.assertRaises(NotImplementedError, self.model.state, "stateLabel")
+
+    def testsetEmissionExeption(self):
+        self.assertRaises(NotImplementedError, self.model.setEmission, 1, "blah")
+
+    def testtoMatricesExeption(self):
+        self.assertRaises(NotImplementedError, self.model.toMatrices)
+
+    def testnormalizeExeption(self):
+        self.assertRaises(NotImplementedError, self.model.normalize)
+
+    def testrandomizeException(self):
+        self.assertRaises(NotImplementedError, self.model.randomize, "noiseLevel")
+
 
 class DiscreteEmissionHMMTests(unittest.TestCase):
     def setUp(self):
@@ -373,7 +420,11 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
         self.pi = [1.0,0.0,0.0]
         self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi)
-                       
+
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.model)
+
     def testaccessfunctions(self):
 
         # print"\ntestaccessfunctions",
@@ -602,8 +653,11 @@ class BackgroundDistributionTests(unittest.TestCase):
                        [0.1,0.2,0.4,0.3, 0.2,0.3,0.1,0.4, 0.25,0.25,0.25,0.25, 0.0,0.5,0.5,0.0 ]]
                                               )
 
-    def testprint(self):
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.model)
         
+    def testprint(self):
         #print "*** testprint"
         s = str(self.bg)
         self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
@@ -664,6 +718,9 @@ class StateLabelHMMTests(unittest.TestCase):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
         self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelDomain=self.l_domain,labelInput=self.labels)
 
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.model)
 
     #create a random model with len(LabelList) states and 
     def oneModel(self, LabelList):
@@ -844,10 +901,10 @@ class StateLabelHMMTests(unittest.TestCase):
             i = len(alpha)-i-1
             for j in range(len(alpha[i])):
                 if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.int_array_getitem(model2.cmodel.label, j):
-                    self.assertNotEqual(round(alpha[i][j], 15), 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
+                    self.assertNotEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]) )
                 else:
-                    self.assertEqual(round(alpha[i][j], 15), 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
+                    self.assertEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]))
 
 
@@ -908,6 +965,10 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         self.B = [[0.0,1.0],[-1.0,0.5], [1.0,0.2]]
         self.pi = [1.0,0.0,0.0]
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianDistribution(F), self.A, self.B, self.pi)
+
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.model)
 
     def testaccessfunctions(self):
         # print"\ntestaccessfunctions",
@@ -980,6 +1041,10 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
         #print "** GaussianMixtureHMMTests **"
+
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.model)
 
     def testNewXML(self):
         model = ghmm.HMMOpenXML('../doc/xml_cont_example.xml')
