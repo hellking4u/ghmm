@@ -21,7 +21,9 @@ install: setup.py all
 	${PYTHON} setup.py install --prefix=${prefix}
 
 test: ghmmunittests.py all
-	${PYTHON} ghmmunittests.py > /dev/null
+	coverage.py -e
+	coverage.py -x ghmmunittests.py > /dev/null
+	coverage.py -r ghmm.py
 
 distclean: setup.py
 	${PYTHON} setup.py clean --all
