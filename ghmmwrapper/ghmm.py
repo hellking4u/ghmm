@@ -1872,8 +1872,6 @@ class HMM:
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
         
-
-        
         logPsum = sum(self.loglikelihoods(emissionSequences) )
 
         return logPsum
@@ -1896,7 +1894,6 @@ class HMM:
         else:    
             raise TypeError, "EmissionSequence or SequenceSet required, got " + \
                   str(emissionSequences.__class__.__name__)        
-              
 
         likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
@@ -1935,7 +1932,7 @@ class HMM:
             multiple calls to pathPosterior
         """
         # implemented in derived classes 
-        pass
+        raise NotImplementedError
         
 
     def statePosterior(self, sequence, state, time):
@@ -1947,7 +1944,7 @@ class HMM:
         
         """
         # implemented in derived classes 
-        pass
+        raise NotImplementedError
 
 
     def posterior(self, sequence):
@@ -1955,29 +1952,28 @@ class HMM:
         
         """
         # implemented in derived classes 
-        pass
+        raise NotImplementedError
 
 
 
     def logprob(self, emissionSequence, stateSequence):
         """log P[ emissionSequence, stateSequence| m] 
-        
-            Defined in derived classes.
         """
-        pass
+        # implemented in derived classes.
+        raise NotImplementedError
 
     # The functions for model training are defined in the derived classes.
     def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
-        pass
+        raise NotImplementedError
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
-        pass
+        raise NotImplementedError
 
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
-        pass
+        raise NotImplementedError
     
     def baumWelchDelete(self):
-        pass
+        raise NotImplementedError
         
     # extern double ghmm_c_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
     def distance(self, model, seqLength):
@@ -1985,10 +1981,8 @@ class HMM:
         return self.cmodel.prob_distance(model.cmodel, seqLength, 0, 0)
 
 
-    
     def forward(self, emissionSequence):
         """
-
             Result: the (N x T)-matrix containing the forward-variables
                     and the scaling vector
         """
@@ -2024,7 +2018,6 @@ class HMM:
 
     def backward(self, emissionSequence, scalingVector):
         """
-
             Result: the (N x T)-matrix containing the backward-variables
         """
         if not isinstance(emissionSequence,EmissionSequence):
@@ -2043,7 +2036,6 @@ class HMM:
         if error == -1:
             log.error( "backward finished with -1: EmissionSequence cannot be build.")
             
-        
         pybeta = ghmmhelper.double_matrix2list(cbeta,t,self.N)
 
         # deallocation
@@ -2070,7 +2062,6 @@ class HMM:
             seqNumber = len(emissionSequences)        
         else:    
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
-
 
         log_p = ghmmwrapper.double_array_alloc(1)
 
@@ -2110,7 +2101,6 @@ class HMM:
             ghmmwrapper.free(viterbiPath) 
             viterbiPath = None
 
-        
         ghmmwrapper.free(log_p)
         log_p = None
             
@@ -2147,9 +2137,8 @@ class HMM:
     def state(self, stateLabel):
         """ Given a stateLabel return the integer index to the state 
 
-            (state labels not yet implemented)
         """
-        pass
+        raise NotImplementedError
 
     def getInitial(self, i):
         """ Accessor function for the initial probability \pi_i """
@@ -2238,12 +2227,12 @@ class HMM:
 
             Defined in derived classes.
          """
-        pass
+        raise NotImplementedError
 
 
     def toMatrices(self):
         "To be defined in derived classes."
-        pass        
+        raise NotImplementedError
 
 
     def normalize(self):
@@ -2251,18 +2240,19 @@ class HMM:
 
             Defined in derived classes.
         """
-        pass
+        raise NotImplementedError
 
 
     def randomize(self, noiseLevel):
         """ """
-        pass
+        raise NotImplementedError
 
     def write(self,fileName):
         """ Writes HMM to file 'fileName'.
 
         """
         self.cmodel.write_xml(fileName)
+
 
     def printtypes(self, model_type):
         strout = []
