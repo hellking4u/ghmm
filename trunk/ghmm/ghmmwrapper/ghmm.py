@@ -2893,10 +2893,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
             strout.append("Outgoing transitions:")
             for i in range( state.out_states):
-                strout.append("\ntransition to state " + str( state.out_id[i] ) + " with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
+                strout.append("\ntransition to state " + str(state.getOutState(i)) + " with probability " + str(state.getOutProb(i)))
             strout.append( "\nIngoing transitions:")
             for i in range(state.in_states):
-                strout.append( "\ntransition from state " + str( state.in_id[i] ) + " with probability " + str(ghmmwrapper.double_array_getitem(state.in_a,i)))
+                strout.append( "\ntransition from state " + str(state.getInState(i)) + " with probability " + str(state.getInProb(i)))
             strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & 4:
@@ -3307,10 +3307,10 @@ class GaussianEmissionHMM(HMM):
                 strout.append("\n  Class : " + str(c)                )
                 strout.append("\n    Outgoing transitions:")
                 for i in range( state.out_states):
-                    strout.append("\n      transition to state " + str(state.out_id[i]) + " with probability = " + str(ghmmwrapper.double_matrix_getitem(state.out_a,c,i)))
+                    strout.append("\n      transition to state " + str(state.getOutState(i)) + " with probability = " + str(state.getOutProb(i, c)))
                 strout.append("\n    Ingoing transitions:")
                 for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.in_id[i]) +" with probability = "+ str(ghmmwrapper.double_matrix_getitem(state.in_a,c,i)))
+                    strout.append("\n      transition from state " + str(state.getInState(i)) +" with probability = "+ str(state.getInProb(i, c)))
 
 
         return join(strout,'')
@@ -3821,11 +3821,10 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 strout.append("\n  Class : " + str(c)                )
                 strout.append("\n    Outgoing transitions:")
                 for i in range( state.out_states):
-                    strout.append("\n      transition to state " + str(state.out_id[i]) + " with probability = " + str(ghmmwrapper.double_matrix_getitem(state.out_a,c,i)))
+                    strout.append("\n      transition to state " + str(state.getOutState(i)) + " with probability = " + str(state.getOutProb(i, c)))
                 strout.append("\n    Ingoing transitions:")
                 for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.in_id[i]) +" with probability = "+ str(ghmmwrapper.double_matrix_getitem(state.in_a,c,i)))
-
+                    strout.append("\n      transition from state " + str(state.getInState(i)) +" with probability = "+ str(state.getInProb(i, c)))
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
         return join(strout,'')

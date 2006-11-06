@@ -77,6 +77,12 @@ typedef struct ghmm_cstate {
         void setDensity(size_t comp, ghmm_density_t type) { self->density[comp] = type; }
         void setMue(size_t i, double value) { self->mue[i] = value; }
         void setU(size_t i, double value) { self->u[i] = value; }
+
+        int getInState(size_t index) { return self->in_id[index]; }
+        int getOutState(size_t index) { return self->out_id[index]; }
+
+        double getInProb(size_t index, size_t c) { return self->in_a[c][index]; }
+        double getOutProb(size_t index, size_t c) { return self->out_a[c][index]; }
 }
 
 STRUCT_ARRAY(ghmm_cstate, cstate)
@@ -168,7 +174,7 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
         int logp(double *O, int T, double *log_p);
 
-        int class_change_alloc();
+        int class_change_alloc(void);
 
         //int check_compatibility(ghmm_cmodel **smo, int smodel_number);
 
