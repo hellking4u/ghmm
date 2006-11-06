@@ -1238,12 +1238,12 @@ class HMMOpenFactory(HMMFactory):
         # XXX broken since silent states are not supported by .smo file format 
         if hmmClass == DiscreteEmissionHMM:
             models = ghmmwrapper.ghmm_dmodel_read(fileName, nrModelPtr)
-            getPtr = ghmmwrapper.get_dmodel_ptr
+            getPtr = ghmmwrapper.dmodel_ptr_array_getitem
         else:
             models = ghmmwrapper.ghmm_cmodel_read(fileName, nrModelPtr)
-            getPtr = ghmmwrapper.get_cmodel_ptr
+            getPtr = ghmmwrapper.cmodel_ptr_array_getitem
 
-        nrModels = nrModelPtr[0]
+        nrModels = ghmmwrapper.int_array_getitem(nrModelPtr, 0)
         if modelIndex == None:
             result = []
             for i in range(nrModels):
