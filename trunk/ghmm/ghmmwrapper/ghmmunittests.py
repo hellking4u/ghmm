@@ -361,9 +361,9 @@ class SequenceSetTests(unittest.TestCase):
 
     def testfilereading(self):
         dom = ghmm.IntegerRange(0,12)
-        seqs = ghmm.SequenceSetOpen(dom,'testdata/d_seq.sqd')
-        print seqs[0]
-        seqs = ghmm.SequenceSetOpen(self.d_alph,'testdata/test10.sqd')
+        seqs = ghmm.SequenceSetOpen(dom, 'testdata/d_seq.sqd')
+        seqs = ghmm.SequenceSetOpen(self.d_alph, 'testdata/test10.sqd')
+        seqs = ghmm.SequenceSetOpen(ghmm.Float(), 'testdata/tiny.txt.sqd')
 
 class HMMBaseClassTests(unittest.TestCase):
     def setUp(self):
@@ -1045,6 +1045,9 @@ class GaussianMixtureHMMTests(unittest.TestCase):
     def test__str__(self):
         # we aren't interested in the output but the function should run fine
         str(self.model)
+
+    def testSMO(self):
+        model = ghmm.HMMOpen('testdata/tiny.smo')
 
     def testNewXML(self):
         model = ghmm.HMMOpenXML('../doc/xml_cont_example.xml')
