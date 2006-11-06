@@ -425,6 +425,8 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(self.model.cmodel.model_type,4)
         self.assertEqual(self.model.getSilentFlag(2),1)
 
+    def testNewXML(self):
+        model = ghmm.HMMOpenXML('../doc/xml_example.xml')
     
     def getModel(self):
         A  = [[0.3, 0.6,0.1],[0.0, 0.5, 0.5],[0.0,0.0,1.0]]
@@ -978,6 +980,9 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
         #print "** GaussianMixtureHMMTests **"
+
+    def testNewXML(self):
+        model = ghmm.HMMOpenXML('../doc/xml_cont_example.xml')
 
     def testcomponentfixing(self):
         #print "testcomponentfixing"

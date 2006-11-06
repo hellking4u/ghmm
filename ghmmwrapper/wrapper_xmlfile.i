@@ -10,10 +10,10 @@ struct ghmm_xmlfile {
     int modelType;
     
     union {
-      ghmm_cmodel * * c;
-      ghmm_dmodel * * d;
-      ghmm_dpmodel * * dp;
-      ghmm_dsmodel * * ds;
+      ghmm_cmodel**  c;
+      ghmm_dmodel**  d;
+      ghmm_dpmodel** dp;
+      ghmm_dsmodel** ds;
     } model;
     /* stupid swig */
 };

@@ -1113,15 +1113,15 @@ class HMMOpenFactory(HMMFactory):
             emission_domain = Float()
             distribution = ContinuousMixtureDistribution
             hmmClass = ContinuousMixtureHMM
-            getPtr = ghmmwrapper.get_cmodel_ptr
-            models = ghmmwrapper.get_model_c(file)
+            getPtr = ghmmwrapper.cmodel_ptr_array_getitem
+            models = file.model.c
             
         elif ((modelType & ghmmwrapper.kDiscreteHMM)
               and not (modelType & ghmmwrapper.kTransitionClasses)
               and not (modelType & ghmmwrapper.kPairHMM)):
             emission_domain = 'd'
             distribution = DiscreteDistribution
-            getPtr = ghmmwrapper.get_dmodel_ptr
+            getPtr = ghmmwrapper.dmodel_ptr_array_getitem
             models = file.model.d
             if (modelType & ghmmwrapper.kLabeledStates):
                 hmmClass = StateLabelHMM
