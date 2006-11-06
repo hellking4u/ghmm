@@ -634,8 +634,8 @@ class EmissionSequence:
         # check if ghmm is build with asci sequence file support
         if isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode):
             if ghmmwrapper.ASCI_SEQ_FILE:
-                if  not os.path.exists(sequenceSetInput):
-                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
+                if  not os.path.exists(sequenceInput):
+                     raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
                     i = ghmmwrapper.int_array_alloc(1)
                     tmp = self.seq_read(sequenceInput, i)
@@ -647,7 +647,7 @@ class EmissionSequence:
                             del seq
                     else:
                         #XXX appropiate ecxception
-                        raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
+                        raise IOError, 'File ' + str(sequenceInput) + ' not valid.'
 
                     ghmmwrapper.free(tmp)
                     ghmmwrapper.free(i)
@@ -658,7 +658,7 @@ class EmissionSequence:
                                        + " the conditional \"GHMM_OBSOLETE\".")
 
         #create a ghmm_dseq with state_labels, if the appropiate parameters are set
-        if isinstance(sequenceInput, list):
+        elif isinstance(sequenceInput, list):
             internalInput = self.emissionDomain.internalSequence(sequenceInput)
             seq = self.sequence_carray(internalInput)
             self.cseq = self.sequenceAllocationFunction(seq, len(sequenceInput))

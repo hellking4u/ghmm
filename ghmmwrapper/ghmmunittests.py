@@ -121,11 +121,11 @@ class AlphabetTests(unittest.TestCase):
 class EmissionSequenceTests(unittest.TestCase):
     
     def setUp(self):
-        i_alph = ghmm.IntegerRange(0,5)
-        d_alph = ghmm.Float()
+        self.i_dom = ghmm.IntegerRange(0,5)
+        self.d_dom = ghmm.Float()
         l_domain = ghmm.LabelDomain(['E','R','T'])
-        self.i_seq = ghmm.EmissionSequence(i_alph,[1,2,0,0,0,3,4])
-        self.d_seq = ghmm.EmissionSequence(d_alph,[1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3])
+        self.i_seq = ghmm.EmissionSequence(self.i_dom,[1,2,0,0,0,3,4])
+        self.d_seq = ghmm.EmissionSequence(self.d_dom,[1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3])
         self.labeled = ghmm.EmissionSequence(ghmm.DNA, list('acgttgatgga'),labelDomain=l_domain,
                                             labelInput= ['E','R','T','T','T','E','R','T','T','T','R'])
         
@@ -162,8 +162,12 @@ class EmissionSequenceTests(unittest.TestCase):
     
     def testwrite(self):
         # print"\ntestwrite ",
-        self.i_seq.write("testdata/ghmmunittests_testwrite.seq")
-        self.d_seq.write("testdata/ghmmunittests_testwrite.seq")
+        self.i_seq.write("testdata/es_discrete_testwrite.seq")
+        self.d_seq.write("testdata/es_continuous_testwrite.seq")
+
+    def testread(self):
+        discrete_seq   = ghmm.EmissionSequence(self.i_dom, "testdata/es_discrete_testwrite.seq")
+        continuous_seq = ghmm.EmissionSequence(self.d_dom, "testdata/es_continuous_testwrite.seq")
         
     def testweightaccess(self):
         # print"\ntestweightaccess ",
