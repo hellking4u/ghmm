@@ -6,23 +6,25 @@
 
 SUBDIRS = .
 
+PYTHON=python
+
 SWIG_INTERFACE_FILES = ghmmwrapper.i wrapper_cseq.i wrapper_dseq.i wrapper_dpseq.i wrapper_cmodel.i wrapper_dmodel.i wrapper_xmlfile.i
 
 all: setup.py ghmm.py ${SWIG_INTERFACE_FILES}
-	python setup.py build
+	${PYTHON} setup.py build
 
 clean: setup.py
-	python setup.py clean
+	${PYTHON} setup.py clean
 	rm -f message.txt
 
 install: setup.py all
-	python setup.py install --prefix=${prefix}
+	${PYTHON} setup.py install --prefix=${prefix}
 
 test: ghmmunittests.py all
-	python ghmmunittests.py > /dev/null
+	${PYTHON} ghmmunittests.py > /dev/null
 
 distclean: setup.py
-	python setup.py clean --all
+	${PYTHON} setup.py clean --all
 	rm -f message.txt
 
 .PHONY: all clean install distclean test
