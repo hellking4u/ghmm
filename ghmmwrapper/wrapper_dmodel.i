@@ -69,8 +69,10 @@ typedef struct {
         void clean();
 
         int getInState(size_t index) { return self->in_id[index]; }
-
         int getOutState(size_t index) { return self->out_id[index]; }
+
+        double getInProb(size_t index) { return self->in_a[index]; }
+        double getOutProb(size_t index) { return self->out_a[index]; }
 }
 
 STRUCT_ARRAY(ghmm_dstate, dstate)
@@ -205,7 +207,7 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         double prob_distance(ghmm_dmodel *m, int maxT, int symmetric, int verbose);
 
-        int normalize();
+        int normalize(void);
 
         int add_noise(double level, int seed);
 
@@ -215,9 +217,9 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int get_uniform_background(ghmm_dseq *sq);
 
-        void order_topological();
+        void order_topological(void);
 
-        void update_tie_groups();
+        void update_tie_groups(void);
 
         int baum_welch(ghmm_dseq *sq);
 
