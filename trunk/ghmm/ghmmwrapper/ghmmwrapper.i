@@ -178,7 +178,7 @@ extern void ghmm_rng_init(void);
 extern void ghmm_rng_timeseed(GHMM_RNG * r);
 
 %inline %{
-	void time_seed(){
+	void time_seed(void){
 		ghmm_rng_timeseed(RNG);
 	}
 %}

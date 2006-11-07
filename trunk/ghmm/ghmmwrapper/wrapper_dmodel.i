@@ -5,6 +5,7 @@
 #include <ghmm/reestimate.h>
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
+#include <ghmm/discrime.h>
 %}
 
 /*==========================================================================
