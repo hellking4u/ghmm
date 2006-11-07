@@ -1051,7 +1051,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         str(self.model)
 
     def testSMO(self):
-        model = ghmm.HMMOpen('testdata/tiny.smo')
+        model = ghmm.HMMOpenSMO('testdata/tiny.smo')
 
     def testNewXML(self):
         model = ghmm.HMMOpenXML('../doc/xml_cont_example.xml')
