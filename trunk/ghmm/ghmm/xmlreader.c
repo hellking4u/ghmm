@@ -1176,7 +1176,7 @@ STOP:
 
 
 /*===========================================================================*/
-static int silence(FILE *dont_use, ...) {return 0;}
+static void silence(void* x, const char* y, ...) {return;}
 
 /*===========================================================================*/
 static int validateFixedDTD(const char* filename) {
@@ -1217,7 +1217,7 @@ static int validateFixedDTD(const char* filename) {
     /* set error and warning functions to NULL to make validation silent */
     cvp->error   = (xmlValidityErrorFunc) silence;
     cvp->warning = (xmlValidityWarningFunc) silence;
-    
+
     /* check if validation suceeded */
     if (xmlValidateDtd(cvp, doc, dtd)) {
       retval = 1;
@@ -1252,6 +1252,11 @@ static int validateDynamicDTD(const char* filename) {
   xmlDocPtr doc         = NULL;
 
   ctxt = xmlNewParserCtxt();
+
+  /* silencing the validation errors */
+  ctxt->vctxt.error   = (xmlValidityErrorFunc) silence;
+  ctxt->vctxt.warning = (xmlValidityWarningFunc) silence;
+
   doc = xmlCtxtReadFile(ctxt, filename, NULL, XML_PARSE_DTDVALID);
   /* check if parsing suceeded */
   if (doc == NULL) {
