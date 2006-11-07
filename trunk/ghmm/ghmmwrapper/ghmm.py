@@ -1351,8 +1351,9 @@ class HMMOpenFactory(HMMFactory):
         return (None, None, None)
             
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
-HMMOpen = HMMOpenFactory(GHMM_FILETYPE_SMO)
-HMMOpenXML = HMMOpenFactory(GHMM_FILETYPE_XML)
+HMMOpenSMO   = HMMOpenFactory(GHMM_FILETYPE_SMO)
+HMMOpenXML   = HMMOpenFactory(GHMM_FILETYPE_XML)
+HMMOpen      = HMMOpenFactory(GHMM_FILETYPE_XML)
 
 
 def readMultipleHMMERModels(fileName):
