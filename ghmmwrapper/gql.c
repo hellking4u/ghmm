@@ -49,11 +49,9 @@
 #include <ghmm/obsolete.h>
 /*#include <ghmm++/GHMM_convertXMLtoC.h>*/
 
-
 static double *log_p_pt;
-static int seq_rank(const void *a1, const void *a2);
 
-int seq_rank(const void *a1, const void *a2) {
+static int seq_rank_fp(const void *a1, const void *a2) {
   
   int i, j;
 
@@ -67,65 +65,6 @@ int seq_rank(const void *a1, const void *a2) {
       return 1;
 }
 
-/* taken from matrix.c ighmm_cmatrix_alloc */
-static double * * cmatrix_alloc(int rows, int cols) {
-
-  double **matrix;
-  int i;
-
-  matrix = calloc(rows, sizeof(double*));
-  if (matrix)
-    for (i=0; i<rows; i++) {
-      matrix[i] = calloc(cols, sizeof(double));
-      /* clean up and abort if an allocation fails */
-      if (!matrix[i]) {
-        for (i=i-1; i>=0; --i)
-          free(matrix[i]);
-        free(matrix);
-        matrix = NULL;
-        break;
-      }
-    }
-
-  return matrix;
-}
-
-/* obsoleted by by global ghmm_c_state_alloc in ghmm/smodel.c
-static int ghmm_c_state_alloc(ghmm_cstate *state,
-			      int M,
-			      int in_states,
-			      int out_states,
-			      int cos) {
-#define CUR_PROC "ghmm_c_state_alloc"
-  int res = -1;
-  if (!((state->c) = calloc(sizeof(*(state->c)), M)))
-    {goto STOP;}
-  if (!((state->mue) = calloc(sizeof(*(state->mue)), M)))
-    {goto STOP;}
-  if (!((state->u) = calloc(sizeof(*(state->u)), M)))
-    {goto STOP;}
-  if (!((state->a) = calloc(sizeof(*(state->a)), M)))
-    {goto STOP;}
-  if (!((state->density) = calloc(sizeof(*(state->density)), M)))
-    {goto STOP;}
-    
-  if (out_states > 0) {
-    if (!((state->out_id) = calloc(sizeof(*(state->out_id)), out_states)))
-      {goto STOP;}
-    state->out_a = cmatrix_alloc(cos, out_states);
-    if(!state->out_a) {goto STOP;}
-  }
-  if (in_states > 0) {
-    if (!((state->in_id) = calloc(sizeof(*(state->in_id)), in_states))) 
-      {goto STOP;}
-    state->in_a = cmatrix_alloc(cos, in_states);
-    if(!state->in_a) {goto STOP;}
-  }
-  res = 0;
-STOP:
-  return(res);
-#undef CUR_PROC
-}*/
 
 ghmm_cmodel *smodel_alloc_fill(int N, int M, int cos, double prior, int density) {
 #define CUR_PROC "smodel_alloc_fill"
@@ -221,16 +160,6 @@ void smodel_set_variance(ghmm_cmodel *smo, int i, double *variance) {
   }
 }
 
-/*
-void call_smodel_print(char *filename, ghmm_cmodel *smo) {
-  FILE *fp=fopen(filename, "w");
-  if (fp == NULL) {
-    fprintf(stderr, "call_smodel_print(0): cannot open file %s\n", filename);    
-  } else {
-    ghmm_c_print(fp, smo);
-    fclose(fp);
-  }
-} */
 
 int smodel_sorted_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, double *log_ps, int *seq_rank) {
   int matched, res;
@@ -253,7 +182,9 @@ int smodel_sorted_individual_likelihoods(ghmm_cmodel *smo, ghmm_cseq *sqd, doubl
   res=matched;
   if (matched == 0) { 
     fprintf(stderr, "smodel_likelihood: NO sequence can be build.\n"); 
-  } else  qsort( seq_rank, sqd->seq_number, sizeof(int), (int (*)(const void *, const void *))seq_rank);
+  }
+  else
+    qsort(seq_rank, sqd->seq_number, sizeof(int), (int (*)(const void *, const void *))seq_rank_fp);
 
   /* return number of "matched" sequences */
   return res;
