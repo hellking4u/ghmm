@@ -850,7 +850,6 @@ class SequenceSet:
         "Deallocation of C sequence struct."
         
         log.debug( "__del__ SequenceSet " + str(self.cseq))
-        print self
         if self.cseq is not None:
             del self.cseq
             self.cseq = None
