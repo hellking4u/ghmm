@@ -128,7 +128,8 @@ class EmissionSequenceTests(unittest.TestCase):
         self.d_seq = ghmm.EmissionSequence(self.d_dom,[1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3])
         self.labeled = ghmm.EmissionSequence(ghmm.DNA, list('acgttgatgga'),labelDomain=l_domain,
                                             labelInput= ['E','R','T','T','T','E','R','T','T','T','R'])
-        
+
+
     def testprint(self):
         #print"\ntestprint ",
         s = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1200034"
@@ -234,14 +235,6 @@ class SequenceSetTests(unittest.TestCase):
         self.l_seq  = ghmm.SequenceSet(ghmm.DNA, self.seqList,labelDomain=self.l_domain,labelInput= self.labelList)
 
 
-    def tearDown(self):
-        #print "*** Tearing down..."
-        #del self.i_seq
-        #del self.d_seq
-        #del self.l_seq
-        pass    
-            
-    
     def testlabelseqset(self):
         self.assertEqual(len(self.l_seq), 5)
 
@@ -266,17 +259,15 @@ class SequenceSetTests(unittest.TestCase):
         
         # self.assertRaises(ghmm.UnknownInputType,ghmm.SequenceSet,)        
         pass
-        
-        
 
-    
+
     def testprint(self):
         #print"\n----------------- testprint "
         s = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111"
-        self.assertEqual(str(self.i_seq),s)
+        self.assertEqual(str(self.i_seq), s)
 
         s2 = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 3, weight 1.0:\n0.0 3.1 0.7 \nSeq 2, length 8, weight 1.0:\n4.4 3.05 2.0 2.4 1.2 1.8 1.0 1.0 \nSeq 3, length 5, weight 1.0:\n0.4 0.1 0.33 2.7 1.345 \nSeq 4, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 "
-        self.assertEqual(str(self.d_seq),s2)
+        self.assertEqual(str(self.d_seq), s2)
 
         # XXX str(self.l_seq)
 
@@ -349,21 +340,22 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(d_subseq.sequenceLength(0),5)
         
     def testwrite(self):
-       #print"\n-----------------testwrite "
-       self.i_seq.write("testdata/ghmmunittests_testwrite.seq") 
-       self.d_seq.write("testdata/ghmmunittests_testwrite.seq") 
+        #print"\n-----------------testwrite "
+        self.i_seq.write("testdata/ghmmunittests_testwrite.seq") 
+        self.d_seq.write("testdata/ghmmunittests_testwrite.seq") 
 
        
     def testlabelaccess(self):
-       #print "\n ----------------- testlabelaccess"
-       self.i_seq.getSeqLabel(2)   
-       l = self.d_seq.getSeqLabel(3)
-       self.assertEqual(l,-1)
-       self.d_seq.setSeqLabel(3,8)
-       l = self.d_seq.getSeqLabel(3)
-       self.assertEqual(l,8)
+        #print "\n ----------------- testlabelaccess"
+        self.i_seq.getSeqLabel(2)   
+        l = self.d_seq.getSeqLabel(3)
+        self.assertEqual(l,-1)
+        self.d_seq.setSeqLabel(3,8)
+        l = self.d_seq.getSeqLabel(3)
+        self.assertEqual(l,8)
 
     def testfilereading(self):
+        #print "\n ----------------- testfilereading"
         dom = ghmm.IntegerRange(0,12)
         seqs = ghmm.SequenceSetOpen(dom, 'testdata/d_seq.sqd')
         seqs = ghmm.SequenceSetOpen(self.d_alph, 'testdata/test10.sqd')
@@ -1183,15 +1175,16 @@ suiteAlphabet = unittest.makeSuite(AlphabetTests,'test')
 suiteEmissionSequence = unittest.makeSuite(EmissionSequenceTests,'test')
 suiteSequenceSet = unittest.makeSuite(SequenceSetTests,'test')
 suiteDiscreteEmissionHMM = unittest.makeSuite(DiscreteEmissionHMMTests,'test')
-#suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'test')
+suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'test')
 suiteStateLabelHMM = unittest.makeSuite(StateLabelHMMTests,'test')
 suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
 suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 
 # Call to individual test suites, uncomment to activate as needed.
-#runner = unittest.TextTestRunner(verbosity=2)
+#runner = unittest.TextTestRunner()
 #runner.run(suiteAlphabet)
+#runner.run(suiteEmissionSequence)
 #runner.run(suiteSequenceSet)
 #runner.run(suiteDiscreteEmissionHMM)
 #runner.run(suiteBackgroundDistribution)
