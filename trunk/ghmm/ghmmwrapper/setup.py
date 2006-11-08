@@ -58,7 +58,8 @@ setup(name="ghmmwrapper",
                                ['sclass_change.c', 'pclasschange.c', 'gql.c', 'ghmmwrapper.i'],
                                include_dirs = ['..'],
                                library_dirs = ['../ghmm/.libs'],
-                               libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z']
+                               libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z'],
+                               depends = ['wrapper_alphabet.i', 'wrapper_cmodel.i', 'wrapper_cseq.i', 'wrapper_dmodel.i', 'wrapper_dpmodel.i', 'wrapper_dpseq.i', 'wrapper_dseq.i', 'wrapper_xmlfile.i']
                                )
                      ]
      )
