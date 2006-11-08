@@ -2280,7 +2280,7 @@ def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
         models = ghmmwrapper.cmodel_ptr_array_alloc(len(hmmList))
         for i, model in enumerate(hmmList):
             ghmmwrapper.cmodel_ptr_array_setitem(models, i, model.cmodel)
-        ghmmwrapper.ghmm_cmodel_xml_write(fileName, models, len(hmmList))
+        ghmmwrapper.ghmm_cmodel_xml_write(models, fileName, len(hmmList))
         ghmmwrapper.free(models)
     elif (fileType==GHMM_FILETYPE_SMO):
         raise WrongFileType("the smo file format is deprecated, use xml instead")
