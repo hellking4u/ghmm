@@ -819,8 +819,7 @@ class SequenceSet:
                     ghmmwrapper.free(tmp)
                     ghmmwrapper.free(i)
 
-
-        if isinstance(sequenceSetInput, list):
+        elif isinstance(sequenceSetInput, list):
             internalInput = [self.emissionDomain.internalSequence(seq) for seq in sequenceSetInput]
             (seq, lengths) = self.sequence_cmatrix(internalInput)
             lens = ghmmhelper.list2int_array(lengths)
