@@ -801,8 +801,8 @@ class SequenceSet:
             if not ghmmwrapper.ASCI_SEQ_FILE:
                 raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
             else:
-                if  not os.path.exists(sequenceSetInput):
-                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
+                if not os.path.exists(sequenceSetInput):
+                    raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
                     i = ghmmwrapper.int_array_alloc(1)
                     tmp = self.seq_read(sequenceSetInput, i)
