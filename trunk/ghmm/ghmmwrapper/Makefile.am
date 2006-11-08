@@ -6,27 +6,37 @@
 
 SUBDIRS = .
 
-PYTHON=python
+SWIG_INTERFACE_FILES = ghmmwrapper.i \
+                       wrapper_alphabet.i \
+                       wrapper_cseq.i \
+                       wrapper_dseq.i \
+                       wrapper_dpseq.i \
+                       wrapper_cmodel.i \
+                       wrapper_dmodel.i \
+                       wrapper_dpmodel.i \
+                       wrapper_xmlfile.i
 
-SWIG_INTERFACE_FILES = ghmmwrapper.i wrapper_cseq.i wrapper_dseq.i wrapper_dpseq.i wrapper_cmodel.i wrapper_dmodel.i wrapper_xmlfile.i
+python2.3: setup.py ghmm.py ${SWIG_INTERFACE_FILES}
+	python2.3 setup.py build
+	python2.3 setup.py install --prefix=${prefix}
 
 all: setup.py ghmm.py ${SWIG_INTERFACE_FILES}
-	${PYTHON} setup.py build
+	python setup.py build
 
 clean: setup.py
-	${PYTHON} setup.py clean
+	python setup.py clean
 	rm -f message.txt
 
 install: setup.py all
-	${PYTHON} setup.py install --prefix=${prefix}
+	python setup.py install --prefix=${prefix}
 
 test: ghmmunittests.py all
 	coverage.py -e
-	coverage.py -x ghmmunittests.py > /dev/null
+	coverage.py -x ghmmunittests.py
 	coverage.py -r ghmm.py
 
 distclean: setup.py
-	${PYTHON} setup.py clean --all
+	python setup.py clean --all
 	rm -f message.txt
 
-.PHONY: all clean install distclean test
+.PHONY: python2.3 all clean install distclean test
