@@ -2278,8 +2278,8 @@ def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
         if os.path.exists(fileName):
             log.warning( "HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
         models = ghmmwrapper.cmodel_ptr_array_alloc(len(hmmList))
-        for i,model in enumerate(hmmList):
-            ghmmwrapper.cmodel_ptr_array_setitem(models, model.cmodel, i)
+        for i, model in enumerate(hmmList):
+            ghmmwrapper.cmodel_ptr_array_setitem(models, i, model.cmodel)
         ghmmwrapper.ghmm_cmodel_xml_write(fileName, models, len(hmmList))
         ghmmwrapper.free(models)
     elif (fileType==GHMM_FILETYPE_SMO):
