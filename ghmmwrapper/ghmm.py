@@ -315,27 +315,26 @@ class Alphabet(EmissionDomain):
 
         if calphabet is None:
             self.listOfCharacters = listOfCharacters
-            self._lengthOfCharacters = -1
-            i = 0
-            for c in self.listOfCharacters:
-                #XXX
-                if (self._lengthOfCharacters != None and type(c) == type("hallo")):
-                    if (self._lengthOfCharacters == -1):
-                        self._lengthOfCharacters = len(c)
-                    elif (len(c) != self._lengthOfCharacters):
-                        self._lengthOfCharacters = None                    
-                self.index[c] = i
-                i += 1
-            if (self._lengthOfCharacters == -1):
-                self._lengthOfCharacters = None
         else:
-            #XXX jg:check
             self.listOfCharacters = []
             for i in range(calphabet.size):
                 c = calphabet.getSymbol(i)
                 self.listOfCharacters.append(c)
-                self.index[c] = i
+
+        for i,c in enumerate(self.listOfCharacters):
+            self.index[c] = i
+
+        lens = {}
+        try:
+            for c in self.listOfCharacters:
+                lens[len(c)] = 1
+        except TypeError:
             self._lengthOfCharacters = None
+        else:
+            if len(lens) == 1:
+                self._lengthOfCharacters = lens.keys()[0]
+            else:
+                self._lengthOfCharacters = None
 
         self.CDataType = "int" # flag indicating which C data type should be used
 
