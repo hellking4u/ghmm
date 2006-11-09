@@ -2294,16 +2294,16 @@ class DiscreteEmissionHMM(HMM):
          - higher order states
          - parameter tying in training
          - background probabilities in training
-    
-    
     """
+
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
 
         self.model_type = self.cmodel.model_type  # model type
         self.maxorder = self.cmodel.maxorder
         self.background = None
-        
+
+
     def __str__(self):
         hmm = self.cmodel
         strout = ["\nGHMM Model\n"]
@@ -2359,6 +2359,7 @@ class DiscreteEmissionHMM(HMM):
                     log.error( "durations not applied")
                 else:
                     self.N = self.cmodel.N
+
 
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
@@ -2425,8 +2426,8 @@ class DiscreteEmissionHMM(HMM):
         cscale = None
         cbeta = None
         return logp
-    
-    
+
+
     def logprob(self, emissionSequence, stateSequence):
         """ log P[ emissionSequence, stateSequence| m] """
         
@@ -2447,7 +2448,6 @@ class DiscreteEmissionHMM(HMM):
         symbolIndex = 1
 
         try:
-        
             for i in range(len(emissionSequence)-1):
                 cur_state = self.cmodel.getState(stateSequence[i])
                 next_state = self.cmodel.getState(stateSequence[i+1])
@@ -2540,7 +2540,6 @@ class DiscreteEmissionHMM(HMM):
     def assignAllBackgrounds(self,stateBackground):
         """ Change all the assignments of background distributions to states.
         """
- 
         if not type(stateBackground) == list:
            raise TypeError, "list required got "+ str(type(stateBackground))
         
@@ -2552,28 +2551,25 @@ class DiscreteEmissionHMM(HMM):
 
         for i in range(self.N):
             self.cmodel.background_id[i] = stateBackground[i]
-        
-    def assignStateBackground(self, state, backgroundID):
 
+    def assignStateBackground(self, state, backgroundID):
         assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
         if self.labelDomain.isAdmissable(backgroundID):
             self.cmodel.background_id[state] = backgroundID
         else:
             log.error( str(backgroundID) + " is not contained in labelDomain."  )
-    
-    
+
+
     def getBackgroundAssignments(self):
         return ghmmhelper.int_array2list(self.cmodel.background_id, self.N)
-        
-    
+
+
     def updateTieGroups(self):
-        
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         self.cmodel.update_tie_groups()
 
-    
+
     def setTieGroups(self, tieList):
-        
         assert len(tieList) == self.N, "Number of entries in tieList is different from number of states."
         
         if self.cmodel.tied_to is None:
@@ -2585,21 +2581,25 @@ class DiscreteEmissionHMM(HMM):
             for i in range(self.N):
                 self.cmodel.tied_to[i] = tieList[i]
 
+
     def removeTiegroups(self):
         ghmmwrapper.free(self.cmodel.tied_to)
         self.cmodel.tied_to = None
         self.cmodel.model_type -= 8
     
+
     def getTieGroups(self):
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         
         return ghmmhelper.int_array2list(self.cmodel.tied_to, self.N)
     
+
     def getSilentFlag(self,state):
         if self.cmodel.model_type & 4:
             return self.cmodel.getSilent(state)
         else:
             return 0
+
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
@@ -2609,6 +2609,7 @@ class DiscreteEmissionHMM(HMM):
         i_error = self.cmodel.normalize()
         if i_error == -1:
             log.error("normalization failed")
+
 
     def toMatrices(self):
         "Return the parameters in matrix form."
@@ -2630,6 +2631,7 @@ class DiscreteEmissionHMM(HMM):
                 A[i][state_index] = ghmmwrapper.double_array_getitem(state.out_a,j)
 
         return [A,B,pi]
+
 
     def isSilent(self,state):
         """ Returns True if 'state' is silent, False otherwise
@@ -2658,11 +2660,9 @@ class DiscreteEmissionHMM(HMM):
         # XXX for silent states things arr more complicated -> to be done
         if self.cmodel.model_type & 4:
             raise RuntimeError, "Models with silent states not yet supported."
-            
-                    
+
         # checking function arguments
         assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
-        
 
         # checking path validity (XXX too inefficient ?)
         for p in path:
@@ -2685,7 +2685,6 @@ class DiscreteEmissionHMM(HMM):
                 path_posterior.append(post[p][path[p]])
                
             return path_posterior  
-        
 
         # XXX silent states are yet to be done
 #        else:
@@ -2720,9 +2719,7 @@ class DiscreteEmissionHMM(HMM):
 #                        j+=1    
 #                
 #            return path_log_lik        
-                
-        
-        
+
 
     def statePosterior(self, sequence, state, time):
         """ Return the log posterior probability for being at 'state' at time 'time' in 'sequence'.
@@ -2746,7 +2743,6 @@ class DiscreteEmissionHMM(HMM):
         return post[time][state]
 
 
-
     def posterior(self, sequence):
         """ Posterior distribution matrix for 'sequence'.
         
@@ -2756,23 +2752,11 @@ class DiscreteEmissionHMM(HMM):
         if self.cmodel.model_type & 4:
             raise RuntimeError, "Models with silent states not yet supported."
 
-        
         assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
         
         (alpha,scale)  = self.forward(sequence)
         beta = self.backward(sequence,scale)
        
-#        print "alpha: "
-#        for a in alpha:
-#            print a
-#        print "\n"
-#        
-#        print "beta: "
-#        for b in beta:
-#            print b
-#        print "\n"    
-        
-        
         post_mat = []
         for i in range(len(sequence)):
             post = []            
@@ -2783,71 +2767,10 @@ class DiscreteEmissionHMM(HMM):
        
             post_mat.append(post)   
 
-       
-
         return post_mat
 
 
-    def toXML(self, filename, backgroundobj = None):
-        [A,B,pi] = self.toMatrices()
-        nalpha = self.cmodel.M
-        nstates = self.cmodel.N
-
-        hmm_dom = xmlutil.HMM()
-
-        hmm_dom.hmmClass.addCode(0, "C1", xmlutil.ValidatingString("Switching class"))
-
-        alphabet = self.emissionDomain
-        # adapted to the pair HMM xmlutil with multiple alphabets
-        hmm_dom.hmmAlphabets[0] = xmlutil.DiscreteHMMAlphabet()
-        for c in alphabet.listOfCharacters:
-            hmm_dom.hmmAlphabets[0].addCode(alphabet.index[c], c)
-
-        if backgroundobj != None:
-             (n,orders,b) = backgroundobj.tolist()
-             background_id = self.getBackgroundAssignments()
-             for i in xrange(n):
-                  hmm_dom.backgroundDistributions.addDistribution(str(i), orders[i], b[i])
-
-        try:
-            tiedlist = self.getTieGroups()
-        except AssertionError:
-            log.warning( "Ignore tied groups")
-            log.warning( "self.cmodel.tied_to not defined")
-
-        for i in xrange(self.cmodel.N):
-            cstate = self.cmodel.getState(i)
-            if nalpha > 1:
-                order = int(math.log(len(B[i]), nalpha)) - 1
-            else:
-                order = len(B[i]) - 1
-
-            have_background = False # XXX
-            tiedto = None           # XXX
-           
-            state_dom = xmlutil.HMMState(-1,hmm_dom)
-            state_dom.fromDiscreteState( i, pi[i], B[i], 0, order, tiedto, have_background)
-            hmm_dom.state[state_dom.index] = state_dom
-            hmm_dom.id2index[i] = state_dom.index
-            
-        nr_classes = 1
-        hmm_dom.G.edgeWeights[0] = EdgeWeight(hmm_dom.G)
-
-        #
-        # Add transition probabilities
-        #
-        for i in xrange(self.cmodel.N):
-            v = hmm_dom.id2index[i]
-            for j in  xrange(self.cmodel.N):
-                if A[i][j] > 0.0:
-                    w = hmm_dom.id2index[j]
-                    hmm_dom.G.AddEdge(v,w,A[i][j])
-
-        hmm_dom.WriteXML(filename)
-        del hmm_dom
-
 ######################################################
-        
 class StateLabelHMM(DiscreteEmissionHMM):
     """ Labelled HMMs with discrete emissions. 
         Same feature list as in DiscreteEmission models.    
@@ -2950,7 +2873,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         else:
             return self.labelDomain.internal(external)
 
-    def sampleSingle(self, seqLength,seed = 0):
+    def sampleSingle(self, seqLength, seed = 0):
         seqPtr = self.cmodel.label_generate_sequences(seed, seqLength, 1, seqLength)
         return EmissionSequence(self.emissionDomain, seqPtr, labelDomain = self.labelDomain )
 
