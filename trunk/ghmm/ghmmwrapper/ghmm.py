@@ -3890,26 +3890,24 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
 
 class ContinuousMixtureHMM(GaussianMixtureHMM):
-     """ HMMs with mixtures of any Continuous Distributions as emissions.
-         Optional features:
-             - fixing mixture components in training
-         
-     
-     """
+    """ HMMs with mixtures of any Continuous Distributions as emissions.
+        Optional features:
+        - fixing mixture components in training
+    """
 
 ##     NORMAL = 0
 ##     NORMAL_RIGHT =1
 ##     NORMAL_LEFT=3
 ##     UNIFORM=4
      
-     def __init__(self, emissionDomain, distribution, cmodel):
-         GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
+    def __init__(self, emissionDomain, distribution, cmodel):
+        GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
  	
  
-     def getEmissionProbability(self,value,st):
-         return self.cmodel.calc_b(state, value)       
+    def getEmissionProbability(self,value,st):
+        return self.cmodel.calc_b(state, value)       
  
-     def getEmission(self, i, comp):
+    def getEmission(self, i, comp):
         """ Return the paramenters of component 'comp' in state 'i'
         (type, mu, sigma^2, weight) - for a gaussian component
         (type, mu, sigma^2,  min, weight) - for a left trunc gaussian
@@ -3922,12 +3920,12 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         weigth = ghmmwrapper.double_array_getitem(state.c,comp)
         type = ghmmwrapper.get_density(state,comp)
         if ((type == ghmmwrapper.uniform) or (type == ghmmwrapper.normal)):
-          return (type, mu, sigma, weigth)
+            return (type, mu, sigma, weigth)
         else:
-          a = ghmmwrapper.double_array_getitem(state.a,comp)
-          return (type, mu, sigma, a, weigth)
+            a = ghmmwrapper.double_array_getitem(state.a,comp)
+            return (type, mu, sigma, a, weigth)
 
-     def setEmission(self, i, comp, type, (mu, sigma, weight, a)):
+    def setEmission(self, i, comp, type, (mu, sigma, weight, a)):
         """ Set the emission distributionParameters for component 'comp' in state 'i'. """
 
         # ensure proper indices
@@ -3940,91 +3938,89 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         state.a[comp] = float(a)
         state.setDensity(comp, int(type))
 	
-     def getEmissionProbability(self, value, state):
+    def getEmissionProbability(self, value, state):
         return self.cmodel.calc_b(state, value)
          
-     def __str__(self):
-         "defines string representation"
-         hmm = self.cmodel
- 
-         strout = "\nOverview of HMM:"
-         strout.append("\nNumber of states: "+ str(hmm.N))
-         strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
- 
-         for k in range(hmm.N):
-             state = hmm.getState(k)
-             strout.append("\n\nState number "+ str(k) +":")
-             strout.append("\nInitial probability: " + str(state.pi))
-             strout.append("\n"+ str(hmm.M) + " density function(s):\n")
- 
-             weight = ""
-             mue = ""
-             u =  ""
-             a = ""
-             density = ""
-             c = ""
- 
-             for outp in range(hmm.M):
-                 weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
-                 mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
-                 u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
-                 a += str(ghmmwrapper.double_array_getitem(state.a,outp))+", "
-                 density += str(ghmmwrapper.double_array_getitem(state.a,outp))+","
-                 c += str(ghmmwrapper.double_array_getitem(state.c,outp))+","
-                 
-             strout.append("  pdf component weights : " + str(weight) + "\n")
-             strout.append("  mean vector: " + str(mue) + "\n")
-             strout.append("  variance vector: " + str(u) + "\n")
-             strout.append("  a vector: " + str(u) + "\n")
-             strout.append("  densities types: " + str(u) + "\n")
-             strout.append("  components weitghs: " + str(c) + "\n")
-             
- 
-             for c in range(self.cmodel.cos):
-                 strout.append("\n  Class : " + str(c)                )
-                 strout.append("\n    Outgoing transitions:")
-                 for i in range( state.out_states):
-                     strout.append("\n      transition to state " + str(state.out_id[i]) + " with probability = " + str(ghmmwrapper.double_matrix_getitem(state.out_a,c,i)))
-                 strout.append("\n    Ingoing transitions:")
-                 for i in range(state.in_states):
-                     strout.append("\n      transition from state " + str(state.in_id[i]) +" with probability = "+ str(ghmmwrapper.double_matrix_getitem(state.in_a,c,i)))
- 
- 
-             strout.append("\nint fix:" + str(state.fix) + "\n")
-         return join(strout,'')
+    def __str__(self):
+        "defines string representation"
+        hmm = self.cmodel
 
-     def getPrior(self):
-         return self.cmodel.prior
- 
-     def toMatrices(self):
-         """Return the parameters in matrix form.
-         It also returns the density type"""
-         A = []
-         B = []
-         pi = []
-         d = [] 
-         for i in range(self.cmodel.N):
-             A.append([0.0] * self.N)
-             B.append([])
-             state = self.cmodel.getState(i)
-             pi.append(state.pi)
- 
-             B[i].append( ghmmhelper.double_array2list(state.mue,self.cmodel.M) )
-             B[i].append( ghmmhelper.double_array2list(state.u,self.cmodel.M) )
-             B[i].append( ghmmhelper.double_array2list(state.c,self.cmodel.M) )
-             B[i].append( ghmmhelper.double_array2list(state.a,self.cmodel.M) )
-             
-             d.append([]);
+        strout = "\nOverview of HMM:"
+        strout.append("\nNumber of states: "+ str(hmm.N))
+        strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
 
-             d[i].append( ghmmhelper.double_array2list(state.density,self.cmodel.M) )
+        for k in range(hmm.N):
+            state = hmm.getState(k)
+            strout.append("\n\nState number "+ str(k) +":")
+            strout.append("\nInitial probability: " + str(state.pi))
+            strout.append("\n"+ str(hmm.M) + " density function(s):\n")
+
+            weight = ""
+            mue = ""
+            u =  ""
+            a = ""
+            density = ""
+            c = ""
+
+            for outp in range(hmm.M):
+                weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
+                mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
+                u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
+                a += str(ghmmwrapper.double_array_getitem(state.a,outp))+", "
+                density += str(ghmmwrapper.double_array_getitem(state.a,outp))+","
+                c += str(ghmmwrapper.double_array_getitem(state.c,outp))+","
+
+            strout.append("  pdf component weights : " + str(weight) + "\n")
+            strout.append("  mean vector: " + str(mue) + "\n")
+            strout.append("  variance vector: " + str(u) + "\n")
+            strout.append("  a vector: " + str(u) + "\n")
+            strout.append("  densities types: " + str(u) + "\n")
+            strout.append("  components weitghs: " + str(c) + "\n")
+
+            for c in range(self.cmodel.cos):
+                strout.append("\n  Class : " + str(c)                )
+                strout.append("\n    Outgoing transitions:")
+                for i in range( state.out_states):
+                    strout.append("\n      transition to state " + str(state.out_id[i]) + " with probability = " + str(ghmmwrapper.double_matrix_getitem(state.out_a,c,i)))
+                strout.append("\n    Ingoing transitions:")
+                for i in range(state.in_states):
+                    strout.append("\n      transition from state " + str(state.in_id[i]) +" with probability = "+ str(ghmmwrapper.double_matrix_getitem(state.in_a,c,i)))
+
+            strout.append("\nint fix:" + str(state.fix) + "\n")
+        return join(strout,'')
+
+    def getPrior(self):
+        return self.cmodel.prior
+ 
+    def toMatrices(self):
+        """Return the parameters in matrix form.
+           It also returns the density type"""
+        A = []
+        B = []
+        pi = []
+        d = [] 
+        for i in range(self.cmodel.N):
+            A.append([0.0] * self.N)
+            B.append([])
+            state = self.cmodel.getState(i)
+            pi.append(state.pi)
+ 
+            B[i].append( ghmmhelper.double_array2list(state.mue,self.cmodel.M) )
+            B[i].append( ghmmhelper.double_array2list(state.u,self.cmodel.M) )
+            B[i].append( ghmmhelper.double_array2list(state.c,self.cmodel.M) )
+            B[i].append( ghmmhelper.double_array2list(state.a,self.cmodel.M) )
+             
+            d.append([]);
+
+            d[i].append( ghmmhelper.double_array2list(state.density,self.cmodel.M) )
                       
+            for j in range(state.out_states):
+                state_index = state.out_id[j]
+                A[i][state_index] = ghmmwrapper.double_matrix_getitem(state.out_a,0,j)
  
-             for j in range(state.out_states):
-                 state_index = state.out_id[j]
-                 A[i][state_index] = ghmmwrapper.double_matrix_getitem(state.out_a,0,j)
- 
-         return [A,B,pi,d]
-	
+        return [A,B,pi,d]
+
+
 def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
     """ """
      
