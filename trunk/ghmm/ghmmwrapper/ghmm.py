@@ -970,6 +970,7 @@ class SequenceSet:
             seq.setLength(i, len_i)
 
             # Above doesnt copy seq_id or seq_label or seq_w
+            # XXX seq_id should be (long) int?
             seq_id = int(ghmmwrapper.double_array_getitem(self.cseq.seq_id, seqIndixes[i]))
             ghmmwrapper.double_array_setitem(seq.seq_id, i, seq_id)
             #if ghmmwrapper.SEQ_LABEL_FIELD:
@@ -1015,6 +1016,7 @@ class SequenceSetSubset(SequenceSet):
 
 
 def SequenceSetOpen(emissionDomain, fileName):
+    # XXX Name doof
     """ Reads a sequence file with multiple sequence sets. 
 
     Returns a list of SequenceSet objects.
@@ -1030,20 +1032,25 @@ def SequenceSetOpen(emissionDomain, fileName):
     elif emissionDomain.CDataType == "double":
         readFile = ghmmwrapper.ghmm_cseq_read
         seqPtr   = ghmmwrapper.cseq_ptr_array_getitem
-            
+    else:
+        raise TypeError, "Invalid c data type " + str(emissionDomain.CDataType)
+
+    # XXX Check whether swig can return setNr too        
     dArr = ghmmwrapper.int_array_alloc(1)
 
     structArray = readFile(fileName, dArr)
     setNr = ghmmwrapper.int_array_getitem(dArr, 0)
 
-    sequenceSets = []
-    for i in range(setNr):
-        seq = seqPtr(structArray,i)
-        sequenceSets.append(SequenceSet(emissionDomain, seq) )
+    # Add Unittest
+    sequenceSets = [SequenceSet(emissionDomain, seqPtr(structArray, i)) for i in range(setNr)]
+##    sequenceSets = []
+##    for i in range(setNr):
+##        seq = seqPtr(structArray,i)
+##        sequenceSets.append(SequenceSet(emissionDomain, seq) )
 
-        # setting labels to NULL
-        sequenceSets[i].cseq.state_labels = None
-        sequenceSets[i].cseq.state_labels_len = None
+##        # setting labels to NULL (XXX only for integer?. DONE by c-constructor) 
+##        sequenceSets[i].cseq.state_labels = None
+##        sequenceSets[i].cseq.state_labels_len = None
        
     ghmmwrapper.free(dArr)
     return  sequenceSets
@@ -1063,6 +1070,7 @@ GHMM_FILETYPE_SMO = 'smo'
 GHMM_FILETYPE_XML = 'xml'
 GHMM_FILETYPE_HMMER = 'hmm'
 
+# XXX Determine file type from file extension. Default unclear?
 
 class HMMOpenFactory(HMMFactory):
 
@@ -1080,21 +1088,19 @@ class HMMOpenFactory(HMMFactory):
     	if self.defaultFileType == GHMM_FILETYPE_XML:
             # try to validate against ghmm.dtd
             if ghmmwrapper.ghmm_xmlfile_validate(fileName):
-                m = self.openNewXML(fileName, modelIndex)
+                return self.openNewXML(fileName, modelIndex)
             else:
-                m = self.openOldXML(fileName)
-                
-            return m
-	    
+                return self.openOldXML(fileName)
         elif self.defaultFileType == GHMM_FILETYPE_SMO:
             return self.openSMO(fileName, modelIndex)
-
-        else:
-            # HMMER format models
+        elif self.defaultFileType == GHMM_FILETYPE_HMMER:
             return self.openHMMER(fileName)
+        else:
+            raise TypeError, "Invalid file type " + str(self.defaultFileType)
 
 
     def openNewXML(self, fileName, modelIndex):
+        # XXX Document me!
         # check the type of hmm
         # start the model
 
@@ -1134,12 +1140,12 @@ class HMMOpenFactory(HMMFactory):
         result = []
         for i in range(nrModels):
             cmodel = getPtr(models,i)
-            if emission_domain is 'd':
+            if emission_domain is 'd': # XXX Uses first alphabet for all models in file
                 emission_domain = Alphabet([], cmodel.alphabet)
-                print emission_domain
+                #print emission_domain
             if modelType & ghmmwrapper.kLabeledStates:
                 labelDomain = LabelDomain([], cmodel.labelAlphabet)
-                print labelDomain
+                #print labelDomain
                 m = hmmClass(emission_domain, distribution(emission_domain), labelDomain, cmodel)
             else:
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
@@ -1267,14 +1273,15 @@ class HMMOpenFactory(HMMFactory):
         else:   # some other model
             emission_domain = IntegerRange(0,h.m)
         distribution = DiscreteDistribution(emission_domain)
-
+        
+        # XXX Probably slow for large matrices (Rewrite for 0.9)
         [A,B,pi,modelName] = h.getGHMMmatrices()
         return  HMMFromMatrices(emission_domain, distribution, A, B, pi, hmmName=modelName)
 
         
     def determineHMMClass(self, fileName):
         #
-        # smo files 
+        # smo files. Obsolete 
         #
         file = open(fileName,'r')
         
@@ -1350,6 +1357,7 @@ class HMMOpenFactory(HMMFactory):
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
 HMMOpenSMO   = HMMOpenFactory(GHMM_FILETYPE_SMO)
 HMMOpenXML   = HMMOpenFactory(GHMM_FILETYPE_XML)
+# XXX Use HMMOpen for all, determine filetype from extension, filetype override for __call__ 
 HMMOpen      = HMMOpenFactory(GHMM_FILETYPE_XML)
 
 
@@ -1359,7 +1367,7 @@ def readMultipleHMMERModels(fileName):
         HMM objects.
 
     """
-    
+    # XXX Integrate into HMMOPen, check for single hmm files
     if not os.path.exists(fileName):
         raise IOError, 'File ' + str(fileName) + ' not found.'
     
@@ -1402,11 +1410,13 @@ class HMMFromMatricesFactory(HMMFactory):
                 raise InvalidModelParameters, " Different number of entries in A and B."
 
             if (labelDomain is None and labelList is not None) or (labelList is None and labelList is not None):
-                raise InvalidModelParameters, "Either labelDomain and labelInput are both given or neither of the two."
+                raise InvalidModelParameters, "Specify either both labelDomain and labelInput or neither."
             
             if isinstance(distribution,DiscreteDistribution):
                 
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
+
+                # XXX Aufhuebschen
                 cmodel = ghmmwrapper.ghmm_dmodel()
                 cmodel.N = len(A)
                 cmodel.M = len(emissionDomain)
@@ -1419,7 +1429,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 if hmmName != None:
                     cmodel.name = hmmName
                 else:
-                    cmodel.name = 'Unused'
+                    cmodel.name = ''
 
                 states = ghmmwrapper.dstate_array_alloc(cmodel.N)
 
