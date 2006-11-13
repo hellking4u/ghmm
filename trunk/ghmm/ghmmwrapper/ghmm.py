@@ -1199,6 +1199,9 @@ class HMMOpenFactory(HMMFactory):
 
             m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
 
+            # old xml is discrete, set appropiate flag
+            m.cmodel.setModelTypeFlag(ghmmwrapper.kDiscreteHMM)
+
             if background_dist != {}:
                  ids = [-1]*m.N
                  for s in hmm_dom.state.values():
@@ -1242,20 +1245,24 @@ class HMMOpenFactory(HMMFactory):
         if hmmClass == DiscreteEmissionHMM:
             models = ghmmwrapper.ghmm_dmodel_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.dmodel_ptr_array_getitem
+            base_model_type = ghmmwrapper.KDiscreteHMM
         else:
             models = ghmmwrapper.ghmm_cmodel_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.cmodel_ptr_array_getitem
+            base_model_type = ghmmwrapper.KContinuousHMM
 
         nrModels = ghmmwrapper.int_array_getitem(nrModelPtr, 0)
         if modelIndex == None:
             result = []
             for i in range(nrModels):
                 cmodel = getPtr(models, i)
+                cmodel.setModelTypeFlag(base_model_type)
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
                 result.append(m)
         else:
             if modelIndex < nrModels:
                 cmodel = getPtr(models, modelIndex)
+                cmodel.setModelTypeFlag(base_model_type)
                 result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             else:
                 result = None
