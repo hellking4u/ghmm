@@ -182,6 +182,8 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
         ghmm_dmodel() { return calloc(1, sizeof(ghmm_dmodel)); }
         ~ghmm_dmodel() { ghmm_dmodel_free(&self); }
 
+        int write_xml(char* filename) { return ghmm_dmodel_xml_write(&self, filename, 1); }
+
         int forward_init(double *alpha_1, int symb, double *scale);
 
         int forward(const int *O, int len, double **alpha, double *scale,
@@ -234,6 +236,8 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int  getSilent(size_t index) { return self->silent[index]; }
         void setSilent(size_t index, int value) { self->silent[index] = value; }
+
+        void setModelTypeFlag(unsigned int flag) { self->model_type |= flag; }
 }
 
 STRUCT_ARRAY(ghmm_dmodel, dmodel)

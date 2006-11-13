@@ -168,6 +168,8 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         ghmm_cmodel() { return calloc(1, sizeof(ghmm_cmodel)); }
         ~ghmm_cmodel() { ghmm_cmodel_free(&self); }
 
+        int write_xml(char* filename) { return ghmm_cmodel_xml_write(&self, filename, 1); }
+
         int forward(double *O, int T, double ***b, double **alpha, double *scale, double *log_p);
 
         int backward(double *O, int T, double ***b, double **beta, const double *scale);
@@ -206,6 +208,8 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         int* viterbi(double *O, int T, double *log_p);
 
         ghmm_cstate* getState(size_t index) { return self->s + index; }
+
+        void setModelTypeFlag(unsigned int flag) { return; }
 }
 
 extern int ghmm_cmodel_xml_write(ghmm_cmodel** smo, const char* file, int smo_number);
