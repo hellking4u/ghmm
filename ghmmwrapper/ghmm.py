@@ -316,10 +316,7 @@ class Alphabet(EmissionDomain):
         if calphabet is None:
             self.listOfCharacters = listOfCharacters
         else:
-            self.listOfCharacters = []
-            for i in range(calphabet.size):
-                c = calphabet.getSymbol(i)
-                self.listOfCharacters.append(c)
+            self.listOfCharacters = [calphabet.getSymbol(i) for i in range(calphabet.size)]
 
         for i,c in enumerate(self.listOfCharacters):
             self.index[c] = i
@@ -428,6 +425,13 @@ class Alphabet(EmissionDomain):
         @return: length of the external characters or None
         """
         return self._lengthOfCharacters
+
+    def toCstruct(self):
+        calphabet = ghmmwrapper.ghmm_alphabet(len(self), "<unused>")
+        for i,symbol in enumerate(self.listOfCharacters):
+            calphabet.setSymbol(i, symbol)
+
+        return calphabet
 
 
 DNA = Alphabet(['a','c','g','t'])
@@ -1249,7 +1253,7 @@ class HMMOpenFactory(HMMFactory):
         else:
             models = ghmmwrapper.ghmm_cmodel_read(fileName, nrModelPtr)
             getPtr = ghmmwrapper.cmodel_ptr_array_getitem
-            base_model_type = ghmmwrapper.KContinuousHMM
+            base_model_type = ghmmwrapper.kContinuousHMM
 
         nrModels = ghmmwrapper.int_array_getitem(nrModelPtr, 0)
         if modelIndex == None:
@@ -1472,23 +1476,15 @@ class HMMFromMatricesFactory(HMMFactory):
                     else:
                         silent_states.append(0)
 
-                    log.debug("test")
-
                     #set out probabilities
                     state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
-
-                    #print state.out_states, state.out_id, state.out_a
-                    log.debug("test1")
 
                     #set "in" probabilities
                     A_col_i = map( lambda x: x[i], A)
                     # Numarray use A[,:i]
-                    log.debug("test2")
                     state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
                     #fix probabilities in reestimation, else 0
                     state.fix = 0
-                    
-                    log.debug("test3")
 
                 cmodel.s = states
                 if silent_flag == 4:
@@ -2785,6 +2781,16 @@ class DiscreteEmissionHMM(HMM):
             post_mat.append(post)   
 
         return post_mat
+
+
+    def write(self,fileName):
+        """ Writes HMM to file 'fileName'.
+
+        """
+        if self.cmodel.alphabet is None:
+            self.cmodel.alphabet = self.emissionDomain.toCstruct()
+
+        self.cmodel.write_xml(fileName)
 
 
 ######################################################
