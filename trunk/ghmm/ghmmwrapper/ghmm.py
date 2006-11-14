@@ -1477,7 +1477,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     #set out probabilities
                     state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
 
-                    print state.out_states, state.out_id, state.out_a
+                    #print state.out_states, state.out_id, state.out_a
                     log.debug("test1")
 
                     #set "in" probabilities
