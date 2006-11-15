@@ -49,10 +49,12 @@
 #include "ghmm_internals.h"
 #include "xmlwriter.h"
 
+#define kAlphabet      0
+#define kLabelAlphabet 1
+
 /* Bitmask to test the modeltype against to choose the type of the model pointer
    we use in the union */
 #define PTR_TYPE_MASK (GHMM_kDiscreteHMM + GHMM_kTransitionClasses + GHMM_kPairHMM + GHMM_kContinuousHMM)
-
 
 #if defined(LIBXML_WRITER_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
 
@@ -143,23 +145,24 @@ STOP:
 
 
 /* ========================================================================= */
-static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa) {
+static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa, int type) {
 #define CUR_PROC "writeAlphabet"
 
   int i;
   char * estr;
 
-  if (0 > xmlTextWriterStartElement(writer, BAD_CAST "alphabet")) {
+  if (0 > xmlTextWriterStartElement(writer, BAD_CAST (type == kAlphabet ? "alphabet" : "classAlphabet"))) {
     GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
     goto STOP;;
   }
   
-  if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "id", "%d", alfa->id)) {
-    estr = ighmm_mprintf(NULL, 0, "failed to write id-attribute for alphabet"
-			 "with id %d", alfa->id);
-    GHMM_LOG(LERROR, estr);
-    m_free(estr);
-  }
+  if (type == kAlphabet)
+    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "id", "%d", alfa->id)) {
+      estr = ighmm_mprintf(NULL, 0, "failed to write id-attribute for alphabet"
+                           "with id %d", alfa->id);
+      GHMM_LOG(LERROR, estr);
+      m_free(estr);
+    }
   
   for (i=0; i<alfa->size; i++) {
     if (0 > xmlTextWriterStartElement(writer, BAD_CAST "symbol")) {
@@ -714,7 +717,7 @@ static int writeTransition(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo,
 			   int sNo) {
 #define CUR_PROC "writeTransition"
 
-  int cos, i, j, rc=0; 
+  int cos, i, j;
   int out_states, * out_id;
   double * * out_a;
   double * w_out_a;
@@ -786,7 +789,7 @@ static int writeTransition(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo,
     }
 
     /* end transition */
-    if (rc < 0 > xmlTextWriterEndElement(writer)) {
+    if (0 > xmlTextWriterEndElement(writer)) {
       GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (transition)");
       goto STOP;
     }
@@ -874,19 +877,19 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   switch (f->modelType & (GHMM_kDiscreteHMM + GHMM_kTransitionClasses
 			  + GHMM_kPairHMM)) {
   case GHMM_kDiscreteHMM:
-    rc = writeAlphabet(writer, f->model.d[number]->alphabet);
+    rc = writeAlphabet(writer, f->model.d[number]->alphabet, kAlphabet);
     break;
   case (GHMM_kDiscreteHMM+GHMM_kTransitionClasses):
-    /*rc = writeAlphabet(writer, f->model.ds[number]->alphabet);*/
+    /*rc = writeAlphabet(writer, f->model.ds[number]->alphabet, kAlphabet);*/
     break;
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM):
   case (GHMM_kDiscreteHMM+GHMM_kPairHMM+GHMM_kTransitionClasses):
-    /*rc = writeAlphabet(writer, f->model.dp[number]->alphabets[0]);
+    /*rc = writeAlphabet(writer, f->model.dp[number]->alphabets[0], kAlphabet);
     if (rc) {
       GHMM_LOG(LERROR, "writing first alphabet of discrete pair HMM failed");
       goto STOP;
     }
-    rc = writeAlphabet(writer, f->model.dp[number]->alphabets[1]);*/    
+    rc = writeAlphabet(writer, f->model.dp[number]->alphabets[1], kAlphabet);*/
     break;
   }
 
@@ -894,6 +897,13 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
     estr = ighmm_mprintf(NULL, 0, "writing alphabet for HMM %d (type %d) failed");
     GHMM_LOG(LERROR, estr);
     m_free(estr);
+  }
+
+  /* write label alphabet if applicable */
+  if ((f->modelType & PTR_TYPE_MASK) == GHMM_kDiscreteHMM
+      && f->modelType & GHMM_kLabeledStates) {
+    if (writeAlphabet(writer, f->model.d[number]->label_alphabet, kLabelAlphabet))
+      GHMM_LOG(LERROR, "writing of label alphabet failed");
   }
 
   /* write background distributions if applicable */

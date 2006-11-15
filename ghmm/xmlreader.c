@@ -607,13 +607,13 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
     /* -------- tied to --------------------------------------------------- */
     if ((!xmlStrcmp(elem->name, BAD_CAST "class"))) {
       
-      assert(f->modelType & GHMM_kTiedEmissions);
+      assert(f->modelType & GHMM_kLabeledStates);
 
       s = (char *)xmlNodeGetContent(elem);
       label = atoi(s);
       m_free(s);
       if ((f->modelType & PTR_TYPE_MASK) == GHMM_kDiscreteHMM) {
-	if (f->model.d[modelNo]->labelAlphabet->size > label)
+	if (f->model.d[modelNo]->label_alphabet->size > label)
 	  f->model.d[modelNo]->label[state] = label;
 	else
 	  GHMM_LOG(LWARN, "Ïnvalid label");
@@ -1030,7 +1030,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     if ((!xmlStrcmp(child->name, BAD_CAST "classAlphabet"))) {
       alfa = parseAlphabet(doc, child, f);
       if (alfa) {
-	f->model.d[modelNo]->labelAlphabet = alfa;
+	f->model.d[modelNo]->label_alphabet = alfa;
       } else {
 	GHMM_LOG(LERROR, "Error in parsing alphabets.");
 	goto STOP;

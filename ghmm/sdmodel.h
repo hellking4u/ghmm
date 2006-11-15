@@ -179,10 +179,10 @@ extern "C" {
   /** Store for each state a class label. Limits the possibly state sequence
 
       Note: label != NULL iff (model_type & kLabeledStates) != 0  */
-    int * label;
-    ghmm_alphabet * labelAlphabet;
+    int* label;
+    ghmm_alphabet* label_alphabet;
 
-    ghmm_alphabet * alphabet;
+    ghmm_alphabet* alphabet;
   };
 
   typedef struct ghmm_dsmodel ghmm_dsmodel;

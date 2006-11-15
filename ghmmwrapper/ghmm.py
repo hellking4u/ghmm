@@ -1148,7 +1148,7 @@ class HMMOpenFactory(HMMFactory):
                 emission_domain = Alphabet([], cmodel.alphabet)
                 #print emission_domain
             if modelType & ghmmwrapper.kLabeledStates:
-                labelDomain = LabelDomain([], cmodel.labelAlphabet)
+                labelDomain = LabelDomain([], cmodel.label_alphabet)
                 #print labelDomain
                 m = hmmClass(emission_domain, distribution(emission_domain), labelDomain, cmodel)
             else:
@@ -3151,6 +3151,20 @@ class StateLabelHMM(DiscreteEmissionHMM):
             else:
                 assert loglikelihoodCutoff != None
                 self.cmodel.label_baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
+
+
+    def write(self,fileName):
+        """ Writes HMM to file 'fileName'.
+
+        """
+        if self.cmodel.alphabet is None:
+            self.cmodel.alphabet = self.emissionDomain.toCstruct()
+            
+        if self.cmodel.label_alphabet is None:
+            self.cmodel.label_alphabet = self.labelDomain.toCstruct()
+
+        self.cmodel.write_xml(fileName)
+
 
 
 class GaussianEmissionHMM(HMM):
