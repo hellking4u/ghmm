@@ -170,10 +170,10 @@ typedef struct {
   /** Store for each state a class label. Limits the possibly state sequence
 
       Note: label != NULL iff (model_type & kLabeledStates) != 0  */
-  int * label;
-  ghmm_alphabet * labelAlphabet;
+  int* label;
+  ghmm_alphabet* label_alphabet;
 
-  ghmm_alphabet * alphabet;
+  ghmm_alphabet* alphabet;
 } ghmm_dmodel;
 
 #ifdef __cplusplus
@@ -568,7 +568,7 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
   void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo);
 
 /**
-   Writes a xml file and returns an array of dmodel pointer
+   Reads a xml file and returns an array of dmodel pointer
    @return           :array of dmodels, NULL on error
    @param file       :filename of the xml file
    @param mo_number  :address of an int to store the length of the returned array
