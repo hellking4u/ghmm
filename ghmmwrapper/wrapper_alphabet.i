@@ -10,6 +10,7 @@ typedef struct {
             ghmm_alphabet* a = calloc(1, sizeof(ghmm_alphabet));
             a->symbols = calloc(size, sizeof(char*));
             a->description = desc;
+            a->size = size;
             return a;
         }
        ~ghmm_alphabet() {
@@ -22,5 +23,5 @@ typedef struct {
         }
 
         char* getSymbol(size_t index) { return self->symbols[index]; }
-        void  setSymbol(char* s, size_t index) { self->symbols[index] = s; }
+        void  setSymbol(size_t index, char* s) { self->symbols[index] = s; }
 }
