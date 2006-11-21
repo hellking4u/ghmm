@@ -233,7 +233,7 @@ CFLAGS="$CFLAGS $LIBXML2_CFLAGS"
 
 
 dnl final configuration
-SUBDIRS="ghmm tools tests doc VisualC"
+SUBDIRS="ghmm tools tests doc"
 
 dnl optional c++ use
 AC_ARG_ENABLE(ghmmXX,
