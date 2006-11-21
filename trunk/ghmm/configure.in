@@ -68,6 +68,7 @@ AC_PATH_PROG(RM,rm)
 AC_PATH_PROG(DOCXX,doc++)
 AC_PATH_PROG(LATEX,latex)
 AC_PATH_PROG(DVIPS,dvips)
+AC_PATH_PROG(PKGCONFIG,pkg-config)
 
 AC_PATH_PROG(EXPECT_FOR_DEJAGNU,expect)
 AC_PATH_PROG(RUNTEST_FOR_DEJAGNU,runtest)
@@ -217,17 +218,16 @@ AC_ARG_WITH(rng,
 
 dnl libxml2 checks
 echo -n "checking libxml2 version... "
-if pkg-config --atleast-version=2.6 libxml-2.0; then
-        echo `pkg-config --modversion libxml-2.0` "... ok"
-pkg_modules="$pkg_modules libxml-2.0"
+if $PKGCONFIG --atleast-version=2.6 libxml-2.0; then
+        echo "... ok"
 else
-        echo `pkg-config --modversion libxml-2.0`
-        AC_MSG_ERROR(Failed: please install atleast libxml-2.6.0)
+        echo `$PKGCONFIG --modversion libxml-2.0`
+        AC_MSG_ERROR(Failed: please install at least libxml-2.6.0)
 fi
 
-PKG_CHECK_MODULES(LIBXML2, [$pkg_modules])
-AC_SUBST(LIBXML2_CFLAGS)
-AC_SUBST(LIBXML2_LIBS)
+LIBXML2_CFLAGS=`$PKGCONFIG --cflags libxml-2.0`
+LIBXML2_LIBS=`$PKGCONFIG --libs libxml-2.0`
+
 LIBS="$LIBS $LIBXML2_LIBS"
 CFLAGS="$CFLAGS $LIBXML2_CFLAGS"
 
