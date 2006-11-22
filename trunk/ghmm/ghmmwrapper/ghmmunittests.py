@@ -161,12 +161,11 @@ class EmissionSequenceTests(unittest.TestCase):
         self.d_seq[1] = 8.34
         self.assertEqual(self.d_seq[1],8.34) 
     
-    def testwrite(self):
-        # print"\ntestwrite ",
+    def testFileIO(self):
+        # print"\ntestFileIO ",
         self.i_seq.write("testdata/es_discrete_testwrite.seq")
         self.d_seq.write("testdata/es_continuous_testwrite.seq")
 
-    def testread(self):
         discrete_seq   = ghmm.EmissionSequence(self.i_dom, "testdata/es_discrete_testwrite.seq")
         continuous_seq = ghmm.EmissionSequence(self.d_dom, "testdata/es_continuous_testwrite.seq")
         
