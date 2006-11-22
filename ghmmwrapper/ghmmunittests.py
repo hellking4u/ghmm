@@ -880,7 +880,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.assertEqual(scale, lscale)
 
     def testalldifferentlabelsforward(self):
-        model2  = self.oneModel(['One']*11)
+        model2  = self.oneModel(self.allLabels)
         
         labelSequence = self.allLabels*4
 
@@ -888,9 +888,9 @@ class StateLabelHMMTests(unittest.TestCase):
         for i in range(len(labelSequence)):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
 
-        Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain,labelSequence)
-        
-        (logp, alpha, scale) =  model2.forwardLabels( Seq, labelSequence)
+        Seq = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain, labelSequence)
+
+        (logp, alpha, scale) =  model2.forwardLabels(Seq, labelSequence)
 
         #check if the beta matrix is 0 or different from 0 at the appropriate entries 
         for i in range(len(alpha)):
