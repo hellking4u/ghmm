@@ -62,6 +62,6 @@ m2.setTieGroups(t)
 #m2.baumWelch(train,3,10)
 print m2
 m2.updateTieGroups()
-print "nach update"
+print "after update"
 print m2
 #m2.baumWelch(train,3,10)
