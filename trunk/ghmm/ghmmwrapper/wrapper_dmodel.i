@@ -237,6 +237,18 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
         int  getSilent(size_t index) { return self->silent[index]; }
         void setSilent(size_t index, int value) { self->silent[index] = value; }
 
+        int  getTiedTo(size_t index) { return self->tied_to[index]; }
+        void setTiedTo(size_t index, int value) { self->tied_to[index] = value; }
+
+        int  getOrder(size_t index) { return self->order[index]; }
+        void setOrder(size_t index, int value) { self->order[index] = value; }
+
+        int  getBackgroundID(size_t index) { return self->background_id[index]; }
+        void setBackgroundID(size_t index, int value) { self->background_id[index] = value; }
+
+        int  getStateLabel(size_t index) { return self->label[index]; }
+        void setStateLabel(size_t index, int value) { self->label[index] = value; }
+
         void setModelTypeFlag(unsigned int flag) { self->model_type |= flag; }
 }
 
