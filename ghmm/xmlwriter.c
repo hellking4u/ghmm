@@ -70,6 +70,31 @@
             GHMM_LOG(LERROR, estr); m_free(estr); goto STOP;} else
 
 
+/* ========================================================================= */
+static unsigned char * replaceXMLEntity(unsigned char* str) {
+#define CUR_PROC "replaceXMLEntity"
+  int i, written = 0;
+  int len = strlen(str);
+  char* retval = malloc(len*4+1);
+  for (i=0; i<len; ++i) {
+    switch (str[i]) {
+    case '<':
+      strncpy(retval, "&lt;", 4);
+      written += 4;
+      break;
+    case '>':
+      strncpy(retval, "&gt;", 4);
+      written += 4;
+      break;
+    default:
+      retval[written++] = str[i];
+    }
+  }
+  retval[written++] = '\0';
+
+  return realloc(retval, written);
+#undef CUR_PROC
+}
 
 /* ========================================================================= */
 static char * strModeltype(int modelType) {
@@ -179,7 +204,7 @@ static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa, int type
       goto STOP;
     }
     
-    if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST alfa->symbols[i])) {
+    if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST replaceXMLEntity(alfa->symbols[i]))) {
       estr = ighmm_mprintf(NULL, 0, "failed to write symbol %s with code %d",
 			   alfa->symbols[i], i);
       GHMM_LOG(LERROR, estr);
@@ -222,9 +247,15 @@ static int writeBackground(xmlTextWriterPtr writer, ghmm_dbackground* bg) {
       m_free(estr);
       return -1;
     }
-    
-    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST bg->name[i]))
-      GHMM_LOG(LERROR, "Error at writing background key");
+
+    if (!(bg->name)) {
+      if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "key", "bg_%d", i))
+        GHMM_LOG(LERROR, "Error at writing background key");
+    }
+    else {
+      if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST bg->name[i]))
+        GHMM_LOG(LERROR, "Error at writing background key");
+    }
 
     if (0 < bg->order[i])
       if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "order", "%d", bg->order[i]))
@@ -313,17 +344,17 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
   if (f->model.d[moNo]->model_type & GHMM_kBackgroundDistributions) {
     bgId = f->model.d[moNo]->background_id[sNo];
     if (bgId != GHMM_kNoBackgroundDistribution) {
-      if (f->model.d[moNo]->bp->name[bgId]) {
-	rc = xmlTextWriterWriteElement(writer, BAD_CAST "backgroundKey",
-				       BAD_CAST f->model.d[moNo]->bp->name[bgId]);
-	if (rc<0) {
-	  GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement (backgroundKey)");
-	  goto STOP;
-	}
-      } else {
-	GHMM_LOG(LERROR, "background name is NULL pointer, invalid model");
-	goto STOP;
+/*       if (f->model.d[moNo]->bp->name[bgId]) { */
+      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "backgroundKey", "bg_%d", bgId);
+/* 				       BAD_CAST f->model.d[moNo]->bp->name[bgId]); */
+      if (rc<0) {
+        GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement (backgroundKey)");
+        goto STOP;
       }
+/*       } else { */
+/* 	GHMM_LOG(LERROR, "background name is NULL pointer, invalid model"); */
+/* 	goto STOP; */
+/*       } */
     }
   }
 
@@ -669,7 +700,7 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
   
   /* write state description */
   if (w_desc) {
-    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", w_desc))
+    if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", BAD_CAST replaceXMLEntity(w_desc)))
       GHMM_LOG(LERROR, "writing state description failed");
   }
 
@@ -957,6 +988,8 @@ void ghmm_xmlfile_write(ghmm_xmlfile* f, const char *file) {
    * library used.
    */
   LIBXML_TEST_VERSION
+
+    xmlSubstituteEntitiesDefault(1);
 
   /* Create a new XmlWriter for DOM, with no compression. */
   writer = xmlNewTextWriterDoc(&doc, 0);
