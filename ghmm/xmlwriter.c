@@ -174,7 +174,6 @@ static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa, int type
 #define CUR_PROC "writeAlphabet"
 
   int i;
-  char * estr;
 
   if (0 > xmlTextWriterStartElement(writer, BAD_CAST (type == kAlphabet ? "alphabet" : "classAlphabet"))) {
     GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement");
@@ -182,40 +181,29 @@ static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa, int type
   }
   
   if (type == kAlphabet)
-    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "id", "%d", alfa->id)) {
-      estr = ighmm_mprintf(NULL, 0, "failed to write id-attribute for alphabet"
-                           "with id %d", alfa->id);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
-    }
+    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "id", "%d", alfa->id))
+      GHMM_LOG_PRINTF(LERROR, LOC "failed to write id-attribute for alphabet"
+               "with id %d", alfa->id);
   
   for (i=0; i<alfa->size; i++) {
     if (0 > xmlTextWriterStartElement(writer, BAD_CAST "symbol")) {
-      estr = ighmm_mprintf(NULL, 0, "failed to start symbol-tag no %d", i);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
+      GHMM_LOG_PRINTF(LERROR, LOC "failed to start symbol-tag no %d", i);
       goto STOP;
     }
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "code", "%d", i)) {
-      estr = ighmm_mprintf(NULL, 0, "failed to write code-attribute for symbol %s"
+      GHMM_LOG_PRINTF(LERROR, LOC "failed to write code-attribute for symbol %s"
 			   "with code %d", alfa->symbols[i], i);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
       goto STOP;
     }
     
     if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST replaceXMLEntity(alfa->symbols[i]))) {
-      estr = ighmm_mprintf(NULL, 0, "failed to write symbol %s with code %d",
+      GHMM_LOG_PRINTF(LERROR, LOC "failed to write symbol %s with code %d",
 			   alfa->symbols[i], i);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
       goto STOP;
     }
     
     if (0 > xmlTextWriterEndElement(writer)) {
-      estr = ighmm_mprintf(NULL, 0, "failed to end symbol-tag no %d", i);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
+      GHMM_LOG_PRINTF(LERROR, LOC "failed to end symbol-tag no %d", i);
       goto STOP;
     }
   }
@@ -237,14 +225,11 @@ static int writeBackground(xmlTextWriterPtr writer, ghmm_dbackground* bg) {
   
   int i;
   char * tmp=NULL;
-  char * estr;
 
   for (i=0; i<bg->n; i++) {
 
     if (0 > xmlTextWriterStartElement(writer, BAD_CAST "background")) {
-      estr = ighmm_mprintf(NULL, 0, "Error at starting backgroung %d", i);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
+      GHMM_LOG_PRINTF(LERROR, LOC "Error at starting backgroung %d", i);
       return -1;
     }
 
@@ -306,7 +291,7 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
 
   if (f->model.d[moNo]->s[sNo].fix)
     if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
-      GHMM_LOG(LERROR, "failed to write fixed attriute");
+      GHMM_LOG(LERROR, "failed to write fixed attribute");
       goto STOP;
     }
 
