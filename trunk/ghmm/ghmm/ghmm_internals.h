@@ -1,3 +1,38 @@
+/*******************************************************************************
+*
+*       This file is part of the General Hidden Markov Model Library,
+*       GHMM version __VERSION__, see http://ghmm.org
+*
+*       Filename: ghmm/ghmm/logging.c
+*       Authors:  Janne Grunau
+*
+*       Copyright (C) 1998-2004 Alexander Schliep 
+*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+*	Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik, 
+*                               Berlin
+*                                   
+*       Contact: schliep@ghmm.org             
+*
+*       This library is free software; you can redistribute it and/or
+*       modify it under the terms of the GNU Library General Public
+*       License as published by the Free Software Foundation; either
+*       version 2 of the License, or (at your option) any later version.
+*
+*       This library is distributed in the hope that it will be useful,
+*       but WITHOUT ANY WARRANTY; without even the implied warranty of
+*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*       Library General Public License for more details.
+*
+*       You should have received a copy of the GNU Library General Public
+*       License along with this library; if not, write to the Free
+*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*
+*       This file is version $Revision$ 
+*                       from $Date$
+*             last change by $Author$.
+*
+*******************************************************************************/
 #ifndef GHMM_INTERNALS_H
 #define GHMM_INTERNALS_H
 
@@ -157,17 +192,14 @@ int ghmm_dmodel_label_gradient_expectations(ghmm_dmodel *mo, double **alpha, dou
 #define LERROR      1
 #define LCRITIC     0
 
-#define LOCUS         __FILE__":"CUR_PROC"(" TOSTRING(__LINE__) "): "
-#define TOSTRING(x) STRINGIFY(x)
+#define LOC          __FILE__":"CUR_PROC"(" TOSTRING(__LINE__) "): "
+#define TOSTRING(x)  STRINGIFY(x)
 #define STRINGIFY(x) # x
 
+#define GHMM_LOG(level, estr)       GHMM_LOG_PRINTF(level, LOC, estr)
+#define GHMM_LOG_QUEUED(level)      GHMM_LOG_PRINTF(level, LOC, NULL)
 
-#define GHMM_LOG_QUEUED(level)      ighmm_logging(level, LOCUS , NULL)
-
-#define GHMM_LOG(level, str)        ighmm_logging(level, LOCUS, str)
-
-
-void ighmm_logging(int level, const char * proc, const char * str);
+void GHMM_LOG_PRINTF(int level, const char* loc, const char* str, ...);
 
 void ighmm_queue_mes(char * text);
 
