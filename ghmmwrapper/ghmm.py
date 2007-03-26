@@ -3207,8 +3207,8 @@ class GaussianEmissionHMM(HMM):
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
-        mu = ghmmwrapper.double_array_getitem(state.mue, 0)
-        sigma = ghmmwrapper.double_array_getitem(state.u,0)
+        mu    = state.getMean(0)
+        sigma = state.getStdDev(0)
         return (mu, sigma)
 
     def setEmission(self, i, (mu, sigma)):
@@ -3218,8 +3218,8 @@ class GaussianEmissionHMM(HMM):
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
-        state.setMue(0, float(mu))  # GHMM C is german: mue instead of mu
-        state.setU(0, float(sigma))
+        state.setMean(0, float(mu))  # GHMM C is german: mue instead of mu
+        state.setStdDev(0, float(sigma))
 
     def getMixtureFix(self,state):
         s = self.cmodel.getState(state)
@@ -3687,10 +3687,10 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
     def getEmission(self, i, comp):
         """ Return (mu, sigma^2, weight) of component 'comp' in state 'i'  """
-        state = self.cmodel.getState(i)
-        mu = ghmmwrapper.double_array_getitem(state.mue, comp)
-        sigma = ghmmwrapper.double_array_getitem(state.u,comp)
-        weigth = ghmmwrapper.double_array_getitem(state.c,comp)
+        state  = self.cmodel.getState(i)
+        mu     = state.getMean(comp)
+        sigma  = state.getStdDev(comp)
+        weigth = state.getWeight(comp)
         return (mu, sigma, weigth)
 
     def setEmission(self, i, comp,(mu, sigma, weight)):
@@ -3700,10 +3700,10 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
-        state.mue[comp] = float(mu)  # GHMM C is german: mue instead of mu
-        state.u[comp] = float(sigma)
-        state.c[comp] = float(weight)
-	
+        state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
+        state.setStdDev(comp, float(sigma))
+        state.setWeight(comp, float(weight))
+
     def getEmissionProbability(self, value, state):
         return self.cmodel.calc_b(state, value)
 
@@ -3874,15 +3874,15 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         (type, mu, sigma^2, max, weight) - for a right trunc gaussian
         (type, max, mix, weight) - for a uniform
         """
-        state = self.cmodel.getState(i)
-        mu = ghmmwrapper.double_array_getitem(state.mue, comp) 
-        sigma = ghmmwrapper.double_array_getitem(state.u,comp)
-        weigth = ghmmwrapper.double_array_getitem(state.c,comp)
-        type = ghmmwrapper.get_density(state,comp)
+        state  = self.cmodel.getState(i)
+        mu     = state.getMean(comp) 
+        sigma  = state.getStdDev(comp)
+        weigth = state.getWeight(comp)
+        type   = state.getDensity(comp)
         if ((type == ghmmwrapper.uniform) or (type == ghmmwrapper.normal)):
             return (type, mu, sigma, weigth)
         else:
-            a = ghmmwrapper.double_array_getitem(state.a,comp)
+            a = state.getTruncate(comp)
             return (type, mu, sigma, a, weigth)
 
     def setEmission(self, i, comp, type, (mu, sigma, weight, a)):
@@ -3892,10 +3892,10 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
-        state.mue[comp] = float(mu)  # GHMM C is german: mue instead of mu
-        state.u[comp] = float(sigma)
-        state.c[comp] = float(weight)
-        state.a[comp] = float(a)
+        state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
+        state.setStdDev(comp, float(sigma))
+        state.setWeight(comp, float(weight))
+        state.setTruncate(comp, float(a))
         state.setDensity(comp, int(type))
 	
     def getEmissionProbability(self, value, state):
