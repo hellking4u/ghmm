@@ -74,9 +74,18 @@ typedef struct ghmm_cstate {
 %extend ghmm_cstate {
         int alloc(int M, int in_states, int out_states, int cos);
 
-        void setDensity(size_t comp, ghmm_density_t type) { self->density[comp] = type; }
-        void setMue(size_t i, double value) { self->mue[i] = value; }
-        void setU(size_t i, double value) { self->u[i] = value; }
+        void  setDensity(size_t i, ghmm_density_t type) { self->density[i] = type; }
+        void   setWeight(size_t i, double value)        { self->c[i]       = value; }
+        void     setMean(size_t i, double value)        { self->mue[i]     = value; }
+        void   setStdDev(size_t i, double value)        { self->u[i]       = value; }
+        void setTruncate(size_t i, double value)        { self->a[i]       = value; }
+
+        ghmm_density_t getDensity(size_t i) { return self->density[i]; }
+        double          getWeight(size_t i) { return self->c[i]; }
+        double            getMean(size_t i) { return self->mue[i]; }
+        double          getStdDev(size_t i) { return self->u[i]; }
+        double        getTruncate(size_t i) { return self->a[i]; }
+
 
         int getInState(size_t index) { return self->in_id[index]; }
         int getOutState(size_t index) { return self->out_id[index]; }
