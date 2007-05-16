@@ -59,7 +59,7 @@ typedef struct {
   /** if fix == 1 --> b stays fix during the training */
   int fix;
   /** contains a description of the state (null terminated utf-8)*/
-  unsigned char * desc;
+  char * desc;
   /** x coordinate position for graph representation plotting **/
   int xPosition;
   /** y coordinate position for graph representation plotting **/

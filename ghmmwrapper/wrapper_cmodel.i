@@ -17,8 +17,8 @@ typedef enum {
 
 %inline %{
         ghmm_density_t* density_array_alloc(size_t length) { return malloc(length*sizeof(ghmm_density_t)); }
-        ghmm_density_t  density_array_getitem(int* self, size_t index) { return self[index]; }
-        void            density_array_setitem(int* self, size_t index, ghmm_density_t value) { self[index] = value; }
+        ghmm_density_t  density_array_getitem(ghmm_density_t* self, size_t index) { return self[index]; }
+        void            density_array_setitem(ghmm_density_t* self, size_t index, ghmm_density_t value) { self[index] = value; }
 %}
 
 
@@ -64,7 +64,7 @@ typedef struct ghmm_cstate {
         mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
   int *mixture_fix;
   /** contains a description of the state (null terminated utf-8)*/
-  unsigned char * desc;
+  char* desc;
   /** x coordinate position for graph representation plotting **/
   int xPosition;
   /** y coordinate position for graph representation plotting **/
@@ -90,7 +90,9 @@ typedef struct ghmm_cstate {
         int getInState(size_t index) { return self->in_id[index]; }
         int getOutState(size_t index) { return self->out_id[index]; }
 
-        double getInProb(size_t index, size_t c) { return self->in_a[c][index]; }
+        double getInProb(size_t index)            { return self->in_a[0][index]; }
+        double getInProb(size_t index, size_t c)  { return self->in_a[c][index]; }
+        double getOutProb(size_t index)           { return self->out_a[0][index]; }
         double getOutProb(size_t index, size_t c) { return self->out_a[c][index]; }
 }
 
@@ -157,7 +159,7 @@ typedef struct ghmm_cmodel {
   double prior;
 
   /* contains a arbitrary name for the model (null terminated utf-8) */
-  unsigned char * name;
+  char * name;
 
   /** All states of the model. Transition probs are part of the states. */
   ghmm_cstate *s;
