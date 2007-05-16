@@ -182,28 +182,28 @@ static int writeAlphabet(xmlTextWriterPtr writer, ghmm_alphabet * alfa, int type
   
   if (type == kAlphabet)
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "id", "%d", alfa->id))
-      GHMM_LOG_PRINTF(LERROR, LOC "failed to write id-attribute for alphabet"
+      GHMM_LOG_PRINTF(LERROR, LOC, "failed to write id-attribute for alphabet"
                "with id %d", alfa->id);
   
   for (i=0; i<alfa->size; i++) {
     if (0 > xmlTextWriterStartElement(writer, BAD_CAST "symbol")) {
-      GHMM_LOG_PRINTF(LERROR, LOC "failed to start symbol-tag no %d", i);
+      GHMM_LOG_PRINTF(LERROR, LOC, "failed to start symbol-tag no %d", i);
       goto STOP;
     }
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "code", "%d", i)) {
-      GHMM_LOG_PRINTF(LERROR, LOC "failed to write code-attribute for symbol %s"
+      GHMM_LOG_PRINTF(LERROR, LOC, "failed to write code-attribute for symbol %s"
 			   "with code %d", alfa->symbols[i], i);
       goto STOP;
     }
     
     if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST replaceXMLEntity(alfa->symbols[i]))) {
-      GHMM_LOG_PRINTF(LERROR, LOC "failed to write symbol %s with code %d",
+      GHMM_LOG_PRINTF(LERROR, LOC, "failed to write symbol %s with code %d",
 			   alfa->symbols[i], i);
       goto STOP;
     }
     
     if (0 > xmlTextWriterEndElement(writer)) {
-      GHMM_LOG_PRINTF(LERROR, LOC "failed to end symbol-tag no %d", i);
+      GHMM_LOG_PRINTF(LERROR, LOC, "failed to end symbol-tag no %d", i);
       goto STOP;
     }
   }
@@ -229,7 +229,7 @@ static int writeBackground(xmlTextWriterPtr writer, ghmm_dbackground* bg) {
   for (i=0; i<bg->n; i++) {
 
     if (0 > xmlTextWriterStartElement(writer, BAD_CAST "background")) {
-      GHMM_LOG_PRINTF(LERROR, LOC "Error at starting backgroung %d", i);
+      GHMM_LOG_PRINTF(LERROR, LOC, "Error at starting backgroung %d", i);
       return -1;
     }
 
@@ -551,7 +551,7 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
   if (f->model.c[moNo]->s[sNo].fix)
     allFixed = 1;
 
-  for(i=0;i<f->model.c[moNo]->s[sNo].M;i++){
+  for(i=0; i < f->model.c[moNo]->s[sNo].M; i++){
     switch (f->model.c[moNo]->s[sNo].density[i]) {
       case normal:
         if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normal")) {
@@ -561,7 +561,7 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
 	WRITE_DOUBLE_ATTRIBUTE(writer, "mean", f->model.c[moNo]->s[sNo].mue[i]);
 	WRITE_DOUBLE_ATTRIBUTE(writer, "variance", f->model.c[moNo]->s[sNo].u[i]);
         break;       
-      case normal_left:     
+      case normal_left:
         if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normalTruncatedLeft")) {
           GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (normalTruncatedLeft)");
           goto STOP;
@@ -588,7 +588,7 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
         WRITE_DOUBLE_ATTRIBUTE(writer, "max", f->model.c[moNo]->s[sNo].mue[i]);
         break;
       default:
-        GHMM_LOG(LERROR, "invalid density");
+        GHMM_LOG_PRINTF(LERROR, LOC, "invalid density %d at position %d", f->model.c[moNo]->s[sNo].density[i], i);
 	goto STOP;
     }
   
