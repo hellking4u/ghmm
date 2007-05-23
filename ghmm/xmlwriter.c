@@ -278,57 +278,66 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
   int bgId, cLabel, rc, order, tied;
   char * tmp=NULL;
 
-  /* writing discrete distribution */
-  if (0 > xmlTextWriterStartElement(writer, BAD_CAST "discrete")) {
-    GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (discrete)");
-    goto STOP;
-  }
-
-  if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "id", BAD_CAST "0")) {
-    GHMM_LOG(LERROR, "failed to write alphabet id");
-    goto STOP;
-  }
-
-  if (f->model.d[moNo]->s[sNo].fix)
-    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
-      GHMM_LOG(LERROR, "failed to write fixed attribute");
-      goto STOP;
-    }
-
   if (f->model.d[moNo]->model_type & GHMM_kSilentStates && f->model.d[moNo]->silent[sNo])
-    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "silent", BAD_CAST "1")) {
-      GHMM_LOG(LERROR, "failed to write silent attribute");
+  {
+    if (0 > xmlTextWriterStartElement(writer, BAD_CAST "silent")) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (silent)");
       goto STOP;
     }
-
-  if ((f->model.d[moNo]->model_type & GHMM_kHigherOrderEmissions)
-      && f->model.d[moNo]->order[sNo]) {
-    order = f->model.d[moNo]->order[sNo];
-    if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "order", "%d", order)) {
-      GHMM_LOG(LERROR, "failed to write order attribute for discrete distribution");
+    /* end silent */
+    if (0 > xmlTextWriterEndElement(writer)) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (silent)");
       goto STOP;
     }
-  } else
-    order = 0;
-
-  tmp = doubleArrayToCSV(f->model.d[moNo]->s[sNo].b, pow(f->model.d[moNo]->M, order+1));
-  if (tmp) {
-    if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST tmp)) {
-      GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw while writing"
-	       "discrete distribution CSV");
-      m_free(tmp);
-      goto STOP;
-    }
-    m_free(tmp);
-  } else {
-    GHMM_LOG(LERROR, "converting array to CSV failed for discrete distribution");
-    goto STOP;
   }
+  else
+  {
+    /* writing discrete distribution */
+    if (0 > xmlTextWriterStartElement(writer, BAD_CAST "discrete")) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (discrete)");
+      goto STOP;
+    }
+
+    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "id", BAD_CAST "0")) {
+      GHMM_LOG(LERROR, "failed to write alphabet id");
+      goto STOP;
+    }
+
+    if (f->model.d[moNo]->s[sNo].fix)
+      if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
+        GHMM_LOG(LERROR, "failed to write fixed attribute");
+        goto STOP;
+      }
+
+    if ((f->model.d[moNo]->model_type & GHMM_kHigherOrderEmissions)
+        && f->model.d[moNo]->order[sNo]) {
+      order = f->model.d[moNo]->order[sNo];
+      if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "order", "%d", order)) {
+        GHMM_LOG(LERROR, "failed to write order attribute for discrete distribution");
+        goto STOP;
+      }
+    } else
+      order = 0;
+
+    tmp = doubleArrayToCSV(f->model.d[moNo]->s[sNo].b, pow(f->model.d[moNo]->M, order+1));
+    if (tmp) {
+      if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST tmp)) {
+        GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw while writing"
+                 "discrete distribution CSV");
+        m_free(tmp);
+        goto STOP;
+      }
+      m_free(tmp);
+    } else {
+      GHMM_LOG(LERROR, "converting array to CSV failed for discrete distribution");
+      goto STOP;
+    }
   
-  /* end discrete distribution */
-  if (0 > xmlTextWriterEndElement(writer)) {
-    GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (discrete)");
-    goto STOP;
+    /* end discrete distribution */
+    if (0 > xmlTextWriterEndElement(writer)) {
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (discrete)");
+      goto STOP;
+    }
   }
 
   /* writing backgroung key */
@@ -430,12 +439,6 @@ static int writeDiscreteSwitchingStateContents(xmlTextWriterPtr writer,
   if (f->model.ds[moNo]->s[sNo].fix)
     if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
       GHMM_LOG(LERROR, "failed to write fixed attriute");
-      goto STOP;
-    }
-
-  if (f->model.ds[moNo]->model_type & GHMM_kSilentStates && f->model.ds[moNo]->silent[sNo])
-    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "silent", BAD_CAST "1")) {
-      GHMM_LOG(LERROR, "failed to write silent attribute");
       goto STOP;
     }
 
@@ -694,7 +697,7 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
 
   /* write initial probability as attribute */
   WRITE_DOUBLE_ATTRIBUTE(writer, "initial", w_pi);
-  
+
   /* write state description */
   if (w_desc) {
     if (xmlTextWriterWriteAttribute(writer, BAD_CAST "desc", BAD_CAST replaceXMLEntity(w_desc)))
