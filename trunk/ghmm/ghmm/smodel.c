@@ -118,6 +118,7 @@ ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
   ARRAY_CALLOC(mo, 1);
   mo->N = N;
   mo->M = 0;
+  mo->model_type = modeltype;
   ARRAY_CALLOC(mo->s, N);
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */

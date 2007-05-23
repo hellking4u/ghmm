@@ -161,6 +161,10 @@ typedef struct ghmm_cmodel {
   /* contains a arbitrary name for the model (null terminated utf-8) */
   char * name;
 
+  /** Contains bit flags for varios model extensions such as
+      kSilentStates (see ghmm.h for a complete list) */
+  int model_type;
+
   /** All states of the model. Transition probs are part of the states. */
   ghmm_cstate *s;
 

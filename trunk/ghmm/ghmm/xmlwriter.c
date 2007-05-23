@@ -104,7 +104,7 @@ static char * strModeltype(int modelType) {
   char * mt;
 
   ARRAY_CALLOC(mt, 200);
-  
+
   if (modelType > 0) {
     if (modelType & GHMM_kLeftRight)
       strcat(mt, "left-right ");
@@ -295,6 +295,12 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
       goto STOP;
     }
 
+  if (f->model.d[moNo]->model_type & GHMM_kSilentStates && f->model.d[moNo]->silent[sNo])
+    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "silent", BAD_CAST "1")) {
+      GHMM_LOG(LERROR, "failed to write silent attribute");
+      goto STOP;
+    }
+
   if ((f->model.d[moNo]->model_type & GHMM_kHigherOrderEmissions)
       && f->model.d[moNo]->order[sNo]) {
     order = f->model.d[moNo]->order[sNo];
@@ -424,6 +430,12 @@ static int writeDiscreteSwitchingStateContents(xmlTextWriterPtr writer,
   if (f->model.ds[moNo]->s[sNo].fix)
     if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
       GHMM_LOG(LERROR, "failed to write fixed attriute");
+      goto STOP;
+    }
+
+  if (f->model.ds[moNo]->model_type & GHMM_kSilentStates && f->model.ds[moNo]->silent[sNo])
+    if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "silent", BAD_CAST "1")) {
+      GHMM_LOG(LERROR, "failed to write silent attribute");
       goto STOP;
     }
 
@@ -863,7 +875,7 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
     w_name  = f->model.c[number]->name;
-    w_type  = strModeltype(f->modelType);
+    w_type  = strModeltype(f->model.c[number]->model_type);
     w_prior = f->model.c[number]->prior;
     N       = f->model.c[number]->N;
     w_cos   = f->model.c[number]->cos;
