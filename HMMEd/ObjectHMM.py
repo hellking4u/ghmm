@@ -126,7 +126,6 @@ class DiscreteHMMBackground:
         return len(self.name.keys())
 
     def edit(self, master, name):
-        print self.name
         self.values[name].edit(master, "backgound distribution \"%s\""%name)
 
     def editDialog(self, master, hmm):
@@ -276,7 +275,6 @@ class ContinuousEmission(Emission):
             muL.append(mu); uL.append(u); aL.append(a); density_tL.append(density_t);
 
         # write parameters in the state
-        print density_tL
         density_array  = ghmmwrapper.density_array_alloc(len(density_tL))
         for (i,density) in enumerate(density_tL):
             ghmmwrapper.density_array_setitem(density_array, i, density)
@@ -321,6 +319,12 @@ class State(VertexObject):
     def update(self):
         pass
 
+    def normalize(self):
+        weights  = [e.GetWeight() for e in self.outEdges]
+        s = float(sum(weights))
+        for i,edge in enumerate(self.outEdges):
+            edge.SetWeight(weights[i]/s)
+
     def editProperties(self, parent, attributes = None):
         self.update()
         if attributes == None:
@@ -334,12 +338,6 @@ class State(VertexObject):
     def editEmissions(self, master):
         self.emission.edit(master, self.id)
 
-    def getInitialProb(self):
-        return self.initial
-
-    def setInitialProb(self, value):
-        self.initial = value
-
     def WriteCState(self, cstate):
         cstate.pi         = self.initial
         cstate.in_states  = len(self.inEdges)
@@ -352,19 +350,16 @@ class State(VertexObject):
         cstate.fix = self.fixed
 
         self.WriteTransitions(cstate)
-
         self.emission.writeParameters(cstate)
 
     def WriteTransitions(self, cstate):
         inID = [edge.tail.id for edge in self.inEdges]
         inA  = [edge.GetEdgeWeight(0) for edge in self.inEdges]
-        #print inID
         cstate.in_id = ghmmhelper.list2int_array(inID)
         cstate.in_a  = ghmmhelper.list2double_array(inA)
 
         outID = [edge.head.id for edge in self.outEdges]
         outA = [edge.GetEdgeWeight(0) for edge in self.outEdges]
-        #print outID
         cstate.out_id = ghmmhelper.list2int_array(outID)
         cstate.out_a  = ghmmhelper.list2double_array(outA)
 
@@ -388,14 +383,12 @@ class ContinuousState(State):
         #print self.itsHMM.edgeWeights.label
         inID = [edge.tail.id for edge in self.inEdges]
         inA  = [[edge.GetEdgeWeight(0) for edge in self.inEdges]]
-        print "in:", inID, inA
         cstate.in_id = ghmmhelper.list2int_array(inID)
         (mat, lens)  = ghmmhelper.list2double_matrix(inA)
         cstate.in_a  = mat
         
         outID = [edge.head.id for edge in self.outEdges]
         outA  = [[edge.GetEdgeWeight(0) for edge in self.outEdges]]
-        print "out:", outID, outA
         cstate.out_id = ghmmhelper.list2int_array(outID)
         (mat, lens)   = ghmmhelper.list2double_matrix(outA)
         cstate.out_a  = mat
@@ -662,6 +655,12 @@ class Transition(EdgeObject):
         #self.weight = Probability()
         self.editableAttr = {'weight':"Weight"}
 
+    def GetWeight(self):
+        return self.GetEdgeWeight(0)
+
+    def SetWeight(self, value):
+        self.SetEdgeWeight(0, value)
+
     def edit(self, parent, attributes = None):
         if attributes == None:
             editBox = EditObjectAttributesDialog(parent, self, self.editableAttr)
@@ -760,8 +759,23 @@ class ObjectHMM(ObjectGraph):
         return v.id
 
     def DeleteVertex(self, v):
-        del self.vertices_ids[v.id]
+        del self.vertices_ids[v]
         ObjectGraph.DeleteVertex(self, v)
+
+    def AddEdge(self,tail,head):
+        out_edges = len(self.vertices[tail].outEdges)
+        if out_edges > 0:
+            weight = 1.0/out_edges
+        else:
+            weight = 1.0
+        ObjectGraph.AddEdge(self,tail,head)
+        edge = self.edges[tail,head]
+        edge.SetWeight(weight)
+        self.vertices[tail].normalize()
+
+    def DeleteEdge(self,tail,head):
+        ObjectGraph.DeleteEdge(self,tail,head)
+        self.vertices[tail].normalize()
 
     def edit(self, parent, attributes = None):
         if attributes == None:
@@ -1005,7 +1019,6 @@ class ObjectHMM(ObjectGraph):
 
         # fill silent array
         if self.modelType & ghmmwrapper.kSilentStates:
-            print "test", [self.vertices[id].silent for id in sortedIDs]
             self.cmodel.silent = ghmmhelper.list2int_array([self.vertices[id].silent for id in sortedIDs])
 
         # fill tied to array
@@ -1037,7 +1050,6 @@ class ObjectHMM(ObjectGraph):
         if self.modelType & ghmmwrapper.kLabeledStates:
             self.cmodel.label = ghmmhelper.list2int_array([0] * self.Order())
 
-        print "python modeltype", self.modelType
         self.cmodel.model_type = self.modelType
 
         # create each state
@@ -1045,11 +1057,8 @@ class ObjectHMM(ObjectGraph):
             cstate = self.cmodel.getState(i)
             self.vertices[id].WriteCState(cstate)
 
-        print "wrote states"
-
         # write to file
         #writeFunction(filename, castFunction(self.cmodel), 1)
         self.cmodel.write_xml(filename)
-        print "wrote to xml"
 
         self.cmodel = None
