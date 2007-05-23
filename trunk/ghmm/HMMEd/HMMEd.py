@@ -519,7 +519,6 @@ class HMMGraphEditor(SAGraphEditor):
                     weight=self.G.GetEdgeWeight(0,tail,head)
                     label = "-> %d" % head
                     transition_probabilities.update({label:weight})
-                    print "edge weight:", label, weight
                     
                 if transition_probabilities.sum==0:
                     key_list=transition_probabilities.keys()
