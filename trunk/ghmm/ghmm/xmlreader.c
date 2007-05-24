@@ -64,7 +64,7 @@
 #define PTR_TYPE_MASK (GHMM_kDiscreteHMM + GHMM_kTransitionClasses + GHMM_kPairHMM + GHMM_kContinuousHMM)
 
 /* holds all valid modeltypes sorted */
-static int validModelTypes[28] = {
+static int validModelTypes[35] = {
   (GHMM_kDiscreteHMM),
   (GHMM_kDiscreteHMM + GHMM_kLeftRight),
   (GHMM_kDiscreteHMM + GHMM_kSilentStates),
@@ -82,12 +82,19 @@ static int validModelTypes[28] = {
   (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
   (GHMM_kDiscreteHMM + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kTiedEmissions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kHigherOrderEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kHigherOrderEmissions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kTiedEmissions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions),
+  (GHMM_kDiscreteHMM + GHMM_kLabeledStates + GHMM_kBackgroundDistributions + GHMM_kHigherOrderEmissions + GHMM_kTiedEmissions + GHMM_kSilentStates),
   (GHMM_kDiscreteHMM + GHMM_kTransitionClasses),
   (GHMM_kContinuousHMM),
   (GHMM_kContinuousHMM + GHMM_kTransitionClasses),
