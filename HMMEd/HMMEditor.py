@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ################################################################################
 #
-#       This file is part of Gato (Graph Algorithm Toolbox) 
+#       This file is part of ghmm
 #
 #       file:   HMMEd.py
 #       author: Janne Grunau
@@ -10,7 +10,7 @@
 #                                   
 #       Contact: schliep@molgen.mpg.de
 #
-#       Information: http://gato.sf.net
+#       Information: http://ghmm.org
 #
 #       This library is free software; you can redistribute it and/or
 #       modify it under the terms of the GNU Library General Public
@@ -559,7 +559,7 @@ class Start:
         graphEditor = SAGraphEditorToplevel()
         graphEditor.NewGraph()
         import logging
-        log = logging.getLogger("Gred.py")
+        log = logging.getLogger("HMMEditor.py")
         
         ################################################################################
 if __name__ == '__main__':
@@ -577,9 +577,9 @@ if __name__ == '__main__':
     tk.option_add('*ActiveBackground','#EEEEEE')
     tk.option_add('*background','#DDDDDD')
     tk.option_add('Tk*Scrollbar.troughColor','#CACACA')
-    graphEditor = HMMGraphEditor(tk)
-    graphEditor.NewGraph()
+    HMMEditor = HMMGraphEditor(tk)
+    HMMEditor.NewGraph()
     import logging
-    log = logging.getLogger("Gred.py")
-    graphEditor.mainloop()
+    log = logging.getLogger("HMMEditor.py")
+    HMMEditor.mainloop()
     

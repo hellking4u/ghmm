@@ -40,7 +40,7 @@ from Gato.MapEditor import NamedCollectionEditor
 from Gato import ProbEditorBasics, ProbEditorDialogs, ProbEditorContinuous
 import Tkinter
 
-import ghmmwrapper, ghmmhelper, HMMEd
+import ghmmwrapper, ghmmhelper, HMMEditor
 
 class DiscreteHMMAlphabet:
     def __init__(self, names = [], description = "alphabet_1"):
@@ -270,6 +270,9 @@ class DiscreteHigherOrderEmission(DiscreteEmission):
         DiscreteEmission.__init__(self, alphabet)
         self.order = order
 
+    def edit(self, master, description):
+        print "not implemented"
+
     def ReadCState(self, cstate, M):
         self.weights = ghmmhelper.double_array2list(cstate.b, M**self.order)
 
@@ -403,7 +406,6 @@ class State(VertexObject):
         self.emission.ReadCState(cstate, cmodel.M)
 
 
-
 class ContinuousState(State):
 #    def __init__(self, emission=Emission(), hmm=None):
 #        State.__init__(self, emission, hmm)
@@ -458,9 +460,8 @@ class BackgroundState(State):
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
         self.update()
-        print "background id:", cmodel.getBackgroundID(i)
         self.background = PopupableInt(cmodel.getBackgroundID(i)+1)
-        print self.background
+
 
 class LabeledState(State):
     def __init__(self, emission=Emission(), hmm=None):
@@ -478,6 +479,7 @@ class LabeledState(State):
 
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
+        self.update
         self.label = PopupableInt(cmodel.getStateLabel(i))
 
 

@@ -291,14 +291,14 @@ AC_ARG_ENABLE(ghmmXX,
 )
 
 dnl python wrapper can be switched on or off
-AC_ARG_ENABLE(obsolete,
+AC_ARG_ENABLE(python,
               AC_HELP_STRING([--disable-python],
                              [disable build and installation of the python bindings]),
-              if test "x$enable_obsolete" != "xno" ; then
-                 SUBDIRS="$SUBDIRS ghmmwrapper"
+              if test "x$enable_python" != "xno" ; then
+                 SUBDIRS="$SUBDIRS ghmmwrapper HMMEd"
               fi,
               dnl default enabled
-              SUBDIRS="$SUBDIRS ghmmwrapper"
+              SUBDIRS="$SUBDIRS ghmmwrapper HMMEd"
 )
 
 dnl finished
@@ -313,6 +313,7 @@ AC_OUTPUT(Makefile \
           doc/docu.dxx \
           tools/ghmm-config \
           ghmmwrapper/Makefile \
+          HMMEd/Makefile \
           VisualC/Makefile \
           VisualC/coin_toss_test/Makefile \
           VisualC/coin_toss_test_pp/Makefile \
