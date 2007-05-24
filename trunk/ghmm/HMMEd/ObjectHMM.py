@@ -75,6 +75,9 @@ class DiscreteHMMAlphabet:
         # update all states emissions
         for state in self.hmm.vertices.values():
             state.emission.grow()
+        # also update background distributions if needed
+        if self.hmm.modelType & ghmmwrapper.kBackgroundDistributions:
+            self.hmm.backgroundDistributions.grow()
 
     def delete(self, name):
         key = self.name2code[name]
@@ -88,6 +91,9 @@ class DiscreteHMMAlphabet:
         # update all states emissions
         for state in self.hmm.vertices.values():
             state.emission.shrink(key)
+        # also update background distributions if needed
+        if self.hmm.modelType & ghmmwrapper.kBackgroundDistributions:
+            self.hmm.backgroundDistributions.shrink()
 
     def GetKeys(self):
         return self.name.keys()
@@ -157,6 +163,14 @@ class DiscreteHMMBackground:
         del self.name2code[name]
         del self.values[key]
         del self.val2pop[key]
+
+    def grow(self):
+        for emission in self.values.values():
+            emission.grow()
+
+    def shrink(self):
+        for emission in self.values.values():
+            emission.shrink()
 
     def getOrders(self):
         keys = self.name.keys()
