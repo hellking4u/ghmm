@@ -809,11 +809,14 @@ class ObjectHMM(ObjectGraph):
         v.id = self.GetNextVertexID()
         self.vertices[v.id] = v
         self.vertices_ids[v.id+1] = str(v.id)
+        # set the initial probability
+        v.initial = typed_assign(v.initial, 1.0/len(self.vertices))
         return v.id
 
     def DeleteVertex(self, v):
         del self.vertices_ids[v+1]
         ObjectGraph.DeleteVertex(self, v)
+
 
     def AddEdge(self,tail,head):
         out_edges = len(self.vertices[tail].outEdges)
@@ -829,6 +832,7 @@ class ObjectHMM(ObjectGraph):
     def DeleteEdge(self,tail,head):
         ObjectGraph.DeleteEdge(self,tail,head)
         self.vertices[tail].normalize()
+
 
     def edit(self, parent, attributes = None):
         if attributes == None:
