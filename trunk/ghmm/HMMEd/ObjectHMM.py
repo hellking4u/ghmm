@@ -43,7 +43,6 @@ import Tkinter
 import ghmmwrapper, ghmmhelper, HMMEd
 
 class DiscreteHMMAlphabet:
-
     def __init__(self, names = [], description = "alphabet_1"):
         self.id = description
         self.name = {}
@@ -108,13 +107,11 @@ class DiscreteHMMAlphabet:
         #calphabet.description = self.id 
         for i in xrange(len(self.name)):
             calphabet.setSymbol(i, self.name[i])
-        print "wrote alphabet"
 
         return calphabet
 
 
 class DiscreteHMMBackground:
-
     def __init__(self, eclass):
         self.EmissionClass = eclass
         self.nextKey = 0
@@ -364,9 +361,9 @@ class State(VertexObject):
         cstate.out_a  = ghmmhelper.list2double_array(outA)
 
     def ReadCState(self, cmodel, cstate, i):
-        self.initial   = cstate.pi
-        self.fixed     = cstate.fix
-        self.labeling  = cstate.desc
+        self.initial   = ValidatingFloat(cstate.pi)
+        self.fixed     = ValidatingBool(cstate.fix)
+        self.labeling  = ValidatingString(cstate.desc)
 
         if self.itsHMM is not None:
             self.itsHMM.SetEmbedding(self.id, cstate.xPosition, cstate.yPosition)
@@ -409,7 +406,7 @@ class SilentState(State):
 
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
-        self.silent = cmodel.getSilent(i)
+        self.silent = ValidatingBool(cmodel.getSilent(i))
 
     
 class BackgroundState(State):
@@ -428,7 +425,6 @@ class BackgroundState(State):
 
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
-        self.background = cmodel.getBackgroundID(i)
 
 
 class LabeledState(State):
@@ -466,7 +462,8 @@ class TiedState(State):
         
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
-        self.tiedTo = cmodel.getTiedTo(i)
+        self.update()
+        self.tiedto = PopupableInt(cmodel.getTiedTo(i)+1)
 
 
 class SilentBackgroundState(SilentState, BackgroundState):
@@ -710,7 +707,7 @@ class ObjectHMM(ObjectGraph):
         self.emissionClass = emissionClass
         self.type = type
 
-        self.vertices_ids = {}
+        self.vertices_ids = {0:'untied'}
 
         # editable attributes per EditPropertiesDialog
         # common properties:
@@ -755,11 +752,11 @@ class ObjectHMM(ObjectGraph):
         v = self.vertexClass(e, self)
         v.id = self.GetNextVertexID()
         self.vertices[v.id] = v
-        self.vertices_ids[v.id] = str(v.id)
+        self.vertices_ids[v.id+1] = str(v.id)
         return v.id
 
     def DeleteVertex(self, v):
-        del self.vertices_ids[v]
+        del self.vertices_ids[v+1]
         ObjectGraph.DeleteVertex(self, v)
 
     def AddEdge(self,tail,head):
@@ -1023,20 +1020,24 @@ class ObjectHMM(ObjectGraph):
 
         # fill tied to array
         if self.modelType & ghmmwrapper.kTiedEmissions:
-            tied_to = [ghmmwrapper.kUntied] * self.Order()
+            tied_list = [ghmmwrapper.kUntied] * self.Order()
             tieddict = {}
             # map python id to continious C array indeces
             for i, id in enumerate(sortedIDs):
-                if self.vertices[id].tiedto != ghmmwrapper.kUntied:
-                    tieddict[self.vertices[id].tiedto].append(i)
+                tiedto = self.vertices[id].tiedto-1
+                if tiedto != ghmmwrapper.kUntied:
+                    if tieddict.has_key(tiedto):
+                        tieddict[tiedto].append(i)
+                    else:
+                        tieddict[tiedto] = [tiedto, i]
             # tiedto has to be sorted, the first entry points to it self
             for k in tieddict.keys():
                 temp = tieddict[k]
                 temp.sort()
                 first = temp[0]
                 for index in temp:
-                    tied_to[index] = first
-            self.cmodel.tied_to = ghmmhelper.list2int_array(tied_to)
+                    tied_list[index] = first
+            self.cmodel.tied_to = ghmmhelper.list2int_array(tied_list)
 
         # fill background id arrary
         if self.modelType & ghmmwrapper.kBackgroundDistributions:
