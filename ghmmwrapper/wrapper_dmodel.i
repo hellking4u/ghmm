@@ -31,6 +31,7 @@ ghmm_dbackground* ghmm_dbackground_alloc (int n, int m, int* orders, double** B)
         ~ghmm_dbackground() { ghmm_dbackground_free(self); }
 
         int getOrder(size_t index) { return self->order[index]; }
+        double *getWeights(size_t index) {return self->b[index]; }
 }
 
 
