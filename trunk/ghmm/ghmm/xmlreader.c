@@ -573,7 +573,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
     }
 
     /* -------- background name  ------------------------------------------ */
-    if ((!xmlStrcmp(elem->name, BAD_CAST "backgroundName"))) {
+    if ((!xmlStrcmp(elem->name, BAD_CAST "backgroundKey"))) {
       
       assert(f->modelType & GHMM_kBackgroundDistributions);
 

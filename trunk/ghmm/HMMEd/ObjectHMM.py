@@ -114,7 +114,8 @@ class DiscreteHMMAlphabet:
 class DiscreteHMMBackground:
     def __init__(self, eclass):
         self.EmissionClass = eclass
-        self.nextKey = 0
+        self.nextKey = 1
+        self.val2pop = {0:"no background"}
         self.name = {}
         self.name2code = {}
         self.values = {}
@@ -123,7 +124,7 @@ class DiscreteHMMBackground:
         return len(self.name.keys())
 
     def edit(self, master, name):
-        self.values[name].edit(master, "backgound distribution \"%s\""%name)
+        self.values[self.name2code[name]].edit(master, "backgound distribution \"%s\""%name)
 
     def editDialog(self, master, hmm):
         self.hmm = hmm
@@ -144,14 +145,44 @@ class DiscreteHMMBackground:
 
         self.name[key] = name
         self.name2code[name] = key
-        self.values[name] = e
+        self.values[key] = e
+        self.val2pop[key] = name
 
     def delete(self, name):
         key = self.name2code[name]
         del self.name[key]
         del self.name2code[name]
-        del self.values[name]
+        del self.values[key]
+        del self.val2pop[key]
 
+    def getOrders(self):
+        keys = self.name.keys()
+        keys.sort()
+        return [self.values[k].order for k in keys]
+
+    def getWeights(self):
+        keys = self.name.keys()
+        keys.sort()
+        return [self.values[k].weights for k in keys]
+
+    def ReadCBackground(self, alphabet, bp):
+        number  = bp.n
+        M       = bp.m
+        for i in xrange(number):
+            key = self.nextKey
+            self.nextKey += 1
+
+            e = self.EmissionClass(alphabet)
+            e.order   = bp.getOrder(i)
+            e.weights = ghmmhelper.double_array2list(bp.getWeights(i), M**(e.order+1))
+
+            name = "bg_%d"%i
+
+            self.name[key] = name
+            self.name2code[name] = key
+            self.values[key] = e
+            self.val2pop[key] = name
+        
 
 class UniformDensity(ProbEditorContinuous.box_function):
     def getParameters(self):
@@ -190,6 +221,7 @@ class DiscreteEmission(Emission):
             self.weights = [1.0 / self.alphabet.size()] * self.alphabet.size()
         else:
             self.weights = []
+        self.order = 0
 
     def grow(self):
         s = float(self.alphabet.size()-1)
@@ -416,16 +448,19 @@ class BackgroundState(State):
 
     def init(self):
         self.background = PopupableInt()
-        self.background.setPopup(self.itsHMM.backgroundDistributions.name)
+        self.background.setPopup(self.itsHMM.backgroundDistributions.val2pop)
 
     def update(self):
         if len(self.itsHMM.backgroundDistributions.names()) > 0:
             self.editableAttr['background'] = "Background distribution"
-            self.background.setPopup(self.itsHMM.backgroundDistributions.name)
+            self.background.setPopup(self.itsHMM.backgroundDistributions.val2pop)
 
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
-
+        self.update()
+        print "background id:", cmodel.getBackgroundID(i)
+        self.background = PopupableInt(cmodel.getBackgroundID(i)+1)
+        print self.background
 
 class LabeledState(State):
     def __init__(self, emission=Emission(), hmm=None):
@@ -977,7 +1012,8 @@ class ObjectHMM(ObjectGraph):
 
         # Add background distributions if appropiate
         if self.modelType & ghmmwrapper.kBackgroundDistributions:
-            print "TODO: importing Background Distributions"
+            self.backgroundDistributions = DiscreteHMMBackground(self.emissionClass)
+            self.backgroundDistributions.ReadCBackground(self.alphabet, cmodel.bp)
 
         # Add switching functions if appropiate
         if self.modelType & ghmmwrapper.kTransitionClasses:
@@ -1048,7 +1084,12 @@ class ObjectHMM(ObjectGraph):
 
         # fill background id arrary
         if self.modelType & ghmmwrapper.kBackgroundDistributions:
-            self.cmodel.background_id = ghmmhelper.list2int_array([ghmmwrapper.kNoBackgroundDistribution] * self.Order())
+            N = self.backgroundDistributions.size()
+            M = self.alphabet.size()
+            orders = ghmmhelper.list2int_array(self.backgroundDistributions.getOrders())
+            (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
+            self.cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
+            self.cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
         # fill higher order array
         if self.modelType & ghmmwrapper.kHigherOrderEmissions:
@@ -1057,7 +1098,7 @@ class ObjectHMM(ObjectGraph):
         # fil label id array
         if self.modelType & ghmmwrapper.kLabeledStates:
             self.cmodel.label_alphabet = self.label_alphabet.WriteCAlphabet()
-            self.cmodel.label = ghmmhelper.list2int_array([self.vertices[id].label for id in sortedIDs] )
+            self.cmodel.label = ghmmhelper.list2int_array([self.vertices[id].label for id in sortedIDs])
 
         self.cmodel.model_type = self.modelType
 
