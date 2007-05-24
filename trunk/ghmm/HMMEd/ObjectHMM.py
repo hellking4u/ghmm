@@ -443,7 +443,7 @@ class LabeledState(State):
 
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
-        self.label = cmodel.getStateLabel(i)
+        self.label = PopupableInt(cmodel.getStateLabel(i))
 
 
 class TiedState(State):
@@ -961,17 +961,20 @@ class ObjectHMM(ObjectGraph):
             state = cmodel.getState(i)
             for j in xrange(state.out_states):
                 outID = state.getOutState(j)
-                outA  = state.getOutProb(j)
                 tail = vdict[i]
                 head = vdict[outID]
                 self.AddEdge(tail, head)
-                self.edges[tail, head].ReadCTransition(state, cos, j)
 
         # Add alphabet if appropiate
         if self.modelType & ghmmwrapper.kDiscreteHMM:
             self.alphabet = DiscreteHMMAlphabet()
             self.alphabet.ReadCAlphabet(cmodel.alphabet)
         
+        # Add label alphabet
+        if self.modelType & ghmmwrapper.kLabeledStates:
+            self.label_alphabet = DiscreteHMMAlphabet()
+            self.label_alphabet.ReadCAlphabet(cmodel.label_alphabet)
+
         # Add background distributions if appropiate
         if self.modelType & ghmmwrapper.kBackgroundDistributions:
             print "TODO: importing Background Distributions"
@@ -980,11 +983,15 @@ class ObjectHMM(ObjectGraph):
         if self.modelType & ghmmwrapper.kTransitionClasses:
             print "TODO: transition classes???"
 
-        # Set all states' values
+        # Set all states' values and set transition weights
         for i in xrange(cmodel.N):
             state = cmodel.getState(i)
             self.vertices[vdict[i]].ReadCState(cmodel, state, i)
-
+            for j in xrange(state.out_states):
+                outID = state.getOutState(j)
+                tail = vdict[i]
+                head = vdict[outID]
+                self.edges[tail, head].ReadCTransition(state, cos, j)
 
     def writeXML(self, filename="test.xml"):
 
@@ -1045,11 +1052,12 @@ class ObjectHMM(ObjectGraph):
 
         # fill higher order array
         if self.modelType & ghmmwrapper.kHigherOrderEmissions:
-            self.cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.getOrder() for id in sortedIDs])
+            self.cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.order() for id in sortedIDs])
 
         # fil label id array
         if self.modelType & ghmmwrapper.kLabeledStates:
-            self.cmodel.label = ghmmhelper.list2int_array([0] * self.Order())
+            self.cmodel.label_alphabet = self.label_alphabet.WriteCAlphabet()
+            self.cmodel.label = ghmmhelper.list2int_array([self.vertices[id].label for id in sortedIDs] )
 
         self.cmodel.model_type = self.modelType
 
