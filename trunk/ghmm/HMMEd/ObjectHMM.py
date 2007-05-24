@@ -38,9 +38,12 @@ from Gato.ObjectGraph import *
 from Gato.EditObjectAttributesDialog import *
 from Gato.MapEditor import NamedCollectionEditor
 from Gato import ProbEditorBasics, ProbEditorDialogs, ProbEditorContinuous
+
 import Tkinter
 
 import ghmmwrapper, ghmmhelper, HMMEditor
+
+import copy
 
 class DiscreteHMMAlphabet:
     def __init__(self, names = [], description = "alphabet_1"):
@@ -285,8 +288,10 @@ class ContinuousEmission(Emission):
     def edit(self, master, stateId):
         if len(self.plotList) == 0:
             self.plotList.append(NormalDensity(mu=0,sigma=1,color="LightGreen"))
+
+        tmp = [copy.copy(x) for x in self.plotList]
         top = Tkinter.Toplevel(master)
-        d = HMMEd.ContinuousEmissionEditor(top, self.plotList)
+        d = HMMEditor.ContinuousEmissionEditor(top, tmp)
         d.pack(expand=1,fill=Tkinter.BOTH)
         top.withdraw()
         top.title( ("State %d emissions" % stateId))        

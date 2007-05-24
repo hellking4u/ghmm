@@ -51,7 +51,6 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         the entire dialog
         """
         ProbEditorContinuous.gauss_editor.__init__(self, master, plotList, width=300, height=300)
-        self.status = False
         self.normalize = Tkinter.IntVar()
         self.normalize.set(1)
 
@@ -208,19 +207,6 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         s3=string.atof(self.e3.get())
         self.create_new_fkt(ObjectHMM.NormalDensityTruncRight(mu=s1,sigma=s2,tail=s3,a=1.0,color=self.nextColor()))
         self.top.destroy()
-
-
-    def save(self):
-        self.status = True
-        self.destroy()
-        self.root.destroy()
-
-
-    def cancel(self):
-        self.status = False
-        self.destroy()
-        self.root.destroy()
-
 
     def success(self):
         return self.status    
