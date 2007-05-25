@@ -2267,9 +2267,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param order: orders of the distribtions (optional)
    @param B:     matrix of distribution parameters (optional)
 */
-ghmm_dbackground *ghmm_dbackground_alloc (int n, int m,
-                                                                int *orders,
-                                                                double **B)
+ghmm_dbackground *ghmm_dbackground_alloc (int n, int m, int *orders, double **B)
 {
 #define CUR_PROC "ghmm_dbackground_alloc"
   ghmm_dbackground *ptbackground;
@@ -2282,6 +2280,8 @@ ghmm_dbackground *ghmm_dbackground_alloc (int n, int m,
     ptbackground->order = orders;
   if (B)
     ptbackground->b = B;
+
+  ARRAY_CALLOC(ptbackground->name, n);
 
   return ptbackground;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
