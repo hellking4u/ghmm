@@ -219,12 +219,17 @@ class HMMTypeChooser(tkSimpleDialog.Dialog):
         # add standard button box. override if you don't want the
         # standard buttons
         box = Frame(self)
-        b_discrete = Button(box, text="discrete", width=10, command=self.discrete, default=ACTIVE)
-        b_discrete.pack(side=LEFT, padx=5, pady=5)
-        #self.bind("<Return>", self.ok)
-        b_continuous = Button(box, text="continuous", width=10, command=self.continuous, default=ACTIVE)
-        b_continuous.pack(side=LEFT, padx=5, pady=5)
+        b_open = Button(box, text="Open existing HMM", width=30, command=self.open, default=ACTIVE)
+        b_open.pack(side=TOP, padx=5, pady=5)
+        b_discrete = Button(box, text="New HMM with discrete emissions", width=30, command=self.discrete)
+        b_discrete.pack(side=TOP, padx=5, pady=5)
+        b_continuous = Button(box, text="New HMM with continuous emissions", width=30, command=self.continuous)
+        b_continuous.pack(side=BOTTOM, padx=5, pady=5)
         box.pack(side=BOTTOM,fill=X)
+
+    def open(self):
+        self.type = 'open'
+        self.ok()
 
     def discrete(self):
         self.type = 0
@@ -256,7 +261,7 @@ class HMMTypeChooser(tkSimpleDialog.Dialog):
 ##         self.infoText.delete('0.0', END)
 ##         self.infoText.insert('0.0', GatoGlobals.gLGPLText)	
 ##         self.infoText.configure(state=DISABLED)
-        self.title("Choose HMM emission type")
+        self.title("New HMM")
 
 class HMMGraphEditor(SAGraphEditor):
 
@@ -384,10 +389,14 @@ class HMMGraphEditor(SAGraphEditor):
         elif self.mode == 'EditProperties':
             self.EditPropertiesUp(event)
 
-    def NewGraph(self, nrOfSymbols=0):
-        
+
+    def NewGraph(self):
         d = HMMTypeChooser(self.master)
 
+        if d.type == 'open':
+            self.OpenGraph()
+            return
+            
         # Create a new HMM and edit it
         self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition, type=d.type)
         self.G.edit(self)
