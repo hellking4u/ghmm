@@ -182,6 +182,11 @@ class DiscreteHMMBackground:
         keys.sort()
         return [self.values[k].weights for k in keys]
 
+    def getNames(self):
+        keys = self.name.keys()
+        keys.sort()
+        return [self.name[k] for k in keys]
+
     def ReadCBackground(self, alphabet, bp):
         number  = bp.n
         M       = bp.m
@@ -193,7 +198,7 @@ class DiscreteHMMBackground:
             e.order   = bp.getOrder(i)
             e.weights = ghmmhelper.double_array2list(bp.getWeights(i), M**(e.order+1))
 
-            name = "bg_%d"%i
+            name = bp.getName(i)
 
             self.name[key] = name
             self.name2code[name] = key
@@ -1114,6 +1119,7 @@ class ObjectHMM(ObjectGraph):
             orders = ghmmhelper.list2int_array(self.backgroundDistributions.getOrders())
             (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
             self.cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
+            [self.cmodel.bp.setName(i,name) for i,name in enumerate(self.backgroundDistributions.getNames())]
             self.cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
         # fill higher order array

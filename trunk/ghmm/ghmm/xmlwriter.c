@@ -238,7 +238,7 @@ static int writeBackground(xmlTextWriterPtr writer, ghmm_dbackground* bg) {
         GHMM_LOG(LERROR, "Error at writing background key");
     }
     else {
-      if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST bg->name[i]))
+      if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "key", BAD_CAST (bg->name[i])))
         GHMM_LOG(LERROR, "Error at writing background key");
     }
 
