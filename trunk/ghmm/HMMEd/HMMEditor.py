@@ -268,6 +268,8 @@ class HMMGraphEditor(SAGraphEditor):
     def __init__(self, master=None):
         self.modeltype = 0;
         SAGraphEditor.__init__(self, master)
+        
+        self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition)
 
     def makeMenuBar(self):
         self.menubar = Menu(self,tearoff=0)
@@ -299,6 +301,9 @@ class HMMGraphEditor(SAGraphEditor):
 
         if self.modeltype & ghmmwrapper.kBackgroundDistributions:
             self.graphMenu.add_command(label='Edit background distributions', command=self.EditBackgroundDistributions)
+            
+        if self.modeltype & ghmmwrapper.kTiedEmissions:
+            self.graphMenu.add_command(label='Edit tie groups', command=self.EditTieGroups)
 
         self.graphMenu.add_separator()
         self.graphMenu.add_checkbutton(label='Grid', command=self.ToggleGridding)
@@ -396,9 +401,7 @@ class HMMGraphEditor(SAGraphEditor):
         if d.type == 'open':
             self.OpenGraph()
             return
-            
-        # Create a new HMM and edit it
-        self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition, type=d.type)
+
         self.G.edit(self)
 
         self.graphName = "New"
@@ -500,6 +503,9 @@ class HMMGraphEditor(SAGraphEditor):
 
     def EditBackgroundDistributions(self):
         self.G.backgroundDistributions.editDialog(self, self.G)
+        
+    def EditTieGroups(self):
+        self.G.tie_groups.editDialog(self, self.G)
 
 
     def EditWeightUp(self,event):
