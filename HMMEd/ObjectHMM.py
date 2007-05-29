@@ -94,6 +94,9 @@ class DiscreteHMMAlphabet:
         # also update background distributions if needed
         if self.hmm.modelType & ghmmwrapper.kBackgroundDistributions:
             self.hmm.backgroundDistributions.shrink()
+        # and tie groups
+        if self.hmm.modelType & ghmmwrapper.kTiedEmissions:
+            self.hmm.tie_groups.shrink()
 
     def GetKeys(self):
         return self.name.keys()
@@ -106,12 +109,15 @@ class DiscreteHMMAlphabet:
 
     def ReadCAlphabet(self, calphabet):
         self.id = calphabet.description
+        if self.id is None:
+            self.id = str(calphabet.size)
         for i in xrange(0, calphabet.size):
             name = calphabet.getSymbol(i)
             self.name[i] = name
             self.name2code[name] = i
 
     def WriteCAlphabet(self):
+        print self.name, self.id
         calphabet = ghmmwrapper.ghmm_alphabet(len(self.name), self.id )
         #calphabet.description = self.id 
         for i in xrange(len(self.name)):
@@ -128,6 +134,7 @@ class DiscreteHMMBackground:
         self.name = {}
         self.name2code = {}
         self.values = {}
+        self.hmm = None
 
     def size(self):
         return len(self.name.keys())
@@ -143,12 +150,14 @@ class DiscreteHMMBackground:
     def names(self):
         return self.name.values()
 
-    def add(self, name):
+    def add(self, name, alphabet=None):
         key = self.nextKey
         self.nextKey += 1
         
-        if self.hmm.alphabet is not None:
+        if self.hmm is not None:
             e = self.EmissionClass(self.hmm.alphabet)
+        elif alphabet is not None:
+            e = self.EmissionClass(alphabet)
         else:
             e = self.EmissionClass()
 
@@ -204,7 +213,27 @@ class DiscreteHMMBackground:
             self.name2code[name] = key
             self.values[key] = e
             self.val2pop[key] = name
-        
+
+class TieGroups(DiscreteHMMBackground):
+
+    def __init__(self, eclass):
+        self.EmissionClass = eclass
+        self.nextKey = 1
+        self.val2pop = {0:"untied"}
+        self.name = {}
+        self.name2code = {}
+        self.values = {}
+        self.hmm = None
+
+    def edit(self, master, name):
+        self.values[self.name2code[name]].edit(master, "Emissions of tie group \"%s\""%name)
+
+    def editEmissions(self, master, id):
+        self.values[id].edit(master, "Emissions of tie group \"%s\""%self.name[id])
+
+    def ReadCBackground(self, alphabet, bp):
+        pass
+
 
 class UniformDensity(ProbEditorContinuous.box_function):
     def getParameters(self):
@@ -513,18 +542,27 @@ class TiedState(State):
         self.init()
 
     def init(self):
-        self.tiedto = PopupableInt()
-        self.tiedto.setPopup(self.itsHMM.vertices_ids)
+        self.tiedto = PopupableInt(0)
+        self.tiedto.setPopup(self.itsHMM.tie_groups.val2pop)
 
     def update(self):
-        if len(self.itsHMM.vertices.keys()) > 1:
+        if len(self.itsHMM.tie_groups.names()) > 0:
             self.editableAttr['tiedto'] = "Emissions tied to state"
-            self.tiedto.setPopup(self.itsHMM.vertices_ids)
-        
+            self.tiedto.setPopup(self.itsHMM.tie_groups.val2pop)
+
+    def editEmissions(self, master):
+        if self.tiedto > 0:
+            self.itsHMM.tie_groups.editEmissions(master, self.tiedto)
+        else:
+            State.editEmissions(self, master)
+
     def ReadCState(self, cmodel, cstate, i):
         State.ReadCState(self, cmodel, cstate, i)
+        tied = cmodel.getTiedTo(i)
+        if tied == i:
+            self.itsHMM.tie_groups.add("tiedto_state%d"%tied, self.itsHMM.alphabet)
         self.update()
-        self.tiedto = PopupableInt(cmodel.getTiedTo(i)+1)
+        self.tiedto = PopupableInt(self.itsHMM.tie_groups.name2code["tiedto_state%d"%tied])
 
 
 class SilentBackgroundState(SilentState, BackgroundState):
@@ -793,7 +831,7 @@ class ObjectHMM(ObjectGraph):
         if type == 0:
             self.editableAttr['tied']       = "Tied emissions"
             self.editableAttr['silent']     = "Silent states"
-            self.editableAttr['maxOrder']   = "Higher order emissions"
+            #self.editableAttr['maxOrder']   = "Higher order emissions"
             self.editableAttr['background'] = "Background distributions"
             self.editableAttr['labels']     = "State labels"
             self.editableAttr['alphatype']  = "Alphabet"
@@ -966,6 +1004,10 @@ class ObjectHMM(ObjectGraph):
         # initialize background distributions
         if mt & ghmmwrapper.kBackgroundDistributions:
             self.backgroundDistributions = DiscreteHMMBackground(emissionClass)
+            
+        # initialize background distributions
+        if mt & ghmmwrapper.kTiedEmissions:
+            self.tie_groups = TieGroups(emissionClass)
 
         self.__init__(vertexClass, edgeClass, emissionClass, alphabet)
         self.modelType = modelType
@@ -1097,12 +1139,12 @@ class ObjectHMM(ObjectGraph):
             tieddict = {}
             # map python id to continious C array indeces
             for i, id in enumerate(sortedIDs):
-                tiedto = self.vertices[id].tiedto-1
-                if tiedto != ghmmwrapper.kUntied:
+                if self.vertices[id].tiedto > 0:
+                    tiedto = self.vertices[id].tiedto-1
                     if tieddict.has_key(tiedto):
                         tieddict[tiedto].append(i)
                     else:
-                        tieddict[tiedto] = [tiedto, i]
+                        tieddict[tiedto] = [i]
             # tiedto has to be sorted, the first entry points to it self
             for k in tieddict.keys():
                 temp = tieddict[k]
@@ -1119,7 +1161,9 @@ class ObjectHMM(ObjectGraph):
             orders = ghmmhelper.list2int_array(self.backgroundDistributions.getOrders())
             (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
             self.cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
-            [self.cmodel.bp.setName(i,name) for i,name in enumerate(self.backgroundDistributions.getNames())]
+            for i,name in enumerate(self.backgroundDistributions.getNames()):
+                print i, name
+                self.cmodel.bp.setName(i, name)
             self.cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
         # fill higher order array
