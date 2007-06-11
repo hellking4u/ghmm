@@ -117,7 +117,6 @@ class DiscreteHMMAlphabet:
             self.name2code[name] = i
 
     def WriteCAlphabet(self):
-        print self.name, self.id
         calphabet = ghmmwrapper.ghmm_alphabet(len(self.name), self.id )
         #calphabet.description = self.id 
         for i in xrange(len(self.name)):
@@ -462,11 +461,8 @@ class State(VertexObject):
 
 
 class ContinuousState(State):
-#    def __init__(self, emission=Emission(), hmm=None):
-#        State.__init__(self, emission, hmm)
 
     def WriteTransitions(self, cstate):
-        #print self.itsHMM.edgeWeights.label
         inID = [edge.tail.id for edge in self.inEdges]
         inA  = [[edge.GetEdgeWeight(0) for edge in self.inEdges]]
         cstate.in_id = ghmmhelper.list2int_array(inID)
@@ -843,7 +839,6 @@ class ObjectHMM(ObjectGraph):
         else:
             print "invalid type"
 
-
     def AddVertex(self):
         """ Add an isolated vertex. Returns the id of the new vertex """
         if self.alphabet is not None:
@@ -854,14 +849,11 @@ class ObjectHMM(ObjectGraph):
         v.id = self.GetNextVertexID()
         self.vertices[v.id] = v
         self.vertices_ids[v.id+1] = str(v.id)
-        # set the initial probability
-        v.initial = typed_assign(v.initial, 1.0/len(self.vertices))
         return v.id
 
     def DeleteVertex(self, v):
         del self.vertices_ids[v+1]
         ObjectGraph.DeleteVertex(self, v)
-
 
     def AddEdge(self,tail,head):
         out_edges = len(self.vertices[tail].outEdges)
@@ -1166,7 +1158,6 @@ class ObjectHMM(ObjectGraph):
             (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
             self.cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
             for i,name in enumerate(self.backgroundDistributions.getNames()):
-                print i, name
                 self.cmodel.bp.setName(i, name)
             self.cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
@@ -1182,11 +1173,19 @@ class ObjectHMM(ObjectGraph):
         self.cmodel.model_type = self.modelType
 
         # create each state
+        initial_sum = 0.0
         for i, id in enumerate(sortedIDs):
             self.vertices[id].num = i
+            initial_sum += self.vertices[id].initial
+
+        if initial_sum < 1E-14:
+            for id in sortedIDs:
+                self.vertices[id].initial = 1.0
+            initial_sum = float(self.Order())
 
         for i, id in enumerate(sortedIDs):
             cstate = self.cmodel.getState(i)
+            self.vertices[id].initial /= initial_sum
             self.vertices[id].WriteCState(cstate)
 
         # write to file
