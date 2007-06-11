@@ -393,6 +393,8 @@ class HMMGraphEditor(SAGraphEditor):
         if d.type == 'open':
             self.OpenGraph()
             return
+        else:
+            self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition, type=d.type)
 
         self.G.edit(self)
 
