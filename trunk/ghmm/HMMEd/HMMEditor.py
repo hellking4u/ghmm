@@ -541,6 +541,7 @@ class HMMGraphEditor(SAGraphEditor):
                 v = self.FindVertex(event)
                 if v != None:
                     self.G.vertices[v].editProperties(self.master)
+                    self.UpdateVertexLabel(v)
 
     def AddVertex(self):
         """ Add an isolated vertex. Returns the id of the new vertex """
