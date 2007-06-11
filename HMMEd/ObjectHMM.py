@@ -400,6 +400,7 @@ class State(VertexObject):
         self.emission = emission
         self.itsHMM = hmm
         self.fixed = ValidatingBool(False)
+        self.num = -1
 
     def update(self):
         pass
@@ -438,12 +439,12 @@ class State(VertexObject):
         self.emission.writeParameters(cstate)
 
     def WriteTransitions(self, cstate):
-        inID = [edge.tail.id for edge in self.inEdges]
+        inID = [edge.tail.num for edge in self.inEdges]
         inA  = [edge.GetEdgeWeight(0) for edge in self.inEdges]
         cstate.in_id = ghmmhelper.list2int_array(inID)
         cstate.in_a  = ghmmhelper.list2double_array(inA)
 
-        outID = [edge.head.id for edge in self.outEdges]
+        outID = [edge.head.num for edge in self.outEdges]
         outA = [edge.GetEdgeWeight(0) for edge in self.outEdges]
         cstate.out_id = ghmmhelper.list2int_array(outID)
         cstate.out_a  = ghmmhelper.list2double_array(outA)
@@ -1178,6 +1179,9 @@ class ObjectHMM(ObjectGraph):
         self.cmodel.model_type = self.modelType
 
         # create each state
+        for i, id in enumerate(sortedIDs):
+            self.vertices[id].num = i
+
         for i, id in enumerate(sortedIDs):
             cstate = self.cmodel.getState(i)
             self.vertices[id].WriteCState(cstate)
