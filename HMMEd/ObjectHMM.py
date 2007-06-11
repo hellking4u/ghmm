@@ -394,8 +394,8 @@ class State(VertexObject):
 
     def __init__(self, emission=Emission(), hmm=None):
         VertexObject.__init__(self)
-        self.desc         = ValidatingString(str(self.id))
-        self.editableAttr = {'desc':"Name", 'initial':"Initial Probability", 'fixed':"fixed emissions"}
+        
+        self.editableAttr = {'labeling':"Name", 'initial':"Initial Probability", 'fixed':"fixed emissions"}
         self.initial = Probability()
         self.emission = emission
         self.itsHMM = hmm
@@ -413,6 +413,7 @@ class State(VertexObject):
 
     def editProperties(self, parent, attributes = None):
         self.update()
+        self.desc = ('Properties of State %d (%s)' % (self.id, self.labeling))
         if attributes == None:
             editBox = EditObjectAttributesDialog(parent, self, self.editableAttr)
         else:
@@ -450,9 +451,9 @@ class State(VertexObject):
         cstate.out_a  = ghmmhelper.list2double_array(outA)
 
     def ReadCState(self, cmodel, cstate, i):
-        self.initial   = ValidatingFloat(cstate.pi)
-        self.fixed     = ValidatingBool(cstate.fix)
-        self.labeling  = ValidatingString(cstate.desc)
+        self.initial  = ValidatingFloat(cstate.pi)
+        self.fixed    = ValidatingBool(cstate.fix)
+        self.labeling = ValidatingString(cstate.desc)
 
         if self.itsHMM is not None:
             self.itsHMM.SetEmbedding(self.id, cstate.xPosition, cstate.yPosition)
@@ -877,6 +878,8 @@ class ObjectHMM(ObjectGraph):
         ObjectGraph.DeleteEdge(self,tail,head)
         self.vertices[tail].normalize()
 
+    def SetLabeling(self,v, value):
+        self.vertices[v].labeling = ValidatingString(value)
 
     def edit(self, parent, attributes = None):
         if attributes == None:
