@@ -600,7 +600,7 @@ class SilentTiedState(SilentState, TiedState):
     def __init__(self, emission=Emission(), hmm=None, silent=ValidatingBool(False)):
         State.__init__(self, emission, hmm)
         SilentState.init(self, silent)
-        TiesdState.init(self)
+        TiedState.init(self)
 
     def update(self):
         TiedState.update(self)
@@ -629,7 +629,7 @@ class LabeledTiedState(LabeledState, TiedState):
     def __init__(self, emission=Emission(), hmm=None):
         State.__init__(self, emission, hmm)
         LabeledState.init(self)
-        TiesdState.init(self)
+        TiedState.init(self)
 
     def update(self):
         LabeledState.update(self)
@@ -677,7 +677,7 @@ class SilentLabeledTiedState(SilentState, LabeledState, TiedState):
         State.__init__(self, emission, hmm)
         SilentState.init(self, silent)
         LabeledState.init(self)
-        TiesdState.init(self)
+        TiedState.init(self)
         
     def update(self):
         LabeledState.update(self)
