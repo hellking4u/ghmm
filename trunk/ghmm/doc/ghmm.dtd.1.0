@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--hidden markov model -->
-<!ELEMENT HMM (alphabet*, classAlphabet?, background*, state+, transition+, switchingFunction?)>
+<!ELEMENT HMM (alphabet*, classAlphabet?, background*, state+, transition*, switchingFunction?)>
 <!ATTLIST HMM
         version           CDATA #IMPLIED
         type              CDATA #REQUIRED
