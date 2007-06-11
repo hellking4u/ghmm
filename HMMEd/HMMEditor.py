@@ -286,25 +286,17 @@ class HMMGraphEditor(SAGraphEditor):
         self.fileMenu.add_command(label='Quit',	          command=self.Quit)
         self.menubar.add_cascade(label="File", menu=self.fileMenu, underline=0)
 
+        # Add graph menu
         self.graphMenu = Menu(self.menubar, tearoff=0)
-        self.graphMenu.add_command(label='Edit HMM', command=self.EditHMM)
-
         self.graphMenu.add_command(label='Edit Prior', command=self.EditPrior)
-
         if self.modeltype & ghmmwrapper.kDiscreteHMM:
             self.graphMenu.add_command(label='Edit Alphabet', command=self.EditAlphabet)
-
         if self.modeltype & ghmmwrapper.kLabeledStates:
             self.graphMenu.add_command(label='Edit class labels', command=self.EditClassLabels)
-
-        #self.graphMenu.add_command(label='Edit Emissions', command=self.EditEmissions)
-
         if self.modeltype & ghmmwrapper.kBackgroundDistributions:
             self.graphMenu.add_command(label='Edit background distributions', command=self.EditBackgroundDistributions)
-            
         if self.modeltype & ghmmwrapper.kTiedEmissions:
             self.graphMenu.add_command(label='Edit tie groups', command=self.EditTieGroups)
-
         self.graphMenu.add_separator()
         self.graphMenu.add_checkbutton(label='Grid', command=self.ToggleGridding)
         self.menubar.add_cascade(label="HMM", menu=self.graphMenu, underline=0)
