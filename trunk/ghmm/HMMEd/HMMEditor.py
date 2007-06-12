@@ -456,16 +456,11 @@ class HMMGraphEditor(SAGraphEditor):
             self.SetTitle("HMMEd _VERSION_ - " + self.graphName)
 
 
-    def EditHMM(self):
-        self.G.edit()
-
-
-    def EditEmissions(self):
-        pass
-
-
     def EditAlphabet(self):
-        self.G.alphabet.editDialog(self, self.G)
+        if self.G.modelType & ghmmwrapper.kHigherOrderEmissions and self.G.Order() > 0:
+            print "not implemented, edit the alphabet before adding states"
+        else:
+            self.G.alphabet.editDialog(self, self.G)
 
 
     def EditPrior(self):

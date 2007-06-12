@@ -279,8 +279,8 @@ class DiscreteEmission(Emission):
         self.weights = [x/sum(self.weights) for x in self.weights]
         
     def shrink(self, index):
-        s = sum(self.weights) - self.weights[index]
         del self.weights[index]
+        s = sum(self.weights)
         if s > 0.0:
             self.weights = [x / s for x in self.weights]
         elif self.alphabet.size() > 0:
@@ -310,21 +310,44 @@ class DiscreteEmission(Emission):
 
     def writeParameters(self, cstate):
         cstate.b = ghmmhelper.list2double_array(self.weights)
-        
+
     def ReadCState(self, cstate, M):
         self.weights = ghmmhelper.double_array2list(cstate.b, M)
 
 
 class DiscreteHigherOrderEmission(DiscreteEmission):
-    def __init__(self, alphabet=None, order=0):
-        DiscreteEmission.__init__(self, alphabet)
-        self.order = order
+    def __init__(self, alphabet, order=0):
+        self.alphabet = alphabet
+        self.order    = ValidatingInt(order)
+        M = self.alphabet.size()
+        if M >  0:
+            self.weights = [1.0 / M] * M**(order+1)
+        else:
+            self.weights = []
 
-    def edit(self, master, description):
+    def grow(self):
+        print "not implemented"
+        
+    def shrink(self, index):
         print "not implemented"
 
+    def edit(self, master, description):
+        if self.order > 0:
+            print "not implemented"
+        else:
+            DiscreteEmission.edit(self, master, description)
+
+    def ChangeOrder(self, neworder):
+        M = self.alphabet.size()
+        if neworder < order:
+            self.weights = self.weights[0:M**(neworder+1)]
+        elif neworder > order:
+            self.weights += [1.0 / M] * (M**(neworder+1) - M**neworder)
+
     def ReadCState(self, cstate, M):
-        self.weights = ghmmhelper.double_array2list(cstate.b, M**self.order)
+        self.order   = ValidatingInt(cstate.order)
+        self.weights = ghmmhelper.double_array2list(cstate.b, M**(self.order+1))
+
 
 class ContinuousEmission(Emission):
     def __init__(self):
@@ -393,13 +416,12 @@ class State(VertexObject):
 
     def __init__(self, emission=Emission(), hmm=None):
         VertexObject.__init__(self)
-        
+        self.num = -1   # continuous id (0..Order()-1) used for writing transitions
         self.editableAttr = {'labeling':"Name", 'initial':"Initial Probability", 'fixed':"fixed emissions"}
         self.initial = Probability()
         self.emission = emission
         self.itsHMM = hmm
         self.fixed = ValidatingBool(False)
-        self.num = -1
 
     def update(self):
         pass
@@ -413,6 +435,9 @@ class State(VertexObject):
     def editProperties(self, parent, attributes = None):
         self.update()
         self.desc = ('Properties of State %d (%s)' % (self.id, self.labeling))
+        if self.itsHMM.modelType & ghmmwrapper.kHigherOrderEmissions:
+            self.order = self.emission.order
+            self.editableAttr['order'] = "Order"
         if attributes == None:
             editBox = EditObjectAttributesDialog(parent, self, self.editableAttr)
         else:
@@ -420,6 +445,10 @@ class State(VertexObject):
             for attr in attributes:
                 editableAttr[attr] = self.editableAttr[attr]
             editBox = EditObjectAttributesDialog(parent, self, editableAttr)
+        if self.itsHMM.modelType & ghmmwrapper.kHigherOrderEmissions:
+            self.emission.ChangeOrder(self.order)
+            del self.order
+            del self.editableAttr['order']
 
     def editEmissions(self, master):
         self.emission.edit(master, self.id)
@@ -829,7 +858,7 @@ class ObjectHMM(ObjectGraph):
         if type == 0:
             self.editableAttr['tied']       = "Tied emissions"
             self.editableAttr['silent']     = "Silent states"
-            #self.editableAttr['maxOrder']   = "Higher order emissions"
+            self.editableAttr['maxOrder']   = "Higher order emissions"
             self.editableAttr['background'] = "Background distributions"
             self.editableAttr['labels']     = "State labels"
             self.editableAttr['alphatype']  = "Alphabet"
@@ -1163,7 +1192,7 @@ class ObjectHMM(ObjectGraph):
 
         # fill higher order array
         if self.modelType & ghmmwrapper.kHigherOrderEmissions:
-            self.cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.order() for id in sortedIDs])
+            self.cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.order for id in sortedIDs])
 
         # fil label id array
         if self.modelType & ghmmwrapper.kLabeledStates:
