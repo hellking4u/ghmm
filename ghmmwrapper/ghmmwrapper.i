@@ -184,6 +184,10 @@ extern void ghmm_rng_timeseed(GHMM_RNG * r);
 %}
 
 
+/* for truncated gaussian pdf */
+extern double ighmm_rand_normal_density_trunc(double x, double mean, double u, double a);
+
+
 /*==========================================================================
   ===== import C structs as shadow classes ================================= */
 %define STRUCT_ARRAY(type, name)
