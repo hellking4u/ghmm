@@ -326,23 +326,26 @@ class DiscreteHigherOrderEmission(DiscreteEmission):
             self.weights = []
 
     def grow(self):
-        print "not implemented"
+        print "BUG! DiscreteHigherOrderEmission.grow() not implemented and should be called"
         
     def shrink(self, index):
-        print "not implemented"
+        print "BUG! DiscreteHigherOrderEmission.shrink() not implemented and should be called"
 
     def edit(self, master, description):
         if self.order > 0:
-            print "not implemented"
+            message = "editing the emissions of higher order states is not implemented"
+            tkMessageBox.showwarning("HMMEd", message)
+            print message
         else:
             DiscreteEmission.edit(self, master, description)
 
     def ChangeOrder(self, neworder):
         M = self.alphabet.size()
-        if neworder < order:
+        if neworder < self.order:
             self.weights = self.weights[0:M**(neworder+1)]
-        elif neworder > order:
+        elif neworder > self.order:
             self.weights += [1.0 / M] * (M**(neworder+1) - M**neworder)
+        self.order = neworder
 
     def ReadCState(self, cstate, M):
         self.order   = ValidatingInt(cstate.order)
@@ -866,7 +869,7 @@ class ObjectHMM(ObjectGraph):
         elif type == 1:
             self.editableAttr['switching'] = "No. of transition Classes"
         else:
-            print "invalid type"
+            tkMessageBox.showerror("HMMEd", "invalid model type")
 
     def AddVertex(self):
         """ Add an isolated vertex. Returns the id of the new vertex """

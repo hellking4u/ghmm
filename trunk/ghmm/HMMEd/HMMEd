@@ -37,13 +37,6 @@
 import HMMEditor, GatoGlobals, Tkinter
 
 if __name__ == '__main__':
-
-##    globals()['gVertexRadius'] = 12
-##    globals()['gVertexFrameWidth'] = 0
-##    globals()['gEdgeWidth'] = 2
-    GatoGlobals.cVertexDefault = '#000099'
-    ##    globals()['cEdgeDefault'] = '#999999'
-    ##    globals()['cLabelDefault'] = 'white'
     
     # Overide default colors for widgets ... maybe shouldnt be doing that for Windows?
     tk = Tkinter.Tk()
@@ -53,5 +46,5 @@ if __name__ == '__main__':
     HMMEditor = HMMEditor.HMMGraphEditor(tk)
     HMMEditor.NewGraph()
     import logging
-    log = logging.getLogger("HMMEd.py")
+    log = logging.getLogger("HMMEd")
     HMMEditor.mainloop()

@@ -239,35 +239,19 @@ class HMMTypeChooser(tkSimpleDialog.Dialog):
         self.type = 1
         self.ok()
 
-
     def body(self, master):
-##         self.resizable(0,0)
-##         self.catIconImage = PhotoImage(data=GatoIcons.gato) # statt file=
-##         self.catIcon = Label(master, image=self.catIconImage)
-##         self.catIcon.pack(side=TOP)
-##         label = Label(master, text=crnotice1)
-##         label.pack(side=TOP)
-##         label = Label(master, font="Helvetica 10", text=crnotice2, justify=CENTER)
-##         label.pack(side=TOP)
-##         color = self.config("bg")[4]
-##         self.infoText = ScrolledText(master, relief=FLAT, 
-##                                      padx=3, pady=3,
-##                                      background=color, 
-##                                      #foreground="black",
-##                                      wrap='word',
-##                                      width=60, height=12,
-##                                      font="Times 10")
-##         self.infoText.pack(expand=0, fill=X, side=BOTTOM)
-##         self.infoText.delete('0.0', END)
-##         self.infoText.insert('0.0', GatoGlobals.gLGPLText)	
-##         self.infoText.configure(state=DISABLED)
         self.title("New HMM")
+
 
 class HMMGraphEditor(SAGraphEditor):
 
     def __init__(self, master=None):
         self.modeltype = 0;
         SAGraphEditor.__init__(self, master)
+
+        self.cEdgeDefault   = '#888888'
+        self.cLabelDefault  = 'black' #'#FF8000' # 230 215 0
+        self.cVertexDefault = 'red' #'#007EE0' # 0 125 230
         
         self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition)
 
@@ -554,14 +538,6 @@ class Start:
         
         ################################################################################
 if __name__ == '__main__':
-
-
-##    globals()['gVertexRadius'] = 12
-##    globals()['gVertexFrameWidth'] = 0
-##    globals()['gEdgeWidth'] = 2
-    GatoGlobals.cVertexDefault = '#000099'
-    ##    globals()['cEdgeDefault'] = '#999999'
-    ##    globals()['cLabelDefault'] = 'white'
     
     # Overide default colors for widgets ... maybe shouldnt be doing that for Windows?
     tk = Tk()
