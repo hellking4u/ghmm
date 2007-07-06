@@ -1429,6 +1429,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 # XXX Aufhuebschen
                 cmodel = ghmmwrapper.ghmm_dmodel()
+                cmodel.model_type = ghmmwrapper.kDiscreteHMM
                 cmodel.N = len(A)
                 cmodel.M = len(emissionDomain)
                 cmodel.prior = -1 # No prior by default
@@ -1523,10 +1524,7 @@ class HMMFromMatricesFactory(HMMFactory):
             if isinstance(distribution,GaussianDistribution):
                 
                 cmodel = ghmmwrapper.ghmm_cmodel()
-                
-                # def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None):                
-
-
+                cmodel.model_type = ghmmwrapper.kContinuousHMM
                 cmodel.M = 1 # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
 
