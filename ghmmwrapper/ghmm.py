@@ -429,7 +429,7 @@ class Alphabet(EmissionDomain):
     def toCstruct(self):
         calphabet = ghmmwrapper.ghmm_alphabet(len(self), "<unused>")
         for i,symbol in enumerate(self.listOfCharacters):
-            calphabet.setSymbol(i, symbol)
+            calphabet.setSymbol(i, str(symbol))
 
         return calphabet
 
