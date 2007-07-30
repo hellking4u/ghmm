@@ -454,7 +454,7 @@ class State(VertexObject):
             del self.editableAttr['order']
 
     def editEmissions(self, master):
-        self.emission.edit(master, self.id)
+        self.emission.edit(master, ('Properties of State %d (%s)' % (self.id, self.labeling)))
 
     def WriteCState(self, cstate):
         cstate.pi         = self.initial
