@@ -927,6 +927,12 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     child = child->next;
   }
 
+  // allocate zero degree count in the case of a HMM without transitions
+  if (inDegree == NULL) {
+      ARRAY_CALLOC(inDegree, N);
+      ARRAY_CALLOC(outDegree, N);
+  }
+
   estr = ighmm_mprintf(NULL, 0, "Found HMM with %d states\n", N);
   GHMM_LOG(LDEBUG, estr);
   m_free(estr);
