@@ -927,7 +927,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     child = child->next;
   }
 
-  // allocate zero degree count in the case of a HMM without transitions
+  /* allocate zero degree count in the case of a HMM without transitions */
   if (inDegree == NULL) {
       ARRAY_CALLOC(inDegree, N);
       ARRAY_CALLOC(outDegree, N);
