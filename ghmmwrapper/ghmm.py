@@ -134,7 +134,6 @@ is to be understood mathematically and to encompass both discrete,
 
 """
 
-import xmlutil
 import ghmmwrapper
 import ghmmhelper
 import modhmmer
@@ -1169,6 +1168,7 @@ class HMMOpenFactory(HMMFactory):
         return result
 
     def openOldXML(self, fileName):
+        from ghmm_obsolete import xmlutil
         hmm_dom = xmlutil.HMM(fileName)
         emission_domain = hmm_dom.AlphabetType()
 
@@ -4519,6 +4519,8 @@ class PairHMMOpenFactory(HMMOpenFactory):
         @return: PairHMM object 
         """
         import xml.dom.minidom
+        from ghmm_obsolete import xmlutil
+
         if not (isinstance(fileName_file_or_dom, StringIO.StringIO) or
                 isinstance(fileName_file_or_dom, xml.dom.minidom.Document)):
             if not os.path.exists(fileName_file_or_dom):

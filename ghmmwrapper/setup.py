@@ -52,14 +52,16 @@ setup(name="ghmmwrapper",
       author="GHMM authors",
       author_email="ghmm-list@lists.sourceforge.net",
       url="http://ghmm.org",
-      py_modules = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','xmlutil','DataStructures',
-                    'Graph','GraphUtil', 'GatoGlobals','EditObjectAttributesDialog','class_change'],
+      py_modules  = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','class_change'],
+      packages    = ['ghmm_obsolete'],
       ext_modules = [Extension('_ghmmwrapper',
                                ['sclass_change.c', 'pclasschange.c', 'gql.c', 'ghmmwrapper.i'],
                                include_dirs = ['..'],
                                library_dirs = ['../ghmm/.libs'],
                                libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z'],
-                               depends = ['wrapper_alphabet.i', 'wrapper_cmodel.i', 'wrapper_cseq.i', 'wrapper_dmodel.i', 'wrapper_dpmodel.i', 'wrapper_dpseq.i', 'wrapper_dseq.i', 'wrapper_xmlfile.i']
+                               depends = ['wrapper_alphabet.i', 'wrapper_cmodel.i', 'wrapper_cseq.i',
+                                          'wrapper_dmodel.i', 'wrapper_dpmodel.i', 'wrapper_dpseq.i',
+                                          'wrapper_dseq.i', 'wrapper_xmlfile.i']
                                )
                      ]
      )
