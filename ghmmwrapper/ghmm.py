@@ -134,7 +134,6 @@ is to be understood mathematically and to encompass both discrete,
 
 """
 
-from Graph import Graph, EdgeWeight
 import xmlutil
 import ghmmwrapper
 import ghmmhelper
