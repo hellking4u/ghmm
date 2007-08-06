@@ -145,6 +145,7 @@ import sys
 import os
 import logging
 from string import join
+from textwrap import fill
 
 # Initialize logging to stderr
 #logging.basicConfig(format="%(asctime)s %(filename)s:%(lineno)d %(levelname)-5s - %(message)s")
@@ -1057,7 +1058,26 @@ def SequenceSetOpen(emissionDomain, fileName):
     ghmmwrapper.free(dArr)
     return  sequenceSets
 
+def writeToFasta(seqSet,fn):
+    """
+    Writes a SequenceSet into a fasta file.
+    """
+    assert isinstance(seqSet, SequenceSet)
+    f = open(fn,'w')
+    
+    for i in range(len(seqSet)):
+        rseq = []
+        for j in range(seqSet.sequenceLength(i)):
+           rseq.append(str( seqSet.emissionDomain.external(( ghmmwrapper.int_matrix_getitem(seqSet.cseq.seq, i, j) )) ))
+        
+        f.write('>seq'+str(i)+'\n')
+        f.write(fill(join(rseq,'') ))
+        f.write('\n')
 
+    f.close()        
+   
+    
+    
 
 
 #-------------------------------------------------------------------------------
@@ -1120,7 +1140,7 @@ class HMMOpenFactory(HMMFactory):
             hmmClass = ContinuousMixtureHMM
             getPtr = ghmmwrapper.cmodel_ptr_array_getitem
             models = file.model.c
-            
+
         elif ((modelType & ghmmwrapper.kDiscreteHMM)
               and not (modelType & ghmmwrapper.kTransitionClasses)
               and not (modelType & ghmmwrapper.kPairHMM)):
@@ -1137,6 +1157,7 @@ class HMMOpenFactory(HMMFactory):
 
         else:
             raise UnsupportedFeature, "Non-supported model type"
+
 
         # read all models to list at first
         result = []
@@ -2667,7 +2688,7 @@ class DiscreteEmissionHMM(HMM):
             you are interested in multiple paths it would be more efficient to use the 'posterior' function
             directly and not multiple calls to pathPosterior
         """
-        # XXX for silent states things arr more complicated -> to be done
+        # XXX for silent states things are more complicated -> to be done
         if self.cmodel.model_type & 4:
             raise RuntimeError, "Models with silent states not yet supported."
 
@@ -2758,7 +2779,7 @@ class DiscreteEmissionHMM(HMM):
         
         """
 
-        # XXX for silent states things arr more complicated -> to be done    	
+        # XXX for silent states things are more complicated -> to be done    	
         if self.cmodel.model_type & 4:
             raise RuntimeError, "Models with silent states not yet supported."
 
