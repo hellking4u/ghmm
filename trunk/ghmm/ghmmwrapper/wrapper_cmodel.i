@@ -90,9 +90,9 @@ typedef struct ghmm_cstate {
         int getInState(size_t index) { return self->in_id[index]; }
         int getOutState(size_t index) { return self->out_id[index]; }
 
-        double getInProb(size_t index)            { return self->in_a[0][index]; }
+        //double getInProb(size_t index)            { return self->in_a[0][index]; }
         double getInProb(size_t index, size_t c)  { return self->in_a[c][index]; }
-        double getOutProb(size_t index)           { return self->out_a[0][index]; }
+        //double getOutProb(size_t index)           { return self->out_a[0][index]; }
         double getOutProb(size_t index, size_t c) { return self->out_a[c][index]; }
 }
 
