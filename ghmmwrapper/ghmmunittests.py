@@ -1181,7 +1181,7 @@ suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 
 # Call to individual test suites, uncomment to activate as needed.
-#runner = unittest.TextTestRunner()
+runner = unittest.TextTestRunner()
 #runner.run(suiteAlphabet)
 #runner.run(suiteEmissionSequence)
 #runner.run(suiteSequenceSet)
