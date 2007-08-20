@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.3
+#!/usr/bin/env python
 ################################################################################
 #
 #       This file is part of the General Hidden Markov Model Library,
@@ -446,7 +446,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.model.setEmission(1,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(1)
         self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
-        self.assertEqual(self.model.cmodel.model_type,4)
+        self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(1),1)
         
         
