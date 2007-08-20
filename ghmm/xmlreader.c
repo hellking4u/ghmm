@@ -763,11 +763,12 @@ STOP:
 
 /*===========================================================================*/
 static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
-				   ghmm_xmlfile* f, int modelNo) {
-#define CUR_PROC "parseTransition"
+				   ghmm_xmlfile* f, int modelNo,
+                                   int nrTransitionClasses) {
+#define CUR_PROC "parseMultipleTransition"
 
   int i, retval=-1;
-  int source, target, error, nrTransitionClasses;
+  int source, target, error;
   int in_state, out_state;
   double * probs;
   char * s;
@@ -1062,7 +1063,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     }
     if ((!xmlStrcmp(child->name, BAD_CAST "transition"))) {
       if (modeltype & GHMM_kTransitionClasses)
-	parseMultipleTransition(doc, child, f, modelNo);
+        parseMultipleTransition(doc, child, f, modelNo, cos);
       else
 	parseSingleTransition(doc, child, f, modelNo);
     }
