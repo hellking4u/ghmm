@@ -454,21 +454,21 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
         self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
-        self.assertEqual(self.model.cmodel.model_type,4)
+        self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(1),0)
         
         # removing last silent state
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         emission = self.model.getEmission(2)
         self.assertEqual(emission,[0.25,0.25,0.25,0.25])  
-        self.assertEqual(self.model.cmodel.model_type,0)
+        self.assertEqual(self.model.cmodel.model_type,256)
         self.assertEqual(self.model.getSilentFlag(2),0)
     
         # inserting silent state
         self.model.setEmission(2,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(2)
         self.assertEqual(emission,[0.0,0.0,0.0,0.0])  
-        self.assertEqual(self.model.cmodel.model_type,4)
+        self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(2),1)
 
     def testNewXML(self):
