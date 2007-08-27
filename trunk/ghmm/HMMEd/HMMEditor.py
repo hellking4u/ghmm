@@ -39,7 +39,6 @@ import math
 from Gato import GatoGlobals, ProbEditorBasics, ProbEditorDialogs, ProbEditorWidgets, ProbEditorContinuous
 from Gato.ObjectGred import *
 import ObjectHMM
-from Gato.EditObjectAttributesDialog import *
 
 import ghmmwrapper
 
@@ -252,6 +251,7 @@ class HMMGraphEditor(SAGraphEditor):
         self.cEdgeDefault   = '#888888'
         self.cLabelDefault  = 'black' #'#FF8000' # 230 215 0
         self.cVertexDefault = 'red' #'#007EE0' # 0 125 230
+        self.SetTitle("HMMEd _VERSION_")
         
         self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition)
 
@@ -386,7 +386,7 @@ class HMMGraphEditor(SAGraphEditor):
         self.ShowGraph(self.G, self.graphName)
         #self.RegisterGraphInformer(HMMInformer(self.G))
         self.fileName = None
-        self.SetTitle("HMMEd _VERSION_ - New Graph")
+        self.SetTitle("HMMEd _VERSION_")
         self.modeltype = self.G.modelType
         self.makeMenuBar()
         self.SetGraphMenuOptions()
