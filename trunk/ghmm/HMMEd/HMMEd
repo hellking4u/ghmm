@@ -34,7 +34,8 @@
 #
 ################################################################################
 
-import HMMEditor, GatoGlobals, Tkinter
+import HMMEditor
+import Tkinter
 
 if __name__ == '__main__':
     
