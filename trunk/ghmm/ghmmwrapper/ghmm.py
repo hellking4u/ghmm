@@ -2203,10 +2203,10 @@ class HMM:
         assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
 
         transition = None
-        for i in range(state.out_states):
-            stateId = ghmmwrapper.int_array_getitem(state.out_id, i)
+        for i in xrange(state.out_states):
+            stateId = state.getOutState(i)
             if stateId == j:
-                transition = ghmmwrapper.double_array_getitem(state.out_a, i)
+                transition = state.getOutProb(i)
                 break
         if transition:
             return transition
