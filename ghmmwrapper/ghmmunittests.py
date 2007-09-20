@@ -1047,6 +1047,13 @@ class GaussianMixtureHMMTests(unittest.TestCase):
     def testNewXML(self):
         model = ghmm.HMMOpenXML('../doc/xml_cont_example.xml')
 
+    def testMultipleTransitionClasses(self):
+        model = ghmm.HMMOpenXML('testdata/xml_cont_multiple.xml')
+        state = model.cmodel.getState(0)
+        self.assertEqual(state.getOutProb(0, 0), state.getOutProb(0))
+        self.assertEqual(state.getOutProb(0, 0), 0.1)
+        self.assertEqual(state.getOutProb(0, 1), 0.2)
+
     def testcomponentfixing(self):
         #print "testcomponentfixing"
         f = self.model.getMixtureFix(0)
