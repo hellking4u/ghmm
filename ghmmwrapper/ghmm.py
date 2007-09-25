@@ -2924,8 +2924,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
 
     def viterbiLabels(self, emissionSequences):
-        """ Returns on approximation of the most likely labeling of the input sequence(s) as
-            given by the viterbi path.
+        """ 
+        Returns the most likely labeling of the input sequence(s) as given by the viterbi path.
         """
 
         if isinstance(emissionSequences,EmissionSequence):
@@ -3477,7 +3477,7 @@ class GaussianEmissionHMM(HMM):
 
             onePath = []
             for j in range(seq_len):                
-                onePath.append(viterbiPath[j])
+                onePath.append( ghmmwrapper.int_array_getitem(viterbiPath,j) )
             
 
             allPaths.append(onePath)
