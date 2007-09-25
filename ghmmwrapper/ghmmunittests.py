@@ -133,10 +133,10 @@ class EmissionSequenceTests(unittest.TestCase):
     def testprint(self):
         #print"\ntestprint ",
         s = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1200034"
-        self.assertEqual(str(self.i_seq),s)
+        self.assertEqual(self.i_seq.verbose_str(),s)
         
         s2 = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1.3 2.1 0.8 0.1 0.03 3.6 43.3 "
-        self.assertEqual(str(self.d_seq),s2)
+        self.assertEqual(self.d_seq.verbose_str(),s2)
         
         
     def testattributes(self):
@@ -263,10 +263,10 @@ class SequenceSetTests(unittest.TestCase):
     def testprint(self):
         #print"\n----------------- testprint "
         s = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111"
-        self.assertEqual(str(self.i_seq), s)
+        self.assertEqual(self.i_seq.verbose_str(), s)
 
         s2 = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 3, weight 1.0:\n0.0 3.1 0.7 \nSeq 2, length 8, weight 1.0:\n4.4 3.05 2.0 2.4 1.2 1.8 1.0 1.0 \nSeq 3, length 5, weight 1.0:\n0.4 0.1 0.33 2.7 1.345 \nSeq 4, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 "
-        self.assertEqual(str(self.d_seq), s2)
+        self.assertEqual(self.d_seq.verbose_str(), s2)
 
         # XXX str(self.l_seq)
 
@@ -313,7 +313,7 @@ class SequenceSetTests(unittest.TestCase):
         self.i_seq.merge(mseq)
         self.assertEqual(len(self.i_seq),7)
         s = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111\nSeq 5, length 6, weight 1.0:\n140453\nSeq 6, length 4, weight 1.0:\n1230"
-        self.assertEqual(str(self.i_seq),s)
+        self.assertEqual(self.i_seq.verbose_str(),s)
 
         #print self.i_seq
 
@@ -321,20 +321,20 @@ class SequenceSetTests(unittest.TestCase):
         self.d_seq.merge(d_mseq)
         self.assertEqual(len(self.d_seq),7)
         s2 = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 3, weight 1.0:\n0.0 3.1 0.7 \nSeq 2, length 8, weight 1.0:\n4.4 3.05 2.0 2.4 1.2 1.8 1.0 1.0 \nSeq 3, length 5, weight 1.0:\n0.4 0.1 0.33 2.7 1.345 \nSeq 4, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 \nSeq 5, length 3, weight 1.0:\n7.5 4.0 1.2 \nSeq 6, length 4, weight 1.0:\n0.4 0.93 3.3 2.54 "
-        self.assertEqual(str(self.d_seq),s2)        
+        self.assertEqual(self.d_seq.verbose_str(),s2)        
         
     
     def testgetsubset(self):
         #print"\n----------------- testgetsubset "
         i_subseq = self.i_seq.getSubset([2,1,3])
         s = "\nNumber of sequences: 3\nSeq 0, length 8, weight 1.0:\n43221111\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 5, weight 1.0:\n00021"
-        self.assertEqual(str(i_subseq),s)
+        self.assertEqual(i_subseq.verbose_str(),s)
         self.assertEqual(len(i_subseq),3)
         self.assertEqual(i_subseq.sequenceLength(0),8)
         
         d_subseq = self.d_seq.getSubset([0,4])
         s2 = "\nNumber of sequences: 2\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 "
-        self.assertEqual(str(d_subseq),s2)
+        self.assertEqual(d_subseq.verbose_str(),s2)
         self.assertEqual(len(d_subseq),2)
         self.assertEqual(d_subseq.sequenceLength(0),5)
         
@@ -654,8 +654,9 @@ class BackgroundDistributionTests(unittest.TestCase):
         
     def testprint(self):
         #print "*** testprint"
-        s = str(self.bg)
-        self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
+        s = self.bg.verbose_str()
+        ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n"
+        self.assertEqual(s,ts)
 
     def testmodelbackgroundaccessfunctions(self):
         
@@ -664,8 +665,9 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.model.setBackground(self.bg, [0,-1,1])
         # deleting background
         del(self.bg)
-        s = str(self.model.background)
-        self.assertEqual(s,"BackgroundDistribution instance:\nNumber of distributions: 2\n\nGHMM Alphabet:\nNumber of symbols: 4\nExternal: ['rot', 'blau', 'gruen', 'gelb']\nInternal: [0, 1, 2, 3]\n\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n")
+        s = self.model.background.verbose_str()
+        ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n"
+        self.assertEqual(s,ts)
 
     def testapplybackground(self):
         self.model.setBackground(self.bg,[0, -1, 1])
@@ -673,7 +675,7 @@ class BackgroundDistributionTests(unittest.TestCase):
         #print self.model
         
         f = lambda x: round(x,15)
-        e1 = map(f, self.model.getEmission(0))
+        e1 = map(f, self.model.getEmission(0)) 
         e2 = map(f, self.model.getEmission(1))
         e3 = map(f, self.model.getEmission(2))
                 
@@ -1149,7 +1151,7 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
              "atgctgc\n" +
              "1.3,2.1,0.8,0.1,0.03,3.6,43.3\n")
 
-        self.assertEqual(str(self.seq),s)
+        self.assertEqual(self.seq.verbose_str(),s)
         
         
     def testattributes(self):
