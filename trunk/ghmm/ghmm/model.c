@@ -1019,128 +1019,132 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
-ghmm_dseq *ghmm_dmodel_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
-                                      long seq_number, int Tmax)
+ghmm_dseq *ghmm_dmodel_generate_sequences(ghmm_dmodel* mo, int seed, int global_len,
+                                          long seq_number, int Tmax)
 {
-# define CUR_PROC "ghmm_dmodel_generate_sequences"
-
-  /* An end state is characterized by not having an output probabiliy. */
+#define CUR_PROC "ghmm_dmodel_generate_sequences"
 
   ghmm_dseq *sq = NULL;
-  int i, j, m;
-  double p, sum;
+  int state;
+  int j, m, j_id;
+  double p, sum, max_sum;
   int len = global_len;
-  /* int silent_len = 0; */
   int n = 0;
-  int state = 0;
-  char * str;
+  int pos, label_pos;
 
-  sq = ghmm_dseq_calloc (seq_number);
-  if (!sq) {GHMM_LOG_QUEUED(LCONVERTED); goto STOP;}
+  sq = ghmm_dseq_calloc(seq_number);
+  if (!sq) {
+    GHMM_LOG_QUEUED(LCONVERTED);
+    goto STOP;
+  }
+
+  /* allocating additional fields for the state sequence in the ghmm_dseq struct */
+  ARRAY_CALLOC(sq->states, seq_number);
+  ARRAY_CALLOC(sq->states_len, seq_number);
+
+  /* A specific length of the sequences isn't given. As a model should have
+     an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
-    /* A specific length of the sequences isn't given. As a model should have
-       an end state, the konstant MAX_SEQ_LEN is used. */
-    len = (int) GHMM_MAX_SEQ_LEN;
+    len = (int)GHMM_MAX_SEQ_LEN;
 
   if (seed > 0) {
-    GHMM_RNG_SET (RNG, seed);
+    GHMM_RNG_SET(RNG, seed);
   }
 
   /* initialize the emission history */
   mo->emission_history = 0;
 
   while (n < seq_number) {
-    /* printf("sequenz n = %d\n",n); */
+    ARRAY_CALLOC(sq->seq[n], len);
+    
+    /* for silent models we have to allocate for the maximal possible number
+       of lables and states */
+    if (mo->model_type & GHMM_kSilentStates) {
+      ARRAY_CALLOC(sq->states[n], len * mo->N);
+    }
+    else {
+      ARRAY_CALLOC(sq->states[n], len);
+    }
 
-    ARRAY_CALLOC (sq->seq[n], len);
-    state = 0;
+    pos = label_pos = 0;
     
     /* Get a random initial state i */
-    p = GHMM_RNG_UNIFORM (RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;
-    for (i = 0; i < mo->N; i++) {
-      sum += mo->s[i].pi;
+    for (state=0; state < mo->N; state++) {
+      sum += mo->s[state].pi;
       if (sum >= p)
         break;
     }
 
-    if ((mo->model_type & GHMM_kHigherOrderEmissions) && (mo->order[i] > 0)) {
-      str = ighmm_mprintf(NULL, 0, "State %d has emission order %d, but it's initial probability is not 0.", i, mo->order[i]);
-      GHMM_LOG(LCRITIC, str);
-      m_free(str);
-      exit (1);
-    }
+    while (pos < len) {
+      /* save the state path and label */
+      sq->states[n][label_pos] = state;
+      label_pos++;
 
-    if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
-      /* silent state: we do nothing, no output */
-      /* printf("first state %d silent\n",i);
-         state = 0; 
-         silent_len = silent_len + 1; */
-    }
-    else {
-      /* first state emits */
-      /* printf("first state %d not silent\n",i); */
-      /* Get a random initial output m */
-      m = get_random_output (mo, i, state);
-      update_emission_history (mo, m);
-      sq->seq[n][state++] = m;
-    }
-
-    /* check whether sequence was completed by inital state */
-    if (state >= len) {
-      /* printf("assinging length %d to sequence %d\n",state,n);
-         printf("sequence complete...\n"); */
-      sq->seq_len[n++] = state;
-      continue;
-    }
-
-    while (state < len) {
-      /* Get a random state i */
-      p = GHMM_RNG_UNIFORM (RNG);
-      sum = 0.0;
-      for (j = 0; j < mo->s[i].out_states; j++) {
-        sum += mo->s[i].out_a[j];
-        if (sum >= p)
-          break;
+      /* Get a random output m if the state is not a silent state */
+      if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[state])) {
+        m = get_random_output(mo, state, pos);
+        update_emission_history(mo, m);
+        sq->seq[n][pos] = m;
+        pos++;
       }
 
-      /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,state); */
+      /* get next state */
+      p = GHMM_RNG_UNIFORM(RNG);
+      if (pos < mo->maxorder) {
+        max_sum = 0.0;
+        for (j = 0; j < mo->s[state].out_states; j++) {
+          j_id = mo->s[state].out_id[j];
+          if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] < pos)
+            max_sum += mo->s[state].out_a[j];
+        }
+        if (j && fabs(max_sum) < GHMM_EPS_PREC) {
+          GHMM_LOG_PRINTF(LERROR, LOC, "No possible transition from state %d "
+                          "since all successor states require more history "
+                          "than seen up to position: %d.",
+                          state, pos);
+          break;
+        }
+        if (j)
+          p *= max_sum;
+      }
+
+      sum = 0.0;
+      for (j = 0; j < mo->s[state].out_states; j++) {
+        j_id = mo->s[state].out_id[j];
+        if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] < pos) {
+          sum += mo->s[state].out_a[j];
+          if (sum >= p)
+            break;
+        }
+      }
 
       if (sum == 0.0) {
-	/* printf("final state reached - aborting\n"); */
-	/* Set Sequence length and sample the next sequence */
-	sq->seq_len[n++] = state;
+        GHMM_LOG_PRINTF(LINFO, LOC, "final state (%d) reached at position %d "
+                        "of sequence %d", state, pos, n);
 	break;
       }
 
-      i = mo->s[i].out_id[j];
-      if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {  /* Get a silent state i */
-        /* printf("silent state \n");
-           silent_len += 1; */
-        /*if (silent_len >= Tmax) {
-           printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
-           sq->seq_len[n++] = state; 
-           break;
-           } */
-      }
-      else {
-        /* Get a random output m from state i */
-        m = get_random_output (mo, i, state);
-        update_emission_history (mo, m);
-        sq->seq[n][state++] = m;
-      }
-      if (state == len)
-        sq->seq_len[n++] = state;
+      state = j_id;
+    }                           /* while (pos < len) */
 
-    }                           /* while (state < len) */
+    /* realocate state path and label sequence to actual size */ 
+    if (mo->model_type & GHMM_kSilentStates) {
+      ARRAY_REALLOC(sq->states[n], label_pos);
+    }
+
+    sq->seq_len[n] = pos;
+    sq->states_len[n] = label_pos;
+    n++;
   }                             /* while( n < seq_number ) */
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  ghmm_dseq_free (&sq);
-  return (NULL);
-# undef CUR_PROC
-}                               /* data */
+  ghmm_dseq_free(&sq);
+  return NULL;
+#undef CUR_PROC
+}
 
 /*============================================================================*/
 
@@ -1770,205 +1774,141 @@ void ghmm_dstate_clean (ghmm_dstate * my_state)
 
 /*==========================  Labeled HMMs  ================================*/
 
-ghmm_dseq *ghmm_dmodel_label_generate_sequences (ghmm_dmodel * mo, int seed,
-                                            int global_len, long seq_number,
-                                            int Tmax)
+ghmm_dseq *ghmm_dmodel_label_generate_sequences(
+    ghmm_dmodel * mo, int seed, int global_len, long seq_number, int Tmax)
 {
-# define CUR_PROC "ghmm_dl_generate_sequences"
-
-  /* An end state is characterized by not having an output probabiliy. */
+#define CUR_PROC "ghmm_dmodel_label_generate_sequences"
 
   ghmm_dseq *sq = NULL;
-  int i, j, m, transition_impossible, j_id;
-  double p, sum;
+  int state;
+  int j, m, j_id;
+  double p, sum, max_sum;
   int len = global_len;
-  /*int silent_len = 0; */
   int n = 0;
-  int pos = 0;
-  int label_index = 0;
+  int pos, label_pos;
 
-  sq = ghmm_dseq_calloc (seq_number);
-
+  sq = ghmm_dseq_calloc(seq_number);
   if (!sq) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
 
-  /* allocating additional fields for the labels in the ghmm_dseq struct */
-  ARRAY_CALLOC (sq->state_labels, seq_number);
-  ARRAY_CALLOC (sq->state_labels_len, seq_number);
+  /* allocating additional fields for the state sequence in the ghmm_dseq struct */
+  ARRAY_CALLOC(sq->states, seq_number);
+  ARRAY_CALLOC(sq->states_len, seq_number);
 
+  /* allocating additional fields for the labels in the ghmm_dseq struct */
+  ARRAY_CALLOC(sq->state_labels, seq_number);
+  ARRAY_CALLOC(sq->state_labels_len, seq_number);
+
+  /* A specific length of the sequences isn't given. As a model should have
+     an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
-    /* A specific length of the sequences isn't given. As a model should have
-       an end state, the konstant MAX_SEQ_LEN is used. */
-    len = (int) GHMM_MAX_SEQ_LEN;
+    len = (int)GHMM_MAX_SEQ_LEN;
 
   if (seed > 0) {
-    GHMM_RNG_SET (RNG, seed);
+    GHMM_RNG_SET(RNG, seed);
   }
 
   /* initialize the emission history */
   mo->emission_history = 0;
 
   while (n < seq_number) {
-    /* printf("sequenz n = %d\n",n); */
-
-    ARRAY_CALLOC (sq->seq[n], len);
+    ARRAY_CALLOC(sq->seq[n], len);
     
+    /* for silent models we have to allocate for the maximal possible number
+       of lables and states */
     if (mo->model_type & GHMM_kSilentStates) {
-      
-      /* printf("Model has silent states.\n"); */
-      /* for silent models we have to allocate for the maximal possible number of lables */
-      ARRAY_CALLOC (sq->state_labels[n], len * mo->N);
+      ARRAY_CALLOC(sq->states[n], len * mo->N);
+      ARRAY_CALLOC(sq->state_labels[n], len * mo->N);
     }
-    else {
-      /* printf("Model has no silent states.\n"); */
-      ARRAY_CALLOC (sq->state_labels[n], len);
+     else {
+      ARRAY_CALLOC(sq->states[n], len);
+      ARRAY_CALLOC(sq->state_labels[n], len);
     }
-    label_index = 0;
-    pos = 0;
+
+    pos = label_pos = 0;
     
     /* Get a random initial state i */
-    p = GHMM_RNG_UNIFORM (RNG);
+    p = GHMM_RNG_UNIFORM(RNG);
     sum = 0.0;
-    for (i = 0; i < mo->N; i++) {
-      sum += mo->s[i].pi;
+    for (state=0; state < mo->N; state++) {
+      sum += mo->s[state].pi;
       if (sum >= p)
         break;
     }
 
-    if (!(mo->model_type & GHMM_kHigherOrderEmissions) && 0 < mo->order[i]) {
-      fprintf (stderr,
-               "ERROR: State %d has emission order %d, but it's initial probability is not 0.\n",
-               i, mo->order[i]);
-      exit (1);
-    }
-
-    /* add label of fist state to the label list */
-    sq->state_labels[n][label_index++] = mo->label[i];
-
-    if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
-      /* silent state: we do nothing, no output */
-      /* printf("first state %d silent\n",i);
-         pos = 0; 
-         silent_len = silent_len + 1; */
-    }
-    else {
-      /* first state emits */
-      /* printf("first state %d not silent\n",i); */
-
-      /* Get a random initial output m */
-      m = get_random_output (mo, i, pos);
-      update_emission_history (mo, m);
-      sq->seq[n][pos++] = m;
-    }
-
-    /* check whether sequence was completed by inital state */
-    if (pos >= len) {
-
-      /* printf("assinging length %d to sequence %d\n", pos, n);
-         printf("sequence complete...\n"); */
-      sq->seq_len[n] = pos;
-      sq->state_labels_len[n] = label_index;
-
-      /* printf("1: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
-
-      if (mo->model_type & GHMM_kSilentStates) {
-        printf ("reallocating\n");
-        ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
-      }
-      n++;
-      continue;
-    }
     while (pos < len) {
-      if (pos < mo->maxorder) {
-        /* if maxorder is not yet reached, we should only go to states with order < pos */
-        transition_impossible = 1;
-        for (j = 0; j < mo->s[i].out_states; j++) {
-          j_id = mo->s[i].out_id[j];
-          if ((mo->order[j_id]) < (pos)) {
-            transition_impossible = 0;
-            break;
-          }
-        }
-        if (1 == transition_impossible) {
-          fprintf (stderr,
-                   "No possible transition from state %d, due to too high order of all successor states. Position: %d",
-                   i, pos);
-          exit (1);
-        }
-        do {
-          /* Get a random state i */
-          p = GHMM_RNG_UNIFORM (RNG);
-          sum = 0.0;
-          for (j = 0; j < mo->s[i].out_states; j++) {
-            j_id = mo->s[i].out_id[j];
-            sum += mo->s[i].out_a[j];
-            if (sum >= p)
-              break;
-          }
-        } while (mo->order[j_id] >= pos);
+      /* save the state path and label */
+      sq->states[n][label_pos] = state;
+      sq->state_labels[n][label_pos] = mo->label[state];
+      label_pos++;
+
+      /* Get a random output m if the state is not a silent state */
+      if (!(mo->model_type & GHMM_kSilentStates) || !(mo->silent[state])) {
+        m = get_random_output(mo, state, pos);
+        update_emission_history(mo, m);
+        sq->seq[n][pos] = m;
+        pos++;
       }
-      else {
-        /* Get a random state i */
-        p = GHMM_RNG_UNIFORM (RNG);
-        sum = 0.0;
-        for (j = 0; j < mo->s[i].out_states; j++) {
-          sum += mo->s[i].out_a[j];
+
+      /* get next state */
+      p = GHMM_RNG_UNIFORM(RNG);
+      if (pos < mo->maxorder) {
+        max_sum = 0.0;
+        for (j = 0; j < mo->s[state].out_states; j++) {
+          j_id = mo->s[state].out_id[j];
+          if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] < pos)
+            max_sum += mo->s[state].out_a[j];
+        }
+        if (j && fabs(max_sum) < GHMM_EPS_PREC) {
+          GHMM_LOG_PRINTF(LERROR, LOC, "No possible transition from state %d "
+                          "since all successor states require more history "
+                          "than seen up to position: %d.",
+                          state, pos);
+          break;
+        }
+        if (j)
+          p *= max_sum;
+      }
+
+      sum = 0.0;
+      for (j = 0; j < mo->s[state].out_states; j++) {
+        j_id = mo->s[state].out_id[j];
+        if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] < pos) {
+          sum += mo->s[state].out_a[j];
           if (sum >= p)
             break;
         }
       }
-      i = mo->s[i].out_id[j];
-
-      /* add label of state to the label list */
-      sq->state_labels[n][label_index] = mo->label[i];
-      label_index++;
-
-      /* printf("state %d selected (i: %d, j: %d) at position %d\n",mo->s[i].out_id[j],i,j,pos); */
 
       if (sum == 0.0) {
-	/* printf("final state reached - aborting\n"); */
-	sq->seq_len[n++] = pos;
+        GHMM_LOG_PRINTF(LINFO, LOC, "final state (%d) reached at position %d "
+                        "of sequence %d", state, pos, n);
 	break;
       }
 
-      if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {    /* Got a silent state i */
-        /* printf("silent state \n");
-           silent_len += 1;
-           if (silent_len >= Tmax) {
-           printf("%d silent states reached -> silent circle - aborting...\n",silent_len);
-           sq->seq_len[n++] = pos; 
-           break;
-           } */
-      }
-      else {
-        /* Get a random output m from state i */
-        m = get_random_output (mo, i, pos);
-        update_emission_history (mo, m);
-        sq->seq[n][pos++] = m;
-      }
-      if (pos == len) {
-        sq->state_labels_len[n] = label_index;
-
-        /* printf("2: seq %d -> %d labels\n",n,sq->state_labels_len[n]); */
-
-        if (mo->model_type & GHMM_kSilentStates) {
-          printf ("reallocating\n");
-          ARRAY_REALLOC (sq->state_labels[n], sq->state_labels_len[n]);
-        }
-
-        sq->seq_len[n++] = pos;
-      }
+      state = j_id;
     }                           /* while (pos < len) */
+
+    /* realocate state path and label sequence to actual size */ 
+    if (mo->model_type & GHMM_kSilentStates) {
+      ARRAY_REALLOC(sq->states[n], label_pos);
+      ARRAY_REALLOC(sq->state_labels[n], label_pos);
+    }
+
+    sq->seq_len[n] = pos;
+    sq->states_len[n] = label_pos;
+    sq->state_labels_len[n] = label_pos;
+    n++;
   }                             /* while( n < seq_number ) */
 
   return (sq);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  ghmm_dseq_free (&sq);
-  return (NULL);
-# undef CUR_PROC
-}                               /* data */
+  ghmm_dseq_free(&sq);
+  return NULL;
+#undef CUR_PROC
+}
 
 
 /*----------------------------------------------------------------------------*/
