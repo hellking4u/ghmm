@@ -664,6 +664,7 @@ int ghmm_dseq_subseq_free (ghmm_dseq *sq)
 
   if (sq->states) {
     ighmm_dmatrix_free (&(sq->states), sq->seq_number);
+    m_free(sq->states_len);
   }
 
   if (sq->state_labels) {

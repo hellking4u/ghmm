@@ -65,6 +65,9 @@ extern "C" {
 
   /** array of sequence length */
     int *seq_len;
+  /** array of state path lengths */
+    int *states_len;
+
 #ifdef GHMM_OBSOLETE
   /**  array of sequence labels */
     long *seq_label;
