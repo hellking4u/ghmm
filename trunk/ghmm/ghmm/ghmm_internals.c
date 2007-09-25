@@ -70,7 +70,7 @@ static void process_external_log(int level, const char* proc, const char* error_
   logfunc(level, message, logfunc_data);
 }
 
-static void ighmm_log_out(int level, const char* proc, const char* message) {
+static void ighmm_log_out(int level, const char* proc, char* message) {
 
   /* if defined use external logging function */
   if (logfunc) {
@@ -108,8 +108,8 @@ static void ighmm_log_out(int level, const char* proc, const char* message) {
 
 
 void GHMM_LOG_PRINTF(int level, const char* proc, const char* error_str, ...) {
-  char* message;
   va_list args;
+  char* message = malloc(256);
 
   /* process queued message if any */
   if (qmessage) {
@@ -118,7 +118,7 @@ void GHMM_LOG_PRINTF(int level, const char* proc, const char* error_str, ...) {
   }
   if (error_str) {
     va_start(args, error_str);
-    message = ighmm_mprintf(NULL, 0, error_str, args);
+    vsnprintf(message, 256, error_str, args);
     ighmm_log_out(level, proc, message);
     va_end(args);
   }
