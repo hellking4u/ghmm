@@ -334,13 +334,21 @@ class Alphabet(EmissionDomain):
 
         self.CDataType = "int" # flag indicating which C data type should be used
 
+
     def __str__(self):
+        strout = ["<Alphabet:"]
+        strout.append( str(self.listOfCharacters) +'>')
+
+        return join(strout,'')
+    
+    def verbose_str(self):
         strout = ["GHMM Alphabet:\n"]
         strout.append("Number of symbols: " + str(len(self)) + "\n")
         strout.append("External: " + str(self.listOfCharacters) + "\n")
         strout.append("Internal: " + str(range(len(self))) + "\n")
         return join(strout,'')
-    
+
+
     def __eq__(self,alph):
         if not isinstance(alph,Alphabet):
             return False
@@ -738,6 +746,16 @@ class EmissionSequence:
         "Defines string representation."
         seq = self.cseq
         strout = []
+        for j in range(seq.getLength(0)):
+            strout.append(str( self.emissionDomain.external(self[j]) )   )
+            if self.emissionDomain.CDataType == "double":
+                strout.append(" ")
+    	return join(strout,'')
+
+    def verbose_str(self):
+        "Defines string representation."
+        seq = self.cseq
+        strout = []
         strout.append("\nEmissionSequence Instance:\nlength " + str(seq.getLength(0)))
         strout.append(", weight " + str(seq.getWeight(0))  + ":\n")
         for j in range(seq.getLength(0)):
@@ -752,6 +770,8 @@ class EmissionSequence:
                 strout.append(str( self.labelDomain.external(ghmmwrapper.int_matrix_getitem(seq.state_labels,0,j)))+ ", ")
 
     	return join(strout,'')
+
+
 
     def sequenceSet(self):
         """ Return a one-element SequenceSet with this sequence."""
@@ -858,6 +878,12 @@ class SequenceSet:
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
+        strout =  ["\n<SequenceSet with " + str(seq.seq_number) +' sequences>']
+        return join(strout,'')
+
+    def verbose_str(self):
+        "Defines string representation."
+        seq = self.cseq
         strout =  ["\nNumber of sequences: " + str(seq.seq_number)]
 
         for i in range(seq.seq_number):
@@ -876,6 +902,7 @@ class SequenceSet:
                     strout.append(str( self.labelDomain.external(ghmmwrapper.int_matrix_getitem(seq.state_labels,i,j))) +", ")
 
         return join(strout,'')
+
 
 
     def __len__(self):
@@ -1827,6 +1854,12 @@ class BackgroundDistribution:
         self.cbackground = None
     
     def __str__(self):
+        outstr = "<BackgroundDistribution with " + str(self.cbackground.n) +" distributions>"
+        d = ghmmhelper.double_matrix2list(self.cbackground.b, self.cbackground.n, len(self.emissionDomain))
+        return outstr
+
+
+    def verbose_str(self):
         outstr = "BackgroundDistribution instance:\n"
         outstr += "Number of distributions: " + str(self.cbackground.n)+"\n\n"
         outstr += str(self.emissionDomain) + "\n"
@@ -1835,8 +1868,6 @@ class BackgroundDistribution:
         for i in range(self.cbackground.n):
             outstr += "  Order: " + str(self.cbackground.getOrder(i))+"\n"
             outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
-            
-                     
         return outstr
         
     def tolist(self):
@@ -2337,6 +2368,13 @@ class DiscreteEmissionHMM(HMM):
 
     def __str__(self):
         hmm = self.cmodel
+        strout = ["<DiscreteEmissionHMM with "+str(hmm.N)+" states>"]
+        return join(strout,'')
+
+
+
+    def verbose_str(self):
+        hmm = self.cmodel
         strout = ["\nGHMM Model\n"]
         strout.append( "Name: " + str(self.cmodel.name))
         strout.append( "\nModelflags: "+ self.printtypes(self.cmodel.model_type))
@@ -2377,6 +2415,7 @@ class DiscreteEmissionHMM(HMM):
                 strout.append( str(self.cmodel.getSilent(k)) + ", ")
         strout.append( "\n")
         return join(strout,'')
+
 
 
     def extendDurations(self, durationlist):
@@ -2826,6 +2865,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
     def __str__(self):
         hmm = self.cmodel
+        strout = ["<StateLabelHMM with "+str(self.N)+" states>"]
+
+        return join(strout,'')
+
+    def verbose_str(self):
+        hmm = self.cmodel
         strout = ["\nGHMM Model\n"]
         strout.append("Name: " + str(self.cmodel.name))
         strout.append("\nModelflags: "+ self.printtypes(self.cmodel.model_type))
@@ -3258,6 +3303,11 @@ class GaussianEmissionHMM(HMM):
     
     def __str__(self):
         hmm = self.cmodel
+        strout = ["<GaussianEmissionHMM with "+ str(hmm.N)+ " states>"]
+        return join(strout,'')
+
+    def verbose_str(self):
+        hmm = self.cmodel
         strout = ["\nHMM Overview:"]
         strout.append("\nNumber of states: " + str(hmm.N))
         strout.append("\nNumber of mixture components: " + str(hmm.M))
@@ -3290,6 +3340,8 @@ class GaussianEmissionHMM(HMM):
 
 
         return join(strout,'')
+
+
 
     # different function signatures require overloading of parent class methods    
     def sample(self, seqNr ,T,seed = -1):
@@ -3767,6 +3819,11 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
          self.cmodel.prior = prior  
     
     def __str__(self):
+        hmm = self.cmodel
+        strout = ["<GaussianMixtureHMM with "+ str(hmm.N)+ " states>"]
+        return join(strout,'')
+
+    def verbose_str(self):
         "defines string representation"
         hmm = self.cmodel
 
@@ -3804,6 +3861,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
         return join(strout,'')
+
 
     def toMatrices(self):
         "Return the parameters in matrix form."
@@ -3923,6 +3981,14 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         "defines string representation"
         hmm = self.cmodel
 
+        strout = "<ContinuousMixtureHMM with "+str(hmm.N)+" states>"
+
+        return join(strout,'')
+
+    def verbose_str(self):
+        "defines string representation"
+        hmm = self.cmodel
+
         strout = "\nOverview of HMM:"
         strout.append("\nNumber of states: "+ str(hmm.N))
         strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
@@ -3966,6 +4032,8 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
         return join(strout,'')
+
+
 
     def getPrior(self):
         return self.cmodel.prior
@@ -4298,6 +4366,15 @@ class ComplexEmissionSequence:
         the sequence in all it's encodings (can be quite long)
         @return: string representation
         """
+        s = ("<ComplexEmissionSequence>")  
+        return s
+
+    def verbose_str(self):
+        """
+        string representation. Access the underlying C-structure and return
+        the sequence in all it's encodings (can be quite long)
+        @return: string representation
+        """
         s = ("ComplexEmissionSequence (len=%i, discrete=%i, continuous=%i)\n"%
              (self.cseq.length, len(self.discreteDomains),
               len(self.continuousDomains)))
@@ -4310,8 +4387,7 @@ class ComplexEmissionSequence:
                             for x in self.getInternalContinuousSequence(i)])
             s += "\n"
         return s
-
-        
+                
 class PairHMM(HMM):
     """
     Pair HMMs with discrete emissions over multiple alphabets.
@@ -4339,6 +4415,16 @@ class PairHMM(HMM):
         self.states = {}
 
     def __str__(self):
+        """
+        string representation (more for debuging) shows the contents of the C
+        structure ghmm_dpmodel
+        @return: string representation
+        """
+        hmm = self.cmodel
+        strout = ["<PairHMM with "+str(hmm.N)+" states>"]
+        return join(strout,'')
+
+    def verbose_str(self):
         """
         string representation (more for debuging) shows the contents of the C
         structure ghmm_dpmodel
@@ -4373,6 +4459,7 @@ class PairHMM(HMM):
             strout.append("\n")
 
         return join(strout,'')
+
 
     def viterbi(self, complexEmissionSequenceX, complexEmissionSequenceY):
         """
