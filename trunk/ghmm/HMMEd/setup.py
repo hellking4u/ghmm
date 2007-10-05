@@ -46,7 +46,7 @@ setup(name="HMMEd",
       url="http://ghmm.org",
       #requires   = ['GATO', 'ghmm'],
       scripts    = ['HMMEd'],
-      py_modules = ['HMMEditor', 'ObjectHMM']
+      py_modules = ['HMMEditor', 'ObjectHMM', 'HMMEditingContext']
      )
 
 # EOF: setup.py
