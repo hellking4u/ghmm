@@ -41,9 +41,48 @@ from Gato import ProbEditorBasics, ProbEditorDialogs, ProbEditorContinuous
 
 import Tkinter
 
-import ghmmwrapper, ghmmhelper, HMMEditor
+import ghmmwrapper, ghmmhelper, ghmm, HMMEditor
 
 import copy
+
+try:
+    from collections import defaultdict
+except:
+    class defaultdict(dict):
+        def __init__(self, default_factory=None, *a, **kw):
+            if (default_factory is not None and
+                not hasattr(default_factory, '__call__')):
+                raise TypeError('first argument must be callable')
+            dict.__init__(self, *a, **kw)
+            self.default_factory = default_factory
+        def __getitem__(self, key):
+            try:
+                return dict.__getitem__(self, key)
+            except KeyError:
+                return self.__missing__(key)
+        def __missing__(self, key):
+            if self.default_factory is None:
+                raise KeyError(key)
+            self[key] = value = self.default_factory()
+            return value
+        def __reduce__(self):
+            if self.default_factory is None:
+                args = tuple()
+            else:
+                args = self.default_factory,
+            return type(self), args, None, None, self.items()
+        def copy(self):
+            return self.__copy__()
+        def __copy__(self):
+            return type(self)(self.default_factory, self)
+        def __deepcopy__(self, memo):
+            import copy
+            return type(self)(self.default_factory,
+                              copy.deepcopy(self.items()))
+        def __repr__(self):
+            return ('defaultdict(%s, %s)' % (self.default_factory,
+                                             dict.__repr__(self)))
+
 
 class DiscreteHMMAlphabet:
     def __init__(self, names = [], description = "alphabet_1"):
@@ -53,6 +92,11 @@ class DiscreteHMMAlphabet:
         for i,name in enumerate(names):
             self.name[i]         = name
             self.name2code[name] = i
+
+    def __str__(self):
+        string  = str(self.id) + ": "
+        string += str(self.name)
+        return string
 
     def size(self):
         return len(self.name.keys())
@@ -250,11 +294,20 @@ class NormalDensityTruncLeft(ProbEditorContinuous.gauss_tail_function_left):
     def getParameters(self):
         return (self.mu, self.sigma, self.tail, ghmmwrapper.normal_left)
 
-class Emission:
+class Emission(object):
     def __init__(self):
         pass
 
+    def __str__(self):
+        pass
+
     def edit(self, master):
+        pass
+
+    def get(self):
+        pass
+    
+    def set(self, value):
         pass
 
     def writeParameters(self, cstate):
@@ -272,6 +325,9 @@ class DiscreteEmission(Emission):
         else:
             self.weights = []
         self.order = 0
+
+    def __str__(self):
+        return str(self.weights)
 
     def grow(self):
         s = float(self.alphabet.size()-1)
@@ -307,6 +363,27 @@ class DiscreteEmission(Emission):
             for label in transition_probabilities.keys():
                 key = self.alphabet.GetKey(label)
                 self.weights[key] = transition_probabilities[label]/transition_probabilities.sum
+
+    def get(self):
+        return self.weights
+
+    def set(self, values):
+        diff = self.alphabet.size() - len(values)
+        #print diff, values, self.alphabet.size(), self.alphabet
+        if diff == 0:
+            self.weights = values
+        elif diff > 0:
+            s = sum(values)
+            if s == 1.0:
+                values += ([0.0]*diff)
+            elif s < 1.0 and s >= 0.0:
+                values += ([(1.0-s)/diff] * diff)
+            else:
+                raise ValueError("sum")
+        else:
+            raise ValueError("wrong number of arguments")
+
+        self.weights = values
 
     def writeParameters(self, cstate):
         cstate.b = ghmmhelper.list2double_array(self.weights)
@@ -357,6 +434,12 @@ class ContinuousEmission(Emission):
         Emission.__init__(self)
         self.weights  = [1.0]
         self.plotList = []
+
+    def get(self):
+        raise
+
+    def set(self, value):
+        raise
 
     def edit(self, master, stateId):
         if len(self.plotList) == 0:
@@ -411,6 +494,129 @@ class ContinuousEmission(Emission):
                 self.plotList.append(UniformDensity())
 
 
+
+class Distribution(ContinuousEmission):
+    def __str__(self):
+        return "  1.0  *  " + str(self.get())
+
+class UniformDistribution(Distribution):
+    def __init__(self, start=0, stop=1):
+        ContinuousEmission.__init__(self)
+        self.plotList = [UniformDensity(start, stop)]
+
+    def set(self, values):
+        self.weights = [1.0]
+        density = self.plotList[0]
+        density.start = float(min(values))
+        density.stop  = float(max(values))
+
+    def get(self):
+        return self.plotList[0]
+
+    def getParameters(self):
+        return self.plotList[0].getParameters()
+
+class GaussianDistribution(Distribution):
+    def __init__(self, mu=0, sigma=1):
+        ContinuousEmission.__init__(self)
+        self.plotList = [NormalDensity(mu, sigma)]
+
+    def set(self, values):
+        self.weights = [1.0]
+        density = self.plotList[0]
+        density.mu    = float(values[0])
+        density.sigma = float(values[1])
+
+    def get(self):
+        return self.plotList[0]
+
+    def getParameters(self):
+        return self.plotList[0].getParameters()
+
+class LeftTruncGaussianDistribution(Distribution):
+    def __init__(self, mu=0, sigma=1, trunc=0.5):
+        ContinuousEmission.__init__(self)
+        self.plotList = [NormalDensityTruncLeft(mu, sigma, trunc)]
+
+    def set(self, values):
+        self.weights = [1.0]
+        density = self.plotList[0]
+        density.mu    = float(values[0])
+        density.sigma = float(values[1])
+        density.tail  = float(values[2])
+
+    def get(self):
+        return self.plotList[0]
+
+    def getParameters(self):
+        return self.plotList[0].getParameters()
+
+class RightTruncGaussianDistribution(Distribution):
+    def __init__(self, mu=0, sigma=1, trunc=0.5):
+        ContinuousEmission.__init__(self)
+        self.plotList = [NormalDensityTruncRight(mu, sigma, trunc)]
+
+    def set(self, values):
+        self.weights = [1.0]
+        density = self.plotList[0]
+        density.mu    = float(values[0])
+        density.sigma = float(values[1])
+        density.tail  = float(values[2])
+
+    def get(self):
+        return self.plotList[0]
+
+    def getParameters(self):
+        return self.plotList[0].getParameters()
+
+class ContinuousMixtureDistribution(Distribution):
+    def __init__(self, parameters=[]):
+        ContinuousEmission.__init__(self)
+        self.set(parameters)
+
+    def __str__(self):
+        string = ""
+        for i,w in enumerate(self.weights):
+            string += ("  %f  *  " % w) + str(self.plotList[i]) + '\n'
+        return string[:-1]
+
+    def set(self, values):
+        self.weights = []
+        self.plotList = []
+        if isinstance(values, Distribution):
+            values = [(values, 1.0)]
+        for value in values:
+            self.plotList.append(value[0])
+            if len(value) > 1:
+                self.weights.append(value[1])
+            else:
+                self.weights.append(-1)
+
+        weights = [w for w in self.weights if w >= 0.0]
+        wsum = sum(weights)
+        if wsum > 1.0:
+            factor = 1.0 / wsum
+            for i,weight in enumerate(self.weights):
+                if weight >= 0.0:
+                    self.weights[i] *= factor
+            wsum = 1.0
+        if len(weights) < len(self.weights):
+            mean = (1.0-wsum) / (len(self.weights)-len(weights))
+            for i,weight in  enumerate(self.weights):
+                if weight >= 0.0:
+                    self.weights[i] = mean
+            
+
+    def get(self):
+        retlist = []
+        for (i, w) in enumerate(self.weights):
+            retlist.append((self.plotList[i], w))
+        return retlist
+
+class GaussianMixtureDistribution(ContinuousMixtureDistribution):
+    pass
+
+
 class DiscretePairEmission(Emission):
     pass
 
@@ -422,24 +628,67 @@ class State(VertexObject):
         self.num = -1   # continuous id (0..Order()-1) used for writing transitions
         self.editableAttr = {'labeling':"Name", 'initial':"Initial Probability", 'fixed':"fixed emissions"}
         self.initial = Probability()
-        self.emission = emission
+        self.Emission = emission
         self.itsHMM = hmm
         self.fixed = ValidatingBool(False)
 
+    def __setattr__(self, name, value):
+        if name is "emission":
+            self.Emission.set(value)
+        elif name is "name":
+            try:
+                if self.itsHMM is not None:
+                    vname = self.labeling
+                    self.itsHMM.name2id[vname] = [x for x in self.itsHMM.name2id[vname] if x != self.id]
+                    if len(self.itsHMM.name2id[vname]) == 0:
+                        del self.itsHMM.name2id[vname]
+            except:
+                raise "State doesn't hold pointer to its HMM, can't update the name"
+            self.labeling = ValidatingString(str(value))
+        else:
+            self.__dict__[name] = value
+            #object.__setattr__(self, name, value)
+
+    def __getattr__(self, name):
+        if name is "emission":
+            return self.Emission.get()
+        elif name is "name":
+            return self.labeling
+        else:
+            return self.__dict__[name]
+            #return object.__getattr__(self, name)
+
+    def __str__(self):
+        string  = ('State %d ("%s"). Initial probability: %f\n' % (self.id, self.labeling, self.initial))
+        string += str(self.Emission)
+        return string
+        
     def update(self):
         pass
 
     def normalize(self):
-        weights  = [e.GetWeight() for e in self.outEdges]
-        s = float(sum(weights))
-        for i,edge in enumerate(self.outEdges):
-            edge.SetWeight(weights[i]/s)
+        # normalize outgoing transmission probabilities
+        weights = [e.GetWeight() for e in self.outEdges]
+        weights = [w for w in weights if w >= 0.0]
+        osum = float(sum(weights))
+        if osum > 1.0 or len(weights) == len(self.outEdges):
+            for i,edge in enumerate(self.outEdges):
+                w = edge.GetWeight()
+                if w >= 0.0:
+                    edge.SetWeight(w/osum)
+            osum=1.0
+        if len(weights) < len(self.outEdges):
+            mean = (1.0-osum) / (len(self.outEdges)-len(weights))
+            for i,edge in enumerate(self.outEdges):
+                if edge.GetWeight() < 0.0:  
+                    edge.SetWeight(mean)
+            
 
     def editProperties(self, parent, attributes = None):
         self.update()
         self.desc = ('Properties of State %d (%s)' % (self.id, self.labeling))
         if self.itsHMM.modelType & ghmmwrapper.kHigherOrderEmissions:
-            self.order = self.emission.order
+            self.order = self.Emission.order
             self.editableAttr['order'] = "Order"
         if attributes == None:
             editBox = EditObjectAttributesDialog(parent, self, self.editableAttr)
@@ -449,12 +698,12 @@ class State(VertexObject):
                 editableAttr[attr] = self.editableAttr[attr]
             editBox = EditObjectAttributesDialog(parent, self, editableAttr)
         if self.itsHMM.modelType & ghmmwrapper.kHigherOrderEmissions:
-            self.emission.ChangeOrder(self.order)
+            self.Emission.ChangeOrder(self.order)
             del self.order
             del self.editableAttr['order']
 
     def editEmissions(self, master):
-        self.emission.edit(master, ('Properties of State %d (%s)' % (self.id, self.labeling)))
+        self.Emission.edit(master, ('Properties of State %d (%s)' % (self.id, self.labeling)))
 
     def WriteCState(self, cstate):
         cstate.pi         = self.initial
@@ -462,13 +711,17 @@ class State(VertexObject):
         cstate.out_states = len(self.outEdges)
 
         cstate.desc      = str(self.labeling)
-        cstate.xPosition = int(self.embedding.x)
-        cstate.yPosition = int(self.embedding.y)
+        if self.embedding is not None:
+            cstate.xPosition = int(self.embedding.x)
+            cstate.yPosition = int(self.embedding.y)
+        else:
+            cstate.xPosition = 0
+            cstate.yPosition = 0
 
         cstate.fix = self.fixed
 
         self.WriteTransitions(cstate)
-        self.emission.writeParameters(cstate)
+        self.Emission.writeParameters(cstate)
 
     def WriteTransitions(self, cstate):
         inID = [edge.tail.num for edge in self.inEdges]
@@ -489,7 +742,7 @@ class State(VertexObject):
         if self.itsHMM is not None:
             self.itsHMM.SetEmbedding(self.id, cstate.xPosition, cstate.yPosition)
 
-        self.emission.ReadCState(cstate, cmodel.M)
+        self.Emission.ReadCState(cstate, cmodel.M)
 
 
 class ContinuousState(State):
@@ -781,6 +1034,23 @@ class Transition(EdgeObject):
         #self.weight = Probability()
         self.editableAttr = {'weight':"Weight"}
 
+    def __str__(self):
+        return "Transition from %d to %d with probability %f" % (self.tail.id, self.head.id, self.GetWeight())
+
+    def __setattr__(self, name, value):
+        if name is "p":
+            self.SetWeight(value)
+        else:
+            self.__dict__[name] = value
+            #object.__setattr__(self, name, value)
+
+    def __getattr__(self, name):
+        if name is "p":
+            return self.GetWeight()
+        else:
+            return self.__dict__[name]
+            #return object.__getattr__(self, name)
+            
     def GetWeight(self):
         return self.GetEdgeWeight(0)
 
@@ -825,7 +1095,7 @@ class ObjectHMM(ObjectGraph):
     """
     """
 
-    def __init__(self, stateClass, transitionClass, emissionClass=Emission(), alphabet=None, type=0):
+    def __init__(self, stateClass, transitionClass, emissionClass=Emission(), alphabet=None, etype=0):
         ObjectGraph.__init__(self, stateClass, transitionClass)
         self.simple    = 0
         self.euclidian = 0
@@ -834,8 +1104,9 @@ class ObjectHMM(ObjectGraph):
 
         self.alphabet = alphabet
         self.emissionClass = emissionClass
-        self.type = type
-
+        self.etype = etype
+        self.name2id = defaultdict(list)
+        
         self.vertices_ids = {0:'untied'}
 
         # editable attributes per EditPropertiesDialog
@@ -858,7 +1129,7 @@ class ObjectHMM(ObjectGraph):
         self.tied               = ValidatingBool()
         
         # discrete emissions only properties
-        if type == 0:
+        if etype == 0:
             self.editableAttr['tied']       = "Tied emissions"
             self.editableAttr['silent']     = "Silent states"
             self.editableAttr['maxOrder']   = "Higher order emissions"
@@ -866,11 +1137,19 @@ class ObjectHMM(ObjectGraph):
             self.editableAttr['labels']     = "State labels"
             self.editableAttr['alphatype']  = "Alphabet"
         # continuous emissions only properties
-        elif type == 1:
+        elif etype == 1:
             self.editableAttr['switching'] = "No. of transition Classes"
         else:
             tkMessageBox.showerror("HMMEd", "invalid model type")
 
+    def __str__(self):
+        string = "HMM with %d states" % len(self.vertices)
+        for v in self.vertices.values():
+            string += '\n' + str(v)
+        for e in self.edges.values():
+            string += '\n' + str(e)
+        return string
+        
     def AddVertex(self):
         """ Add an isolated vertex. Returns the id of the new vertex """
         if self.alphabet is not None:
@@ -880,11 +1159,18 @@ class ObjectHMM(ObjectGraph):
         v = self.vertexClass(e, self)
         v.id = self.GetNextVertexID()
         self.vertices[v.id] = v
-        self.vertices_ids[v.id+1] = str(v.id)
+        self.vertices_ids[v.id] = str(v.id)
+        vname = str(v.id)
+        v.name = vname
+        self.name2id[vname].append(v.id)
         return v.id
 
     def DeleteVertex(self, v):
-        del self.vertices_ids[v+1]
+        vname = self.vertices[v].name
+        self.name2id[vname] = [x for x in self.name2id[vname] if x != v]
+        if len(self.name2id[vname]) == 0:
+            del self.name2id[vname]
+        del self.vertices_ids[v]
         ObjectGraph.DeleteVertex(self, v)
 
     def AddEdge(self,tail,head):
@@ -923,17 +1209,17 @@ class ObjectHMM(ObjectGraph):
 
     def computeModelType(self):
         modelType = 0
-        if self.type == 0:
+        if self.etype == 0:
             modelType += ghmmwrapper.kDiscreteHMM
             if self.maxOrder > 0:
                 modelType += ghmmwrapper.kHigherOrderEmissions
-        elif self.type == 1:
+        elif self.etype == 1:
             modelType += ghmmwrapper.kContinuousHMM
-        elif self.type == 2:
+        elif self.etype == 2:
             modelType += ghmmwrapper.kDiscreteHMM
             modelType += ghmmwrapper.kPairHMM
         else:
-            print "invalid type:", self.type
+            print "invalid type:", self.etype
 
         if self.switching > 1:
             modelType += ghmmwrapper.kTransitionClasses
@@ -966,7 +1252,10 @@ class ObjectHMM(ObjectGraph):
                     emissionClass = DiscreteEmission
                 alphabet = self.initAlphabet()
         elif modelType & ghmmwrapper.kContinuousHMM:
-            emissionClass = ContinuousEmission
+            if self.emissionClass == Emission:
+                emissionClass = ContinuousEmission
+            else:
+                emissionClass = self.emissionClass
             alphabet = None
         else:
             print "not a valid model type"
@@ -1042,6 +1331,9 @@ class ObjectHMM(ObjectGraph):
 
 
     def initAlphabet(self):
+        if isinstance(self.alphabet, ghmm.Alphabet):
+            return DiscreteHMMAlphabet(self.alphabet.listOfCharacters)
+            
         if self.alphatype == 0:
             return DiscreteHMMAlphabet(["0", "1"])
         elif self.alphatype == 1:
@@ -1073,18 +1365,22 @@ class ObjectHMM(ObjectGraph):
 
         #cmodel = filedata.getModel(0)
         if self.modelType & ghmmwrapper.kContinuousHMM:
-            cmodel = filedata.get_cmodel(0)
-            cos = cmodel.cos
+            self.buildFromCModel(filedata.get_cmodel(0))
         elif self.modelType & ghmmwrapper.kDiscreteHMM:
             if self.modelType & ghmmwrapper.kPairHMM:
-                cmodel = filedata.get_dpmodel(0)
-                cos = 1
+                self.buildFromCModel(filedata.get_dpmodel(0))
             elif self.modelType & ghmmwrapper.kTransitionClasses:
-                cmodel = filedata.get_dsmodel(0)
-                cos = cmodel.cos
+                self.buildFromCModel(filedata.get_dsmodel(0))
             else:
-                cmodel = filedata.get_dmodel(0)
-                cos = 1
+                self.buildFromCModel(filedata.get_dmodel(0))
+
+
+    def buildFromCModel(self, cmodel):
+        cos = 1
+        # Add alphabet if appropiate first
+        if self.modelType & ghmmwrapper.kDiscreteHMM:
+            self.alphabet = DiscreteHMMAlphabet()
+            self.alphabet.ReadCAlphabet(cmodel.alphabet)
 
         # Add all states
         vdict = {}
@@ -1099,11 +1395,6 @@ class ObjectHMM(ObjectGraph):
                 tail = vdict[i]
                 head = vdict[outID]
                 self.AddEdge(tail, head)
-
-        # Add alphabet if appropiate
-        if self.modelType & ghmmwrapper.kDiscreteHMM:
-            self.alphabet = DiscreteHMMAlphabet()
-            self.alphabet.ReadCAlphabet(cmodel.alphabet)
         
         # Add label alphabet
         if self.modelType & ghmmwrapper.kLabeledStates:
@@ -1117,7 +1408,10 @@ class ObjectHMM(ObjectGraph):
 
         # Add switching functions if appropiate
         if self.modelType & ghmmwrapper.kTransitionClasses:
+            cos = cmodel.cos
             print "TODO: transition classes???"
+        if self.modelType & ghmmwrapper.kContinuousHMM:
+            cos = cmodel.cos
 
         # Set all states' values and set transition weights
         for i in xrange(cmodel.N):
@@ -1129,37 +1423,61 @@ class ObjectHMM(ObjectGraph):
                 head = vdict[outID]
                 self.edges[tail, head].ReadCTransition(state, cos, j)
 
-    def writeXML(self, filename="test.xml"):
 
+    def normalize(self):
+        # normalize initial probablilities
+        initials = [v.initial for v in self.vertices.values() if v.initial >= 0.0]
+        isum = sum(initials)
+        if isum > 1.0 or len(initials) == self.Order():
+            factor = 1.0 / isum
+            for vertex in self.vertices.values():
+                if vertex.initial >= 0.0:
+                    vertex.initial *= factor
+            isum = 1.0
+        if len(initials) < self.Order():
+            mean = (1.0-isum) / (self.Order()-len(initials))
+            for vertex in self.vertices.values():
+                if vertex.initial < 0.0:
+                    vertex.initial = mean
+            
+        # normalize state's transition probablilities
+        for vertex in self.vertices.values():
+            vertex.normalize()
+        
+    def finalize(self):
+        # ensure that all entities are properly normalized and initialized
+        self.normalize()
+
+        # build cmodel
         if self.modelType & ghmmwrapper.kContinuousHMM:
-            self.cmodel = ghmmwrapper.ghmm_cmodel()
-            self.cmodel.s = ghmmwrapper.cstate_array_alloc(self.Order())
+            cmodel = ghmmwrapper.ghmm_cmodel()
+            cmodel.s = ghmmwrapper.cstate_array_alloc(self.Order())
         elif self.modelType & ghmmwrapper.kDiscreteHMM:
             if self.modelType & ghmmwrapper.kPairHMM:
-                self.cmodel = None
+                cmodel = None
             elif self.modelType & ghmmwrapper.kTransitionClasses:
-                self.cmodel = None
+                cmodel = None
             else:
-                self.cmodel   = ghmmwrapper.ghmm_dmodel()
-                self.cmodel.s = ghmmwrapper.dstate_array_alloc(self.Order())
-                self.cmodel.M = self.alphabet.size()
-                self.cmodel.alphabet = self.alphabet.WriteCAlphabet()
+                cmodel   = ghmmwrapper.ghmm_dmodel()
+                cmodel.s = ghmmwrapper.dstate_array_alloc(self.Order())
+                cmodel.M = self.alphabet.size()
+                cmodel.alphabet = self.alphabet.WriteCAlphabet()
                 
         if self.modelType & ghmmwrapper.kTransitionClasses:
-            self.cmodel.cos = maxcos()
+            cmodel.cos = maxcos()
         else:
-            self.cmodel.cos = 1
+            cmodel.cos = 1
 
         # sort state IDs
         sortedIDs = self.vertices.keys()
         sortedIDs.sort()
 
         # fill state property arrays according to the model type with default values
-        self.cmodel.N = self.Order()
+        cmodel.N = self.Order()
 
         # fill silent array
         if self.modelType & ghmmwrapper.kSilentStates:
-            self.cmodel.silent = ghmmhelper.list2int_array([self.vertices[id].silent for id in sortedIDs])
+            cmodel.silent = ghmmhelper.list2int_array([self.vertices[id].silent for id in sortedIDs])
 
         # fill tied to array
         if self.modelType & ghmmwrapper.kTiedEmissions:
@@ -1180,7 +1498,7 @@ class ObjectHMM(ObjectGraph):
                 first = temp[0]
                 for index in temp:
                     tied_list[index] = first
-            self.cmodel.tied_to = ghmmhelper.list2int_array(tied_list)
+            cmodel.tied_to = ghmmhelper.list2int_array(tied_list)
 
         # fill background id arrary
         if self.modelType & ghmmwrapper.kBackgroundDistributions:
@@ -1188,21 +1506,21 @@ class ObjectHMM(ObjectGraph):
             M = self.alphabet.size()
             orders = ghmmhelper.list2int_array(self.backgroundDistributions.getOrders())
             (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
-            self.cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
+            cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
             for i,name in enumerate(self.backgroundDistributions.getNames()):
-                self.cmodel.bp.setName(i, name)
-            self.cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
+                cmodel.bp.setName(i, name)
+            cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
         # fill higher order array
         if self.modelType & ghmmwrapper.kHigherOrderEmissions:
-            self.cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.order for id in sortedIDs])
+            cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.order for id in sortedIDs])
 
         # fil label id array
         if self.modelType & ghmmwrapper.kLabeledStates:
-            self.cmodel.label_alphabet = self.label_alphabet.WriteCAlphabet()
-            self.cmodel.label = ghmmhelper.list2int_array([self.vertices[id].label for id in sortedIDs])
+            cmodel.label_alphabet = self.label_alphabet.WriteCAlphabet()
+            cmodel.label = ghmmhelper.list2int_array([self.vertices[id].label for id in sortedIDs])
 
-        self.cmodel.model_type = self.modelType
+        cmodel.model_type = self.modelType
 
         # create each state
         initial_sum = 0.0
@@ -1216,12 +1534,14 @@ class ObjectHMM(ObjectGraph):
             initial_sum = float(self.Order())
 
         for i, id in enumerate(sortedIDs):
-            cstate = self.cmodel.getState(i)
+            cstate = cmodel.getState(i)
             self.vertices[id].initial /= initial_sum
             self.vertices[id].WriteCState(cstate)
 
-        # write to file
-        #writeFunction(filename, castFunction(self.cmodel), 1)
-        self.cmodel.write_xml(filename)
+        return cmodel
 
-        self.cmodel = None
+    def writeXML(self, filename="test.xml"):
+        cmodel = self.finalize()
+        # write to file
+        cmodel.write_xml(filename)
+
