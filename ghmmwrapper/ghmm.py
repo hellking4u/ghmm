@@ -742,6 +742,16 @@ class EmissionSequence:
             #XXX appropiate exception
             raise IndexOutOfBounds(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
 
+    def getGeneratingStates(self):
+        """
+        Returns the state path from which the sequence was generated as a Python list.
+        """
+        l_state = []
+        for j in range(ghmmwrapper.int_array_getitem(self.cseq.states_len,0) ):
+            l_state.append(ghmmwrapper.int_matrix_getitem(self.cseq.states,0,j))
+
+        return l_state
+
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
@@ -943,6 +953,20 @@ class SequenceSet:
         if not ghmmwrapper.SEQ_LABEL_FIELD:
             raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         ghmmwrapper.long_array_setitem(self.cseq.seq_label,index,value)
+
+    def getGeneratingStates(self):
+        """
+        Returns the state paths from which the sequences were generated as a Python list of lists.
+        """
+        l_state = []
+        for i in range(len(self)):
+            ls_i = []
+            for j in range(ghmmwrapper.int_array_getitem(self.cseq.states_len,i) ):
+                ls_i.append(ghmmwrapper.int_matrix_getitem(self.cseq.states,i,j))
+            l_state.append(ls_i)   
+
+        return l_state
+
 
     def getSequence(self, index):
         """ Returns the index-th sequence in internal representation"""
