@@ -756,10 +756,26 @@ class EmissionSequence:
         "Defines string representation."
         seq = self.cseq
         strout = []
-        for j in range(seq.getLength(0)):
-            strout.append(str( self.emissionDomain.external(self[j]) )   )
-            if self.emissionDomain.CDataType == "double":
-                strout.append(" ")
+       
+        l = seq.getLength(0)
+        if l <= 80:
+       
+            for j in range(l):
+                strout.append(str( self.emissionDomain.external(self[j]) )   )
+                if self.emissionDomain.CDataType == "double":
+                    strout.append(" ")
+        else:
+            
+            for j in range(0,5):
+                strout.append(str( self.emissionDomain.external(self[j]) )   )
+                if self.emissionDomain.CDataType == "double":
+                    strout.append(" ")
+            strout.append('...')
+            for j in range(l-5,l):
+                strout.append(str( self.emissionDomain.external(self[j]) )   )
+                if self.emissionDomain.CDataType == "double":
+                    strout.append(" ")
+
     	return join(strout,'')
 
     def verbose_str(self):
@@ -887,9 +903,30 @@ class SequenceSet:
     
     def __str__(self):
         "Defines string representation."
+        #seq = self.cseq
+        #strout =  ["\n<SequenceSet with " + str(seq.seq_number) +' sequences>']
+        #return join(strout,'')
+
         seq = self.cseq
-        strout =  ["\n<SequenceSet with " + str(seq.seq_number) +' sequences>']
+        strout =  ["\nNumber of sequences: " + str(seq.seq_number)]
+
+        if seq.seq_number <= 6:
+
+            for i in range(seq.seq_number):
+                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)) + ":\n")
+                strout.append(str(self[i]))
+
+        else:
+            for i in range(0,2):
+                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)) + ":\n")
+                strout.append(str(self[i]))
+            strout.append('\n\n...\n')
+            for i in range(seq.seq_number-2,seq.seq_number):
+                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)) + ":\n")
+                strout.append(str(self[i]))
+
         return join(strout,'')
+
 
     def verbose_str(self):
         "Defines string representation."
@@ -1868,7 +1905,7 @@ class BackgroundDistribution:
         elif isinstance(bgInput, ghmmwrapper.background_distributions):
             self.cbackground = bgInput
             self.emissionDomain = emissionDomain
-            
+             
         else:
             raise TypeError, "Input type "+str(type(bgInput)) +" not recognized."    
 
@@ -1878,8 +1915,14 @@ class BackgroundDistribution:
         self.cbackground = None
     
     def __str__(self):
-        outstr = "<BackgroundDistribution with " + str(self.cbackground.n) +" distributions>"
+        outstr = "BackgroundDistribution instance:\n"
+        outstr += "Number of distributions: " + str(self.cbackground.n)+"\n"
+        outstr += str(self.emissionDomain) + "\n"
         d = ghmmhelper.double_matrix2list(self.cbackground.b, self.cbackground.n, len(self.emissionDomain))
+        outstr += "Distributions:\n"   
+        for i in range(self.cbackground.n):
+            outstr += "  Order: " + str(self.cbackground.getOrder(i))+"\n"
+            outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
         return outstr
 
 
@@ -2391,8 +2434,90 @@ class DiscreteEmissionHMM(HMM):
 
 
     def __str__(self):
+#        hmm = self.cmodel
+#        strout = ["<DiscreteEmissionHMM with "+str(hmm.N)+" states>"]
+#        return join(strout,'')
+
         hmm = self.cmodel
-        strout = ["<DiscreteEmissionHMM with "+str(hmm.N)+" states>"]
+        strout = ["\nGHMM Model\n"]
+        strout.append( "Name: " + str(self.cmodel.name))
+        strout.append(  "\nNumber of states: "+ str(hmm.N))
+        if self.cmodel.model_type &  16: #kHigherOrderEmissions
+            order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
+        else:
+            order = [0]*hmm.N
+
+        if hmm.N <= 4:
+
+            for k in range(hmm.N):
+                state = hmm.getState(k)
+                strout.append( "\n\nState "+ str(k) + ", order " + str(order[k])+":")
+                strout.append( "\nInitial: " + str(state.pi))
+                #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
+                strout.append( "\nEmissions: ")
+                for outp in range(hmm.M**(order[k]+1)):
+                    strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                    if outp % hmm.M == hmm.M-1:
+                        strout.append( "\n")
+                    else:
+                        strout.append( ", ")
+
+                strout.append( "Transitions:")
+                trans = [0.0] * hmm.N
+                for i in range( state.out_states):
+                    #strout.append( "\ntransition to state " + str( state.getOutState(i)))
+                    #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
+
+                    trans[state.getOutState(i)] = ghmmwrapper.double_array_getitem(state.out_a,i)
+                strout.append(str(trans))
+        else:
+
+            for k in range(0,2):
+                state = hmm.getState(k)
+                strout.append( "\n\nState "+ str(k) + ", order " + str(order[k])+":")
+                strout.append( "\nInitial: " + str(state.pi))
+                #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
+                strout.append( "\nEmissions: ")
+                for outp in range(hmm.M**(order[k]+1)):
+                    strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                    if outp % hmm.M == hmm.M-1:
+                        strout.append( "\n")
+                    else:
+                        strout.append( ", ")
+
+                strout.append( "Transitions:")
+                trans = [0.0] * hmm.N
+                for i in range( state.out_states):
+                    #strout.append( "\ntransition to state " + str( state.getOutState(i)))
+                    #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
+
+                    trans[state.getOutState(i)] = ghmmwrapper.double_array_getitem(state.out_a,i)
+                strout.append(str(trans))
+            
+            strout.append('\n\n...')
+            
+            for k in range(hmm.N-2,hmm.N):
+                state = hmm.getState(k)
+                strout.append( "\n\nState "+ str(k) + ", order " + str(order[k])+":")
+                strout.append( "\nInitial: " + str(state.pi))
+                #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
+                strout.append( "\nEmissions: ")
+                for outp in range(hmm.M**(order[k]+1)):
+                    strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                    if outp % hmm.M == hmm.M-1:
+                        strout.append( "\n")
+                    else:
+                        strout.append( ", ")
+
+                strout.append( "Transitions:")
+                trans = [0.0] * hmm.N
+                for i in range( state.out_states):
+                    #strout.append( "\ntransition to state " + str( state.getOutState(i)))
+                    #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
+
+                    trans[state.getOutState(i)] = ghmmwrapper.double_array_getitem(state.out_a,i)
+                strout.append(str(trans))
+
         return join(strout,'')
 
 
