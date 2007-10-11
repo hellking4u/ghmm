@@ -1514,7 +1514,9 @@ def readMultipleHMMERModels(fileName):
     
 
 class HMMFromMatricesFactory(HMMFactory):
-    
+    """ XXX Document matrix formats """
+
+    #XXX: this should use the editing context
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None, densities = None):
         if isinstance(emissionDomain,Alphabet):
             
@@ -1879,6 +1881,7 @@ HMMFromMatrices = HMMFromMatricesFactory()
 #- Background distribution
 
 class BackgroundDistribution:
+    """ XXX doc string """
     def __init__(self, emissionDomain, bgInput):
         
         if type(bgInput) == list:
@@ -1994,14 +1997,9 @@ class HMM:
 
         Note: The implementation does not compute the full forward matrix since we are only interested
               in the likelihoods in this case.
-        """
-        
-        if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
-        
-        logPsum = sum(self.loglikelihoods(emissionSequences) )
+        """        
+        return sum(self.loglikelihoods(emissionSequences))
 
-        return logPsum
 
     def loglikelihoods(self, emissionSequences): 
         """ Compute a vector ( log( P[s| model]) )_{s} of log-likelihoods of the
@@ -2013,7 +2011,8 @@ class HMM:
                     (numarray) vector of floats
 
         """
-
+        # XXX: add xxxSequenceSet() to EmissionSequence and SequenceSet
+        #emissionSequences = emissionSequences.xxxSequenceSet()
         if isinstance(emissionSequences,EmissionSequence):
             seqNumber = 1 
         elif isinstance(emissionSequences,SequenceSet):
@@ -2113,6 +2112,11 @@ class HMM:
             Result: the (N x T)-matrix containing the forward-variables
                     and the scaling vector
         """
+
+        # XXX Allocations should be in try, except, finally blocks
+        # to assure deallocation even in the case of errrors.
+        # This will leak otherwise.
+        
                       
         if not isinstance(emissionSequence,EmissionSequence):
             raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
@@ -2382,6 +2386,18 @@ class HMM:
 
 
     def printtypes(self, model_type):
+        #XXX Maybe nicer 
+        #strout = []
+        #types = ['',
+        #         'kLeftRight',
+        #.]
+        #if !model_type:
+        #    return 'kNotSpecified'
+        #for i, type_str in enumerate(types):
+        #    if model_type & 1 << i:
+        #        strout.append(type_str)
+        #return ''.join(strout)
+
         strout = []
         first = 0
         if model_type &  2:         #kLeftRight
