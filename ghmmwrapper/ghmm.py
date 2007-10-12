@@ -248,7 +248,7 @@ class WrongFileType(GHMMError):
 
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
-class EmissionDomain:
+class EmissionDomain(object):
     """ Abstract base class for emissions produced by an HMM.
 
         There can be two representations for emissions:
@@ -477,7 +477,7 @@ class Float(EmissionDomain):
 
 #-------------------------------------------------------------------------------
 #- Distribution and derived  ---------------------------------------------------
-class Distribution:
+class Distribution(object):
     """ Abstract base class for distribution over EmissionDomains
     """
 
@@ -605,7 +605,7 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
 #-------------------------------------------------------------------------------
 #Sequence, SequenceSet and derived  ------------------------------------------
 
-class EmissionSequence:
+class EmissionSequence(object):
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
         domain where the emission orginated from.
@@ -820,7 +820,7 @@ class EmissionSequence:
         return self.cseq.getWeight(0)
 
 
-class SequenceSet:
+class SequenceSet(object):
     def __init__(self, emissionDomain, sequenceSetInput, labelDomain = None, labelInput = None):
         self.emissionDomain = emissionDomain
         self.cseq = None
@@ -1170,7 +1170,7 @@ def writeToFasta(seqSet,fn):
 
 #-------------------------------------------------------------------------------
 # HMMFactory and derived  -----------------------------------------------------
-class HMMFactory:
+class HMMFactory(object):
     """ A HMMFactory is the base class of HMM factories.
         A HMMFactory has just a constructor and a () method
     """
@@ -1880,7 +1880,7 @@ HMMFromMatrices = HMMFromMatricesFactory()
 #-------------------------------------------------------------------------------
 #- Background distribution
 
-class BackgroundDistribution:
+class BackgroundDistribution(object):
     """ XXX doc string """
     def __init__(self, emissionDomain, bgInput):
         
@@ -1956,7 +1956,7 @@ class BackgroundDistribution:
 
 #-------------------------------------------------------------------------------
 #- HMM and derived  
-class HMM:
+class HMM(object):
     """ The HMM base class. 
         All functions where the C signatures allows it will 
         be  defined in here. Unfortunately there stil is a lot of overloading going on in 
@@ -4385,7 +4385,7 @@ class DiscretePairDistribution(DiscreteDistribution):
                 counts[self.getPairIndex(charX, charY)] += 1
             return counts
 
-class ComplexEmissionSequence:
+class ComplexEmissionSequence(object):
     """
     A complex emission sequence holds the encoded representations of one
     single sequence. The encoding is done by the emissionDomains. It also links
