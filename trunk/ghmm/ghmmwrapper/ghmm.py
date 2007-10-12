@@ -2129,30 +2129,27 @@ class HMM:
 
         seq = emissionSequence.cseq.getSequence(0)
 
-        error = self.cmodel.forward(seq,t, calpha, cscale, unused)
+        error = self.cmodel.forward(seq, t, calpha, cscale, unused)
         if error == -1:
             log.error( "forward finished with -1: EmissionSequence cannot be build.")
 
         # translate alpha / scale to python lists 
         pyscale = ghmmhelper.double_array2list(cscale, t)
-        pyalpha = ghmmhelper.double_matrix2list(calpha,t,self.N)
+        pyalpha = ghmmhelper.double_matrix2list(calpha, t, self.N)
         
         # deallocation
         ghmmwrapper.free(unused)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha, t)
-        unused = None
-        csale = None
-        calpha = None
-        return (pyalpha,pyscale)
+        return pyalpha, pyscale
         
 
     def backward(self, emissionSequence, scalingVector):
         """
             Result: the (N x T)-matrix containing the backward-variables
         """
-        if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+        #if not isinstance(emissionSequence,EmissionSequence):
+        #    raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
         seq = emissionSequence.cseq.getSequence(0)
         
@@ -2172,8 +2169,6 @@ class HMM:
         # deallocation
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(cbeta,t)
-        cscale = None
-        cbeta = None
         return pybeta
 
 
@@ -2186,7 +2181,8 @@ class HMM:
             object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
                     SequenceSet
         """
-        
+
+        ### XXX USE GET SEQ SET
         if isinstance(emissionSequences,EmissionSequence):
             seqNumber = 1
         elif isinstance(emissionSequences,SequenceSet):
@@ -2211,14 +2207,14 @@ class HMM:
             
             # for model types without possible silent states
             # the length of the viterbi path is known
-            if (self.cmodel.model_type &  4) == 0:    # check model_type for silent state flag        
+            # XXX use Constants 
+            if not self.cmodel.model_type & 4:    # check model_type for silent state flag        
                 onePath = ghmmhelper.int_array2list(viterbiPath, seq_len)
             
             # in the silent case we have to append as long as the path is
             # positive because the final path position is marked with a -1
             # in the following array entry.
-            elif self.cmodel.model_type &  4 != 0:  # check model_type for silent state flag   
-                
+            else:
                 for j in range(seq_len * self.N): # maximum length of a viterbi path for a silent model
                     d = ghmmwrapper.int_array_getitem(viterbiPath, j)
                                    
@@ -2235,13 +2231,13 @@ class HMM:
         ghmmwrapper.free(log_p)
         log_p = None
             
-        if emissionSequences.cseq.seq_number > 1:
-            return (allPaths, allLogs)
+        if seqNumber > 1:
+            return allPaths, allLogs
         else:
-            return (allPaths[0], allLogs[0])
+            return allPaths[0], allLogs[0]
 
 
-    def sample(self, seqNr ,T,seed = 0):
+    def sample(self, seqNr ,T, seed = 0):
         """ Sample emission sequences 
                 seqNr = number of sequences to be sampled
                 T = length of each sequence
@@ -2249,9 +2245,6 @@ class HMM:
 
         """
         seqPtr = self.cmodel.generate_sequences(seed,T,seqNr,self.N)
-        seqPtr.state_labels = None
-        seqPtr.state_labels_len = None
-
         return SequenceSet(self.emissionDomain,seqPtr)
         
 
@@ -2260,9 +2253,6 @@ class HMM:
             Returns a Sequence object.
         """
         seqPtr = self.cmodel.generate_sequences(seed,T,1,self.N)
-        seqPtr.state_labels = None
-        seqPtr.state_labels_len = None
-
         return EmissionSequence(self.emissionDomain,seqPtr)
 
     def state(self, stateLabel):
@@ -2278,11 +2268,10 @@ class HMM:
 
     def setInitial(self, i, prob, fixProb=False):
         """ Accessor function for the initial probability \pi_i
-            For 'fixProb' = True \pi will be rescaled to 1 with 'pi[i]' fixed to the
+            If 'fixProb' = True \pi will be rescaled to 1 with 'pi[i]' fixed to the
             arguement value of 'prob'.
 
-         """
-
+        """
         state = self.cmodel.getState(i)
         old_pi = state.pi
         state.pi = prob
@@ -2301,19 +2290,17 @@ class HMM:
         state = self.cmodel.getState(i)	
 
         # ensure proper indices
+        # XXX IndexError
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
         assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
 
-        transition = None
+        transition = 0.0
         for i in xrange(state.out_states):
             stateId = state.getOutState(i)
             if stateId == j:
                 transition = state.getOutProb(i)
                 break
-        if transition:
-            return transition
-        else:
-            return 0
+        return transition
 
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij. """
@@ -2321,6 +2308,8 @@ class HMM:
         # ensure proper indices
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
         assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+
+        # XXX Need to check that (i,j) is a transition, return IndexError else
 
         self.cmodel.set_transition(i, j, prob)
 
@@ -2335,6 +2324,7 @@ class HMM:
         """
         if self.emissionDomain.CDataType == "int": # discrete emissions.
             state = self.cmodel.getState(i)
+            # XXX Use name instead of 16
             if self.cmodel.model_type & 16:         #kHigherOrderEmissions
                 order = ghmmwrapper.int_array_getitem(self.cmodel.order, i)
                 emissions = ghmmhelper.double_array2list(state.b, self.M**(order+1))
@@ -2346,11 +2336,11 @@ class HMM:
             state = self.cmodel.getState(i)
             emParam = []
             for i in range(self.M):
-                mixComp = []
-                mixComp.append(ghmmwrapper.double_array_getitem(state.mue,i) )
-                mixComp.append(ghmmwrapper.double_array_getitem(state.u,i) )
-                mixComp.append(ghmmwrapper.double_array_getitem(state.c,i) )
-                emParam.append(mixComp)
+                emParam.append(
+                    [ghmmwrapper.double_array_getitem(state.mue,i),
+                     ghmmwrapper.double_array_getitem(state.u,i),
+                     ghmmwrapper.double_array_getitem(state.c,i)
+                     ])
             return emParam
 
     def setEmission(self, i, distributionParemters):
@@ -2360,7 +2350,7 @@ class HMM:
          """
         raise NotImplementedError
 
-
+    # XXX asMatrices
     def toMatrices(self):
         "To be defined in derived classes."
         raise NotImplementedError
@@ -2458,11 +2448,13 @@ class DiscreteEmissionHMM(HMM):
         strout = ["\nGHMM Model\n"]
         strout.append( "Name: " + str(self.cmodel.name))
         strout.append(  "\nNumber of states: "+ str(hmm.N))
+        # XXX 16
         if self.cmodel.model_type &  16: #kHigherOrderEmissions
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
             order = [0]*hmm.N
 
+        # XXX DRAFT
         if hmm.N <= 4:
 
             for k in range(hmm.N):
@@ -2537,7 +2529,7 @@ class DiscreteEmissionHMM(HMM):
         return join(strout,'')
 
 
-
+    
     def verbose_str(self):
         hmm = self.cmodel
         strout = ["\nGHMM Model\n"]
@@ -2599,12 +2591,13 @@ class DiscreteEmissionHMM(HMM):
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
         assert len(distributionParameters) == self.M
-        # ensure proper indices
+        # ensure proper indices XXX InsertError
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
 
         # updating silent flag and/or model type if necessary 
+        # XXX FLAGS
         if self.cmodel.model_type & 4:
             if sum(distributionParameters) == 0.0:
                 self.cmodel.setSilent(i, 1)
@@ -2627,22 +2620,23 @@ class DiscreteEmissionHMM(HMM):
         state.b = ghmmhelper.list2double_array(distributionParameters)
 
 
+    # XXX Change name?
     def backwardTermination(self, emissionSequence, pybeta, scalingVector):
         """
 
             Result: the backward log probability of emissionSequence
         """
-        if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str (emissionSequence.__class__.__name__)
+        #if not isinstance(emissionSequence,EmissionSequence):
+        #    raise TypeError, "EmissionSequence required, got " + str (emissionSequence.__class__.__name__)
 
         seq = emissionSequence.cseq.getSequence(0)
         
         # parsing 'scalingVector' to C double array.
-        cscale = ghmmhelper.list2double_array (scalingVector)
+        cscale = ghmmhelper.list2double_array(scalingVector)
         
         # alllocating beta matrix
-        t = len (emissionSequence)
-        cbeta = ghmmhelper.list2double_matrix (pybeta)
+        t = len(emissionSequence)
+        cbeta = ghmmhelper.list2double_matrix(pybeta)
         #print cbeta[0]
 
         # allocating double * for log probability
@@ -2658,11 +2652,10 @@ class DiscreteEmissionHMM(HMM):
         ghmmwrapper.free(log_p)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(cbeta[0],t)
-        cscale = None
-        cbeta = None
         return logp
 
 
+    # XXX Implement in C
     def logprob(self, emissionSequence, stateSequence):
         """ log P[ emissionSequence, stateSequence| m] """
         
@@ -2703,9 +2696,10 @@ class DiscreteEmissionHMM(HMM):
                         logP += math.log( ghmmwrapper.double_array_getitem(state.out_a,j) * emissionProb)
                         break
         except IndexError:
-            pass
+            pass #XXX Funny
         return logP     
-    
+
+    # XXX Make C defaults available to ghmm.py, use baum_welch_nstep only
     def baumWelch(self, trainingSequences, nrSteps = None, loglikelihoodCutoff = None):
         """ Reestimates the model with the sequence in 'trainingSequences'.
            
@@ -2719,6 +2713,7 @@ class DiscreteEmissionHMM(HMM):
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)
 
+        # XXX NotImplemented 
         if self.cmodel.model_type & 4:     #kSilentStates
             log.critical( "Sorry, training of models containing silent states not yet supported.")
         else:
@@ -2728,6 +2723,7 @@ class DiscreteEmissionHMM(HMM):
                 assert loglikelihoodCutoff != None
                 self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
+    # XXX Go over names (singular/plural)
 
     def applyBackground(self, backgroundWeight):
         """Apply the background distribution to the emission probabilities of states which
@@ -2742,7 +2738,7 @@ class DiscreteEmissionHMM(HMM):
         result = self.cmodel.background_apply(cweights)
         
         ghmmwrapper.free(cweights)
-        if result is not 0:
+        if result:
             log.error("applyBackground failed.")
 						
     
@@ -2772,6 +2768,7 @@ class DiscreteEmissionHMM(HMM):
         # updating model type
         self.cmodel.model_type += 32 #kBackgroundDistributions
     
+    # XXX Unify next two methods
     def assignAllBackgrounds(self,stateBackground):
         """ Change all the assignments of background distributions to states.
         """
@@ -2789,6 +2786,7 @@ class DiscreteEmissionHMM(HMM):
 
     def assignStateBackground(self, state, backgroundID):
         assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
+        # XXX CHeck
         if self.labelDomain.isAdmissable(backgroundID):
             self.cmodel.background_id[state] = backgroundID
         else:
@@ -2800,6 +2798,7 @@ class DiscreteEmissionHMM(HMM):
 
 
     def updateTieGroups(self):
+        """ XXX Name uninformative. Average emission probabilities of tied states. """
         assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         self.cmodel.update_tie_groups()
 
@@ -2874,12 +2873,7 @@ class DiscreteEmissionHMM(HMM):
         """
         assert 0 <= state <= self.N-1, "Invalid state index"
         
-        # check whether model contains silent states at all
-        if not (self.cmodel.model_type & 4):
-            return False
-        
-        # check silent flag for state 'state'
-        if self.cmodel.silent[state]:
+        if (self.cmodel.model_type & 4) and self.cmodel.silent[state]:
             return True
         else:
             return False    
@@ -2894,7 +2888,7 @@ class DiscreteEmissionHMM(HMM):
         """
         # XXX for silent states things are more complicated -> to be done
         if self.cmodel.model_type & 4:
-            raise RuntimeError, "Models with silent states not yet supported."
+            raise RuntimeError, "Models with silent states not yet supported." # XXX NotImplemented
 
         # checking function arguments
         assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
@@ -2960,7 +2954,7 @@ class DiscreteEmissionHMM(HMM):
         """ Return the log posterior probability for being at 'state' at time 'time' in 'sequence'.
             
             CAVEAT: statePosterior needs to calculate the complete forward and backward matrices. If 
-            you are interested in multiple states it would be more efficient to use the posterior function
+            you are interested in multiple states it would be more efficient to use the hmm.posterior() method
             directly and not multiple calls to statePosterior
         
         """
@@ -3150,12 +3144,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
         (vPath, log_p) = self.viterbi(emissionSequences)
 
         labels = []
-
+        f = lambda i: self.labelDomain.external(self.getLabel(i))
         if seqNumber == 1:
-            labels = map(lambda i: self.labelDomain.external(self.getLabel(i)), vPath)
+            labels = map(f, vPath)
         else:
             for j in range(seqNumber):
-                labels.append( map(lambda i: self.labelDomain.external(self.getLabel(i)), vPath[j]) )
+                labels.append( map(f, vPath[j]) )
 
         return (labels, log_p)
 
@@ -3169,7 +3163,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             object, [[l_0^0, ..., l_T^0], ..., [l_0^k, ..., l_T^k]} for a k-sequence
                     SequenceSet
         """
-        if self.cmodel.model_type & 4:     #kSilentStates
+        if self.cmodel.model_type & 4:     #kSilentStates NotImplemented XXX
             log.critical( "Sorry, k-best decoding on models containing silent states not yet supported.")
         else:
             if isinstance(emissionSequences,EmissionSequence):
@@ -3196,8 +3190,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 ghmmwrapper.free(labeling)
 
             ghmmwrapper.free(log_p)
-            labeling = None
-            log_p = None
 
             if emissionSequences.cseq.seq_number > 1:
                 return (map(self.externalLabel, allLabels), allLogs)
@@ -3771,7 +3763,7 @@ class GaussianEmissionHMM(HMM):
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
-            Use baum_welch_setup and baum_welch_step if you want more control
+            Use baumWelchSetup and baumWelchStep if you want more control
             over the training, compute diagnostics or do noise-insertion
 
             training_sequences can either be a SequenceSet or a Sequence
