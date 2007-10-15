@@ -248,6 +248,7 @@ class WrongFileType(GHMMError):
 
 #-------------------------------------------------------------------------------
 #- constants -------------------------------------------------------------------
+kNotSpecified            = ghmmwrapper.kNotSpecified
 kLeftRight               = ghmmwrapper.kLeftRight
 kSilentStates            = ghmmwrapper.kSilentStates
 kTiedEmissions           = ghmmwrapper.kTiedEmissions
@@ -258,7 +259,18 @@ kTransitionClasses       = ghmmwrapper.kTransitionClasses
 kDiscreteHMM             = ghmmwrapper.kDiscreteHMM
 kContinuousHMM           = ghmmwrapper.kContinuousHMM
 kPairHMM                 = ghmmwrapper.kPairHMM
-
+types = {
+    kLeftRight:'kLeftRight',
+    kSilentStates:'kSilentStates',
+    kTiedEmissions:'kTiedEmissions',
+    kHigherOrderEmissions:'kHigherOrderEmissions',
+    kBackgroundDistributions:'kBackgroundDistributions',
+    kLabeledStates:'kLabeledStates',
+    kTransitionClasses:'kTransitionClasses',
+    kDiscreteHMM:'kDiscreteHMM',
+    kContinuousHMM:'kContinuousHMM',
+    kPairHMM:'kPairHMM',
+    }
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain(object):
@@ -2387,35 +2399,13 @@ class HMM(object):
 
 
     def printtypes(self, model_type):
-        #XXX Maybe nicer 
-        #strout = []
-        #types = ['',
-        #         'kLeftRight',
-        #.]
-        #if !model_type:
-        #    return 'kNotSpecified'
-        #for i, type_str in enumerate(types):
-        #    if model_type & 1 << i:
-        #        strout.append(type_str)
-        #return ''.join(strout)
-
         strout = []
-        first = 0
-        if model_type &  2:         #kLeftRight
-            strout.append("kLeftRight ")
-        if model_type &  4:         #kSilentStates
-            strout.append("kSilentStates ")
-        if model_type &  8:         #kTiedEmissions
-            strout.append("kTiedEmissions ")
-        if model_type & 16:         #kHigherOrderEmissions
-            strout.append("kHigherOrderEmissions ")
-        if model_type & 32:         #kBackgroundDistributions
-            strout.append("kBackgroundDistributions ")
-        if model_type & 64:         #kLabeledStates
-            strout.append("kClassLabels ")
-        if model_type == 0:         #kNotSpecified
-            strout = "kNotSpecified"
-        return join(strout,'')
+        if model_type == kNotSpecified:
+            return 'kNotSpecified'
+        for k in types.keys():
+            if model_type & k:
+                strout.append(types[k])
+        return ' '.join(strout)
 
 
 def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
