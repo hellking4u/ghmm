@@ -366,7 +366,7 @@ class Alphabet(EmissionDomain):
 
         return join(strout,'')
     
-    def verbose_str(self):
+    def verboseStr(self):
         strout = ["GHMM Alphabet:\n"]
         strout.append("Number of symbols: " + str(len(self)) + "\n")
         strout.append("External: " + str(self.listOfCharacters) + "\n")
@@ -803,7 +803,7 @@ class EmissionSequence(object):
 
     	return join(strout,'')
 
-    def verbose_str(self):
+    def verboseStr(self):
         "Defines string representation."
         seq = self.cseq
         strout = []
@@ -953,7 +953,7 @@ class SequenceSet(object):
         return join(strout,'')
 
 
-    def verbose_str(self):
+    def verboseStr(self):
         "Defines string representation."
         seq = self.cseq
         strout =  ["\nNumber of sequences: " + str(seq.seq_number)]
@@ -1954,7 +1954,7 @@ class BackgroundDistribution(object):
         return outstr
 
 
-    def verbose_str(self):
+    def verboseStr(self):
         outstr = "BackgroundDistribution instance:\n"
         outstr += "Number of distributions: " + str(self.cbackground.n)+"\n\n"
         outstr += str(self.emissionDomain) + "\n"
@@ -2441,96 +2441,58 @@ class DiscreteEmissionHMM(HMM):
 
 
     def __str__(self):
-#        hmm = self.cmodel
-#        strout = ["<DiscreteEmissionHMM with "+str(hmm.N)+" states>"]
-#        return join(strout,'')
-
         hmm = self.cmodel
-        strout = ["\nGHMM Model\n"]
-        strout.append( "Name: " + str(self.cmodel.name))
-        strout.append(  "\nNumber of states: "+ str(hmm.N))
+        strout = [str(self.__class__.__name__)]
+        if self.cmodel.name:
+            strout.append( " " + str(self.cmodel.name))
+        strout.append(  "(N= "+ str(hmm.N))
+        strout.append(  ", M= "+ str(hmm.M)+')\n')
+        
         if self.hasFlags(kHigherOrderEmissions):
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
             order = [0]*hmm.N
-
-        # XXX DRAFT
+        
         if hmm.N <= 4:
-
-            for k in range(hmm.N):
-                state = hmm.getState(k)
-                strout.append( "\n\nState "+ str(k) + ", order " + str(order[k])+":")
-                strout.append( "\nInitial: " + str(state.pi))
-                #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
-                strout.append( "\nEmissions: ")
-                for outp in range(hmm.M**(order[k]+1)):
-                    strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
-                    if outp % hmm.M == hmm.M-1:
-                        strout.append( "\n")
-                    else:
-                        strout.append( ", ")
-
-                strout.append( "Transitions:")
-                trans = [0.0] * hmm.N
-                for i in range( state.out_states):
-                    #strout.append( "\ntransition to state " + str( state.getOutState(i)))
-                    #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
-
-                    trans[state.getOutState(i)] = ghmmwrapper.double_array_getitem(state.out_a,i)
-                strout.append(str(trans))
+            iter_list = range(self.N)
         else:
+            iter_list = [0,1,'X',hmm.N-2,hmm.N-1]            
 
-            for k in range(0,2):
-                state = hmm.getState(k)
-                strout.append( "\n\nState "+ str(k) + ", order " + str(order[k])+":")
-                strout.append( "\nInitial: " + str(state.pi))
-                #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
-                strout.append( "\nEmissions: ")
-                for outp in range(hmm.M**(order[k]+1)):
-                    strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
-                    if outp % hmm.M == hmm.M-1:
-                        strout.append( "\n")
-                    else:
-                        strout.append( ", ")
+        for k in iter_list:
+            if k == 'X':
+                strout.append('\n  ...\n\n')
+                continue
+        
+            state = hmm.getState(k)
+            strout.append( "  state "+ str(k) +' (')
+            if order[k] > 0:
+                strout.append( 'order= '+ str(order[k])+',')
 
-                strout.append( "Transitions:")
-                trans = [0.0] * hmm.N
-                for i in range( state.out_states):
-                    #strout.append( "\ntransition to state " + str( state.getOutState(i)))
-                    #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
 
-                    trans[state.getOutState(i)] = ghmmwrapper.double_array_getitem(state.out_a,i)
-                strout.append(str(trans))
-            
-            strout.append('\n\n...')
-            
-            for k in range(hmm.N-2,hmm.N):
-                state = hmm.getState(k)
-                strout.append( "\n\nState "+ str(k) + ", order " + str(order[k])+":")
-                strout.append( "\nInitial: " + str(state.pi))
-                #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
-                strout.append( "\nEmissions: ")
-                for outp in range(hmm.M**(order[k]+1)):
-                    strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
-                    if outp % hmm.M == hmm.M-1:
-                        strout.append( "\n")
-                    else:
-                        strout.append( ", ")
+            strout.append( "initial= " + str(state.pi)+')\n')
+            strout.append( "    Emissions: ")
+            for outp in range(hmm.M**(order[k]+1)):
+                strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                if outp < hmm.M**(order[k]+1)-1:
+                    strout.append( ', ')
+                else:    
+                    strout.append('\n')
 
-                strout.append( "Transitions:")
-                trans = [0.0] * hmm.N
-                for i in range( state.out_states):
-                    #strout.append( "\ntransition to state " + str( state.getOutState(i)))
-                    #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
+            strout.append( "    Transitions:")
+            #trans = [0.0] * hmm.N
+            for i in range( state.out_states):
+                strout.append( " ->" + str( state.getOutState(i))+' ('+ str(ghmmwrapper.double_array_getitem(state.out_a,i) ) +')' )
+                if i < state.out_states-1:
+                    strout.append( ',')
+                #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
 
-                    trans[state.getOutState(i)] = ghmmwrapper.double_array_getitem(state.out_a,i)
-                strout.append(str(trans))
+            strout.append('\n')
 
         return join(strout,'')
 
 
     
-    def verbose_str(self):
+    def verboseStr(self):
         hmm = self.cmodel
         strout = ["\nGHMM Model\n"]
         strout.append( "Name: " + str(self.cmodel.name))
@@ -3031,11 +2993,57 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
     def __str__(self):
         hmm = self.cmodel
-        strout = ["<StateLabelHMM with "+str(self.N)+" states>"]
+        strout = [str(self.__class__.__name__)]
+        if self.cmodel.name:
+            strout.append( " " + str(self.cmodel.name))
+        strout.append(  "(N= "+ str(hmm.N))
+        strout.append(  ", M= "+ str(hmm.M)+')\n')
+        
+        # XXX 16
+        if self.cmodel.model_type &  16: #kHigherOrderEmissions
+            order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
+        else:
+            order = [0]*hmm.N
+        label = ghmmhelper.int_array2list(hmm.label, self.N)
+        
+        if hmm.N <= 4:
+            iter_list = range(self.N)
+        else:
+            iter_list = [0,1,'X',hmm.N-2,hmm.N-1]            
+
+        for k in iter_list:
+            if k == 'X':
+                strout.append('\n  ...\n\n')
+                continue
+        
+            state = hmm.getState(k)
+            strout.append( "  state "+ str(k) +' (')
+            if order[k] > 0:
+                strout.append( 'order= '+ str(order[k])+',')
+
+            strout.append( "initial= " + str(state.pi)+', label= ' + str(self.labelDomain.external(label[k])) + ')\n')
+            strout.append( "    Emissions: ")
+            for outp in range(hmm.M**(order[k]+1)):
+                strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                if outp < hmm.M**(order[k]+1)-1:
+                    strout.append( ', ')
+                else:    
+                    strout.append('\n')
+
+            strout.append( "    Transitions:")
+            #trans = [0.0] * hmm.N
+            for i in range( state.out_states):
+                strout.append( " ->" + str( state.getOutState(i))+' ('+ str(ghmmwrapper.double_array_getitem(state.out_a,i) ) +')' )
+                if i < state.out_states-1:
+                    strout.append( ',')
+                #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
+
+            strout.append('\n')
 
         return join(strout,'')
 
-    def verbose_str(self):
+
+    def verboseStr(self):
         hmm = self.cmodel
         strout = ["\nGHMM Model\n"]
         strout.append("Name: " + str(self.cmodel.name))
@@ -3467,10 +3475,51 @@ class GaussianEmissionHMM(HMM):
     
     def __str__(self):
         hmm = self.cmodel
-        strout = ["<GaussianEmissionHMM with "+ str(hmm.N)+ " states>"]
+        strout = [str(self.__class__.__name__)]
+        if self.cmodel.name:
+            strout.append( " " + str(self.cmodel.name))
+        strout.append(  "(N= "+ str(hmm.N)+')\n')
+        
+        
+        if hmm.N <= 4:
+            iter_list = range(self.N)
+        else:
+            iter_list = [0,1,'X',hmm.N-2,hmm.N-1]            
+
+        for k in iter_list:
+            if k == 'X':
+                strout.append('\n  ...\n\n')
+                continue
+        
+            state = hmm.getState(k)
+            strout.append("  state "+ str(k) + " (")
+            strout.append( "initial= " + str(state.pi) )
+            if self.cmodel.cos > 1:
+             strout.append(', cos='+ str(self.cmodel.cos))
+            strout.append(", mu= " + str(ghmmwrapper.double_array_getitem(state.mue,0))+', ')
+            strout.append("sigma= " + str(ghmmwrapper.double_array_getitem(state.u,0)) )
+            strout.append(')\n')
+
+
+
+            strout.append( "    Transitions:")
+            if self.cmodel.cos > 1:
+                strout.append("\n")
+            
+            for c in range(self.cmodel.cos):
+                if self.cmodel.cos > 1:
+                    strout.append('      class: ' + str(c)+ ':'  )
+                for i in range( state.out_states):
+                    strout.append('->' + str(state.getOutState(i)) + ' (' + str(state.getOutProb(i, c))+')' )
+                    if i < state.out_states-1:
+                        strout.append( ', ')
+
+                strout.append('\n')
+
         return join(strout,'')
 
-    def verbose_str(self):
+
+    def verboseStr(self):
         hmm = self.cmodel
         strout = ["\nHMM Overview:"]
         strout.append("\nNumber of states: " + str(hmm.N))
@@ -3980,10 +4029,62 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
     
     def __str__(self):
         hmm = self.cmodel
-        strout = ["<GaussianMixtureHMM with "+ str(hmm.N)+ " states>"]
+        strout = [str(self.__class__.__name__)]
+        if self.cmodel.name:
+            strout.append( " " + str(self.cmodel.name))
+        strout.append(  "(N= "+ str(hmm.N)+')\n')
+        
+        
+        if hmm.N <= 4:
+            iter_list = range(self.N)
+        else:
+            iter_list = [0,1,'X',hmm.N-2,hmm.N-1]            
+
+        for k in iter_list:
+            if k == 'X':
+                strout.append('\n  ...\n\n')
+                continue
+        
+            state = hmm.getState(k)
+            strout.append("  state "+ str(k) + " (")
+            strout.append( "initial= " + str(state.pi) )
+            if self.cmodel.cos > 1:
+                strout.append(', cos='+ str(self.cmodel.cos))
+            strout.append(')\n')
+
+            weight = ""
+            mue = ""
+            u =  ""
+
+            for outp in range(hmm.M):
+                weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
+                mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
+                u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
+
+            strout.append( "    Emissions (")
+            strout.append("weights= " + str(weight) + ", ")
+            strout.append("mu= " + str(mue) + ", ")
+            strout.append("sigma= " + str(u) + ")\n")
+
+
+            strout.append( "    Transitions:")
+            if self.cmodel.cos > 1:
+                strout.append("\n")
+            
+            for c in range(self.cmodel.cos):
+                if self.cmodel.cos > 1:
+                    strout.append('      class: ' + str(c)+ ':'  )
+                for i in range( state.out_states):
+                    strout.append('->' + str(state.getOutState(i)) + ' (' + str(state.getOutProb(i, c))+')' )
+                    if i < state.out_states-1:
+                        strout.append( ', ')
+
+                strout.append('\n')
+
         return join(strout,'')
 
-    def verbose_str(self):
+
+    def verboseStr(self):
         "defines string representation"
         hmm = self.cmodel
 
@@ -4145,7 +4246,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
         return join(strout,'')
 
-    def verbose_str(self):
+    def verboseStr(self):
         "defines string representation"
         hmm = self.cmodel
 
@@ -4529,7 +4630,7 @@ class ComplexEmissionSequence(object):
         s = ("<ComplexEmissionSequence>")  
         return s
 
-    def verbose_str(self):
+    def verboseStr(self):
         """
         string representation. Access the underlying C-structure and return
         the sequence in all it's encodings (can be quite long)
@@ -4584,7 +4685,7 @@ class PairHMM(HMM):
         strout = ["<PairHMM with "+str(hmm.N)+" states>"]
         return join(strout,'')
 
-    def verbose_str(self):
+    def verboseStr(self):
         """
         string representation (more for debuging) shows the contents of the C
         structure ghmm_dpmodel
