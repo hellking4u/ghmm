@@ -247,6 +247,19 @@ class WrongFileType(GHMMError):
         return repr(self.message)
 
 #-------------------------------------------------------------------------------
+#- constants -------------------------------------------------------------------
+kLeftRight               = ghmmwrapper.kLeftRight
+kSilentStates            = ghmmwrapper.kSilentStates
+kTiedEmissions           = ghmmwrapper.kTiedEmissions
+kHigherOrderEmissions    = ghmmwrapper.kHigherOrderEmissions
+kBackgroundDistributions = ghmmwrapper.kBackgroundDistributions
+kLabeledStates           = ghmmwrapper.kLabeledStates
+kTransitionClasses       = ghmmwrapper.kTransitionClasses
+kDiscreteHMM             = ghmmwrapper.kDiscreteHMM
+kContinuousHMM           = ghmmwrapper.kContinuousHMM
+kPairHMM                 = ghmmwrapper.kPairHMM
+
+#-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain(object):
     """ Abstract base class for emissions produced by an HMM.
@@ -1329,7 +1342,7 @@ class HMMOpenFactory(HMMFactory):
             # check for tied states
             tied = hmm_dom.getTiedStates()
             if len(tied) > 0:
-                m.cmodel.model_type += 8  #kTiedEmissions
+                m.setFlags(kTiedEmissions)
                 m.cmodel.tied_to = ghmmhelper.list2int_array(tied)
 
             durations = hmm_dom.getStateDurations()
@@ -1599,13 +1612,13 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 cmodel.s = states
                 if silent_flag == 4:
-                    cmodel.model_type += silent_flag
+                    cmodel.model_type |= silent_flag
                     cmodel.silent = ghmmhelper.list2int_array(silent_states)
 
                 cmodel.maxorder = max(tmpOrder)
                 if cmodel.maxorder > 0:
                     log.debug( "Set kHigherOrderEmissions.")
-                    cmodel.model_type += 16     #kHigherOrderEmissions
+                    cmodel.model_type |= kHigherOrderEmissions
                     cmodel.order = ghmmhelper.list2int_array(tmpOrder)
 
                 # initialize lookup table for powers of the alphabet size,
@@ -1620,7 +1633,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     if not isinstance(labelDomain,LabelDomain):
                         raise TypeError, "LabelDomain object required."
                     
-                    cmodel.model_type += 64     #kClassLabels
+                    cmodel.model_type |= kLabeledStates
                     m = StateLabelHMM(emissionDomain, distribution, labelDomain, cmodel)
                     m.setLabels(labelList)
                     return m
@@ -1634,7 +1647,7 @@ class HMMFromMatricesFactory(HMMFactory):
             if isinstance(distribution,GaussianDistribution):
                 
                 cmodel = ghmmwrapper.ghmm_cmodel()
-                cmodel.model_type = ghmmwrapper.kContinuousHMM
+                cmodel.model_type = kContinuousHMM
                 cmodel.M = 1 # Number of mixture componenent for emission distribution
                 cmodel.prior = -1 # Unused
 
@@ -2208,7 +2221,7 @@ class HMM(object):
             # for model types without possible silent states
             # the length of the viterbi path is known
             # XXX use Constants 
-            if not self.cmodel.model_type & 4:    # check model_type for silent state flag        
+            if not self.hasFlags(kSilentStates):
                 onePath = ghmmhelper.int_array2list(viterbiPath, seq_len)
             
             # in the silent case we have to append as long as the path is
@@ -2254,6 +2267,23 @@ class HMM(object):
         """
         seqPtr = self.cmodel.generate_sequences(seed,T,1,self.N)
         return EmissionSequence(self.emissionDomain,seqPtr)
+
+    def clearFlags(self, flags):
+        """ Clears one or more model type flags. Use with care.
+        """
+        log.debug("clearFlags: " + self.printtypes(flags))
+        self.cmodel.model_type &= ~flags
+
+    def hasFlags(self, flags):
+        """ Checks if the model has one or more model type flags set
+        """
+        return self.cmodel.model_type & flags
+
+    def setFlags(self, flags):
+        """ Sets one or more model type flags. Use with care.
+        """
+        log.debug("setFlags: " + self.printtypes(flags))
+        self.cmodel.model_type |= flags
 
     def state(self, stateLabel):
         """ Given a stateLabel return the integer index to the state 
@@ -2322,26 +2352,7 @@ class HMM(object):
             [ [mu_1, sigma_1, weight_1] ... [mu_M, sigma_M, weight_M]  ] is returned.
 
         """
-        if self.emissionDomain.CDataType == "int": # discrete emissions.
-            state = self.cmodel.getState(i)
-            # XXX Use name instead of 16
-            if self.cmodel.model_type & 16:         #kHigherOrderEmissions
-                order = ghmmwrapper.int_array_getitem(self.cmodel.order, i)
-                emissions = ghmmhelper.double_array2list(state.b, self.M**(order+1))
-            else:                
-                emissions = ghmmhelper.double_array2list(state.b, self.M)
-            return emissions
-
-        elif self.emissionDomain.CDataType == "double": # continuous emissions
-            state = self.cmodel.getState(i)
-            emParam = []
-            for i in range(self.M):
-                emParam.append(
-                    [ghmmwrapper.double_array_getitem(state.mue,i),
-                     ghmmwrapper.double_array_getitem(state.u,i),
-                     ghmmwrapper.double_array_getitem(state.c,i)
-                     ])
-            return emParam
+        raise NotImplementedError
 
     def setEmission(self, i, distributionParemters):
         """ Set the emission distribution parameters
@@ -2400,7 +2411,7 @@ class HMM(object):
             strout.append("kHigherOrderEmissions ")
         if model_type & 32:         #kBackgroundDistributions
             strout.append("kBackgroundDistributions ")
-        if model_type & 64:         #kClassLabels
+        if model_type & 64:         #kLabeledStates
             strout.append("kClassLabels ")
         if model_type == 0:         #kNotSpecified
             strout = "kNotSpecified"
@@ -2448,8 +2459,7 @@ class DiscreteEmissionHMM(HMM):
         strout = ["\nGHMM Model\n"]
         strout.append( "Name: " + str(self.cmodel.name))
         strout.append(  "\nNumber of states: "+ str(hmm.N))
-        # XXX 16
-        if self.cmodel.model_type &  16: #kHigherOrderEmissions
+        if self.hasFlags(kHigherOrderEmissions):
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
             order = [0]*hmm.N
@@ -2537,7 +2547,7 @@ class DiscreteEmissionHMM(HMM):
         strout.append( "\nModelflags: "+ self.printtypes(self.cmodel.model_type))
         strout.append(  "\nNumber of states: "+ str(hmm.N))
         strout.append(  "\nSize of Alphabet: "+ str(hmm.M))
-        if self.cmodel.model_type &  16: #kHigherOrderEmissions
+        if self.hasFlags(kHigherOrderEmissions):
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
             order = [0]*hmm.N
@@ -2566,7 +2576,7 @@ class DiscreteEmissionHMM(HMM):
                 strout.append( " with probability " + str(ghmmwrapper.double_array_getitem(state.in_a,i)))
             strout.append( "\nint fix:" + str(state.fix) + "\n")
 
-        if self.cmodel.model_type &  4:
+        if self.hasFlags(kSilentStates):
             strout.append("\nSilent states: \n")
             for k in range(hmm.N):
                 strout.append( str(self.cmodel.getSilent(k)) + ", ")
@@ -2587,6 +2597,14 @@ class DiscreteEmissionHMM(HMM):
                 else:
                     self.N = self.cmodel.N
 
+    def getEmission(self, i):
+        state = self.cmodel.getState(i)
+        if self.hasFlags(kHigherOrderEmissions):
+            order = ghmmwrapper.int_array_getitem(self.cmodel.order, i)
+            emissions = ghmmhelper.double_array2list(state.b, self.M**(order+1))
+        else:                
+            emissions = ghmmhelper.double_array2list(state.b, self.M)
+        return emissions
 
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
@@ -2596,21 +2614,20 @@ class DiscreteEmissionHMM(HMM):
 
         state = self.cmodel.getState(i)
 
-        # updating silent flag and/or model type if necessary 
-        # XXX FLAGS
-        if self.cmodel.model_type & 4:
+        # updating silent flag and/or model type if necessary
+        if self.hasFlags(kSilentStates):
             if sum(distributionParameters) == 0.0:
                 self.cmodel.setSilent(i, 1)
-            else:                
+            else:
                 self.cmodel.setSilent(i, 0)
                 #change model_type and free array if no silent state is left
                 if 0 == sum(ghmmhelper.int_array2list(self.cmodel.silent,self.N)):
-                    self.cmodel.model_type -= 4
+                    self.clearFlags(kSilentStates)
                     ghmmwrapper.free(self.cmodel.silent)
                     self.cmodel.silent = None
         #if the state becomes the first silent state allocate memory and set the silen flag
         elif sum(distributionParameters) == 0.0:
-            self.cmodel.model_type += 4
+            self.setFlags(kSilentStates)
             slist = [0]*self.N
             slist[i] = 1
             self.cmodel.silent = ghmmhelper.list2int_array(slist)
@@ -2665,7 +2682,7 @@ class DiscreteEmissionHMM(HMM):
         state = self.cmodel.getState(stateSequence[0])
         emissionProb = ghmmwrapper.double_array_getitem(state.b, emissionSequence[0])
         if emissionProb == 0:
-            silent = (self.cmodel.model_type & 4) and self.cmodel.silent[stateSequence[0]]
+            silent = self.hasFlags(kSilentStates) and self.cmodel.silent[stateSequence[0]]
             if silent == 1:
                 emissionProb = 1
             else:
@@ -2686,7 +2703,7 @@ class DiscreteEmissionHMM(HMM):
                         # print "b["+str(emissionSequence[symbolIndex])+"] in state " + str(stateSequence[i+1]) + " = ",emissionProb
                         symbolIndex += 1
                         if emissionProb == 0:
-                            silent = (self.cmodel.model_type & 4) and self.cmodel.getSilent(stateSequence[i+1])
+                            silent = self.hasFlags(kSilentStates) and self.cmodel.getSilent(stateSequence[i+1])
                             if silent == 1:
                                 emissionProb = 1
                                 symbolIndex -= 1
@@ -2714,8 +2731,8 @@ class DiscreteEmissionHMM(HMM):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)
 
         # XXX NotImplemented 
-        if self.cmodel.model_type & 4:     #kSilentStates
-            log.critical( "Sorry, training of models containing silent states not yet supported.")
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         else:
             if nrSteps == None:
                 self.cmodel.baum_welch(trainingSequences.cseq)
@@ -2766,7 +2783,7 @@ class DiscreteEmissionHMM(HMM):
         self.cmodel.background_id = ghmmhelper.list2int_array(stateBackground)
 
         # updating model type
-        self.cmodel.model_type += 32 #kBackgroundDistributions
+        self.setFlags(kBackgroundDistributions)
     
     # XXX Unify next two methods
     def assignAllBackgrounds(self,stateBackground):
@@ -2799,7 +2816,7 @@ class DiscreteEmissionHMM(HMM):
 
     def updateTieGroups(self):
         """ XXX Name uninformative. Average emission probabilities of tied states. """
-        assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
+        assert self.hasFlags(kTiedEmissions) and self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         self.cmodel.update_tie_groups()
 
 
@@ -2809,7 +2826,7 @@ class DiscreteEmissionHMM(HMM):
         if self.cmodel.tied_to is None:
             log.debug( "allocating tied_to")
             self.cmodel.tied_to = ghmmhelper.list2int_array(tieList)
-            self.cmodel.model_type += 8
+            self.setFlags(kTiedEmissions)
         else:
             log.debug( "tied_to already initialized")
             for i in range(self.N):
@@ -2819,17 +2836,17 @@ class DiscreteEmissionHMM(HMM):
     def removeTiegroups(self):
         ghmmwrapper.free(self.cmodel.tied_to)
         self.cmodel.tied_to = None
-        self.cmodel.model_type -= 8
+        self.clearFlags(kTiedEmissions)
     
 
     def getTieGroups(self):
-        assert self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
+        assert self.hasFlags(kTiedEmissions) and self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         
         return ghmmhelper.int_array2list(self.cmodel.tied_to, self.N)
     
 
     def getSilentFlag(self,state):
-        if self.cmodel.model_type & 4:
+        if self.hasFlags(kSilentStates):
             return self.cmodel.getSilent(state)
         else:
             return 0
@@ -2850,7 +2867,7 @@ class DiscreteEmissionHMM(HMM):
         A = []
         B = []
         pi = []
-        if self.cmodel.model_type & 16:         #kHigherOrderEmissions
+        if self.hasFlags(kHigherOrderEmissions):
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
             order = [0]*self.N
@@ -2873,7 +2890,7 @@ class DiscreteEmissionHMM(HMM):
         """
         assert 0 <= state <= self.N-1, "Invalid state index"
         
-        if (self.cmodel.model_type & 4) and self.cmodel.silent[state]:
+        if self.hasFlags(kSilentStates) and self.cmodel.silent[state]:
             return True
         else:
             return False    
@@ -2887,7 +2904,7 @@ class DiscreteEmissionHMM(HMM):
             directly and not multiple calls to pathPosterior
         """
         # XXX for silent states things are more complicated -> to be done
-        if self.cmodel.model_type & 4:
+        if self.hasFlags(kSilentStates):
             raise RuntimeError, "Models with silent states not yet supported." # XXX NotImplemented
 
         # checking function arguments
@@ -2901,7 +2918,7 @@ class DiscreteEmissionHMM(HMM):
         post = self.posterior(sequence)
         path_posterior = []
         
-        if not (self.cmodel.model_type & 4):   # check for kSilentStates
+        if not self.hasFlags(kSilentStates):
             # if there are no silent states things are straightforward
             
             assert len(path) == len(sequence), "Path and sequence have different lengths"
@@ -2959,8 +2976,8 @@ class DiscreteEmissionHMM(HMM):
         
         """
         # XXX for silent states things arr more complicated -> to be done
-        if self.cmodel.model_type & 4:
-            raise RuntimeError, "Models with silent states not yet supported."
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError, "Models with silent states not yet supported."
             
                     
         # checking function arguments
@@ -2978,7 +2995,7 @@ class DiscreteEmissionHMM(HMM):
         """
 
         # XXX for silent states things are more complicated -> to be done    	
-        if self.cmodel.model_type & 4:
+        if self.hasFlags(kSilentStates):
             raise RuntimeError, "Models with silent states not yet supported."
 
         assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
@@ -3036,7 +3053,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         strout.append("\nNumber of states: "+ str(hmm.N))
         strout.append("\nSize of Alphabet: "+ str(hmm.M))
 
-        if hmm.model_type & ghmmwrapper.kHigherOrderEmissions:
+        if hmm.model_type & kHigherOrderEmissions:
             order = ghmmhelper.int_array2list(hmm.order, self.N)
         else:
             order = [0]*hmm.N
@@ -3065,7 +3082,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 strout.append( "\ntransition from state " + str(state.getInState(i)) + " with probability " + str(state.getInProb(i)))
             strout.append("\nint fix:" + str(state.fix) + "\n")
 
-        if hmm.model_type & 4:
+        if hmm.model_type & kSilentStates:
             strout.append("\nSilent states: \n")
             for k in range(hmm.N):
                 strout.append(str(hmm.silent[k]) + ", ")
@@ -3163,8 +3180,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
             object, [[l_0^0, ..., l_T^0], ..., [l_0^k, ..., l_T^k]} for a k-sequence
                     SequenceSet
         """
-        if self.cmodel.model_type & 4:     #kSilentStates NotImplemented XXX
-            log.critical( "Sorry, k-best decoding on models containing silent states not yet supported.")
+        if self.hasFlags(kSilentStates):
+            raise NotimplementedError("Sorry, k-best decoding on models containing silent states not yet supported.")
         else:
             if isinstance(emissionSequences,EmissionSequence):
                 seqNumber = 1
@@ -3205,7 +3222,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         """
         
         # check for labels 
-        assert self.cmodel.model_type & 64, "Error: Model is not labelled. "
+        assert self.hasFlags(kLabeledStates), "Error: Model is not labelled."
         
         
         if isinstance(emissionsequences, EmissionSequence):
@@ -3363,8 +3380,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)
 
-        if self.cmodel.model_type & 4:     #kSilentStates
-            log.critical("Sorry, training of models containing silent states not yet supported.")
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         else:
             if nrSteps == None:
                 self.cmodel.label_baum_welch(trainingSequences.cseq)
@@ -3840,11 +3857,9 @@ class GaussianEmissionHMM(HMM):
         post = self.posterior(sequence)
         path_posterior = []
         
-        if not (self.cmodel.model_type & 4):   # check for kSilentStates
+        if not self.hasFlags(kSilentStates):
             # if there are no silent states things are straightforward
-            
             assert len(path) == len(sequence), "Path and sequence have different lengths"
-            
         
             # appending posteriors for each element of path
             for p in range(len(path)):
@@ -3853,8 +3868,6 @@ class GaussianEmissionHMM(HMM):
                 path_posterior.append(post[p][path[p]])
                
             return path_posterior  
-        
-
 
     def statePosterior(self, sequence, state, time):
         """ Return the log posterior probability for being at 'state' at time 'time' in 'sequence'.
@@ -4609,7 +4622,7 @@ class PairHMM(HMM):
                 strout.append("\ntransition from state " + str(state.in_id[i]) + " with probability " + str(ghmmwrapper.double_array_getitem(state.in_a,i)))
                 strout.append("\nint fix:" + str(state.fix) + "\n")
 
-        if hmm.model_type & 4:
+        if hmm.model_type & kSilentStates:
             strout.append("\nSilent states: \n")
             for k in range(hmm.N):
                 strout.append(str(hmm.silent[k]) + ", ")

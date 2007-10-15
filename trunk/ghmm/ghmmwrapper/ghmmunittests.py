@@ -57,7 +57,20 @@ import ghmmwrapper
 import random
 
 # adjust verbosity level
-import logging
+import logging, sys
+
+log = logging.getLogger("GHMM unit tests")
+# creating StreamHandler to stderr
+hdlr = logging.StreamHandler(sys.stderr)
+# setting message format
+fmt = logging.Formatter("%(name)s %(filename)s:%(lineno)d  - %(message)s")
+hdlr.setFormatter(fmt)
+# adding handler to logger object
+log.addHandler(hdlr)
+#set unittests log level
+log.setLevel(logging.WARN)
+
+#set GHMM log level
 ghmm.log.setLevel(logging.WARN)
 
 
@@ -410,19 +423,20 @@ class HMMBaseClassTests(unittest.TestCase):
 
 class DiscreteEmissionHMMTests(unittest.TestCase):
     def setUp(self):
-        
+        log.debug("DiscreteEmissionHMMTests.setUp() -- begin")
         self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
         self.pi = [1.0,0.0,0.0]
         self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi)
+        log.debug("DiscreteEmissionHMMTests.setUp() -- end")
 
     def test__str__(self):
+        log.debug("test__str__ -- begin")
         # we aren't interested in the output but the function should run fine
         str(self.model)
 
-    def testaccessfunctions(self):
-
-        # print"\ntestaccessfunctions",
+    def testAccessFunctions(self):
+        log.debug("testAccessFunctions -- begin")
 
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,4)
@@ -449,7 +463,6 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(1),1)
         
-        
         # removing silent state
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
@@ -472,9 +485,11 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(self.model.getSilentFlag(2),1)
 
     def testNewXML(self):
+        log.debug("testNewXML -- begin")
         model = ghmm.HMMOpenXML('../doc/xml_example.xml')
     
     def getModel(self):
+        log.debug("getModel -- begin")
         A  = [[0.3, 0.6,0.1],[0.0, 0.5, 0.5],[0.0,0.0,1.0]]
         B  = [[0.5, 0.5],[0.5,0.5],[1.0,0.0]]
         pi = [1.0, 0.0, 0.0]
@@ -482,43 +497,41 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
                                     ghmm.DiscreteDistribution(ghmm.IntegerRange(0,2)),
                                     A, B, pi)
         
-    def testdel(self):
+    def testDel(self):
         """  test for explicit construction and destruction """
-        # print"\ntestdel ",
+        log.debug("testDel -- begin")
         del self.model
-        # print "===== testing for construction/destruction ===="
+        print "===== testing for construction/destruction ===="
         for i in range(100):
             mo = self.getModel()
     
-    def testtomatrices(self):
-        # print"\ntesttomatrices",
+    def testAsMatrices(self):
+        log.debug("testAsMatrices -- begin")
         tA,tB,tpi = self.model.toMatrices()
         
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
         self.assertEqual(self.pi,tpi)        
             
-    def testsample(self):
-        #print"\ntestsample ",
+    def testSample(self):
+        log.debug("testSample -- begin")
         seq = self.model.sampleSingle(100, seed=3586662)
-        #print "*************" 
         #print seq
-        
         seq2 = self.model.sample(10, 100, seed=3586662)
 
 
-    def testbaumwelch(self):
-        #print"\n**** testbaumwelch ",
+    def testBaumWelch(self):
+        log.debug("testBaumWelch -- begin")
         seq = self.model.sample(100,100,seed=3586662)
-        self.model.baumWelch(seq,5,0.01)
+        self.assertRaises(NotImplementedError, self.model.baumWelch, seq, 5, 0.01)
         
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         self.assertEqual(self.model.cmodel.model_type & 4, 0)
         self.model.baumWelch(seq,5,0.01)
         self.model.baumWelch(seq)
         
-    def testviterbi(self):
-        
+    def testViterbi(self):
+        log.debug("testViterbi -- begin")
         # Caution with an even number of consecutives 'g'
         # the model can produce two equal probable paths
         
@@ -526,6 +539,8 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         g = lambda x: map(f, x)
 
         seq = ghmm.EmissionSequence(ghmm.DNA, [ 'c','c','g','c','c','g','g','g','g','g','c','g','g','g','c' ])
+                                               #[0,  2,  0,  1,  0,  2,  0,  1,  0,  1,  0,  1,  0,  1,  0]
+                                               #[0,  2,  0,  1,  0,  2,  0,  1,  0,  1,  0,  1,  0,  1,  0, 1, 0]
                 
         result = self.model.viterbi(seq)
         trueResult =  ([0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0], -19.698557965224637)
@@ -566,22 +581,21 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual (g(path2[1]), g(truePath2[1]))    
         
 
-    def testloglikelihood(self):
-        # print"\ntestloglikelihood",
+    def testLoglikelihood(self):
+        log.debug("testLoglikelihood -- begin")
         seq = self.model.sampleSingle(100,seed=3586662)
         logp = self.model.loglikelihood(seq)
         self.assert_(logp-93.1053904716 < 10^-8, "Different results in loglikelihood ")
 
-    def testlogprob(self):
-        # print"\ntestlogprob ",
+    def testLogProb(self):
+        log.debug("testLogProb -- begin")
         seq = self.model.sampleSingle(15,seed=3586662)
         path,logp = self.model.viterbi(seq)
         logp = self.model.logprob(seq,path)
         self.assert_(logp - 22.4303246929 < 10^-8, "Different results in logprob ")
         
-    def testfoba(self):
-        
-        #print"\ntestfoba "
+    def testFoBa(self):
+        log.debug("testFoBa -- begin")
         #print self.model
         seq = ghmm.EmissionSequence(self.model.emissionDomain,
                                     ['g','g','g','c','t','g','g','c','g','g',
@@ -610,9 +624,9 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual (f(self.model.loglikelihood(seq)),
                           f(self.model.backwardTermination (seq, beta, scale)))
 
-    def testtiedstated(self):
+    def testTiedStates(self):
+        log.debug( "testTiedStates -- begin")
         f = lambda x: round(x,15)
-        e1 = map(f,self.model.getEmission(0))
         t = (-1,1,1)
         self.model.setTieGroups(t)
 
@@ -626,8 +640,10 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(em0, [0.0,0.5,0.5,0.0])
         em2 = map(f,self.model.getEmission(2))
         self.assertEqual(em2, [0.15, 0.1, 0.5, 0.25])
+        log.debug("testTiedStates -- end")
 
-    def testnormalization(self):
+    def testNormalization(self):
+        log.debug("testNormalization")
         self.model.setInitial(0, 2.0)
         self.model.normalize()
         self.assertEqual(1.0, self.model.getInitial(0))
@@ -1086,7 +1102,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
 
 class XMLIOTests(unittest.TestCase):
     
-    def setUp(self):        
+    def setUp(self):
         self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
         self.pi = [1.0,0,0]
