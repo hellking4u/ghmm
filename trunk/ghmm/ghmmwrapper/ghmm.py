@@ -1948,9 +1948,11 @@ class BackgroundDistribution(object):
         outstr += str(self.emissionDomain) + "\n"
         d = ghmmhelper.double_matrix2list(self.cbackground.b, self.cbackground.n, len(self.emissionDomain))
         outstr += "Distributions:\n"   
+        f = lambda x: "%.2f" % (x,)  # float rounding function 
+        
         for i in range(self.cbackground.n):
             outstr += "  Order: " + str(self.cbackground.getOrder(i))+"\n"
-            outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
+            outstr += "  " + str(i+1) +": "+join(map(f,d[i]),', ')+"\n"
         return outstr
 
 
@@ -2448,6 +2450,8 @@ class DiscreteEmissionHMM(HMM):
         strout.append(  "(N= "+ str(hmm.N))
         strout.append(  ", M= "+ str(hmm.M)+')\n')
         
+        f = lambda x: "%.2f" % (x,) # float rounding function 
+        
         if self.hasFlags(kHigherOrderEmissions):
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
@@ -2469,7 +2473,7 @@ class DiscreteEmissionHMM(HMM):
                 strout.append( 'order= '+ str(order[k])+',')
 
 
-            strout.append( "initial= " + str(state.pi)+')\n')
+            strout.append( "initial= " + f(state.pi)+')\n')
             strout.append( "    Emissions: ")
             for outp in range(hmm.M**(order[k]+1)):
                 strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
@@ -2481,7 +2485,7 @@ class DiscreteEmissionHMM(HMM):
             strout.append( "    Transitions:")
             #trans = [0.0] * hmm.N
             for i in range( state.out_states):
-                strout.append( " ->" + str( state.getOutState(i))+' ('+ str(ghmmwrapper.double_array_getitem(state.out_a,i) ) +')' )
+                strout.append( " ->" + str( state.getOutState(i))+' ('+ f(ghmmwrapper.double_array_getitem(state.out_a,i) ) +')' )
                 if i < state.out_states-1:
                     strout.append( ',')
                 #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
@@ -2998,6 +3002,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
             strout.append( " " + str(self.cmodel.name))
         strout.append(  "(N= "+ str(hmm.N))
         strout.append(  ", M= "+ str(hmm.M)+')\n')
+
+        f = lambda x: "%.2f" % (x,) # float rounding function 
         
         # XXX 16
         if self.cmodel.model_type &  16: #kHigherOrderEmissions
@@ -3021,7 +3027,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             if order[k] > 0:
                 strout.append( 'order= '+ str(order[k])+',')
 
-            strout.append( "initial= " + str(state.pi)+', label= ' + str(self.labelDomain.external(label[k])) + ')\n')
+            strout.append( "initial= " + f(state.pi)+', label= ' + str(self.labelDomain.external(label[k])) + ')\n')
             strout.append( "    Emissions: ")
             for outp in range(hmm.M**(order[k]+1)):
                 strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
@@ -3033,7 +3039,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             strout.append( "    Transitions:")
             #trans = [0.0] * hmm.N
             for i in range( state.out_states):
-                strout.append( " ->" + str( state.getOutState(i))+' ('+ str(ghmmwrapper.double_array_getitem(state.out_a,i) ) +')' )
+                strout.append( " ->" + str( state.getOutState(i))+' ('+ f(ghmmwrapper.double_array_getitem(state.out_a,i) ) +')' )
                 if i < state.out_states-1:
                     strout.append( ',')
                 #strout.append(" with probability " + str(ghmmwrapper.double_array_getitem(state.out_a,i)))
@@ -3479,7 +3485,8 @@ class GaussianEmissionHMM(HMM):
         if self.cmodel.name:
             strout.append( " " + str(self.cmodel.name))
         strout.append(  "(N= "+ str(hmm.N)+')\n')
-        
+
+        f = lambda x: "%.2f" % (x,)  # float rounding function      
         
         if hmm.N <= 4:
             iter_list = range(self.N)
@@ -3493,16 +3500,16 @@ class GaussianEmissionHMM(HMM):
         
             state = hmm.getState(k)
             strout.append("  state "+ str(k) + " (")
-            strout.append( "initial= " + str(state.pi) )
+            strout.append( "initial= " + f(state.pi) )
             if self.cmodel.cos > 1:
              strout.append(', cos='+ str(self.cmodel.cos))
-            strout.append(", mu= " + str(ghmmwrapper.double_array_getitem(state.mue,0))+', ')
-            strout.append("sigma= " + str(ghmmwrapper.double_array_getitem(state.u,0)) )
+            strout.append(", mu= " + f(ghmmwrapper.double_array_getitem(state.mue,0))+', ')
+            strout.append("sigma= " + f(ghmmwrapper.double_array_getitem(state.u,0)) )
             strout.append(')\n')
 
 
 
-            strout.append( "    Transitions:")
+            strout.append( "    Transitions: ")
             if self.cmodel.cos > 1:
                 strout.append("\n")
             
@@ -3510,7 +3517,7 @@ class GaussianEmissionHMM(HMM):
                 if self.cmodel.cos > 1:
                     strout.append('      class: ' + str(c)+ ':'  )
                 for i in range( state.out_states):
-                    strout.append('->' + str(state.getOutState(i)) + ' (' + str(state.getOutProb(i, c))+')' )
+                    strout.append('->' + str(state.getOutState(i)) + ' (' + f(state.getOutProb(i, c))+')' )
                     if i < state.out_states-1:
                         strout.append( ', ')
 
@@ -4034,6 +4041,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             strout.append( " " + str(self.cmodel.name))
         strout.append(  "(N= "+ str(hmm.N)+')\n')
         
+        f = lambda x: "%.2f" % (x,)  # float rounding function 
         
         if hmm.N <= 4:
             iter_list = range(self.N)
@@ -4047,7 +4055,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         
             state = hmm.getState(k)
             strout.append("  state "+ str(k) + " (")
-            strout.append( "initial= " + str(state.pi) )
+            strout.append( "initial= " + f(state.pi) )
             if self.cmodel.cos > 1:
                 strout.append(', cos='+ str(self.cmodel.cos))
             strout.append(')\n')
@@ -4057,9 +4065,9 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             u =  ""
 
             for outp in range(hmm.M):
-                weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
-                mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
-                u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
+                weight += f(ghmmwrapper.double_array_getitem(state.c,outp))+", "
+                mue += f(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
+                u += f(ghmmwrapper.double_array_getitem(state.u,outp))+", "
 
             strout.append( "    Emissions (")
             strout.append("weights= " + str(weight) + ", ")
@@ -4067,7 +4075,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             strout.append("sigma= " + str(u) + ")\n")
 
 
-            strout.append( "    Transitions:")
+            strout.append( "    Transitions: ")
             if self.cmodel.cos > 1:
                 strout.append("\n")
             
