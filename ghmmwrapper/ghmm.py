@@ -1943,16 +1943,15 @@ class BackgroundDistribution(object):
         self.cbackground = None
     
     def __str__(self):
-        outstr = "BackgroundDistribution instance:\n"
-        outstr += "Number of distributions: " + str(self.cbackground.n)+"\n"
+        outstr = 'BackgroundDistribution (N= '+str(self.cbackground.n)+'):\n'
         outstr += str(self.emissionDomain) + "\n"
         d = ghmmhelper.double_matrix2list(self.cbackground.b, self.cbackground.n, len(self.emissionDomain))
         outstr += "Distributions:\n"   
         f = lambda x: "%.2f" % (x,)  # float rounding function 
         
         for i in range(self.cbackground.n):
-            outstr += "  Order: " + str(self.cbackground.getOrder(i))+"\n"
-            outstr += "  " + str(i+1) +": "+join(map(f,d[i]),', ')+"\n"
+            outstr += '  '+str(i+1) + ":(order= " + str(self.cbackground.getOrder(i))+"): "
+            outstr += " "+join(map(f,d[i]),', ')+"\n"
         return outstr
 
 
