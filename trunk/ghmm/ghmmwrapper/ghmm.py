@@ -641,7 +641,7 @@ class EmissionSequence(object):
         self.emissionDomain = emissionDomain
 
         if ParentSequenceSet is not None:
-            # optional reference to a parent equenceSet. Is needed for reference counting
+            # optional reference to a parent SequenceSet. Is needed for reference counting
             #XXX exception
             assert isinstance(ParentSequenceSet,SequenceSet), "Error: Invalid reference. Only SequenceSet is valid."    
             self.ParentSequenceSet = ParentSequenceSet
@@ -823,7 +823,6 @@ class EmissionSequence(object):
     	return join(strout,'')
 
 
-
     def sequenceSet(self):
         """ Return a one-element SequenceSet with this sequence."""
         
@@ -844,6 +843,32 @@ class EmissionSequence(object):
     def getWeight(self):
         return self.cseq.getWeight(0)
 
+    def asSequenceSet(self):
+        """returns a one element SequenceSet"""
+        log.debug("EmissionSequence.asSequenceSet() -- begin " + repr(self.cseq))
+        seq = self.sequenceAllocationFunction(1)
+
+        # checking for state labels in the source C sequence struct
+        if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
+            log.debug("EmissionSequence.asSequenceSet() -- found labels !")
+            seq.calloc_state_labels()
+            self.cseq.copyStateLabel(0, seq, 0)
+
+        seq.setLength(0, self.cseq.getLength(0))
+        seq.setSequence(0, self.cseq.getSequence(0))
+        seq.setWeight(0, self.cseq.getWeight(0))
+        
+        # Above doesnt copy seq_id or seq_label or seq_w
+        # XXX seq_id should be (long) int?
+        seq_id = ghmmwrapper.double_array_getitem(self.cseq.seq_id, 0)
+        ghmmwrapper.double_array_setitem(seq.seq_id, 0, seq_id)
+        #if ghmmwrapper.SEQ_LABEL_FIELD:
+        #    seq_label = ghmmwrapper.long_array_getitem(self.cseq.seq_label, i)
+        #    ghmmwrapper.long_array_setitem(seq.seq_label, i, int(seq_label))
+
+        log.debug("EmissionSequence.asSequenceSet() -- end " + repr(seq))
+        return SequenceSetSubset(self.emissionDomain, seq, self)
+        
 
 class SequenceSet(object):
     def __init__(self, emissionDomain, sequenceSetInput, labelDomain = None, labelInput = None):
@@ -910,6 +935,7 @@ class SequenceSet(object):
 
         #internal use
         elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq) or isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq):
+            log.debug("SequenceSet.__init__()", str(sequenceSetInput))
             self.cseq = sequenceSetInput
             if labelDomain is not None:
                 self.labelDomain = labelDomain
@@ -920,12 +946,9 @@ class SequenceSet(object):
 
     def __del__(self):
         "Deallocation of C sequence struct."
-        
         log.debug( "__del__ SequenceSet " + str(self.cseq))
-        if self.cseq is not None:
-            del self.cseq
-            self.cseq = None
-    
+
+
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
@@ -970,7 +993,6 @@ class SequenceSet(object):
                     strout.append(str( self.labelDomain.external(ghmmwrapper.int_matrix_getitem(seq.state_labels,i,j))) +", ")
 
         return join(strout,'')
-
 
 
     def __len__(self):
@@ -1093,7 +1115,7 @@ class SequenceSet(object):
              
             # setting labels if appropriate
             if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
-                self.cseq.copyStateLabels(seqIndixes[i], seq, seqIndixes[i])
+                self.cseq.copyStateLabel(seqIndixes[i], seq, seqIndixes[i])
 
         seq.seq_number = seqNumber
         
@@ -1102,7 +1124,11 @@ class SequenceSet(object):
     def write(self,fileName):
         "Writes (appends) the SequenceSet into file 'fileName'."
         self.cseq.write(fileName)
-        
+
+    def asSequenceSet(self):
+        """conveinence function, returns only self"""
+        return self
+
 class SequenceSetSubset(SequenceSet):
     """ 
     SequenceSetSubset contains a subset of the sequences from a SequenceSet object.
@@ -1110,17 +1136,18 @@ class SequenceSetSubset(SequenceSet):
     """
     def __init__(self, emissionDomain, sequenceSetInput, ParentSequenceSet , labelDomain = None, labelInput = None):
         # reference on the parent SequenceSet object
-        self.ParentSequenceSet =  ParentSequenceSet
+        log.debug("SequenceSetSubset.__init__ -- begin -", str(ParentSequenceSet))
+        self.ParentSequenceSet = ParentSequenceSet
         SequenceSet.__init__(self, emissionDomain, sequenceSetInput, labelDomain, labelInput)
-
 
     def __del__(self):
         """ Since we do not want to deallocate the sequence memory, the destructor has to be
             overloaded.
         """
+        log.debug( "__del__ SequenceSubSet " + str(self.cseq))
+        
         if self.cseq is not None:
             self.cseq.subseq_free()
-            self.cseq = None
 
         # remove reference on parent SequenceSet object
         self.ParentSequenceSet = None
@@ -2033,15 +2060,9 @@ class HMM(object):
                     (numarray) vector of floats
 
         """
-        # XXX: add xxxSequenceSet() to EmissionSequence and SequenceSet
-        #emissionSequences = emissionSequences.xxxSequenceSet()
-        if isinstance(emissionSequences,EmissionSequence):
-            seqNumber = 1 
-        elif isinstance(emissionSequences,SequenceSet):
-            seqNumber = len(emissionSequences)        
-        else:    
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + \
-                  str(emissionSequences.__class__.__name__)        
+        log.debug("HMM.loglikelihoods() -- begin")
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
 
         likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
@@ -2066,7 +2087,8 @@ class HMM(object):
                 likelihoodList.append(ghmmwrapper.double_array_getitem(likelihood,0))
 
         ghmmwrapper.free(likelihood)
-        likelihood = None
+        del emissionSequences
+        log.debug("HMM.loglikelihoods() -- end")
         return likelihoodList
 
     ## Further Marginals ...
@@ -2134,22 +2156,17 @@ class HMM(object):
             Result: the (N x T)-matrix containing the forward-variables
                     and the scaling vector
         """
-
+        log.debug("HMM.forward -- begin")
         # XXX Allocations should be in try, except, finally blocks
         # to assure deallocation even in the case of errrors.
         # This will leak otherwise.
-        
-                      
-        if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+        seq = emissionSequence.cseq.getSequence(0)        
 
         unused = ghmmwrapper.double_array_alloc(1) # Dummy return value for forward()    	
      
         t = len(emissionSequence)
         calpha = ghmmwrapper.double_matrix_alloc(t, self.N)
         cscale = ghmmwrapper.double_array_alloc(t)
-
-        seq = emissionSequence.cseq.getSequence(0)
 
         error = self.cmodel.forward(seq, t, calpha, cscale, unused)
         if error == -1:
@@ -2163,6 +2180,8 @@ class HMM(object):
         ghmmwrapper.free(unused)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha, t)
+
+        log.debug("HMM.forward -- end")
         return pyalpha, pyscale
         
 
@@ -2170,9 +2189,7 @@ class HMM(object):
         """
             Result: the (N x T)-matrix containing the backward-variables
         """
-        #if not isinstance(emissionSequence,EmissionSequence):
-        #    raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
-
+        log.debug("HMM.backward -- begin")
         seq = emissionSequence.cseq.getSequence(0)
         
         # parsing 'scalingVector' to C double array.
@@ -2191,10 +2208,12 @@ class HMM(object):
         # deallocation
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(cbeta,t)
+
+        log.debug("HMM.backward -- end")
         return pybeta
 
 
-    def viterbi(self, emissionSequences):
+    def viterbi(self, eseqs):
         """ Compute the Viterbi-path for each sequence in emissionSequences
 
             emission_sequences can either be a SequenceSet or an EmissionSequence
@@ -2203,14 +2222,10 @@ class HMM(object):
             object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
                     SequenceSet
         """
+        log.debug("HMM.viterbi() -- begin")
+        emissionSequences = eseqs.asSequenceSet()
 
-        ### XXX USE GET SEQ SET
-        if isinstance(emissionSequences,EmissionSequence):
-            seqNumber = 1
-        elif isinstance(emissionSequences,SequenceSet):
-            seqNumber = len(emissionSequences)        
-        else:    
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+        seqNumber = len(emissionSequences)        
 
         log_p = ghmmwrapper.double_array_alloc(1)
 
@@ -2229,7 +2244,6 @@ class HMM(object):
             
             # for model types without possible silent states
             # the length of the viterbi path is known
-            # XXX use Constants 
             if not self.hasFlags(kSilentStates):
                 onePath = ghmmhelper.int_array2list(viterbiPath, seq_len)
             
@@ -2239,20 +2253,18 @@ class HMM(object):
             else:
                 for j in range(seq_len * self.N): # maximum length of a viterbi path for a silent model
                     d = ghmmwrapper.int_array_getitem(viterbiPath, j)
-                                   
                     if d >= 0:
                         onePath.append(d)
                     else:
                         break
-                        
+
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.double_array_getitem(log_p, 0))
             ghmmwrapper.free(viterbiPath) 
-            viterbiPath = None
 
         ghmmwrapper.free(log_p)
-        log_p = None
-            
+
+        log.debug("HMM.viterbi() -- end")
         if seqNumber > 1:
             return allPaths, allLogs
         else:
@@ -2274,7 +2286,9 @@ class HMM(object):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
+        log.debug("HMM.sampleSingle() -- begin")
         seqPtr = self.cmodel.generate_sequences(seed,T,1,self.N)
+        log.debug("HMM.sampleSingle() -- end")
         return EmissionSequence(self.emissionDomain,seqPtr)
 
     def clearFlags(self, flags):
@@ -2594,9 +2608,6 @@ class DiscreteEmissionHMM(HMM):
 
             Result: the backward log probability of emissionSequence
         """
-        #if not isinstance(emissionSequence,EmissionSequence):
-        #    raise TypeError, "EmissionSequence required, got " + str (emissionSequence.__class__.__name__)
-
         seq = emissionSequence.cseq.getSequence(0)
         
         # parsing 'scalingVector' to C double array.
@@ -2681,7 +2692,6 @@ class DiscreteEmissionHMM(HMM):
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
             raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)
 
-        # XXX NotImplemented 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         else:
@@ -2856,10 +2866,7 @@ class DiscreteEmissionHMM(HMM):
         """
         # XXX for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
-            raise RuntimeError, "Models with silent states not yet supported." # XXX NotImplemented
-
-        # checking function arguments
-        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+            raise NotImplementedError, "Models with silent states not yet supported."
 
         # checking path validity (XXX too inefficient ?)
         for p in path:
@@ -2929,8 +2936,7 @@ class DiscreteEmissionHMM(HMM):
         # XXX for silent states things arr more complicated -> to be done
         if self.hasFlags(kSilentStates):
             raise NotImplementedError, "Models with silent states not yet supported."
-            
-                    
+
         # checking function arguments
         assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
         assert 0 <= time <= len(sequence), "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
@@ -2947,7 +2953,7 @@ class DiscreteEmissionHMM(HMM):
 
         # XXX for silent states things are more complicated -> to be done    	
         if self.hasFlags(kSilentStates):
-            raise RuntimeError, "Models with silent states not yet supported."
+            raise NotImplementedError, "Models with silent states not yet supported."
 
         assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
         
@@ -3148,12 +3154,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         Returns the most likely labeling of the input sequence(s) as given by the viterbi path.
         """
 
-        if isinstance(emissionSequences,EmissionSequence):
-            seqNumber = 1
-        elif isinstance(emissionSequences,SequenceSet):
-            seqNumber = len(emissionSequences)
-        else:
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
 
         assert emissionSequences.emissionDomain == self.emissionDomain, "Sequence and model emissionDomains are incompatible."
         
@@ -3182,12 +3184,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if self.hasFlags(kSilentStates):
             raise NotimplementedError("Sorry, k-best decoding on models containing silent states not yet supported.")
         else:
-            if isinstance(emissionSequences,EmissionSequence):
-                seqNumber = 1
-            elif isinstance(emissionSequences,SequenceSet):
-                seqNumber = len(emissionSequences)
-            else:
-                raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+            emissionSequences = emissionSequences.asSequenceSet()
+            seqNumber = len(emissionSequences)
 
             log_p = ghmmwrapper.double_array_alloc(1)
 
@@ -3213,26 +3211,21 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 return (self.externalLabel(allLabels[0]), allLogs[0])
 
 
-    def gradientSearch(self, emissionsequences, eta=.1, steps=20):
+    def gradientSearch(self, emissionSequences, eta=.1, steps=20):
         """ trains a model with given sequencesgradescentFunction using gradient descent
 
             emission_sequences can either be a SequenceSet or an EmissionSequence
 
         """
         
-        # check for labels 
-        assert self.hasFlags(kLabeledStates), "Error: Model is not labelled."
+        # check for labels
+        if not self.hasFlags(kLabeledStates):
+            raise NotImplementedError("Error: Model is no labeled states.")
         
-        
-        if isinstance(emissionsequences, EmissionSequence):
-            seqNumber = 1
-        elif isinstance(emissionsequences, SequenceSet):
-            seqNumber = len(emissionsequences)
-        else:
-            raise TypeError, "LabeledEmissionSequence or LabeledSequenceSet required, got "\
-                  + str(emissionsequences.__class__.__name__)
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
 
-        tmp_model = self.cmodel.label_gradient_descent(emissionsequences.cseq, eta, steps)
+        tmp_model = self.cmodel.label_gradient_descent(emissionSequences.cseq, eta, steps)
         if tmp_model is None:
             log.error("Gradient descent finished not successfully.")
             return False
@@ -3250,19 +3243,13 @@ class StateLabelHMM(DiscreteEmissionHMM):
                     (numarray) vector of floats
 
         """
-        if isinstance(emissionSequences,EmissionSequence):
-            seqNumber = 1
-        elif isinstance(emissionSequences,SequenceSet):
-            seqNumber = len(emissionSequences)
-        else:
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + \
-                  str(emissionSequences.__class__.__name__)
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
 
         assert emissionSequences.cseq.state_labels is not None, "Sequence needs to be labeled."
 
         likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
-
 
         for i in range(seqNumber):
             seq = emissionSequences.cseq.getSequence(i)
@@ -3652,14 +3639,8 @@ class GaussianEmissionHMM(HMM):
                     (numarray) vector of floats
 
         """
-
-        if isinstance(emissionSequences,EmissionSequence):
-            seqNumber = 1 
-        elif isinstance(emissionSequences,SequenceSet):
-            seqNumber = len(emissionSequences)        
-        else:    
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + \
-                  str(emissionSequences.__class__.__name__)        
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
 
         if self.cmodel.cos > 1:
             log.debug( "self.cmodel.cos = " + str( self.cmodel.cos) )
@@ -3710,13 +3691,8 @@ class GaussianEmissionHMM(HMM):
             object, [[q_0^0, ..., q_T^0], ..., [q_0^k, ..., q_T^k]} for a k-sequence
                     SequenceSet
         """
-        
-        if isinstance(emissionSequences,EmissionSequence):
-            seqNumber = 1
-        elif isinstance(emissionSequences,SequenceSet):
-            seqNumber = len(emissionSequences)        
-        else:    
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
 
         if self.cmodel.cos > 1:
             log.debug( "self.cmodel.cos = "+ str( self.cmodel.cos))
