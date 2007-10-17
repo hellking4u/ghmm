@@ -68,10 +68,10 @@ hdlr.setFormatter(fmt)
 # adding handler to logger object
 log.addHandler(hdlr)
 #set unittests log level
-log.setLevel(logging.WARN)
+log.setLevel(logging.ERROR)
 
 #set GHMM log level
-ghmm.log.setLevel(logging.WARN)
+ghmm.log.setLevel(logging.ERROR)
 
 
 class AlphabetTests(unittest.TestCase):
@@ -489,7 +489,6 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         model = ghmm.HMMOpenXML('../doc/xml_example.xml')
     
     def getModel(self):
-        log.debug("getModel -- begin")
         A  = [[0.3, 0.6,0.1],[0.0, 0.5, 0.5],[0.0,0.0,1.0]]
         B  = [[0.5, 0.5],[0.5,0.5],[1.0,0.0]]
         pi = [1.0, 0.0, 0.0]
@@ -501,7 +500,6 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         """  test for explicit construction and destruction """
         log.debug("testDel -- begin")
         del self.model
-        print "===== testing for construction/destruction ===="
         for i in range(100):
             mo = self.getModel()
     
@@ -586,6 +584,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         seq = self.model.sampleSingle(100,seed=3586662)
         logp = self.model.loglikelihood(seq)
         self.assert_(logp-93.1053904716 < 10^-8, "Different results in loglikelihood ")
+        log.debug("testLoglikelihood -- end")
 
     def testLogProb(self):
         log.debug("testLogProb -- begin")
@@ -603,9 +602,8 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
                                      'g','g','c','c','g','c','g','c','c','c',
                                      'g','c','g','c','g','g','c','t','c','c'])
 
-        (alpha,scale) = self.model.forward(seq)
-       
-        
+        (alpha,scale) = self.model.forward(seq)       
+
         f = lambda x: round(x, 13)
         g = lambda x: map(f, x)
         
@@ -617,12 +615,12 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         
         beta = self.model.backward(seq,scale)
         tbeta = [[0.99999999999999944, 0.93777288282264037, 0.90665932423396078], [1.0387725400509094, 0.87202814099718418, 0.78865594147032159], [0.89851709082326969, 1.1552362596299182, 1.2835958440332425], [0.99999999999999956, 0.3333333333333332, 0.0], [0.99018797150167415, 0.92857142857142794, 0.89776315710630483], [1.0137817804861966, 0.8510489133365684, 0.76968247976175441], [0.88003858898536058, 1.1314781858383207, 1.2571979842648009], [0.999999999999999, 0.91297745742272951, 0.86946618613409465], [0.99615983039934863, 0.93417167590571015, 0.90317759865889091], [1.028991814771324, 0.86381742368004855, 0.7812302281344109], [0.89128509174829584, 1.1459379751049517, 1.2732644167832796], [0.99999999999999944, 0.91297745742272962, 0.86946618613409488], [0.99615983039934886, 0.93417167590571037, 0.90317759865889113], [1.0289918147713242, 0.86381742368004866, 0.78123022813441101], [0.89128509174829595, 1.1459379751049521, 1.2732644167832801], [0.99999999999999967, 1.2857142857142854, 1.4285714285714282], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.93777288282264093, 0.90665932423396134], [1.03877254005091, 0.87202814099718462, 0.78865594147032214], [0.89851709082327025, 1.1552362596299188, 1.2835958440332431], [1.0000000000000002, 1.285714285714286, 1.428571428571429], [1.0000000000000002, 0.83947939262472893, 0.75921908893709344], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.93777288282264093, 0.90665932423396134], [1.03877254005091, 0.87202814099718462, 0.78865594147032214], [0.89851709082327025, 1.1552362596299188, 1.2835958440332431], [1.0000000000000002, 0.33333333333333343, 0.0], [0.72222222222222221, 0.92857142857142849, 1.0317460317460319], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 1.0, 1.0]]
-        
+
         self.assertEqual (map(g, beta),map(g, tbeta))
-                
         #testing forward and backward log probabilities
         self.assertEqual (f(self.model.loglikelihood(seq)),
                           f(self.model.backwardTermination (seq, beta, scale)))
+        log.debug("testFoBa -- end")
 
     def testTiedStates(self):
         log.debug( "testTiedStates -- begin")
@@ -1190,8 +1188,8 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
 
 
 # Run ALL tests (comment out to deactivate)
-#if __name__ == '__main__':
-#    unittest.main()
+if __name__ == '__main__':
+    unittest.main()
 
 
 # Individual test suites for each of the different classes
