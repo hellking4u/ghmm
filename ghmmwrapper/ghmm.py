@@ -928,12 +928,8 @@ class SequenceSet(object):
     
     def __str__(self):
         "Defines string representation."
-        #seq = self.cseq
-        #strout =  ["\n<SequenceSet with " + str(seq.seq_number) +' sequences>']
-        #return join(strout,'')
-
         seq = self.cseq
-        strout =  ["\nNumber of sequences: " + str(seq.seq_number)]
+        strout =  ["SequenceSet (N= " + str(seq.seq_number)+")"]
 
         if seq.seq_number <= 6:
 
@@ -2475,7 +2471,7 @@ class DiscreteEmissionHMM(HMM):
             strout.append( "initial= " + f(state.pi)+')\n')
             strout.append( "    Emissions: ")
             for outp in range(hmm.M**(order[k]+1)):
-                strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                strout.append(f(ghmmwrapper.double_array_getitem(state.b,outp)))
                 if outp < hmm.M**(order[k]+1)-1:
                     strout.append( ', ')
                 else:    
@@ -3029,7 +3025,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             strout.append( "initial= " + f(state.pi)+', label= ' + str(self.labelDomain.external(label[k])) + ')\n')
             strout.append( "    Emissions: ")
             for outp in range(hmm.M**(order[k]+1)):
-                strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
+                strout.append(f(ghmmwrapper.double_array_getitem(state.b,outp)))
                 if outp < hmm.M**(order[k]+1)-1:
                     strout.append( ', ')
                 else:    
