@@ -929,22 +929,22 @@ class SequenceSet(object):
     def __str__(self):
         "Defines string representation."
         seq = self.cseq
-        strout =  ["SequenceSet (N= " + str(seq.seq_number)+")"]
+        strout =  ["SequenceSet (N=" + str(seq.seq_number)+")"]
 
+        
         if seq.seq_number <= 6:
-
-            for i in range(seq.seq_number):
-                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)) + ":\n")
-                strout.append(str(self[i]))
-
+            iter_list = range(seq.seq_number)
         else:
-            for i in range(0,2):
-                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)) + ":\n")
-                strout.append(str(self[i]))
-            strout.append('\n\n...\n')
-            for i in range(seq.seq_number-2,seq.seq_number):
-                strout.append("\nSeq " + str(i)+ ", length " + str(seq.getLength(i)) + ":\n")
-                strout.append(str(self[i]))
+            iter_list = [0,2,'X',seq.seq_number-2,seq.seq_number-1]
+
+        
+        for i in iter_list:
+            if i == 'X':
+                strout.append('\n...\n')
+            else:
+                strout.append("\n  seq " + str(i)+ "(len=" + str(seq.getLength(i)) + ")\n")
+                strout.append('    '+str(self[i]))
+
 
         return join(strout,'')
 
