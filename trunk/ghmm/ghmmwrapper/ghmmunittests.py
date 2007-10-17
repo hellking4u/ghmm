@@ -411,8 +411,8 @@ class HMMBaseClassTests(unittest.TestCase):
     def testsetEmissionExeption(self):
         self.assertRaises(NotImplementedError, self.model.setEmission, 1, "blah")
 
-    def testtoMatricesExeption(self):
-        self.assertRaises(NotImplementedError, self.model.toMatrices)
+    def testasMatricesExeption(self):
+        self.assertRaises(NotImplementedError, self.model.asMatrices)
 
     def testnormalizeExeption(self):
         self.assertRaises(NotImplementedError, self.model.normalize)
@@ -505,7 +505,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
     
     def testAsMatrices(self):
         log.debug("testAsMatrices -- begin")
-        tA,tB,tpi = self.model.toMatrices()
+        tA,tB,tpi = self.model.asMatrices()
         
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
@@ -1009,7 +1009,7 @@ class GaussianEmissionHMMTests(unittest.TestCase):
     
     def testtomatrices(self):
         # print"\ntesttomatrices ",
-        tA,tB,tpi = self.model.toMatrices()
+        tA,tB,tpi = self.model.asMatrices()
         
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
@@ -1085,7 +1085,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
 
     def testtomatrices(self):
         #print"\ntesttomatrices "
-        tA,tB,tpi = self.model.toMatrices()
+        tA,tB,tpi = self.model.asMatrices()
         
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)

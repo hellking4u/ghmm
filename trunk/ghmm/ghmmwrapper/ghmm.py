@@ -2384,8 +2384,7 @@ class HMM(object):
          """
         raise NotImplementedError
 
-    # XXX asMatrices
-    def toMatrices(self):
+    def asMatrices(self):
         "To be defined in derived classes."
         raise NotImplementedError
 
@@ -2823,7 +2822,7 @@ class DiscreteEmissionHMM(HMM):
             log.error("normalization failed")
 
 
-    def toMatrices(self):
+    def asMatrices(self):
         "Return the parameters in matrix form."
         A = []
         B = []
@@ -3834,7 +3833,7 @@ class GaussianEmissionHMM(HMM):
          self.cmodel.prior = prior
 
          
-    def toMatrices(self):
+    def asMatrices(self):
         "Return the parameters in matrix form."
         A = []
         B = []
@@ -4103,7 +4102,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return join(strout,'')
 
 
-    def toMatrices(self):
+    def asMatrices(self):
         "Return the parameters in matrix form."
         A = []
         B = []
@@ -4278,7 +4277,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
     def getPrior(self):
         return self.cmodel.prior
  
-    def toMatrices(self):
+    def asMatrices(self):
         """Return the parameters in matrix form.
            It also returns the density type"""
         A = []
