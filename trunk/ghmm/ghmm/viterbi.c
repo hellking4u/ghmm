@@ -66,10 +66,10 @@ static int viterbi_free(local_store_t **v, int n, int len)
 {
 #define CUR_PROC "viterbi_free"
     int j;
-    mes_check_ptr(v, return (-1));
+    mes_check_ptr(v, return -1);
 
     if (!*v)
-        return (0);
+        return 0;
 
     for (j = 0; j < n; j++)
         m_free((*v)->log_in_a[j]);
@@ -83,7 +83,7 @@ static int viterbi_free(local_store_t **v, int n, int len)
     m_free((*v)->topo_order);
     m_free(*v);
 
-    return (0);
+    return 0;
 #undef CUR_PROC
 }                               /* viterbi_free */
 
@@ -117,10 +117,10 @@ static local_store_t *viterbi_alloc(ghmm_dmodel *mo, int len)
     v->topo_order_length = 0;
     ARRAY_CALLOC(v->topo_order, mo->N);
 
-    return (v);
+    return v;
   STOP:                        /* Label STOP from ARRAY_[CM]ALLOC */
     viterbi_free(&v, mo->N, len);
-    return (NULL);
+    return NULL;
 #undef CUR_PROC
 }                               /* viterbi_alloc */
 
@@ -151,7 +151,6 @@ static void Viterbi_precompute(ghmm_dmodel *mo, int *o, int len, local_store_t *
                 v->log_b[j][t] = 0.0;
             }
         }
-
 #undef CUR_PROC
 }                               /* viterbi_precompute */
 
@@ -205,9 +204,9 @@ static int extend_int_array(int *array, int cur_len, int extend)
     for (j = cur_len - 1; j >= (cur_len - extend); j--) {
         array[j] = -1;
     }
-    return (cur_len);
+    return cur_len;
   STOP:
-    return (-1);
+    return -1;
 #undef CUR_PROC
 }
 
@@ -436,7 +435,7 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
 
     /* Free the memory space */
     viterbi_free(&v, mo->N, len);
-    return (state_seq);
+    return state_seq;
   STOP:                        /* Label STOP from ARRAY_[CM]ALLOC */
     /* Free the memory space */
     viterbi_free(&v, mo->N, len);
