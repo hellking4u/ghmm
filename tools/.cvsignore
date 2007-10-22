@@ -1,9 +1,0 @@
-.deps
-.libs
-Makefile
-Makefile.in
-cluster
-ghmm-config
-probdist
-scluster
-smix_hmm
