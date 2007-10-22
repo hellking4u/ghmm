@@ -156,7 +156,7 @@ static void Viterbi_precompute(ghmm_dmodel *mo, int *o, int len, local_store_t *
 }                               /* viterbi_precompute */
 
 /*----------------------------------------------------------------------------*/
-static void __viterbi_silent(ghmm_dmodel *mo, int t, local_store_t *v)
+static void viterbi_silent(ghmm_dmodel *mo, int t, local_store_t *v)
 {
 #define CUR_PROC "viterbi_silent"
     int topocount;
@@ -280,7 +280,7 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
             v->phi[j] = log(mo->s[j].pi) + v->log_b[j][0];
     }
     if (mo->model_type & GHMM_kSilentStates) {  /* could go into silent state at t=0 */
-        __viterbi_silent(mo, t = 0, v);
+        viterbi_silent(mo, t = 0, v);
     }
 
     /* t > 0 */
@@ -327,7 +327,7 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
 
         /* complete time step for silent states */
         if (mo->model_type & GHMM_kSilentStates) {
-            __viterbi_silent(mo, t, v);
+            viterbi_silent(mo, t, v);
         }
     }                           /* Next observation , increment time-step */
 
@@ -444,9 +444,6 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
     return NULL;
 #undef CUR_PROC
 }                               /* ghmm_dmodel_viterbi */
-
-
-
 
 /*============================================================================*/
 double ghmm_dmodel_viterbi_logp(ghmm_dmodel * mo, int *o, int len, int *state_seq)
