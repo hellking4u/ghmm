@@ -605,7 +605,9 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
           self.fix.append(fix)
 
     def set(self, index, w, fix, distribution):
-        assert M > index
+        if index >= M:
+            raise IndexError
+
         assert isinstance(distribution,ContinuousDistribution)
         self.weight[i] = w
         self.components[i] = distribution
@@ -643,7 +645,8 @@ class EmissionSequence(object):
         if ParentSequenceSet is not None:
             # optional reference to a parent SequenceSet. Is needed for reference counting
             #XXX exception
-            assert isinstance(ParentSequenceSet,SequenceSet), "Error: Invalid reference. Only SequenceSet is valid."    
+            if not isinstance(ParentSequenceSet,SequenceSet):
+                raise TypeError, "Invalid reference. Only SequenceSet is valid."    
             self.ParentSequenceSet = ParentSequenceSet
         else:
             self.ParentSequenceSet = None
@@ -958,12 +961,12 @@ class SequenceSet(object):
         if seq.seq_number <= 6:
             iter_list = range(seq.seq_number)
         else:
-            iter_list = [0,2,'X',seq.seq_number-2,seq.seq_number-1]
+            iter_list = [0,1,'X',seq.seq_number-2,seq.seq_number-1]
 
         
         for i in iter_list:
             if i == 'X':
-                strout.append('\n...\n')
+                strout.append('\n\n   ...\n')
             else:
                 strout.append("\n  seq " + str(i)+ "(len=" + str(seq.getLength(i)) + ")\n")
                 strout.append('    '+str(self[i]))
@@ -1198,7 +1201,8 @@ def writeToFasta(seqSet,fn):
     """
     Writes a SequenceSet into a fasta file.
     """
-    assert isinstance(seqSet, SequenceSet)
+    if not isinstance(seqSet, SequenceSet):
+        raise TypeError, "SequenceSet expected."
     f = open(fn,'w')
     
     for i in range(len(seqSet)):
@@ -1568,7 +1572,8 @@ class HMMFromMatricesFactory(HMMFactory):
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None, densities = None):
         if isinstance(emissionDomain,Alphabet):
             
-            assert emissionDomain == distribution.alphabet, "emissionDomain and distribution must be compatible"
+            if not emissionDomain == distribution.alphabet:
+                raise TypeError, "emissionDomain and distribution must be compatible"
             
             # checking matrix dimensions and argument validation, only some obvious errors are checked
             if not len(A) == len(A[0]):
@@ -1841,8 +1846,6 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
                 #      ]
 
-                assert densities != None, "Continuous Mixture Distributions need a density type array"
-                 
                 cmodel = ghmmwrapper.ghmm_cmodel()
                 cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
                 cmodel.prior = 0 # Unused
@@ -1989,7 +1992,7 @@ class BackgroundDistribution(object):
             outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
         return outstr
         
-    def tolist(self):
+    def toList(self):
         dim = self.cbackground.m
         distNum = self.cbackground.n
         orders = ghmmhelper.int_array2list(self.cbackground.order, distNum)
@@ -2126,7 +2129,7 @@ class HMM(object):
 
 
 
-    def logprob(self, emissionSequence, stateSequence):
+    def joined(self, emissionSequence, stateSequence):
         """log P[ emissionSequence, stateSequence| m] 
         """
         # implemented in derived classes.
@@ -2343,9 +2346,10 @@ class HMM(object):
         state = self.cmodel.getState(i)        
 
         # ensure proper indices
-        # XXX IndexError
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
-        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
+        if not 0 <= j < self.N:
+            raise IndexError, "Index " + str(j) + " out of bounds."
 
         transition = 0.0
         for i in xrange(state.out_states):
@@ -2359,8 +2363,10 @@ class HMM(object):
         """ Accessor function for the transition a_ij. """
 
         # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
-        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
+        if not 0 <= j < self.N:
+            raise IndexError, "Index " + str(j) + " out of bounds."
 
         # XXX Need to check that (i,j) is a transition, return IndexError else
 
@@ -2572,9 +2578,11 @@ class DiscreteEmissionHMM(HMM):
 
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
-        assert len(distributionParameters) == self.M
-        # ensure proper indices XXX InsertError
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        if not len(distributionParameters) == self.M:
+            raise TypeError
+        # ensure proper indices
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
 
@@ -2634,7 +2642,7 @@ class DiscreteEmissionHMM(HMM):
 
 
     # XXX Implement in C
-    def logprob(self, emissionSequence, stateSequence):
+    def joined(self, emissionSequence, stateSequence):
         """ log P[ emissionSequence, stateSequence| m] """
         
         if not isinstance(emissionSequence,EmissionSequence):
@@ -2709,7 +2717,8 @@ class DiscreteEmissionHMM(HMM):
            the background, where the backgroundWeight parameter (within [0,1]) controls
            the background's contribution for each state.
         """
-        assert len(backgroundWeight) == self.N, "Argument 'backgroundWeight' does not match number of states."
+        if not len(backgroundWeight) == self.N:
+            raise TypeError, "Argument 'backgroundWeight' does not match number of states."
         
         cweights = ghmmhelper.list2double_array(backgroundWeight)
         result = self.cmodel.background_apply(cweights)
@@ -2733,7 +2742,8 @@ class DiscreteEmissionHMM(HMM):
         if not type(stateBackground) == list:
             raise TypeError, "list required got "+ str(type(stateBackground))
             
-        assert len(stateBackground) == self.N, "Argument 'stateBackground' does not match number of states."
+        if not len(stateBackground) == self.N:
+            raise TypeError, "Argument 'stateBackground' does not match number of states."
 
         if self.background != None:
             del(self.background)
@@ -2848,7 +2858,8 @@ class DiscreteEmissionHMM(HMM):
         """ Returns True if 'state' is silent, False otherwise
         
         """
-        assert 0 <= state <= self.N-1, "Invalid state index"
+        if not 0 <= state <= self.N-1:
+            raise IndexError, "Invalid state index"
         
         if self.hasFlags(kSilentStates) and self.cmodel.silent[state]:
             return True
@@ -2869,7 +2880,8 @@ class DiscreteEmissionHMM(HMM):
 
         # checking path validity (XXX too inefficient ?)
         for p in path:
-            assert 0 <= p <= self.N-1, "Invalid state index "+str(p)+". Model and path are incompatible"
+            if not 0 <= p <= self.N-1:
+                raise IndexError, "Invalid state index "+str(p)+". Model and path are incompatible"
 
         # calculate complete posterior matrix
         post = self.posterior(sequence)
@@ -2937,9 +2949,12 @@ class DiscreteEmissionHMM(HMM):
             raise NotImplementedError, "Models with silent states not yet supported."
 
         # checking function arguments
-        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
-        assert 0 <= time <= len(sequence), "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
-        assert 0 <= state <= self.N-1, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
+        if not isinstance(sequence, EmissionSequence):
+            raise TypeError, "Input to posterior must be EmissionSequence object"
+        if not 0 <= time <= len(sequence):
+            raise IndexError, "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
+        if not 0 <= state <= self.N-1:
+            raise IndexError, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
 
         post = self.posterior(sequence)
         return post[time][state]
@@ -2954,7 +2969,8 @@ class DiscreteEmissionHMM(HMM):
         if self.hasFlags(kSilentStates):
             raise NotImplementedError, "Models with silent states not yet supported."
 
-        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+        if not isinstance(sequence, EmissionSequence):
+             raise TypeError, "Input to posterior must be EmissionSequence object"
         
         (alpha,scale)  = self.forward(sequence)
         beta = self.backward(sequence,scale)
@@ -2991,7 +3007,9 @@ class StateLabelHMM(DiscreteEmissionHMM):
     def __init__(self, emissionDomain, distribution, labelDomain, cmodel):
         DiscreteEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
 
-        assert isinstance(labelDomain, LabelDomain), "Invalid labelDomain"
+        if not isinstance(labelDomain, LabelDomain):
+            raise TypeError, "Invalid labelDomain"
+        
         self.labelDomain = labelDomain
 
 
@@ -3156,7 +3174,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         emissionSequences = emissionSequences.asSequenceSet()
         seqNumber = len(emissionSequences)
 
-        assert emissionSequences.emissionDomain == self.emissionDomain, "Sequence and model emissionDomains are incompatible."
+        if not emissionSequences.emissionDomain == self.emissionDomain:
+            raise TypeError, "Sequence and model emissionDomains are incompatible."
         
         (vPath, log_p) = self.viterbi(emissionSequences)
 
@@ -3245,7 +3264,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         emissionSequences = emissionSequences.asSequenceSet()
         seqNumber = len(emissionSequences)
 
-        assert emissionSequences.cseq.state_labels is not None, "Sequence needs to be labeled."
+        if emissionSequences.cseq.state_labels is None:
+            raise TypeError, "Sequence needs to be labeled."
 
         likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
@@ -3405,8 +3425,10 @@ class GaussianEmissionHMM(HMM):
              Raises IndexError if the transition is not allowed
         """
         # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
-        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
+        if not 0 <= j < self.N:
+            raise IndexError, "Index " + str(j) + " out of bounds."
  
         transition = self.cmodel.get_transition(i, j, 0)
         if transition < 0.0: # Tried to access non-existing edge:
@@ -3417,16 +3439,18 @@ class GaussianEmissionHMM(HMM):
         """ Accessor function for the transition a_ij """
 
         # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
-        assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
+        if not 0 <= j < self.N:
+            raise IndexError, "Index " + str(j) + " out of bounds."
 
         self.cmodel.set_transition(i, j, 0, float(prob))
 
     def getEmission(self, i):
         """ Return (mu, sigma^2)  """
 
-        # ensure proper index
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
         mu    = state.getMean(0)
@@ -3437,7 +3461,8 @@ class GaussianEmissionHMM(HMM):
         """ Set the emission distributionParameters for state i """
 
         # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
         state.setMean(0, float(mu))  # GHMM C is german: mue instead of mu
@@ -3783,7 +3808,8 @@ class GaussianEmissionHMM(HMM):
         if not isinstance(trainingSequences, SequenceSet) and not isinstance(trainingSequences, EmissionSequence):
             raise TypeError, "baumWelch requires a SequenceSet or EmissionSequence object."
         
-        assert self.emissionDomain.CDataType == "double", "Continuous sequence needed."
+        if not self.emissionDomain.CDataType == "double":
+            raise TypeError, "Continuous sequence needed."
         
         self.baumWelchSetup(trainingSequences, nrSteps)
         ghmmwrapper.ghmm_cmodel_baum_welch(self.BWcontext)        
@@ -3862,12 +3888,14 @@ class GaussianEmissionHMM(HMM):
             directly and not multiple calls to pathPosterior
         """
         # checking function arguments
-        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+        if not isinstance(sequence, EmissionSequence):
+            raise TypeError, "Input to posterior must be EmissionSequence object"
         
 
         # checking path validity (XXX too inefficient ?)
         for p in path:
-            assert 0 <= p <= self.N-1, "Invalid state index "+str(p)+". Model and path are incompatible"
+            if not 0 <= p <= self.N-1:
+                raise IndexError, "Invalid state index "+str(p)+". Model and path are incompatible"
 
         # calculate complete posterior matrix
         post = self.posterior(sequence)
@@ -3895,9 +3923,12 @@ class GaussianEmissionHMM(HMM):
         """
                     
         # checking function arguments
-        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
-        assert 0 <= time <= len(sequence), "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
-        assert 0 <= state <= self.N-1, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
+        if not isinstance(sequence, EmissionSequence):
+            raise TypeError, "Input to posterior must be EmissionSequence object"
+        if not 0 <= time <= len(sequence):
+            raise IndexError, "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
+        if not 0 <= state <= self.N-1:
+            raise IndexError, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
 
         post = self.posterior(sequence)
         return post[time][state]
@@ -3909,7 +3940,8 @@ class GaussianEmissionHMM(HMM):
         
         """
         
-        assert isinstance(sequence, EmissionSequence), "Input to posterior must be EmissionSequence object"
+        if not isinstance(sequence, EmissionSequence):
+            raise TypeError, "Input to posterior must be EmissionSequence object"
         
         (alpha,scale)  = self.forward(sequence)
         beta = self.backward(sequence,scale)
@@ -3953,7 +3985,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         """ Set the emission distributionParameters for component 'comp' in state 'i'. """
 
         # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
@@ -3964,7 +3997,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return self.cmodel.calc_b(state, value)
 
 
-    def logprob(self, emissionSequence, stateSequence):
+    def joined(self, emissionSequence, stateSequence):
         """ log P[ emissionSequence, stateSequence| m] """
         
         if not isinstance(emissionSequence,EmissionSequence):
@@ -4203,7 +4236,8 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         """ Set the emission distributionParameters for component 'comp' in state 'i'. """
 
         # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        if not 0 <= i < self.N:
+            raise IndexError, "Index " + str(i) + " out of bounds."
 
         state = self.cmodel.getState(i)
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
