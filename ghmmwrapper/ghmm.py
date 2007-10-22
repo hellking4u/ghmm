@@ -599,9 +599,9 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
         self.weight.append(w)
         self.component.append(distribution)
         if isinstance(distribution,UniformDistribution): 
-	# uniform distributions are fixed by definition
-	  self.fix.append(1)            
-	else:
+        # uniform distributions are fixed by definition
+          self.fix.append(1)            
+        else:
           self.fix.append(fix)
 
     def set(self, index, w, fix, distribution):
@@ -609,10 +609,10 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
         assert isinstance(distribution,ContinuousDistribution)
         self.weight[i] = w
         self.components[i] = distribution
-	if isinstance(distribution,UniformDistribution): 
-	# uniform distributions are fixed by definition
-	  self.fix[i](1)            
-	else:
+        if isinstance(distribution,UniformDistribution): 
+        # uniform distributions are fixed by definition
+          self.fix[i](1)            
+        else:
           self.fix[i](fix)
 
     def get(self,i):
@@ -623,7 +623,7 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
         assert self.M == len(self.components)
         assert sum(self.weight) == 1
         assert sum(self.weight > 1) == 0
-	assert sum(self.weight < 0) == 0        
+        assert sum(self.weight < 0) == 0        
 
 
 
@@ -739,7 +739,7 @@ class EmissionSequence(object):
     def __setitem__(self, index, value):
         internalValue = self.emissionDomain.internal(value)
         self.cseq.setSymbol(0, index, internalValue)
-		
+                
 
     def __getitem__(self, index):
         """ Return the symbol at position 'index'. """
@@ -801,7 +801,7 @@ class EmissionSequence(object):
                 if self.emissionDomain.CDataType == "double":
                     strout.append(" ")
 
-    	return join(strout,'')
+        return join(strout,'')
 
     def verboseStr(self):
         "Defines string representation."
@@ -820,7 +820,7 @@ class EmissionSequence(object):
             for j in range(seq.getLabelsLength(0)):
                 strout.append(str( self.labelDomain.external(ghmmwrapper.int_matrix_getitem(seq.state_labels,0,j)))+ ", ")
 
-    	return join(strout,'')
+        return join(strout,'')
 
 
     def sequenceSet(self):
@@ -1243,7 +1243,7 @@ class HMMOpenFactory(HMMFactory):
                 raise IOError, 'File ' + str(fileName) + ' not found.'
             
         # XML file: both new and old format
-    	if self.defaultFileType == GHMM_FILETYPE_XML:
+        if self.defaultFileType == GHMM_FILETYPE_XML:
             # try to validate against ghmm.dtd
             if ghmmwrapper.ghmm_xmlfile_validate(fileName):
                 return self.openNewXML(fileName, modelIndex)
@@ -1400,7 +1400,7 @@ class HMMOpenFactory(HMMFactory):
         log.debug("determineHMMClass = "+ str(  (hmmClass, emission_domain, distribution)))
         
         nrModelPtr = ghmmwrapper.int_array_alloc(1)
-    	    
+
         # XXX broken since silent states are not supported by .smo file format 
         if hmmClass == DiscreteEmissionHMM:
             models = ghmmwrapper.ghmm_dmodel_read(fileName, nrModelPtr)
@@ -1789,7 +1789,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 for i in range(cmodel.N):
                     state = ghmmwrapper.cstate_array_getRef(states,i)
                     state.pi = pi[i]
-		    state.M = len(B[0][0])
+                    state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
                     state.c = ghmmhelper.list2double_array([1.0]) # Mixture weights. Unused
@@ -1800,7 +1800,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.mue = ghmmhelper.list2double_array(mu_list) #mu = mue in GHMM C-lib.
                     state.u = ghmmhelper.list2double_array(sigma_list)
                     state.c = ghmmhelper.list2double_array(weight_list)
-		    state.a = ghmmhelper.list2double_array([0.0] * state.M)
+                    state.a = ghmmhelper.list2double_array([0.0] * state.M)
 
                     # setting densities types (all normal by default)                    
                     densities = ghmmwrapper.density_array_alloc(cmodel.M)
@@ -1827,8 +1827,8 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #append states to model
                 cmodel.s = states
-		
-		
+                
+                
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
                 
             elif isinstance(distribution, ContinuousMixtureDistribution):
@@ -1871,7 +1871,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 for i in range(cmodel.N):
                     state = ghmmwrapper.cstate_array_getRef(states,i)
                     state.pi = pi[i]
-		    state.M = len(B[0][0])
+                    state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
                     state.c = ghmmhelper.list2double_array([1.0]) # Mixture weight
@@ -1883,7 +1883,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.mue = ghmmhelper.list2double_array(mu_list) #mu = mue in GHMM C-lib.
                     state.u = ghmmhelper.list2double_array(sigma_list)
                     state.c = ghmmhelper.list2double_array(weight_list)
-		    state.a = ghmmhelper.list2double_array(a_list)
+                    state.a = ghmmhelper.list2double_array(a_list)
 
                     # setting densities types (all normal by default)                    
                     densit = ghmmwrapper.density_array_alloc(cmodel.M)
@@ -1915,8 +1915,8 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #append states to model
                 cmodel.s = states
-		
-		
+                
+                
                 return ContinuousMixtureHMM(emissionDomain, distribution, cmodel)
             else:
                 raise GHMMError(type(distribution),
@@ -2162,7 +2162,7 @@ class HMM(object):
         # This will leak otherwise.
         seq = emissionSequence.cseq.getSequence(0)        
 
-        unused = ghmmwrapper.double_array_alloc(1) # Dummy return value for forward()    	
+        unused = ghmmwrapper.double_array_alloc(1) # Dummy return value for forward()
      
         t = len(emissionSequence)
         calpha = ghmmwrapper.double_matrix_alloc(t, self.N)
@@ -2340,7 +2340,7 @@ class HMM(object):
 
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
-        state = self.cmodel.getState(i)	
+        state = self.cmodel.getState(i)        
 
         # ensure proper indices
         # XXX IndexError
@@ -2717,7 +2717,7 @@ class DiscreteEmissionHMM(HMM):
         ghmmwrapper.free(cweights)
         if result:
             log.error("applyBackground failed.")
-						
+                                                
     
     def setBackground(self, backgroundObject, stateBackground):
         """ Configure model to use the background distributions in 'backgroundObject'. 
@@ -2950,7 +2950,7 @@ class DiscreteEmissionHMM(HMM):
         
         """
 
-        # XXX for silent states things are more complicated -> to be done    	
+        # XXX for silent states things are more complicated -> to be done            
         if self.hasFlags(kSilentStates):
             raise NotImplementedError, "Models with silent states not yet supported."
 
@@ -3408,7 +3408,7 @@ class GaussianEmissionHMM(HMM):
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
         assert 0 <= j < self.N, "Index " + str(j) + " out of bounds."
  
-     	transition = self.cmodel.get_transition(i, j, 0)
+        transition = self.cmodel.get_transition(i, j, 0)
         if transition < 0.0: # Tried to access non-existing edge:
             transition = 0.0
         return transition
@@ -3969,11 +3969,11 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         
         if not isinstance(emissionSequence,EmissionSequence):
             raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
-                        		
+
         state = self.cmodel.getState(stateSequence[0])
         emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
         
-    	if (emissionProb == 0): # zero ??? or some small constant?
+        if (emissionProb == 0): # zero ??? or some small constant?
             raise SequenceCannotBeBuild, "first symbol " + str(emissionSequence[0]) + " not emitted by state " + str(stateSequence[0])
                         
         logP = math.log(state.pi * emissionProb )
@@ -3984,7 +3984,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             for i in range(len(emissionSequence)-1):
                 cur_state = self.cmodel.getState(stateSequence[i])
                 next_state = self.cmodel.getState(stateSequence[i+1])
-		
+
                 for j in range(cur_state.out_states):
                     out_id = cur_state.out_id[j]
                     if out_id == stateSequence[i+1]:
@@ -4177,8 +4177,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
      
     def __init__(self, emissionDomain, distribution, cmodel):
         GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
- 	
- 
+
     def getEmissionProbability(self,value,st):
         return self.cmodel.calc_b(state, value)       
  
@@ -4212,7 +4211,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         state.setWeight(comp, float(weight))
         state.setTruncate(comp, float(a))
         state.setDensity(comp, int(type))
-	
+
     def getEmissionProbability(self, value, state):
         return self.cmodel.calc_b(state, value)
          
@@ -4833,10 +4832,10 @@ class PairHMM(HMM):
         allok = 1
         # from build matrices in xmlutil:
         orders = {}
-	k = 0 # C style index
-	for s in self.states: # ordering from XML
-	    orders[s.index] = k
-	    k = k + 1
+        k = 0 # C style index
+        for s in self.states: # ordering from XML
+            orders[s.index] = k
+            k = k + 1
         
         for state in self.states:
             for tclass in range(state.kclasses):
@@ -4925,10 +4924,10 @@ class PairHMMOpenFactory(HMMOpenFactory):
         
         # from build matrices in xmlutil:
         orders = {}
-	k = 0 # C style index
-	for s in pystates: # ordering from XML
-	    orders[s.index] = k
-	    k = k + 1
+        k = 0 # C style index
+        for s in pystates: # ordering from XML
+            orders[s.index] = k
+            k = k + 1
             
         #initialize states
         for i in range(cmodel.N):
