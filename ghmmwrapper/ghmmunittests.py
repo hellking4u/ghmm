@@ -390,8 +390,8 @@ class HMMBaseClassTests(unittest.TestCase):
     def testposteriorExeption(self):
         self.assertRaises(NotImplementedError, self.model.posterior, "sequence")
 
-    def testlogprobExeption(self):
-        self.assertRaises(NotImplementedError, self.model.logprob, "emissionSequence", "stateSequence")
+    def testjoinedExeption(self):
+        self.assertRaises(NotImplementedError, self.model.joined, "emissionSequence", "stateSequence")
 
     def testbaumWelchExeption(self):
         self.assertRaises(NotImplementedError, self.model.baumWelch, "trainingSequences", "nrSteps", "loglikelihoodCutoff")
@@ -590,7 +590,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         log.debug("testLogProb -- begin")
         seq = self.model.sampleSingle(15,seed=3586662)
         path,logp = self.model.viterbi(seq)
-        logp = self.model.logprob(seq,path)
+        logp = self.model.joined(seq,path)
         self.assert_(logp - 22.4303246929 < 10^-8, "Different results in logprob ")
         
     def testFoBa(self):
