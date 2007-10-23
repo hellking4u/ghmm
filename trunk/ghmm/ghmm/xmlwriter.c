@@ -878,7 +878,10 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
     w_name  = f->model.c[number]->name;
-    w_type  = strModeltype(f->model.c[number]->model_type);
+    if (f->model.c[number]->model_type)
+      w_type  = strModeltype(f->model.c[number]->model_type);
+    else
+      w_type  = strModeltype(f->modelType);
     w_prior = f->model.c[number]->prior;
     N       = f->model.c[number]->N;
     w_cos   = f->model.c[number]->cos;
