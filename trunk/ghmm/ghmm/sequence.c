@@ -45,6 +45,10 @@
 #include <math.h>
 #include <float.h>
 #include <string.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "ghmm.h"
 #include "mprintf.h"
@@ -60,6 +64,12 @@
 #include "ghmm_internals.h"
 
 #include "obsolete.h"
+
+enum sequence_flags{
+    kBlockAllocation = 1<<0,
+    kHasLabels       = 1<<1,
+};
+
 
 #ifdef GHMM_OBSOLETE
 /*============================================================================*/
@@ -507,16 +517,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 ghmm_cseq *ghmm_cseq_calloc (long seq_number)
 {
 #define CUR_PROC "ghmm_cseq_calloc"
-
   int i;
-  char * str;
-
-  /*printf("*** ghmm_cseq *sequence_d_calloc, nr: %d\n",seq_number);*/
   ghmm_cseq *sqd = NULL;
+
   if (seq_number > GHMM_MAX_SEQ_NUMBER) {
-    str = ighmm_mprintf (NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
-    GHMM_LOG(LCONVERTED, str);
-    m_free (str);
+    GHMM_LOG_PRINTF(LERROR, LOC, "Number of sequences %ld exceeds possible range %d",
+                    seq_number, GHMM_MAX_SEQ_NUMBER);
     goto STOP;
   }
   ARRAY_CALLOC (sqd, 1);
@@ -528,6 +534,7 @@ ghmm_cseq *ghmm_cseq_calloc (long seq_number)
   ARRAY_CALLOC (sqd->seq_id, seq_number);
   ARRAY_CALLOC (sqd->seq_w, seq_number);
   sqd->seq_number = seq_number;
+  sqd->capacity = seq_number;
 
   sqd->total_w = 0.0;
   for (i = 0; i < seq_number; i++) {
@@ -550,13 +557,11 @@ ghmm_dseq *ghmm_dseq_calloc (long seq_number)
 {
 #define CUR_PROC "ghmm_dseq_calloc"
   int i;
-  char * str;
   ghmm_dseq *sq = NULL;
 
   if (seq_number > GHMM_MAX_SEQ_NUMBER) {
-    str = ighmm_mprintf(NULL, 0, "Number of sequences %ld exceeds possible range", seq_number);
-    GHMM_LOG(LCONVERTED, str);
-    m_free(str);
+    GHMM_LOG_PRINTF(LERROR, LOC, "Number of sequences %ld exceeds possible range %d",
+                    seq_number, GHMM_MAX_SEQ_NUMBER);
     goto STOP;
   }
   ARRAY_CALLOC(sq, 1);
@@ -569,6 +574,8 @@ ghmm_dseq *ghmm_dseq_calloc (long seq_number)
   ARRAY_CALLOC(sq->seq_id, seq_number);
   ARRAY_CALLOC(sq->seq_w, seq_number);
   sq->seq_number = seq_number;
+  sq->capacity = seq_number;
+
   for (i=0; i < seq_number; i++) {
 #ifdef GHMM_OBSOLETE
     sq->seq_label[i] = -1;
@@ -584,6 +591,33 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* ghmm_dseq_calloc */
+
+/*============================================================================*/
+static int ghmm_dseq_realloc(ghmm_dseq *sq, int seq_number) {
+#define CUR_PROC "ghmm_dseq_realloc"
+  int i;
+
+  if (seq_number > GHMM_MAX_SEQ_NUMBER) {
+      GHMM_LOG_PRINTF(LERROR, LOC, "Number of sequences %ld exceeds possible range", seq_number);
+      goto STOP;
+  }
+  ARRAY_REALLOC(sq->seq, seq_number);
+  if (sq->flags & kHasLabels && sq->states)
+      ARRAY_REALLOC(sq->states, seq_number);
+  ARRAY_REALLOC(sq->seq_len, seq_number);
+#ifdef GHMM_OBSOLETE
+  ARRAY_REALLOC(sq->seq_label, seq_number);
+#endif /* GHMM_OBSOLETE */
+  ARRAY_REALLOC(sq->seq_id, seq_number);
+  ARRAY_REALLOC(sq->seq_w, seq_number);
+
+  sq->capacity = seq_number;
+
+  return 0;
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return -1;
+#undef CUR_PROC
+}                               /* ghmm_dseq_realloc */
 
 /*============================================================================*/
 int ghmm_dseq_calloc_state_labels (ghmm_dseq *sq)
@@ -1162,8 +1196,10 @@ int ghmm_dseq_free (ghmm_dseq ** sq) {
     return -1;
 
   /* ighmm_dmatrix_free also takes care of (*sq)->seq */
-  if (ighmm_dmatrix_free(&(*sq)->seq, (*sq)->seq_number) == -1)
-    GHMM_LOG(LCONVERTED, "Error in ghmm_dseq_free!");
+  if ((*sq)->flags & kBlockAllocation)
+    free((*sq)->seq);
+  else if (ighmm_dmatrix_free(&(*sq)->seq, (*sq)->seq_number) == -1)
+    GHMM_LOG(LWARN, "Error in ghmm_dseq_free!");
 
   m_free((*sq)->seq_len);
 #ifdef GHMM_OBSOLETE
@@ -1501,3 +1537,141 @@ int ghmm_cseq_mix_like (ghmm_cmodel ** smo, int smo_number, ghmm_cseq * sqd,
 
 #undef CUR_PROC
 }                               /* ghmm_cseq_mix_like */
+
+static int *preproccess_alphabet(ghmm_alphabet *a) {
+#define CUR_PROC "preprocess_alphabet"
+    unsigned int i;
+    int *l = malloc(128*sizeof(*l));
+    memset(l, -1, 128*sizeof(*l));
+    for (i=0; i<a->size; ++i) {
+        if (strlen(a->symbols[i]) == 1) {
+            l[a->symbols[i][0]] = i;
+        }
+        else {
+            GHMM_LOG(LERROR, "invalid alphabet for ghmm_dseq_open_fasta");
+            free(l);
+            return NULL;
+        }
+    }
+    return l;
+#undef CUR_PROC
+}
+
+static int get_internal(int *lookup, char x) {
+
+    if (x>=0 && x < 128)
+        return lookup[x];
+    else {
+        return -1;
+    }
+}
+
+/*============================================================================*/
+ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet) {
+#define CUR_PROC "ghmm_dseq_open_fasta"
+
+    char *line, *input, *last_header;
+    int seqlen, linelen, symbol, i;
+    int pos=0, seq_nr=0, header_cont=0, skip_seq=1;
+    int  *lookup, *sequences, *curseq_ptr;
+    FILE *fa = NULL;
+    struct stat sb;
+
+    ghmm_dseq *seqs = ghmm_dseq_calloc(50);
+    if (!seqs)
+        goto STOP;
+    ARRAY_MALLOC(line, 121);
+    ARRAY_MALLOC(last_header, 121);
+
+    if (!(fa = fopen(filename, "r"))) {
+        GHMM_LOG_PRINTF(LERROR, LOC, "can't open FastA file %s", filename);
+        goto STOP;
+    }
+
+    /* determine filesize to allocate the buffer for the sequnce data */
+    if (stat(filename, &sb)) {
+        goto STOP;
+    }
+    ARRAY_MALLOC(sequences, sb.st_size);
+    /* set flag indicating that the sequences are all in one array */
+    seqs->flags |= kBlockAllocation;
+    curseq_ptr = sequences;
+
+    if (!(lookup = preproccess_alphabet(alphabet)))
+        goto STOP;
+
+    while ((input = fgets(line, 120, fa))) {
+        linelen = strlen(input);
+        /* found a sequnce identifier, start next */
+        if (input[0] == '>' && !header_cont) {
+        
+            if (curseq_ptr && !skip_seq) {
+                if (seqs->capacity <= seq_nr &&
+                    ghmm_dseq_realloc(seqs, (seqs->capacity)*2))
+                {
+                    GHMM_LOG(LERROR, "reallocation failed");
+                    goto STOP;
+                }
+
+                seqs->seq[seq_nr] = curseq_ptr;
+                seqs->seq_len[seq_nr] = seqlen;
+                curseq_ptr = sequences + pos;
+                seq_nr++;
+            }
+            skip_seq = 0;
+            seqlen = 0;
+            strncpy(last_header, input+1, m_min(65, linelen-2));
+            /* check whether the header was completed */
+            if (input[linelen-1] != '\n')
+                header_cont = 1;
+        }
+        /* header continuation */
+        else if (header_cont) {
+            header_cont = 0;
+            if (input[linelen-1] != '\n')
+                header_cont = 1;
+        }
+        /* reading sequence data */
+        else if (!skip_seq) {
+            if (input[linelen-1] == '\n')
+                linelen--;
+            for (i=0; i<linelen; ++i) {
+                if (0 > (symbol = get_internal(lookup, input[i]))) {
+                    GHMM_LOG_PRINTF(LWARN, LOC,
+                                    "Invalid char %c in sequence \"%s ...\" ignoring it",
+                                    input[i], last_header);
+                    skip_seq = 1;
+                    pos -= (seqlen + i);
+                    goto NEXT_LINE;
+                }
+                sequences[pos++] = symbol;
+            }
+            seqlen += linelen;
+        }
+      NEXT_LINE:
+        continue;
+    }
+    if (curseq_ptr) {
+        if (ghmm_dseq_realloc(seqs, seq_nr+1))
+        {
+            GHMM_LOG(LERROR, "reallocation failed");
+            goto STOP;
+        }
+
+        seqs->seq[seq_nr] = curseq_ptr;
+        seqs->seq_len[seq_nr] = seqlen;
+        seqs->seq_number = seq_nr+1;
+    }
+    
+    fclose(fa);
+    free(lookup);
+    return seqs;
+STOP:
+    fclose(fa);
+    ghmm_dseq_free(&seqs);
+    free(sequences);     
+    free(line);
+    free(lookup);
+    return NULL;
+#undef CUR_PROC
+}
