@@ -59,6 +59,7 @@ setup(name="ghmmwrapper",
                                include_dirs = ['..'],
                                library_dirs = ['../ghmm/.libs'],
                                libraries = ['ghmm', 'm', 'pthread', 'xml2', 'z'],
+                               extra_compile_args = ["-O2", "-pipe"], # -g might help debugging
                                depends = ['wrapper_alphabet.i', 'wrapper_cmodel.i', 'wrapper_cseq.i',
                                           'wrapper_dmodel.i', 'wrapper_dpmodel.i', 'wrapper_dpseq.i',
                                           'wrapper_dseq.i', 'wrapper_xmlfile.i']
