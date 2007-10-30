@@ -41,6 +41,7 @@ extern "C" {
 #endif /*__cplusplus*/
 
 #include "model.h"
+#include "mes.h"
 
 
 /*==============  Memory allocation macros for mes-functions  ===============*/
