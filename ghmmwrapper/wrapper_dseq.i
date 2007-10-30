@@ -29,13 +29,18 @@ typedef struct ghmm_dseq {
   double *seq_w;
   /** total number of sequences */
   long seq_number;
+  /** reserved space for sequences is always >= seq_number */
+  long capacity;
   /** sum of sequence weights */
   double total_w;
 
-  /* matrix of state labels corresponding to seq */
+  /** matrix of state labels corresponding to seq */
   int **state_labels;
-  /* number of labels for each sequence */
+  /** number of labels for each sequence */
   int *state_labels_len;
+
+  /** flags internal */
+  unsigned int flags;
 } ghmm_dseq;
 
 extern int ghmm_dseq_free(ghmm_dseq **sq);
@@ -43,6 +48,10 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
 
 %extend ghmm_dseq {
         ghmm_dseq(long number) { return ghmm_dseq_calloc(number); }
+        ghmm_dseq(const char *filename, ghmm_alphabet *alphabet)
+        {
+            return ghmm_dseq_open_fasta(filename, alphabet);
+        }
         ghmm_dseq(int* seq, int length) {
             ghmm_dseq* self = ghmm_dseq_calloc(1);
             self->seq[0] = seq;

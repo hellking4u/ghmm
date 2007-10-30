@@ -78,13 +78,18 @@ extern "C" {
     double *seq_w;
   /** total number of sequences */
     long seq_number;
+  /** reserved space for sequences is always >= seq_number */
+    long capacity;
   /** sum of sequence weights */
     double total_w;
 
-    /* matrix of state labels corresponding to seq */
+  /** matrix of state labels corresponding to seq */
     int **state_labels;
-    /* number of labels for each sequence */
+  /** number of labels for each sequence */
     int *state_labels_len;
+
+  /** flags (internal) */
+    unsigned int flags;
   } ghmm_dseq;
 
 /** @name struct ghmm_cseq
@@ -108,8 +113,13 @@ extern "C" {
     double *seq_w;
   /** total number of sequences */
     long seq_number;
+  /** reserved space for sequences is always >= seq_number */
+    long capacity;
   /** sum of sequence weights */
     double total_w;
+
+  /** flags (internal) */
+    unsigned int flags;
   } ghmm_cseq;
 
 
@@ -171,8 +181,13 @@ int ghmm_dseq_subseq_free (ghmm_dseq *sq);
 int ghmm_cseq_subseq_free (ghmm_cseq *sqd);
 
 
-
-
+/**
+   Reads a FastA file and returns a ghmm_dseq object
+   @param filename filemane of the fasta file
+   @param alfabet  alfabet
+   @return  ghmm_dseq of the fasta file
+*/
+ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
 
 
 /** Generates all possible integer sequence of lenght n from an alphabet with

@@ -21,8 +21,13 @@ typedef struct ghmm_cseq {
   double *seq_w;
   /** total number of sequences */
   long seq_number;
+  /** reserved space for sequences is always >= seq_number */
+  long capacity;
   /** sum of sequence weights */
   double total_w;
+
+  /** flags (internal) */
+  unsigned int flags;
 } ghmm_cseq;
 
 extern int ghmm_cseq_free(ghmm_cseq **csq);

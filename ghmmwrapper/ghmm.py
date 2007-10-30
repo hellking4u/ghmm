@@ -898,9 +898,18 @@ class SequenceSet(object):
 
         # reads in the first sequence struct in the input file
         if isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode):
+            if sequenceSetInput[-3:] == ".fa":
+                # assuming FastA file:
+                alfa = emissionDomain.toCstruct()
+                cseq = ghmmwrapper.ghmm_dseq(sequenceSetInput, alfa)
+                if cseq is None:
+                    raise IOError("invalid FastA file: " + sequenceSetInput)
+                self.cseq = cseq
             # check if ghmm is build with asci sequence file support
-            if not ghmmwrapper.ASCI_SEQ_FILE:
-                raise UnsupportedFeature ("asci sequence files are deprecated. Please convert your files to the new xml-format or rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            elif not ghmmwrapper.ASCI_SEQ_FILE:
+                raise UnsupportedFeature ("asci sequence files are deprecated. \
+                Please convert your files to the new xml-format or rebuild the GHMM \
+                with the conditional \"GHMM_OBSOLETE\".")
             else:
                 if not os.path.exists(sequenceSetInput):
                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
@@ -1439,7 +1448,7 @@ class HMMOpenFactory(HMMFactory):
         
         if h.m == 4:  # DNA model
             emission_domain = DNA
-        elif h.m == 20:   # Peptide model    
+        elif h.m == 20:   # Peptide model
             emission_domain = AminoAcids
         else:   # some other model
             emission_domain = IntegerRange(0,h.m)
