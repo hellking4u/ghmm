@@ -7,9 +7,12 @@ typedef struct {
 
 %extend ghmm_alphabet {
         ghmm_alphabet(size_t size, char* desc) {
+            int len = strlen(desc)+1;
+            char *d = malloc(len);
             ghmm_alphabet* a = calloc(1, sizeof(ghmm_alphabet));
             a->symbols = calloc(size, sizeof(char*));
-            a->description = desc;
+            d = strncpy(d, desc, len);
+            a->description = d;
             a->size = size;
             return a;
         }
@@ -23,5 +26,10 @@ typedef struct {
         }
 
         char* getSymbol(size_t index) { return self->symbols[index]; }
-        void  setSymbol(size_t index, char* s) { self->symbols[index] = s; }
+        void  setSymbol(size_t index, char* s) {
+            int len = strlen(s)+1;
+            char *sym = malloc(len);
+            sym = strncpy(sym, s, len);
+            self->symbols[index] = sym;
+        }
 }
