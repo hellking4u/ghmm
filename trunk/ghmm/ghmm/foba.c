@@ -499,6 +499,52 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_dmodel_logp */
 
 /*============================================================================*/
+  int ghmm_dmodel_logp_joint(ghmm_dmodel * mo, const int *O, int len,
+                            const int *S, int slen, double *log_p)
+{
+# define CUR_PROC "ghmm_dmodel_logp_joint"
+    int prevstate, state, spos=0, pos=0, j;
+
+    prevstate = state = S[0];
+    *log_p = log(mo->s[state].pi);
+    if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[state])
+        *log_p += log(mo->s[state].b[O[pos++]]);
+        
+    for (spos=1; spos < slen || pos < len; spos++) {
+        state = S[spos];
+        for (j=0; j < mo->s[state].in_states; ++j) {
+            if (prevstate == mo->s[state].in_id[j])
+                break;
+        }
+
+        if (j == mo->s[state].in_states ||
+            fabs(mo->s[state].in_a[j]) < GHMM_EPS_PREC) {
+            GHMM_LOG_PRINTF(LERROR, LOC, "Sequence can't be built. There is no "
+                            "transition from state %d to %d.", prevstate, state);
+            goto STOP;
+        }
+
+        *log_p += log(mo->s[state].in_a[j]);
+
+        if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[state]) {
+            *log_p += log(mo->s[state].b[O[pos++]]);
+        }
+        
+        prevstate = state;
+    }
+
+    if (pos < len)
+        GHMM_LOG_PRINTF(LINFO, LOC, "state sequence too short! processed only %d symbols", pos);
+    if (spos < slen)
+        GHMM_LOG_PRINTF(LINFO, LOC, "sequence too short! visited only %d states", spos);
+
+    return 0;
+  STOP:
+    return -1;
+# undef CUR_PROC
+}
+
+/*============================================================================*/
 /*====================== Lean forward algorithm  ====================*/
 int ghmm_dmodel_forward_lean (ghmm_dmodel * mo, const int *O, int len, double *log_p)
 {

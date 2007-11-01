@@ -644,12 +644,9 @@ class EmissionSequence(object):
 
         if ParentSequenceSet is not None:
             # optional reference to a parent SequenceSet. Is needed for reference counting
-            #XXX exception
             if not isinstance(ParentSequenceSet,SequenceSet):
-                raise TypeError, "Invalid reference. Only SequenceSet is valid."    
-            self.ParentSequenceSet = ParentSequenceSet
-        else:
-            self.ParentSequenceSet = None
+                raise TypeError("Invalid reference. Only SequenceSet is valid.")    
+        self.ParentSequenceSet = ParentSequenceSet
 
         if self.emissionDomain.CDataType == "int":
             # necessary C functions for accessing the ghmm_dseq struct
@@ -1314,10 +1311,8 @@ class HMMOpenFactory(HMMFactory):
             cmodel = getPtr(models,i)
             if emission_domain is 'd': # XXX Uses first alphabet for all models in file
                 emission_domain = Alphabet([], cmodel.alphabet)
-                #print emission_domain
             if modelType & ghmmwrapper.kLabeledStates:
                 labelDomain = LabelDomain([], cmodel.label_alphabet)
-                #print labelDomain
                 m = hmmClass(emission_domain, distribution(emission_domain), labelDomain, cmodel)
             else:
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
@@ -2650,49 +2645,36 @@ class DiscreteEmissionHMM(HMM):
         return logp
 
 
-    # XXX Implement in C
     def joined(self, emissionSequence, stateSequence):
         """ log P[ emissionSequence, stateSequence| m] """
         
         if not isinstance(emissionSequence,EmissionSequence):
             raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
-        state = self.cmodel.getState(stateSequence[0])
-        emissionProb = ghmmwrapper.double_array_getitem(state.b, emissionSequence[0])
-        if emissionProb == 0:
-            silent = self.hasFlags(kSilentStates) and self.cmodel.silent[stateSequence[0]]
-            if silent == 1:
-                emissionProb = 1
-            else:
-                raise SequenceCannotBeBuild, "first symbol " + str(emissionSequence[i+1]) + " not emitted by state " + str(stateSequence[0])
-                        
-        logP = math.log(state.pi * emissionProb )
+        t = len(emissionSequence)
+        s = len(stateSequence)
         
-        symbolIndex = 1
+        if t != s and not self.hasFlags(kSilentStates):
+            raise IndexError("sequence and state sequence have different lengths " +
+                             "but the model has no silent states.")
 
-        try:
-            for i in range(len(emissionSequence)-1):
-                cur_state = self.cmodel.getState(stateSequence[i])
-                next_state = self.cmodel.getState(stateSequence[i+1])
-                for j in range(cur_state.out_states):
-                    out_id = ghmmwrapper.int_array_getitem(cur_state.out_id, j)
-                    if out_id == stateSequence[i+1]:
-                        emissionProb = ghmmwrapper.double_array_getitem(next_state.b, emissionSequence[symbolIndex])
-                        # print "b["+str(emissionSequence[symbolIndex])+"] in state " + str(stateSequence[i+1]) + " = ",emissionProb
-                        symbolIndex += 1
-                        if emissionProb == 0:
-                            silent = self.hasFlags(kSilentStates) and self.cmodel.getSilent(stateSequence[i+1])
-                            if silent == 1:
-                                emissionProb = 1
-                                symbolIndex -= 1
-                            else:
-                                raise SequenceCannotBeBuild, "symbol " + str(emissionSequence[i+1]) + " not emitted by state "+ str(stateSequence[i+1])
+        log_p = ghmmwrapper.double_array_alloc(1)
+        seq = emissionSequence.cseq.getSequence(0)
+        states = ghmmhelper.list2int_array(stateSequence)
+        
+        err = self.cmodel.logp_joint(seq, t, states, s, log_p)
 
-                        logP += math.log( ghmmwrapper.double_array_getitem(state.out_a,j) * emissionProb)
-                        break
-        except IndexError:
-            pass #XXX Funny
-        return logP     
+        if err != 0:
+            log.error("logp_joint finished with -1: EmissionSequence cannot be build under stateSequence.")
+            return
+
+        logp = ghmmwrapper.double_array_getitem(log_p, 0)
+
+        # deallocation
+        ghmmwrapper.free(log_p)
+        ghmmwrapper.free(states)
+        return logp
+    
 
     # XXX Make C defaults available to ghmm.py, use baum_welch_nstep only
     def baumWelch(self, trainingSequences, nrSteps = None, loglikelihoodCutoff = None):

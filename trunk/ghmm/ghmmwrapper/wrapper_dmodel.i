@@ -199,6 +199,8 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int logp(const int *O, int len, double *log_p);
 
+        int logp_joint(const int *O, int len, const int *S, int slen, double *log_p);
+
         int forward_lean(const int *O, int len, double *log_p);
 
         //int check_compatibility(ghmm_dmodel **mo, int model_number);
