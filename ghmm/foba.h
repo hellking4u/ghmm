@@ -115,6 +115,21 @@ extern "C" {
   int ghmm_dmodel_logp (ghmm_dmodel * mo, const int *O, int len, double *log_p);
 
 
+/**
+  Calculation of log( P(O,S|lambda) ).
+  Computes joint probability of sequence and state sequence
+  @param mo        model
+  @param O         sequence
+  @param len       length of sequence
+  @param S         state sequence
+  @param slen      length of state sequence (differs from len only for HMMs with silent states)
+  @param log\_p    log likelihood log( P(O|lambda) )
+  @return 0 for success, -1 for error
+*/
+  int ghmm_dmodel_logp_joint(ghmm_dmodel * mo, const int *O, int len,
+                             const int *S, int slen, double *log_p);
+
+
 /** Forward-Algorithm (lean version).
   Calculates log( P(O|lambda) ) for a given double sequence and a given model.
   @param mo       model
