@@ -1178,7 +1178,6 @@ def SequenceSetOpen(emissionDomain, fileName):
         raise TypeError, "Invalid c data type " + str(emissionDomain.CDataType)
 
     structArray, setNr = readFile(fileName)
-    #setNr = ghmmwrapper.int_array_getitem(dArr, 0)
 
     # Add Unittest
     sequenceSets = [SequenceSet(emissionDomain, seqPtr(structArray, i)) for i in range(setNr)]
@@ -1193,6 +1192,7 @@ def SequenceSetOpen(emissionDomain, fileName):
        
     return  sequenceSets
 
+
 def writeToFasta(seqSet,fn):
     """
     Writes a SequenceSet into a fasta file.
@@ -1204,15 +1204,15 @@ def writeToFasta(seqSet,fn):
     for i in range(len(seqSet)):
         rseq = []
         for j in range(seqSet.sequenceLength(i)):
-           rseq.append(str( seqSet.emissionDomain.external(( ghmmwrapper.int_matrix_getitem(seqSet.cseq.seq, i, j) )) ))
-        
+           rseq.append(str(seqSet.emissionDomain.external(
+               ghmmwrapper.int_matrix_getitem(seqSet.cseq.seq, i, j)
+               )))
+
         f.write('>seq'+str(i)+'\n')
         f.write(fill(join(rseq,'') ))
         f.write('\n')
 
-    f.close()        
-   
-    
+    f.close()
     
 
 
