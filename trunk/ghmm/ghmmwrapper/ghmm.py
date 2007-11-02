@@ -1867,9 +1867,16 @@ HMMFromMatrices = HMMFromMatricesFactory()
 #- Background distribution
 
 class BackgroundDistribution(object):
-    """ XXX doc string """
+    """ Background distributions object
+
+        holds discrete distributions used as background while training
+        discrete HMMs to avoid over fitting.
+        Input is a discrete EmissionDomain and a list of list. Each list is
+        a distinct distribution. The distributions can be of higher order.
+        The length of a single distribution is a power of len(EmissionDomain)
+    """
     def __init__(self, emissionDomain, bgInput):
-        
+
         if type(bgInput) == list:
             self.emissionDomain = emissionDomain
             distNum = len(bgInput)
@@ -1927,7 +1934,7 @@ class BackgroundDistribution(object):
             outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
         return outstr
         
-    def toList(self):
+    def toLists(self):
         dim = self.cbackground.m
         distNum = self.cbackground.n
         orders = ghmmhelper.int_array2list(self.cbackground.order, distNum)
@@ -2697,9 +2704,8 @@ class DiscreteEmissionHMM(HMM):
                 assert loglikelihoodCutoff != None
                 self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
-    # XXX Go over names (singular/plural)
 
-    def applyBackground(self, backgroundWeight):
+    def applyBackgrounds(self, backgroundWeight):
         """Apply the background distribution to the emission probabilities of states which
            have been assigned one (usually in the editor and coded in the XML).
            applyBackground computes a convex combination of the emission probability and
@@ -2717,7 +2723,7 @@ class DiscreteEmissionHMM(HMM):
             log.error("applyBackground failed.")
                                                 
     
-    def setBackground(self, backgroundObject, stateBackground):
+    def setBackgrounds(self, backgroundObject, stateBackground):
         """ Configure model to use the background distributions in 'backgroundObject'. 
             'stateBackground' is a list of indixes (one for each state) refering to distributions
             in 'backgroundObject'.
@@ -2745,8 +2751,10 @@ class DiscreteEmissionHMM(HMM):
         self.setFlags(kBackgroundDistributions)
     
     # XXX Unify next two methods
-    def assignAllBackgrounds(self,stateBackground):
+    def setBackgroundAssignments(self, stateBackground):
         """ Change all the assignments of background distributions to states.
+
+            Input is a list of background ids or '-1' for no background
         """
         if not type(stateBackground) == list:
            raise TypeError, "list required got "+ str(type(stateBackground))
@@ -2757,20 +2765,17 @@ class DiscreteEmissionHMM(HMM):
         for d in stateBackground:
             assert d in range(self.cbackground.n), "Error: Invalid background distribution id."  
 
-        for i in range(self.N):
-            self.cmodel.background_id[i] = stateBackground[i]
-
-    def assignStateBackground(self, state, backgroundID):
-        assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
-        # XXX CHeck
-        if self.labelDomain.isAdmissable(backgroundID):
-            self.cmodel.background_id[state] = backgroundID
-        else:
-            log.error( str(backgroundID) + " is not contained in labelDomain."  )
+        for i, b_id in enumerate(stateBackground):
+                self.cmodel.background_id[i] = b_id
 
 
     def getBackgroundAssignments(self):
-        return ghmmhelper.int_array2list(self.cmodel.background_id, self.N)
+        """ Get the background assignments of all states
+
+            '-1' -> no background
+        """
+        if self.hasFlags(kBackgroundDistributions):
+            return ghmmhelper.int_array2list(self.cmodel.background_id, self.N)
 
 
     def updateTiedEmissions(self):
