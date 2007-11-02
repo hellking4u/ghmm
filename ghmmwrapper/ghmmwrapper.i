@@ -131,13 +131,15 @@
 /*============================================================================
   =============== Logging Function Callbacks ================================= */
 // Grab a Python function object as a Python object.
-%typemap(python,in) PyObject *pyfunc {
+#ifdef SWIG<python>
+%typemap(in) PyObject *pyfunc {
   if (!PyCallable_Check($input)) {
     PyErr_SetString(PyExc_TypeError, "Need a callable object!");
     return NULL;
   }
   $1 = $input;
 }
+#endif
 
 %{
   /* This function matches the prototype of the normal C callback
