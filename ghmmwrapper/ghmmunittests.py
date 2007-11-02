@@ -676,7 +676,7 @@ class BackgroundDistributionTests(unittest.TestCase):
         
         #print "***  testmodelbackgroundaccessfunctions"
         
-        self.model.setBackground(self.bg, [0,-1,1])
+        self.model.setBackgrounds(self.bg, [0,-1,1])
         # deleting background
         del(self.bg)
         s = self.model.background.verboseStr()
@@ -684,8 +684,8 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.assertEqual(s,ts)
 
     def testapplybackground(self):
-        self.model.setBackground(self.bg,[0, -1, 1])
-        self.model.applyBackground([0.1, 0.2, .3])
+        self.model.setBackgrounds(self.bg,[0, -1, 1])
+        self.model.applyBackgrounds([0.1, 0.2, .3])
         #print self.model
         
         f = lambda x: round(x,15)
