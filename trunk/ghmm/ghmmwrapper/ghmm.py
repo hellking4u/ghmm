@@ -2750,7 +2750,6 @@ class DiscreteEmissionHMM(HMM):
         # updating model type
         self.setFlags(kBackgroundDistributions)
     
-    # XXX Unify next two methods
     def setBackgroundAssignments(self, stateBackground):
         """ Change all the assignments of background distributions to states.
 
