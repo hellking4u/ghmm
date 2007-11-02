@@ -216,12 +216,6 @@ class SequenceCannotBeBuild(GHMMError):
     def __str__(self):
         return repr(self.message)
 
-class IndexOutOfBounds(GHMMError):
-    def __init__(self,message):
-        self.message = message
-    def __str__(self):
-        return repr(self.message)
-
 class InvalidModelParameters(GHMMError):
     def __init__(self,message):
         self.message = message
@@ -681,8 +675,7 @@ class EmissionSequence(object):
                             seq = self.seq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
-                        #XXX appropiate ecxception
-                        raise IOError, 'File ' + str(sequenceInput) + ' not valid.'
+                        raise WrongFileType('File ' + str(sequenceInput) + ' not valid.')
 
                     ghmmwrapper.free(tmp)
                     ghmmwrapper.free(i)
@@ -764,8 +757,7 @@ class EmissionSequence(object):
             iLabel = ghmmhelper.int_array2list(self.cseq.getLabels(0), self.cseq.getLabelsLength(0))
             return self.labelDomain.externalSequence(iLabel)
         else:
-            #XXX appropiate exception
-            raise IndexOutOfBounds(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
+            raise IndexError(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
 
     def getGeneratingStates(self):
         """
@@ -1065,7 +1057,7 @@ class SequenceSet(object):
                 seq.append(self.cseq.getSymbol(index, j))
             return seq
         else:
-            raise IndexOutOfBounds(str(index) + " is out of bounds, only " + str(self.cseq.seq_number) + "sequences")
+            raise IndexError(str(index) + " is out of bounds, only " + str(self.cseq.seq_number) + "sequences")
 
     def getStateLabel(self,index):
         """ Returns the labeling of the index-th sequence in internal representation"""
@@ -1075,7 +1067,7 @@ class SequenceSet(object):
                     label.append(self.labelDomain.external(ghmmwrapper.int_matrix_getitem(self.cseq.state_labels, index, j)))
             return label
         else:
-            raise IndexOutOfBounds(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
+            raise IndexError(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
         
 
     def merge(self, emissionSequences): # Only allow EmissionSequence?
@@ -1324,7 +1316,7 @@ class HMMOpenFactory(HMMFactory):
             if modelIndex < nrModels:
                 result = result[modelIndex]
             else:
-                raise IndexOutOfBounds("the file %s has only %s models"% fileName, str(nrModels))
+                raise IndexError("the file %s has only %s models"% fileName, str(nrModels))
         elif nrModels == 1:
             result = result[0]
 
