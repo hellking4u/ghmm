@@ -628,12 +628,12 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         t = (-1,1,1)
         self.model.setTieGroups(t)
 
-        self.model.updateTieGroups()
+        self.model.updateTiedEmissions()
         em2 = map(f,self.model.getEmission(2))
         self.assertEqual(em2, [0.0, 0.0, 0.0, 0.0])
 
         self.model.setEmission(2,[0.2,0.2,0.2,0.4])
-        self.model.updateTieGroups()
+        self.model.updateTiedEmissions()
         em0 = map(f,self.model.getEmission(0))
         self.assertEqual(em0, [0.0,0.5,0.5,0.0])
         em2 = map(f,self.model.getEmission(2))
