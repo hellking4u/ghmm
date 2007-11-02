@@ -1532,7 +1532,7 @@ def readMultipleHMMERModels(fileName):
         HMM objects.
 
     """
-    # XXX Integrate into HMMOPen, check for single hmm files
+    # XXX Integrate into HMMOpen, check for single hmm files
     if not os.path.exists(fileName):
         raise IOError, 'File ' + str(fileName) + ' not found.'
     
@@ -1581,18 +1581,8 @@ class HMMFromMatricesFactory(HMMFactory):
                 raise InvalidModelParameters, "Specify either both labelDomain and labelInput or neither."
             
             if isinstance(distribution,DiscreteDistribution):
-                
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
-
-                # XXX Aufhuebschen
-                cmodel = ghmmwrapper.ghmm_dmodel()
-                cmodel.model_type = ghmmwrapper.kDiscreteHMM
-                cmodel.N = len(A)
-                cmodel.M = len(emissionDomain)
-                cmodel.prior = -1 # No prior by default
-                
-                # tie groups are deactivated by default
-                cmodel.tied_to = None
+                cmodel = ghmmwrapper.ghmm_dmodel(len(A), len(emissionDomain))
                 
                 # assign model identifier (if specified)
                 if hmmName != None:
@@ -1601,10 +1591,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     cmodel.name = ''
 
                 states = ghmmwrapper.dstate_array_alloc(cmodel.N)
-
-                silent_flag = 0
                 silent_states = []
-
                 tmpOrder = []
 
                 #initialize states
@@ -1622,15 +1609,15 @@ class HMMFromMatricesFactory(HMMFactory):
                     if  cmodel.M**(order+1) == len(B[i]):
                         tmpOrder.append(order)
                     else:
-                        raise InvalidModelParameters, "The number of "+str(len(B[i]))+ " emission parameters for state "+str(i)+" is invalid. State order can not be determined."
+                        raise InvalidModelParameters("The number of " + str(len(B[i])) +
+                                                     " emission parameters for state " +
+                                                     str(i) + " is invalid. State order can not be determined.")
                     
                     state.b = ghmmhelper.list2double_array(B[i])
-                                        
                     state.pi = pi[i]
                     
-                    if (sum(B[i]) == 0 ): 
+                    if sum(B[i]) == 0.0: 
                         silent_states.append(1)
-                        silent_flag = 4
                     else:
                         silent_states.append(0)
 
@@ -1638,15 +1625,15 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
 
                     #set "in" probabilities
-                    A_col_i = map( lambda x: x[i], A)
+                    A_col_i = map(lambda x: x[i], A)
                     # Numarray use A[,:i]
                     state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
                     #fix probabilities in reestimation, else 0
                     state.fix = 0
 
                 cmodel.s = states
-                if silent_flag == 4:
-                    cmodel.model_type |= silent_flag
+                if sum(silent_states) > 0:
+                    cmodel.model_type |= kSilentStates
                     cmodel.silent = ghmmhelper.list2int_array(silent_states)
 
                 cmodel.maxorder = max(tmpOrder)
@@ -1671,36 +1658,19 @@ class HMMFromMatricesFactory(HMMFactory):
                     m = StateLabelHMM(emissionDomain, distribution, labelDomain, cmodel)
                     m.setLabels(labelList)
                     return m
-                else:    
+                else:
                     return DiscreteEmissionHMM(emissionDomain, distribution, cmodel)
-
             else:
                 raise GHMMError(type(distribution), "Not a valid distribution for Alphabet") 
         else:
-
             if isinstance(distribution,GaussianDistribution):
-                
-                cmodel = ghmmwrapper.ghmm_cmodel()
-                cmodel.model_type = kContinuousHMM
-                cmodel.M = 1 # Number of mixture componenent for emission distribution
-                cmodel.prior = -1 # Unused
-
                 # determining number of transition classes
-                cos = 0
-                if type(A[0][0]) == list:
-                    cos = len(A)
-                    cmodel.N = len(A[0])
-                    
-                    # allocating class switching context
-                    cmodel.class_change_alloc()
-                else: 
-                    cos = 1
-                    cmodel.N = len(A)
+                cos = ghmmhelper.classNumber(A)
+                if cos == 1:
                     A = [A]
-                
-                cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
 
-                log.debug( "cmodel.cos = "+str(cmodel.cos))
+                cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), 1, cos)
+                log.debug("cmodel.cos = " + str(cmodel.cos))
 
                 states = ghmmwrapper.cstate_array_alloc(cmodel.N)
 
@@ -1760,24 +1730,11 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
                 #      ]
                 
-                cmodel = ghmmwrapper.ghmm_cmodel()
-                cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
-                cmodel.prior = -1 # Unused
-                
-                # determining number of transition classes
-                cos = 0
-                if type(A[0][0]) == list:
-                    cos = len(A)
-                    cmodel.N = len(A[0])
-                    # allocating class switching context
-                    cmodel.class_change_alloc()
-                    
-                else: 
-                    cos = 1
-                    cmodel.N = len(A)
+                cos = ghmmhelper.classNumber(A)
+                if cos == 1:
                     A = [A]
                     
-                cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
+                cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), len(B[0][0]), cos)
                 
                 states = ghmmwrapper.cstate_array_alloc(cmodel.N)
 
@@ -1821,12 +1778,11 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.in_states = trans[0]
                     state.in_id = trans[1]
                     state.in_a = trans[2]
-                
+
                     state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation                
 
                 #append states to model
                 cmodel.s = states
-                
                 
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
                 
@@ -1840,24 +1796,10 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
                 #      ]
 
-                cmodel = ghmmwrapper.ghmm_cmodel()
-                cmodel.M = len(B[0][0]) # Number of mixture componenents for emission distribution
-                cmodel.prior = 0 # Unused
-                
-                # determining number of transition classes
-                cos = 0
-                if type(A[0][0]) == list:
-                    cos = len(A)
-                    cmodel.N = len(A[0])
-                    # allocating class switching context
-                    cmodel.class_change_alloc()
-                    
-                else: 
-                    cos = 1
-                    cmodel.N = len(A)
+                cos = ghmmhelper.classNumber(A)
+                if cos == 1:
                     A = [A]
-                    
-                cmodel.cos = ghmmhelper.classNumber(A)  # number of transition classes in GHMM
+                cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), len(B[0][0]), cos)
                 
                 states = ghmmwrapper.cstate_array_alloc(cmodel.N)
 
@@ -1907,13 +1849,12 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.in_states = trans[0]
                     state.in_id = trans[1]
                     state.in_a = trans[2]
-                
+
                     state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation                
 
                 #append states to model
                 cmodel.s = states
-                
-                
+
                 return ContinuousMixtureHMM(emissionDomain, distribution, cmodel)
             else:
                 raise GHMMError(type(distribution),

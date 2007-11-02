@@ -183,6 +183,14 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
 %extend ghmm_dmodel {
         ghmm_dmodel() { return calloc(1, sizeof(ghmm_dmodel)); }
+        ghmm_dmodel(int no_states, int no_emissions) {
+                ghmm_dmodel *mo = calloc(1, sizeof(ghmm_dmodel));
+                mo->N = no_states;
+                mo->M = no_emissions;
+                mo->model_type = GHMM_kDiscreteHMM;
+                mo->prior = -1;
+                return mo;
+         }
         ~ghmm_dmodel() { ghmm_dmodel_free(&self); }
 
         int write_xml(char* filename) { return ghmm_dmodel_xml_write(&self, filename, 1); }
