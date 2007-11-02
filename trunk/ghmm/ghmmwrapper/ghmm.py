@@ -3882,12 +3882,6 @@ class GaussianEmissionHMM(HMM):
         if not isinstance(sequence, EmissionSequence):
             raise TypeError, "Input to posterior must be EmissionSequence object"
         
-
-        # checking path validity (XXX too inefficient ?)
-        for p in path:
-            if not 0 <= p <= self.N-1:
-                raise IndexError, "Invalid state index "+str(p)+". Model and path are incompatible"
-
         # calculate complete posterior matrix
         post = self.posterior(sequence)
         path_posterior = []
@@ -3897,11 +3891,11 @@ class GaussianEmissionHMM(HMM):
             assert len(path) == len(sequence), "Path and sequence have different lengths"
         
             # appending posteriors for each element of path
-            for p in range(len(path)):
-                #print "post[",p,"],[",path[p],"] =",post[p][path[p]]
-            
-                path_posterior.append(post[p][path[p]])
-               
+            for p,state in enumerate(path):
+                try:
+                    path_posterior.append(post[p][state])
+                except IndexError:
+                    raise IndexError("Invalid state index "+str(p)+". Model and path are incompatible")
             return path_posterior  
 
     def statePosterior(self, sequence, state, time):
