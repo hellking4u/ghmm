@@ -2842,14 +2842,21 @@ class DiscreteEmissionHMM(HMM):
         return ghmmhelper.int_array2list(self.cmodel.background_id, self.N)
 
 
-    def updateTieGroups(self):
-        """ XXX Name uninformative. Average emission probabilities of tied states. """
+    def updateTiedEmissions(self):
+        """ Averages emission probabilities of tied states. """
         assert self.hasFlags(kTiedEmissions) and self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
         self.cmodel.update_tie_groups()
 
 
     def setTieGroups(self, tieList):
-        assert len(tieList) == self.N, "Number of entries in tieList is different from number of states."
+        """ Sets the tied emission groups
+
+            tieList contains for every state either '-1' or the index
+            of the tied emission group leader.
+            The tied emission group is tied to itself
+        """
+        if len(tieList) != self.N:
+            raise IndexError("Number of entries in tieList is different from number of states.")
         
         if self.cmodel.tied_to is None:
             log.debug( "allocating tied_to")
@@ -2857,18 +2864,21 @@ class DiscreteEmissionHMM(HMM):
             self.setFlags(kTiedEmissions)
         else:
             log.debug( "tied_to already initialized")
-            for i in range(self.N):
+            for i, in range(self.N):
                 self.cmodel.tied_to[i] = tieList[i]
 
 
-    def removeTiegroups(self):
-        ghmmwrapper.free(self.cmodel.tied_to)
-        self.cmodel.tied_to = None
-        self.clearFlags(kTiedEmissions)
-    
+    def removeTieGroups(self):
+        """ Removes all tied emission information. """ 
+        if self.hasFlags(kTiedEmissions) and self.cmodel.tied_to != None:
+            ghmmwrapper.free(self.cmodel.tied_to)
+            self.cmodel.tied_to = None
+            self.clearFlags(kTiedEmissions)
 
     def getTieGroups(self):
-        assert self.hasFlags(kTiedEmissions) and self.cmodel.tied_to is not None, "cmodel.tied_to is undefined."
+        """ Gets tied emission group structure. """
+        if not self.hasFlags(kTiedEmissions) or self.cmodel.tied_to is None:
+            raise TypeError("HMM has no tied emissions or self.cmodel.tied_to is undefined.")
         
         return ghmmhelper.int_array2list(self.cmodel.tied_to, self.N)
     
@@ -2959,8 +2969,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         f = lambda x: "%.2f" % (x,) # float rounding function 
         
-        # XXX 16
-        if self.cmodel.model_type &  16: #kHigherOrderEmissions
+        if self.hasFlags(kHigherOrderEmissions):
             order = ghmmhelper.int_array2list(self.cmodel.order, self.N)
         else:
             order = [0]*hmm.N
