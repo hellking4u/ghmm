@@ -29,7 +29,7 @@ install: setup.py all
 	$(PYTHON) setup.py install --prefix=${prefix}
 
 test: ghmmunittests.py all
-	PYTHONPATH=./build/lib.linux-i686-2.4/:$PYTHONPATH LD_LIBRARY_PATH=../ghmm/.libs:$LD_LIBRARY_PATH $(PYTHON) ghmmunittests.py
+	PYTHONPATH=./build/lib.linux-i686-2.4/:$(PYTHONPATH) LD_LIBRARY_PATH=../ghmm/.libs:$(LD_LIBRARY_PATH) $(PYTHON) ghmmunittests.py
 
 coverage: ghmmunittests.py all
 	coverage.py -e
