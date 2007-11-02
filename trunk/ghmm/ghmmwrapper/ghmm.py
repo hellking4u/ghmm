@@ -240,6 +240,12 @@ class WrongFileType(GHMMError):
     def __str__(self):
         return repr(self.message)
 
+class ParseFileError(GHMMError):
+    def __init__(self,message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
+
 #-------------------------------------------------------------------------------
 #- constants -------------------------------------------------------------------
 kNotSpecified            = ghmmwrapper.kNotSpecified
@@ -666,19 +672,16 @@ class EmissionSequence(object):
                 if  not os.path.exists(sequenceInput):
                      raise IOError, 'File ' + str(sequenceInput) + ' not found.'
                 else:
-                    i = ghmmwrapper.int_array_alloc(1)
-                    tmp = self.seq_read(sequenceInput, i)
-                    seq_number = ghmmwrapper.int_array_getitem(i, 0)
+                    tmp, seq_number = self.seq_read(sequenceInput)
                     if seq_number > 0:
                         self.cseq = self.seq_ptr_array_getitem(tmp, 0)
                         for n in range(1, seq_number):
                             seq = self.seq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
-                        raise WrongFileType('File ' + str(sequenceInput) + ' not valid.')
+                        raise ParseFileError('File ' + str(sequenceInput) + ' not valid.')
 
                     ghmmwrapper.free(tmp)
-                    ghmmwrapper.free(i)
 
             else:
                 raise UnsupportedFeature("asci sequence files are deprecated. Please convert your files"
@@ -892,7 +895,7 @@ class SequenceSet(object):
                 alfa = emissionDomain.toCstruct()
                 cseq = ghmmwrapper.ghmm_dseq(sequenceSetInput, alfa)
                 if cseq is None:
-                    raise IOError("invalid FastA file: " + sequenceSetInput)
+                    raise ParseFileError("invalid FastA file: " + sequenceSetInput)
                 self.cseq = cseq
             # check if ghmm is build with asci sequence file support
             elif not ghmmwrapper.ASCI_SEQ_FILE:
@@ -912,8 +915,7 @@ class SequenceSet(object):
                             seq = self.seq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
-                        #XXX appropiate ecxception
-                        raise IOError, 'File ' + str(sequenceSetInput) + ' not valid.'
+                        raise ParseFileError, 'File ' + str(sequenceSetInput) + ' not valid.'
 
                     ghmmwrapper.free(tmp)
                     ghmmwrapper.free(i)
@@ -1175,11 +1177,8 @@ def SequenceSetOpen(emissionDomain, fileName):
     else:
         raise TypeError, "Invalid c data type " + str(emissionDomain.CDataType)
 
-    # XXX Check whether swig can return setNr too        
-    dArr = ghmmwrapper.int_array_alloc(1)
-
-    structArray = readFile(fileName, dArr)
-    setNr = ghmmwrapper.int_array_getitem(dArr, 0)
+    structArray, setNr = readFile(fileName)
+    #setNr = ghmmwrapper.int_array_getitem(dArr, 0)
 
     # Add Unittest
     sequenceSets = [SequenceSet(emissionDomain, seqPtr(structArray, i)) for i in range(setNr)]
@@ -1192,7 +1191,6 @@ def SequenceSetOpen(emissionDomain, fileName):
 ##        sequenceSets[i].cseq.state_labels = None
 ##        sequenceSets[i].cseq.state_labels_len = None
        
-    ghmmwrapper.free(dArr)
     return  sequenceSets
 
 def writeToFasta(seqSet,fn):

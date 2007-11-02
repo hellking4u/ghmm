@@ -87,6 +87,7 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
             }
 }
 
-extern ghmm_cseq** ghmm_cseq_read(const char* filename, int* sqd_number);
+%apply int *OUTPUT {int *sqd_number};
+extern ghmm_cseq **ghmm_cseq_read(const char *filename, int *sqd_number);
 
 REFERENCE_ARRAY(ghmm_cseq, cseq_ptr)

@@ -134,6 +134,7 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
             }
 }
 
-extern ghmm_dseq** ghmm_dseq_read(const char* filename, int* seq_arrays);
+%apply int *OUTPUT {int *seq_arrays};
+extern ghmm_dseq **ghmm_dseq_read(const char *filename, int *seq_arrays);
 
 REFERENCE_ARRAY(ghmm_dseq, dseq_ptr)
