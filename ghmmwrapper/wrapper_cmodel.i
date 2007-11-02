@@ -181,6 +181,17 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
 %extend ghmm_cmodel {
         ghmm_cmodel() { return calloc(1, sizeof(ghmm_cmodel)); }
+        ghmm_cmodel(int no_states, int no_components, int cos) {
+                ghmm_cmodel *mo = calloc(1, sizeof(ghmm_cmodel));
+                mo->model_type = kContinuousHMM;
+                mo->N = no_states;
+                mo->M = no_components;
+                mo->cos = cos;
+                mo->prior = -1;
+                if (cos > 1)
+                    ghmm_cmodel_class_change_alloc(mo);
+                return mo;
+        }
         ~ghmm_cmodel() { ghmm_cmodel_free(&self); }
 
         int write_xml(char* filename) { return ghmm_cmodel_xml_write(&self, filename, 1); }
