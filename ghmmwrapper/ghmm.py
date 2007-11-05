@@ -1090,11 +1090,9 @@ class SequenceSet(object):
             log.debug( "SequenceSet: found labels !")
             seq.calloc_state_labels()
 
-        for i in range(seqNumber):
-
-            len_i = self.cseq.getLength(seqIndixes[i])
-            
-            seq.setSequence(i, self.cseq.getSequence(seqIndixes[i]))
+        for i,seq_nr in enumerate(seqIndixes):
+            len_i = self.cseq.getLength(seq_nr)
+            seq.setSequence(i, self.cseq.getSequence(seq_nr))
             seq.setLength(i, len_i)
             seq.setWeight(i, self.cseq.getWeight(i))
              
