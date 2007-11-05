@@ -854,7 +854,7 @@ class EmissionSequence(object):
         seq.setWeight(0, self.cseq.getWeight(0))
         
         # Above doesnt copy seq_id or seq_label or seq_w
-        # XXX seq_id should be (long) int?
+        # XXX janne: seq_id should be (long) int?
         seq_id = ghmmwrapper.double_array_getitem(self.cseq.seq_id, 0)
         ghmmwrapper.double_array_setitem(seq.seq_id, 0, seq_id)
         #if ghmmwrapper.SEQ_LABEL_FIELD:
@@ -1107,7 +1107,7 @@ class SequenceSet(object):
             seq.setLength(i, len_i)
 
             # Above doesnt copy seq_id or seq_label or seq_w
-            # XXX seq_id should be (long) int?
+            # XXX janne: seq_id should be (long) int?
             seq_id = int(ghmmwrapper.double_array_getitem(self.cseq.seq_id, seqIndixes[i]))
             ghmmwrapper.double_array_setitem(seq.seq_id, i, seq_id)
             #if ghmmwrapper.SEQ_LABEL_FIELD:
@@ -1179,7 +1179,7 @@ def SequenceSetOpen(emissionDomain, fileName):
 
     structArray, setNr = readFile(fileName)
 
-    # Add Unittest
+    # XXX Add Unittest
     sequenceSets = [SequenceSet(emissionDomain, seqPtr(structArray, i)) for i in range(setNr)]
 ##    sequenceSets = []
 ##    for i in range(setNr):
@@ -1228,7 +1228,7 @@ GHMM_FILETYPE_SMO = 'smo'
 GHMM_FILETYPE_XML = 'xml'
 GHMM_FILETYPE_HMMER = 'hmm'
 
-# XXX Determine file type from file extension. Default unclear?
+# XXX janne Determine file type from file extension. Default unclear?
 
 class HMMOpenFactory(HMMFactory):
 
@@ -1258,7 +1258,7 @@ class HMMOpenFactory(HMMFactory):
 
 
     def openNewXML(self, fileName, modelIndex):
-        # XXX Document me!
+        # XXX janne Document me!
         # check the type of hmm
         # start the model
 
@@ -1299,7 +1299,7 @@ class HMMOpenFactory(HMMFactory):
         result = []
         for i in range(nrModels):
             cmodel = getPtr(models,i)
-            if emission_domain is 'd': # XXX Uses first alphabet for all models in file
+            if emission_domain is 'd': # XXX janne Uses first alphabet for all models in file
                 emission_domain = Alphabet([], cmodel.alphabet)
             if modelType & ghmmwrapper.kLabeledStates:
                 labelDomain = LabelDomain([], cmodel.label_alphabet)
@@ -1439,7 +1439,7 @@ class HMMOpenFactory(HMMFactory):
             emission_domain = IntegerRange(0,h.m)
         distribution = DiscreteDistribution(emission_domain)
         
-        # XXX Probably slow for large matrices (Rewrite for 0.9)
+        # XXX TODO: Probably slow for large matrices (Rewrite for 0.9)
         [A,B,pi,modelName] = h.getGHMMmatrices()
         return  HMMFromMatrices(emission_domain, distribution, A, B, pi, hmmName=modelName)
 
@@ -1522,7 +1522,7 @@ class HMMOpenFactory(HMMFactory):
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
 HMMOpenSMO   = HMMOpenFactory(GHMM_FILETYPE_SMO)
 HMMOpenXML   = HMMOpenFactory(GHMM_FILETYPE_XML)
-# XXX Use HMMOpen for all, determine filetype from extension, filetype override for __call__ 
+# XXX janne Use HMMOpen for all, determine filetype from extension, filetype override for __call__ 
 HMMOpen      = HMMOpenFactory(GHMM_FILETYPE_XML)
 
 
@@ -1562,7 +1562,7 @@ def readMultipleHMMERModels(fileName):
 class HMMFromMatricesFactory(HMMFactory):
     """ XXX Document matrix formats """
 
-    #XXX: this should use the editing context
+    # XXX TODO: this should use the editing context
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None, densities = None):
         if isinstance(emissionDomain,Alphabet):
             
@@ -2020,7 +2020,7 @@ class HMM(object):
             if ret_val == -1:
                 
                 log.warning("forward returned -1: Sequence"+str(i)+"cannot be build.")
-                # XXX Eventually this should trickle down to C-level
+                # XXX TODO Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
                 # things to blow up later.
@@ -2046,7 +2046,7 @@ class HMM(object):
             be more efficient to use the 'posterior' function directly and not
             multiple calls to pathPosterior
         """
-        # XXX for silent states things are more complicated -> to be done
+        # XXX TODO for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
             raise NotImplementedError, "Models with silent states not yet supported."
 
@@ -2065,7 +2065,7 @@ class HMM(object):
                 except IndexError:
                     raise IndexError("Invalid state index " + str(state) + ". Model and path are incompatible")
             return path_posterior
-#        # XXX silent states are yet to be done
+#        # XXX TODO silent states are yet to be done
 #        else:
 #            # for silent state models we have to propagate the silent states in each column of the 
 #            # posterior matrix 
@@ -2108,7 +2108,7 @@ class HMM(object):
             it would be more efficient to use the posterior function directly
             and not multiple calls to statePosterior
         """
-        # XXX for silent states things arr more complicated -> to be done
+        # XXX TODO for silent states things arr more complicated -> to be done
         if self.hasFlags(kSilentStates):
             raise NotImplementedError, "Models with silent states not yet supported."
 
@@ -2126,7 +2126,7 @@ class HMM(object):
         """ Posterior distribution matrix for 'sequence'.
         
         """
-        # XXX for silent states things are more complicated -> to be done            
+        # XXX TODO for silent states things are more complicated -> to be done            
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Models with silent states not yet supported.")
 
@@ -2681,7 +2681,7 @@ class DiscreteEmissionHMM(HMM):
         return logp
     
 
-    # XXX Make C defaults available to ghmm.py, use baum_welch_nstep only
+    # XXX janne Make C defaults available to ghmm.py, use baum_welch_nstep only
     def baumWelch(self, trainingSequences, nrSteps = None, loglikelihoodCutoff = None):
         """ Reestimates the model with the sequence in 'trainingSequences'.
            
@@ -3564,7 +3564,7 @@ class GaussianEmissionHMM(HMM):
             if ret_val == -1:
                 
                 log.warning( "forward returned -1: Sequence"+str(i)+"cannot be build.")
-                # XXX Eventually this should trickle down to C-level
+                # XXX TODO: Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
                 # things to blow up later.
