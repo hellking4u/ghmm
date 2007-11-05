@@ -2681,7 +2681,6 @@ class DiscreteEmissionHMM(HMM):
         return logp
     
 
-    # XXX janne Make C defaults available to ghmm.py, use baum_welch_nstep only
     def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimates the model with the sequence in 'trainingSequences'.
            
