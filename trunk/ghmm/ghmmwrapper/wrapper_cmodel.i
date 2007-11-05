@@ -179,6 +179,8 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 %newobject ghmm_cmodel_generate_sequences;
 %newobject ghmm_cmodel::generate_sequences;
 
+%apply double *OUTPUT {double *log_p};
+
 %extend ghmm_cmodel {
         ghmm_cmodel() { return calloc(1, sizeof(ghmm_cmodel)); }
         ghmm_cmodel(int no_states, int no_components, int cos) {
