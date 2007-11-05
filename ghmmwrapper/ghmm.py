@@ -852,14 +852,6 @@ class EmissionSequence(object):
         seq.setLength(0, self.cseq.getLength(0))
         seq.setSequence(0, self.cseq.getSequence(0))
         seq.setWeight(0, self.cseq.getWeight(0))
-        
-        # Above doesnt copy seq_id or seq_label or seq_w
-        # XXX janne: seq_id should be (long) int?
-        seq_id = ghmmwrapper.double_array_getitem(self.cseq.seq_id, 0)
-        ghmmwrapper.double_array_setitem(seq.seq_id, 0, seq_id)
-        #if ghmmwrapper.SEQ_LABEL_FIELD:
-        #    seq_label = ghmmwrapper.long_array_getitem(self.cseq.seq_label, i)
-        #    ghmmwrapper.long_array_setitem(seq.seq_label, i, int(seq_label))
 
         log.debug("EmissionSequence.asSequenceSet() -- end " + repr(seq))
         return SequenceSetSubset(self.emissionDomain, seq, self)
@@ -1103,17 +1095,7 @@ class SequenceSet(object):
             len_i = self.cseq.getLength(seqIndixes[i])
             
             seq.setSequence(i, self.cseq.getSequence(seqIndixes[i]))
-
             seq.setLength(i, len_i)
-
-            # Above doesnt copy seq_id or seq_label or seq_w
-            # XXX janne: seq_id should be (long) int?
-            seq_id = int(ghmmwrapper.double_array_getitem(self.cseq.seq_id, seqIndixes[i]))
-            ghmmwrapper.double_array_setitem(seq.seq_id, i, seq_id)
-            #if ghmmwrapper.SEQ_LABEL_FIELD:
-            #    seq_label = ghmmwrapper.long_array_getitem(self.cseq.seq_label, i)
-            #    ghmmwrapper.long_array_setitem(seq.seq_label, i, int(seq_label))
-
             seq.setWeight(i, self.cseq.getWeight(i))
              
             # setting labels if appropriate
