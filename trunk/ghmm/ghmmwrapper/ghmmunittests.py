@@ -486,7 +486,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
     def testNewXML(self):
         log.debug("testNewXML -- begin")
-        model = ghmm.HMMOpenXML('../doc/xml_example.xml')
+        model = ghmm.HMMOpen('../doc/xml_example.xml')
     
     def getModel(self):
         A  = [[0.3, 0.6,0.1],[0.0, 0.5, 0.5],[0.0,0.0,1.0]]
@@ -1058,13 +1058,13 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         str(self.model)
 
     def testSMO(self):
-        model = ghmm.HMMOpenSMO('testdata/tiny.smo')
+        model = ghmm.HMMOpen('testdata/tiny.smo')
 
     def testNewXML(self):
-        model = ghmm.HMMOpenXML('../doc/xml_cont_example.xml')
+        model = ghmm.HMMOpen('../doc/xml_cont_example.xml')
 
     def testMultipleTransitionClasses(self):
-        model = ghmm.HMMOpenXML('testdata/xml_cont_multiple.xml')
+        model = ghmm.HMMOpen('testdata/xml_cont_multiple.xml')
         state = model.cmodel.getState(0)
         self.assertEqual(state.getOutProb(0, 0), state.getOutProb(0))
         self.assertEqual(state.getOutProb(0, 0), 0.1)
@@ -1130,9 +1130,9 @@ class XMLIOTests(unittest.TestCase):
         #print self.tSeq
 
     def testReadHMMed(self):
-        model = ghmm.HMMOpenXML('testdata/multexon-4.xml')
+        model = ghmm.HMMOpen('testdata/multexon-4.xml')
         del model
-        model = ghmm.HMMOpenXML('testdata/test2.xml')
+        model = ghmm.HMMOpen('testdata/test2.xml')
         del model
 
     def testWriteReadXML(self):
@@ -1141,10 +1141,10 @@ class XMLIOTests(unittest.TestCase):
         Ignored attributes: tied_to and background.
         """
         #self.model.toXML('testdata/discrete.xml')
-        model2 = ghmm.HMMOpenXML('testdata/discrete.xml')
+        model2 = ghmm.HMMOpen('testdata/discrete.xml')
 
         #self.label_model.toXML('testdata/model_label.xml')
-        model3 = ghmm.HMMOpenXML('testdata/model_label.xml')
+        model3 = ghmm.HMMOpen('testdata/model_label.xml')
 
 ########### PAIR HMM TESTS ##############
 
