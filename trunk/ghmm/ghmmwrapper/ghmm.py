@@ -1280,10 +1280,8 @@ class HMMOpenFactory(HMMFactory):
 
 
     def openNewXML(self, fileName, modelIndex):
-        # XXX janne Document me!
-        # check the type of hmm
-        # start the model
-
+        """ Open one ore more HMM in the new xml format """
+        # opens and parses the file
         file = ghmmwrapper.ghmm_xmlfile_parse(fileName)
         if file == None:
             log.debug( "XML has file format problems!")
@@ -1292,6 +1290,7 @@ class HMMOpenFactory(HMMFactory):
         nrModels = file.noModels
         modelType = file.modelType
 
+        # we have a continuous HMM, prepare for hmm creation
         if (modelType & ghmmwrapper.kContinuousHMM):
             emission_domain = Float()
             distribution = ContinuousMixtureDistribution
@@ -1299,6 +1298,7 @@ class HMMOpenFactory(HMMFactory):
             getPtr = ghmmwrapper.cmodel_ptr_array_getitem
             models = file.model.c
 
+        # we have a discrete HMM, prepare for hmm creation
         elif ((modelType & ghmmwrapper.kDiscreteHMM)
               and not (modelType & ghmmwrapper.kTransitionClasses)
               and not (modelType & ghmmwrapper.kPairHMM)):
@@ -1308,11 +1308,10 @@ class HMMOpenFactory(HMMFactory):
             models = file.model.d
             if (modelType & ghmmwrapper.kLabeledStates):
                 hmmClass = StateLabelHMM
-            elif (modelType & ghmmwrapper.kDiscreteHMM):
-                hmmClass = DiscreteEmissionHMM
             else:
-                raise UnsupportedFeature, "Non-supported model type"
+                hmmClass = DiscreteEmissionHMM
 
+        # currently not supported
         else:
             raise UnsupportedFeature, "Non-supported model type"
 
@@ -1340,8 +1339,6 @@ class HMMOpenFactory(HMMFactory):
         elif nrModels == 1:
             result = result[0]
 
-
-        del models
         return result
 
     def openOldXML(self, fileName):
