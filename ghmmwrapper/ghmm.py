@@ -1228,33 +1228,55 @@ GHMM_FILETYPE_SMO = 'smo'
 GHMM_FILETYPE_XML = 'xml'
 GHMM_FILETYPE_HMMER = 'hmm'
 
-# XXX janne Determine file type from file extension. Default unclear?
-
 class HMMOpenFactory(HMMFactory):
-
+    """ Opens a HMM from a file. Currently four formats are supported:
+        HMMer, our smo file format, and two xml formats.
+        The support for smo files and the old xml format will phase out soon
+    """
     def __init__(self, defaultFileType=None):
-        if defaultFileType:
-            self.defaultFileType = defaultFileType
+        self.defaultFileType = defaultFileType
 
-    def __call__(self, fileName, modelIndex = None):
+    def guessFileType(self, filename):
+        """ guesses the file format from the filename """
+        if filename.endswith('.'+GHMM_FILETYPE_XML):
+            return GHMM_FILETYPE_XML
+        elif filename.endswith('.'+GHMM_FILETYPE_SMO):
+            return GHMM_FILETYPE_SMO
+        elif filename.endswith('.'+GHMM_FILETYPE_HMMER):
+            return GHMM_FILETYPE_HMMER
+        else:
+            return None
+
+    def __call__(self, fileName, modelIndex=None, filetype=None):
         
         if not isinstance(fileName,StringIO.StringIO):
             if not os.path.exists(fileName):
                 raise IOError, 'File ' + str(fileName) + ' not found.'
-            
+
+        if not filetype:
+            if self.defaultFileType:
+                log.warning("HMMOpenHMMER, HMMOpenSMO and HMMOpenXML are deprecated. "
+                            + "Use HMMOpen and the filetype parameter if needed.")
+                filetype = self.defaultFileType
+            else:
+                filetype = self.guessFileType(fileName)
+            if not filetype:
+                raise WrongFileType("Could not guess the type of file " + str(fileName)
+                                    + " and no filetype specified")
+        
         # XML file: both new and old format
-        if self.defaultFileType == GHMM_FILETYPE_XML:
+        if filetype == GHMM_FILETYPE_XML:
             # try to validate against ghmm.dtd
             if ghmmwrapper.ghmm_xmlfile_validate(fileName):
                 return self.openNewXML(fileName, modelIndex)
             else:
                 return self.openOldXML(fileName)
-        elif self.defaultFileType == GHMM_FILETYPE_SMO:
+        elif filetype == GHMM_FILETYPE_SMO:
             return self.openSMO(fileName, modelIndex)
-        elif self.defaultFileType == GHMM_FILETYPE_HMMER:
+        elif filetype == GHMM_FILETYPE_HMMER:
             return self.openHMMER(fileName)
         else:
-            raise TypeError, "Invalid file type " + str(self.defaultFileType)
+            raise TypeError, "Invalid file type " + str(filetype)
 
 
     def openNewXML(self, fileName, modelIndex):
@@ -1518,12 +1540,14 @@ class HMMOpenFactory(HMMFactory):
                 raise TypeError, "Model type can not be determined."
 
         return (None, None, None)
-            
+
+# the following three methods are deprecated
 HMMOpenHMMER = HMMOpenFactory(GHMM_FILETYPE_HMMER) # read single HMMER model from file
 HMMOpenSMO   = HMMOpenFactory(GHMM_FILETYPE_SMO)
 HMMOpenXML   = HMMOpenFactory(GHMM_FILETYPE_XML)
-# XXX janne Use HMMOpen for all, determine filetype from extension, filetype override for __call__ 
-HMMOpen      = HMMOpenFactory(GHMM_FILETYPE_XML)
+
+# use only HMMOpen and specify the filetype if it can't guessed from the extension
+HMMOpen      = HMMOpenFactory()
 
 
 def readMultipleHMMERModels(fileName):
