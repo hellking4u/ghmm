@@ -1299,7 +1299,7 @@ class HMMOpenFactory(HMMFactory):
         result = []
         for i in range(nrModels):
             cmodel = getPtr(models,i)
-            if emission_domain is 'd': # XXX janne Uses first alphabet for all models in file
+            if emission_domain is 'd':
                 emission_domain = Alphabet([], cmodel.alphabet)
             if modelType & ghmmwrapper.kLabeledStates:
                 labelDomain = LabelDomain([], cmodel.label_alphabet)
