@@ -2030,14 +2030,13 @@ class HMM(object):
         emissionSequences = emissionSequences.asSequenceSet()
         seqNumber = len(emissionSequences)
 
-        likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
 
         for i in range(seqNumber):
             seq = emissionSequences.cseq.getSequence(i)
             tmp = emissionSequences.cseq.getLength(i)
             
-            ret_val = self.cmodel.logp(seq, tmp, likelihood)
+            ret_val,likelihood = self.cmodel.logp(seq, tmp)
             if ret_val == -1:
                 
                 log.warning("forward returned -1: Sequence"+str(i)+"cannot be build.")
@@ -2050,9 +2049,8 @@ class HMM(object):
                 # a set of sequences
                 likelihoodList.append(-float('Inf'))
             else:
-                likelihoodList.append(ghmmwrapper.double_array_getitem(likelihood,0))
+                likelihoodList.append(likelihood)
 
-        ghmmwrapper.free(likelihood)
         del emissionSequences
         log.debug("HMM.loglikelihoods() -- end")
         return likelihoodList
@@ -2194,14 +2192,12 @@ class HMM(object):
         # to assure deallocation even in the case of errrors.
         # This will leak otherwise.
         seq = emissionSequence.cseq.getSequence(0)        
-
-        unused = ghmmwrapper.double_array_alloc(1) # Dummy return value for forward()
      
         t = len(emissionSequence)
         calpha = ghmmwrapper.double_matrix_alloc(t, self.N)
         cscale = ghmmwrapper.double_array_alloc(t)
 
-        error = self.cmodel.forward(seq, t, calpha, cscale, unused)
+        error, unused = self.cmodel.forward(seq, t, calpha, cscale)
         if error == -1:
             log.error( "forward finished with -1: EmissionSequence cannot be build.")
 
@@ -2210,7 +2206,6 @@ class HMM(object):
         pyalpha = ghmmhelper.double_matrix2list(calpha, t, self.N)
         
         # deallocation
-        ghmmwrapper.free(unused)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha, t)
 
@@ -2260,8 +2255,6 @@ class HMM(object):
 
         seqNumber = len(emissionSequences)        
 
-        log_p = ghmmwrapper.double_array_alloc(1)
-
         allLogs = []
         allPaths = []
         for i in range(seqNumber):
@@ -2269,7 +2262,7 @@ class HMM(object):
             seq_len = emissionSequences.cseq.getLength(i)
             
             if seq_len > 0:
-                viterbiPath = self.cmodel.viterbi(seq,seq_len,log_p)
+                viterbiPath, log_p = self.cmodel.viterbi(seq,seq_len)
             else:
                 viterbiPath = None
 
@@ -2292,10 +2285,8 @@ class HMM(object):
                         break
 
             allPaths.append(onePath)
-            allLogs.append(ghmmwrapper.double_array_getitem(log_p, 0))
+            allLogs.append(log_p)
             ghmmwrapper.free(viterbiPath) 
-
-        ghmmwrapper.free(log_p)
 
         log.debug("HMM.viterbi() -- end")
         if seqNumber > 1:
@@ -2654,18 +2645,12 @@ class DiscreteEmissionHMM(HMM):
         t = len(emissionSequence)
         cbeta = ghmmhelper.list2double_matrix(pybeta)
         #print cbeta[0]
-
-        # allocating double * for log probability
-        log_p = ghmmwrapper.double_array_alloc(1)
         
-        error = self.cmodel.backward_termination(seq, t, cbeta[0], cscale, log_p)
+        error, logp = self.cmodel.backward_termination(seq, t, cbeta[0], cscale)
         if error == -1:
             log.error("backward finished with -1: EmissionSequence cannot be build.")
 
-        logp = ghmmwrapper.double_array_getitem(log_p, 0)
-
         # deallocation
-        ghmmwrapper.free(log_p)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(cbeta[0],t)
         return logp
@@ -2684,20 +2669,16 @@ class DiscreteEmissionHMM(HMM):
             raise IndexError("sequence and state sequence have different lengths " +
                              "but the model has no silent states.")
 
-        log_p = ghmmwrapper.double_array_alloc(1)
         seq = emissionSequence.cseq.getSequence(0)
         states = ghmmhelper.list2int_array(stateSequence)
         
-        err = self.cmodel.logp_joint(seq, t, states, s, log_p)
+        err, logp = self.cmodel.logp_joint(seq, t, states, s)
 
         if err != 0:
             log.error("logp_joint finished with -1: EmissionSequence cannot be build under stateSequence.")
             return
 
-        logp = ghmmwrapper.double_array_getitem(log_p, 0)
-
         # deallocation
-        ghmmwrapper.free(log_p)
         ghmmwrapper.free(states)
         return logp
     
@@ -3101,8 +3082,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
             emissionSequences = emissionSequences.asSequenceSet()
             seqNumber = len(emissionSequences)
 
-            log_p = ghmmwrapper.double_array_alloc(1)
-
             allLogs = []
             allLabels = []
 
@@ -3110,14 +3089,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 seq = emissionSequences.cseq.getSequence(i)
                 seq_len = emissionSequences.cseq.getLength(i)
 
-                labeling = self.cmodel.label_kbest(seq, seq_len, k, log_p)
+                labeling, log_p = self.cmodel.label_kbest(seq, seq_len, k)
                 oneLabel = ghmmhelper.int_array2list(labeling, seq_len)
 
                 allLabels.append(oneLabel)
-                allLogs.append(ghmmwrapper.double_array_getitem(log_p, 0))
+                allLogs.append(log_p)
                 ghmmwrapper.free(labeling)
-
-            ghmmwrapper.free(log_p)
 
             if emissionSequences.cseq.seq_number > 1:
                 return (map(self.externalLabel, allLabels), allLogs)
@@ -3163,23 +3140,20 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if emissionSequences.cseq.state_labels is None:
             raise TypeError, "Sequence needs to be labeled."
 
-        likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
 
         for i in range(seqNumber):
             seq = emissionSequences.cseq.getSequence(i)
             labels = ghmmwrapper.get_col_pointer_int(emissionSequences.cseq.state_labels,i)
             tmp = emissionSequences.cseq.getLength(i)
-            ret_val = self.cmodel.label_logp(seq, labels, tmp, likelihood)
+            ret_val,likelihood = self.cmodel.label_logp(seq, labels, tmp)
 
             if ret_val == -1:
                 log.warning("forward returned -1: Sequence"+ str(i) +"cannot be build.")
                 likelihoodList.append(-float('Inf'))
             else:
-                likelihoodList.append(ghmmwrapper.double_array_getitem(likelihood,0))
+                likelihoodList.append(likelihood)
 
-        del likelihood
-        likelihood = None
         return likelihoodList
 
     def forwardLabels(self, emissionSequence, labelSequence):
@@ -3191,7 +3165,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if not isinstance(emissionSequence,EmissionSequence):
             raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
-        logP = ghmmwrapper.double_array_alloc(1)
         n_states = self.cmodel.N
 
         t = emissionSequence.cseq.getLength(0)
@@ -3207,23 +3180,20 @@ class StateLabelHMM(DiscreteEmissionHMM):
         for i in range(len(labelSequence)):
             ghmmwrapper.int_array_setitem(label, i, self.internalLabel(labelSequence[i]))
 
-        error = self.cmodel.label_forward(seq, label, t, calpha, cscale, logP)
+        error, logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
         if error == -1:
             log.error( "Forward finished with -1: Sequence " + str(i) + " cannot be build.")
 
         # translate alpha / scale to python lists
         pyscale = ghmmhelper.double_array2list(cscale, t)
         pyalpha = ghmmhelper.double_matrix2list(calpha,t,n_states)
-        logpval = ghmmwrapper.double_array_getitem(logP, 0)
         
         ghmmwrapper.free(label)
-        ghmmwrapper.free(logP)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha,t)
-        logP = None
         cscale = None
         calpha = None
-        return (logpval, pyalpha, pyscale)
+        return (logp, pyalpha, pyscale)
 
     def backwardLabels(self, emissionSequence, labelSequence, scalingVector):
         """
@@ -3243,30 +3213,26 @@ class StateLabelHMM(DiscreteEmissionHMM):
         for i in range(len(labelSequence)):
             ghmmwrapper.int_array_setitem(label, i, self.internalLabel(labelSequence[i]))
 
-        logP = ghmmwrapper.double_array_alloc(1)
-
         # parsing 'scalingVector' to C double array.
         cscale = ghmmhelper.list2double_array(scalingVector)
 
         # alllocating beta matrix
         cbeta = ghmmwrapper.double_matrix_alloc(t, self.cmodel.N)
 
-        error = self.cmodel.label_backward(seq, label, t, cbeta, cscale, logP)
+        error,logp = self.cmodel.label_backward(seq, label, t, cbeta, cscale)
         if error == -1:
             log.error( "backward finished with -1: EmissionSequence cannot be build.")
 
         pybeta = ghmmhelper.double_matrix2list(cbeta,t,self.cmodel.N)
-        logpval = ghmmwrapper.double_array_getitem(logP, 0)
         
         # deallocation
-        ghmmwrapper.free(logP)
         ghmmwrapper.free(cscale)
         ghmmwrapper.free(label)
         ghmmwrapper.double_matrix_free(cbeta,t)
         cscale = None
         label = None
         cbeta = None
-        return (logpval, pybeta)
+        return (logp, pybeta)
 
     def baumWelchLabels(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimates the model with the sequence in 'trainingSequences'.
@@ -3488,9 +3454,7 @@ class GaussianEmissionHMM(HMM):
         if not isinstance(emissionSequence,EmissionSequence):
             raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
 
-        logP = ghmmwrapper.double_array_alloc(1)
         i = self.cmodel.N
-
 
         t = emissionSequence.cseq.getLength(0)
         calpha = ghmmwrapper.double_matrix_alloc (t, i)
@@ -3498,7 +3462,7 @@ class GaussianEmissionHMM(HMM):
 
         seq = emissionSequence.cseq.getSequence(0)
 
-        error = self.cmodel.forward(seq, t, None, calpha, cscale, logP)
+        error. logp = self.cmodel.forward(seq, t, None, calpha, cscale)
         if error == -1:
             log.error( "Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build.")
         
@@ -3506,10 +3470,8 @@ class GaussianEmissionHMM(HMM):
         pyscale = ghmmhelper.double_array2list(cscale, t)
         pyalpha = ghmmhelper.double_matrix2list(calpha,t,i)
 
-        del logP
         del cscale
         ghmmwrapper.double_matrix_free(calpha,t)
-        logP = None
         cscale = None
         calpha = None
         return (pyalpha,pyscale)
@@ -3562,7 +3524,6 @@ class GaussianEmissionHMM(HMM):
             log.debug( "self.cmodel.cos = " + str( self.cmodel.cos) )
             assert self.cmodel.class_change is not None, "Error: class_change not initialized."
 
-        likelihood = ghmmwrapper.double_array_alloc(1)
         likelihoodList = []
 
         for i in range(seqNumber):
@@ -3572,7 +3533,7 @@ class GaussianEmissionHMM(HMM):
             if self.cmodel.cos > 1:
                 self.cmodel.class_change.k = i
             
-            ret_val = self.cmodel.logp(seq, tmp, likelihood)
+            ret_val, likelihood = self.cmodel.logp(seq, tmp)
             if ret_val == -1:
                 
                 log.warning( "forward returned -1: Sequence"+str(i)+"cannot be build.")
@@ -3585,17 +3546,13 @@ class GaussianEmissionHMM(HMM):
                 # a set of sequences
                 likelihoodList.append(-float('Inf'))
             else:
-                likelihoodList.append(ghmmwrapper.double_array_getitem(likelihood,0))
-
-        ghmmwrapper.free(likelihood)
-        likelihood = None
+                likelihoodList.append(likelihood)
 
         # resetting class_change->k to default
         if self.cmodel.cos > 1:
            self.cmodel.class_change.k = -1
 
         return likelihoodList
-
 
     
     def viterbi(self, emissionSequences):
@@ -3614,9 +3571,6 @@ class GaussianEmissionHMM(HMM):
             log.debug( "self.cmodel.cos = "+ str( self.cmodel.cos))
             assert self.cmodel.class_change is not None, "Error: class_change not initialized."
 
-
-        log_p = ghmmwrapper.double_array_alloc(1)
-
         allLogs = []
         allPaths = []
         for i in range(seqNumber):
@@ -3630,7 +3584,7 @@ class GaussianEmissionHMM(HMM):
             seq_len = emissionSequences.cseq.getLength(i)
 
             if seq_len != 0:
-                viterbiPath = self.cmodel.viterbi(seq,seq_len,log_p)
+                viterbiPath, log_p = self.cmodel.viterbi(seq,seq_len)
             else:
                 viterbiPath = None
 
@@ -3642,7 +3596,6 @@ class GaussianEmissionHMM(HMM):
             allPaths.append(onePath)
             allLogs.append(ghmmwrapper.double_array_getitem(log_p, 0))
         
-        ghmmwrapper.free(log_p)
         ghmmwrapper.free(viterbiPath)
         viterbiPath = None
         log_p = None
@@ -3810,6 +3763,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
 
     def joined(self, emissionSequence, stateSequence):
+        # XXX implement in C, see ghmm_dmodel_logp_joint
         """ log P[ emissionSequence, stateSequence| m] """
         
         if not isinstance(emissionSequence,EmissionSequence):
@@ -3821,7 +3775,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         if (emissionProb == 0): # zero ??? or some small constant?
             raise SequenceCannotBeBuild, "first symbol " + str(emissionSequence[0]) + " not emitted by state " + str(stateSequence[0])
                         
-        logP = math.log(state.pi * emissionProb )
+        logP = math.log(state.pi * emissionProb)
         
         #symbolIndex = 1
 
