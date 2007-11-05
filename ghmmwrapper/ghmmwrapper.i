@@ -76,7 +76,6 @@
 %apply Pointer NONNULL { ghmm_dseq ** };
 %apply Pointer NONNULL { ghmm_dpseq * };
 %apply Pointer NONNULL { ghmm_dpseq ** };
-%apply Pointer NONNULL { scluster * };
 
 
 /*==========================================================================
