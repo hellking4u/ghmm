@@ -2145,7 +2145,7 @@ class HMM(object):
         raise NotImplementedError("to be defined in derived classes")
 
     # The functions for model training are defined in the derived classes.
-    def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
+    def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         raise NotImplementedError("to be defined in derived classes")
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
@@ -2682,7 +2682,7 @@ class DiscreteEmissionHMM(HMM):
     
 
     # XXX janne Make C defaults available to ghmm.py, use baum_welch_nstep only
-    def baumWelch(self, trainingSequences, nrSteps = None, loglikelihoodCutoff = None):
+    def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimates the model with the sequence in 'trainingSequences'.
            
             Note that training for models including silent states is not yet supported.
@@ -2697,12 +2697,8 @@ class DiscreteEmissionHMM(HMM):
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
-        else:
-            if nrSteps == None:
-                self.cmodel.baum_welch(trainingSequences.cseq)
-            else:
-                assert loglikelihoodCutoff != None
-                self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
+        
+        self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
 
     def applyBackgrounds(self, backgroundWeight):
@@ -3252,7 +3248,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         cbeta = None
         return (logpval, pybeta)
 
-    def baumWelchLabels(self, trainingSequences, nrSteps = None, loglikelihoodCutoff = None):
+    def baumWelchLabels(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimates the model with the sequence in 'trainingSequences'.
 
             Note that training for models including silent states is not yet supported.
@@ -3267,12 +3263,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
-        else:
-            if nrSteps == None:
-                self.cmodel.label_baum_welch(trainingSequences.cseq)
-            else:
-                assert loglikelihoodCutoff != None
-                self.cmodel.label_baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
+
+        self.cmodel.label_baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
 
     def write(self,fileName):
@@ -3675,7 +3667,7 @@ class GaussianEmissionHMM(HMM):
                             in_a[k] = normP # updating in probabilities
                         
 
-    def baumWelch(self, trainingSequences, nrSteps, loglikelihoodCutoff):
+    def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimate the model parameters given the training_sequences.
             Perform at most nr_steps until the improvement in likelihood
             is below likelihood_cutoff
@@ -3691,7 +3683,7 @@ class GaussianEmissionHMM(HMM):
         if not self.emissionDomain.CDataType == "double":
             raise TypeError, "Continuous sequence needed."
         
-        self.baumWelchSetup(trainingSequences, nrSteps)
+        self.baumWelchSetup(trainingSequences, nrSteps, loglikelihoodCutoff)
         ghmmwrapper.ghmm_cmodel_baum_welch(self.BWcontext)        
         likelihood = ghmmwrapper.double_array_getitem(self.BWcontext.logp, 0)
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
@@ -3700,7 +3692,7 @@ class GaussianEmissionHMM(HMM):
 
         return likelihood
 
-    def baumWelchSetup(self, trainingSequences, nrSteps):
+    def baumWelchSetup(self, trainingSequences, nrSteps, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
             Use baumWelchSetup and baumWelchStep if you want more control
             over the training, compute diagnostics or do noise-insertion
@@ -3713,7 +3705,7 @@ class GaussianEmissionHMM(HMM):
         self.BWcontext.smo  = self.cmodel
         self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to ghmm_cseq
         self.BWcontext.logp = ghmmwrapper.double_array_alloc(1) # place holder for sum of log-likelihood
-        self.BWcontext.eps  = 10e-6
+        self.BWcontext.eps  = loglikelihoodCutoff
         self.BWcontext.max_iter = nrSteps
 
 

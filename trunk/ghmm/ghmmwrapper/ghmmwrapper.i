@@ -45,14 +45,14 @@
 %include exception.i    
 %include typemaps.i
 
+/* this will not work if we build ghmmwrapper out of the ghmm tree
+   include ../config.h twice, once for swig and once for CC */
 %{
 #include "../config.h"
 #include "sclass_change.h"
 #include "pclasschange.h"
 %}
 
-/* this will not work if we build ghmmwrapper out of the ghmm tree
-   include ../config.h twice, once for swig and once for CC */
 %include "../config.h"
 %include "sclass_change.h"
 %include "pclasschange.h"
@@ -126,6 +126,19 @@
 #define kContinuousHMM (1 << 9)
 
 #define kPairHMM (1 << 10)
+
+
+/* ============== constants ================================================= */
+/** 
+    Convergence: Halt criterium for Baum-Welch reestimation if the difference
+    of log(P) in two consecutive iterations is smaller than (EPS\_ITER\_BW * log(P))..
+*/
+#define EPS_ITER_BW      0.0001
+
+/**
+  Maximum number of iterations in reestimate
+  */
+#define MAX_ITER_BW      500
 
 
 /*============================================================================
