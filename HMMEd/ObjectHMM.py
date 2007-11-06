@@ -1174,15 +1174,9 @@ class ObjectHMM(ObjectGraph):
         ObjectGraph.DeleteVertex(self, v)
 
     def AddEdge(self,tail,head):
-        out_edges = len(self.vertices[tail].outEdges)
-        if out_edges > 0:
-            weight = 1.0/out_edges
-        else:
-            weight = 1.0
         ObjectGraph.AddEdge(self,tail,head)
         edge = self.edges[tail,head]
-        edge.SetWeight(weight)
-        self.vertices[tail].normalize()
+        edge.SetWeight(1.0)
 
     def DeleteEdge(self,tail,head):
         ObjectGraph.DeleteEdge(self,tail,head)
@@ -1428,18 +1422,27 @@ class ObjectHMM(ObjectGraph):
         # normalize initial probablilities
         initials = [v.initial for v in self.vertices.values() if v.initial >= 0.0]
         isum = sum(initials)
-        if isum > 1.0 or len(initials) == self.Order():
-            factor = 1.0 / isum
-            for vertex in self.vertices.values():
-                if vertex.initial >= 0.0:
-                    vertex.initial *= factor
-            isum = 1.0
-        if len(initials) < self.Order():
-            mean = (1.0-isum) / (self.Order()-len(initials))
-            for vertex in self.vertices.values():
-                if vertex.initial < 0.0:
-                    vertex.initial = mean
-            
+        if len(initials) == self.Order():
+            if isum == 0.0:
+                for vertex in self.vertices.values():
+                    vertex.initial = 1.0 / self.Order()
+            else:
+                factor = 1.0 / isum
+                for vertex in self.vertices.values():
+                    if vertex.initial >= 0.0:
+                        vertex.initial *= factor
+        else:
+            if isum > 1.0:
+                factor = 1.0 / isum
+                for vertex in self.vertices.values():
+                    if vertex.initial >= 0.0:
+                        vertex.initial *= factor
+            elif isum < 1.0:
+                mean = (1.0-isum) / (self.Order()-len(initials))
+                for vertex in self.vertices.values():
+                    if vertex.initial < 0.0:
+                        vertex.initial = mean
+
         # normalize state's transition probablilities
         for vertex in self.vertices.values():
             vertex.normalize()

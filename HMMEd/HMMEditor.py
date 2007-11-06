@@ -227,15 +227,15 @@ class HMMTypeChooser(tkSimpleDialog.Dialog):
         box.pack(side=BOTTOM,fill=X)
 
     def open(self):
-        self.type = 'open'
+        self.etype = 'open'
         self.ok()
 
     def discrete(self):
-        self.type = 0
+        self.etype = 0
         self.ok()
 
     def continuous(self):
-        self.type = 1
+        self.etype = 1
         self.ok()
 
     def body(self, master):
@@ -374,11 +374,11 @@ class HMMGraphEditor(SAGraphEditor):
     def NewGraph(self):
         d = HMMTypeChooser(self.master)
 
-        if d.type == 'open':
+        if d.etype == 'open':
             self.OpenGraph()
             return
         else:
-            self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition, type=d.type)
+            self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition, etype=d.etype)
 
         self.G.edit(self)
 
