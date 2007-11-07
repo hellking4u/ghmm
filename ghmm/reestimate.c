@@ -59,15 +59,6 @@ typedef struct local_store_t {
   double **b_denom;
 } local_store_t;
 
-static local_store_t *reestimate_alloc (const ghmm_dmodel * mo);
-static int reestimate_free (local_store_t ** r, int N);
-static int reestimate_init (local_store_t * r, const ghmm_dmodel * mo);
-static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo);
-static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r,
-                                int seq_number, int *seq_length, int **O,
-                                double *log_p, double *seq_w);
-
-
 
 static double nologSum(double* vec, int len) {
   int i;
@@ -79,41 +70,6 @@ static double nologSum(double* vec, int len) {
   return retval;
 }
 
-
-/*----------------------------------------------------------------------------*/
-static local_store_t *reestimate_alloc (const ghmm_dmodel * mo)
-{
-# define CUR_PROC "reestimate_alloc"
-  int i;
-  local_store_t *r = NULL;
-  ARRAY_CALLOC(r, 1);
-
-  ARRAY_CALLOC(r->pi_num, mo->N);
-  ARRAY_CALLOC(r->a_num, mo->N);
-  for (i=0; i<mo->N; i++)
-    ARRAY_CALLOC(r->a_num[i], mo->s[i].out_states);
-  ARRAY_CALLOC(r->a_denom, mo->N);
-
-  ARRAY_MALLOC(r->b_num, mo->N);
-  ARRAY_MALLOC(r->b_denom, mo->N);
-
-  if (mo->model_type & GHMM_kHigherOrderEmissions)
-    for (i=0; i<mo->N; i++) {
-      ARRAY_CALLOC(r->b_num[i], ghmm_ipow(mo, mo->M, mo->order[i] + 1));
-      ARRAY_CALLOC(r->b_denom[i], ghmm_ipow (mo, mo->M, mo->order[i]));
-    }
-  else
-    for (i=0; i<mo->N; i++) {
-      ARRAY_CALLOC(r->b_num[i], mo->M);
-      ARRAY_CALLOC(r->b_denom[i], 1);
-    }
-
-  return (r);
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
-  reestimate_free (&r, mo->N);
-  return (NULL);
-# undef CUR_PROC
-}                               /* reestimate_alloc */
 
 /*----------------------------------------------------------------------------*/
 static int reestimate_free (local_store_t ** r, int N)
@@ -150,6 +106,41 @@ static int reestimate_free (local_store_t ** r, int N)
   return (0);
 # undef CUR_PROC
 }                               /* reestimate_free */
+
+/*----------------------------------------------------------------------------*/
+static local_store_t *reestimate_alloc (const ghmm_dmodel * mo)
+{
+# define CUR_PROC "reestimate_alloc"
+  int i;
+  local_store_t *r = NULL;
+  ARRAY_CALLOC(r, 1);
+
+  ARRAY_CALLOC(r->pi_num, mo->N);
+  ARRAY_CALLOC(r->a_num, mo->N);
+  for (i=0; i<mo->N; i++)
+    ARRAY_CALLOC(r->a_num[i], mo->s[i].out_states);
+  ARRAY_CALLOC(r->a_denom, mo->N);
+
+  ARRAY_MALLOC(r->b_num, mo->N);
+  ARRAY_MALLOC(r->b_denom, mo->N);
+
+  if (mo->model_type & GHMM_kHigherOrderEmissions)
+    for (i=0; i<mo->N; i++) {
+      ARRAY_CALLOC(r->b_num[i], ghmm_ipow(mo, mo->M, mo->order[i] + 1));
+      ARRAY_CALLOC(r->b_denom[i], ghmm_ipow (mo, mo->M, mo->order[i]));
+    }
+  else
+    for (i=0; i<mo->N; i++) {
+      ARRAY_CALLOC(r->b_num[i], mo->M);
+      ARRAY_CALLOC(r->b_denom[i], 1);
+    }
+
+  return (r);
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  reestimate_free (&r, mo->N);
+  return (NULL);
+# undef CUR_PROC
+}                               /* reestimate_alloc */
 
 /*----------------------------------------------------------------------------*/
 static int reestimate_init(local_store_t * r, const ghmm_dmodel * mo) {
@@ -223,9 +214,6 @@ void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo) {
   int bi_len;
   int nr=0;
   double *new_emissions;
-  char * str;
-
-  /* printf("** Start of ghmm_dmodel_update_tied_groups **\n"); */
 
   /* do nothing if there are no tied emissions */
   if (!(mo->model_type & GHMM_kTiedEmissions)) {
@@ -252,9 +240,7 @@ void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo) {
 	bi_len = mo->M;
 
       if (mo->model_type & GHMM_kSilentStates && mo->silent[i]) {
-	str = ighmm_mprintf(NULL, 0, "Tie group leader %d is silent.", i);
-	GHMM_LOG(LWARN, str);
-	m_free(str);
+	GHMM_LOG_PRINTF(LWARN, LOC, "Tie group leader %d is silent.", i);
 	nr = 0;
 	/* initializing with zeros */
 	for (k=0; k<bi_len; k++)
@@ -280,9 +266,7 @@ void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo) {
               new_emissions[k] += mo->s[j].b[k];
           }
           else {
-	    str = ighmm_mprintf(NULL, 0, "Tie group member %d is silent.", j);
-	    GHMM_LOG(LWARN, str);
-	    m_free(str);
+	    GHMM_LOG_PRINTF(LWARN, LOC, "Tie group member %d is silent.", j);
 	  }
         }
       }
@@ -300,9 +284,7 @@ void ghmm_dmodel_update_tie_groups (ghmm_dmodel * mo) {
             }
 	}
       else {
-	str = ighmm_mprintf(NULL, 0, "The tie group with leader %d has only one non-silent state. Kind of pointless!", i);
-	GHMM_LOG(LINFO, str);
-	m_free(str);
+	GHMM_LOG_PRINTF(LINFO, LOC, "The tie group with leader %d has only one non-silent state. Kind of pointless!", i);
       }
     }
   }
@@ -320,7 +302,6 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
   int h, i, j, m, l, j_id, positive;
   double factor, p_i;
   int hist, col, size, reachable;
-  char *str;
 
   mes_check_0 (r->pi_denom, goto STOP);
 
@@ -340,11 +321,9 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
       }
       if (p_i == 0.0) {
         if (h == 0)
-          str = ighmm_mprintf(NULL, 0, "State %d can't be reached (no in_states)", i);
+          GHMM_LOG_PRINTF(LINFO, LOC, "State %d can't be reached (no in_states)", i);
         else
-          str = ighmm_mprintf (NULL, 0, "State %d can't be reached (prob = 0.0)", i);
-        GHMM_LOG(LINFO, str);
-        m_free (str);
+          GHMM_LOG_PRINTF(LINFO, LOC, "State %d can't be reached (prob = 0.0)", i);
         reachable = 0;
       }
       factor = 0.0;
@@ -418,10 +397,8 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
         col = hist * mo->M;
         for (m = col; m < col + mo->M; m++) {
           if ((r->b_denom[i][hist] - r->b_num[i][m]) <= -GHMM_EPS_PREC) {
-            str = ighmm_mprintf (NULL, 0, "numerator b (%.4f) > denom (%.4f)!\n",
-                                 r->b_num[i][m], r->b_denom[i][hist]);
-            GHMM_LOG(LCONVERTED, str);
-            m_free (str);
+            GHMM_LOG_PRINTF(LCONVERTED, LOC, "numerator b (%.4f) > denom (%.4f)!\n",
+                            r->b_num[i][m], r->b_denom[i][hist]);
           }
           
           mo->s[i].b[m] = r->b_num[i][m] * factor;
@@ -430,10 +407,8 @@ static int reestimate_setlambda (local_store_t * r, ghmm_dmodel * mo)
         }
 
         if (!positive) {
-          str = ighmm_mprintf (NULL, 0, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
-                               i, col, col + mo->M, r->b_denom[i][hist]);
-          GHMM_LOG(LCONVERTED, str);
-          m_free (str);
+          GHMM_LOG_PRINTF(LCONVERTED, LOC, "All numerator b[%d][%d-%d] == 0 (denom = %g)!\n",
+                          i, col, col + mo->M, r->b_denom[i][hist]);
         }
       }                           /* for each history */
     }
@@ -454,9 +429,9 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
 {
 # define CUR_PROC "reestimate_one_step"
   int res = -1;
-  int k, i, j, t, j_id, valid;
+  int k, i, j, t, j_id, valid=0;
   int e_index;
-  char * str;
+  int errors;
   double **alpha = NULL;
   double **beta = NULL;
   double *scale = NULL;
@@ -473,7 +448,6 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
     mo->maxorder = 0;
 
   *log_p = 0.0;
-  valid = 0;
   /* loop over all sequences */
   for (k = 0; k < seq_number; k++) {
     mo->emission_history = 0;
@@ -492,6 +466,7 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
     if (log_p_k != +1) {        /* O[k] can be generated */
       *log_p += log_p_k;
       valid = 1;
+      
       if (ghmm_dmodel_backward (mo, O[k], T_k, beta, scale) == -1) {
         GHMM_LOG_QUEUED(LCONVERTED);
         goto FREE;
@@ -539,13 +514,10 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
       }
     }                           /* if (log_p_k != +1) */
     else {
-      str = ighmm_mprintf(NULL, 0, "O(%d) can't be built from model mo!\n", k);
-      GHMM_LOG(LWARN, str);
-      m_free(str);
+      GHMM_LOG_PRINTF(LWARN, LOC, "O(%d) can't be built from model mo!\n", k);
     }
 
     ighmm_reestimate_free_matvek(alpha, beta, scale, T_k);
-
   }                             /* for (k = 0; k < seq_number; k++) */
 
   if (valid) {
@@ -555,14 +527,10 @@ static int reestimate_one_step (ghmm_dmodel * mo, local_store_t * r, int seq_num
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
-    /* printf ("---- reestimate: after normalization ----\n"); */
-    /*
-       printf("Emission:\n");
-       ghmm_dmodel_B_print(stdout, mo, "\t", " ", "\n");
-     */
-    /* only test: */
-    if (ghmm_dmodel_check(mo) == -1) {
-      GHMM_LOG(LERROR, "reestimated model is invalid");
+
+    if ((errors = ghmm_dmodel_check(mo))) {
+      GHMM_LOG_PRINTF(LERROR, LOC, "Reestimated model is invalid, "
+                      "model_check found %d errors", -errors);
       goto STOP;
     }
   }
@@ -829,7 +797,6 @@ int ghmm_dmodel_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
   int res = -1;
-  char *str;
 
   /* local store for all iterations */
   r = reestimate_alloc (mo);
@@ -847,18 +814,14 @@ int ghmm_dmodel_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step
     if (1) {
       if (reestimate_one_step(mo, r, sq->seq_number, sq->seq_len, sq->seq,
 			      &log_p, sq->seq_w) == -1) {
-	str = ighmm_mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
-	GHMM_LOG(LCONVERTED, str);
-	m_free (str);
+	GHMM_LOG_PRINTF(LCONVERTED, LOC, "reestimate_one_step false (%d.step)\n", n);
 	goto STOP;
       }
     }
     else {
       if (reestimate_one_step_lean(mo, r, sq->seq_number, sq->seq_len, sq->seq,
 			      &log_p, sq->seq_w) == -1) {
-	str = ighmm_mprintf (NULL, 0, "reestimate_one_step false (%d.step)\n", n);
-	GHMM_LOG(LCONVERTED, str);
-	m_free (str);
+	GHMM_LOG_PRINTF(LCONVERTED, LOC, "reestimate_one_step false (%d.step)\n", n);
 	goto STOP;
       }
     }
@@ -869,30 +832,25 @@ int ghmm_dmodel_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step
     /*printf("%8.5f (-log_p)\n", -log_p); */
 
     if (log_p == +1) {
-      printf
-        ("Reestimate stopped: No sequence can be built from model mo!\n");
+      GHMM_LOG(LERROR, "Reestimate stopped: No sequence can be built "
+               "from model mo!");
       break;
     }
 
     diff = log_p - log_p_old;
     /* error in convergence ? */
     if (diff < -GHMM_EPS_PREC) {
-      str = ighmm_mprintf (NULL, 0, "No convergence: log P < log P-old! (n=%d)\n", n);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LCONVERTED, LOC, "No convergence: log P < log P-old! (n=%d)\n", n);
       goto STOP;
     }
     else if (log_p > GHMM_EPS_PREC) {
-      str = ighmm_mprintf (NULL, 0, "No convergence: log P > 0! (n=%d)\n", n);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LCONVERTED, LOC, "No convergence: log P > 0! (n=%d)\n", n);
       goto STOP;
     }
 
     /* stop iterations? */
     if (diff < fabs ((double) likelihood_delta * log_p)) {
-      printf("Convergence after %d steps\n", n); 
-
+      GHMM_LOG_PRINTF(LINFO, LOC, "Convergence after %d steps", n);
       break;
     }
     else {
@@ -921,7 +879,7 @@ int ghmm_dmodel_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq, int max_step
   /*printf("%8.5f (-log_p optimized model)\n", -log_p);*/
 
   /* check new parameter for plausibility */
-  /* if (ghmm_dmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+  /* if (ghmm_dmodel_check(mo) < 0) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -936,21 +894,20 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /**============================ Labeled HMMs ================================**/
 /*----------------------------------------------------------------------------*/
-static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
-                                      int seq_number, int *seq_length,
-                                      int **O, int **label, double *log_p,
-                                      double *seq_w)
+static int reestimate_one_step_label(ghmm_dmodel *mo, local_store_t *r,
+                                     int seq_number, int *seq_length, int **O,
+                                     int **label, double *log_p, double *seq_w)
 {
 # define CUR_PROC "reestimate_one_step_label"
 
   int k, i, j, t, j_id;
-  int e_index, T_k, valid = 0;
+  int errors;
+  int e_index, T_k, valid=0;
   double **alpha = NULL;
   double **beta = NULL;
   double *scale = NULL;
   double gamma;
   double log_p_k;
-  char *str;
 
   /* first set maxorder to zero if model_type & kHigherOrderEmissions is FALSE 
 
@@ -1033,13 +990,10 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
       }
     }
     else {
-      str = ighmm_mprintf (NULL, 0, "warning: sequence %d can't be built from model\n", k);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LWARN, LOC, "warning: sequence %d can't be built from model", k);
     }
 
     ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
-
   }                             /* for (k = 0; k < seq_number; k++) */
 
   if (valid) {
@@ -1048,18 +1002,18 @@ static int reestimate_one_step_label (ghmm_dmodel * mo, local_store_t * r,
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
-    /* printf ("---- reestimate: after normalization ----\n"); */
-    /*     printf("Emission:\n"); */
-    /*     ghmm_dmodel_B_print(stdout, mo, "\t", " ", "\n"); */
-    /* only test: */
-    /*    if (ghmm_dmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+
+    if ((errors = ghmm_dmodel_check(mo))) {
+      GHMM_LOG_PRINTF(LERROR, LOC, "Reestimated model is invalid, "
+                      "model_check found %d errors", -errors);
+      goto STOP;
+    }
   }
   else {                        /* NO sequence can be built from model mo! */
     *log_p = +1;
   }
 
   return (0);
-
 FREE:
   ighmm_reestimate_free_matvek (alpha, beta, scale, T_k);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -1080,12 +1034,11 @@ int ghmm_dmodel_label_baum_welch (ghmm_dmodel * mo, ghmm_dseq * sq)
 int ghmm_dmodel_label_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
                                        int max_step, double likelihood_delta)
 {
-# define CUR_PROC "ghmm_dl_baum_welch"
+# define CUR_PROC "ghmm_dl_baum_welch_nstep"
   int n, k, valid;
   double log_p, log_p_old, log_p_k, diff;
   local_store_t *r = NULL;
   int res = -1;
-  char *str;
 
   /* local store for all iterations */
   r = reestimate_alloc (mo);
@@ -1103,41 +1056,35 @@ int ghmm_dmodel_label_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
     if (reestimate_one_step_label
         (mo, r, sq->seq_number, sq->seq_len, sq->seq, sq->state_labels,
          &log_p, sq->seq_w) == -1) {
-      str = ighmm_mprintf (NULL, 0, "reestimate_one_step_label false (%d.step)\n", n);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LCONVERTED, LOC, "reestimate_one_step_label false (%d.step)\n", n);
       goto STOP;
     }
 
     if (n == 1)
-      printf ("%8.5f (-log_p input model)\n", -log_p);
+      GHMM_LOG_PRINTF(LINFO, LOC, "%8.5f (-log_p input model)\n", -log_p);
     else
-      printf ("%8.5f (-log_p)\n", -log_p);
+      GHMM_LOG_PRINTF(LINFO, LOC, "%8.5f (-log_p)\n", -log_p);
 
     if (log_p == +1) {
-      printf
-        ("Reestimate stopped: No sequence can be built from model mo!\n");
+      GHMM_LOG_PRINTF(LERROR, LOC, "Reestimate stopped: No sequence can be "
+                      "built from model mo!\n");
       break;
     }
 
     diff = log_p - log_p_old;
     /* error in convergence ? */
     if (diff < -GHMM_EPS_PREC) {
-      str = ighmm_mprintf (NULL, 0, "No convergence: log P < log P-old! (n = %d)\n", n);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LCONVERTED, LOC, "No convergence: log P < log P-old! (n = %d)\n", n);
       goto STOP;
     }
     else if (log_p > GHMM_EPS_PREC) {
-      str = ighmm_mprintf (NULL, 0, "No convergence: log P > 0! (n = %d)\n", n);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LCONVERTED, LOC, "No convergence: log P > 0! (n = %d)\n", n);
       goto STOP;
     }
 
     /* stop iterations? */
     if (diff < fabs ((double) likelihood_delta * log_p)) {
-      printf ("Convergence after %d steps\n", n);
+      GHMM_LOG_PRINTF(LINFO, LOC, "Convergence after %d steps\n", n);
       break;
     }
     else {
@@ -1166,10 +1113,10 @@ int ghmm_dmodel_label_baum_welch_nstep (ghmm_dmodel * mo, ghmm_dseq * sq,
 
   if (!valid)
     log_p = +1;
-  printf ("%8.5f (-log_p optimized model)\n", -log_p);
+  GHMM_LOG_PRINTF(LINFO, LOC, "%8.5f (-log_p optimized model)", -log_p);
 
   /* check new parameter for plausibility */
-  /* if (ghmm_dmodel_check(mo) == -1) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
+  /* if (ghmm_dmodel_check(mo) < 0) { GHMM_LOG_QUEUED(LCONVERTED); goto STOP; } */
   res = 0;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
