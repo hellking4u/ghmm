@@ -138,8 +138,15 @@ typedef struct ghmm_cmodel_class_change_context {
 
 %extend ghmm_cmodel_baum_welch_context{
         ghmm_cmodel_baum_welch_context()
-            { return malloc(sizeof(ghmm_cmodel_baum_welch_context)); }
-        ~ghmm_cmodel_baum_welch_context() { free(self); }
+        {
+                ghmm_cmodel_baum_welch_context *bwc = malloc(sizeof(ghmm_cmodel_baum_welch_context));
+                bwc->logp = malloc(sizeof(*bwc->logp));
+                return bwc;
+        }
+        ~ghmm_cmodel_baum_welch_context() {
+                free(self->logp);
+                free(self);
+        }
 }
 
 
