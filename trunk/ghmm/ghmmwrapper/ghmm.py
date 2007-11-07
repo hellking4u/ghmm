@@ -156,7 +156,7 @@ hdlr = logging.StreamHandler(sys.stderr)
 
 # setting message format
 #fmt = logging.Formatter("%(name)s %(asctime)s %(filename)s:%(lineno)d %(levelname)s %(thread)-5s - %(message)s")
-fmt = logging.Formatter("%(name)s %(filename)s:%(lineno)d  - %(message)s")
+fmt = logging.Formatter("%(name)s %(filename)s:%(lineno)d - %(message)s")
 hdlr.setFormatter(fmt)
 
 # adding handler to logger object
