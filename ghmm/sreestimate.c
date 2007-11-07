@@ -290,7 +290,6 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
   int i, j, m, l, j_id, osc, fix_flag;
   double pi_factor, a_factor_i = 0.0, c_factor_i = 0.0, u_im, mue_im, mue_left, mue_right, A, B, Atil, Btil, fix_w, unfix_w;    /* Q; */
   int a_num_pos, a_denom_pos, c_denom_pos, c_num_pos;
-  char *str;
 
   double p_i=0.0;
   int g, h;
@@ -319,7 +318,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
         if (smo->s[i].out_states > 0) {
           if (smo->s[i].in_states == 0)
             ighmm_mes (MESCONTR, "state %d: no in_states\n", i);
-	    
+    
           else {
             /* Test: sum all ingoing == 0 ? */
             p_i = smo->s[i].pi;
@@ -336,7 +335,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
       }
       else
         a_factor_i = 1 / r->a_denom[i][osc];
-	
+
       a_num_pos = 0;
 
 
@@ -374,10 +373,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
           else
             l++;
         if (l == smo->s[j_id].in_states) {
-          str = ighmm_mprintf (NULL, 0,
-                  "no matching in_a for out_a(=a[%d][%d]) found!\n", i, j_id);
-          GHMM_LOG(LCONVERTED, str);
-          m_free (str);
+          GHMM_LOG_PRINTF(LCONVERTED, LOC, "no matching in_a for out_a(=a[%d][%d]) found!", i, j_id);
           goto STOP;
         }
         smo->s[j_id].in_a[osc][l] = smo->s[i].out_a[osc][j];
@@ -628,19 +624,18 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
           }
           else {
             if (!smo->class_change->get_class) {
-              printf ("ERROR: get_class not initialized\n");
+              GHMM_LOG(LERROR, "get_class not initialized");
               goto STOP;
             }
 
             osc = smo->class_change->get_class (smo, O[k], k, t - 1);
             /*printf("osc=%d : cos = %d, k = %d, t = %d, state=%d\n",osc,smo->cos,smo->class_change->k,t,i); */
-	    if (osc >= smo->cos){
-	      printf("ERROR: get_class returned index %d but model has only %d classes !\n",osc,smo->cos);
-	      goto STOP;
-	    }
-	    
+            if (osc >= smo->cos) {
+              GHMM_LOG_PRINTF(LERROR, LOC, "get_class returned index %d "
+                              "but model has only %d classes!", osc, smo->cos);
+              goto STOP;
+            }
           }
-
 
           /* A: starts at t=1 !!! */
           for (j = 0; j < smo->s[i].out_states; j++) {
@@ -756,17 +751,10 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
     
     if (ghmm_cmodel_check(smo) == -1) { 
         GHMM_LOG_QUEUED(LCONVERTED); 
-        printf("Model invalid !\n\n");
-        
-       
-        goto STOP; 
-        
-    } 
-    /* else {
-        printf("Model is ok.\n");
-    }  */   
-        
-    
+        GHMM_LOG(LERROR, "Model invalid!");
+        goto STOP;
+    }
+
   }
   else {                        /* NO sequence can be build from smodel smo! */
     /* diskret:  *log_p = +1; */
@@ -794,7 +782,6 @@ int ghmm_cmodel_baum_welch (ghmm_cmodel_baum_welch_context * cs)
   int i, j, n, valid, valid_old, max_iter_bw;
   double log_p, log_p_old, diff, eps_iter_bw;
   local_store_t *r = NULL;
-  char *str;
 
   /* truncated normal density needs static varialbles C_PHI and
      CC_PHI */
@@ -830,11 +817,9 @@ int ghmm_cmodel_baum_welch (ghmm_cmodel_baum_welch_context * cs)
                                   cs->sqd->seq_len, cs->sqd->seq, &log_p,
                                   cs->sqd->seq_w);
     /* to follow convergence of bw: uncomment next line */
-    printf ("\tBW Iter %d\t log(p) %.4f\n", n, log_p);
+    GHMM_LOG_PRINTF(LINFO, LOC, "\tBW Iter %d\t log(p) %.4f", n, log_p);
     if (valid == -1) {
-      str = ighmm_mprintf (NULL, 0, "sreestimate_one_step false (%d.step)\n", n);
-      GHMM_LOG(LCONVERTED, str);
-      m_free (str);
+      GHMM_LOG_PRINTF(LCONVERTED, LOC, "sreestimate_one_step false (%d.step)", n);
       goto STOP;
     }
 
@@ -849,19 +834,13 @@ int ghmm_cmodel_baum_welch (ghmm_cmodel_baum_welch_context * cs)
 
     if (diff < -GHMM_EPS_PREC) {
       if (valid > valid_old) {
-        str = ighmm_mprintf (NULL, 0,
-                "log P < log P-old (more sequences (%d) , n = %d)\n",
-                 valid - valid_old, n);
-        GHMM_LOG(LCONVERTED, str);
-        m_free (str);
+        GHMM_LOG_PRINTF(LCONVERTED, LOC, "log P < log P-old (more sequences (%d), n = %d)",
+                        valid - valid_old, n);
       }
       /* no convergence */
       else {
-        str = ighmm_mprintf (NULL, 0,
-	        "NO convergence: log P(%e) < log P-old(%e)! (n = %d)\n",
-	        log_p, log_p_old, n);
-        GHMM_LOG(LCONVERTED, str);
-        m_free (str);
+        GHMM_LOG_PRINTF(LCONVERTED, LOC, "NO convergence: log P(%e) < log P-old(%e)! (n = %d)",
+                        log_p, log_p_old, n);
         break;                  /* goto STOP; ? */
       }
     }
