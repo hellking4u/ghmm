@@ -231,7 +231,7 @@ extern "C" {
 /**
    Tests if all standardization requirements of model are fulfilled. 
    (That is, if the sum of the probabilities is 1).
-   @return 0 for success; -1 for error
+   @return 0 for success; otherwise negated number of errors
    @param mo:  ghmm_dmodel to test */
   int ghmm_dmodel_check (const ghmm_dmodel * mo);
 

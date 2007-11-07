@@ -757,7 +757,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*============================================================================*/
 int ghmm_dmodel_check(const ghmm_dmodel * mo) {
 # define CUR_PROC "ghmm_dmodel_check"
-  int res = -1;
+  int res=0;
   double sum;
   int i, j, imag=0;
 
@@ -768,7 +768,7 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
 
   if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
     GHMM_LOG(LERROR, "sum Pi[i] != 1.0\n");
-    goto STOP;
+    res--;
   }
 
   /* check each state */
@@ -783,7 +783,7 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
 
     if (j>0 && fabs(sum-1.0) >= GHMM_EPS_PREC) {
       GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] (%g) not equal 1.0", i, sum);
-      goto STOP;
+      res--;
     }
     /* Sum the a[i][j]'s : normalized in transitions */
     sum = mo->s[i].pi;
@@ -805,27 +805,25 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
       if ((fabs(sum + mo->M ) >= GHMM_EPS_PREC)) {
         GHMM_LOG_PRINTF(LWARN, LOC, "state %d can't be reached but is not set"
                             " as non-reachale state", i);
-        goto STOP;
+        res--;
       }
     } else if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {
       /* silent states */
       if (sum != 0.0) {
         GHMM_LOG_PRINTF(LWARN, LOC, "state %d is silent but has a non-zero"
                             " emission probability", i);
-        goto STOP;
+        res--;
       }
     } 
     else {
       /* normal states */
       if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
         GHMM_LOG_PRINTF(LWARN, LOC, "sum s[%d].b[*] = %f != 1.0", i, sum);
-        goto STOP;
+        res--;
       }
     }
   }
 
-  res = 0;
-STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* ghmm_dmodel_check */
