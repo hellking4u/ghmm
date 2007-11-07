@@ -3168,8 +3168,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         ghmmwrapper.free(label)
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha,t)
-        cscale = None
-        calpha = None
         return (logp, pyalpha, pyscale)
 
     def backwardLabels(self, emissionSequence, labelSequence, scalingVector):
@@ -3206,9 +3204,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         ghmmwrapper.free(cscale)
         ghmmwrapper.free(label)
         ghmmwrapper.double_matrix_free(cbeta,t)
-        cscale = None
-        label = None
-        cbeta = None
         return (logp, pybeta)
 
     def baumWelchLabels(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
@@ -3449,8 +3444,6 @@ class GaussianEmissionHMM(HMM):
 
         del cscale
         ghmmwrapper.double_matrix_free(calpha,t)
-        cscale = None
-        calpha = None
         return (pyalpha,pyscale)
 
     def backward(self, emissionSequence, scalingVector):
@@ -3480,8 +3473,6 @@ class GaussianEmissionHMM(HMM):
         # deallocation
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(cbeta,t)
-        cscale = None
-        cbeta = None
         return pybeta
 
     def loglikelihoods(self, emissionSequences): 
@@ -3574,8 +3565,6 @@ class GaussianEmissionHMM(HMM):
             allLogs.append(ghmmwrapper.double_array_getitem(log_p, 0))
         
         ghmmwrapper.free(viterbiPath)
-        viterbiPath = None
-        log_p = None
 
         # resetting class_change->k to default
         if self.cmodel.cos > 1:
@@ -4342,7 +4331,6 @@ class ComplexEmissionSequence(object):
         """
         d_pointer = self.cseq.get_continuous(index)
         internal = ghmmhelper.double_array2list(d_pointer, len(self))
-        d_pointer = None
         return internal
     
     def getDiscreteSequence(self, index):
