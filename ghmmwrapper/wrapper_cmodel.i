@@ -249,5 +249,6 @@ REFERENCE_ARRAY(ghmm_cmodel, cmodel_ptr)
 
 /* obsolete stuff */
 #ifdef GHMM_OBSOLETE
-extern ghmm_cmodel** ghmm_cmodel_read(const char* filename, int* smo_number);
+%apply int *OUTPUT {int *smo_number};
+extern ghmm_cmodel **ghmm_cmodel_read(const char *filename, int *smo_number);
 #endif

@@ -1395,20 +1395,17 @@ class HMMOpenFactory(HMMFactory):
         (hmmClass, emission_domain, distribution) = self.determineHMMClass(fileName)
 
         log.debug("determineHMMClass = "+ str(  (hmmClass, emission_domain, distribution)))
-        
-        nrModelPtr = ghmmwrapper.int_array_alloc(1)
 
         # XXX broken since silent states are not supported by .smo file format 
         if hmmClass == DiscreteEmissionHMM:
-            models = ghmmwrapper.ghmm_dmodel_read(fileName, nrModelPtr)
+            models,nrModels = ghmmwrapper.ghmm_dmodel_read(fileName)
             getPtr = ghmmwrapper.dmodel_ptr_array_getitem
             base_model_type = ghmmwrapper.KDiscreteHMM
         else:
-            models = ghmmwrapper.ghmm_cmodel_read(fileName, nrModelPtr)
+            models,nrModels = ghmmwrapper.ghmm_cmodel_read(fileName)
             getPtr = ghmmwrapper.cmodel_ptr_array_getitem
             base_model_type = ghmmwrapper.kContinuousHMM
 
-        nrModels = ghmmwrapper.int_array_getitem(nrModelPtr, 0)
         if modelIndex == None:
             result = []
             for i in range(nrModels):

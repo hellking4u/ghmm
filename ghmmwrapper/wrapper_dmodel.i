@@ -294,5 +294,6 @@ extern int ghmm_dmodel_label_discriminative(ghmm_dmodel** mo, ghmm_dseq** sqs, i
 
 /* obsolete stuff */
 #ifdef GHMM_OBSOLETE
-extern ghmm_dmodel** ghmm_dmodel_read(char* filename, int* mo_number);
+%apply int *OUTPUT {int *mo_number};
+extern ghmm_dmodel **ghmm_dmodel_read(char *filename, int *mo_number);
 #endif
