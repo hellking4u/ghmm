@@ -3654,7 +3654,6 @@ class GaussianEmissionHMM(HMM):
         self.BWcontext = ghmmwrapper.ghmm_cmodel_baum_welch_context()
         self.BWcontext.smo  = self.cmodel
         self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to ghmm_cseq
-        self.BWcontext.logp = ghmmwrapper.double_array_alloc(1) # place holder for sum of log-likelihood
         self.BWcontext.eps  = loglikelihoodCutoff
         self.BWcontext.max_iter = nrSteps
 
@@ -3671,8 +3670,6 @@ class GaussianEmissionHMM(HMM):
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
 
-        ghmmwrapper.free(self.BWcontext.logp)
-        self.BWcontext.logp = None
         del self.BWcontext
         self.BWcontext = None
 
