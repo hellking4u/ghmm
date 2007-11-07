@@ -429,7 +429,7 @@ class Alphabet(EmissionDomain):
         if internal == -1:
             return "-"
         if internal < -1 or len(self.listOfCharacters) < internal:
-            raise KeyError, "Internal symbol "+str(internal)+" not recognized."
+            raise KeyError("Internal symbol "+str(internal)+" not recognized.")
         return self.listOfCharacters[internal]
 
     def externalSequence(self, internalSequence):
@@ -663,14 +663,14 @@ class EmissionSequence(object):
             self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
             self.sequence_carray = ghmmhelper.list2double_array
         else:
-            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+            raise NoValidCDataType("C data type " + str(self.emissionDomain.CDataType) + " invalid.")
 
 
         # check if ghmm is build with asci sequence file support
         if isinstance(sequenceInput, str) or isinstance(sequenceInput, unicode):
             if ghmmwrapper.ASCI_SEQ_FILE:
                 if  not os.path.exists(sequenceInput):
-                     raise IOError, 'File ' + str(sequenceInput) + ' not found.'
+                     raise IOError('File ' + str(sequenceInput) + ' not found.')
                 else:
                     tmp, seq_number = self.seq_read(sequenceInput)
                     if seq_number > 0:
@@ -709,13 +709,13 @@ class EmissionSequence(object):
         # internal use
         elif isinstance(sequenceInput, ghmmwrapper.ghmm_dseq) or isinstance(sequenceInput, ghmmwrapper.ghmm_cseq):
             if sequenceInput.seq_number > 1:
-                raise badCPointer, "Use SequenceSet for multiple sequences."
+                raise badCPointer("Use SequenceSet for multiple sequences.")
             self.cseq = sequenceInput
             if labelDomain != None:
                 self.labelDomain = labelDomain
 
         else:
-            raise UnknownInputType, "inputType " + str(type(sequenceInput)) + " not recognized."
+            raise UnknownInputType("inputType " + str(type(sequenceInput)) + " not recognized.")
 
 
     def __del__(self):
@@ -746,12 +746,12 @@ class EmissionSequence(object):
     
     def getSeqLabel(self):
         if not ghmmwrapper.SEQ_LABEL_FIELD:
-            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            raise UnsupportedFeature("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         return ghmmwrapper.long_array_getitem(self.cseq.seq_label,0)
 
     def setSeqLabel(self,value):
         if not ghmmwrapper.SEQ_LABEL_FIELD:
-            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            raise UnsupportedFeature("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         ghmmwrapper.long_array_setitem(self.cseq.seq_label,0,value)
     
     def getStateLabel(self):
@@ -877,7 +877,7 @@ class SequenceSet(object):
             self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2double_matrix
         else:
-            raise NoValidCDataType, "C data type " + str(self.emissionDomain.CDataType) + " invalid."
+            raise NoValidCDataType("C data type " + str(self.emissionDomain.CDataType) + " invalid.")
 
 
         # reads in the first sequence struct in the input file
@@ -891,7 +891,7 @@ class SequenceSet(object):
                 self.cseq = cseq
             # check if ghmm is build with asci sequence file support
             elif not ghmmwrapper.ASCI_SEQ_FILE:
-                raise UnsupportedFeature ("asci sequence files are deprecated. \
+                raise UnsupportedFeature("asci sequence files are deprecated. \
                 Please convert your files to the new xml-format or rebuild the GHMM \
                 with the conditional \"GHMM_OBSOLETE\".")
             else:
@@ -907,7 +907,7 @@ class SequenceSet(object):
                             seq = self.seq_ptr_array_getitem(tmp, n)
                             del seq
                     else:
-                        raise ParseFileError, 'File ' + str(sequenceSetInput) + ' not valid.'
+                        raise ParseFileError('File ' + str(sequenceSetInput) + ' not valid.')
 
                     ghmmwrapper.free(tmp)
                     ghmmwrapper.free(i)
@@ -936,7 +936,7 @@ class SequenceSet(object):
                 self.labelDomain = labelDomain
                 
         else:    
-            raise UnknownInputType, "inputType " + str(type(sequenceSetInput)) + " not recognized."
+            raise UnknownInputType("inputType " + str(type(sequenceSetInput)) + " not recognized.")
 
 
     def __del__(self):
@@ -1021,12 +1021,12 @@ class SequenceSet(object):
     
     def getSeqLabel(self,index):
         if not ghmmwrapper.SEQ_LABEL_FIELD:
-            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            raise UnsupportedFeature("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         return ghmmwrapper.long_array_getitem(self.cseq.seq_label,index)
 
     def setSeqLabel(self,index,value):
         if not ghmmwrapper.SEQ_LABEL_FIELD:
-            raise UnsupportedFeature ("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
+            raise UnsupportedFeature("the seq_label field is obsolete. If you need it rebuild the GHMM with the conditional \"GHMM_OBSOLETE\".")
         ghmmwrapper.long_array_setitem(self.cseq.seq_label,index,value)
 
     def getGeneratingStates(self):
@@ -1071,7 +1071,7 @@ class SequenceSet(object):
         """
 
         if not isinstance(emissionSequences,EmissionSequence) and not isinstance(emissionSequences,SequenceSet):
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__)
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(emissionSequences.__class__.__name__))
         
         self.cseq.add(emissionSequences.cseq)
         del(emissionSequences) # removing merged sequences
@@ -1146,7 +1146,7 @@ def SequenceSetOpen(emissionDomain, fileName):
     """
 
     if not os.path.exists(fileName):
-        raise IOError, 'File ' + str(fileName) + ' not found.'
+        raise IOError('File ' + str(fileName) + ' not found.')
 
     if emissionDomain.CDataType == "int":
         readFile = ghmmwrapper.ghmm_dseq_read
@@ -1155,7 +1155,7 @@ def SequenceSetOpen(emissionDomain, fileName):
         readFile = ghmmwrapper.ghmm_cseq_read
         seqPtr   = ghmmwrapper.cseq_ptr_array_getitem
     else:
-        raise TypeError, "Invalid c data type " + str(emissionDomain.CDataType)
+        raise TypeError("Invalid c data type " + str(emissionDomain.CDataType))
 
     structArray, setNr = readFile(fileName)
 
@@ -1178,7 +1178,7 @@ def writeToFasta(seqSet,fn):
     Writes a SequenceSet into a fasta file.
     """
     if not isinstance(seqSet, SequenceSet):
-        raise TypeError, "SequenceSet expected."
+        raise TypeError("SequenceSet expected.")
     f = open(fn,'w')
     
     for i in range(len(seqSet)):
@@ -1231,7 +1231,7 @@ class HMMOpenFactory(HMMFactory):
         
         if not isinstance(fileName,StringIO.StringIO):
             if not os.path.exists(fileName):
-                raise IOError, 'File ' + str(fileName) + ' not found.'
+                raise IOError('File ' + str(fileName) + ' not found.')
 
         if not filetype:
             if self.defaultFileType:
@@ -1256,7 +1256,7 @@ class HMMOpenFactory(HMMFactory):
         elif filetype == GHMM_FILETYPE_HMMER:
             return self.openHMMER(fileName)
         else:
-            raise TypeError, "Invalid file type " + str(filetype)
+            raise TypeError("Invalid file type " + str(filetype))
 
 
     def openNewXML(self, fileName, modelIndex):
@@ -1293,7 +1293,7 @@ class HMMOpenFactory(HMMFactory):
 
         # currently not supported
         else:
-            raise UnsupportedFeature, "Non-supported model type"
+            raise UnsupportedFeature("Non-supported model type")
 
 
         # read all models to list at first
@@ -1388,7 +1388,7 @@ class HMMOpenFactory(HMMFactory):
         # MO & SMO Files, format is deprecated
         # check if ghmm is build with smo support
         if not ghmmwrapper.SMO_FILE_SUPPORT:
-            raise UnsupportedFeature ("smo files are deprecated. Please convert your files"
+            raise UnsupportedFeature("smo files are deprecated. Please convert your files"
                                       "to the new xml-format or rebuild the GHMM with the"
                                       "conditional \"GHMM_OBSOLETE\".")
             
@@ -1511,7 +1511,7 @@ class HMMOpenFactory(HMMFactory):
                 return (hmm_class, emission_domain, distribution)
 
             else:
-                raise TypeError, "Model type can not be determined."
+                raise TypeError("Model type can not be determined.")
 
         return (None, None, None)
 
@@ -1532,7 +1532,7 @@ def readMultipleHMMERModels(fileName):
     """
     # XXX Integrate into HMMOpen, check for single hmm files
     if not os.path.exists(fileName):
-        raise IOError, 'File ' + str(fileName) + ' not found.'
+        raise IOError('File ' + str(fileName) + ' not found.')
     
     modelList = []
     string = ""
@@ -1565,18 +1565,18 @@ class HMMFromMatricesFactory(HMMFactory):
         if isinstance(emissionDomain,Alphabet):
             
             if not emissionDomain == distribution.alphabet:
-                raise TypeError, "emissionDomain and distribution must be compatible"
+                raise TypeError("emissionDomain and distribution must be compatible")
             
             # checking matrix dimensions and argument validation, only some obvious errors are checked
             if not len(A) == len(A[0]):
-                raise InvalidModelParameters, "A is not quadratic."
+                raise InvalidModelParameters("A is not quadratic.")
             if not len(pi) == len(A):
-                raise InvalidModelParameters,  "Length of pi does not match length of A."
+                raise InvalidModelParameters("Length of pi does not match length of A.")
             if not len(A) == len(B):
-                raise InvalidModelParameters, " Different number of entries in A and B."
+                raise InvalidModelParameters("Different number of entries in A and B.")
 
             if (labelDomain is None and labelList is not None) or (labelList is None and labelList is not None):
-                raise InvalidModelParameters, "Specify either both labelDomain and labelInput or neither."
+                raise InvalidModelParameters("Specify either both labelDomain and labelInput or neither.")
             
             if isinstance(distribution,DiscreteDistribution):
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
@@ -1650,7 +1650,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 # check for state labels
                 if labelDomain is not None and labelList is not None:
                     if not isinstance(labelDomain,LabelDomain):
-                        raise TypeError, "LabelDomain object required."
+                        raise TypeError("LabelDomain object required.")
                     
                     cmodel.model_type |= kLabeledStates
                     m = StateLabelHMM(emissionDomain, distribution, labelDomain, cmodel)
@@ -1901,7 +1901,7 @@ class BackgroundDistribution(object):
             self.emissionDomain = emissionDomain
              
         else:
-            raise TypeError, "Input type "+str(type(bgInput)) +" not recognized."    
+            raise TypeError("Input type "+str(type(bgInput)) +" not recognized.")
 
     def __del__(self):
         log.debug( "__del__ BackgroundDistribution " + str(self.cbackground))
@@ -2044,7 +2044,7 @@ class HMM(object):
         """
         # XXX TODO for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
-            raise NotImplementedError, "Models with silent states not yet supported."
+            raise NotImplementedError("Models with silent states not yet supported.")
 
         # calculate complete posterior matrix
         post = self.posterior(sequence)
@@ -2106,13 +2106,13 @@ class HMM(object):
         """
         # XXX TODO for silent states things arr more complicated -> to be done
         if self.hasFlags(kSilentStates):
-            raise NotImplementedError, "Models with silent states not yet supported."
+            raise NotImplementedError("Models with silent states not yet supported.")
 
         # checking function arguments
         if not 0 <= time < len(sequence):
-            raise IndexError, "Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" )."
+            raise IndexError("Invalid sequence index: "+str(time)+" (sequence has length "+str(len(sequence))+" ).")
         if not 0 <= state < self.N:
-            raise IndexError, "Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states )."
+            raise IndexError("Invalid state index: " +str(state)+ " (models has "+str(self.N)+" states ).")
 
         post = self.posterior(sequence)
         return post[time][state]
@@ -2345,9 +2345,9 @@ class HMM(object):
 
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
-            raise IndexError, "Index " + str(j) + " out of bounds."
+            raise IndexError("Index " + str(j) + " out of bounds.")
 
         transition = 0.0
         for i in xrange(state.out_states):
@@ -2362,9 +2362,9 @@ class HMM(object):
 
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
-            raise IndexError, "Index " + str(j) + " out of bounds."
+            raise IndexError("Index " + str(j) + " out of bounds.")
 
         # XXX Need to check that (i,j) is a transition, return IndexError else
 
@@ -2580,7 +2580,7 @@ class DiscreteEmissionHMM(HMM):
             raise TypeError
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
 
@@ -2637,7 +2637,7 @@ class DiscreteEmissionHMM(HMM):
         """ log P[ emissionSequence, stateSequence| m] """
         
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
         t = len(emissionSequence)
         s = len(stateSequence)
@@ -2671,7 +2671,7 @@ class DiscreteEmissionHMM(HMM):
            
         """
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
@@ -2687,7 +2687,7 @@ class DiscreteEmissionHMM(HMM):
            the background's contribution for each state.
         """
         if not len(backgroundWeight) == self.N:
-            raise TypeError, "Argument 'backgroundWeight' does not match number of states."
+            raise TypeError("Argument 'backgroundWeight' does not match number of states.")
         
         cweights = ghmmhelper.list2double_array(backgroundWeight)
         result = self.cmodel.background_apply(cweights)
@@ -2706,13 +2706,13 @@ class DiscreteEmissionHMM(HMM):
         """
         
         if not isinstance(backgroundObject,BackgroundDistribution):
-            raise TypeError, "BackgroundDistribution required, got " + str(emissionSequences.__class__.__name__)        
+            raise TypeError("BackgroundDistribution required, got " + str(emissionSequences.__class__.__name__))
 
         if not type(stateBackground) == list:
-            raise TypeError, "list required got "+ str(type(stateBackground))
+            raise TypeError("list required got "+ str(type(stateBackground)))
             
         if not len(stateBackground) == self.N:
-            raise TypeError, "Argument 'stateBackground' does not match number of states."
+            raise TypeError("Argument 'stateBackground' does not match number of states.")
 
         if self.background != None:
             del(self.background)
@@ -2730,7 +2730,7 @@ class DiscreteEmissionHMM(HMM):
             Input is a list of background ids or '-1' for no background
         """
         if not type(stateBackground) == list:
-           raise TypeError, "list required got "+ str(type(stateBackground))
+           raise TypeError("list required got "+ str(type(stateBackground)))
         
         assert self.cmodel.background_id is not None, "Error: No backgrounds defined in model."   
         assert len(stateBackground) == self.N, "Error: Number of weigths does not match number of states."
@@ -2836,7 +2836,7 @@ class DiscreteEmissionHMM(HMM):
         
         """
         if not 0 <= state <= self.N-1:
-            raise IndexError, "Invalid state index"
+            raise IndexError("Invalid state index")
         
         if self.hasFlags(kSilentStates) and self.cmodel.silent[state]:
             return True
@@ -2863,7 +2863,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         DiscreteEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
 
         if not isinstance(labelDomain, LabelDomain):
-            raise TypeError, "Invalid labelDomain"
+            raise TypeError("Invalid labelDomain")
         
         self.labelDomain = labelDomain
 
@@ -2976,7 +2976,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         # set state label to to the appropiate index
         for i in range(self.N):
             if not self.labelDomain.isAdmissable(labelList[i]):
-                raise GHMMOutOfDomain, "Label "+str(labelList[i])+" not included in labelDomain."
+                raise GHMMOutOfDomain("Label "+str(labelList[i])+" not included in labelDomain.")
             
         ghmmwrapper.free(self.cmodel.label)
         self.cmodel.label = ghmmhelper.list2int_array([self.labelDomain.internal(l) for l in labelList])
@@ -3000,7 +3000,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         elif type(internal) is list:
             return self.labelDomain.externalSequence(internal)
         else:
-            raise TypeError, 'int or list needed'
+            raise TypeError('int or list needed')
 
     def internalLabel(self, external):
         """ Return int representation of an label or list of labels
@@ -3029,7 +3029,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         seqNumber = len(emissionSequences)
 
         if not emissionSequences.emissionDomain == self.emissionDomain:
-            raise TypeError, "Sequence and model emissionDomains are incompatible."
+            raise TypeError("Sequence and model emissionDomains are incompatible.")
         
         (vPath, log_p) = self.viterbi(emissionSequences)
 
@@ -3115,7 +3115,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         seqNumber = len(emissionSequences)
 
         if emissionSequences.cseq.state_labels is None:
-            raise TypeError, "Sequence needs to be labeled."
+            raise TypeError("Sequence needs to be labeled.")
 
         likelihoodList = []
 
@@ -3140,13 +3140,13 @@ class StateLabelHMM(DiscreteEmissionHMM):
                     and the scaling vector
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
         n_states = self.cmodel.N
 
         t = emissionSequence.cseq.getLength(0)
         if t != len(labelSequence):
-            raise TypeError, "ERROR: Observation and Labellist must have same length"
+            raise TypeError("ERROR: Observation and Labellist must have same length")
 
         calpha = ghmmwrapper.double_matrix_alloc(t, n_states)
         cscale = ghmmwrapper.double_array_alloc(t)
@@ -3176,11 +3176,11 @@ class StateLabelHMM(DiscreteEmissionHMM):
             Result: the (N x T)-matrix containing the backward-variables
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
         t = emissionSequence.cseq.getLength(0)
         if t != len(labelSequence):
-            raise TypeError, "ERROR: Observation and Labellist must have same length"
+            raise TypeError("ERROR: Observation and Labellist must have same length")
 
         seq = emissionSequence.cseq.getSequence(0)
         label = ghmmwrapper.int_array_alloc(t)
@@ -3217,7 +3217,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         """
         if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
-            raise TypeError, "EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__)
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
@@ -3256,9 +3256,9 @@ class GaussianEmissionHMM(HMM):
         """
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
-            raise IndexError, "Index " + str(j) + " out of bounds."
+            raise IndexError("Index " + str(j) + " out of bounds.")
  
         transition = self.cmodel.get_transition(i, j, 0)
         if transition < 0.0: # Tried to access non-existing edge:
@@ -3270,9 +3270,9 @@ class GaussianEmissionHMM(HMM):
 
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
-            raise IndexError, "Index " + str(j) + " out of bounds."
+            raise IndexError("Index " + str(j) + " out of bounds.")
 
         self.cmodel.set_transition(i, j, 0, float(prob))
 
@@ -3280,7 +3280,7 @@ class GaussianEmissionHMM(HMM):
         """ Return (mu, sigma^2)  """
 
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
         mu    = state.getMean(0)
@@ -3292,7 +3292,7 @@ class GaussianEmissionHMM(HMM):
 
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
         state.setMean(0, float(mu))  # GHMM C is german: mue instead of mu
@@ -3424,7 +3424,7 @@ class GaussianEmissionHMM(HMM):
                     and the scaling vector
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
         i = self.cmodel.N
 
@@ -3452,7 +3452,7 @@ class GaussianEmissionHMM(HMM):
             Result: the (N x T)-matrix containing the backward-variables
         """
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
         seq = emissionSequence.cseq.getSequence(0)
 
@@ -3617,10 +3617,10 @@ class GaussianEmissionHMM(HMM):
         """
         
         if not isinstance(trainingSequences, SequenceSet) and not isinstance(trainingSequences, EmissionSequence):
-            raise TypeError, "baumWelch requires a SequenceSet or EmissionSequence object."
+            raise TypeError("baumWelch requires a SequenceSet or EmissionSequence object.")
         
         if not self.emissionDomain.CDataType == "double":
-            raise TypeError, "Continuous sequence needed."
+            raise TypeError("Continuous sequence needed.")
         
         self.baumWelchSetup(trainingSequences, nrSteps, loglikelihoodCutoff)
         ghmmwrapper.ghmm_cmodel_baum_welch(self.BWcontext)        
@@ -3714,7 +3714,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
@@ -3730,13 +3730,13 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         """ log P[ emissionSequence, stateSequence| m] """
         
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError, "EmissionSequence required, got " + str(emissionSequence.__class__.__name__)
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
         state = self.cmodel.getState(stateSequence[0])
         emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
         
         if (emissionProb == 0): # zero ??? or some small constant?
-            raise SequenceCannotBeBuild, "first symbol " + str(emissionSequence[0]) + " not emitted by state " + str(stateSequence[0])
+            raise SequenceCannotBeBuild("first symbol " + str(emissionSequence[0]) + " not emitted by state " + str(stateSequence[0]))
                         
         logP = math.log(state.pi * emissionProb)
         
@@ -3753,7 +3753,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                         emissionProb = self.getEmissionProbability(emissionSequence[i+1],out_id)
                         #symbolIndex += 1
                         if emissionProb == 0:
-                            raise SequenceCannotBeBuild, "symbol " + str(emissionSequence[i+1]) + " not emitted by state "+ str(stateSequence[i+1])
+                            raise SequenceCannotBeBuild("symbol " + str(emissionSequence[i+1]) + " not emitted by state "+ str(stateSequence[i+1]))
                         logP += math.log( ghmmwrapper.double_matrix_getitem(cur_state.out_a,0,j) * emissionProb)
                         break
         except IndexError:
@@ -3966,7 +3966,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
         # ensure proper indices
         if not 0 <= i < self.N:
-            raise IndexError, "Index " + str(i) + " out of bounds."
+            raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
@@ -4072,16 +4072,16 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
     """ """
      
     if len(HMMList) != len(SeqList):
-        raise TypeError, 'Inputs not equally long'
+        raise TypeError('Inputs not equally long')
 
    
     inplen = len(HMMList)
     if gradient not in [0, 1]:
-       raise UnknownInputType, "TrainingType " + gradient + " not supported."
+       raise UnknownInputType("TrainingType " + gradient + " not supported.")
     
     for i in range(inplen):
         if HMMList[i].emissionDomain.CDataType == "double":
-            raise TypeError, 'discriminative training is at the moment only implemented on discrete HMMs'
+            raise TypeError('discriminative training is at the moment only implemented on discrete HMMs')
         #initial training with Baum-Welch
         HMMList[i].baumWelch(SeqList[i], 3, 1e-9)
 
@@ -4107,7 +4107,7 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
 def HMMDiscriminativePerformance(HMMList, SeqList):
 
     if len(HMMList) != len(SeqList):
-        raise TypeRrror, 'Inputs not equally long'
+        raise TypeRrror('Inputs not equally long')
 
     inplen = len(HMMList)
     
@@ -4632,19 +4632,19 @@ class PairHMMOpenFactory(HMMOpenFactory):
         if not (isinstance(fileName_file_or_dom, StringIO.StringIO) or
                 isinstance(fileName_file_or_dom, xml.dom.minidom.Document)):
             if not os.path.exists(fileName_file_or_dom):
-                raise IOError, 'File ' + str(fileName_file_or_dom) + ' not found.'
+                raise IOError('File ' + str(fileName_file_or_dom) + ' not found.')
 
         hmm_dom = xmlutil.HMM(fileName_file_or_dom)
         if (not hmm_dom.modelType == "pairHMM"):
-            raise InvalidModelParameters, "Model type specified in the XML file (%s) is not pairHMM" % hmm_dom.modelType
+            raise InvalidModelParameters("Model type specified in the XML file (%s) is not pairHMM" % hmm_dom.modelType)
         # obviously it's a pair HMM
         [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
         if not len(A) == len(A[0]):
-            raise InvalidModelParameters, "A is not quadratic."
+            raise InvalidModelParameters("A is not quadratic.")
         if not len(pi) == len(A):
-            raise InvalidModelParameters,  "Length of pi does not match length of A."
+            raise InvalidModelParameters("Length of pi does not match length of A.")
         if not len(A) == len(B):
-            raise InvalidModelParameters, " Different number of entries in A and B."
+            raise InvalidModelParameters("Different number of entries in A and B.")
 
         cmodel = ghmmwrapper.ghmm_dp_init()
         cmodel.N = len(A)
