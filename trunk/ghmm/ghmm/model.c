@@ -760,9 +760,8 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
   int res = -1;
   double sum;
   int i, j, imag=0;
-  char *str;
-  /* The sum of the Pi[i]'s is 1 */
 
+  /* The sum of the Pi[i]'s is 1 */
   sum = 0.0;
   for (i = 0; i < mo->N; i++)
     sum += mo->s[i].pi;
@@ -776,18 +775,14 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
   for (i=0; i<mo->N; i++) {
     sum = 0.0;
     if (mo->s[i].out_states == 0) {
-      str = ighmm_mprintf(NULL, 0, "out_states = 0 (state %d -> final state!)", i);
-      GHMM_LOG(LDEBUG, str);
-      m_free(str)
+      GHMM_LOG_PRINTF(LDEBUG, LOC, "out_states = 0 (state %d -> final state!)", i);
     }
     /* Sum the a[i][j]'s : normalized out transitions */
     for (j=0; j < mo->s[i].out_states; j++)
       sum += mo->s[i].out_a[j];
 
     if (j>0 && fabs(sum-1.0) >= GHMM_EPS_PREC) {
-      str = ighmm_mprintf(NULL, 0, "sum of s[%d].out_a[*] (%g) not equal 1.0", i, sum);
-      GHMM_LOG(LWARN, str);
-      m_free(str);
+      GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] (%g) not equal 1.0", i, sum);
       goto STOP;
     }
     /* Sum the a[i][j]'s : normalized in transitions */
@@ -797,9 +792,7 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
 
     if (fabs(sum) <= GHMM_EPS_PREC) {
       imag = 1;
-      str = ighmm_mprintf(NULL, 0, "state %d can't be reached", i);
-      GHMM_LOG(LINFO, str);
-      m_free(str);
+      GHMM_LOG_PRINTF(LINFO, LOC, "state %d can't be reached", i);
     }
 
     /* Sum the b[j]'s: normalized emission probs */
@@ -810,28 +803,22 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
     if (imag) {
       /* not reachable states */
       if ((fabs(sum + mo->M ) >= GHMM_EPS_PREC)) {
-        str = ighmm_mprintf(NULL, 0, "state %d can't be reached but is not set"
+        GHMM_LOG_PRINTF(LWARN, LOC, "state %d can't be reached but is not set"
                             " as non-reachale state", i);
-        GHMM_LOG(LWARN, str);
-        m_free(str);
         goto STOP;
       }
     } else if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {
       /* silent states */
       if (sum != 0.0) {
-        str = ighmm_mprintf(NULL, 0, "state %d is silent but has a non-zero"
+        GHMM_LOG_PRINTF(LWARN, LOC, "state %d is silent but has a non-zero"
                             " emission probability", i);
-        GHMM_LOG(LWARN, str);
-        m_free(str);
         goto STOP;
       }
     } 
     else {
       /* normal states */
       if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
-        str = ighmm_mprintf(NULL, 0, "sum s[%d].b[*] = %f != 1.0", i, sum);
-        GHMM_LOG(LCONVERTED, str);
-        m_free(str);
+        GHMM_LOG_PRINTF(LWARN, LOC, "sum s[%d].b[*] = %f != 1.0", i, sum);
         goto STOP;
       }
     }
