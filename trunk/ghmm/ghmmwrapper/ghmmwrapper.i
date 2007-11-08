@@ -49,6 +49,7 @@
    include ../config.h twice, once for swig and once for CC */
 %{
 #include "../config.h"
+#include "../ghmm/randvar.h"
 #include "sclass_change.h"
 #include "pclasschange.h"
 %}
