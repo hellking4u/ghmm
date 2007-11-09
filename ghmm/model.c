@@ -846,38 +846,33 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
 {
 #define CUR_PROC "ghmm_dmodel_check_compatibel_models"
   int i, j;
-  char *str;
 
   if (mo->N != m2->N) {
-    str = ighmm_mprintf(NULL, 0, "ERROR: different number of states (%d != %d)\n",
+    GHMM_LOG_PRINTF(LINFO, LOC, "different number of states (%d != %d)\n",
                    mo->N, m2->N);
-    goto STOP;
+    return -1;
   }
   if (mo->M != m2->M) {
-    str = ighmm_mprintf(NULL, 0, "ERROR: different number of possible outputs (%d != %d)\n",
+    GHMM_LOG_PRINTF(LINFO, LOC, "different number of possible outputs (%d != %d)\n",
                    mo->M, m2->M);
-    goto STOP;
+    return -1;
   }
   for (i=0; i<mo->N; ++i) {
     if (mo->s[i].out_states != m2->s[i].out_states) {
-      str = ighmm_mprintf(NULL, 0, "ERROR: different number of outstates (%d != %d) in state %d.\n",
+      GHMM_LOG_PRINTF(LINFO, LOC, "different number of outstates (%d != %d) in state %d.\n",
                    mo->s[i].out_states, m2->s[i].out_states, i);
-      goto STOP;
+      return -1;
     }
     for (j=0; j<mo->s[i].out_states; ++j) {
       if (mo->s[i].out_id[j] != m2->s[i].out_id[j]) {
-	str = ighmm_mprintf(NULL, 0, "ERROR: different out_ids (%d != %d) in entry %d of state %d.\n",
+	GHMM_LOG_PRINTF(LINFO, LOC, "different out_ids (%d != %d) in entry %d of state %d.\n",
 		      mo->s[i].out_id[j], m2->s[i].out_id[j], j, i);
-	goto STOP;
+	return -1;
       }
     }
   }
 
   return 0;
-STOP:
-  GHMM_LOG(LCONVERTED, str);
-  m_free (str);
-  return (-1);
 #undef CUR_PROC
 }                               /* ghmm_dmodel_check_compatibility */
 
@@ -1138,7 +1133,6 @@ double ghmm_dmodel_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
 # define CUR_PROC "ghmm_dmodel_likelihood"
   double log_p_i, log_p;
   int found, i;
-  char *str;
 
   /* printf("***  model_likelihood:\n"); */
 
@@ -1165,8 +1159,7 @@ double ghmm_dmodel_likelihood (ghmm_dmodel * mo, ghmm_dseq * sq)
       found = 1;
     }
     else {
-      str = ighmm_mprintf (NULL, 0, "sequence[%d] can't be build.\n", i);
-      GHMM_LOG(LCONVERTED, str);
+      GHMM_LOG_PRINTF(LWARN, LOC, "sequence[%d] can't be build.", i);
     }
   }
   if (!found)
@@ -1904,7 +1897,6 @@ int ghmm_dmodel_normalize (ghmm_dmodel * mo)
   double pi_sum=0.0;
   int i, j, m, j_id, i_id=0, res=0;
   int size = 1;
-  char *str;
 
   for (i = 0; i < mo->N; i++) {
     if (mo->s[i].pi >= 0.0)
@@ -1930,9 +1922,8 @@ int ghmm_dmodel_normalize (ghmm_dmodel * mo)
         }
       }
       if (i_id == mo->s[j_id].in_states) {
-        str = ighmm_mprintf (NULL, 0, "Outgoing transition from state %d to \
-           state %d has no corresponding incoming transition.\n", i, j_id);
-        GHMM_LOG(LCONVERTED, str);
+        GHMM_LOG_PRINTF(LERROR, LOC, "Outgoing transition from state %d to \
+           state %d has no corresponding incoming transition.", i, j_id);
         return -1;
       }
       mo->s[j_id].in_a[i_id] = mo->s[i].out_a[j];
@@ -2252,7 +2243,6 @@ int ghmm_dmodel_background_apply (ghmm_dmodel * mo, double *background_weight)
 # define CUR_PROC "ghmm_dmodel_apply_background"
 
   int i, j, size;
-  char * estr;
 
   if (!(mo->model_type & GHMM_kBackgroundDistributions)) {
     GHMM_LOG(LCONVERTED, "Error: No background distributions");
@@ -2263,13 +2253,11 @@ int ghmm_dmodel_background_apply (ghmm_dmodel * mo, double *background_weight)
     if (mo->background_id[i] != GHMM_kNoBackgroundDistribution) {
       if (mo->model_type & GHMM_kHigherOrderEmissions) {
 	if (mo->order[i] != mo->bp->order[mo->background_id[i]]) {
-	  estr = ighmm_mprintf(NULL, 0, "State (%d) and background order (%d) "
+	  GHMM_LOG_PRINTF(LERROR, LOC, "State (%d) and background order (%d) "
 			       "do not match in state %d. Background_id = %d",
 			       mo->order[i],
 			       mo->bp->order[mo->background_id[i]], i,
 			       mo->background_id[i]);
-	  GHMM_LOG(LERROR, estr);
-	  m_free(estr);
 	  return -1;
 	}
 	/* XXX Cache in ghmm_dbackground */
