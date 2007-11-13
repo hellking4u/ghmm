@@ -101,7 +101,7 @@ static local_store_t *viterbi_alloc(ghmm_dmodel *mo, int len)
         ARRAY_CALLOC(v->log_in_a[j], mo->s[j].in_states);
     }
 
-    v->log_b = ighmm_cmatrix_alloc(mo->N, len);
+    v->log_b = ighmm_cmatrix_alloc(mo->N, mo->M);
     if (!(v->log_b)) {
         GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
@@ -131,26 +131,24 @@ static void Viterbi_precompute(ghmm_dmodel *mo, int *o, int len, local_store_t *
     int i, j, t;
 
     /* Precomputing the log(a_ij) */
-    for (j = 0; j < mo->N; j++)
-        for (i = 0; i < mo->s[j].in_states; i++)
+    for (j = 0; j < mo->N; j++) {
+        for (i = 0; i < mo->s[j].in_states; i++) {
             if (mo->s[j].in_a[i] == 0.0)        /* DBL_EPSILON ? */
                 v->log_in_a[j][i] = +1; /* Not used any further in the calculations */
             else
                 v->log_in_a[j][i] = log(mo->s[j].in_a[i]);
-
+        }
+    }
 
     /* Precomputing the log(bj(ot)) */
-    for (j = 0; j < mo->N; j++)
-        for (t = 0; t < len; t++) {
-            if (o[t] != mo->M) {
-                if (mo->s[j].b[o[t]] == 0.0)    /* DBL_EPSILON ? */
-                    v->log_b[j][t] = +1;
-                else
-                    v->log_b[j][t] = log(mo->s[j].b[o[t]]);
-            } else {
-                v->log_b[j][t] = 0.0;
-            }
+    for (j = 0; j < mo->N; j++) {
+        for (t = 0; t < mo->M; t++) {
+            if (mo->s[j].b[t] == 0.0)    /* DBL_EPSILON ? */
+                v->log_b[j][t] = +1;
+            else
+                v->log_b[j][t] = log(mo->s[j].b[t]);
         }
+    }
 #undef CUR_PROC
 }                               /* viterbi_precompute */
 
@@ -273,10 +271,10 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
 
     /* Initialization, that is t = 0 */
     for (j = 0; j < mo->N; j++) {
-        if (mo->s[j].pi == 0.0 || v->log_b[j][0] == +1) /* instead of 0, DBL_EPS.? */
+        if (mo->s[j].pi == 0.0 || v->log_b[j][o[0]] == +1) /* instead of 0, DBL_EPS.? */
             v->phi[j] = +1;
         else
-            v->phi[j] = log(mo->s[j].pi) + v->log_b[j][0];
+            v->phi[j] = log(mo->s[j].pi) + v->log_b[j][o[0]];
     }
     if (mo->model_type & GHMM_kSilentStates) {  /* could go into silent state at t=0 */
         viterbi_silent(mo, t = 0, v);
@@ -310,10 +308,10 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
                 /* No maximum found (that is, state never reached)
                    or the output O[t] = 0.0: */
                 if (max_value == -DBL_MAX ||    /* and then also: (v->psi[t][j] == -1) */
-                    v->log_b[St][t] == +1) {
+                    v->log_b[St][o[t]] == +1) {
                     v->phi_new[St] = +1;
                 } else
-                    v->phi_new[St] = max_value + v->log_b[St][t];
+                    v->phi_new[St] = max_value + v->log_b[St][o[t]];
 
             }
         }                       /* complete time step for emitting states */
