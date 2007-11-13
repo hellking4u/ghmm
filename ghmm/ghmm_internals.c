@@ -50,7 +50,7 @@
 
 static char * qmessage;
 
-static int maxlevel = 6;
+static int maxlevel = 3;
 
 static void (* logfunc)(int level, const char * message, void * clientdata);
 
