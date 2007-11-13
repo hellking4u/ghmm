@@ -767,7 +767,7 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
     sum += mo->s[i].pi;
 
   if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
-    GHMM_LOG(LERROR, "sum Pi[i] != 1.0\n");
+    GHMM_LOG(LERROR, "sum Pi[i] != 1.0");
     res--;
   }
 
@@ -778,11 +778,15 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
     for (j=0; j < mo->s[i].out_states; j++) {
       sum += mo->s[i].out_a[j];
     }
-    if (j==0 || sum == 0.0)  {
+    if (j==0) {
       GHMM_LOG_PRINTF(LDEBUG, LOC, "out_states = 0 (state %d -> final state!)", i);
     }
+    else if (sum == 0.0) {
+      GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] = 0.0 (assumed final "
+                      "state but %d transitions)", i, mo->s[i].out_states);
+    }
     else if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
-      GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] (%f) not equal 1.0", i, sum);
+      GHMM_LOG_PRINTF(LERROR, LOC, "sum of s[%d].out_a[*] = %f != 1.0", i, sum);
       res--;
     }
     /* Sum the a[i][j]'s : normalized in transitions */
@@ -803,22 +807,22 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
     if (imag) {
       /* not reachable states */
       if ((fabs(sum + mo->M ) >= GHMM_EPS_PREC)) {
-        GHMM_LOG_PRINTF(LWARN, LOC, "state %d can't be reached but is not set"
-                            " as non-reachale state", i);
+        GHMM_LOG_PRINTF(LERROR, LOC, "state %d can't be reached but is not set"
+                        " as non-reachale state", i);
         res--;
       }
     } else if ((mo->model_type & GHMM_kSilentStates) && mo->silent[i]) {
       /* silent states */
       if (sum != 0.0) {
-        GHMM_LOG_PRINTF(LWARN, LOC, "state %d is silent but has a non-zero"
-                            " emission probability", i);
+        GHMM_LOG_PRINTF(LERROR, LOC, "state %d is silent but has a non-zero"
+                        " emission probability", i);
         res--;
       }
     } 
     else {
       /* normal states */
       if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
-        GHMM_LOG_PRINTF(LWARN, LOC, "sum s[%d].b[*] = %f != 1.0", i, sum);
+        GHMM_LOG_PRINTF(LERROR, LOC, "sum s[%d].b[*] = %f != 1.0", i, sum);
         res--;
       }
     }
