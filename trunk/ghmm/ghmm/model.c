@@ -774,15 +774,15 @@ int ghmm_dmodel_check(const ghmm_dmodel * mo) {
   /* check each state */
   for (i=0; i<mo->N; i++) {
     sum = 0.0;
-    if (mo->s[i].out_states == 0) {
+    /* Sum the a[i][j]'s : normalized out transitions */
+    for (j=0; j < mo->s[i].out_states; j++) {
+      sum += mo->s[i].out_a[j];
+    }
+    if (j==0 || sum == 0.0)  {
       GHMM_LOG_PRINTF(LDEBUG, LOC, "out_states = 0 (state %d -> final state!)", i);
     }
-    /* Sum the a[i][j]'s : normalized out transitions */
-    for (j=0; j < mo->s[i].out_states; j++)
-      sum += mo->s[i].out_a[j];
-
-    if (j>0 && fabs(sum-1.0) >= GHMM_EPS_PREC) {
-      GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] (%g) not equal 1.0", i, sum);
+    else if (fabs(sum-1.0) >= GHMM_EPS_PREC) {
+      GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] (%f) not equal 1.0", i, sum);
       res--;
     }
     /* Sum the a[i][j]'s : normalized in transitions */
