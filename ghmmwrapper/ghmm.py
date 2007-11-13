@@ -3022,9 +3022,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
     def viterbiLabels(self, emissionSequences):
         """ 
-        Returns the most likely labeling of the input sequence(s) as given by the viterbi path.
-        """
+        Returns the labeling of the input sequence(s) as given by the viterbi path.
 
+        For one EmissionSequence a list of labels is returned; for an SequenceSet a list of
+        list of labels.
+        
+        """
         emissionSequences = emissionSequences.asSequenceSet()
         seqNumber = len(emissionSequences)
 
@@ -3038,6 +3041,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if seqNumber == 1:
             labels = map(f, vPath)
         else:
+            # XXX list comprehension
             for j in range(seqNumber):
                 labels.append( map(f, vPath[j]) )
 
@@ -3055,28 +3059,28 @@ class StateLabelHMM(DiscreteEmissionHMM):
         """
         if self.hasFlags(kSilentStates):
             raise NotimplementedError("Sorry, k-best decoding on models containing silent states not yet supported.")
+
+        emissionSequences = emissionSequences.asSequenceSet()
+        seqNumber = len(emissionSequences)
+
+        allLogs = []
+        allLabels = []
+
+        for i in range(seqNumber):
+            seq = emissionSequences.cseq.getSequence(i)
+            seq_len = emissionSequences.cseq.getLength(i)
+
+            labeling, log_p = self.cmodel.label_kbest(seq, seq_len, k)
+            oneLabel = ghmmhelper.int_array2list(labeling, seq_len)
+
+            allLabels.append(oneLabel)
+            allLogs.append(log_p)
+            ghmmwrapper.free(labeling)
+
+        if emissionSequences.cseq.seq_number > 1:
+            return (map(self.externalLabel, allLabels), allLogs)
         else:
-            emissionSequences = emissionSequences.asSequenceSet()
-            seqNumber = len(emissionSequences)
-
-            allLogs = []
-            allLabels = []
-
-            for i in range(seqNumber):
-                seq = emissionSequences.cseq.getSequence(i)
-                seq_len = emissionSequences.cseq.getLength(i)
-
-                labeling, log_p = self.cmodel.label_kbest(seq, seq_len, k)
-                oneLabel = ghmmhelper.int_array2list(labeling, seq_len)
-
-                allLabels.append(oneLabel)
-                allLogs.append(log_p)
-                ghmmwrapper.free(labeling)
-
-            if emissionSequences.cseq.seq_number > 1:
-                return (map(self.externalLabel, allLabels), allLogs)
-            else:
-                return (self.externalLabel(allLabels[0]), allLogs[0])
+            return (self.externalLabel(allLabels[0]), allLogs[0])
 
 
     def gradientSearch(self, emissionSequences, eta=.1, steps=20):
@@ -3098,6 +3102,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             log.error("Gradient descent finished not successfully.")
             return False
         else:
+            # XXX check if swig deallocets the model
             self.cmodel = tmp_model
             return True
 
@@ -3146,12 +3151,13 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         t = emissionSequence.cseq.getLength(0)
         if t != len(labelSequence):
-            raise TypeError("ERROR: Observation and Labellist must have same length")
+            raise TypeError("emissionSequence and labelSequence must have same length")
 
         calpha = ghmmwrapper.double_matrix_alloc(t, n_states)
         cscale = ghmmwrapper.double_array_alloc(t)
 
         seq = emissionSequence.cseq.getSequence(0)
+        # XXX use list2intarray
         label = ghmmwrapper.int_array_alloc(t)
 
         for i in range(len(labelSequence)):
@@ -3159,7 +3165,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         error, logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
         if error == -1:
-            log.error( "Forward finished with -1: Sequence " + str(i) + " cannot be build.")
+            log.error( "Forward finished with -1: Sequence cannot be build.")
 
         # translate alpha / scale to python lists
         pyscale = ghmmhelper.double_array2list(cscale, t)
@@ -3180,9 +3186,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         t = emissionSequence.cseq.getLength(0)
         if t != len(labelSequence):
-            raise TypeError("ERROR: Observation and Labellist must have same length")
+            raise TypeError("emissionSequence and labelSequence must have same length")
 
         seq = emissionSequence.cseq.getSequence(0)
+        # XXX use list2intarray
         label = ghmmwrapper.int_array_alloc(t)
 
         for i in range(len(labelSequence)):
@@ -3273,6 +3280,7 @@ class GaussianEmissionHMM(HMM):
             raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
             raise IndexError("Index " + str(j) + " out of bounds.")
+        # XXX check that i,j is transition
 
         self.cmodel.set_transition(i, j, 0, float(prob))
 
@@ -3295,8 +3303,10 @@ class GaussianEmissionHMM(HMM):
             raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
-        state.setMean(0, float(mu))  # GHMM C is german: mue instead of mu
+        state.setMean(0, float(mu))
         state.setStdDev(0, float(sigma))
+
+    # XXX no mixture here
 
     def getMixtureFix(self,state):
         s = self.cmodel.getState(state)
@@ -3399,11 +3409,12 @@ class GaussianEmissionHMM(HMM):
 
 
 
-    # different function signatures require overloading of parent class methods    
+    # XXX different function signatures require overloading of parent class methods why?
     def sample(self, seqNr ,T,seed = -1):
         """ Sample emission sequences 
         
         """
+        # XXX
         seqPtr = self.cmodel.generate_sequences(seed,T,seqNr,0,-1) 
 
         return SequenceSet(self.emissionDomain,seqPtr)
@@ -3434,7 +3445,7 @@ class GaussianEmissionHMM(HMM):
 
         seq = emissionSequence.cseq.getSequence(0)
 
-        error. logp = self.cmodel.forward(seq, t, None, calpha, cscale)
+        error, logp = self.cmodel.forward(seq, t, None, calpha, cscale)
         if error == -1:
             log.error( "Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build.")
         
@@ -3545,8 +3556,7 @@ class GaussianEmissionHMM(HMM):
             if self.cmodel.cos > 1:
                 # if emissionSequence is a sequenceSet with multiple sequences, 
                 # use sequence index as class_change.k
-                if emissionSequences.cseq.seq_number > 1:
-                    self.cmodel.class_change.k = i
+                self.cmodel.class_change.k = i
 
             seq = emissionSequences.cseq.getSequence(i)
             seq_len = emissionSequences.cseq.getLength(i)

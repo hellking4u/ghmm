@@ -52,7 +52,7 @@
 #include "ghmm_internals.h"
 
 /* switch: turn off (0)  MESCONTR and MESINFO */
-#define MCI 1
+#define MCI 0
 /* set control output (MES_WIN, MES_FILE, MES_FILE_WIN, ...) */
 #define MESCONTR MES_FILE
 /* set info output  (logP, ...) */
