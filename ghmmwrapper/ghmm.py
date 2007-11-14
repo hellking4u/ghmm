@@ -635,7 +635,7 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
 class EmissionSequence(object):
     """ An EmissionSequence contains the *internal* representation of
         a sequence of emissions. It also contains a reference to the
-        domain where the emission orginated from.
+        domain where the emissions orginated from.
     """
 
     def __init__(self, emissionDomain, sequenceInput, labelDomain = None, labelInput = None, ParentSequenceSet=None):
@@ -858,7 +858,22 @@ class EmissionSequence(object):
         
 
 class SequenceSet(object):
+    """ A SequenceSet contains the *internal* representation of a number of
+        sequences of emissions. It also contains a reference to the
+        domain where the emissions orginated from.
+    """
+
     def __init__(self, emissionDomain, sequenceSetInput, labelDomain = None, labelInput = None):
+        """
+        'sequenceSetInput' is a set of sequences from 'emissionDomain'. There are several 
+        valid types for 'sequenceSetInput':
+            - if 'sequenceSetInput' is a string, it is interpreted as the filename of a sequence file to be
+              read. File format should be fasta
+            - if 'sequenceSetInput' is list, it is considered as a list of list containing the input sequences
+            
+            - 'sequenceSetInput' can also be a pointer to a C sequence struct but this is only meant for internal use
+        
+        """
         self.emissionDomain = emissionDomain
         self.cseq = None
 
@@ -882,7 +897,7 @@ class SequenceSet(object):
 
         # reads in the first sequence struct in the input file
         if isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode):
-            if sequenceSetInput[-3:] == ".fa":
+            if sequenceSetInput[-3:] == ".fa" or sequenceSetInput[-6:] == ".fasta":
                 # assuming FastA file:
                 alfa = emissionDomain.toCstruct()
                 cseq = ghmmwrapper.ghmm_dseq(sequenceSetInput, alfa)
@@ -3020,7 +3035,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         return SequenceSet(self.emissionDomain,seqPtr, labelDomain = self.labelDomain)
 
 
-    def viterbiLabels(self, emissionSequences):
+    def labeledViterbi(self, emissionSequences):
         """ 
         Returns the labeling of the input sequence(s) as given by the viterbi path.
 
@@ -3106,7 +3121,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             self.cmodel = tmp_model
             return True
 
-    def labelSeqLikelihoods(self, emissionSequences):
+    def labeledlogikelihoods(self, emissionSequences):
         """ Compute a vector ( log( P[s,l| model]) )_{s} of log-likelihoods of the
             individual emission_sequences using the forward algorithm
 
@@ -3138,7 +3153,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         return likelihoodList
 
-    def forwardLabels(self, emissionSequence, labelSequence):
+    def labeledForward(self, emissionSequence, labelSequence):
         """
 
             Result: the (N x T)-matrix containing the forward-variables
@@ -3176,7 +3191,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         ghmmwrapper.double_matrix_free(calpha,t)
         return (logp, pyalpha, pyscale)
 
-    def backwardLabels(self, emissionSequence, labelSequence, scalingVector):
+    def labeledBackward(self, emissionSequence, labelSequence, scalingVector):
         """
 
             Result: the (N x T)-matrix containing the backward-variables
@@ -3213,7 +3228,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         ghmmwrapper.double_matrix_free(cbeta,t)
         return (logp, pybeta)
 
-    def baumWelchLabels(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
+    def labeledBaumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimates the model with the sequence in 'trainingSequences'.
 
             Note that training for models including silent states is not yet supported.
@@ -3572,7 +3587,7 @@ class GaussianEmissionHMM(HMM):
             
 
             allPaths.append(onePath)
-            allLogs.append(ghmmwrapper.double_array_getitem(log_p, 0))
+            allLogs.append(log_p)
         
         ghmmwrapper.free(viterbiPath)
 
@@ -3655,7 +3670,7 @@ class GaussianEmissionHMM(HMM):
         self.BWcontext.sqd  = trainingSequences.cseq    # copy reference to ghmm_cseq
         self.BWcontext.eps  = loglikelihoodCutoff
         self.BWcontext.max_iter = nrSteps
-
+ 
 
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
         """ Compute one iteration of Baum Welch estimation.
@@ -3664,7 +3679,7 @@ class GaussianEmissionHMM(HMM):
 
             training_sequences can either be a SequenceSet or a Sequence
         """
-        pass
+        raise NotImplementedError
 
     def baumWelchDelete(self):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
