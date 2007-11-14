@@ -1037,6 +1037,28 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         # print"\ntestdel ",
         del(self.model)
 
+    def testforward(self):
+        seq = self.model.sampleSingle(3,seed=3586662)
+        res = self.model.forward(seq)        
+        self.assertEqual(str(res[0]), '[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.81096817099595242, 0.0, 0.18903182900404761]]')
+        self.assertEqual(str(res[1]), '[0.14046138547389087, 0.1717049478939392, 0.2456746384908276]')        
+        
+        
+
+
+    def testloglikelihoods(self):
+        seq = self.model.sampleSingle(100,seed=3586662)
+        res = self.model.loglikelihoods(seq)        
+        
+        self.assertEqual(str(res), '[-138.66374870816287]' )
+        
+
+    def testviterbi(self):
+        seq = self.model.sampleSingle(20,seed=3586662)
+        res = self.model.viterbi(seq)        
+        self.assertEqual(str(res), '([0, 1, 0, 1, 0, 1, 2, 2, 1, 0, 1, 2, 0, 1, 2, 1, 2, 2, 0, 1], -33.575966803792092)')
+
+
 
 class GaussianMixtureHMMTests(unittest.TestCase):
     def setUp(self):
