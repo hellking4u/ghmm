@@ -220,6 +220,9 @@ extern double ighmm_rand_normal_density_trunc(double x, double mean, double u, d
 %}
 %enddef
 
+%apply double *OUTPUT {double *log_p};
+
+
 %include wrapper_alphabet.i
 
 %include wrapper_cseq.i
