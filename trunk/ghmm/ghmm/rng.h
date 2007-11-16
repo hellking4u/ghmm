@@ -36,10 +36,14 @@
 #ifndef GHMM_RNG_H
 #define GHMM_RNG_H
 
+#include "ghmmconfig.h"
+
 /* use mersenne twister as default */
 #ifndef GHMM_RNG_BSD
 #ifndef GHMM_RNG_GSL
+#ifndef GHMM_RNG_MERSENNE_TWISTER
 #define GHMM_RNG_MERSENNE_TWISTER
+#endif
 #endif
 #endif
 

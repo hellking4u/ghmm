@@ -34,10 +34,13 @@
 *
 *******************************************************************************/
 
-#ifdef GHMM_OBSOLETE
-
 #ifndef GHMM_CLUSTER_H
 #define GHMM_CLUSTER_H
+
+#include "ghmmconfig.h"
+
+#ifdef GHMM_OBSOLETE
+
 #include "sequence.h"
 #include "model.h"
 
@@ -133,6 +136,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* GHMM_CLUSTER_H */
 
 #endif /* GHMM_OBSOLETE */
+
+#endif                          /* GHMM_CLUSTER_H */

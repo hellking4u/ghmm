@@ -34,15 +34,17 @@
 *
 *******************************************************************************/
 
-#ifndef GHMM_OBSOLETE
-#warning "GHMM_OBSOLETE is not defined!"
-#endif
-
 #ifndef GHMM_SEQUENCE_H
 #define GHMM_SEQUENCE_H
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#include "ghmmconfig.h"
+
+#ifndef GHMM_OBSOLETE
+#warning "GHMM_OBSOLETE is not defined!"
 #endif
 
 /**@name sequences  (double and int) */
@@ -465,5 +467,6 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* GHMM_SEQUENCE_H */
 /*@} (Doc++-Group: sequence) */

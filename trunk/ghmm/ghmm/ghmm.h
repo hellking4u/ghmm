@@ -41,6 +41,8 @@
 extern "C" {
 #endif
 
+#include "ghmmconfig.h"
+
 /**@name GHMM-Globals */
 /*@{ (Doc++-Group: globals) */
 

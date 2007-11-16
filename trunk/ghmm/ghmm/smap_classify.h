@@ -34,6 +34,8 @@
 *
 *******************************************************************************/
 
+#include "ghmmconfig.h"
+
 #ifdef GHMM_OBSOLETE
 
 #ifndef GHMM_SMAP_CLASSIFY_H

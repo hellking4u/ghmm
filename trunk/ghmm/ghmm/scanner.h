@@ -34,10 +34,12 @@
 *
 *******************************************************************************/
 
-#ifdef GHMM_OBSOLETE
-
 #ifndef GHMM_SCANNER_H
 #define GHMM_SCANNER_H
+
+#include "ghmmconfig.h"
+
+#ifdef GHMM_OBSOLETE
 
 #include <stdio.h>
 
@@ -194,6 +196,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* GHMM_SCANNER_H */
 
 #endif /* GHMM_OBSOLETE */
+
+#endif                          /* GHMM_SCANNER_H */

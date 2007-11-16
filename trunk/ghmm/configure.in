@@ -78,25 +78,14 @@ AC_ARG_ENABLE(obsolete,
               AC_HELP_STRING([--disable-obsolete],
                              [disable default enabled obsolete features]),
               if test "x$enable_obsolete" != "xno" ; then
-                  AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
+                  GHMM_OBSOLETE=1
                   AC_MSG_NOTICE(obsolete features enabled)
               else
+                  GHMM_OBSOLETE=0
                   AC_MSG_NOTICE(obsolete features disabled)
               fi,
-              AC_DEFINE([GHMM_OBSOLETE], [], [include obsolete features])
+              GHMM_OBSOLETE=1
               AC_MSG_NOTICE(obsolete features enabled)
-)
-
-dnl experimental things can be switched on or off
-AC_ARG_ENABLE(experimental,
-              AC_HELP_STRING([--enable-experimental],
-                             [enable experimental features [[default=no]]]),
-              if test "x$enable_experimental" != "xno" ; then
-                  AC_DEFINE([__EXPERIMENTAL__], [$enable_experimental], [include experimental features])
-                  AC_MSG_NOTICE(experimental features enabled)
-              fi,
-              AC_MSG_NOTICE(experimental features disabled)
-
 )
 
 dnl unsupported features can be switched on or off
@@ -104,9 +93,10 @@ AC_ARG_ENABLE(unsupported,
               AC_HELP_STRING([--enable-unsupported],
                              [enable unsupported features [[default=no]]]),
               if test "x$enable_unsupported" != "xno" ; then
-                  AC_DEFINE([GHMM_UNSUPPORTED], [], [include unsupported features])
+                  GHMM_UNSUPPORTED=1
                   AC_MSG_NOTICE(unsupported features enabled)
               fi,
+              GHMM_UNSUPPORTED=0
               AC_MSG_NOTICE(unsupported features disabled)
 )
 
@@ -189,31 +179,36 @@ AC_ARG_ENABLE(gsl,
   ]
 )
 
+dnl use internal Mersenne Twister as default RNG
+GHMM_RNG_BSD=0
+GHMM_RNG_GSL=0
+GHMM_RNG_MERSENNE_TWISTER=1
+
 dnl select random number generator
 AC_ARG_WITH(rng,
             [  --with-rng=XXX          selects random number generator ("mt" (default), "bsd" or "gsl")],
             [ if test "x$with_rng" = "xbsd"; then
-                AC_DEFINE([GHMM_RNG_BSD], [], [use system RNG (bsd style)])
+                GHMM_RNG_BSD=1
+                GHMM_RNG_MERSENNE_TWISTER=0
                 AC_MSG_NOTICE(using BSD random number generator)
                 AC_CHECK_LIB(bsd, random)
               else
                 if test "x$with_rng" = "xgsl"; then
                   if test -n "$enable_gsl" && test "x$enable_gsl" != "xno"; then
-                    AC_DEFINE([GHMM_RNG_GSL], [], [use GSL RNG])
+                    GHMM_RNG_GSL=1
+                    GHMM_RNG_MERSENNE_TWISTER=0
                     AC_MSG_NOTICE(using GSL random number generator)
                   else
                     AC_MSG_ERROR(the gsl random number generator is only usable then gsl is enabled)
                   fi
                 else
                   if test "x$with_rng" = "xmt"; then
-                    AC_DEFINE([GHMM_RNG_MERSENNE_TWISTER], [], [use internal Mersenne-Twiser RNG])
                     AC_MSG_NOTICE(using internal Mersenne-Twister random number generator)
                   else
                     AC_MSG_ERROR(not a valid random number generator)
                   fi
                 fi
-              fi],
-            [ AC_DEFINE([GHMM_RNG_MERSENNE_TWISTER], [], [use internal Mersenne-Twiser RNG])])
+              fi])
 
 
 dnl libxml2 checks
@@ -303,10 +298,16 @@ AC_ARG_ENABLE(python,
 
 dnl finished
 AC_SUBST(SUBDIRS)
+AC_SUBST(GHMM_OBSOLETE)
+AC_SUBST(GHMM_UNSUPPORTED)
+AC_SUBST(GHMM_RNG_BSD)
+AC_SUBST(GHMM_RNG_GSL)
+AC_SUBST(GHMM_RNG_MERSENNE_TWISTER)
 
 AC_OUTPUT(Makefile \
           doc/Makefile \
           ghmm/Makefile \
+          ghmm/ghmmconfig.h \
           tools/Makefile \
           tests/Makefile \
           tests/data/Makefile \

@@ -45,6 +45,7 @@ lib_LTLIBRARIES = libghmm.la
 
 libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
 libghmm_la_SOURCES= ghmm.h \
+		    ghmmconfig.h \
                     rng.c rng.h \
                     randvar.c randvar.h \
                     gauss_tail.c \
@@ -86,6 +87,7 @@ libghmm_la_SOURCES= ghmm.h \
 
 
 pkginclude_HEADERS = ghmm.h \
+		  ghmmconfig.h \
                   sequence.h \
 		  psequence.h \
                   xmlreader.h \

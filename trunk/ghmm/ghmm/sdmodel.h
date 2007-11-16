@@ -37,6 +37,7 @@
 #define GHMM_SDMODEL_H
 
 #include "ghmm.h"
+#include "ghmmconfig.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -38,6 +38,8 @@
 #  include "../config.h"
 #endif
 
+#include "ghmmconfig.h"
+
 #ifdef GHMM_OBSOLETE
 
 #include <string.h>
