@@ -841,9 +841,9 @@ class StateLabelHMMTests(unittest.TestCase):
         labelSequence      = self.labels
         (alpha, scale)     = model.forward( self.tSeq)
         (b_beta)           = model.backward( self.tSeq, scale)
-        (bl_logp, bl_beta) = model.backwardLabels( self.tSeq, labelSequence, scale)
+        (bl_logp, bl_beta) = model.labeledBackward( self.tSeq, labelSequence, scale)
 
-        #compare beta matrizes from backward and backwardLabels (all states share one label)
+        #compare beta matrizes from backward and labeledBackward (all states share one label)
         self.assertEqual (map(g, b_beta), map(g, bl_beta))
 
 
@@ -858,8 +858,8 @@ class StateLabelHMMTests(unittest.TestCase):
 
         Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain,labelSequence)
         
-        (fl_logp, alpha, scale) =  model2.forwardLabels( Seq, labelSequence)
-        (bl_logp, bl_beta)      = model2.backwardLabels( Seq, labelSequence, scale)
+        (fl_logp, alpha, scale) =  model2.labeledForward( Seq, labelSequence)
+        (bl_logp, bl_beta)      = model2.labeledBackward( Seq, labelSequence, scale)
 
         #check if the beta matrix is at the appropriated entries 0 or different from 0 
         for i in range(len(bl_beta)):
@@ -877,9 +877,9 @@ class StateLabelHMMTests(unittest.TestCase):
         
         labelSequence          = self.labels
         (alpha, scale)         = model.forward(self.tSeq)
-        (logp, lalpha, lscale) = model.forwardLabels(self.tSeq, labelSequence )
+        (logp, lalpha, lscale) = model.labeledForward(self.tSeq, labelSequence )
 
-        # compare beta matrizes from backward and backwardLabels (all states share one label)
+        # compare beta matrizes from backward and labeledBackward (all states share one label)
         # XXX due to rounding errors in the Python floating point representation
         # we have to round for 15 decimal positions
         
@@ -905,7 +905,7 @@ class StateLabelHMMTests(unittest.TestCase):
 
         Seq = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain, labelSequence)
 
-        (logp, alpha, scale) =  model2.forwardLabels(Seq, labelSequence)
+        (logp, alpha, scale) =  model2.labeledForward(Seq, labelSequence)
 
         #check if the beta matrix is 0 or different from 0 at the appropriate entries 
         for i in range(len(alpha)):
@@ -949,16 +949,16 @@ class StateLabelHMMTests(unittest.TestCase):
     def testbaumwelch(self):
         # print"\ntestbaumwelch ",
         seq = self.model.sample(100,100,seed=3586662)
-        self.model.baumWelchLabels(seq,5,0.01)
+        self.model.labeledBaumWelch(seq,5,0.01)
         
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-        self.model.baumWelchLabels(seq,5,0.01)   
+        self.model.labeledBaumWelch(seq,5,0.01)   
     
    
     def testviterbilabels(self):
         seq = ghmm.EmissionSequence(ghmm.DNA, ['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'])
         
-        p = self.model.viterbiLabels(seq)
+        p = self.model.labeledViterbi(seq)
 
         self.assertEqual(p[0], ['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
         self.assertEqual(round(p[1],14) ,round(-39.893892710502115,14))
