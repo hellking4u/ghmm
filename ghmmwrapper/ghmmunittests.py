@@ -955,7 +955,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.model.labeledBaumWelch(seq,5,0.01)   
     
    
-    def testviterbilabels(self):
+    def testlabeledviterbi(self):
         seq = ghmm.EmissionSequence(ghmm.DNA, ['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'])
         
         p = self.model.labeledViterbi(seq)
