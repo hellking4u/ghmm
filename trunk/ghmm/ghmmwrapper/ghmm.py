@@ -165,7 +165,7 @@ log.addHandler(hdlr)
 # Set the minimal severity of a message to be shown. The levels in
 # increasing severity are: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-log.setLevel(logging.ERROR)
+log.setLevel(logging.WARNING)
 log.info( " I'm the ghmm in "+ __file__)
 
 c_log = [log.critical, log.error, log.warning, log.info, log.debug]
