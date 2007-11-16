@@ -181,8 +181,6 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 %newobject ghmm_dmodel::generate_sequences;
 %newobject ghmm_dmodel_generate_sequences;
 
-%apply double *OUTPUT {double *log_p};
-
 %extend ghmm_dmodel {
         ghmm_dmodel() { return calloc(1, sizeof(ghmm_dmodel)); }
         ghmm_dmodel(int no_states, int no_emissions) {
