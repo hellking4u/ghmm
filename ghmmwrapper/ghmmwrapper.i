@@ -48,13 +48,13 @@
 /* this will not work if we build ghmmwrapper out of the ghmm tree
    include ../config.h twice, once for swig and once for CC */
 %{
-#include "../config.h"
+#include "../ghmm/ghmmconfig.h"
 #include "../ghmm/randvar.h"
 #include "sclass_change.h"
 #include "pclasschange.h"
 %}
 
-%include "../config.h"
+%include "../ghmm/ghmmconfig.h"
 %include "sclass_change.h"
 %include "pclasschange.h"
 

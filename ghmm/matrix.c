@@ -45,6 +45,8 @@
 #include <math.h>
 #include <float.h>
 
+#include "ghmmconfig.h"
+
 #include "matrix.h"
 #include "vector.h"
 #include "model.h"

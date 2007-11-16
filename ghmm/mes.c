@@ -47,6 +47,8 @@
 #  include <io.h>
 #endif
 
+#include "ghmmconfig.h"
+
 #include "mes.h"
 #include "mprintf.h"
 

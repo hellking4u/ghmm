@@ -47,6 +47,7 @@
 #include <assert.h>
 
 #include "ghmm.h"
+#include "ghmmconfig.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "smodel.h"

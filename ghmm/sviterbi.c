@@ -42,8 +42,6 @@
 #  include "../config.h"
 #endif
 
-/* #if __EXPERIMENTAL__ == 3 */
-
 #include <float.h>
 #include <math.h>
 #include "ghmm_internals.h"
@@ -237,6 +235,3 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
 #undef CUR_PROC
 }                               /* ghmm_cmodel_viterbi */
-
-
-/*  #endif */ /* __EXPERIMENTAL__ == 3 */

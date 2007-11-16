@@ -34,6 +34,8 @@
 *
 *******************************************************************************/
 
+#include "ghmmconfig.h"
+
 #ifdef GHMM_OBSOLETE
 
 #ifndef GHMM_SMIXTUREHMM_H

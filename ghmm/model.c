@@ -47,6 +47,8 @@
 #include <math.h>
 #include <assert.h>
 
+#include "ghmmconfig.h"
+
 #include "model.h"
 #include "matrix.h"
 #include "sequence.h"

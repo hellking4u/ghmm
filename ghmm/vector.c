@@ -46,6 +46,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "ghmmconfig.h"
+
 #include "mes.h"
 #include "vector.h"
 #include "rng.h"

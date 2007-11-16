@@ -45,7 +45,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+
 #include "ghmm.h"
+#include "ghmmconfig.h"
 #include "mprintf.h"
 #include "mes.h"
 #include "sequence.h"
