@@ -3051,14 +3051,11 @@ class StateLabelHMM(DiscreteEmissionHMM):
         
         (vPath, log_p) = self.viterbi(emissionSequences)
 
-        labels = []
         f = lambda i: self.labelDomain.external(self.getLabel(i))
         if seqNumber == 1:
             labels = map(f, vPath)
         else:
-            # XXX list comprehension
-            for j in range(seqNumber):
-                labels.append( map(f, vPath[j]) )
+            labels = [map(f, vp) for vp in vPath]
 
         return (labels, log_p)
 
@@ -3172,11 +3169,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         cscale = ghmmwrapper.double_array_alloc(t)
 
         seq = emissionSequence.cseq.getSequence(0)
-        # XXX use list2intarray
-        label = ghmmwrapper.int_array_alloc(t)
-
-        for i in range(len(labelSequence)):
-            ghmmwrapper.int_array_setitem(label, i, self.internalLabel(labelSequence[i]))
+        label = ghmmhelper.list2int_array(self.internalLabel(labelSequence))
 
         error, logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
         if error == -1:
@@ -3204,11 +3197,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             raise TypeError("emissionSequence and labelSequence must have same length")
 
         seq = emissionSequence.cseq.getSequence(0)
-        # XXX use list2intarray
-        label = ghmmwrapper.int_array_alloc(t)
-
-        for i in range(len(labelSequence)):
-            ghmmwrapper.int_array_setitem(label, i, self.internalLabel(labelSequence[i]))
+        label = ghmmhelper.list2int_array(self.internalLabel(labelSequence))
 
         # parsing 'scalingVector' to C double array.
         cscale = ghmmhelper.list2double_array(scalingVector)
