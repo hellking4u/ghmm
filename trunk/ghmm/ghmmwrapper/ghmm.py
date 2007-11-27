@@ -2287,25 +2287,25 @@ class HMM(object):
             return allPaths[0], allLogs[0]
 
 
-    def sample(self, seqNr ,T, seed = 0):
+    def sample(self, seqNr ,T, seed=0):
         """ Sample emission sequences 
                 seqNr = number of sequences to be sampled
                 T = length of each sequence
                 seed = initialization value for rng, default 0 means 
 
         """
-        seqPtr = self.cmodel.generate_sequences(seed,T,seqNr,self.N)
-        return SequenceSet(self.emissionDomain,seqPtr)
+        seqPtr = self.cmodel.generate_sequences(seed, T, seqNr, -1)
+        return SequenceSet(self.emissionDomain, seqPtr)
         
 
-    def sampleSingle(self, T, seed = 0):
+    def sampleSingle(self, T, seed=0):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
         """
         log.debug("HMM.sampleSingle() -- begin")
-        seqPtr = self.cmodel.generate_sequences(seed,T,1,self.N)
+        seqPtr = self.cmodel.generate_sequences(seed, T, 1, -1)
         log.debug("HMM.sampleSingle() -- end")
-        return EmissionSequence(self.emissionDomain,seqPtr)
+        return EmissionSequence(self.emissionDomain, seqPtr)
 
     def clearFlags(self, flags):
         """ Clears one or more model type flags. Use with care.
@@ -3421,27 +3421,6 @@ class GaussianEmissionHMM(HMM):
 
 
         return join(strout,'')
-
-
-
-    # XXX different function signatures require overloading of parent class methods why?
-    def sample(self, seqNr ,T,seed = -1):
-        """ Sample emission sequences 
-        
-        """
-        # XXX
-        seqPtr = self.cmodel.generate_sequences(seed,T,seqNr,0,-1) 
-
-        return SequenceSet(self.emissionDomain,seqPtr)
-
-
-    def sampleSingle(self, T,seed= -1):
-        """ Sample a single emission sequence of length at most T.
-            Returns a Sequence object.
-        """
-        seqPtr = self.cmodel.generate_sequences(seed,T,1,0,-1) 
-
-        return EmissionSequence(self.emissionDomain,seqPtr)
 
     def forward(self, emissionSequence):
         """

@@ -276,6 +276,7 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
 			generator is not initialized.
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
+    @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1
 */
   ghmm_dseq *ghmm_dmodel_generate_sequences (ghmm_dmodel * mo, int seed, int global_len,
                                         long seq_number, int Tmax);

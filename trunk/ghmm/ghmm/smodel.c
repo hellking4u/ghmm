@@ -952,7 +952,7 @@ double ghmm_cmodel_get_random_var (ghmm_cmodel * smo, int state, int m)
 
 ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
                                          int global_len, long seq_number,
-                                         long label, int Tmax)
+                                         int Tmax)
 {
 # define CUR_PROC "ghmm_cmodel_generate_sequences"
 
@@ -1153,9 +1153,6 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
 
         ARRAY_REALLOC (sq->seq[n], pos);
       sq->seq_len[n] = pos;
-#ifdef GHMM_OBSOLETE
-      sq->seq_label[n] = label;
-#endif /* GHMM_OBSOLETE */
       /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }
@@ -1531,7 +1528,7 @@ double ghmm_cmodel_prob_distance (ghmm_cmodel * cm0, ghmm_cmodel * cm, int maxT,
 
   for (k = 0; k < 2; k++) {
 
-    seq0 = ghmm_cmodel_generate_sequences (smo1, 0, maxT + 1, 1, 0, maxT + 1);
+    seq0 = ghmm_cmodel_generate_sequences (smo1, 0, maxT + 1, 1, maxT + 1);
 
     /*ghmm_cseq_print(stdout,seq0,0);*/
 
@@ -1557,7 +1554,7 @@ double ghmm_cmodel_prob_distance (ghmm_cmodel * cm0, ghmm_cmodel * cm, int maxT,
         /* create a additional sequences at once */
         a = (maxT - total) / (total / seq0->seq_number) + 1;
         /* printf("total=%d generating %d", total, a); */
-        tmp = ghmm_cmodel_generate_sequences (smo1, 0, 0, a, 0, maxT + 1);
+        tmp = ghmm_cmodel_generate_sequences (smo1, 0, 0, a, maxT + 1);
         ghmm_cseq_add (seq0, tmp);
         ghmm_cseq_free (&tmp);
 

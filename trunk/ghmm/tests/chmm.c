@@ -79,7 +79,6 @@ int single_state_continuous()
 				      1,  /* random seed */
 				      10, /* length of sequences */
 				      10, /* sequences */
-				      0,  /* label */
 				      0  /* maximal sequence length 0: no limit*/
 				      );
   /* print out sequences */
@@ -118,7 +117,6 @@ int single_state_continuous()
 					 1,  /* random seed */
 					 10, /* length of sequences */
 					 10, /* sequences */
-					 0,  /* label */
 					 0   /* maximal sequence length 0: no limit*/
 					 );
 

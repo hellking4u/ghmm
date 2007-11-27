@@ -250,13 +250,12 @@ extern "C" {
 			generator is not initialized.
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
-    @param label:       label tag
     @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
 */
 
   ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
                                            int global_len, long seq_number,
-                                           long label, int Tmax);
+                                           int Tmax);
 
 /** 
     Computes sum over all sequence of
