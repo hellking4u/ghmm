@@ -215,7 +215,7 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
         double get_random_var(int state, int m);
 
-        ghmm_cseq* generate_sequences(int seed, int global_len, long seq_number, long label, int Tmax);
+        ghmm_cseq* generate_sequences(int seed, int global_len, long seq_number, int Tmax);
 
         int likelihood(ghmm_cseq *sqd, double *log_p);
 

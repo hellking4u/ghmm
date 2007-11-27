@@ -42,11 +42,10 @@
 %include cstring.i
 
 %include constraints.i
-%include exception.i    
+%include exception.i
 %include typemaps.i
 
-/* this will not work if we build ghmmwrapper out of the ghmm tree
-   include ../config.h twice, once for swig and once for CC */
+/* include ../ghmm/ghmmconfig.h twice, once for swig and once for CC */
 %{
 #include "../ghmm/ghmmconfig.h"
 #include "../ghmm/randvar.h"
@@ -220,8 +219,8 @@ extern double ighmm_rand_normal_density_trunc(double x, double mean, double u, d
 %}
 %enddef
 
+// double *log_p is used as additional return value
 %apply double *OUTPUT {double *log_p};
-
 
 %include wrapper_alphabet.i
 
