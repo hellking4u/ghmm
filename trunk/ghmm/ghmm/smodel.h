@@ -250,7 +250,7 @@ extern "C" {
 			generator is not initialized.
     @param global_len:  length of sequences (=0: automatically via final states)
     @param seq_number:  number of sequences
-    @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1 
+    @param Tmax:        maximal sequence length, set to MAX_SEQ_LEN if -1
 */
 
   ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
