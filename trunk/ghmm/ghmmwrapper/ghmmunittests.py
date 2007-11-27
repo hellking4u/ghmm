@@ -956,13 +956,17 @@ class StateLabelHMMTests(unittest.TestCase):
     
    
     def testlabeledviterbi(self):
-        seq = ghmm.EmissionSequence(ghmm.DNA, ['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'])
+        seq = ghmm.SequenceSet(ghmm.DNA, [['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'], ['a','c','g','t']])
         
-        p = self.model.labeledViterbi(seq)
+        path, logp = self.model.labeledViterbi(seq[0])
 
-        self.assertEqual(p[0], ['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
-        self.assertEqual(round(p[1],14) ,round(-39.893892710502115,14))
+        self.assertEqual(path, ['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
+        self.assertEqual(round(logp,14) ,round(-39.893892710502115,14))
 
+        paths, logps = self.model.labeledViterbi(seq)
+        
+        self.assertEqual(path, paths[0])
+        self.assertEqual(logp, logps[0])
 
     # TO DO: testing XML-file read
    
