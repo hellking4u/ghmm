@@ -8,6 +8,8 @@ SUBDIRS = .
 
 PYTHON=python
 
+PYTHONVER := $(shell $(PYTHON) --version 2>&1 | cut -c 8-10)
+
 SWIG_INTERFACE_FILES = ghmmwrapper.i \
                        wrapper_alphabet.i \
                        wrapper_cseq.i \
@@ -29,7 +31,7 @@ install: setup.py all
 	$(PYTHON) setup.py install --prefix=${prefix}
 
 test: ghmmunittests.py all
-	PYTHONPATH=./build/lib.linux-i686-2.4/:$(PYTHONPATH) LD_LIBRARY_PATH=../ghmm/.libs:$(LD_LIBRARY_PATH) $(PYTHON) ghmmunittests.py
+	PYTHONPATH=./build/lib.linux-i686-$(PYTHONVER)/:$(PYTHONPATH) LD_LIBRARY_PATH=../ghmm/.libs:$(LD_LIBRARY_PATH) $(PYTHON) ghmmunittests.py
 
 coverage: ghmmunittests.py all
 	coverage.py -e
