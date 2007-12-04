@@ -175,7 +175,7 @@
 
 %inline %{
 // Set a Python function object as a callback function
-// Note : PyObject *pyfunc is remapped with a typempap
+// Note : PyObject *pyfunc is remapped with a typemap
 static void set_pylogging(PyObject *pyfunc) {
   ghmm_set_logfunc(PythonCallBack, (void *) pyfunc);
   Py_INCREF(pyfunc);
@@ -249,6 +249,60 @@ extern void free(void*);
 ARRAY(int)
 ARRAY(long)
 ARRAY(double)
+
+%typemap(in) (int *pylist, size_t length) {
+  int i;
+  if (PySequence_Check($input)) {
+    $2 = PySequence_Size($input);
+    $1 = int_array_alloc($2);
+    if (!$1) {
+      PyErr_SetString(PyExc_TypeError,"Could not allocate a int_array with $2 entries");
+      return NULL;
+    }     
+    for (i = 0; i < $2; i++) {
+      PyObject *o = PySequence_GetItem($input,i);
+      if (!PyInt_Check(o)) {
+         Py_XDECREF(o);
+         PyErr_SetString(PyExc_ValueError,"Expecting a sequence of integers");
+         free($1);
+         return NULL;
+      }
+      $1[i] = (int)PyInt_AsLong(o);
+      Py_DECREF(o);
+    }
+  }
+  else {
+    PyErr_SetString(PyExc_TypeError,"Expecting a sequence");
+    return NULL;
+  }
+}
+
+%typemap(in, numinputs=0) size_t *inputlength (size_t temp) {
+    $1 = &temp;
+}
+
+%typemap(argout) (size_t *inputlength) {
+    int i;
+    Py_XDECREF($result);   /* Blow away any previous result */
+    if (result) {
+        $result = PyList_New(*$1);
+        for (i=0; i<*$1; i++) {
+            PyList_SetItem($result, i, PyInt_FromLong(result[i]));
+        }
+    }
+    else {
+        PyErr_SetString(PyExc_ValueError,"got a null pointer");
+        return NULL;
+    } 
+}
+
+%inline %{
+int* list2int_array(int *pylist, size_t length) { return pylist; }
+int* int_array2list(int *array, size_t length, size_t *inputlength) {
+    *inputlength = length;
+    return array;
+}
+%}
 
 %define MATRIX(type)
 %inline %{
