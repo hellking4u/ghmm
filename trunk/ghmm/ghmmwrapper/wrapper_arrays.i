@@ -59,17 +59,24 @@ extern void free(void*);
     if (!$1) {
       PyErr_SetString(PyExc_TypeError,"Could not allocate a double_array with $2 entries");
       return NULL;
-    }     
+    }
     for (i = 0; i < $2; i++) {
-      PyObject *o = PySequence_GetItem($input,i);
-      if (!PyFloat_Check(o)) {
-         Py_XDECREF(o);
-         PyErr_SetString(PyExc_ValueError,"Expecting a sequence of floats");
-         free($1);
-         return NULL;
-      }
-      $1[i] = PyFloat_AsDouble(o);
-      Py_DECREF(o);
+        PyObject *o = PySequence_GetItem($input,i);
+        if (PyFloat_Check(o)) {
+            $1[i] = PyFloat_AsDouble(o);
+            Py_DECREF(o);
+        }
+        // conversion from int to double is without loss
+        else if (PyInt_Check(o)) {
+            $1[i] = (double)PyInt_AsLong(o);
+            Py_DECREF(o);
+        }
+        else {
+            Py_XDECREF(o);
+            PyErr_SetString(PyExc_ValueError,"Expecting a sequence of numbers");
+            free($1);
+            return NULL;
+        }
     }
   }
   else {
