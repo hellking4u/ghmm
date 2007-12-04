@@ -40,28 +40,10 @@ from modhmmer import *
 from random import *
 
 
-def list2double_array(lisems):
-    "converts python list to C double array"
-    arrems = ghmmwrapper.double_array_alloc(len(lisems))
-    for i in range(len(lisems)):
-        ghmmwrapper.double_array_setitem(arrems, i, lisems[i])
-    return arrems
-
-def double_array2list(carray,length):
-    "converts C double array to python list."
-    l = []
-    for i in range(length):
-        l.append(ghmmwrapper.double_array_getitem(carray, i))
-    return l
-
 def double_matrix2list(cmatrix, row, col):
     llist = []
     for i in range(row):
-        llist.append([])    
-     
-    for i in range(row):
-        for j in range(col):
-            llist[i].append(ghmmwrapper.double_matrix_getitem(cmatrix, i, j))
+        llist.append(ghmmwrapper.double_array2list(ghmmwrapper.double_matrix_get_col(cmatrix, i), col))
     return llist
 
 
@@ -75,7 +57,7 @@ def list2double_matrix(matrix):
     seq = ghmmwrapper.double_matrix_alloc_row(cols)
     col_len = []
     for i in range(cols):
-        col = list2double_array(matrix[i])
+        col = ghmmwrapper.list2double_array(matrix[i])
         ghmmwrapper.double_matrix_set_col(seq, i, col)
         col_len.append(len(matrix[i]))
 
