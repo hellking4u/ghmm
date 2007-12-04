@@ -47,28 +47,13 @@ def list2double_array(lisems):
         ghmmwrapper.double_array_setitem(arrems, i, lisems[i])
     return arrems
 
-def list2int_array(lisems):
-    "converts python list to C int array"
-    arrems = ghmmwrapper.int_array_alloc(len(lisems))
-    for i in range(len(lisems)):
-        ghmmwrapper.int_array_setitem(arrems, i, lisems[i])
-    return arrems
-
-
 def double_array2list(carray,length):
     "converts C double array to python list."
     l = []
     for i in range(length):
         l.append(ghmmwrapper.double_array_getitem(carray, i))
     return l
-    
-def int_array2list(carray,length):
-    "converts C double array to python list."
-    l = []
-    for i in range(length):
-        l.append(ghmmwrapper.int_array_getitem(carray, i))
-    return l
-    
+
 def double_matrix2list(cmatrix, row, col):
     llist = []
     for i in range(row):
@@ -106,7 +91,7 @@ def list2int_matrix(matrix):
     seq = ghmmwrapper.int_matrix_alloc_row(rows)
     col_len = []
     for i in range(rows):
-        col = list2int_array(matrix[i])
+        col = ghmmwrapper.list2int_array(matrix[i])
         ghmmwrapper.int_matrix_set_col(seq, i, col)
         col_len.append(len(matrix[i]))
 
@@ -116,11 +101,7 @@ def list2int_matrix(matrix):
 def int_matrix2list(cmatrix,row,col):
     llist = []
     for i in range(row):
-        llist.append([])    
-     
-    for i in range(row):
-        for j in range(col):
-            llist[i].append(ghmmwrapper.int_matrix_getitem(cmatrix,i,j) )
+        llist.append(ghmmwrapper.int_array2list(ghmmwrapper.int_matrix_get_col(cmatrix,i),col))
     return llist
 
 
