@@ -157,32 +157,33 @@ static void viterbi_silent(ghmm_dmodel *mo, int t, local_store_t *v)
 {
 #define CUR_PROC "viterbi_silent"
     int topocount;
-    int i, k;
+    int i, St, i_id, max_id;
     double max_value, value;
 
-    for (topocount = 0; topocount < mo->topo_order_length; topocount++) {
-        k = mo->topo_order[topocount];
-        if (mo->silent[k]) {    /* Silent states */
+    for (topocount=0; topocount < mo->topo_order_length; topocount++) {
+        St = mo->topo_order[topocount];
+        if (mo->silent[St]) {    /* Silent states */
             /* Determine the maximum */
             /* max_phi = phi[i] + log_in_a[j][i] ... */
             max_value = -DBL_MAX;
-            v->psi[t][k] = -1;
-            for (i = 0; i < mo->s[k].in_states; i++) {
-
-                if (v->phi[mo->s[k].in_id[i]] != +1 && v->log_in_a[k][i] != +1) {
-                    value = v->phi[mo->s[k].in_id[i]] + v->log_in_a[k][i];
+            max_id = -1;
+            for (i = 0; i < mo->s[St].in_states; i++) {
+                i_id = mo->s[St].in_id[i];
+                if (v->phi[i_id] != +1 && v->log_in_a[St][i] != +1) {
+                    value = v->phi[i_id] + v->log_in_a[St][i];
                     if (value > max_value) {
                         max_value = value;
-                        v->psi[t][k] = mo->s[k].in_id[i];
+                        max_id = i_id;
                     }
                 }
             }
             /* No maximum found (that is, state never reached)
                or the output O[t] = 0.0: */
-            if (max_value == -DBL_MAX) {
-                v->phi[k] = +1;
+            if (max_id < 0) {
+                v->phi[St] = +1;
             } else {
-                v->phi[k] = max_value;
+                v->phi[St] = max_value;
+                v->psi[t][St] = max_id;
             }
         }
     }
@@ -215,7 +216,7 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
 #define CUR_PROC "ghmm_dmodel_viterbi"
 
     int *state_seq = NULL;
-    int t, j, i, k, St;
+    int t, j, i, i_id, St, max_id;
     double value, max_value, *temp;
     local_store_t *v;
 
@@ -288,31 +289,29 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
             v->psi[t][j] = -1;
         }
 
-        for (k = 0; k < mo->N; k++) {
+        for (St=0; St < mo->N; St++) {
             /* Determine the maximum */
             /* max_phi = phi[i] + log_in_a[j][i] ... */
-            if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[k]) {
-                St = k;
+            if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[St]) {
                 max_value = -DBL_MAX;
-                v->psi[t][St] = -1;
+                max_id = -1;
                 for (i = 0; i < mo->s[St].in_states; i++) {
-                    if (v->phi[mo->s[St].in_id[i]] != +1 && v->log_in_a[St][i] != +1) {
-                        value = v->phi[mo->s[St].in_id[i]] + v->log_in_a[St][i];
+                    i_id = mo->s[St].in_id[i];
+                    if (v->phi[i_id] != +1 && v->log_in_a[St][i] != +1) {
+                        value = v->phi[i_id] + v->log_in_a[St][i];
                         if (value > max_value) {
                             max_value = value;
-                            v->psi[t][St] = mo->s[St].in_id[i];
+                            max_id = i_id;
                         }
                     }
                 }
 
                 /* No maximum found (that is, state never reached)
                    or the output O[t] = 0.0: */
-                if (max_value == -DBL_MAX ||    /* and then also: (v->psi[t][j] == -1) */
-                    v->log_b[St][o[t]] == +1) {
-                    v->phi_new[St] = +1;
-                } else
+                if (max_id >= 0 && v->log_b[St][o[t]] != +1) {
                     v->phi_new[St] = max_value + v->log_b[St][o[t]];
-
+                    v->psi[t][St]  = max_id;
+                }
             }
         }                       /* complete time step for emitting states */
 
@@ -422,9 +421,9 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
         }
         /* reversing order */
         for (i = 0; i < floor(cur_len_path / 2.0); i++) {
-            k = state_seq[i];
+            St = state_seq[i];
             state_seq[i] = state_seq[cur_len_path - 1 - i];
-            state_seq[cur_len_path - 1 - i] = k;
+            state_seq[cur_len_path - 1 - i] = St;
         }
         *pathlen = cur_len_path;
     }
