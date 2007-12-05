@@ -1048,12 +1048,11 @@ class SequenceSet(object):
         """
         Returns the state paths from which the sequences were generated as a Python list of lists.
         """
+        states_len = ghmmwrapper.int_array2list(self.cseq.states_len, len(self))
         l_state = []
-        for i in range(len(self)):
-            ls_i = []
-            for j in range(ghmmwrapper.int_array_getitem(self.cseq.states_len,i) ):
-                ls_i.append(ghmmwrapper.int_matrix_getitem(self.cseq.states,i,j))
-            l_state.append(ls_i)
+        for i, length in enumerate(states_len):
+            col = ghmmwrapper.int_matrix_get_col(self.cseq.states, i)
+            l_state.append(ghmmwrapper.int_array2list(col, length))
 
         return l_state
 
