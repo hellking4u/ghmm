@@ -3549,11 +3549,7 @@ class GaussianEmissionHMM(HMM):
             else:
                 viterbiPath = None
 
-            onePath = []
-            for j in range(seq_len):                
-                onePath.append( ghmmwrapper.int_array_getitem(viterbiPath,j) )
-            
-
+            onePath = ghmmwrapper.int_array2list(viterbiPath, seq_len)
             allPaths.append(onePath)
             allLogs.append(log_p)
         
