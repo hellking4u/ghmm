@@ -48,12 +48,12 @@ def double_matrix2list(cmatrix, row, col):
 
 
 def list2double_matrix(matrix):
-    """ Allocation and initialization of a double** based on a   
+    """ Allocation and initialization of a double** based on a
         two dimensional Python list (list of lists). The number of elements
         in each column can vary.
     """
     cols = len(matrix)
-    
+
     seq = ghmmwrapper.double_matrix_alloc_row(cols)
     col_len = []
     for i in range(cols):
@@ -64,12 +64,12 @@ def list2double_matrix(matrix):
     return (seq, col_len)
 
 def list2int_matrix(matrix):
-    """ Allocation and initialization of an int** based on a   
+    """ Allocation and initialization of an int** based on a
         two dimensional Python list (list of lists). The number of elements
         in each column can vary.
     """
     rows = len(matrix)
-    
+
     seq = ghmmwrapper.int_matrix_alloc_row(rows)
     col_len = []
     for i in range(rows):
@@ -125,7 +125,7 @@ def extract_out(lisprobs):
 #        for i in range(len(lisprobs[0])):
 #            if lisprobs[j][i] != 0 and i not in lis:
 #                lis.append(i)
-#    print "lis: ", lis            
+#    print "lis: ", lis
 #    trans_id   = ghmmwrapper.int_array_alloc(len(lis))
 #    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
     # creating list with positive probabilities
@@ -133,7 +133,7 @@ def extract_out(lisprobs):
 #        for j in range(len(lis)):
 #            ghmmwrapper.set_2d_arrayd(probsarray,k,j, lisprobs[k][lis[j]])
 #    trans_prob = twodim_double_array(probsarray, cos, len(lis)) # python CLASS, C internal
-#    
+#
 #    print trans_prob
     # initializing c state index array
 #    for i in range(len(lis)):
@@ -149,7 +149,7 @@ def extract_out_cos(transmat, cos, state):
 
         Allocates: .out_id vector and .out_a array (of size cos x N)
     """
-    
+
     lis = []
     # parsing indixes belonging to postive probabilites
     for j in range(cos):
@@ -158,16 +158,16 @@ def extract_out_cos(transmat, cos, state):
                 lis.append(i)
 
     #lis.sort()
-    #print "lis: ", lis            
-    
+    #print "lis: ", lis
+
     trans_id   = ghmmwrapper.int_array_alloc(len(lis))
     probsarray = ghmmwrapper.double_matrix_alloc(cos, len(lis)) # C-function
-    
+
     # creating list with positive probabilities
     for k in range(cos):
         for j in range(len(lis)):
             ghmmwrapper.double_matrix_setitem(probsarray, k, j, transmat[k][state][lis[j]])
-    
+
     # initializing C state index array
     for i in range(len(lis)):
         ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
@@ -188,23 +188,23 @@ def extract_in_cos(transmat, cos, state):
     for j in range(cos):
         transmat_col_state = map( lambda x: x[state], transmat[j])
         for i in range(len(transmat_col_state)):
-            
+
             if transmat_col_state[i] != 0.0 and i not in lis:
                 lis.append(i)
 
     #lis.sort()
-    #print "lis: ", lis            
+    #print "lis: ", lis
 
 
-    
+
     trans_id   = ghmmwrapper.int_array_alloc(len(lis))
     probsarray = ghmmwrapper.double_matrix_alloc(cos, len(lis)) # C-function
-    
+
     # creating list with positive probabilities
     for k in range(cos):
         for j in range(len(lis)):
             ghmmwrapper.double_matrix_setitem(probsarray,k,j, transmat[k][lis[j]][state])
-    
+
     # initializing C state index array
     for i in range(len(lis)):
         ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
@@ -212,7 +212,7 @@ def extract_in_cos(transmat, cos, state):
 
 class twodim_double_array:
     "Two-dimensional C-Double Array"
-    
+
     def __init__(self,array, rows, columns, rowlabels=None, columnlabels=None):
         "Constructor"
         self.array = array
@@ -221,7 +221,7 @@ class twodim_double_array:
         self.size = (rows,columns)
         self.rowlabels =rowlabels
         self.columnlabels = columnlabels
-        
+
     def __getitem__(self,index):
         "defines twodim_double_array[index[0],index[1]]"
         return ghmmwrapper.double_matrix_getitem(self.array,index[0],index[1])
@@ -230,7 +230,7 @@ class twodim_double_array:
         "defines twodim_double_array[index[0],index[1]]"
         if (len(index) == 2):
             ghmmwrapper.set_2d_arrayd(self.array,index[0],index[1],value)
-                
+
     def __str__(self):
         "defines string representation"
         strout = "\n"
@@ -282,14 +282,14 @@ class twodim_double_array:
 ##             strout += "\t"
 ##             strout += "\n"
 ##         return strout
-        
-            
+
+
 def classNumber(A):
     """ Returns the number of transition classes in the matrix A   """
     cos = 0
     if type(A[0][0]) == list:
         cos = len(A)
-    else: 
+    else:
         cos = 1
     return cos
 

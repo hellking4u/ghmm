@@ -85,7 +85,7 @@ class AlphabetTests(unittest.TestCase):
 
     def testinternalexternal(self):
         """ Check that internal -> external is a bijection """
-        
+
         # print"\ntestinternalexternal ",
         for l in self.dna:
             self.assertEqual(l, self.dnaAlphabet.external(self.dnaAlphabet.internal(l)))
@@ -95,14 +95,14 @@ class AlphabetTests(unittest.TestCase):
         self.assertRaises(KeyError, self.dnaAlphabet.internal, 'x')
         # remove this assertion because -1 now represents a gap '-'
         # self.assertRaises(KeyError, self.dnaAlphabet.external, -1)
-        
+
         self.assertRaises(KeyError, self.dnaAlphabet.external, len(self.dna) + 1)
-    
+
 
     def testinternalexternalSequence(self):
         """ Check internal -> external applied to a sequence """
         # print"\ntestinternalexternalSequence ",
-        
+
         extseq = ['a','c','g','t','a','g','t']
         intseq = self.dnaAlphabet.internalSequence(extseq)
         self.assertEqual(min(intseq), 0)
@@ -113,26 +113,26 @@ class AlphabetTests(unittest.TestCase):
             self.assertEqual(intseq[i], self.dnaAlphabet.internal(extseq[i]))
             self.assertEqual(result[i], self.dnaAlphabet.external(intseq[i]))
 
-        
+
         extseq = ['a','c','g','x','a','g','t']
         self.assertRaises(KeyError, self.dnaAlphabet.internalSequence, extseq)
         intseq[3] = 5
         self.assertRaises(KeyError, self.dnaAlphabet.externalSequence, intseq)
-       
-        
-                            
+
+
+
     def testlen(self):
         #print"\ntestlen ",
-        
+
         self.assertEqual(len(self.binaryAlphabet),2)
         self.assertEqual(len(self.dnaAlphabet),len(self.dna))
 
         self.assertEqual(len(self.binaryAlphabet),2)
         self.assertEqual(len(self.dnaAlphabet),len(self.dna))
-    
+
 
 class EmissionSequenceTests(unittest.TestCase):
-    
+
     def setUp(self):
         self.i_dom = ghmm.IntegerRange(0,5)
         self.d_dom = ghmm.Float()
@@ -147,33 +147,33 @@ class EmissionSequenceTests(unittest.TestCase):
         #print"\ntestprint ",
         s = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1200034"
         self.assertEqual(self.i_seq.verboseStr(),s)
-        
+
         s2 = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1.3 2.1 0.8 0.1 0.03 3.6 43.3 "
         self.assertEqual(self.d_seq.verboseStr(),s2)
-        
-        
+
+
     def testattributes(self):
-        #print"\ntestattributes ", 
+        #print"\ntestattributes ",
         self.assertEqual(self.i_seq.cseq.state_labels,None)
-        self.assertEqual(self.i_seq.cseq.state_labels_len,None)    
-        self.assertEqual(self.i_seq.cseq.seq_number,1)    
-        self.assertEqual(len(self.i_seq),7)    
-    
-        self.assertEqual(self.d_seq.cseq.seq_number,1)    
-        self.assertEqual(len(self.d_seq),7) 
-        
+        self.assertEqual(self.i_seq.cseq.state_labels_len,None)
+        self.assertEqual(self.i_seq.cseq.seq_number,1)
+        self.assertEqual(len(self.i_seq),7)
+
+        self.assertEqual(self.d_seq.cseq.seq_number,1)
+        self.assertEqual(len(self.d_seq),7)
+
     def testitemaccess(self):
         # print"\ntestitemaccess ",
         b = self.i_seq[5]
-        self.assertEqual(b,3)    
+        self.assertEqual(b,3)
         self.i_seq[5] = 1
-        self.assertEqual(self.i_seq[5],1)            
-        
+        self.assertEqual(self.i_seq[5],1)
+
         b2 = self.d_seq[1]
-        self.assertEqual(b2,2.1)    
+        self.assertEqual(b2,2.1)
         self.d_seq[1] = 8.34
-        self.assertEqual(self.d_seq[1],8.34) 
-    
+        self.assertEqual(self.d_seq[1],8.34)
+
     def testFileIO(self):
         # print"\ntestFileIO ",
         self.i_seq.write("testdata/es_discrete_testwrite.seq")
@@ -181,7 +181,7 @@ class EmissionSequenceTests(unittest.TestCase):
 
         discrete_seq   = ghmm.EmissionSequence(self.i_dom, "testdata/es_discrete_testwrite.seq")
         continuous_seq = ghmm.EmissionSequence(self.d_dom, "testdata/es_continuous_testwrite.seq")
-        
+
     def testweightaccess(self):
         # print"\ntestweightaccess ",
         w = self.i_seq.getWeight()
@@ -197,9 +197,9 @@ class EmissionSequenceTests(unittest.TestCase):
 
     def testlabelaccess(self):
         self.i_seq.setSeqLabel(8)
-        l = self.i_seq.getSeqLabel()   
+        l = self.i_seq.getSeqLabel()
         self.assertEqual(l,8)
-        
+
         l = self.d_seq.getSeqLabel()
         self.assertEqual(l,-1)
         self.d_seq.setSeqLabel(5)
@@ -223,13 +223,13 @@ class EmissionSequenceTests(unittest.TestCase):
 
 
 class SequenceSetTests(unittest.TestCase):
-    
+
     def setUp(self):
         #print "----------------- Setting up... ---------"
         self.i_alph = ghmm.IntegerRange(0,7)
         self.d_alph = ghmm.Float()
         self.l_domain = ghmm.LabelDomain(['E','R','T'])
-        
+
         self.i_seq = ghmm.SequenceSet(self.i_alph,[ [1,2,3,4,5],[0,3,0],[4,3,2,2,1,1,1,1], [0,0,0,2,1],[1,1,1,1,1,1] ])
         self.d_seq = ghmm.SequenceSet(self.d_alph,[ [1.5,2.3,3.7,4.1,5.1],[0.0,3.1,0.7],[4.4,3.05,2.0,2.4,1.2,1.8,1.0,1.0], [0.4,0.1,0.33,2.7,1.345],[1.0,1.0,1.0,1.0,1.0,1.0] ])
 
@@ -242,8 +242,8 @@ class SequenceSetTests(unittest.TestCase):
                           ['E','R','T','T','E','R','T'],
                           ['E','R','T','T','R','T','T','R','T','E','T'],
                           ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','E','T'],
-                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R'],]        
- 
+                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R'],]
+
         self.l_seq  = ghmm.SequenceSet(ghmm.DNA, self.seqList,labelDomain=self.l_domain,labelInput= self.labelList)
 
 
@@ -251,7 +251,7 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(len(self.l_seq), 5)
 
         for i in range(len(self.l_seq)):
-            
+
             # testing length
             self.assertEqual(len(self.l_seq.getSequence(i)), len(self.seqList[i]))
 
@@ -268,8 +268,8 @@ class SequenceSetTests(unittest.TestCase):
 
     # XXX check different input types
     def testseqerror(self):
-        
-        # self.assertRaises(ghmm.UnknownInputType,ghmm.SequenceSet,)        
+
+        # self.assertRaises(ghmm.UnknownInputType,ghmm.SequenceSet,)
         pass
 
 
@@ -283,24 +283,24 @@ class SequenceSetTests(unittest.TestCase):
 
         # XXX str(self.l_seq)
 
-       
+
     def testattributes(self):
         #print"\n----------------- testattributes "
         self.assertEqual(len(self.i_seq),5)
         self.assertEqual(self.i_seq.sequenceLength(1),3)
-        
+
         self.assertEqual(len(self.d_seq),5)
         self.assertEqual(self.d_seq.sequenceLength(4),6)
-     
+
     def testgetitem(self):
         #print"\n----------------- testgetitem ",
         s = self.i_seq[2]
         self.assertEqual(len(s),8)
-        
+
         s2 = self.d_seq[4]
         self.assertEqual(len(s2),6)
-        
-    
+
+
     def testweightaccess(self):
         #print"\n----------------- testweightaccess "
         w = self.i_seq.getWeight(4)
@@ -308,13 +308,13 @@ class SequenceSetTests(unittest.TestCase):
         self.i_seq.setWeight(4,4.0)
         w = self.i_seq.getWeight(4)
         self.assertEqual(w,4.0)
-        
+
         w2 = self.d_seq.getWeight(2)
         self.assertEqual(w2,1.0)
         self.d_seq.setWeight(2,7.0)
         w2 = self.d_seq.getWeight(2)
         self.assertEqual(w2,7.0)
-        
+
 
     def testmerge(self):
         """Merging two SequenceSets   """
@@ -322,7 +322,7 @@ class SequenceSetTests(unittest.TestCase):
         wrong = 4  # wrong argument type to merge
         self.assertRaises(TypeError,self.i_seq.merge,wrong)
 
-        mseq = ghmm.SequenceSet(self.i_alph,[ [1,4,0,4,5,3],[1,2,3,0] ])        
+        mseq = ghmm.SequenceSet(self.i_alph,[ [1,4,0,4,5,3],[1,2,3,0] ])
         self.i_seq.merge(mseq)
         self.assertEqual(len(self.i_seq),7)
         s = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111\nSeq 5, length 6, weight 1.0:\n140453\nSeq 6, length 4, weight 1.0:\n1230"
@@ -330,13 +330,13 @@ class SequenceSetTests(unittest.TestCase):
 
         #print self.i_seq
 
-        d_mseq = ghmm.SequenceSet(self.d_alph,[ [7.5,4.0,1.2],[0.4,0.93,3.3,2.54] ])    
+        d_mseq = ghmm.SequenceSet(self.d_alph,[ [7.5,4.0,1.2],[0.4,0.93,3.3,2.54] ])
         self.d_seq.merge(d_mseq)
         self.assertEqual(len(self.d_seq),7)
         s2 = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 3, weight 1.0:\n0.0 3.1 0.7 \nSeq 2, length 8, weight 1.0:\n4.4 3.05 2.0 2.4 1.2 1.8 1.0 1.0 \nSeq 3, length 5, weight 1.0:\n0.4 0.1 0.33 2.7 1.345 \nSeq 4, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 \nSeq 5, length 3, weight 1.0:\n7.5 4.0 1.2 \nSeq 6, length 4, weight 1.0:\n0.4 0.93 3.3 2.54 "
-        self.assertEqual(self.d_seq.verboseStr(),s2)        
-        
-    
+        self.assertEqual(self.d_seq.verboseStr(),s2)
+
+
     def testgetsubset(self):
         #print"\n----------------- testgetsubset "
         i_subseq = self.i_seq.getSubset([2,1,3])
@@ -344,22 +344,22 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(i_subseq.verboseStr(),s)
         self.assertEqual(len(i_subseq),3)
         self.assertEqual(i_subseq.sequenceLength(0),8)
-        
+
         d_subseq = self.d_seq.getSubset([0,4])
         s2 = "\nNumber of sequences: 2\nSeq 0, length 5, weight 1.0:\n1.5 2.3 3.7 4.1 5.1 \nSeq 1, length 6, weight 1.0:\n1.0 1.0 1.0 1.0 1.0 1.0 "
         self.assertEqual(d_subseq.verboseStr(),s2)
         self.assertEqual(len(d_subseq),2)
         self.assertEqual(d_subseq.sequenceLength(0),5)
-        
+
     def testwrite(self):
         #print"\n-----------------testwrite "
-        self.i_seq.write("testdata/ghmmunittests_testwrite.seq") 
-        self.d_seq.write("testdata/ghmmunittests_testwrite.seq") 
+        self.i_seq.write("testdata/ghmmunittests_testwrite.seq")
+        self.d_seq.write("testdata/ghmmunittests_testwrite.seq")
 
-       
+
     def testlabelaccess(self):
         #print "\n ----------------- testlabelaccess"
-        self.i_seq.getSeqLabel(2)   
+        self.i_seq.getSeqLabel(2)
         l = self.d_seq.getSeqLabel(3)
         self.assertEqual(l,-1)
         self.d_seq.setSeqLabel(3,8)
@@ -401,7 +401,7 @@ class HMMBaseClassTests(unittest.TestCase):
 
     def testbaumWelchStepExeption(self):
         self.assertRaises(NotImplementedError, self.model.baumWelchStep, "nrSteps", "loglikelihoodCutoff")
-    
+
     def testbaumWelchDeleteExeption(self):
         self.assertRaises(NotImplementedError, self.model.baumWelchDelete)
 
@@ -440,54 +440,54 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,4)
-        
+
         pi = self.model.getInitial(2)
         self.assertEqual(pi,0)
         self.model.setInitial(2,0.5,fixProb=1)
         pi = self.model.getInitial(2)
         self.assertEqual(pi,0.5)
-        
+
         trans = self.model.getTransition(0,1)
         self.assertEqual(trans, 0.3)
         self.model.setTransition(0,1,0.6)
         trans = self.model.getTransition(0,1)
         self.assertEqual(trans, 0.6)
-        
+
         emission = self.model.getEmission(1)
         self.assertEqual(emission, [0.1, 0.0, 0.8, 0.1] )
-        
+
         # introducing silent state
         self.model.setEmission(1,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(1)
-        self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
+        self.assertEqual(emission,[0.0,0.0,0.0,0.0] )
         self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(1),1)
-        
+
         # removing silent state
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
-        self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
+        self.assertEqual(emission,[0.2,0.2,0.2,0.4] )
         self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(1),0)
-        
+
         # removing last silent state
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         emission = self.model.getEmission(2)
-        self.assertEqual(emission,[0.25,0.25,0.25,0.25])  
+        self.assertEqual(emission,[0.25,0.25,0.25,0.25])
         self.assertEqual(self.model.cmodel.model_type,256)
         self.assertEqual(self.model.getSilentFlag(2),0)
-    
+
         # inserting silent state
         self.model.setEmission(2,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(2)
-        self.assertEqual(emission,[0.0,0.0,0.0,0.0])  
+        self.assertEqual(emission,[0.0,0.0,0.0,0.0])
         self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(2),1)
 
     def testNewXML(self):
         log.debug("testNewXML -- begin")
         model = ghmm.HMMOpen('../doc/xml_example.xml')
-    
+
     def getModel(self):
         A  = [[0.3, 0.6,0.1],[0.0, 0.5, 0.5],[0.0,0.0,1.0]]
         B  = [[0.5, 0.5],[0.5,0.5],[1.0,0.0]]
@@ -495,22 +495,22 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         return ghmm.HMMFromMatrices(ghmm.IntegerRange(0,2),
                                     ghmm.DiscreteDistribution(ghmm.IntegerRange(0,2)),
                                     A, B, pi)
-        
+
     def testDel(self):
         """  test for explicit construction and destruction """
         log.debug("testDel -- begin")
         del self.model
         for i in range(100):
             mo = self.getModel()
-    
+
     def testAsMatrices(self):
         log.debug("testAsMatrices -- begin")
         tA,tB,tpi = self.model.asMatrices()
-        
+
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
-        self.assertEqual(self.pi,tpi)        
-            
+        self.assertEqual(self.pi,tpi)
+
     def testSample(self):
         log.debug("testSample -- begin")
         seq = self.model.sampleSingle(100, seed=3586662)
@@ -522,31 +522,31 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         log.debug("testBaumWelch -- begin")
         seq = self.model.sample(100,100,seed=3586662)
         self.assertRaises(NotImplementedError, self.model.baumWelch, seq, 5, 0.01)
-        
+
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         self.assertEqual(self.model.cmodel.model_type & 4, 0)
         self.model.baumWelch(seq,5,0.01)
         self.model.baumWelch(seq)
-        
+
     def testViterbi(self):
         log.debug("testViterbi -- begin")
         # Caution with an even number of consecutives 'g'
         # the model can produce two equal probable paths
-        
+
         f = lambda x: round(x, 13)
         g = lambda x: map(f, x)
 
         seq = ghmm.EmissionSequence(ghmm.DNA, [ 'c','c','g','c','c','g','g','g','g','g','c','g','g','g','c' ])
                                                #[0,  2,  0,  1,  0,  2,  0,  1,  0,  1,  0,  1,  0,  1,  0]
                                                #[0,  2,  0,  1,  0,  2,  0,  1,  0,  1,  0,  1,  0,  1,  0, 1, 0]
-                
+
         result = self.model.viterbi(seq)
         trueResult =  ([0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0], -19.698557965224637)
-        
+
         self.assertEqual (result[0], trueResult[0])
         self.assertEqual (f(result[1]), f(trueResult[1]))
-    
-        
+
+
         seq2 = ghmm.SequenceSet(ghmm.DNA, [['c','c','g','c','c','g','g','g','g','g','c','g','g','g','c'],
                                            ['c','g','g','g','g','g','c','t','g','c','g','g','t','c','c'],
                                            ['g','g','c','g','c','c','g','c','c','c','c','g','g','g','t'],
@@ -557,8 +557,8 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
                                            ['c','c','g','g','g','g','g','g','g','c','g','c','g','c','g'],
                                            ['g','g','g','g','c','c','g','g','g','c','g','c','g','g','g'],
                                            ['g','c','t','c','g','g','a','g','g','c','a','g','g','g','g']])
-        
-        
+
+
         path2 = self.model.viterbi(seq2)
         truePath2 = ([[0, 2, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
                       [0, 1, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 2, 0],
@@ -574,10 +574,10 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
                        -20.691809738234902, -21.595677950110499, -27.846425095148575,
                        -24.262906156692473, -19.516236408430682, -19.5162364084307,
                        -25.754561033470189])
-                
-        self.assertEqual (path2[0], truePath2[0])    
-        self.assertEqual (g(path2[1]), g(truePath2[1]))    
-        
+
+        self.assertEqual (path2[0], truePath2[0])
+        self.assertEqual (g(path2[1]), g(truePath2[1]))
+
 
     def testLoglikelihood(self):
         log.debug("testLoglikelihood -- begin")
@@ -592,7 +592,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         path,logp = self.model.viterbi(seq)
         logp = self.model.joined(seq,path)
         self.assert_(logp - 22.4303246929 < 10^-8, "Different results in logprob ")
-        
+
     def testFoBa(self):
         log.debug("testFoBa -- begin")
         #print self.model
@@ -602,17 +602,17 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
                                      'g','g','c','c','g','c','g','c','c','c',
                                      'g','c','g','c','g','g','c','t','c','c'])
 
-        (alpha,scale) = self.model.forward(seq)       
+        (alpha,scale) = self.model.forward(seq)
 
         f = lambda x: round(x, 13)
         g = lambda x: map(f, x)
-        
+
         talpha = [[0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.50453092851201675, 0.22588976929475116, 0.26957930219323206], [0.7142857142857143, 0.0, 0.2857142857142857], [0.0, 0.76923076923076916, 0.23076923076923075], [0.61307901907356943, 0.10899182561307905, 0.27792915531335155], [0.46113149992850677, 0.27262761546160807, 0.26624088460988515], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.50453092851201675, 0.22588976929475116, 0.26957930219323206], [0.48775986167826385, 0.24395091819263898, 0.26828922012909723], [0.71428571428571419, 0.0, 0.2857142857142857], [0.43640897755610969, 0.29925187032418948, 0.26433915211970072], [0.50453092851201675, 0.22588976929475116, 0.26957930219323206], [0.48775986167826385, 0.24395091819263898, 0.26828922012909723], [0.71428571428571419, 0.0, 0.2857142857142857], [0.7142857142857143, 0.0, 0.2857142857142857], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.50453092851201675, 0.22588976929475116, 0.26957930219323206], [0.7142857142857143, 0.0, 0.2857142857142857], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.7142857142857143, 0.0, 0.28571428571428575], [0.7142857142857143, 0.0, 0.28571428571428575], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.50453092851201675, 0.22588976929475116, 0.26957930219323206], [0.7142857142857143, 0.0, 0.2857142857142857], [0.0, 0.76923076923076916, 0.23076923076923075], [0.71428571428571419, 0.0, 0.2857142857142857], [0.7142857142857143, 0.0, 0.2857142857142857]]
         self.assertEqual(map(g, alpha),map(g, talpha))
-        
+
         tscale =   [0.69999999999999996, 0.57285714285714284, 0.56965087281795512, 0.38953070962658143, 0.027857142857142858, 0.56461538461538452, 0.57168937329700276, 0.39770983270578136, 0.57285714285714284, 0.56965087281795512, 0.57043689532898478, 0.39269141068371188, 0.57285714285714284, 0.56965087281795501, 0.57043689532898478, 0.39269141068371188, 0.34999999999999998, 0.34999999999999998, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284, 0.56965087281795512, 0.38953070962658143, 0.34999999999999998, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284, 0.40236907730673316, 0.34999999999999998, 0.34999999999999998, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284, 0.56965087281795512, 0.38953070962658143, 0.027857142857142858, 0.48461538461538456, 0.34999999999999998]
         self.assertEqual(map(f, scale), map(f,tscale))
-        
+
         beta = self.model.backward(seq,scale)
         tbeta = [[0.99999999999999944, 0.93777288282264037, 0.90665932423396078], [1.0387725400509094, 0.87202814099718418, 0.78865594147032159], [0.89851709082326969, 1.1552362596299182, 1.2835958440332425], [0.99999999999999956, 0.3333333333333332, 0.0], [0.99018797150167415, 0.92857142857142794, 0.89776315710630483], [1.0137817804861966, 0.8510489133365684, 0.76968247976175441], [0.88003858898536058, 1.1314781858383207, 1.2571979842648009], [0.999999999999999, 0.91297745742272951, 0.86946618613409465], [0.99615983039934863, 0.93417167590571015, 0.90317759865889091], [1.028991814771324, 0.86381742368004855, 0.7812302281344109], [0.89128509174829584, 1.1459379751049517, 1.2732644167832796], [0.99999999999999944, 0.91297745742272962, 0.86946618613409488], [0.99615983039934886, 0.93417167590571037, 0.90317759865889113], [1.0289918147713242, 0.86381742368004866, 0.78123022813441101], [0.89128509174829595, 1.1459379751049521, 1.2732644167832801], [0.99999999999999967, 1.2857142857142854, 1.4285714285714282], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.93777288282264093, 0.90665932423396134], [1.03877254005091, 0.87202814099718462, 0.78865594147032214], [0.89851709082327025, 1.1552362596299188, 1.2835958440332431], [1.0000000000000002, 1.285714285714286, 1.428571428571429], [1.0000000000000002, 0.83947939262472893, 0.75921908893709344], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.83947939262472882, 0.75921908893709322], [0.86984815618221256, 1.1183762008057019, 1.2426402231174465], [1.0, 0.93777288282264093, 0.90665932423396134], [1.03877254005091, 0.87202814099718462, 0.78865594147032214], [0.89851709082327025, 1.1552362596299188, 1.2835958440332431], [1.0000000000000002, 0.33333333333333343, 0.0], [0.72222222222222221, 0.92857142857142849, 1.0317460317460319], [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 1.0, 1.0]]
 
@@ -645,7 +645,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.model.setInitial(0, 2.0)
         self.model.normalize()
         self.assertEqual(1.0, self.model.getInitial(0))
-        
+
 class BackgroundDistributionTests(unittest.TestCase):
     " Tests for background distributions "
 
@@ -665,7 +665,7 @@ class BackgroundDistributionTests(unittest.TestCase):
     def test__str__(self):
         # we aren't interested in the output but the function should run fine
         str(self.model)
-        
+
     def testprint(self):
         #print "*** testprint"
         s = self.bg.verboseStr()
@@ -673,9 +673,9 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.assertEqual(s,ts)
 
     def testmodelbackgroundaccessfunctions(self):
-        
+
         #print "***  testmodelbackgroundaccessfunctions"
-        
+
         self.model.setBackgrounds(self.bg, [0,-1,1])
         # deleting background
         del(self.bg)
@@ -687,22 +687,22 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.model.setBackgrounds(self.bg,[0, -1, 1])
         self.model.applyBackgrounds([0.1, 0.2, .3])
         #print self.model
-        
+
         f = lambda x: round(x,15)
-        e1 = map(f, self.model.getEmission(0)) 
+        e1 = map(f, self.model.getEmission(0))
         e2 = map(f, self.model.getEmission(1))
         e3 = map(f, self.model.getEmission(2))
-                
+
         self.assertEqual(e1, [0.02, 0.48, 0.46, 0.04])
         self.assertEqual(e2, [0.1,  0.0,  0.8,  0.1])
         self.assertEqual(e3, [0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12, 0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
-        
+
 
     def testbackgroundtraining(self):
         # XXX test for background distributions
          self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-        
-    # XXX ...        
+
+    # XXX ...
 
 
 
@@ -714,7 +714,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.labels = ['One']*slength
         self.allLabels = ['a','b','c','d','e','f','g']
         self.l_domain= ghmm.LabelDomain(['One','a','b','c','d','e','f','g'])
-        
+
 
         self.A = [[0.0,0.5,0.5],[0.4,0.2,0.4],[0.3,0.3,0.4]]
         self.B = [[0.2,0.1,0.1,0.6],[0.3,0.1,0.1,0.5],
@@ -733,7 +733,7 @@ class StateLabelHMMTests(unittest.TestCase):
         # we aren't interested in the output but the function should run fine
         str(self.model)
 
-    #create a random model with len(LabelList) states and 
+    #create a random model with len(LabelList) states and
     def oneModel(self, LabelList):
         no_states = len(LabelList)
         A = []
@@ -751,7 +751,7 @@ class StateLabelHMMTests(unittest.TestCase):
             for j in range(no_states):
                 A_e[j] /= asum
             A.append(A_e)
-            
+
             bsum = 0
             B_e = []
             #get a random B-row
@@ -762,7 +762,7 @@ class StateLabelHMMTests(unittest.TestCase):
             for j in range(4):
                 B_e[j] /= bsum
             B.append(B_e)
-            
+
             #get random pi
             pi.append(random.random())
             pisum += pi[-1]
@@ -773,12 +773,12 @@ class StateLabelHMMTests(unittest.TestCase):
 
         return ghmm.HMMFromMatrices(ghmm.DNA, ghmm.DiscreteDistribution(ghmm.DNA),
                                     A, B, pi, None, self.l_domain, LabelList)
-            
+
     def testsample(self):
         # print"\ntestsample ",
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
-        
+
     def testaccessfunctions(self):
 
         # print"\ntestaccessfunctions",
@@ -800,18 +800,18 @@ class StateLabelHMMTests(unittest.TestCase):
 
         emission = self.model.getEmission(1)
         self.assertEqual(emission, [0.3,0.1,0.1,0.5] )
-        
+
         # introducing silent state
         self.model.setEmission(1,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(1)
-        self.assertEqual(emission,[0.0,0.0,0.0,0.0] ) 
+        self.assertEqual(emission,[0.0,0.0,0.0,0.0] )
         self.assertEqual(self.model.cmodel.model_type & 4, 4)
         self.assertEqual(ghmmwrapper.int_array_getitem(self.model.cmodel.silent,1),1)
 
         # removing silent state
         self.model.setEmission(1,[0.2,0.2,0.2,0.4])
         emission = self.model.getEmission(1)
-        self.assertEqual(emission,[0.2,0.2,0.2,0.4] )  
+        self.assertEqual(emission,[0.2,0.2,0.2,0.4] )
         #print "model_type = ",self.model.cmodel.model_type
         self.assertEqual(self.model.cmodel.model_type & 4,0)
         self.assertEqual(self.model.isSilent(1), False)
@@ -819,7 +819,7 @@ class StateLabelHMMTests(unittest.TestCase):
         # inserting silent state
         self.model.setEmission(0,[0.0,0.0,0.0,0.0])
         emission = self.model.getEmission(0)
-        self.assertEqual(emission,[0.0,0.0,0.0,0.0])  
+        self.assertEqual(emission,[0.0,0.0,0.0,0.0])
         self.assertEqual(self.model.cmodel.model_type & 4,4)
         self.assertEqual(ghmmwrapper.int_array_getitem(self.model.cmodel.silent,0),1)
 
@@ -828,7 +828,7 @@ class StateLabelHMMTests(unittest.TestCase):
         self.assertEqual(labels,['fst','scd','thr'])
         self.model.setLabels(['fst','thr','fst'])
         labels = self.model.getLabels()
-        self.assertEqual(labels, ['fst','thr','fst']) 
+        self.assertEqual(labels, ['fst','thr','fst'])
 
     def testonelabelcomparebackward(self):
         model = self.oneModel(['One']*11)
@@ -837,7 +837,7 @@ class StateLabelHMMTests(unittest.TestCase):
         # to be changed
         f = lambda x: round (x, 12)
         g = lambda x: map (f, x)
-        
+
         labelSequence      = self.labels
         (alpha, scale)     = model.forward( self.tSeq)
         (b_beta)           = model.backward( self.tSeq, scale)
@@ -849,7 +849,7 @@ class StateLabelHMMTests(unittest.TestCase):
 
     def testalldifferentlabelsbackward(self):
         model2 = self.oneModel(self.allLabels)
-        
+
         labelSequence = self.allLabels*4
 
         sequence = []
@@ -857,11 +857,11 @@ class StateLabelHMMTests(unittest.TestCase):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
 
         Seq  = ghmm.EmissionSequence(ghmm.DNA, sequence, self.l_domain,labelSequence)
-        
+
         (fl_logp, alpha, scale) =  model2.labeledForward( Seq, labelSequence)
         (bl_logp, bl_beta)      = model2.labeledBackward( Seq, labelSequence, scale)
 
-        #check if the beta matrix is at the appropriated entries 0 or different from 0 
+        #check if the beta matrix is at the appropriated entries 0 or different from 0
         for i in range(len(bl_beta)):
             i = len(bl_beta)-i-1
             for j in range(len(bl_beta[i])):
@@ -874,7 +874,7 @@ class StateLabelHMMTests(unittest.TestCase):
 
     def testonelabelcompareforward(self):
         model  = self.oneModel(['One']*11)
-        
+
         labelSequence          = self.labels
         (alpha, scale)         = model.forward(self.tSeq)
         (logp, lalpha, lscale) = model.labeledForward(self.tSeq, labelSequence )
@@ -882,21 +882,21 @@ class StateLabelHMMTests(unittest.TestCase):
         # compare beta matrizes from backward and labeledBackward (all states share one label)
         # XXX due to rounding errors in the Python floating point representation
         # we have to round for 15 decimal positions
-        
+
         f = lambda x: round(x,12) #XXX
         for i in range(len(alpha)):
             alpha[i] = map(f, alpha[i])
-            lalpha[i] = map(f, lalpha[i])        
-        
+            lalpha[i] = map(f, lalpha[i])
+
         self.assertEqual(alpha, lalpha)
 
         scale = map(f, scale)
-        lscale = map(f, lscale)        
+        lscale = map(f, lscale)
         self.assertEqual(scale, lscale)
 
     def testalldifferentlabelsforward(self):
         model2  = self.oneModel(self.allLabels)
-        
+
         labelSequence = self.allLabels*4
 
         sequence = []
@@ -907,7 +907,7 @@ class StateLabelHMMTests(unittest.TestCase):
 
         (logp, alpha, scale) =  model2.labeledForward(Seq, labelSequence)
 
-        #check if the beta matrix is 0 or different from 0 at the appropriate entries 
+        #check if the beta matrix is 0 or different from 0 at the appropriate entries
         for i in range(len(alpha)):
             i = len(alpha)-i-1
             for j in range(len(alpha[i])):
@@ -919,7 +919,7 @@ class StateLabelHMMTests(unittest.TestCase):
                                         + ", value: " + str(alpha[i][j]))
 
 
-    def testkbest(self): 
+    def testkbest(self):
         seq = ghmm.EmissionSequence(self.model.emissionDomain,
                                     ['a','c','g','t','t','a','a','a','c','g',
                                      't','g','a','c','g','c','a','t','t','t'],
@@ -932,17 +932,17 @@ class StateLabelHMMTests(unittest.TestCase):
         path = self.model.kbest(seq)
         self.assertEqual(path,(['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd',
                                 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr',
-                                'scd', 'fst', 'scd', 'fst'], -35.735009627142446)) 
+                                'scd', 'fst', 'scd', 'fst'], -35.735009627142446))
 
 
     def testgradientdescent(self):
         A2 = [[0.3,0.2,0.5],[0.1,0.8,0.1],[0.1,0.4,0.5]]
         B2 = [[0.4,0.2,0.2,0.2],[0.4,0.2,0.2,0.2],
              [0.2,0.1,0.1,0.6,   0.25,0.25,0.25,0.25,   0.5,0.1,0.3,0.1, 0.2,0.1,0.1,0.6]]
-        pi2 = [0.5,0.5,0.0] 
-    
+        pi2 = [0.5,0.5,0.0]
+
         model2 = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), A2, B2, pi2,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
-        
+
         train = self.model.sample(10,300,seed=3586662)
         model2.gradientSearch(train)
 
@@ -950,26 +950,26 @@ class StateLabelHMMTests(unittest.TestCase):
         # print"\ntestbaumwelch ",
         seq = self.model.sample(100,100,seed=3586662)
         self.model.labeledBaumWelch(seq,5,0.01)
-        
+
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-        self.model.labeledBaumWelch(seq,5,0.01)   
-    
-   
+        self.model.labeledBaumWelch(seq,5,0.01)
+
+
     def testlabeledviterbi(self):
         seq = ghmm.SequenceSet(ghmm.DNA, [['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'], ['a','c','g','t']])
-        
+
         path, logp = self.model.labeledViterbi(seq[0])
 
         self.assertEqual(path, ['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
         self.assertEqual(round(logp,14) ,round(-39.893892710502115,14))
 
         paths, logps = self.model.labeledViterbi(seq)
-        
+
         self.assertEqual(path, paths[0])
         self.assertEqual(logp, logps[0])
 
     # TO DO: testing XML-file read
-   
+
 
 class GaussianEmissionHMMTests(unittest.TestCase):
 
@@ -987,38 +987,38 @@ class GaussianEmissionHMMTests(unittest.TestCase):
 
     def testaccessfunctions(self):
         # print"\ntestaccessfunctions",
-        
+
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,1)
-        
+
         pi = self.model.getInitial(2)
         self.assertEqual(pi,0)
         self.model.setInitial(2,0.5,fixProb=1)
         pi = self.model.getInitial(2)
         self.assertEqual(pi,0.5)
-        
+
         trans = self.model.getTransition(0,1)
         self.assertEqual(trans, 1.0)
         self.model.setTransition(0,1,0.6)
-        
+
         trans = self.model.getTransition(0,1)
         self.assertEqual(trans, 0.6)
-        
+
         emission = self.model.getEmission(1)
         self.assertEqual(emission, (-1.0,0.5) )
         self.model.setEmission(1,(3.0,0.5))
-        
+
         emission = self.model.getEmission(1)
         self.assertEqual(emission, (3.0,0.5))
-    
+
     def testtomatrices(self):
         # print"\ntesttomatrices ",
         tA,tB,tpi = self.model.asMatrices()
-        
+
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
-        self.assertEqual(self.pi,tpi)    
-    
+        self.assertEqual(self.pi,tpi)
+
     def testsample(self):
         # print"\ntestsample ",
         seq = self.model.sampleSingle(100,seed=3586662)
@@ -1029,8 +1029,8 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         # print"\ntestbaumwelch",
         seq = self.model.sample(100,100,seed=0)
         self.model.baumWelch(seq,5,0.01)
-    
-    
+
+
     def oneStateModel(self, mean, var):
         # one state model with N(mean, var)
         return ghmm.HMMFromMatrices(ghmm.Float(),
@@ -1043,23 +1043,23 @@ class GaussianEmissionHMMTests(unittest.TestCase):
 
     def testforward(self):
         seq = self.model.sampleSingle(3,seed=3586662)
-        res = self.model.forward(seq)        
+        res = self.model.forward(seq)
         self.assertEqual(str(res[0]), '[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.81096817099595242, 0.0, 0.18903182900404761]]')
-        self.assertEqual(str(res[1]), '[0.14046138547389087, 0.1717049478939392, 0.2456746384908276]')        
-        
-        
+        self.assertEqual(str(res[1]), '[0.14046138547389087, 0.1717049478939392, 0.2456746384908276]')
+
+
 
 
     def testloglikelihoods(self):
         seq = self.model.sampleSingle(100,seed=3586662)
-        res = self.model.loglikelihoods(seq)        
-        
+        res = self.model.loglikelihoods(seq)
+
         self.assertEqual(str(res), '[-138.66374870816287]' )
-        
+
 
     def testviterbi(self):
         seq = self.model.sampleSingle(20,seed=3586662)
-        res = self.model.viterbi(seq)        
+        res = self.model.viterbi(seq)
         self.assertEqual(str(res), '([0, 1, 0, 1, 0, 1, 2, 2, 1, 0, 1, 2, 0, 1, 2, 1, 2, 2, 0, 1], -33.575966803792092)')
 
 
@@ -1075,7 +1075,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
              [ [4.0,5.0,1.0],[1.0,2.5,2.0], [0.3,0.3,0.4]] ]
 
         self.pi = [1.0,0.0,0.0]
-        
+
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
         #print "** GaussianMixtureHMMTests **"
 
@@ -1100,32 +1100,32 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         #print "testcomponentfixing"
         f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,0,0])
-        self.model.setMixtureFix(0,[0,1,0])    
+        self.model.setMixtureFix(0,[0,1,0])
         f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,1,0])
-        self.model.setMixtureFix(1,[1,1,1])    
-        f = self.model.getMixtureFix(1) 
+        self.model.setMixtureFix(1,[1,1,1])
+        f = self.model.getMixtureFix(1)
         self.assertEqual(f,[1,1,1])
-        
+
         # XXX check mu,v,u
 
     def testtomatrices(self):
         #print"\ntesttomatrices "
         tA,tB,tpi = self.model.asMatrices()
-        
+
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
-        self.assertEqual(self.pi,tpi)    
-        
-        
+        self.assertEqual(self.pi,tpi)
+
+
     def testsample(self):
         #print"\ntestsample "
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
-        
+
 
 class XMLIOTests(unittest.TestCase):
-    
+
     def setUp(self):
         self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
@@ -1138,7 +1138,7 @@ class XMLIOTests(unittest.TestCase):
         self.labels = ['One']*slength
         self.allLabels = ['a','b','c','d','e','f','g']
         self.l_domain= ghmm.LabelDomain(['One','a','b','c','d','e','f','g'])
-        
+
 
         self.A = [[0.0,0.5,0.5],[0.4,0.2,0.4],[0.3,0.3,0.4]]
         self.B = [[0.2,0.1,0.1,0.6],[0.3,0.1,0.1,0.5],
@@ -1147,7 +1147,7 @@ class XMLIOTests(unittest.TestCase):
 
         self.l_domain2 = ghmm.LabelDomain(['fst','scd','thr'])
         self.label_model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
-        
+
         sequence = []
         for i in range(slength):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
@@ -1175,7 +1175,7 @@ class XMLIOTests(unittest.TestCase):
 ########### PAIR HMM TESTS ##############
 
 class ComplexEmissionSequenceTests(unittest.TestCase):
-    
+
     def setUp(self):
         i_alph = ghmm.IntegerRange(0,5)
         d_alph = ghmm.Float()
@@ -1183,7 +1183,7 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
                                                 [[1,2,0,0,0,3,4],
                                                  ['a','t','g','c','t','g','c'],
                                                  [1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3]])
-        
+
     def testprint(self):
         # print"\ntestprint ",
         s = ("ComplexEmissionSequence (len=7, discrete=2, continuous=1)\n" +
@@ -1192,22 +1192,22 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
              "1.3,2.1,0.8,0.1,0.03,3.6,43.3\n")
 
         self.assertEqual(self.seq.verboseStr(),s)
-        
-        
+
+
     def testattributes(self):
-        # print"\ntestattributes ", 
+        # print"\ntestattributes ",
         self.assertEqual(self.seq.cseq.number_of_alphabets,2)
-        self.assertEqual(self.seq.cseq.number_of_d_seqs,1)    
-        self.assertEqual(self.seq.cseq.length,7)    
-        self.assertEqual(len(self.seq),7)    
-    
+        self.assertEqual(self.seq.cseq.number_of_d_seqs,1)
+        self.assertEqual(self.seq.cseq.length,7)
+        self.assertEqual(len(self.seq),7)
+
     def testitemaccess(self):
         # print"\ntestitemaccess ",
         b = self.seq.getInternalDiscreteSequence(0)
-        self.assertEqual(b[5], 3)    
-        
+        self.assertEqual(b[5], 3)
+
         b2 = self.seq.getInternalContinuousSequence(0)
-        self.assertEqual(b2[1],2.1)    
+        self.assertEqual(b2[1],2.1)
 
     def testerrors(self):
         pass
