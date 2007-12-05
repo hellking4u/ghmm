@@ -2253,28 +2253,11 @@ class HMM(object):
             seq_len = emissionSequences.cseq.getLength(i)
 
             if seq_len > 0:
-                viterbiPath, log_p = self.cmodel.viterbi(seq,seq_len)
+                viterbiPath, pathlen, log_p = self.cmodel.viterbi(seq, seq_len)
             else:
                 viterbiPath = None
 
-            onePath = []
-
-            # for model types without possible silent states
-            # the length of the viterbi path is known
-            if not self.hasFlags(kSilentStates):
-                onePath = ghmmwrapper.int_array2list(viterbiPath, seq_len)
-
-            # in the silent case we have to append as long as the path is
-            # positive because the final path position is marked with a -1
-            # in the following array entry.
-            else:
-                for j in range(seq_len * self.N): # maximum length of a viterbi path for a silent model
-                    d = ghmmwrapper.int_array_getitem(viterbiPath, j)
-                    if d >= 0:
-                        onePath.append(d)
-                    else:
-                        break
-
+            onePath = ghmmwrapper.int_array2list(viterbiPath, pathlen)
             allPaths.append(onePath)
             allLogs.append(log_p)
             ghmmwrapper.free(viterbiPath)
@@ -3048,7 +3031,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if not emissionSequences.emissionDomain == self.emissionDomain:
             raise TypeError("Sequence and model emissionDomains are incompatible.")
 
-        (vPath, log_p) = self.viterbi(emissionSequences)
+        vPath, log_p = self.viterbi(emissionSequences)
 
         f = lambda i: self.labelDomain.external(self.getLabel(i))
         if seqNumber == 1:

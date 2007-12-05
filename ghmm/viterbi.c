@@ -210,7 +210,7 @@ static int extend_int_array(int *array, int cur_len, int extend)
 
 /*============================================================================*/
 /** Return the viterbi path of the sequence.  */
-int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
+int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double *log_p)
 {
 #define CUR_PROC "ghmm_dmodel_viterbi"
 
@@ -429,13 +429,17 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, double *log_p)
             state_seq[i] = state_seq[cur_len_path - 1 - i];
             state_seq[cur_len_path - 1 - i] = k;
         }
+        *pathlen = cur_len_path;
     }
+    else
+        *pathlen = len_path;
 
     /* Free the memory space */
     viterbi_free(&v, mo->N, len);
     return state_seq;
   STOP:                        /* Label STOP from ARRAY_[CM]ALLOC */
     /* Free the memory space */
+    *pathlen = -1;
     viterbi_free(&v, mo->N, len);
     m_free(state_seq);
     return NULL;
@@ -447,7 +451,8 @@ double ghmm_dmodel_viterbi_logp(ghmm_dmodel * mo, int *o, int len, int *state_se
 {
 #define CUR_PROC "ghmm_dmodel_viterbi_logp"
     double log_p = 0.0;
-    int *vpath = ghmm_dmodel_viterbi(mo, o, len, &log_p);
+    int unused;
+    int *vpath = ghmm_dmodel_viterbi(mo, o, len, &unused, &log_p);
     m_free(vpath);
     return log_p;
 #undef CUR_PROC

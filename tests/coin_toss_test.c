@@ -93,7 +93,7 @@ int two_states_coin_toss()
   double **forward_alpha;
   double forward_scale[10];
   int *viterbi_path;
-  int i;
+  int i, pathlen;
   /* flags indicating whether a state is silent */
   int silent_array[2] =  {0,0}; 
 
@@ -137,7 +137,7 @@ int two_states_coin_toss()
 
   /* try viterbi algorithm in a clear situation */
   viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],
-				my_output->seq_len[0], &log_p_viterbi);
+				my_output->seq_len[0],&pathlen, &log_p_viterbi);
   if (viterbi_path==NULL)
     {fprintf(stderr,"viterbi failed!"); return 1;}
 
