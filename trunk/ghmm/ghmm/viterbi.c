@@ -56,6 +56,8 @@ typedef struct local_store_t {
     double *phi_new;
     int **psi;
 
+    int *path_len;
+
     int *topo_order;
     int topo_order_length;
 } local_store_t;
@@ -80,7 +82,10 @@ static int viterbi_free(local_store_t **v, int n, int len)
     m_free((*v)->phi_new);
     /*ighmm_dmatrix_free( &((*v)->psi), len ); */
     ighmm_dmatrix_stat_free(&((*v)->psi));
+
+    m_free((*v)->path_len);
     m_free((*v)->topo_order);
+
     m_free(*v);
 
     return 0;
@@ -113,6 +118,8 @@ static local_store_t *viterbi_alloc(ghmm_dmodel *mo, int len)
         GHMM_LOG_QUEUED(LCONVERTED);
         goto STOP;
     }
+
+    ARRAY_CALLOC(v->path_len, mo->N);
 
     v->topo_order_length = 0;
     ARRAY_CALLOC(v->topo_order, mo->N);
@@ -184,28 +191,10 @@ static void viterbi_silent(ghmm_dmodel *mo, int t, local_store_t *v)
             } else {
                 v->phi[St] = max_value;
                 v->psi[t][St] = max_id;
+                v->path_len[St] = v->path_len[max_id] + 1;
             }
         }
     }
-#undef CUR_PROC
-}
-
-/*============================================================================*/
-/* auxilary function. Reallocates an integer array to a given length
-   and initialises the new positions with -1 */
-static int extend_int_array(int *array, int cur_len, int extend)
-{
-#define CUR_PROC "extend_int_array"
-    int j;
-    cur_len += extend;
-    ARRAY_REALLOC(array, cur_len);
-    /* initialising new memory with -1  */
-    for (j = cur_len - 1; j >= (cur_len - extend); j--) {
-        array[j] = -1;
-    }
-    return cur_len;
-  STOP:
-    return -1;
 #undef CUR_PROC
 }
 
@@ -217,36 +206,18 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
 
     int *state_seq = NULL;
     int t, j, i, i_id, St, max_id;
+    int end_state, next_state, prev_state;
+    int len_path, state_seq_index;
+    int *plen, *exchange;
     double value, max_value, *temp;
     local_store_t *v;
-
-    /* length_factor determines the size of the memory allocation for the state
-       path array in case the model contains silent states.
-       The larger length_factor is chosen, the less reallocs will be necessary
-       but it increases the amount of allocated memory that is not used. */
-    int length_factor = 2;
-
-    /* the lenght of the viterbi path is unknown for models with silent states.
-       The maximum length is given by mo->N * len. In order to keep
-       memory consumption in check we first allocate lenght_factor * len
-       and realloc more space as needed. */
-    int len_path;
-
-    int cur_len_path = 0;       /* the current length of the viterbi path */
-
-    int lastemState;
-    int state_seq_index;
 
     /* for silent states: initializing path length with a multiple
        of the sequence length
        and sort the silent states topological */
     if (mo->model_type & GHMM_kSilentStates) {
-        len_path = length_factor * len;
         ghmm_dmodel_order_topological(mo);
     }
-    /* if there are no silent states, path and sequence length are identical */
-    else
-        len_path = len;
 
     /* Allocate the matrices log_in_a, log_b,Vektor phi, phi_new, Matrix psi */
     v = viterbi_alloc(mo, len);
@@ -255,17 +226,7 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
         goto STOP;
     }
 
-    /* allocating state_seq array */
-    ARRAY_CALLOC(state_seq, len_path);
-
-    /* initialization of state_seq with -1, only necessary for silent state models */
-    /* XXX use memset?, not faster, assumes 2-complement is it really necessary to
-       to set the entire path with a guard value */
-    if (mo->model_type & GHMM_kSilentStates) {
-        for (i = 0; i < len_path; i++) {
-            state_seq[i] = -1;
-        }
-    }
+    ARRAY_CALLOC(plen, mo->N);
 
     /* Precomputing the log(a_ij) and log(bj(ot)) */
     Viterbi_precompute(mo, o, len, v);
@@ -274,8 +235,10 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
     for (j = 0; j < mo->N; j++) {
         if (mo->s[j].pi == 0.0 || v->log_b[j][o[0]] == +1) /* instead of 0, DBL_EPS.? */
             v->phi[j] = +1;
-        else
+        else {
             v->phi[j] = log(mo->s[j].pi) + v->log_b[j][o[0]];
+            v->path_len[j] = 1;
+        }
     }
     if (mo->model_type & GHMM_kSilentStates) {  /* could go into silent state at t=0 */
         viterbi_silent(mo, t = 0, v);
@@ -311,12 +274,14 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
                 if (max_id >= 0 && v->log_b[St][o[t]] != +1) {
                     v->phi_new[St] = max_value + v->log_b[St][o[t]];
                     v->psi[t][St]  = max_id;
+                    plen[St] = v->path_len[max_id] + 1;
                 }
             }
         }                       /* complete time step for emitting states */
 
-        /* Exchange phi pointers */
+        /* Exchange pointers */
         temp = v->phi; v->phi = v->phi_new; v->phi_new = temp;
+        exchange = v->path_len; v->path_len = plen; plen = exchange;
 
         /* complete time step for silent states */
         if (mo->model_type & GHMM_kSilentStates) {
@@ -324,119 +289,53 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
         }
     }                           /* Next observation , increment time-step */
 
-    /* Termination */
-    /* for models with silent states we store the last state in the path at position 0.
-       If there are no silent states we can use the correct position directly. */
-    if (!(mo->model_type & GHMM_kSilentStates)) {
-        state_seq_index = len_path - 1;
-    } else {
-        state_seq_index = 0;
-    }
-
+    /* Termination - find end state */
     max_value = -DBL_MAX;
-    state_seq[state_seq_index] = -1;
-    for (j = 0; j < mo->N; j++) {
+    end_state = -1;
+    for (j=0; j < mo->N; j++) {
         if (v->phi[j] != +1 && v->phi[j] > max_value) {
             max_value = v->phi[j];
-            state_seq[state_seq_index] = j;
+            end_state = j;
         }
     }
-    if (max_value == -DBL_MAX) {
+    if (end_state < 0) {
         /* Sequence can't be generated from the model! */
         *log_p = +1;
-        if (!(mo->model_type & GHMM_kSilentStates)) {
-            /* Backtracing doesn't work, insert -1 values in state_seq */
-            for (t = len - 2; t >= 0; t--) {
-                state_seq[t] = -1;
-            }
-        }
-    } else {
-        /* Backtracing, should put DEL path nicely */
-        /* for models without silent states traceback is straightforward */
-        if (!(mo->model_type & GHMM_kSilentStates)) {
-            *log_p = max_value;
-            lastemState = state_seq[len_path - 1];
-
-            for (t = len - 2, i = len_path - 2; t >= 0; t--) {
-                state_seq[i--] = v->psi[t + 1][lastemState];
-                lastemState = v->psi[t + 1][lastemState];
-            }
-        }
-
-        /* if there are silent states, we have to watch the length 
-           of the viterbi path and realloc as needed */
-        else {
-            cur_len_path = 1;
-            *log_p = max_value;
-            lastemState = state_seq[0];
-
-            for (t = len - 2, i = 1; t >= 0; t--) {
-                /* if next state to be inserted into the path is silent we have to propagate up to the next emitting state */
-                if (mo->silent[v->psi[t + 1][lastemState]]) {
-                    St = v->psi[t + 1][lastemState];
-                    /* fprintf(stderr, "t=%d:  DEL St=%d\n", t+1, St ); */
-
-                    while (St != -1 && mo->silent[St]) {        /* trace-back up to the last emitting state */
-                        /* fprintf(stderr, "***  t=%d:  DEL St=%d\n", t, St ); */
-                        if (cur_len_path + 1 > len_path) {
-                            /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
-                            len_path = extend_int_array(state_seq, len_path, len);
-                        }
-                        state_seq[i++] = St;
-                        St = v->psi[t][St];
-                        cur_len_path++;
-                    }
-
-                    if (cur_len_path + 1 > len_path) {
-                        /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
-                        len_path = extend_int_array(state_seq, len_path, len);
-                    }
-                    state_seq[i++] = St;
-                    lastemState = St;
-                    cur_len_path++;
-
-                } else {
-                    if (cur_len_path + 1 > len_path) {
-                        /* we have to allocate more memory for state_seq. Memory is increased by the sequence length */
-                        len_path = extend_int_array(state_seq, len_path, len);
-                    }
-
-                    state_seq[i++] = v->psi[t + 1][lastemState];
-                    lastemState = v->psi[t + 1][lastemState];
-                    cur_len_path++;
-                }
-            }
-        }
+        len_path = 1;
     }
-    /* post-processing of the state path for models with silent states. 
-       We have to realloc to the actual path length and reverse the order.
-       The final element of the state path is marked with a -1 entry
-       at the following array position */
-    if (mo->model_type & GHMM_kSilentStates) {
-        /* reallocating */
-        if (cur_len_path + 1 != len_path) {
-            ARRAY_REALLOC(state_seq, cur_len_path + 1);
-            state_seq[cur_len_path] = -1;       /*end marker entry */
-            len_path = cur_len_path + 1;
-        }
-        /* reversing order */
-        for (i = 0; i < floor(cur_len_path / 2.0); i++) {
-            St = state_seq[i];
-            state_seq[i] = state_seq[cur_len_path - 1 - i];
-            state_seq[cur_len_path - 1 - i] = St;
-        }
-        *pathlen = cur_len_path;
+    else {
+        *log_p = max_value;
+        len_path = v->path_len[end_state];
     }
-    else
-        *pathlen = len_path;
+
+    /* allocating state_seq array */
+    ARRAY_CALLOC(state_seq, len_path+1);
+    t = len-1;
+    state_seq_index = len_path-1;
+    state_seq[len_path] = -1;
+    state_seq[state_seq_index--] = end_state;
+    prev_state = end_state;
+
+    /* backtrace is simple if the path length is known */
+    for (; state_seq_index >= 0;  state_seq_index--) {
+        next_state = v->psi[t][prev_state];
+        state_seq[state_seq_index] = prev_state = next_state;
+        if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[next_state])
+            t--;
+    }
+    *pathlen = len_path;
+    if (state_seq_index >= 0 || t > 0)
+        GHMM_LOG_PRINTF(LERROR, LOC, "state_seq_index = %d, t = %d", state_seq_index, t);
 
     /* Free the memory space */
     viterbi_free(&v, mo->N, len);
+    m_free(plen);
     return state_seq;
   STOP:                        /* Label STOP from ARRAY_[CM]ALLOC */
     /* Free the memory space */
     *pathlen = -1;
     viterbi_free(&v, mo->N, len);
+    m_free(plen);
     m_free(state_seq);
     return NULL;
 #undef CUR_PROC
