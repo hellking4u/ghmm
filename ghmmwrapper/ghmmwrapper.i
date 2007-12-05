@@ -128,7 +128,7 @@
 
 
 /* ============== constants ================================================= */
-/** 
+/**
     Convergence: Halt criterium for Baum-Welch reestimation if the difference
     of log(P) in two consecutive iterations is smaller than (EPS\_ITER\_BW * log(P))..
 */
@@ -157,11 +157,11 @@
   /* This function matches the prototype of the normal C callback
      function for our widget. However, we use the clientdata pointer
      for holding a reference to a Python callable object. */
-  
+
   static void PythonCallBack(int level, const char * message, void *clientdata)
     {
       PyObject *func, *arglist;
-      
+
       // Get Python function
       func = (PyObject *) clientdata;
       // Build Python arguments
