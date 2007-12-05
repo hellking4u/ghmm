@@ -52,14 +52,15 @@ extern "C" {
   sequence. The matrices in the local_store struct are allocated using
   stat_matrix_d_alloc. In case of a model with silent states, the length of the viterbi 
   path is not identical with the sequence length. In such a case the end of the state path is
-  marked by a -1 entry in the returned array.
+  marked by a -1 entry in the returned array. deprecated, use the argument pathlen instead
   @return Viterbi path
   @param mo:    model
   @param o:     sequence
   @param len:   length of the sequence
+  @param pathlen: length of the viterbi path excluding the final "-1"
   @param log_p: probability of the sequence in the Viterbi path
   */
-  int * ghmm_dmodel_viterbi (ghmm_dmodel * mo, int *o, int len, double *log_p);
+    int * ghmm_dmodel_viterbi (ghmm_dmodel * mo, int *o, int len, int *pathlen, double *log_p);
 
 /**
   Calculates the logarithmic probability to a given path through the 

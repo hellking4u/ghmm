@@ -220,7 +220,8 @@ extern double ighmm_rand_normal_density_trunc(double x, double mean, double u, d
 %enddef
 
 // double *log_p is used as additional return value
-%apply double *OUTPUT {double *log_p};
+%apply double* OUTPUT {double *log_p};
+%apply int*    OUTPUT {int *pathlen};
 
 %include wrapper_alphabet.i
 

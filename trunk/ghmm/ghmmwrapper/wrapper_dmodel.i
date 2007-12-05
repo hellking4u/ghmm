@@ -241,7 +241,7 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int baum_welch_nstep(ghmm_dseq *sq, int max_step, double likelihood_delta);
 
-        int* viterbi(int *o, int len, double *log_p);
+        int* viterbi(int *o, int len, int *pathlen, double *log_p);
 
         double viterbi_logp(int *o, int len, int *state_seq);
 
