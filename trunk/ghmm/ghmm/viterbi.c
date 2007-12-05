@@ -216,7 +216,7 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
 
     int *state_seq = NULL;
     int t, j, i, k, St;
-    double value, max_value;
+    double value, max_value, *temp;
     local_store_t *v;
 
     /* length_factor determines the size of the memory allocation for the state
@@ -316,11 +316,8 @@ int *ghmm_dmodel_viterbi(ghmm_dmodel * mo, int *o, int len, int *pathlen, double
             }
         }                       /* complete time step for emitting states */
 
-        /* First now replace the old phi with the new phi */
-        for (j = 0; j < mo->N; j++) {
-            v->phi[j] = v->phi_new[j];
-            /*printf("\npsi[%d],%d, phi, %f\n", t, v->psi[t][j], v->phi[j]); */
-        }
+        /* Exchange phi pointers */
+        temp = v->phi; v->phi = v->phi_new; v->phi_new = temp;
 
         /* complete time step for silent states */
         if (mo->model_type & GHMM_kSilentStates) {
