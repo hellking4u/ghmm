@@ -503,15 +503,15 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
                             const int *S, int slen, double *log_p)
 {
 # define CUR_PROC "ghmm_dmodel_logp_joint"
-    int prevstate, state, spos=0, pos=0, j;
+    int prevstate, state, seqpos=0, pos=0, j;
 
     prevstate = state = S[0];
     *log_p = log(mo->s[state].pi);
     if (!(mo->model_type & GHMM_kSilentStates) || !mo->silent[state])
         *log_p += log(mo->s[state].b[O[pos++]]);
         
-    for (spos=1; spos < slen || pos < len; spos++) {
-        state = S[spos];
+    for (seqpos=1; seqpos < slen || pos < len; seqpos++) {
+        state = S[seqpos];
         for (j=0; j < mo->s[state].in_states; ++j) {
             if (prevstate == mo->s[state].in_id[j])
                 break;
@@ -535,8 +535,8 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
     if (pos < len)
         GHMM_LOG_PRINTF(LINFO, LOC, "state sequence too short! processed only %d symbols", pos);
-    if (spos < slen)
-        GHMM_LOG_PRINTF(LINFO, LOC, "sequence too short! visited only %d states", spos);
+    if (seqpos < slen)
+        GHMM_LOG_PRINTF(LINFO, LOC, "sequence too short! visited only %d states", seqpos);
 
     return 0;
   STOP:
