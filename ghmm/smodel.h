@@ -456,7 +456,7 @@ extern "C" {
 /**
     Get transition probabality from state 'i' to state 'j' to value 'prob'.
     NOTE: No internal checks
-    @return  transition probability from state i to state j
+    @return   1 if there is a transition, 0 otherwise
     @param mo model
     @param i  state index (source)
     @param j  state index (target)
