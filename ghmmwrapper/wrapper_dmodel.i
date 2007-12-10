@@ -219,6 +219,7 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
         double likelihood(ghmm_dseq *sq);
 
         double get_transition(int i, int j);
+        int    check_transition(int i, int j);
         void   set_transition(int i, int j, double prob);
 
         double prob_distance(ghmm_dmodel *m, int maxT, int symmetric, int verbose);

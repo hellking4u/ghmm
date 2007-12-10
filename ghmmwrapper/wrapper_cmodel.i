@@ -238,6 +238,7 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         void get_interval_B(int state, double *a, double *b);
 
         double get_transition(int i, int j, int c);
+        int    check_transition(int i, int j, int c);
         void   set_transition(int i, int j, int c, double prob);
 
         int* viterbi(double *O, int T, double *log_p);
