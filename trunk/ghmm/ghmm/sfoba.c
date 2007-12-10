@@ -325,3 +325,62 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return (res);
 # undef CUR_PROC
 }                               /* ghmm_cmodel_logp */
+
+/*============================================================================*/
+int ghmm_cmodel_logp_joint(ghmm_cmodel *mo, const double *O, int len,
+                            const int *S, int slen, double *log_p)
+{
+# define CUR_PROC "ghmm_cmodel_logp_joint"
+    int prevstate, state, state_pos=0, pos=0, j, osc=0;
+
+    prevstate = state = S[0];
+    *log_p = log(mo->s[state].pi);
+    if (!(mo->model_type & GHMM_kSilentStates) || 1 /* XXX !mo->silent[state] */ )
+        *log_p += log(ghmm_cmodel_calc_b(mo, state, O[pos++]));
+        
+    for (state_pos=1; state_pos < slen || pos < len; state_pos++) {
+        state = S[state_pos];
+        for (j=0; j < mo->s[state].in_states; ++j) {
+            if (prevstate == mo->s[state].in_id[j])
+                break;
+        }
+
+        if (mo->cos > 1) {
+            if (!mo->class_change->get_class) {
+                GHMM_LOG(LERROR, "get_class not initialized");
+                goto STOP;
+            }
+            osc = mo->class_change->get_class(mo, O, mo->class_change->k, pos);
+            if (osc >= mo->cos) {
+                GHMM_LOG_PRINTF(LERROR, LOC, "get_class returned index %d "
+                                "but model has only %d classes!", osc, mo->cos);
+                goto STOP;
+            }
+        }
+
+        if (j == mo->s[state].in_states ||
+            fabs(mo->s[state].in_a[osc][j]) < GHMM_EPS_PREC) {
+            GHMM_LOG_PRINTF(LERROR, LOC, "Sequence can't be built. There is no "
+                            "transition from state %d to %d.", prevstate, state);
+            goto STOP;
+        }
+
+        *log_p += log(mo->s[state].in_a[osc][j]);
+
+        if (!(mo->model_type & GHMM_kSilentStates) || 1 /* XXX !mo->silent[state] */) {
+            *log_p += log(ghmm_cmodel_calc_b(mo, state, O[pos++]));
+        }
+        
+        prevstate = state;
+    }
+
+    if (pos < len)
+        GHMM_LOG_PRINTF(LINFO, LOC, "state sequence too short! processed only %d symbols", pos);
+    if (state_pos < slen)
+        GHMM_LOG_PRINTF(LINFO, LOC, "sequence too short! visited only %d states", state_pos);
+
+    return 0;
+  STOP:
+    return -1;
+# undef CUR_PROC
+}

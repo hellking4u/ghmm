@@ -2150,9 +2150,30 @@ class HMM(object):
 
 
     def joined(self, emissionSequence, stateSequence):
-        """log P[ emissionSequence, stateSequence| m]
-        """
-        raise NotImplementedError("to be defined in derived classes")
+        """ log P[ emissionSequence, stateSequence| m] """
+
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
+
+        t = len(emissionSequence)
+        s = len(stateSequence)
+
+        if t != s and not self.hasFlags(kSilentStates):
+            raise IndexError("sequence and state sequence have different lengths " +
+                             "but the model has no silent states.")
+
+        seq = emissionSequence.cseq.getSequence(0)
+        states = ghmmwrapper.list2int_array(stateSequence)
+
+        err, logp = self.cmodel.logp_joint(seq, t, states, s)
+
+        if err != 0:
+            log.error("logp_joint finished with -1: EmissionSequence cannot be build under stateSequence.")
+            return
+
+        # deallocation
+        ghmmwrapper.free(states)
+        return logp
 
     # The functions for model training are defined in the derived classes.
     def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
@@ -2628,34 +2649,6 @@ class DiscreteEmissionHMM(HMM):
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(cbeta[0],t)
         return logp
-
-
-    def joined(self, emissionSequence, stateSequence):
-        """ log P[ emissionSequence, stateSequence| m] """
-
-        if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
-
-        t = len(emissionSequence)
-        s = len(stateSequence)
-
-        if t != s and not self.hasFlags(kSilentStates):
-            raise IndexError("sequence and state sequence have different lengths " +
-                             "but the model has no silent states.")
-
-        seq = emissionSequence.cseq.getSequence(0)
-        states = ghmmwrapper.list2int_array(stateSequence)
-
-        err, logp = self.cmodel.logp_joint(seq, t, states, s)
-
-        if err != 0:
-            log.error("logp_joint finished with -1: EmissionSequence cannot be build under stateSequence.")
-            return
-
-        # deallocation
-        ghmmwrapper.free(states)
-        return logp
-
 
     def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimates the model with the sequence in 'trainingSequences'.
@@ -3549,49 +3542,6 @@ class GaussianEmissionHMM(HMM):
             return (allPaths, allLogs)
         else:
             return (allPaths[0], allLogs[0])
-
-
-    def joined(self, emissionSequence, stateSequence):
-        # XXX implement in C, see ghmm_dmodel_logp_joint
-        """ log P[ emissionSequence, stateSequence| m] """
-
-        if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError("EmissionSequence required, got " +
-                            str(emissionSequence.__class__.__name__))
-
-        state = self.cmodel.getState(stateSequence[0])
-        emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
-
-        if (emissionProb == 0): # zero ??? or some small constant?
-            raise SequenceCannotBeBuild("first symbol " +
-                                        str(emissionSequence[0]) + " not emitted by state " +
-                                        str(stateSequence[0]))
-
-        logP = math.log(state.pi * emissionProb)
-
-        #symbolIndex = 1
-
-        try:
-            for i in range(len(emissionSequence)-1):
-                cur_state = self.cmodel.getState(stateSequence[i])
-                next_state = self.cmodel.getState(stateSequence[i+1])
-
-                for j in range(cur_state.out_states):
-                    out_id = ghmmwrapper.int_array_getitem(cur_state.out_id, j)
-                    if out_id == stateSequence[i+1]:
-                        emissionProb = self.getEmissionProbability(emissionSequence[i+1],out_id)
-                        #symbolIndex += 1
-                        if emissionProb == 0:
-                            raise SequenceCannotBeBuild("symbol " + str(emissionSequence[i+1]) +
-                                                        " not emitted by state " +
-                                                        str(stateSequence[i+1]))
-                        logP += math.log( ghmmwrapper.double_matrix_getitem(cur_state.out_a,0,j) *
-                                          emissionProb)
-                        break
-        except IndexError:
-            pass
-        return logP
-
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
