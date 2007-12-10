@@ -32,7 +32,8 @@ noinst_PROGRAMS = root_finder_test \
                   test_gsl_ran_gaussian_tail \
                   sequences_test \
                   sequences_old_format \
-                  label_higher_order_test
+                  label_higher_order_test \
+		  read_fa
 
 LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 
