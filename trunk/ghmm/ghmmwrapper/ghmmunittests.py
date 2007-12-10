@@ -589,8 +589,9 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
     def testLogProb(self):
         log.debug("testLogProb -- begin")
         seq = self.model.sampleSingle(15,seed=3586662)
-        path,logp = self.model.viterbi(seq)
+        path,vlogp = self.model.viterbi(seq)
         logp = self.model.joined(seq,path)
+        self.assertEqual(vlogp, logp)
         self.assert_(logp - 22.4303246929 < 10^-8, "Different results in logprob ")
 
     def testFoBa(self):
@@ -1066,6 +1067,12 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         seq = self.model.sampleSingle(20,seed=3586662)
         res = self.model.viterbi(seq)
         self.assertEqual(str(res), '([0, 1, 0, 1, 0, 1, 2, 2, 1, 0, 1, 2, 0, 1, 2, 1, 2, 2, 0, 1], -33.575966803792092)')
+
+    def testJoined(self):
+        seq = self.model.sampleSingle(50, seed=3586662)
+        path, vlogp = self.model.viterbi(seq)
+        logp = self.model.joined(seq, path)
+        self.assertAlmostEqual(logp, vlogp)
 
 
 

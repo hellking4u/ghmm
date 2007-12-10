@@ -3292,6 +3292,10 @@ class GaussianEmissionHMM(HMM):
         state.setMean(0, float(mu))
         state.setStdDev(0, float(sigma))
 
+
+    def getEmissionProbability(self, value, state):
+        return self.cmodel.calc_b(state, value)
+
     # XXX no mixture here
 
     def getMixtureFix(self,state):
@@ -3547,6 +3551,47 @@ class GaussianEmissionHMM(HMM):
             return (allPaths[0], allLogs[0])
 
 
+    def joined(self, emissionSequence, stateSequence):
+        # XXX implement in C, see ghmm_dmodel_logp_joint
+        """ log P[ emissionSequence, stateSequence| m] """
+
+        if not isinstance(emissionSequence,EmissionSequence):
+            raise TypeError("EmissionSequence required, got " +
+                            str(emissionSequence.__class__.__name__))
+
+        state = self.cmodel.getState(stateSequence[0])
+        emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
+
+        if (emissionProb == 0): # zero ??? or some small constant?
+            raise SequenceCannotBeBuild("first symbol " +
+                                        str(emissionSequence[0]) + " not emitted by state " +
+                                        str(stateSequence[0]))
+
+        logP = math.log(state.pi * emissionProb)
+
+        #symbolIndex = 1
+
+        try:
+            for i in range(len(emissionSequence)-1):
+                cur_state = self.cmodel.getState(stateSequence[i])
+                next_state = self.cmodel.getState(stateSequence[i+1])
+
+                for j in range(cur_state.out_states):
+                    out_id = ghmmwrapper.int_array_getitem(cur_state.out_id, j)
+                    if out_id == stateSequence[i+1]:
+                        emissionProb = self.getEmissionProbability(emissionSequence[i+1],out_id)
+                        #symbolIndex += 1
+                        if emissionProb == 0:
+                            raise SequenceCannotBeBuild("symbol " + str(emissionSequence[i+1]) +
+                                                        " not emitted by state " +
+                                                        str(stateSequence[i+1]))
+                        logP += math.log( ghmmwrapper.double_matrix_getitem(cur_state.out_a,0,j) *
+                                          emissionProb)
+                        break
+        except IndexError:
+            pass
+        return logP
+
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
@@ -3691,51 +3736,6 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
         state.setStdDev(comp, float(sigma))
         state.setWeight(comp, float(weight))
-
-    def getEmissionProbability(self, value, state):
-        return self.cmodel.calc_b(state, value)
-
-
-    def joined(self, emissionSequence, stateSequence):
-        # XXX implement in C, see ghmm_dmodel_logp_joint
-        """ log P[ emissionSequence, stateSequence| m] """
-
-        if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError("EmissionSequence required, got " +
-                            str(emissionSequence.__class__.__name__))
-
-        state = self.cmodel.getState(stateSequence[0])
-        emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
-
-        if (emissionProb == 0): # zero ??? or some small constant?
-            raise SequenceCannotBeBuild("first symbol " +
-                                        str(emissionSequence[0]) + " not emitted by state " +
-                                        str(stateSequence[0]))
-
-        logP = math.log(state.pi * emissionProb)
-
-        #symbolIndex = 1
-
-        try:
-            for i in range(len(emissionSequence)-1):
-                cur_state = self.cmodel.getState(stateSequence[i])
-                next_state = self.cmodel.getState(stateSequence[i+1])
-
-                for j in range(cur_state.out_states):
-                    out_id = cur_state.out_id[j]
-                    if out_id == stateSequence[i+1]:
-                        emissionProb = self.getEmissionProbability(emissionSequence[i+1],out_id)
-                        #symbolIndex += 1
-                        if emissionProb == 0:
-                            raise SequenceCannotBeBuild("symbol " + str(emissionSequence[i+1]) +
-                                                        " not emitted by state " +
-                                                        str(stateSequence[i+1]))
-                        logP += math.log( ghmmwrapper.double_matrix_getitem(cur_state.out_a,0,j) *
-                                          emissionProb)
-                        break
-        except IndexError:
-            pass
-        return logP
 
     def getPrior(self):
          return self.cmodel.prior
