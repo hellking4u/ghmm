@@ -301,6 +301,16 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
   double ghmm_dmodel_get_transition(ghmm_dmodel* mo, int i, int j);
 
 /**
+    Checks if a non zero transition exists between state 'i' to state 'j'.
+    NOTE: No internal checks
+    @return   1 if there is a transition, 0 otherwise
+    @param mo model
+    @param i  state index (source)
+    @param j  state index (target)
+*/
+  int ghmm_dmodel_check_transition(ghmm_dmodel* mo, int i, int j);
+
+/**
     Set transition from state 'i' to state 'j' to value 'prob'.
     NOTE: No internal checks - model might get broken if used without care.
     @param mo model

@@ -1820,6 +1820,21 @@ double ghmm_cmodel_get_transition(ghmm_cmodel* smo, int i, int j, int c)
 # undef CUR_PROC
 }   /* ghmm_cmodel_get_transition */
 
+int ghmm_cmodel_check_transition(ghmm_cmodel* smo, int i, int j, int c)
+{
+# define CUR_PROC "ghmm_dmodel_check_transition"
+  int out;
+
+  if (smo->s && smo->s[i].out_a && smo->s[j].in_a) {
+    for (out=0; out < smo->s[i].out_states; out++) {
+      if (smo->s[i].out_id[out] == j)
+          return 1;
+    }
+  }
+  return 0;
+# undef CUR_PROC
+}   /* ghmm_cmodel_check_transition */
+
 void ghmm_cmodel_set_transition (ghmm_cmodel* smo, int i, int j, int c, double prob)
 {
 # define CUR_PROC "ghmm_cmodel_set_transition"

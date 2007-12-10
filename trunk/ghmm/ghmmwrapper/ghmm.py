@@ -2367,12 +2367,9 @@ class HMM(object):
         if not 0 <= j < self.N:
             raise IndexError("Index " + str(j) + " out of bounds.")
 
-        transition = 0.0
-        for i in xrange(state.out_states):
-            stateId = state.getOutState(i)
-            if stateId == j:
-                transition = state.getOutProb(i)
-                break
+        transition = self.cmodel.get_transition(i, j)
+        if transition < 0.0:
+            transition = 0.0
         return transition
 
     def setTransition(self, i, j, prob):
@@ -2384,7 +2381,8 @@ class HMM(object):
         if not 0 <= j < self.N:
             raise IndexError("Index " + str(j) + " out of bounds.")
 
-        # XXX Need to check that (i,j) is a transition, return IndexError else
+        if not self.cmodel.check_transition(i, j):
+            raise ValueError("No transition between state " + str(i) + " and " + str(j))
 
         self.cmodel.set_transition(i, j, prob)
 
@@ -3259,7 +3257,9 @@ class GaussianEmissionHMM(HMM):
             raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
             raise IndexError("Index " + str(j) + " out of bounds.")
-        # XXX check that i,j is transition
+
+        if not self.cmodel.check_transition(i, j, 0):
+            raise ValueError("No transition between state " + str(i) + " and " + str(j))
 
         self.cmodel.set_transition(i, j, 0, float(prob))
 

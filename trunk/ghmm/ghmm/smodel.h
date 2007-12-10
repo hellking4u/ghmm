@@ -465,6 +465,17 @@ extern "C" {
   double ghmm_cmodel_get_transition(ghmm_cmodel* mo, int i, int j, int c);
 
 /**
+    Checks if a non zero transition exists between state 'i' to state 'j'.
+    NOTE: No internal checks
+    @return  transition probability from state i to state j
+    @param mo model
+    @param i  state index (source)
+    @param j  state index (target)
+    @param c  transition class
+*/
+  int ghmm_cmodel_check_transition(ghmm_cmodel* mo, int i, int j, int c);
+
+/**
     Set transition from state 'i' to state 'j' to value 'prob'.
     NOTE: No internal checks - model might get broken if used without care.
     @param mo model

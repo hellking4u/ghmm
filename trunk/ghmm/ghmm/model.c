@@ -1191,6 +1191,21 @@ double ghmm_dmodel_get_transition(ghmm_dmodel* mo, int i, int j)
 # undef CUR_PROC
 }   /* ghmm_dmodel_get_transition */
 
+int ghmm_dmodel_check_transition(ghmm_dmodel* mo, int i, int j)
+{
+# define CUR_PROC "ghmm_dmodel_check_transition"
+  int out;
+
+  if (mo->s && mo->s[i].out_a && mo->s[j].in_a) {
+    for (out=0; out < mo->s[i].out_states; out++) {
+      if (mo->s[i].out_id[out] == j)
+        return 1;
+    }
+  }
+  return 0;
+# undef CUR_PROC
+}   /* ghmm_dmodel_check_transition */
+
 void ghmm_dmodel_set_transition (ghmm_dmodel * mo, int i, int j, double prob)
 {
 # define CUR_PROC "ghmm_dmodel_set_transition"
