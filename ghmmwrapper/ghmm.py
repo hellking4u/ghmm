@@ -2118,7 +2118,7 @@ class HMM(object):
             it would be more efficient to use the posterior function directly
             and not multiple calls to statePosterior
         """
-        # XXX TODO for silent states things arr more complicated -> to be done
+        # XXX TODO for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Models with silent states not yet supported.")
 
@@ -3701,13 +3701,16 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         """ log P[ emissionSequence, stateSequence| m] """
 
         if not isinstance(emissionSequence,EmissionSequence):
-            raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
+            raise TypeError("EmissionSequence required, got " +
+                            str(emissionSequence.__class__.__name__))
 
         state = self.cmodel.getState(stateSequence[0])
         emissionProb = self.getEmissionProbability(emissionSequence[0],stateSequence[0])
 
         if (emissionProb == 0): # zero ??? or some small constant?
-            raise SequenceCannotBeBuild("first symbol " + str(emissionSequence[0]) + " not emitted by state " + str(stateSequence[0]))
+            raise SequenceCannotBeBuild("first symbol " +
+                                        str(emissionSequence[0]) + " not emitted by state " +
+                                        str(stateSequence[0]))
 
         logP = math.log(state.pi * emissionProb)
 
@@ -3724,8 +3727,11 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                         emissionProb = self.getEmissionProbability(emissionSequence[i+1],out_id)
                         #symbolIndex += 1
                         if emissionProb == 0:
-                            raise SequenceCannotBeBuild("symbol " + str(emissionSequence[i+1]) + " not emitted by state "+ str(stateSequence[i+1]))
-                        logP += math.log( ghmmwrapper.double_matrix_getitem(cur_state.out_a,0,j) * emissionProb)
+                            raise SequenceCannotBeBuild("symbol " + str(emissionSequence[i+1]) +
+                                                        " not emitted by state " +
+                                                        str(stateSequence[i+1]))
+                        logP += math.log( ghmmwrapper.double_matrix_getitem(cur_state.out_a,0,j) *
+                                          emissionProb)
                         break
         except IndexError:
             pass
