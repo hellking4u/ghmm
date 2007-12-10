@@ -209,6 +209,8 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
         int logp(double *O, int T, double *log_p);
 
+        int logp_joint(const double *O, int len, const int *S, int slen, double *log_p);
+
         int class_change_alloc(void);
 
         //int check_compatibility(ghmm_cmodel **smo, int smodel_number);

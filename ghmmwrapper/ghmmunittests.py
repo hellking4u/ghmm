@@ -390,9 +390,6 @@ class HMMBaseClassTests(unittest.TestCase):
     def testposteriorExeption(self):
         self.assertRaises(NotImplementedError, self.model.posterior, "sequence")
 
-    def testjoinedExeption(self):
-        self.assertRaises(NotImplementedError, self.model.joined, "emissionSequence", "stateSequence")
-
     def testbaumWelchExeption(self):
         self.assertRaises(NotImplementedError, self.model.baumWelch, "trainingSequences", "nrSteps", "loglikelihoodCutoff")
 

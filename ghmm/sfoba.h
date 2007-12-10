@@ -97,6 +97,21 @@ extern "C" {
   int ghmm_cmodel_logp (ghmm_cmodel * smo, double *O, int T, double *log_p);
 
 
+/**
+  Calculation of log( P(O,S | lambda) ).
+  Computes joint probability of sequence and state sequence
+  @param mo        model
+  @param O         sequence
+  @param len       length of sequence
+  @param S         state sequence
+  @param slen      length of state sequence (differs from len only for HMMs with silent states)
+  @param log\_p    log likelihood log( P(O|lambda) )
+  @return 0 for success, -1 for error
+  */
+int ghmm_cmodel_logp_joint(ghmm_cmodel *mo, const double *O, int len,
+                           const int *S, int slen, double *log_p);
+
+
 #ifdef __cplusplus
 }
 #endif
