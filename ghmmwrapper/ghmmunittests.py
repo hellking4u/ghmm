@@ -1044,10 +1044,15 @@ class GaussianEmissionHMMTests(unittest.TestCase):
     def testforward(self):
         seq = self.model.sampleSingle(3,seed=3586662)
         res = self.model.forward(seq)
-        self.assertEqual(str(res[0]), '[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.81096817099595242, 0.0, 0.18903182900404761]]')
-        self.assertEqual(str(res[1]), '[0.14046138547389087, 0.1717049478939392, 0.2456746384908276]')
+        
+        f = lambda x: round(x,14)
 
-
+        self.assertEqual([map(f, v) for v in res[0]],
+                         [[1.0, 0.0, 0.0],
+                          [0.0, 1.0, 0.0],
+                          [0.81096817099594998, 0.0, 0.18903182900404999]])
+        self.assertEqual(map(f, res[1]),
+                         [0.14046138547389, 0.17170494789394, 0.24567463849082999])
 
 
     def testloglikelihoods(self):
