@@ -1132,9 +1132,22 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
 
+class HMMERReadTests(unittest.TestCase):
+    def testSingleRead(self):
+        model = ghmm.HMMOpen('testdata/tk.hmm')
+        self.assertEqual(model.N, 38)
+        self.assertEqual(len(model.emissionDomain), 20)
+        self.assert_(model.hasFlags(ghmm.kSilentStates))
+        self.assert_(model.hasFlags(ghmm.kDiscreteHMM))
+
+    def testMultipleRead(self):
+        models = ghmm.readMultipleHMMERModels("testdata/multiple_hmmer.hmm")
+        self.assertEqual(len(models), 5)
+        self.assertEqual(str(models[0]), str(models[3]))
+        self.assertEqual(str(models[1]), str(models[4]))
 
 class XMLIOTests(unittest.TestCase):
-
+    """ Deprecated """
     def setUp(self):
         self.A = [[0.3,0.3,0.4],[0.6,0.1,0.3],[1.0,0.0,0.0]]
         self.B = [[0.0,0.5,0.5,0.0],[0.1,0.0,0.8,0.1], [0.0,0.0,0.0,0.0]]
@@ -1236,7 +1249,9 @@ suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'te
 suiteStateLabelHMM = unittest.makeSuite(StateLabelHMMTests,'test')
 suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
 suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
+suiteHMMER = unittest.makeSuite(HMMERReadTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
+suiteComplexSequence = unittest.makeSuite(ComplexEmissionSequenceTests,'test')
 
 # Call to individual test suites, uncomment to activate as needed.
 runner = unittest.TextTestRunner()
@@ -1248,5 +1263,6 @@ runner = unittest.TextTestRunner()
 #runner.run(suiteStateLabelHMM)
 #runner.run(suiteGaussianEmissionHMM)
 #runner.run(suiteGaussianMixtureHMM)
+#runner.run(suiteHMMER)
 #runner.run(suiteXMLIO)
-
+#runner.run(suiteComplexSequence)
