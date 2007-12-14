@@ -276,7 +276,7 @@ REFERENCE_ARRAY(ghmm_dmodel, dmodel_ptr)
         int label_logp(const int *O, const int *label, int len, double *log_p);
         int label_backward(const int *O, const int *label, int len, double **beta, double *scale, double *log_p);
         //int label_forward_lean(const int *O, const int *label, int len, double *log_p);
-        int label_gradient_descent(ghmm_dseq *sq, double eta, int no_steps);
+        ghmm_dmodel *label_gradient_descent(ghmm_dseq *sq, double eta, int no_steps);
         int* label_kbest(int *o_seq, int seq_len, int k, double *log_p);
         int label_baum_welch(ghmm_dseq *sq);
         int label_baum_welch_nstep(ghmm_dseq *sq, int max_step, double likelihood_delta);
