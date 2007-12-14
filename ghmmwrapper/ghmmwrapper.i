@@ -143,7 +143,7 @@
 /*============================================================================
   =============== Logging Function Callbacks ================================= */
 // Grab a Python function object as a Python object.
-#ifdef SWIG<python>
+#if defined(SWIGPYTHON)
 %typemap(in) PyObject *pyfunc {
   if (!PyCallable_Check($input)) {
     PyErr_SetString(PyExc_TypeError, "Need a callable object!");
@@ -151,37 +151,37 @@
   }
   $1 = $input;
 }
-#endif
 
 %{
   /* This function matches the prototype of the normal C callback
      function for our widget. However, we use the clientdata pointer
      for holding a reference to a Python callable object. */
 
-  static void PythonCallBack(int level, const char * message, void *clientdata)
+    static void PythonCallBack(int level, const char *message, void *clientdata)
     {
-      PyObject *func, *arglist;
+        PyObject *func, *arglist;
 
-      // Get Python function
-      func = (PyObject *) clientdata;
-      // Build Python arguments
-      arglist = Py_BuildValue("(is)", level, message);
-      // Call Python
-      PyEval_CallObject(func, arglist);
-      // Trash arguments
-      Py_DECREF(arglist);
+        // Get Python function
+        func = (PyObject *) clientdata;
+        // Build Python arguments
+        arglist = Py_BuildValue("(is)", level, message);
+        // Call Python
+        PyEval_CallObject(func, arglist);
+        // Trash arguments
+        Py_DECREF(arglist);
     }
 %}
 
 %inline %{
-// Set a Python function object as a callback function
-// Note : PyObject *pyfunc is remapped with a typemap
-static void set_pylogging(PyObject *pyfunc) {
-  ghmm_set_logfunc(PythonCallBack, (void *) pyfunc);
-  Py_INCREF(pyfunc);
-}
+    // Set a Python function object as a callback function
+    // Note : PyObject *pyfunc is remapped with a typemap
+    void set_pylogging(PyObject *pyfunc)
+    {
+        ghmm_set_logfunc(PythonCallBack, (void *) pyfunc);
+        Py_INCREF(pyfunc);
+    }
 %}
-
+#endif /* defined(SWIGPYTHON) */
 
 /*==========================================================================
   ===== Random Number Generator (RNG) ====================================== */
