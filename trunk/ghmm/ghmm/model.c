@@ -629,6 +629,8 @@ int ghmm_dmodel_free(ghmm_dmodel ** mo) {
 
   if ((*mo)->s)
     m_free((*mo)->s);
+  if ((*mo)->alphabet)
+    m_free((*mo)->alphabet);
   if ((*mo)->name)
     m_free((*mo)->name);
   if ((*mo)->model_type & GHMM_kSilentStates) {
