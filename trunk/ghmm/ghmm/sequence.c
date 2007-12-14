@@ -1210,6 +1210,8 @@ int ghmm_dseq_free (ghmm_dseq ** sq) {
 
   if ((*sq)->states)
     ighmm_dmatrix_free(&(*sq)->states, (*sq)->seq_number);
+  if ((*sq)->states_len)
+    m_free((*sq)->states_len);
 
   if ((*sq)->state_labels) {
     ighmm_dmatrix_free (&(*sq)->state_labels, (*sq)->seq_number);
