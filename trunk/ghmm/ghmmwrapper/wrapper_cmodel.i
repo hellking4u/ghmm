@@ -149,6 +149,7 @@ typedef struct ghmm_cmodel_class_change_context {
         }
 }
 
+%newobject ghmm_cmodel::generate_sequences;
 
 /*==========================================================================
   ===== continous emission models ========================================== */
