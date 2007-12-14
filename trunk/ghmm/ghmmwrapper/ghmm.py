@@ -1986,8 +1986,6 @@ class HMM(object):
     def __del__(self):
         """ Deallocation routine for the underlying C data structures. """
         log.debug( "__del__ HMM" + str(self.cmodel))
-        del self.cmodel
-        self.cmodel = None
 
     def loglikelihood(self, emissionSequences):
         """ Compute log( P[emissionSequences| model]) using the forward algorithm
@@ -3085,7 +3083,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
             log.error("Gradient descent finished not successfully.")
             return False
         else:
-            # XXX check if swig deallocets the model
             self.cmodel = tmp_model
             return True
 
