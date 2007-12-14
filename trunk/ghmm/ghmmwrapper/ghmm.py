@@ -1437,7 +1437,7 @@ class HMMOpenFactory(HMMFactory):
 
         return result
 
-    def openHMMER(self, fileName):
+    def openSingleHMMER(self, fileName):
         # HMMER format models
         h = modhmmer.hmmer(fileName)
 
@@ -1452,6 +1452,39 @@ class HMMOpenFactory(HMMFactory):
         # XXX TODO: Probably slow for large matrices (Rewrite for 0.9)
         [A,B,pi,modelName] = h.getGHMMmatrices()
         return  HMMFromMatrices(emission_domain, distribution, A, B, pi, hmmName=modelName)
+
+
+    def openHMMER(self, fileName):
+        """
+        Reads a file containing multiple HMMs in HMMER format, returns list of
+        HMM objects or a single HMM object.
+        """
+        if not os.path.exists(fileName):
+            raise IOError('File ' + str(fileName) + ' not found.')
+
+        modelList = []
+        string = ""
+        f = open(fileName,"r")
+
+        res = re.compile("^//")
+        stat = re.compile("^ACC\s+(\w+)")
+        for line in f.readlines():
+            string = string + line
+            m = stat.match(line)
+            if m:
+                name = m.group(1)
+                log.info( "Reading model " + str(name) + ".")
+
+            match = res.match(line)
+            if match:
+                fileLike = StringIO.StringIO(string)
+                modelList.append(self.openSingleHMMER(fileLike))
+                string = ""
+                match = None
+
+        if len(modelList) == 1:
+            return modelList[0]
+        return modelList
 
 
     def determineHMMClass(self, fileName):
@@ -1536,39 +1569,6 @@ HMMOpenXML   = HMMOpenFactory(GHMM_FILETYPE_XML)
 
 # use only HMMOpen and specify the filetype if it can't guessed from the extension
 HMMOpen      = HMMOpenFactory()
-
-
-def readMultipleHMMERModels(fileName):
-    """
-        Reads a file containing multiple HMMs in HMMER format, returns list of
-        HMM objects.
-
-    """
-    # XXX Integrate into HMMOpen, check for single hmm files
-    if not os.path.exists(fileName):
-        raise IOError('File ' + str(fileName) + ' not found.')
-
-    modelList = []
-    string = ""
-    f = open(fileName,"r")
-
-    res = re.compile("^//")
-    stat = re.compile("^ACC\s+(\w+)")
-    for line in f.readlines():
-        string = string + line
-        m = stat.match(line)
-        if m:
-            name = m.group(1)
-            log.info( "Reading model " + str(name) + ".")
-
-        match = res.match(line)
-        if match:
-            fileLike = StringIO.StringIO(string)
-            modelList.append(HMMOpenHMMER(fileLike))
-            string = ""
-            match = None
-
-    return modelList
 
 
 class HMMFromMatricesFactory(HMMFactory):

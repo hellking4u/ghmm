@@ -1141,7 +1141,7 @@ class HMMERReadTests(unittest.TestCase):
         self.assert_(model.hasFlags(ghmm.kDiscreteHMM))
 
     def testMultipleRead(self):
-        models = ghmm.readMultipleHMMERModels("testdata/multiple_hmmer.hmm")
+        models = ghmm.HMMOpen("testdata/multiple_hmmer.hmm")
         self.assertEqual(len(models), 5)
         self.assertEqual(str(models[0]), str(models[3]))
         self.assertEqual(str(models[1]), str(models[4]))
