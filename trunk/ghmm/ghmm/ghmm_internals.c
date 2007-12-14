@@ -52,25 +52,31 @@ static char * qmessage;
 
 static int maxlevel = 3;
 
-static void (* logfunc)(int level, const char * message, void * clientdata);
+static void (*logfunc)(int level, const char *message, void *clientdata);
 
-static void * logfunc_data;
+static void *logfunc_data;
 
-static void process_external_log(int level, const char* proc, const char* error_str) {
+static void process_external_log(int level, const char *proc, const char *error_str) {
 
-  char* message;
+  char *message;
 
-  int len = strlen(proc) + strlen(error_str) + 1;
-  message = malloc(sizeof(char)*(len+1));
-  if (!message)
-    return;
-  message = strncpy(message, proc, len);
-  message = strncat(message, error_str, len);
-  
-  logfunc(level, message, logfunc_data);
+  int proc_len = strlen(proc);
+  int slen = strlen(error_str);
+  message = malloc(sizeof(char) * (proc_len+slen+1));
+  if (message)
+  {
+      message = strncpy(message, proc, proc_len+1);
+      message = strncat(message, error_str, slen);
+      logfunc(level, message, logfunc_data);
+      free(message);
+  }
+  else {
+      logfunc(level, proc, logfunc_data);
+      logfunc(level, error_str, logfunc_data);
+  }
 }
 
-static void ighmm_log_out(int level, const char* proc, char* message) {
+static void ighmm_log_out(int level, const char *proc, char *message) {
 
   /* if defined use external logging function */
   if (logfunc) {
@@ -102,29 +108,34 @@ static void ighmm_log_out(int level, const char* proc, char* message) {
       fputs(message, stderr);
       fputc('\n', stderr);
     }
-
-  free(message);
 }
 
 
 void GHMM_LOG_PRINTF(int level, const char* proc, const char* error_str, ...) {
   va_list args;
-  char* message = malloc(256);
+  char* message = NULL;
 
   /* process queued message if any */
   if (qmessage) {
     ighmm_log_out(level, proc, qmessage);
+    free(qmessage);
     qmessage = NULL;
   }
   if (error_str) {
-    va_start(args, error_str);
-    vsnprintf(message, 256, error_str, args);
-    ighmm_log_out(level, proc, message);
-    va_end(args);
+    message = malloc(256);
+    if (message) {
+        va_start(args, error_str);
+        vsnprintf(message, 256, error_str, args);
+        va_end(args);
+        ighmm_log_out(level, proc, message);
+        free(message);
+    }
+    else
+        ighmm_log_out(level, proc, "Could allocate memory in GHMM_LOG_PRINTF()");
   }
 }
 
-void ighmm_queue_mes(char * text) {
+void ighmm_queue_mes(char *text) {
 #define CUR_PROC "ighmm_queue_mes"
   /* let no message get lost */
   if (!qmessage)
