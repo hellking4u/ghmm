@@ -359,10 +359,12 @@ static int parseBackground(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int m
     GHMM_LOG(LERROR, "Can not parse background CSV list.");
     goto STOP;
   }
+  free(s);
 
   return 0;
 STOP:
   m_free(b);
+  free(s);
   return -1;
 #undef CUR_PROC
 }
@@ -947,6 +949,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
   modelname = xmlGetProp(cur, BAD_CAST "name");
   mt = getXMLCharAttribute(cur, "type", &error);
   modeltype = parseModelType(mt, strlen(mt));
+  free(mt);
   f->modelType = modeltype;
   /* reading common optional atribute prior, 1.0 if not defined */    
   prior = getDoubleAttribute(cur, "prior", &error);
@@ -958,7 +961,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     cos = 1;
 
   /* if first model, initialize model structures */
-  if ( modelNo == 0){
+  if (modelNo == 0){
   switch (f->modelType & PTR_TYPE_MASK) {
     case GHMM_kDiscreteHMM:
       ARRAY_CALLOC(f->model.d, f->noModels);

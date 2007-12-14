@@ -1289,8 +1289,7 @@ class HMMOpenFactory(HMMFactory):
             emission_domain = Float()
             distribution = ContinuousMixtureDistribution
             hmmClass = ContinuousMixtureHMM
-            getPtr = ghmmwrapper.cmodel_ptr_array_getitem
-            models = file.model.c
+            getModel = file.get_cmodel
 
         # we have a discrete HMM, prepare for hmm creation
         elif ((modelType & ghmmwrapper.kDiscreteHMM)
@@ -1298,8 +1297,7 @@ class HMMOpenFactory(HMMFactory):
               and not (modelType & ghmmwrapper.kPairHMM)):
             emission_domain = 'd'
             distribution = DiscreteDistribution
-            getPtr = ghmmwrapper.dmodel_ptr_array_getitem
-            models = file.model.d
+            getModel = file.get_dmodel
             if (modelType & ghmmwrapper.kLabeledStates):
                 hmmClass = StateLabelHMM
             else:
@@ -1313,7 +1311,7 @@ class HMMOpenFactory(HMMFactory):
         # read all models to list at first
         result = []
         for i in range(nrModels):
-            cmodel = getPtr(models,i)
+            cmodel = getModel(i)
             if emission_domain is 'd':
                 emission_domain = Alphabet([], cmodel.alphabet)
             if modelType & ghmmwrapper.kLabeledStates:

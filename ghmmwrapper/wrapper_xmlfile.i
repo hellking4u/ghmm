@@ -18,6 +18,10 @@ typedef struct {
     /* stupid swig */
 } ghmm_xmlfile;
 
+%newobject ghmm_xmlfile::get_cmodel;
+%newobject ghmm_xmlfile::get_dmodel;
+%newobject ghmm_xmlfile::get_dpmodel;
+%newobject ghmm_xmlfile::get_dsmodel;
 %extend ghmm_xmlfile {
         ghmm_cmodel*  get_cmodel(size_t index)  { return self->model.c[index]; }
         ghmm_dmodel*  get_dmodel(size_t index)  { return self->model.d[index]; }
@@ -25,6 +29,7 @@ typedef struct {
         ghmm_dsmodel* get_dsmodel(size_t index) { return self->model.ds[index]; }
 }
 
+%newobject ghmm_xmlfile_parse;
 extern ghmm_xmlfile* ghmm_xmlfile_parse(const char *filename);
 
 extern int           ghmm_xmlfile_validate(const char *filename);
