@@ -179,7 +179,6 @@ typedef struct {
 extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
 %newobject ghmm_dmodel::generate_sequences;
-%newobject ghmm_dmodel_generate_sequences;
 
 %extend ghmm_dmodel {
         ghmm_dmodel() { return calloc(1, sizeof(ghmm_dmodel)); }
@@ -269,7 +268,6 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 STRUCT_ARRAY(ghmm_dmodel, dmodel)
 REFERENCE_ARRAY(ghmm_dmodel, dmodel_ptr)
 
-%newobject ghmm_dmodel_label_generate_sequences;
 %newobject ghmm_dmodel::label_generate_sequences;
 
 /* ====== labeled =========================================================== */
