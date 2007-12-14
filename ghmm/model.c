@@ -2218,8 +2218,6 @@ ghmm_dbackground *ghmm_dbackground_alloc (int n, int m, int *orders, double **B)
   if (B)
     ptbackground->b = B;
 
-  ARRAY_CALLOC(ptbackground->name, n);
-
   return ptbackground;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   return NULL;
@@ -2227,8 +2225,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*----------------------------------------------------------------------------*/
-ghmm_dbackground *ghmm_dbackground_copy
-                                       (ghmm_dbackground * bg)
+ghmm_dbackground *ghmm_dbackground_copy(ghmm_dbackground * bg)
 {
 #define CUR_PROC "ghmm_dbackground_copy"
   int i, j, b_i_len;
