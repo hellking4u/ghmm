@@ -23,6 +23,7 @@ typedef struct {
 %newobject ghmm_xmlfile::get_dpmodel;
 %newobject ghmm_xmlfile::get_dsmodel;
 %extend ghmm_xmlfile {
+        ~ghmm_xmlfile() { free(self->model.c); free(self); }
         ghmm_cmodel*  get_cmodel(size_t index)  { return self->model.c[index]; }
         ghmm_dmodel*  get_dmodel(size_t index)  { return self->model.d[index]; }
         ghmm_dpmodel* get_dpmodel(size_t index) { return self->model.dp[index]; }
