@@ -3410,7 +3410,7 @@ class GaussianEmissionHMM(HMM):
         pyscale = ghmmwrapper.double_array2list(cscale, t)
         pyalpha = ghmmhelper.double_matrix2list(calpha,t,i)
 
-        del cscale
+        ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha,t)
         return (pyalpha,pyscale)
 
