@@ -576,6 +576,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
       f->model.c[modelNo]->s[state].fix = stateFixed;
 
     }
+    free(desc); desc = NULL;
 
     /* ======== pair hmm state ============================================ */
     if ((!xmlStrcmp(elem->name, BAD_CAST "pair"))) {
@@ -1020,6 +1021,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     GHMM_LOG(LERROR, "invalid or unimplemented model type");
     goto STOP;
   }
+  m_free(modelname); modelname = NULL;
 
   /* allocating background distributions for approtiate models */
   if (modeltype & GHMM_kBackgroundDistributions) { 
@@ -1082,11 +1084,12 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
 
   /* freeing temporary data */
   m_free(inDegree);
-  m_free(outDegree);  
-  return 0;  
+  m_free(outDegree);
+  return 0;
 STOP:
   free(inDegree);
   free(outDegree);
+  free(modelname);
   free(bg_orders);
   free(bg_ptr);
   free(alphabets);
