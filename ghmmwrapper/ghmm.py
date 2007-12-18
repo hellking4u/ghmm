@@ -1757,7 +1757,6 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
-                    state.c = ghmmwrapper.list2double_array([1.0]) # Mixture weights. Unused
                     mu_list = B[i][0]
                     sigma_list = B[i][1]
                     weight_list = B[i][2]
@@ -1822,7 +1821,6 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
-                    state.c = ghmmwrapper.list2double_array([1.0]) # Mixture weight
                     mu_list = B[i][0]
                     sigma_list = B[i][1]
                     a_list = B[i][2]
