@@ -12,6 +12,7 @@ PYTHONVER := $(shell $(PYTHON) -V 2>&1 | cut -c 8-10)
 
 SWIG_INTERFACE_FILES = ghmmwrapper.i \
                        wrapper_alphabet.i \
+		       wrapper_arrays.i \
                        wrapper_cseq.i \
                        wrapper_dseq.i \
                        wrapper_dpseq.i \
