@@ -456,6 +456,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
 	}
 	ARRAY_MALLOC(emissions, pow(f->model.d[modelNo]->M, order+1));
 	parseCSVList(s, pow(f->model.d[modelNo]->M, order+1), emissions, rev);
+	free(f->model.d[modelNo]->s[state].b);
 	f->model.d[modelNo]->s[state].b = emissions;
 	break;
 
