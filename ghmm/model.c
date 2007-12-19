@@ -654,8 +654,10 @@ int ghmm_dmodel_free(ghmm_dmodel ** mo) {
     m_free(m->tied_to);
   if (m->pow_lookup)
     m_free(m->pow_lookup);
-  if (m->model_type & GHMM_kBackgroundDistributions)
+  if (m->model_type & GHMM_kBackgroundDistributions) {
     m_free(m->background_id);
+    ghmm_dbackground_free(m->bp);
+  }
   if (m->model_type & GHMM_kHigherOrderEmissions)
     m_free(m->order);
   if (m->model_type & GHMM_kLabeledStates)
@@ -667,20 +669,24 @@ int ghmm_dmodel_free(ghmm_dmodel ** mo) {
 }  /* ghmm_dmodel_free */
 
 
-int ghmm_dbackground_free (ghmm_dbackground * bg)
-{
+/*============================================================================*/
+int ghmm_dbackground_free(ghmm_dbackground *bg) {
 #define CUR_PROC "ghmm_dbackground_free"
+  int i;
 
   if (bg->order)
     m_free(bg->order);
   if (bg->b)
     ighmm_cmatrix_free(&(bg->b), bg->n);
-  m_free (bg);
-  return (0);
+  if (bg->name) {
+    for (i=0; i<bg->n; i++)
+      free(bg->name[i]);
+    m_free(bg->name);
+  }
+  m_free(bg);
+  return 0;
 #undef CUR_PROC
 }
-
-
 
 /*============================================================================*/
 ghmm_dmodel *ghmm_dmodel_copy (const ghmm_dmodel * mo)
@@ -2218,8 +2224,7 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
    @param order: orders of the distribtions (optional)
    @param B:     matrix of distribution parameters (optional)
 */
-ghmm_dbackground *ghmm_dbackground_alloc (int n, int m, int *orders, double **B)
-{
+ghmm_dbackground *ghmm_dbackground_alloc (int n, int m, int *orders, double **B) {
 #define CUR_PROC "ghmm_dbackground_alloc"
   ghmm_dbackground *ptbackground;
 
