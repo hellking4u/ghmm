@@ -30,6 +30,7 @@ ghmm_dbackground* ghmm_dbackground_alloc (int n, int m, int* orders, double** B)
             { return ghmm_dbackground_alloc(n, m, orders, B); }
         ~ghmm_dbackground() { ghmm_dbackground_free(self); }
 
+        ghmm_dbackground *copy();
         int getOrder(size_t index) { return self->order[index]; }
         double *getWeights(size_t index) { return self->b[index]; }
 	char *getName (size_t index) { return self->name[index]; }

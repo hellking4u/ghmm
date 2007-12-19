@@ -1941,6 +1941,9 @@ class BackgroundDistribution(object):
             outstr += "  " + str(i+1) +": "+str(d[i])+"\n"
         return outstr
 
+    def getCopy(self):
+        return self.cbackground.copy()
+
     def toLists(self):
         dim = self.cbackground.m
         distNum = self.cbackground.n
@@ -2698,7 +2701,7 @@ class DiscreteEmissionHMM(HMM):
         if self.background != None:
             del(self.background)
             ghmmwrapper.free(self.cmodel.background_id)
-        self.cmodel.bp = backgroundObject.cbackground
+        self.cmodel.bp = backgroundObject.getCopy()
         self.background = backgroundObject
         self.cmodel.background_id = ghmmwrapper.list2int_array(stateBackground)
 
