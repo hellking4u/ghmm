@@ -1022,6 +1022,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     goto STOP;
   }
   m_free(modelname); modelname = NULL;
+  free(alphabets);
 
   /* allocating background distributions for approtiate models */
   if (modeltype & GHMM_kBackgroundDistributions) { 
