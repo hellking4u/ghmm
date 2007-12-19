@@ -617,39 +617,51 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #endif /* GHMM_OBSOLETE */
 
 /*============================================================================*/
+static void ghmm_alphabet_free(ghmm_alphabet *a) {
+#define CUR_PROC "ghmm_alphabet_free"
+    int i;
+    for (i=0; i<a->size; i++)
+        free(a->symbols[i]);
+    free(a->symbols);
+    free(a);
+#undef CUR_PROC
+}
 
+/*============================================================================*/
 int ghmm_dmodel_free(ghmm_dmodel ** mo) {
 #define CUR_PROC "ghmm_dmodel_free"
   int i;
+  ghmm_dmodel *m = NULL;
   mes_check_ptr (mo, return (-1));
-  mes_check_ptr (*mo, return (-1));
+  m = *mo;
+  mes_check_ptr (m, return (-1));
 
-  for (i=0; i < (*mo)->N && (*mo)->s; i++)
-    ghmm_dstate_clean(&(*mo)->s[i]);
+  for (i=0; i < m->N && m->s; i++)
+    ghmm_dstate_clean(&m->s[i]);
 
-  if ((*mo)->s)
-    m_free((*mo)->s);
-  if ((*mo)->alphabet)
-    m_free((*mo)->alphabet);
-  if ((*mo)->name)
-    m_free((*mo)->name);
-  if ((*mo)->model_type & GHMM_kSilentStates) {
-    if ((*mo)->topo_order)
-      m_free((*mo)->topo_order);
-    m_free((*mo)->silent);
+  if (m->s)
+    m_free(m->s);
+  if (m->alphabet)
+    ghmm_alphabet_free(m->alphabet);
+  if (m->name)
+    m_free(m->name);
+  if (m->model_type & GHMM_kSilentStates) {
+    if (m->topo_order)
+      m_free(m->topo_order);
+    m_free(m->silent);
   }
-  if ((*mo)->model_type & GHMM_kTiedEmissions)
-    m_free((*mo)->tied_to);
-  if ((*mo)->pow_lookup)
-    m_free((*mo)->pow_lookup);
-  if ((*mo)->model_type & GHMM_kBackgroundDistributions)
-    m_free((*mo)->background_id);
-  if ((*mo)->model_type & GHMM_kHigherOrderEmissions)
-    m_free((*mo)->order);
-  if ((*mo)->model_type & GHMM_kLabeledStates)
-    m_free((*mo)->label);
+  if (m->model_type & GHMM_kTiedEmissions)
+    m_free(m->tied_to);
+  if (m->pow_lookup)
+    m_free(m->pow_lookup);
+  if (m->model_type & GHMM_kBackgroundDistributions)
+    m_free(m->background_id);
+  if (m->model_type & GHMM_kHigherOrderEmissions)
+    m_free(m->order);
+  if (m->model_type & GHMM_kLabeledStates)
+    m_free(m->label);
  
-  m_free(*mo);
+  m_free(m);
   return (0);
 #undef CUR_PROC
 }  /* ghmm_dmodel_free */
