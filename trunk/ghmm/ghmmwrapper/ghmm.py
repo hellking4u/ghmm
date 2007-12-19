@@ -3656,9 +3656,6 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
     """
 
-    def __init__(self, emissionDomain, distribution, cmodel):
-        GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
-
     def getEmission(self, i, comp):
         """ Return (mu, sigma^2, weight) of component 'comp' in state 'i'  """
         state  = self.cmodel.getState(i)
@@ -3855,9 +3852,6 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 ##     NORMAL_RIGHT =1
 ##     NORMAL_LEFT=3
 ##     UNIFORM=4
-
-    def __init__(self, emissionDomain, distribution, cmodel):
-        GaussianEmissionHMM.__init__(self, emissionDomain, distribution, cmodel)
 
     def getEmissionProbability(self,value,st):
         return self.cmodel.calc_b(state, value)
