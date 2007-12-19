@@ -1021,7 +1021,6 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     GHMM_LOG(LERROR, "invalid or unimplemented model type");
     goto STOP;
   }
-  m_free(modelname); modelname = NULL;
   free(alphabets);
 
   /* allocating background distributions for approtiate models */

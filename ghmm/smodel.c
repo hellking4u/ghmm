@@ -750,6 +750,7 @@ int ghmm_cmodel_free (ghmm_cmodel ** smo)
     }
     m_free ((*smo)->class_change);
   }
+  if ((*smo)->name) m_free((*smo)->name);
   /*m_free ((*smo)->density);*/
   m_free (*smo);
   return (0);
