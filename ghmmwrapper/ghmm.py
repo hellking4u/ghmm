@@ -3853,9 +3853,6 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 ##     NORMAL_LEFT=3
 ##     UNIFORM=4
 
-    def getEmissionProbability(self,value,st):
-        return self.cmodel.calc_b(state, value)
-
     def getEmission(self, i, comp):
         """ Return the paramenters of component 'comp' in state 'i'
         (type, mu, sigma^2, weight) - for a gaussian component
@@ -3887,9 +3884,6 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         state.setWeight(comp, float(weight))
         state.setTruncate(comp, float(a))
         state.setDensity(comp, int(type))
-
-    def getEmissionProbability(self, value, state):
-        return self.cmodel.calc_b(state, value)
 
     def __str__(self):
         "defines string representation"
