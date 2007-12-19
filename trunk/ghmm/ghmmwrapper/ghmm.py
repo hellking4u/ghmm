@@ -4209,8 +4209,8 @@ class ComplexEmissionSequence(object):
             # self.cseq.set_discrete(i, seq)
 
         for i in range(len(self.continuousInputs)):
-            seq = [float(x) for x in self.continuousInputs[i]]
-            seq = ghmmwrapper.list2double_array(seq)
+            #seq = [float(x) for x in self.continuousInputs[i]]
+            #seq = ghmmwrapper.list2double_array(seq)
             pointerContinuous = self.cseq.get_continuous(i)
             for j in range(len(self)):
                 ghmmwrapper.double_array_setitem(pointerContinuous, j, self.continuousInputs[i][j])
