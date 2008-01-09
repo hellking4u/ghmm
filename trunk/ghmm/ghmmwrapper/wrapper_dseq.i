@@ -47,6 +47,9 @@ extern int ghmm_dseq_free(ghmm_dseq **sq);
 extern ghmm_dseq* ghmm_dseq_calloc(long number);
 
 %extend ghmm_dseq {
+%apply SWIGTYPE* DISOWN {ghmm_dseq* seq};
+        ghmm_dseq(ghmm_dseq* seq) { return seq; }
+%clear ghmm_dseq* seq;
         ghmm_dseq(long number) { return ghmm_dseq_calloc(number); }
         ghmm_dseq(const char *filename, ghmm_alphabet *alphabet)
         {
@@ -134,7 +137,29 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
             }
 }
 
-%apply int *OUTPUT {int *seq_arrays};
+// ignore the input value for int array to python list conversion
+%typemap(in, numinputs=0) int *seq_arrays (int temp) {
+    $1 = &temp;
+}
+// convert array of ints to python list
+%typemap(argout) (int *seq_arrays) {
+    int i;
+    PyObject *obj;
+    Py_XDECREF($result);   /* Blow away any previous result */
+    if (result) {
+        $result = PyList_New(*$1);
+        for (i=0; i<*$1; i++) {
+            obj = SWIG_NewPointerObj(result[i], SWIGTYPE_p_ghmm_dseq, SWIG_POINTER_NEW);
+            PyList_SetItem($result, i, obj);
+        }
+        free(result);
+    }
+    else {
+        PyErr_SetString(PyExc_ValueError,"got a null pointer");
+        return NULL;
+    }
+}
+
 extern ghmm_dseq **ghmm_dseq_read(const char *filename, int *seq_arrays);
 
 REFERENCE_ARRAY(ghmm_dseq, dseq_ptr)

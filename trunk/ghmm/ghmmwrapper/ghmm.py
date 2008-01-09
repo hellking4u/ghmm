@@ -672,16 +672,11 @@ class EmissionSequence(object):
                 if  not os.path.exists(sequenceInput):
                      raise IOError('File ' + str(sequenceInput) + ' not found.')
                 else:
-                    tmp, seq_number = self.seq_read(sequenceInput)
-                    if seq_number > 0:
-                        self.cseq = self.seq_ptr_array_getitem(tmp, 0)
-                        for n in range(1, seq_number):
-                            seq = self.seq_ptr_array_getitem(tmp, n)
-                            del seq
+                    tmp = self.seq_read(sequenceInput)
+                    if len(tmp) > 0:
+                        self.cseq = tmp[0]
                     else:
                         raise ParseFileError('File ' + str(sequenceInput) + ' not valid.')
-
-                    ghmmwrapper.free(tmp)
 
             else:
                 raise UnsupportedFeature("asci sequence files are deprecated. Please convert your files"
@@ -717,11 +712,9 @@ class EmissionSequence(object):
         else:
             raise UnknownInputType("inputType " + str(type(sequenceInput)) + " not recognized.")
 
-
     def __del__(self):
         "Deallocation of C sequence struct."
         log.debug( "__del__ EmissionSequence " + str(self.cseq))
-
         # if a parent SequenceSet exits, we use cseq.subseq_free() to free memory
         if self.ParentSequenceSet is not None:
             self.cseq.subseq_free()
@@ -913,19 +906,11 @@ class SequenceSet(object):
                 if not os.path.exists(sequenceSetInput):
                     raise IOError, 'File ' + str(sequenceSetInput) + ' not found.'
                 else:
-                    i = ghmmwrapper.int_array_alloc(1)
-                    tmp = self.seq_read(sequenceSetInput, i)
-                    seq_number = ghmmwrapper.int_array_getitem(i, 0)
-                    if seq_number > 0:
-                        self.cseq = self.seq_ptr_array_getitem(tmp, 0)
-                        for n in range(1, seq_number):
-                            seq = self.seq_ptr_array_getitem(tmp, n)
-                            del seq
+                    tmp = self.seq_read(sequenceSetInput)
+                    if len(tmp) > 0:
+                        self.cseq = tmp[0]
                     else:
                         raise ParseFileError('File ' + str(sequenceSetInput) + ' not valid.')
-
-                    ghmmwrapper.free(tmp)
-                    ghmmwrapper.free(i)
 
         elif isinstance(sequenceSetInput, list):
             internalInput = [self.emissionDomain.internalSequence(seq) for seq in sequenceSetInput]
@@ -1163,28 +1148,19 @@ def SequenceSetOpen(emissionDomain, fileName):
         raise IOError('File ' + str(fileName) + ' not found.')
 
     if emissionDomain.CDataType == "int":
-        readFile = ghmmwrapper.ghmm_dseq_read
-        seqPtr   = ghmmwrapper.dseq_ptr_array_getitem
+        seq_read_func_ptr = ghmmwrapper.ghmm_dseq_read
+        seq_ctor_func_ptr = ghmmwrapper.ghmm_dseq        
     elif emissionDomain.CDataType == "double":
-        readFile = ghmmwrapper.ghmm_cseq_read
-        seqPtr   = ghmmwrapper.cseq_ptr_array_getitem
+        seq_read_func_ptr = ghmmwrapper.ghmm_cseq_read
+        seq_ctor_func_ptr = ghmmwrapper.ghmm_cseq
     else:
         raise TypeError("Invalid c data type " + str(emissionDomain.CDataType))
 
-    structArray, setNr = readFile(fileName)
-
-    # XXX Add Unittest
-    sequenceSets = [SequenceSet(emissionDomain, seqPtr(structArray, i)) for i in range(setNr)]
-##    sequenceSets = []
-##    for i in range(setNr):
-##        seq = seqPtr(structArray,i)
-##        sequenceSets.append(SequenceSet(emissionDomain, seq) )
-
-##        # setting labels to NULL (XXX only for integer?. DONE by c-constructor)
-##        sequenceSets[i].cseq.state_labels = None
-##        sequenceSets[i].cseq.state_labels_len = None
-
-    return  sequenceSets
+    seqs = seq_read_func_ptr(fileName)
+    # ugly workaround for swig bug. swig is not always creating a proxy class 
+    seqs = [seq_ctor_func_ptr(ptr) for ptr in seqs]
+    sequenceSets = [SequenceSet(emissionDomain, seq_ptr) for seq_ptr in seqs]
+    return sequenceSets
 
 
 def writeToFasta(seqSet,fn):
