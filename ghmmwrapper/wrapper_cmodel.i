@@ -137,9 +137,11 @@ typedef struct ghmm_cmodel_class_change_context {
   } ghmm_cmodel_baum_welch_context;
 
 %extend ghmm_cmodel_baum_welch_context{
-        ghmm_cmodel_baum_welch_context()
+        ghmm_cmodel_baum_welch_context(ghmm_cmodel *smo, ghmm_cseq *sqd)
         {
                 ghmm_cmodel_baum_welch_context *bwc = malloc(sizeof(ghmm_cmodel_baum_welch_context));
+                bwc->smo = smo;
+                bwc->sqd = sqd;
                 bwc->logp = malloc(sizeof(*bwc->logp));
                 return bwc;
         }
@@ -149,10 +151,11 @@ typedef struct ghmm_cmodel_class_change_context {
         }
 }
 
-%newobject ghmm_cmodel::generate_sequences;
 
 /*==========================================================================
   ===== continous emission models ========================================== */
+%newobject ghmm_cmodel::generate_sequences;
+
 typedef struct ghmm_cmodel {
   /** Number of states */
   int N;
@@ -183,9 +186,6 @@ typedef struct ghmm_cmodel {
 } ghmm_cmodel;
 
 extern int ghmm_cmodel_free(ghmm_cmodel **smo);
-
-%newobject ghmm_cmodel_generate_sequences;
-%newobject ghmm_cmodel::generate_sequences;
 
 %extend ghmm_cmodel {
         ghmm_cmodel() { return calloc(1, sizeof(ghmm_cmodel)); }
