@@ -86,6 +86,8 @@ REFERENCE_ARRAY(ghmm_dstate, dstate_ptr)
 
 /*==========================================================================
   ===== discrete emission models =========================================== */
+%newobject ghmm_dmodel::generate_sequences;
+
 typedef struct {
   /** Number of states */
   int N;
@@ -178,8 +180,6 @@ typedef struct {
 } ghmm_dmodel;
 
 extern int ghmm_dmodel_free(ghmm_dmodel **mo);
-
-%newobject ghmm_dmodel::generate_sequences;
 
 %extend ghmm_dmodel {
         ghmm_dmodel() { return calloc(1, sizeof(ghmm_dmodel)); }
