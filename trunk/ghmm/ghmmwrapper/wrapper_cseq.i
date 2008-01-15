@@ -90,13 +90,11 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
             }
 }
 
-//%newobject ghmm_cseq_read;
-//%apply int *OUTPUT {int *sqd_number};
-// ignore the input value for int array to python list conversion
+// ignore the input value for ghmm_cseq array to python list conversion
 %typemap(in, numinputs=0) int *sqd_number (int temp) {
     $1 = &temp;
 }
-// convert array of ints to python list
+// convert array of ghmm_cseqs to python list
 %typemap(argout) (int *sqd_number) {
     int i;
     PyObject *obj;
