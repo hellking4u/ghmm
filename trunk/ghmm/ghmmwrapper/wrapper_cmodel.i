@@ -189,6 +189,9 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
 %extend ghmm_cmodel {
         ghmm_cmodel() { return calloc(1, sizeof(ghmm_cmodel)); }
+%apply SWIGTYPE* DISOWN {ghmm_cmodel *smo};
+        ghmm_cmodel(ghmm_cmodel *smo) { return smo; }
+%clear ghmm_cmodel *smo;
         ghmm_cmodel(int no_states, int no_components, int cos) {
                 ghmm_cmodel *mo = calloc(1, sizeof(ghmm_cmodel));
                 mo->model_type = kContinuousHMM;
@@ -258,6 +261,29 @@ REFERENCE_ARRAY(ghmm_cmodel, cmodel_ptr)
 
 /* obsolete stuff */
 #ifdef GHMM_OBSOLETE
-%apply int *OUTPUT {int *smo_number};
+
+// ignore the input value for ghmm_cmodel array to python list conversion
+%typemap(in, numinputs=0) int *smo_number (int temp) {
+    $1 = &temp;
+}
+// convert array of ghmm_cmodels to python list
+%typemap(argout) (int *smo_number) {
+    int i;
+    PyObject *obj;
+    Py_XDECREF($result);   /* Blow away any previous result */
+    if (result) {
+        $result = PyList_New(*$1);
+        for (i=0; i<*$1; i++) {
+            obj = SWIG_NewPointerObj(result[i], SWIGTYPE_p_ghmm_cmodel, SWIG_POINTER_NEW);
+            PyList_SetItem($result, i, obj);
+        }
+        free(result);
+    }
+    else {
+        PyErr_SetString(PyExc_ValueError,"got a null pointer");
+        return NULL;
+    }
+}
 extern ghmm_cmodel **ghmm_cmodel_read(const char *filename, int *smo_number);
-#endif
+
+#endif /* GHMM_OBSOLETE */

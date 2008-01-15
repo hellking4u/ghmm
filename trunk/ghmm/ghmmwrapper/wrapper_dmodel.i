@@ -292,6 +292,29 @@ extern int ghmm_dmodel_label_discriminative(ghmm_dmodel** mo, ghmm_dseq** sqs, i
 
 /* obsolete stuff */
 #ifdef GHMM_OBSOLETE
-%apply int *OUTPUT {int *mo_number};
+
+// ignore the input value for ghmm_dmodel array to python list conversion
+%typemap(in, numinputs=0) int *mo_number (int temp) {
+    $1 = &temp;
+}
+// convert array of ghmm_dmodels to python list
+%typemap(argout) (int *mo_number) {
+    int i;
+    PyObject *obj;
+    Py_XDECREF($result);   /* Blow away any previous result */
+    if (result) {
+        $result = PyList_New(*$1);
+        for (i=0; i<*$1; i++) {
+            obj = SWIG_NewPointerObj(result[i], SWIGTYPE_p_ghmm_dmodel, SWIG_POINTER_NEW);
+            PyList_SetItem($result, i, obj);
+        }
+        free(result);
+    }
+    else {
+        PyErr_SetString(PyExc_ValueError,"got a null pointer");
+        return NULL;
+    }
+}
 extern ghmm_dmodel **ghmm_dmodel_read(char *filename, int *mo_number);
-#endif
+
+#endif /* GHMM_OBSOLETE */
