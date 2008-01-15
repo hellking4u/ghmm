@@ -1115,7 +1115,6 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.model.setMixtureFix(1,[1,1,1])
         f = self.model.getMixtureFix(1)
         self.assertEqual(f,[1,1,1])
-
         # XXX check mu,v,u
 
     def testtomatrices(self):
