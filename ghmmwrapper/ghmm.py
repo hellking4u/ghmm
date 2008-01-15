@@ -3268,6 +3268,7 @@ class GaussianEmissionHMM(HMM):
 
     def setMixtureFix(self, state ,flags):
         s = self.cmodel.getState(state)
+        ghmmwrapper.free(s.mixture_fix)
         s.mixture_fix = ghmmwrapper.list2int_array(flags)
 
     def getStateFix(self,state):
