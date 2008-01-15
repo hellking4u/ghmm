@@ -1386,28 +1386,27 @@ class HMMOpenFactory(HMMFactory):
 
         # XXX broken since silent states are not supported by .smo file format
         if hmmClass == DiscreteEmissionHMM:
-            models,nrModels = ghmmwrapper.ghmm_dmodel_read(fileName)
-            getPtr = ghmmwrapper.dmodel_ptr_array_getitem
+            models = ghmmwrapper.ghmm_dmodel_read(fileName)
             base_model_type = ghmmwrapper.KDiscreteHMM
         else:
-            models,nrModels = ghmmwrapper.ghmm_cmodel_read(fileName)
-            getPtr = ghmmwrapper.cmodel_ptr_array_getitem
+            models = ghmmwrapper.ghmm_cmodel_read(fileName)
             base_model_type = ghmmwrapper.kContinuousHMM
 
         if modelIndex == None:
             result = []
-            for i in range(nrModels):
-                cmodel = getPtr(models, i)
+            for cmodel in models:
+                # ugly workaround for SWIG not creating a proxy class
+                cmodel = ghmmwrapper.ghmm_cmodel(cmodel)
                 cmodel.setModelTypeFlag(base_model_type)
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
                 result.append(m)
         else:
             if modelIndex < nrModels:
-                cmodel = getPtr(models, modelIndex)
+                cmodel = models[modelIndex]
                 cmodel.setModelTypeFlag(base_model_type)
                 result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             else:
-                result = None
+                raise IndexError(fileName + "has only " + len(models) + "models")
 
         return result
 
