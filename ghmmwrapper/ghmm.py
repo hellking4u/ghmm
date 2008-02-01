@@ -2146,6 +2146,7 @@ class HMM(object):
         ghmmwrapper.free(states)
         return logp
 
+    # XXX Implement in subclasses
     # The functions for model training are defined in the derived classes.
     def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         raise NotImplementedError("to be defined in derived classes")
@@ -3202,7 +3203,7 @@ class GaussianEmissionHMM(HMM):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
 
         # Baum Welch context, call baumWelchSetup to initalize
-        self.BWcontext = ""
+        self.BWcontext = None
 
     def getTransition(self, i, j):
         """ Returns the probability of the transition from state i to state j.
@@ -3383,8 +3384,9 @@ class GaussianEmissionHMM(HMM):
             log.error( "Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build.")
 
         # translate alpha / scale to python lists
-        pyscale = ghmmwrapper.double_array2list(cscale, t)
-        pyalpha = ghmmhelper.double_matrix2list(calpha,t,i)
+        pyscale = ghmmwrapper.double_array2list(cscale, t) # XXX return Python2.5 arrays??? 
+        pyalpha = ghmmhelper.double_matrix2list(calpha,t,i) # XXX return Python2.5 arrays? Also 
+        # XXX Check Matrix-valued input.
 
         ghmmwrapper.free(cscale)
         ghmmwrapper.double_matrix_free(calpha,t)
@@ -3455,7 +3457,7 @@ class GaussianEmissionHMM(HMM):
                 # things to blow up later.
                 # cmodel.logp() could do without a return value if -Inf is returned
                 # What should be the semantics in case of computing the likelihood of
-                # a set of sequences
+                # a set of sequences?
                 likelihoodList.append(-float('Inf'))
             else:
                 likelihoodList.append(likelihood)
@@ -3517,6 +3519,7 @@ class GaussianEmissionHMM(HMM):
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
 
+        # XXX exists in C??
         for c in range(self.cmodel.cos):
             for i in range(self.N):
                 # normalizing transitions
@@ -3590,6 +3593,7 @@ class GaussianEmissionHMM(HMM):
 
             training_sequences can either be a SequenceSet or a Sequence
         """
+        # XXX Implement me
         raise NotImplementedError
 
     def baumWelchDelete(self):
@@ -3652,9 +3656,11 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         state.setStdDev(comp, float(sigma))
         state.setWeight(comp, float(weight))
 
+    # XXX OBSOLETE
     def getPrior(self):
          return self.cmodel.prior
 
+    # XXX OBSOLETE
     def setPrior(self, prior):
          self.cmodel.prior = prior
 
@@ -3779,6 +3785,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable) """
+        # XXX Use super normalize, only normalize mixture weights
+
 
         for c in range(self.cmodel.cos):
             for i in range(self.N):
@@ -3918,13 +3926,16 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         return join(strout,'')
 
 
-
+    # XXX OBSOLETE
     def getPrior(self):
         return self.cmodel.prior
 
+    
     def asMatrices(self):
         """Return the parameters in matrix form.
            It also returns the density type"""
+        # XXX inherit transitions ????
+        
         A = []
         B = []
         pi = []
@@ -3952,7 +3963,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
 
 def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
-    """ """
+    """ XXX Document me """
 
     if len(HMMList) != len(SeqList):
         raise TypeError('Inputs not equally long')
@@ -3988,6 +3999,7 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
 
 
 def HMMDiscriminativePerformance(HMMList, SeqList):
+    """ XXX Document me """
 
     if len(HMMList) != len(SeqList):
         raise TypeRrror('Inputs not equally long')
@@ -4112,11 +4124,18 @@ class DiscretePairDistribution(DiscreteDistribution):
                 counts[self.getPairIndex(charX, charY)] += 1
             return counts
 
+
+# XXX Change to MultivariateEmissionSequence
 class ComplexEmissionSequence(object):
     """
-    A complex emission sequence holds the encoded representations of one
-    single sequence. The encoding is done by the emissionDomains. It also links
-    to the underlying C-structure.
+    A MultivariateEmissionSequence is a sequence of multiple emissions per
+    time-point. Emissions can be from distinct EmissionDomains. In particular,
+    integer and floating point emissions are allowed. Access to emissions is
+    given by the index, seperately for discrete and continuous EmissionDomains.
+
+    Example: XXX
+    
+    MultivariateEmissionSequence also links to the underlying C-structure.
 
     Note: ComplexEmissionSequence has to be considered imutable for the moment.
     There are no means to manipulate the sequence positions yet.
