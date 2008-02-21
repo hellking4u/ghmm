@@ -6,12 +6,12 @@
 *       Filename: ghmm/ghmm/xmlreader.h
 *       Authors:  Janne Grunau
 *
-*       Copyright (C) 1998-2004 Alexander Schliep 
+*       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
-*	Copyright (C) 2002-2005 Max-Planck-Institut fuer Molekulare Genetik, 
+*        Copyright (C) 2002-2005 Max-Planck-Institut fuer Molekulare Genetik,
 *                               Berlin
-*                                   
-*       Contact: schliep@ghmm.org             
+*
+*       Contact: schliep@ghmm.org
 *
 *       This library is free software; you can redistribute it and/or
 *       modify it under the terms of the GNU Library General Public
@@ -28,9 +28,9 @@
 *       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *
-*       This file is version $Revision$ 
+*       This file is version $Revision$
 *                       from $Date$
-*             last change by $Author$.
+*             last change by $Author$
 *
 *******************************************************************************/
 #ifndef GHMM_XMLREADER_H
@@ -47,20 +47,20 @@ extern "C" {
 
 /**@name HMM-Model */
 /*@{ (Doc++-Group: xmlreader) */
-  
+
   typedef struct ghmm_xmlfile {
 
     int noModels;
-    
+
     int modelType;
-    
+
     union {
       ghmm_cmodel * * c;
       ghmm_dmodel * * d;
       ghmm_dpmodel * * dp;
       ghmm_dsmodel * * ds;
     } model;
-    
+
   } ghmm_xmlfile;
 
 
