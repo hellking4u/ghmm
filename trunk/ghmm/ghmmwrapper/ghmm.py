@@ -599,10 +599,10 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
         self.weight.append(w)
         self.component.append(distribution)
         if isinstance(distribution,UniformDistribution):
-        # uniform distributions are fixed by definition
-          self.fix.append(1)
+            # uniform distributions are fixed by definition
+            self.fix.append(1)
         else:
-          self.fix.append(fix)
+            self.fix.append(fix)
 
     def set(self, index, w, fix, distribution):
         if index >= M:
@@ -612,10 +612,10 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
         self.weight[i] = w
         self.components[i] = distribution
         if isinstance(distribution,UniformDistribution):
-        # uniform distributions are fixed by definition
-          self.fix[i](1)
+            # uniform distributions are fixed by definition
+            self.fix[i](1)
         else:
-          self.fix[i](fix)
+            self.fix[i](fix)
 
     def get(self,i):
         assert M > i
@@ -1149,7 +1149,7 @@ def SequenceSetOpen(emissionDomain, fileName):
 
     if emissionDomain.CDataType == "int":
         seq_read_func_ptr = ghmmwrapper.ghmm_dseq_read
-        seq_ctor_func_ptr = ghmmwrapper.ghmm_dseq        
+        seq_ctor_func_ptr = ghmmwrapper.ghmm_dseq
     elif emissionDomain.CDataType == "double":
         seq_read_func_ptr = ghmmwrapper.ghmm_cseq_read
         seq_ctor_func_ptr = ghmmwrapper.ghmm_cseq
@@ -1157,7 +1157,7 @@ def SequenceSetOpen(emissionDomain, fileName):
         raise TypeError("Invalid c data type " + str(emissionDomain.CDataType))
 
     seqs = seq_read_func_ptr(fileName)
-    # ugly workaround for swig bug. swig is not always creating a proxy class 
+    # ugly workaround for swig bug. swig is not always creating a proxy class
     seqs = [seq_ctor_func_ptr(ptr) for ptr in seqs]
     sequenceSets = [SequenceSet(emissionDomain, seq_ptr) for seq_ptr in seqs]
     return sequenceSets
@@ -2272,7 +2272,7 @@ class HMM(object):
         seqPtr = self.cmodel.generate_sequences(seed, T, seqNr, -1)
         return SequenceSet(self.emissionDomain, seqPtr)
 
-    
+
     def sampleSingle(self, T, seed=0):
         """ Sample a single emission sequence of length at most T.
             Returns a Sequence object.
@@ -3384,8 +3384,8 @@ class GaussianEmissionHMM(HMM):
             log.error( "Forward finished with -1: Sequence " + str(seq_nr) + " cannot be build.")
 
         # translate alpha / scale to python lists
-        pyscale = ghmmwrapper.double_array2list(cscale, t) # XXX return Python2.5 arrays??? 
-        pyalpha = ghmmhelper.double_matrix2list(calpha,t,i) # XXX return Python2.5 arrays? Also 
+        pyscale = ghmmwrapper.double_array2list(cscale, t) # XXX return Python2.5 arrays???
+        pyalpha = ghmmhelper.double_matrix2list(calpha,t,i) # XXX return Python2.5 arrays? Also
         # XXX Check Matrix-valued input.
 
         ghmmwrapper.free(cscale)
@@ -3930,12 +3930,12 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
     def getPrior(self):
         return self.cmodel.prior
 
-    
+
     def asMatrices(self):
         """Return the parameters in matrix form.
            It also returns the density type"""
         # XXX inherit transitions ????
-        
+
         A = []
         B = []
         pi = []
@@ -4134,7 +4134,7 @@ class ComplexEmissionSequence(object):
     given by the index, seperately for discrete and continuous EmissionDomains.
 
     Example: XXX
-    
+
     MultivariateEmissionSequence also links to the underlying C-structure.
 
     Note: ComplexEmissionSequence has to be considered imutable for the moment.
