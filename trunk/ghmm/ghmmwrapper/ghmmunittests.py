@@ -1131,6 +1131,61 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
 
+class ContinuousMixtureHMMTests(unittest.TestCase):
+    def setUp(self):
+    
+        # create a continuous mixture model from matrices
+        F = ghmm.Float()
+        #self.A = [[0.3,0.3,0.4],[0.4,0.3,0.3],[0.3,0.4,0.3]]
+        self.A = [[0.0,1.0,0.0],[0.0,0.0,1.0],[1.0,0.0,0.0]]
+        self.B = [ [ [2.0],[1.0],[2.0],[1.0] ],
+                   [ [6.0],[4.0],[5.3],[1.0] ],
+                   [ [5.0],[9.0],[5.5],[1.0] ] ]
+        self.pi = [1.0,0.0,0.0]
+        self.densities = [ [ghmmwrapper.uniform], [ghmmwrapper.normal_left], [ghmmwrapper.normal_right] ]
+        self.CMmodel = ghmm.HMMFromMatrices(F,ghmm.ContinuousMixtureDistribution(F), self.A, self.B, self.pi, densities=self.densities)
+        
+    def test__str__(self):
+        #print "\ntest__str__"
+        # we aren't interested in the output but the function should run fine
+        str(self.CMmodel)
+   
+    def testsample(self):
+        #print "\ntest sample "
+        seq = self.CMmodel.sampleSingle(12,seed=3586662)
+        seq2 = self.CMmodel.sample(10,100,seed=3586662)
+    
+    def testprobfunctions(self):
+        #print "testprobfunctions"
+        # test model with uniform and truncated normals as emissions
+        p = self.CMmodel.getEmissionProbability(0.5,0)
+        self.assertEqual(p,0)
+        p = self.CMmodel.getEmissionProbability(1.5,0)
+        self.assertEqual(p,1)
+        
+        p = self.CMmodel.getEmissionProbability(5.5,1)
+        self.assertEqual(p,0)
+        p = self.CMmodel.getEmissionProbability(5.0,1)
+        self.assertEqual(p,0.48471233586200718)
+        self.CMmodel.setEmission(1,0,ghmmwrapper.normal_left,[6.0,1.0,1.0,6.5])
+        p = self.CMmodel.getEmissionProbability(6.3,1)
+        self.assertEqual(p,0.55156691334742991)
+        
+    # this test will give an error, as the sample function for 
+    # truncated gaussians is not correct    
+    def testviterbi(self):
+        pass
+#         #print "\ntest viterbi"
+#         #seq = self.CMmodel.sample(100,100,seed=3586662)
+#         seq = self.CMmodel.sampleSingle(100,seed=3586662)        
+#         v = self.CMmodel.viterbi(seq)
+#         seq = self.CMmodel.sampleSingle(50,seed=3586662)
+#         (ss,loglik) = self.CMmodel.viterbi(seq)
+#         truess = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1]
+#         self.assertEqual(ss,truess)
+#         trueloglik = -48.8182427352
+#         self.assertEqual(str(loglik),str(trueloglik)) 
+        
 class HMMERReadTests(unittest.TestCase):
     def testSingleRead(self):
         model = ghmm.HMMOpen('testdata/tk.hmm')
@@ -1248,6 +1303,7 @@ suiteBackgroundDistribution = unittest.makeSuite(BackgroundDistributionTests,'te
 suiteStateLabelHMM = unittest.makeSuite(StateLabelHMMTests,'test')
 suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
 suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
+suiteContinuousMixtureHMM = unittest.makeSuite(ContinuousMixtureHMMTests,'test')
 suiteHMMER = unittest.makeSuite(HMMERReadTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 suiteComplexSequence = unittest.makeSuite(ComplexEmissionSequenceTests,'test')
@@ -1262,6 +1318,7 @@ runner = unittest.TextTestRunner()
 #runner.run(suiteStateLabelHMM)
 #runner.run(suiteGaussianEmissionHMM)
 #runner.run(suiteGaussianMixtureHMM)
+#runner.run(suiteContinuousMixtureHMM)
 #runner.run(suiteHMMER)
 #runner.run(suiteXMLIO)
 #runner.run(suiteComplexSequence)
