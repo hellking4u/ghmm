@@ -132,8 +132,13 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
             {
                 FILE* file;
                 file = fopen(filename, "at");
-                ghmm_dseq_print(self, file);
-                fclose(file);
+                if (file)
+                {
+                        ghmm_dseq_print(self, file);
+                        fclose(file);
+                }
+                else
+                        PyErr_SetString(PyExc_TypeError,"Expecting a sequence");
             }
 }
 

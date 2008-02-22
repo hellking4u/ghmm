@@ -85,8 +85,13 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
             {
                 FILE* file;
                 file = fopen(filename, "at");
-                ghmm_cseq_print(self, file, discrete);
-                fclose(file);
+                if (file)
+                {
+                        ghmm_cseq_print(self, file, discrete); 
+                        fclose(file);
+                }
+                else
+                        PyErr_SetString(PyExc_TypeError,"Expecting a sequence");
             }
 }
 
