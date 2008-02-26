@@ -2386,11 +2386,12 @@ class HMM(object):
 
     def normalize(self):
         """ Normalize transition probs, emission probs (if applicable)
-
-            Defined in derived classes.
         """
-        raise NotImplementedError
+        log.debug( "Normalizing now.")
 
+        i_error = self.cmodel.normalize()
+        if i_error == -1:
+            log.error("normalization failed")
 
     def randomize(self, noiseLevel):
         """ """
@@ -2760,17 +2761,6 @@ class DiscreteEmissionHMM(HMM):
             return self.cmodel.getSilent(state)
         else:
             return 0
-
-
-    def normalize(self):
-        """ Normalize transition probs, emission probs (if applicable) """
-
-        log.debug( "Normalizing now.")
-
-        i_error = self.cmodel.normalize()
-        if i_error == -1:
-            log.error("normalization failed")
-
 
     def asMatrices(self):
         "Return the parameters in matrix form."
@@ -3519,36 +3509,6 @@ class GaussianEmissionHMM(HMM):
         else:
             return (allPaths[0], allLogs[0])
 
-    def normalize(self):
-        """ Normalize transition probs, emission probs (if applicable) """
-
-        # XXX exists in C??
-        for c in range(self.cmodel.cos):
-            for i in range(self.N):
-                # normalizing transitions
-                state = self.cmodel.getState(i)
-                out_a_i = ghmmwrapper.double_matrix_get_col(state.out_a, c)
-
-                pSum = 0.0
-                stateIds = []
-
-                for j in range(state.out_states):
-                    stateIds.append(state.out_id[j])
-
-                    pSum += ghmmwrapper.double_array_getitem(out_a_i,j)
-
-                for j in range(state.out_states):
-                    normP = ghmmwrapper.double_array_getitem(out_a_i,j) / pSum
-                    out_a_i[j] = normP # updating out probabilities
-
-                    inState = self.cmodel.getState(stateIds[j])
-                    in_a =  ghmmwrapper.double_matrix_get_col(inState.in_a,c)
-                    for k in range(inState.in_states):
-                        inId = inState.in_id[k]
-                        if inId == i:
-                            in_a[k] = normP # updating in probabilities
-
-
     def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Reestimate the model parameters given the training_sequences.
             Perform at most nr_steps until the improvement in likelihood
@@ -3785,48 +3745,6 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 A[i][state_index] = ghmmwrapper.double_matrix_getitem(state.out_a,0,j)
 
         return [A,B,pi]
-
-    def normalize(self):
-        """ Normalize transition probs, emission probs (if applicable) """
-        # XXX Use super normalize, only normalize mixture weights
-
-
-        for c in range(self.cmodel.cos):
-            for i in range(self.N):
-                # normalizing transitions
-                state = self.cmodel.getState(i)
-                out_a_i = ghmmwrapper.double_matrix_get_col(state.out_a,c)
-
-                pSum = 0.0
-                stateIds = []
-
-                for j in range(state.out_states):
-                    stateIds.append(state.out_id[j])
-
-                    pSum += ghmmwrapper.double_array_getitem(out_a_i,j)
-
-                for j in range(state.out_states):
-                    normP = ghmmwrapper.double_array_getitem(out_a_i,j) / pSum
-                    out_a_i[j] = normP # updating out probabilities
-
-                    inState = self.cmodel.getState(stateIds[j])
-                    in_a =  ghmmwrapper.double_matrix_get_col(inState.in_a,c)
-                    for k in range(inState.in_states):
-                        inId = inState.in_id[k]
-                        if inId == i:
-                            in_a[k] = normP # updating in probabilities
-
-                # normalizing mixture weigths
-                pSum = 0.0
-                for k in range(self.cmodel.M):
-                  pSum += ghmmwrapper.double_array_getitem(state.c,k)
-
-
-                for k in range(self.cmodel.M):
-                    v = ghmmwrapper.double_array_getitem(state.c,k)
-                    state.c[k] =  v / pSum
-
-
 
 
 class ContinuousMixtureHMM(GaussianMixtureHMM):
