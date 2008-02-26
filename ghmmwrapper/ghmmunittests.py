@@ -411,9 +411,6 @@ class HMMBaseClassTests(unittest.TestCase):
     def testasMatricesExeption(self):
         self.assertRaises(NotImplementedError, self.model.asMatrices)
 
-    def testnormalizeExeption(self):
-        self.assertRaises(NotImplementedError, self.model.normalize)
-
     def testrandomizeException(self):
         self.assertRaises(NotImplementedError, self.model.randomize, "noiseLevel")
 
