@@ -453,6 +453,13 @@ extern "C" {
 */
   void ghmm_cmodel_get_interval_B (ghmm_cmodel * smo, int state, double *a, double *b);
 
+/** Normalizes initial and transisition probablilities and mixture weights
+    @return     0 on success / -1 on error
+    @param smo  model to normalize
+*/
+
+  int ghmm_cmodel_normalize(ghmm_cmodel *smo);
+
 /**
     Get transition probabality from state 'i' to state 'j' to value 'prob'.
     NOTE: No internal checks

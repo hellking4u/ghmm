@@ -1861,6 +1861,57 @@ void ghmm_cmodel_set_transition (ghmm_cmodel* smo, int i, int j, int c, double p
 # undef CUR_PROC
 }   /* ghmm_cmodel_set_transition */
 
+/*----------------------------------------------------------------------------*/
+/* Scales the output and transitions probs of all states in a given model */
+int ghmm_cmodel_normalize(ghmm_cmodel *smo)
+{
+#define CUR_PROC "ghmm_cmodel_normalize"
+  double pi_sum=0.0;
+  int i, j, c, m, j_id, i_id=0, res=0;
+  int size = 1;
+
+  for (i = 0; i < smo->N; i++) {
+    if (smo->s[i].pi >= 0.0)
+      pi_sum += smo->s[i].pi;
+    else
+      smo->s[i].pi = 0.0;
+
+    for (c = 0; c < smo->cos; c++) {
+      /* normalize transition probabilities */
+      if (ighmm_cvector_normalize(smo->s[i].out_a[c], smo->s[i].out_states) == -1) {
+        res = -1;
+      }
+      /* for every outgoing probability update the corrosponding incoming probability */
+      for (j = 0; j < smo->s[i].out_states; j++) {
+        j_id = smo->s[i].out_id[j];
+        for (m = 0; m < smo->s[j_id].in_states; m++) {
+          if (i == smo->s[j_id].in_id[m]) {
+            i_id = m;
+            break;
+          }
+        }
+        if (i_id == smo->s[j_id].in_states) {
+          GHMM_LOG_PRINTF(LERROR, LOC, "Outgoing transition from state %d to \
+             state %d has no corresponding incoming transition.", i, j_id);
+          return -1;
+        }
+        smo->s[j_id].in_a[c][i_id] = smo->s[i].out_a[c][j];
+      }
+    }
+    /* normalize mixture weights, but not for silent states */
+    if (!((smo->model_type & GHMM_kSilentStates) && 0 /*smo->silent[i]*/)) {
+      if (ighmm_cvector_normalize(smo->s[i].c, smo->M) == -1)
+        res = -1;
+    }
+  }
+
+  for (i = 0; i < smo->N; i++)
+    smo->s[i].pi /= pi_sum;
+
+  return res;
+#undef CUR_PROC
+}                               /* ghmm_cmodel_normalize */
+
 
 /*============================================================================*/
 double ghmm_cmodel_ifunc (ghmm_cmodel * smo, int state, double c, double x)
