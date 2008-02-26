@@ -3085,7 +3085,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         for i in range(seqNumber):
             seq = emissionSequences.cseq.getSequence(i)
-            labels = ghmmwrapper.get_col_pointer_int(emissionSequences.cseq.state_labels,i)
+            labels = ghmmwrapper.int_matrix_get_col(emissionSequences.cseq.state_labels,i)
             tmp = emissionSequences.cseq.getLength(i)
             ret_val,likelihood = self.cmodel.label_logp(seq, labels, tmp)
 
@@ -3527,7 +3527,7 @@ class GaussianEmissionHMM(HMM):
             for i in range(self.N):
                 # normalizing transitions
                 state = self.cmodel.getState(i)
-                out_a_i = ghmmwrapper.get_col_pointer_d(state.out_a,c)
+                out_a_i = ghmmwrapper.double_matrix_get_col(state.out_a, c)
 
                 pSum = 0.0
                 stateIds = []
@@ -3542,7 +3542,7 @@ class GaussianEmissionHMM(HMM):
                     out_a_i[j] = normP # updating out probabilities
 
                     inState = self.cmodel.getState(stateIds[j])
-                    in_a =  ghmmwrapper.get_col_pointer_d(inState.in_a,c)
+                    in_a =  ghmmwrapper.double_matrix_get_col(inState.in_a,c)
                     for k in range(inState.in_states):
                         inId = inState.in_id[k]
                         if inId == i:
@@ -3795,7 +3795,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             for i in range(self.N):
                 # normalizing transitions
                 state = self.cmodel.getState(i)
-                out_a_i = ghmmwrapper.get_col_pointer_d(state.out_a,c)
+                out_a_i = ghmmwrapper.double_matrix_get_col(state.out_a,c)
 
                 pSum = 0.0
                 stateIds = []
@@ -3810,7 +3810,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                     out_a_i[j] = normP # updating out probabilities
 
                     inState = self.cmodel.getState(stateIds[j])
-                    in_a =  ghmmwrapper.get_col_pointer_d(inState.in_a,c)
+                    in_a =  ghmmwrapper.double_matrix_get_col(inState.in_a,c)
                     for k in range(inState.in_states):
                         inId = inState.in_id[k]
                         if inId == i:
