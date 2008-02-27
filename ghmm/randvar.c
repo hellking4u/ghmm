@@ -434,29 +434,12 @@ double ighmm_rand_normal_right (double a, double mue, double u, int seed)
   }
 
 #ifdef DO_WITH_GSL
-  /* up to version 0.8 gsl_ran_gaussian_tail can not handle negative cutoff */
-#define GSL_RAN_GAUSSIAN_TAIL_BUG 1
-#ifdef GSL_RAN_GAUSSIAN_TAIL_BUG
-  s = (-mue) / sigma;
-  if (s < 1) {
-    do {
-      x = gsl_ran_gaussian (RNG, 1.0);
-    }
-    while (x < s);
-    return x * sigma + mue;
-  }
-#endif /* GSL_RAN_GAUSSIAN_TAIL_BUG */
   /* move boundary to lower values in order to achieve maximum at mue
      gsl_ran_gaussian_tail(generator, lower_boundary, sigma)
    */
   return gsl_ran_gaussian_tail (RNG, a - mue, sqrt (u)) + mue;
 
 #else /* DO_WITH_GSL */
-  /* Method: Generate Gauss-distributed random nunbers (with GSL-lib.),
-     until a positive one is found -> not very effective if mue << 0
-     while (x < 0.0) {
-     x = sigma * ighmm_rand_std_normal(seed) + mue;
-     } */
 
   /* Inverse transformation with restricted sampling by Fishman */
   U = GHMM_RNG_UNIFORM (RNG);
