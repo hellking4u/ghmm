@@ -452,8 +452,8 @@ double ighmm_rand_normal_right (double a, double mue, double u, int seed)
   t = sqrt (-log (t * t));
 
   T =
-    sigma * (t -
-             (C0 + t * (C1 + t * C2)) / (1 + t * (D1 + t * (D2 + t * D3))));
+    sigma * (t - (C0 + t * (C1 + t * C2))
+                 / (1 + t * (D1 + t * (D2 + t * D3))));
 
   if (Us < Us1)
     x = mue - T;
