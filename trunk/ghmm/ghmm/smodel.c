@@ -973,11 +973,11 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
   /* A specific length of the sequences isn't given. As a model should have
      an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
-    len = (int) GHMM_MAX_SEQ_LEN;
+    len = GHMM_MAX_SEQ_LEN;
 
   /* Maximum length of a sequence not given */
   if (Tmax <= 0)
-    Tmax = (int) GHMM_MAX_SEQ_LEN;
+    Tmax = GHMM_MAX_SEQ_LEN;
 
 
   /* rng is also used by ighmm_rand_std_normal 
