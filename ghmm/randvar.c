@@ -460,18 +460,19 @@ double ighmm_rand_normal_right (double a, double mue, double u, int seed)
 
   /* Inverse transformation with restricted sampling by Fishman */
   U = GHMM_RNG_UNIFORM (RNG);
-  Feps = ighmm_rand_get_PHI (-(a + mue) / sigma);
+  Feps = ighmm_rand_get_PHI((a - mue) / sigma);
+
   Us = Feps + (1 - Feps) * U;
-  /* Numerically better: 1-Us = 1-Feps - (1-Feps)*U, therefore: 
-     Feps1 = 1-Feps, Us1 = 1-Us */
-  Feps1 = ighmm_rand_get_PHI ((a + mue) / sigma);
-  Us1 = Feps1 - Feps1 * U;
+  Us1 = 1-Us;
   t = m_min (Us, Us1);
+
   t = sqrt (-log (t * t));
+
   T =
     sigma * (t -
              (C0 + t * (C1 + t * C2)) / (1 + t * (D1 + t * (D2 + t * D3))));
-  if (Us - 0.5 < 0)
+
+  if (Us < Us1)
     x = mue - T;
   else
     x = mue + T;
