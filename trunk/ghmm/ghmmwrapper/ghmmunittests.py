@@ -1168,20 +1168,16 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
         p = self.CMmodel.getEmissionProbability(6.3,1)
         self.assertEqual(p,0.55156691334742991)
         
-    # this test will give an error, as the sample function for 
-    # truncated gaussians is not correct    
     def testviterbi(self):
-        pass
-#         #print "\ntest viterbi"
-#         #seq = self.CMmodel.sample(100,100,seed=3586662)
-#         seq = self.CMmodel.sampleSingle(100,seed=3586662)        
-#         v = self.CMmodel.viterbi(seq)
-#         seq = self.CMmodel.sampleSingle(50,seed=3586662)
-#         (ss,loglik) = self.CMmodel.viterbi(seq)
-#         truess = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1]
-#         self.assertEqual(ss,truess)
-#         trueloglik = -48.8182427352
-#         self.assertEqual(str(loglik),str(trueloglik)) 
+         #print "\ntest viterbi"
+         #seq = self.CMmodel.sample(100,100,seed=3586662)
+         seq = self.CMmodel.sampleSingle(100,seed=3586662)        
+         v = self.CMmodel.viterbi(seq)
+         seq = self.CMmodel.sampleSingle(50,seed=3586662)
+         (ss,loglik) = self.CMmodel.viterbi(seq)
+         truess = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1]
+         self.assertEqual(ss, truess)
+         self.assertAlmostEqual(loglik, -47.984268716) 
         
 class HMMERReadTests(unittest.TestCase):
     def testSingleRead(self):
