@@ -1345,7 +1345,7 @@ class HMMOpenFactory(HMMFactory):
             m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
 
             # old xml is discrete, set appropiate flag
-            m.cmodel.setModelTypeFlag(ghmmwrapper.kDiscreteHMM)
+            m.cmodel.addModelTypeFlags(ghmmwrapper.kDiscreteHMM)
 
             if background_dist != {}:
                  ids = [-1]*m.N
@@ -1397,13 +1397,13 @@ class HMMOpenFactory(HMMFactory):
             for cmodel in models:
                 # ugly workaround for SWIG not creating a proxy class
                 cmodel = ghmmwrapper.ghmm_cmodel(cmodel)
-                cmodel.setModelTypeFlag(base_model_type)
+                cmodel.addModelTypeFlags(base_model_type)
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
                 result.append(m)
         else:
             if modelIndex < nrModels:
                 cmodel = models[modelIndex]
-                cmodel.setModelTypeFlag(base_model_type)
+                cmodel.addModelTypeFlags(base_model_type)
                 result = hmmClass(emission_domain, distribution(emission_domain), cmodel)
             else:
                 raise IndexError(fileName + "has only " + len(models) + "models")

@@ -262,8 +262,9 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int  getStateLabel(size_t index) { return self->label[index]; }
         void setStateLabel(size_t index, int value) { self->label[index] = value; }
-
-        void setModelTypeFlag(unsigned int flag) { self->model_type |= flag; }
+        
+        void addModelTypeFlags(unsigned int flags) { self->model_type |= flags; return; }
+        void removeModelTypeFlags(unsigned int flags) { self->model_type &= ~flags; return; }
 }
 
 STRUCT_ARRAY(ghmm_dmodel, dmodel)
