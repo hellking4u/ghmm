@@ -192,15 +192,16 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 %apply SWIGTYPE* DISOWN {ghmm_cmodel *smo};
         ghmm_cmodel(ghmm_cmodel *smo) { return smo; }
 %clear ghmm_cmodel *smo;
-        ghmm_cmodel(int no_states, int no_components, int cos) {
+        ghmm_cmodel(int no_states, int cos) {
                 ghmm_cmodel *mo = calloc(1, sizeof(ghmm_cmodel));
                 mo->model_type = kContinuousHMM;
                 mo->N = no_states;
-                mo->M = no_components;
+                mo->M = 1;
                 mo->cos = cos;
                 mo->prior = -1;
                 if (cos > 1)
                     ghmm_cmodel_class_change_alloc(mo);
+                mo->s = calloc(mo->N, sizeof(ghmm_cstate));
                 return mo;
         }
         ~ghmm_cmodel() { ghmm_cmodel_free(&self); }

@@ -1549,7 +1549,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
     # XXX TODO: this should use the editing context
     def __call__(self, emissionDomain, distribution, A, B, pi, hmmName = None, labelDomain= None, labelList = None, densities = None):
-        if isinstance(emissionDomain,Alphabet):
+        if isinstance(emissionDomain, Alphabet):
 
             if not emissionDomain == distribution.alphabet:
                 raise TypeError("emissionDomain and distribution must be compatible")
@@ -1647,25 +1647,20 @@ class HMMFromMatricesFactory(HMMFactory):
                     return DiscreteEmissionHMM(emissionDomain, distribution, cmodel)
             else:
                 raise GHMMError(type(distribution), "Not a valid distribution for Alphabet")
-        else:
-            if isinstance(distribution,GaussianDistribution):
-                # determining number of transition classes
-                cos = ghmmhelper.classNumber(A)
-                if cos == 1:
-                    A = [A]
 
-                cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), 1, cos)
-                log.debug("cmodel.cos = " + str(cmodel.cos))
+        elif isinstance(emissionDomain, Float):
+            # determining number of transition classes
+            cos = ghmmhelper.classNumber(A)
+            if cos == 1:
+                A = [A]
 
-                # create and append states array to model
-                states = ghmmwrapper.cstate_array_alloc(cmodel.N)
-                cmodel.s = states
-                self.constructSwitchingTransitions(cmodel, pi, A)
+            cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), cos)
+            log.debug("cmodel.cos = " + str(cmodel.cos))
 
-                # Switching functions and transition classes are handled
-                # elswhere
+            self.constructSwitchingTransitions(cmodel, pi, A)
 
-                #initialize states
+            if isinstance(distribution, GaussianDistribution):
+                #initialize emissions
                 for i in range(cmodel.N):
                     state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
                     state.M = 1
@@ -1685,15 +1680,9 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.density = densities
                     state.setDensity(0,0)
 
-                    state.fix = 0 # if fix = 1 exclude the state probabilities from reestimation
-
-                m = GaussianEmissionHMM(emissionDomain, distribution, cmodel)
-                m.cmodel.class_change = None
-                return m
+                return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
 
             if isinstance(distribution, GaussianMixtureDistribution):
-                log.debug( "*** mixture model")
-
                 # Interpretation of B matrix for the mixture case (Example with three states and two components each):
                 #  B = [
                 #      [ ["mu11","mu12"],["sig11","sig12"],["w11","w12"]   ],
@@ -1701,23 +1690,13 @@ class HMMFromMatricesFactory(HMMFactory):
                 #      [  ["mu31","mu32"],["sig31","sig32"],["w31","w32"]  ],
                 #      ]
 
-                cos = ghmmhelper.classNumber(A)
-                if cos == 1:
-                    A = [A]
+                log.debug( "*** mixture model")
 
-                cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), len(B[0][0]), cos)
-
-                # create and append states array to model
-                states = ghmmwrapper.cstate_array_alloc(cmodel.N)
-                cmodel.s = states
-                self.constructSwitchingTransitions(cmodel, pi, A)
-
-                # Switching functions and transition classes are handled
-                # elswhere
+                cmodel.M = len(B[0][0])
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = ghmmwrapper.cstate_array_getRef(states,i)
+                    state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
                     state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
@@ -1739,13 +1718,9 @@ class HMMFromMatricesFactory(HMMFactory):
                     # mixture fixing deactivated by default
                     state.mixture_fix = ghmmwrapper.list2int_array([0] * state.M)
 
-                    state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
-
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
 
             elif isinstance(distribution, ContinuousMixtureDistribution):
-                log.debug( "*** general mixture model")
-
                 # Interpretation of B matrix for the mixture case (Example with three states and two components each):
                 #  B = [
                 #      [ ["mu11","mu12"],["sig11","sig12"],["a11","a12"],["w11","w12"]   ],
@@ -1756,18 +1731,9 @@ class HMMFromMatricesFactory(HMMFactory):
                 # ghmmwrapper.uniform: mu = min, sig = max
                 # ghmmwrapper.normal_right or ghmmwrapper.normal_left: a = cutoff
 
-                cos = ghmmhelper.classNumber(A)
-                if cos == 1:
-                    A = [A]
-                cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), len(B[0][0]), cos)
+                log.debug( "*** general mixture model")
 
-                # create and append states array to model
-                states = ghmmwrapper.cstate_array_alloc(cmodel.N)
-                cmodel.s = states
-                self.constructSwitchingTransitions(cmodel, pi, A)
-
-                # Switching functions and transition classes are handled
-                # elswhere
+                cmodel.M = len(B[0][0])
 
                 #initialize states
                 for i in range(cmodel.N):
@@ -1796,16 +1762,15 @@ class HMMFromMatricesFactory(HMMFactory):
                       if densities[i][j] == ghmmwrapper.uniform:
                         mix_fix[j] = 1
 
-                    # mixture fixing deactivated by default
                     state.mixture_fix = ghmmwrapper.list2int_array(mix_fix)
-
-                    state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
 
                 return ContinuousMixtureHMM(emissionDomain, distribution, cmodel)
 
             else:
                 raise GHMMError(type(distribution),
                                 "Cannot construct model for this domain/distribution combination")
+        else:
+            raise TypeError("Unknown emission doamin" + str(emissionDomain))
 
     def constructSwitchingTransitions(self, cmodel, pi, A):
         """ internal function: creates switching transitions """
