@@ -199,8 +199,10 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
                 mo->M = 1;
                 mo->cos = cos;
                 mo->prior = -1;
-                if (cos > 1)
+                if (cos > 1) {
+                    mo->model_type |= kTransitionClasses;
                     ghmm_cmodel_class_change_alloc(mo);
+                }
                 mo->s = calloc(mo->N, sizeof(ghmm_cstate));
                 return mo;
         }
