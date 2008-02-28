@@ -1657,16 +1657,17 @@ class HMMFromMatricesFactory(HMMFactory):
                 cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), 1, cos)
                 log.debug("cmodel.cos = " + str(cmodel.cos))
 
+                # create and append states array to model
                 states = ghmmwrapper.cstate_array_alloc(cmodel.N)
+                cmodel.s = states
+                self.constructSwitchingTransitions(cmodel, pi, A)
 
                 # Switching functions and transition classes are handled
                 # elswhere
 
                 #initialize states
                 for i in range(cmodel.N):
-
-                    state = ghmmwrapper.cstate_array_getRef(states, i)
-                    state.pi = pi[i]
+                    state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
                     state.M = 1
 
                     # allocate arrays of emmission parameters
@@ -1684,22 +1685,8 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.density = densities
                     state.setDensity(0,0)
 
-                    #set out probabilities
-                    trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i)
-                    state.out_states = trans[0]
-                    state.out_id = trans[1]
-                    state.out_a = trans[2]
-
-                    #set "in" probabilities
-                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i)
-                    state.in_states = trans[0]
-                    state.in_id = trans[1]
-                    state.in_a = trans[2]
-
                     state.fix = 0 # if fix = 1 exclude the state probabilities from reestimation
 
-                #append states to model
-                cmodel.s = states
                 m = GaussianEmissionHMM(emissionDomain, distribution, cmodel)
                 m.cmodel.class_change = None
                 return m
@@ -1720,7 +1707,10 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), len(B[0][0]), cos)
 
+                # create and append states array to model
                 states = ghmmwrapper.cstate_array_alloc(cmodel.N)
+                cmodel.s = states
+                self.constructSwitchingTransitions(cmodel, pi, A)
 
                 # Switching functions and transition classes are handled
                 # elswhere
@@ -1728,7 +1718,6 @@ class HMMFromMatricesFactory(HMMFactory):
                 #initialize states
                 for i in range(cmodel.N):
                     state = ghmmwrapper.cstate_array_getRef(states,i)
-                    state.pi = pi[i]
                     state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
@@ -1750,22 +1739,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     # mixture fixing deactivated by default
                     state.mixture_fix = ghmmwrapper.list2int_array([0] * state.M)
 
-                    #set out probabilities
-                    trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i)
-                    state.out_states = trans[0]
-                    state.out_id = trans[1]
-                    state.out_a = trans[2]
-
-                    #set "in" probabilities
-                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i)
-                    state.in_states = trans[0]
-                    state.in_id = trans[1]
-                    state.in_a = trans[2]
-
                     state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
-
-                #append states to model
-                cmodel.s = states
 
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
 
@@ -1787,15 +1761,17 @@ class HMMFromMatricesFactory(HMMFactory):
                     A = [A]
                 cmodel = ghmmwrapper.ghmm_cmodel(len(A[0]), len(B[0][0]), cos)
 
+                # create and append states array to model
                 states = ghmmwrapper.cstate_array_alloc(cmodel.N)
+                cmodel.s = states
+                self.constructSwitchingTransitions(cmodel, pi, A)
 
                 # Switching functions and transition classes are handled
                 # elswhere
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = ghmmwrapper.cstate_array_getRef(states,i)
-                    state.pi = pi[i]
+                    state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
                     state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
@@ -1823,27 +1799,34 @@ class HMMFromMatricesFactory(HMMFactory):
                     # mixture fixing deactivated by default
                     state.mixture_fix = ghmmwrapper.list2int_array(mix_fix)
 
-                    #set out probabilities
-                    trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i)
-                    state.out_states = trans[0]
-                    state.out_id = trans[1]
-                    state.out_a = trans[2]
-
-                    #set "in" probabilities
-                    trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i)
-                    state.in_states = trans[0]
-                    state.in_id = trans[1]
-                    state.in_a = trans[2]
-
                     state.fix = 0 # if fix = 1, exclude state's probabilities from reestimation
 
-                #append states to model
-                cmodel.s = states
-
                 return ContinuousMixtureHMM(emissionDomain, distribution, cmodel)
+
             else:
                 raise GHMMError(type(distribution),
                                 "Cannot construct model for this domain/distribution combination")
+
+    def constructSwitchingTransitions(self, cmodel, pi, A):
+        """ internal function: creates switching transitions """
+
+        #initialize states
+        for i in range(cmodel.N):
+
+            state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
+            state.pi = pi[i]
+            
+            #set out probabilities
+            trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i)
+            state.out_states = trans[0]
+            state.out_id = trans[1]
+            state.out_a = trans[2]
+
+            #set "in" probabilities
+            trans = ghmmhelper.extract_in_cos(A,cmodel.cos, i)
+            state.in_states = trans[0]
+            state.in_id = trans[1]
+            state.in_a = trans[2]
 
 
 HMMFromMatrices = HMMFromMatricesFactory()
