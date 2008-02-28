@@ -100,7 +100,13 @@ extern "C" {
 
 
 /* ----- Mersenne Twister and BSD RNG -------------------------------------- */
-#ifndef GHMM_RNG_GSL
+#ifdef GHMM_RNG_GSL
+/* Functions defined in GSL */
+#define GHMM_RNG_SET gsl_rng_set
+#define GHMM_RNG_UNIFORM gsl_rng_uniform
+#define GHMM_RNG_NAME gsl_rng_name
+
+#else
 
 /* Functions */
 #define GHMM_RNG_SET ghmm_rng_set
