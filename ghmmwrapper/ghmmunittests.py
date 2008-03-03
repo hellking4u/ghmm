@@ -1139,13 +1139,14 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
                    [ [6.0],[4.0],[5.3],[1.0] ],
                    [ [5.0],[9.0],[5.5],[1.0] ] ]
         self.pi = [1.0,0.0,0.0]
-        self.densities = [ [ghmmwrapper.uniform], [ghmmwrapper.normal_left], [ghmmwrapper.normal_right] ]
+        self.densities = [ [ghmmwrapper.uniform], [ghmmwrapper.normal_right], [ghmmwrapper.normal_left] ]
         self.CMmodel = ghmm.HMMFromMatrices(F,ghmm.ContinuousMixtureDistribution(F), self.A, self.B, self.pi, densities=self.densities)
         
     def test__str__(self):
         #print "\ntest__str__"
         # we aren't interested in the output but the function should run fine
         str(self.CMmodel)
+        self.CMmodel.verboseStr()
    
     def testsample(self):
         #print "\ntest sample "
@@ -1154,30 +1155,44 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
     
     def testprobfunctions(self):
         #print "testprobfunctions"
-        # test model with uniform and truncated normals as emissions
-        p = self.CMmodel.getEmissionProbability(0.5,0)
-        self.assertEqual(p,0)
-        p = self.CMmodel.getEmissionProbability(1.5,0)
-        self.assertEqual(p,1)
-        
-        p = self.CMmodel.getEmissionProbability(5.5,1)
-        self.assertEqual(p,0)
-        p = self.CMmodel.getEmissionProbability(5.0,1)
-        self.assertEqual(p,0.48471233586200718)
-        self.CMmodel.setEmission(1,0,ghmmwrapper.normal_left,[6.0,1.0,1.0,6.5])
-        p = self.CMmodel.getEmissionProbability(6.3,1)
-        self.assertEqual(p,0.55156691334742991)
+        # test uniform distribution as emissions
+        self.assertEqual(self.CMmodel.getEmissionProbability(0.5, 0), 0)
+        self.assertEqual(self.CMmodel.getEmissionProbability(1.5, 0), 1)
+        # test left truncated normal distribution as emission
+        self.assertEqual(self.CMmodel.getEmissionProbability(5.2, 1), 0)
+        self.assertAlmostEqual(self.CMmodel.getEmissionProbability(5.4, 1), 0.29944210031070617)
+        # test right truncated normal distribution as emission
+        self.CMmodel.setEmission(1, 0, ghmmwrapper.normal_left, [-1.0, 1.0, 1.0, 0.0])
+        self.assertEqual(self.CMmodel.getEmissionProbability( 0.2, 1), 0)
+        self.assertAlmostEqual(self.CMmodel.getEmissionProbability(-1.2, 1), 0.46478295110622631)
+        # restore model
+        self.CMmodel.setEmission(1, 0, ghmmwrapper.normal_left, [6.0, 4.0, 1.0, 5.3])
         
     def testviterbi(self):
          #print "\ntest viterbi"
-         #seq = self.CMmodel.sample(100,100,seed=3586662)
-         seq = self.CMmodel.sampleSingle(100,seed=3586662)        
-         v = self.CMmodel.viterbi(seq)
-         seq = self.CMmodel.sampleSingle(50,seed=3586662)
-         (ss,loglik) = self.CMmodel.viterbi(seq)
-         truess = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1]
+         #print self.CMmodel.sampleSingle(60, seed=73758).verboseStr()
+         rawseq =  [1.10634541744,  6.13712296834, 5.37447253975,   1.72873921716,
+                    7.43040070856,  -0.2997816938,  1.63238054793, 10.905074667,
+                    2.6812057707,    1.21269052429, 6.73183031119,  4.06780630848,
+                    1.61550739803,   9.51644132986, 2.42128688233,  1.14971328992,
+                    7.12362917842,   4.76043212769, 1.00965285185,  6.73926703355,
+                   -0.497560079849,  1.77782831318, 6.85742246836,  1.44343512052,
+                    1.81884644181,  13.4877284603,  4.93458321666,  1.15394293237,
+                    6.93777041981,  4.1029824645,   1.38728421926,  6.54975617794,
+                    4.47940446593,  1.48128074524,  6.13699556795,  1.85923595646,
+                    1.26106797648,  7.64526047147,  4.86209032316,  1.51006921288,
+                    5.83887400339,  3.90352042654,  1.07119115861,  8.42136567975,
+                    3.80125237578,  1.43305531447,  5.82441319698,  2.02335866192,
+                    1.84035088634,  5.9107593352,   0.414084431335, 1.22181066242,
+                    7.54454857696,  4.41079991304,  1.29848454078,  6.3681964078,
+                    4.56234897069,  1.23467261298,  6.69523170066,  3.327731226]
+         seq = ghmm.EmissionSequence(ghmm.Float(), rawseq)
+         ss, loglik = self.CMmodel.viterbi(seq)
+         truess = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0,
+                   1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1,
+                   2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2]
          self.assertEqual(ss, truess)
-         self.assertAlmostEqual(loglik, -47.984268716) 
+         self.assertAlmostEqual(loglik, -73.27162571045973) 
         
 class HMMERReadTests(unittest.TestCase):
     def testSingleRead(self):
