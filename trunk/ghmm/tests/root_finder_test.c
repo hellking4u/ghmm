@@ -20,7 +20,7 @@ int main()
 #else
 
 #include <stdio.h>
-//#include "ghmm/root_finder.h"
+/*#include "ghmm/root_finder.h"*/
 
 /* find simple square root */
 double test_sqrt(double x1, double x2, double x3, double x4)
