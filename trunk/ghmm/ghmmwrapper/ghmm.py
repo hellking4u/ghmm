@@ -3437,12 +3437,16 @@ class GaussianEmissionHMM(HMM):
             seq = emissionSequences.cseq.getSequence(i)
             seq_len = emissionSequences.cseq.getLength(i)
 
-            if seq_len != 0:
-                viterbiPath, log_p = self.cmodel.viterbi(seq,seq_len)
-            else:
-                viterbiPath = None
+            try:
+                viterbiPath, log_p = self.cmodel.viterbi(seq, seq_len)
+            except TypeError:
+                viterbiPath, log_p = (None, float("-infinity"))
 
-            onePath = ghmmwrapper.int_array2list(viterbiPath, seq_len)
+            if viterbiPath != None:
+                onePath = ghmmwrapper.int_array2list(viterbiPath, seq_len)
+            else:
+                onePath = []
+
             allPaths.append(onePath)
             allLogs.append(log_p)
 
@@ -3739,7 +3743,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         state.setDensity(comp, int(type))
 
     def __str__(self):
-        "defines string representation"
+        """ defines string representation """
         hmm = self.cmodel
 
         strout = "<ContinuousMixtureHMM with "+str(hmm.N)+" states>"
@@ -3747,10 +3751,10 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         return join(strout,'')
 
     def verboseStr(self):
-        "defines string representation"
+        """ Human readable model description """
         hmm = self.cmodel
 
-        strout = "\nOverview of HMM:"
+        strout = ["\nOverview of HMM:"]
         strout.append("\nNumber of states: "+ str(hmm.N))
         strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
 
@@ -3765,31 +3769,31 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             u =  ""
             a = ""
             density = ""
-            c = ""
 
-            for outp in range(hmm.M):
+            for outp in range(state.M):
                 weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
                 mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
                 u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
                 a += str(ghmmwrapper.double_array_getitem(state.a,outp))+", "
-                density += str(ghmmwrapper.double_array_getitem(state.a,outp))+","
-                c += str(ghmmwrapper.double_array_getitem(state.c,outp))+","
+                density += str(ghmmwrapper.density_array_getitem(state.density,outp))+","
 
-            strout.append("  pdf component weights : " + str(weight) + "\n")
+            strout.append("  component weights : " + str(weight) + "\n")
             strout.append("  mean vector: " + str(mue) + "\n")
             strout.append("  variance vector: " + str(u) + "\n")
-            strout.append("  a vector: " + str(u) + "\n")
-            strout.append("  densities types: " + str(u) + "\n")
-            strout.append("  components weitghs: " + str(c) + "\n")
+            strout.append("  a vector: " + str(a) + "\n")
+            strout.append("  densities types: " + str(density) + "\n")
 
             for c in range(self.cmodel.cos):
                 strout.append("\n  Class : " + str(c)                )
                 strout.append("\n    Outgoing transitions:")
                 for i in range( state.out_states):
-                    strout.append("\n      transition to state " + str(state.out_id[i]) + " with probability = " + str(ghmmwrapper.double_matrix_getitem(state.out_a,c,i)))
+                    strout.append("\n      transition to state " + str(state.getOutState(i)) +
+                                  " with probability = " + str(state.getOutProb(c,i)))
+
                 strout.append("\n    Ingoing transitions:")
                 for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.in_id[i]) +" with probability = "+ str(ghmmwrapper.double_matrix_getitem(state.in_a,c,i)))
+                    strout.append("\n      transition from state " + str(state.getInState(i)) +
+                                  " with probability = "+ str(state.getInProb(c,i)))
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
         return join(strout,'')
