@@ -203,8 +203,8 @@ double ighmm_rand_normal_density_pos (double x, double mean, double u)
 
 
 /*============================================================================*/
-double ighmm_rand_normal_density_trunc (double x, double mean, double u,
-                                     double a)
+double ighmm_rand_normal_density_trunc(double x, double mean, double u,
+                                       double a)
 {
 # define CUR_PROC "ighmm_rand_normal_density_trunc"
 #ifndef DO_WITH_GSL
@@ -212,26 +212,25 @@ double ighmm_rand_normal_density_trunc (double x, double mean, double u,
 #endif /* DO_WITH_GSL */
 
   if (u <= 0.0) {
-    GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
+    GHMM_LOG(LERROR, "u <= 0.0 not allowed");
     goto STOP;
   }
   if (x < a)
-    return (0.0);
+    return 0.0;
 
 #ifdef DO_WITH_GSL
   /* move mean to the right position */
-  /* double gsl_ran_gaussian_tail_pdf (double x, double a, double sigma) */
-  return gsl_ran_gaussian_tail_pdf (x - mean, a - mean, sqrt (u));
+  return gsl_ran_gaussian_tail_pdf(x - mean, a - mean, sqrt(u));
 #else
-  if ((c = ighmm_rand_get_1overa (a, mean, u)) == -1) {
-    GHMM_LOG_QUEUED(LCONVERTED);
+  if ((c = ighmm_rand_get_1overa(a, mean, u)) == -1) {
+    GHMM_LOG_QUEUED(LERROR);
     goto STOP;
   };
-  return (c * ighmm_rand_normal_density (x, mean, u));
+  return c * ighmm_rand_normal_density(x, mean, u);
 #endif /* DO_WITH_GSL */
 
 STOP:
-  return (-1.0);
+  return -1.0;
 # undef CUR_PROC
 }                               /* double ighmm_rand_normal_density_trunc */
 
@@ -419,33 +418,32 @@ double ighmm_rand_normal_right (double a, double mue, double u, int seed)
 #ifdef DO_WITH_GSL
   double s;
 #else
-  double U, Us, Us1, Feps, Feps1, t, T;
+  double U, Us, Us1, Feps, t, T;
 #endif
 
   if (u <= 0.0) {
     GHMM_LOG(LCONVERTED, "u <= 0.0 not allowed\n");
     goto STOP;
   }
-  sigma = sqrt (u);
+  sigma = sqrt(u);
 
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
-    return (1.0);
   }
 
 #ifdef DO_WITH_GSL
   /* move boundary to lower values in order to achieve maximum at mue
      gsl_ran_gaussian_tail(generator, lower_boundary, sigma)
    */
-  return gsl_ran_gaussian_tail (RNG, a - mue, sqrt (u)) + mue;
+  return mue + gsl_ran_gaussian_tail(RNG, a - mue, sqrt (u));
 
 #else /* DO_WITH_GSL */
 
   /* Inverse transformation with restricted sampling by Fishman */
-  U = GHMM_RNG_UNIFORM (RNG);
-  Feps = ighmm_rand_get_PHI((a - mue) / sigma);
+  U = GHMM_RNG_UNIFORM(RNG);
+  Feps = ighmm_rand_get_PHI((a-mue) / sigma);
 
-  Us = Feps + (1 - Feps) * U;
+  Us = Feps + (1-Feps) * U;
   Us1 = 1-Us;
   t = m_min (Us, Us1);
 
@@ -461,9 +459,8 @@ double ighmm_rand_normal_right (double a, double mue, double u, int seed)
     x = mue + T;
 #endif /* DO_WITH_GSL */
 
-
 STOP:
-  return (x);
+  return x;
 # undef CUR_PROC
 }                               /* randvar_normal_pos */
 
