@@ -627,7 +627,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
         if (f->model.d[modelNo]->label_alphabet->size > label)
           f->model.d[modelNo]->label[state] = label;
         else
-          GHMM_LOG(LWARN, "Ïnvalid label");
+          GHMM_LOG(LWARN, "Invalid label");
       }
     }
 
