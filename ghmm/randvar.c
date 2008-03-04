@@ -349,7 +349,6 @@ double ighmm_rand_std_normal (int seed)
 # define CUR_PROC "ighmm_rand_std_normal"
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
-    return (1.0);
   }
   else {
 #ifdef DO_WITH_GSL
@@ -385,7 +384,6 @@ double ighmm_rand_normal (double mue, double u, int seed)
 # define CUR_PROC "ighmm_rand_normal"
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
-    return (1.0 * sqrt (u) + mue);
   }
   else {
 #ifdef DO_WITH_GSL
@@ -472,7 +470,6 @@ double ighmm_rand_uniform_int (int seed, int K)
 # define CUR_PROC "ighmm_rand_uniform_int"
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
-    return (1.0);
   }
   else {
 #ifdef DO_WITH_GSL
@@ -495,7 +492,6 @@ double ighmm_rand_uniform_cont (int seed, double max, double min)
   }
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
-    return (1.0);
   }
   else {
 #ifdef DO_WITH_GSL
