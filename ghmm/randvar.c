@@ -350,7 +350,7 @@ double ighmm_rand_std_normal (int seed)
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
   }
-  else {
+
 #ifdef DO_WITH_GSL
     return (gsl_ran_gaussian (RNG, 1.0));
 #else
@@ -385,7 +385,7 @@ double ighmm_rand_normal (double mue, double u, int seed)
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
   }
-  else {
+
 #ifdef DO_WITH_GSL
     return (gsl_ran_gaussian (RNG, sqrt (u)) + mue);
 #else
@@ -471,7 +471,7 @@ double ighmm_rand_uniform_int (int seed, int K)
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
   }
-  else {
+
 #ifdef DO_WITH_GSL
     /* more direct solution than old version ! */
     return (double) gsl_rng_uniform_int (RNG, K);
@@ -493,7 +493,7 @@ double ighmm_rand_uniform_cont (int seed, double max, double min)
   if (seed != 0) {
     GHMM_RNG_SET (RNG, seed);
   }
-  else {
+
 #ifdef DO_WITH_GSL
     return (double)(((double)gsl_rng_uniform (RNG)*(max-min)) + min);
 #else
