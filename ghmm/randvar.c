@@ -373,7 +373,7 @@ double ighmm_rand_std_normal (int seed)
     theta = 2.0 * PI * GHMM_RNG_UNIFORM (RNG);  /* theta ~ uniform(0, 2 \pi) */
     return sqrt (r2) * cos (theta);
 #endif
-  }
+
 # undef CUR_PROC
 }                               /* ighmm_rand_std_normal */
 
@@ -393,7 +393,7 @@ double ighmm_rand_normal (double mue, double u, int seed)
     x = sqrt (u) * ighmm_rand_std_normal (seed) + mue;
     return (x);
 #endif
-  }
+
 # undef CUR_PROC
 }                               /* ighmm_rand_normal */
 
@@ -478,7 +478,7 @@ double ighmm_rand_uniform_int (int seed, int K)
 #else
     return (double) ((int) (((double) K) * GHMM_RNG_UNIFORM (RNG)));
 #endif
-  }
+
 # undef CUR_PROC
 }                               /* ighmm_rand_uniform_int */
 
@@ -499,7 +499,7 @@ double ighmm_rand_uniform_cont (int seed, double max, double min)
 #else
     return (double)((GHMM_RNG_UNIFORM (RNG))*(max-min) + min );
 #endif
-  }
+
 STOP:
   return (-1.0);
 # undef CUR_PROC
