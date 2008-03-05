@@ -195,6 +195,8 @@ STOP:
 # undef CUR_PROC
 }                               /* ghmm_cmodel_forward */
 
+#define LOWER_SCALE_BOUND 3.4811068399043105e-57 /* exp(-130) */
+
 /*============================================================================*/
 int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
                     double **beta, const double *scale)
@@ -207,11 +209,8 @@ int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
 
   for (t = 0; t < T; t++) {
     /* try differenent bounds here in case of problems 
-       like beta[t] = NaN 
-     */
-    if (scale[t] < exp (-130)) {
-      /* if (scale[t] < exp(-230)) { */
-      /*    if (scale[t] <= DBL_MIN) { */
+       like beta[t] = NaN */
+    if (scale[t] < LOWER_SCALE_BOUND) {
       /* printf("backward scale(%d) = %e\n", t , scale[t]); */
       goto STOP;
     }
