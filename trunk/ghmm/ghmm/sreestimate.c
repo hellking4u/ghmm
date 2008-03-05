@@ -70,7 +70,6 @@ typedef struct local_store_t {
   double **u_num;
   double **mue_u_denom;       /* mue-denom. = u-denom. for sym. normal density */
   double **sum_gt_otot;       /* for truncated normal density */
-  double **sum_gt_logb;       /* Control according to Q-function */
 } local_store_t;
 
 /** needed for normaldensitypos (truncated normal density) */
@@ -144,11 +143,7 @@ static local_store_t *sreestimate_alloc (const ghmm_cmodel * smo)
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
-  r->sum_gt_logb = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
-  if (!(r->sum_gt_logb)) {
-    GHMM_LOG_QUEUED(LCONVERTED);
-    goto STOP;
-  }
+
   return (r);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   sreestimate_free (&r, smo->N);
@@ -176,7 +171,6 @@ static int sreestimate_free (local_store_t ** r, int N)
   ighmm_cmatrix_stat_free (&((*r)->u_num));
   ighmm_cmatrix_stat_free (&((*r)->mue_u_denom));
   ighmm_cmatrix_stat_free (&((*r)->sum_gt_otot));
-  ighmm_cmatrix_stat_free (&((*r)->sum_gt_logb));
   m_free (*r);
   return (0);
 # undef CUR_PROC
@@ -202,7 +196,6 @@ static int sreestimate_init (local_store_t * r, const ghmm_cmodel * smo)
       r->u_num[i][m] = 0.0;
       r->mue_u_denom[i][m] = 0.0;
       r->sum_gt_otot[i][m] = 0.0;
-      r->sum_gt_logb[i][m] = 0.0;
     }
   }
   return (0);
@@ -549,7 +542,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
   double *scale = NULL;
   double ***b = NULL;
   int T_k = 0, T_k_max = 0;
-  double c_t, sum_alpha_a_ji, gamma, gamma_ct, f_im, quot;
+  double c_t, sum_alpha_a_ji, gamma, gamma_ct, f_im;
   double log_p_k;
   double contrib_t;
   
@@ -702,12 +695,6 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
 
           /* sum gamma_ct * O[k][t] * O[k][t] (truncated normal density): */
           r->sum_gt_otot[i][m] += (gamma_ct * m_sqr (O[k][t]));
-
-          /* sum gamma_ct * log(b_im) */
-          if (gamma_ct > 0.0) {
-            quot = b[t][i][m] / smo->s[i].c[m];
-            r->sum_gt_logb[i][m] += (gamma_ct * log (quot));
-          }
         }
 
       }                         /* for (t=0, t<T) */
