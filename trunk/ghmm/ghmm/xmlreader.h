@@ -8,7 +8,7 @@
 *
 *       Copyright (C) 1998-2004 Alexander Schliep
 *       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
-*        Copyright (C) 2002-2005 Max-Planck-Institut fuer Molekulare Genetik,
+*       Copyright (C) 2002-2005 Max-Planck-Institut fuer Molekulare Genetik,
 *                               Berlin
 *
 *       Contact: schliep@ghmm.org
