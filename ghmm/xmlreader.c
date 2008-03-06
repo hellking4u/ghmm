@@ -64,7 +64,7 @@
 #define PTR_TYPE_MASK (GHMM_kDiscreteHMM + GHMM_kTransitionClasses + GHMM_kPairHMM + GHMM_kContinuousHMM)
 
 /* holds all valid modeltypes sorted */
-static int validModelTypes[35] = {
+static int validModelTypes[] = {
   (GHMM_kDiscreteHMM),
   (GHMM_kDiscreteHMM + GHMM_kLeftRight),
   (GHMM_kDiscreteHMM + GHMM_kSilentStates),
