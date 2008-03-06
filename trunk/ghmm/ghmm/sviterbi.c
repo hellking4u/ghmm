@@ -109,15 +109,13 @@ static void sviterbi_precompute (ghmm_cmodel * smo, double *O, int T,
                                  local_store_t * v)
 {
 #define CUR_PROC "sviterbi_precompute"
-  int j, t, m;
+  int j, t;
   double cb;
 
   /* Precomputing of log(b_j(O_t)) */
   for (j = 0; j < smo->N; j++) {
     for (t = 0; t < T; t++) {
-      cb = 0.0;
-      for (m = 0; m < smo->M; m++)
-        cb += ghmm_cmodel_calc_cmbm (smo, j, m, O[t]);
+      cb = ghmm_cmodel_calc_b(smo, j, O[t]);
       if (cb == 0.0)            /* DBL_EPSILON ? */
         v->log_b[j][t] = -DBL_MAX;
       else
