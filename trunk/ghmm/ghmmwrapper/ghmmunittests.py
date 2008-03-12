@@ -85,8 +85,7 @@ class AlphabetTests(unittest.TestCase):
 
     def testinternalexternal(self):
         """ Check that internal -> external is a bijection """
-
-        # print"\ntestinternalexternal ",
+        log.debug("AlphabetTests.testinternalexternal() -- begin")
         for l in self.dna:
             self.assertEqual(l, self.dnaAlphabet.external(self.dnaAlphabet.internal(l)))
 
@@ -101,7 +100,7 @@ class AlphabetTests(unittest.TestCase):
 
     def testinternalexternalSequence(self):
         """ Check internal -> external applied to a sequence """
-        # print"\ntestinternalexternalSequence ",
+        log.debug("AlphabetTests.testinternalexternalSequence() -- begin")
 
         extseq = ['a','c','g','t','a','g','t']
         intseq = self.dnaAlphabet.internalSequence(extseq)
@@ -122,7 +121,7 @@ class AlphabetTests(unittest.TestCase):
 
 
     def testlen(self):
-        #print"\ntestlen ",
+        log.debug("AlphabetTests.testlen()")
 
         self.assertEqual(len(self.binaryAlphabet),2)
         self.assertEqual(len(self.dnaAlphabet),len(self.dna))
@@ -144,7 +143,7 @@ class EmissionSequenceTests(unittest.TestCase):
 
 
     def testprint(self):
-        #print"\ntestprint ",
+        log.debug("EmissionSequenceTests.testprint")
         s = "\nEmissionSequence Instance:\nlength 7, weight 1.0:\n1200034"
         self.assertEqual(self.i_seq.verboseStr(),s)
 
@@ -153,7 +152,7 @@ class EmissionSequenceTests(unittest.TestCase):
 
 
     def testattributes(self):
-        #print"\ntestattributes ",
+        log.debug("EmissionSequenceTests.testattributes")
         self.assertEqual(self.i_seq.cseq.state_labels,None)
         self.assertEqual(self.i_seq.cseq.state_labels_len,None)
         self.assertEqual(self.i_seq.cseq.seq_number,1)
@@ -163,7 +162,7 @@ class EmissionSequenceTests(unittest.TestCase):
         self.assertEqual(len(self.d_seq),7)
 
     def testitemaccess(self):
-        # print"\ntestitemaccess ",
+        log.debug("EmissionSequenceTests.testitemaccess"),
         b = self.i_seq[5]
         self.assertEqual(b,3)
         self.i_seq[5] = 1
@@ -175,7 +174,7 @@ class EmissionSequenceTests(unittest.TestCase):
         self.assertEqual(self.d_seq[1],8.34)
 
     def testFileIO(self):
-        # print"\ntestFileIO ",
+        log.debug("EmissionSequenceTests.testFileIO")
         self.i_seq.write("testdata/es_discrete_testwrite.seq")
         self.d_seq.write("testdata/es_continuous_testwrite.seq")
 
@@ -183,7 +182,7 @@ class EmissionSequenceTests(unittest.TestCase):
         continuous_seq = ghmm.EmissionSequence(self.d_dom, "testdata/es_continuous_testwrite.seq")
 
     def testweightaccess(self):
-        # print"\ntestweightaccess ",
+        log.debug("EmissionSequenceTests.testweightaccess()")
         w = self.i_seq.getWeight()
         self.assertEqual(w,1.0)
         self.i_seq.setWeight(4.0)
@@ -196,6 +195,7 @@ class EmissionSequenceTests(unittest.TestCase):
         self.assertEqual(w2,2.0)
 
     def testlabelaccess(self):
+        log.debug("EmissionSequenceTests.testlabelaccess")
         self.i_seq.setSeqLabel(8)
         l = self.i_seq.getSeqLabel()
         self.assertEqual(l,8)
@@ -225,13 +225,17 @@ class EmissionSequenceTests(unittest.TestCase):
 class SequenceSetTests(unittest.TestCase):
 
     def setUp(self):
-        #print "----------------- Setting up... ---------"
+        log.debug("SequenceSetTests.setUp()")
         self.i_alph = ghmm.IntegerRange(0,7)
         self.d_alph = ghmm.Float()
         self.l_domain = ghmm.LabelDomain(['E','R','T'])
 
-        self.i_seq = ghmm.SequenceSet(self.i_alph,[ [1,2,3,4,5],[0,3,0],[4,3,2,2,1,1,1,1], [0,0,0,2,1],[1,1,1,1,1,1] ])
-        self.d_seq = ghmm.SequenceSet(self.d_alph,[ [1.5,2.3,3.7,4.1,5.1],[0.0,3.1,0.7],[4.4,3.05,2.0,2.4,1.2,1.8,1.0,1.0], [0.4,0.1,0.33,2.7,1.345],[1.0,1.0,1.0,1.0,1.0,1.0] ])
+        self.i_seq = ghmm.SequenceSet(self.i_alph,[ [1,2,3,4,5], [0,3,0], [4,3,2,2,1,1,1,1],
+                                                    [0,0,0,2,1], [1,1,1,1,1,1] ])
+        self.d_seq = ghmm.SequenceSet(self.d_alph,[ [1.5,2.3,3.7,4.1,5.1], [0.0,3.1,0.7],
+                                                    [4.4,3.05,2.0,2.4,1.2,1.8,1.0,1.0],
+                                                    [0.4,0.1,0.33,2.7,1.345],
+                                                    [1.0,1.0,1.0,1.0,1.0,1.0] ])
 
         self.seqList = [list('aaaa'),
                         list('acctttg'),
@@ -241,11 +245,13 @@ class SequenceSetTests(unittest.TestCase):
         self.labelList = [['E','R','T','T'],
                           ['E','R','T','T','E','R','T'],
                           ['E','R','T','T','R','T','T','R','T','E','T'],
-                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','E','T'],
-                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R','T','T','R','T','E','T','R','T','T','R'],]
+                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R',
+                           'T','T','R','T','T','R','E','T'],
+                          ['E','R','T','T','R','T','T','R','T','T','R','T','E','T','R',
+                           'T','T','R','T','T','R','T','E','T','R','T','T','R'],]
 
-        self.l_seq  = ghmm.SequenceSet(ghmm.DNA, self.seqList,labelDomain=self.l_domain,labelInput= self.labelList)
-
+        self.l_seq  = ghmm.SequenceSet(ghmm.DNA, self.seqList, labelDomain=self.l_domain,
+                                       labelInput=self.labelList)
 
     def testlabelseqset(self):
         self.assertEqual(len(self.l_seq), 5)
@@ -274,7 +280,7 @@ class SequenceSetTests(unittest.TestCase):
 
 
     def testprint(self):
-        #print"\n----------------- testprint "
+        log.debug("SequenceSetTests.testprint")
         s = "\nNumber of sequences: 5\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111"
         self.assertEqual(self.i_seq.verboseStr(), s)
 
@@ -285,7 +291,7 @@ class SequenceSetTests(unittest.TestCase):
 
 
     def testattributes(self):
-        #print"\n----------------- testattributes "
+        log.debug("SequenceSetTests.testattributes")
         self.assertEqual(len(self.i_seq),5)
         self.assertEqual(self.i_seq.sequenceLength(1),3)
 
@@ -293,7 +299,7 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(self.d_seq.sequenceLength(4),6)
 
     def testgetitem(self):
-        #print"\n----------------- testgetitem ",
+        log.debug("SequenceSetTests.testgetitem")
         s = self.i_seq[2]
         self.assertEqual(len(s),8)
 
@@ -302,7 +308,7 @@ class SequenceSetTests(unittest.TestCase):
 
 
     def testweightaccess(self):
-        #print"\n----------------- testweightaccess "
+        log.debug("SequenceSetTests.testweightaccess")
         w = self.i_seq.getWeight(4)
         self.assertEqual(w,1.0)
         self.i_seq.setWeight(4,4.0)
@@ -318,7 +324,7 @@ class SequenceSetTests(unittest.TestCase):
 
     def testmerge(self):
         """Merging two SequenceSets   """
-        #print"\n************************************ testmerge "
+        log.debug("SequenceSetTests.testmerge")
         wrong = 4  # wrong argument type to merge
         self.assertRaises(TypeError,self.i_seq.merge,wrong)
 
@@ -328,8 +334,6 @@ class SequenceSetTests(unittest.TestCase):
         s = "\nNumber of sequences: 7\nSeq 0, length 5, weight 1.0:\n12345\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 8, weight 1.0:\n43221111\nSeq 3, length 5, weight 1.0:\n00021\nSeq 4, length 6, weight 1.0:\n111111\nSeq 5, length 6, weight 1.0:\n140453\nSeq 6, length 4, weight 1.0:\n1230"
         self.assertEqual(self.i_seq.verboseStr(),s)
 
-        #print self.i_seq
-
         d_mseq = ghmm.SequenceSet(self.d_alph,[ [7.5,4.0,1.2],[0.4,0.93,3.3,2.54] ])
         self.d_seq.merge(d_mseq)
         self.assertEqual(len(self.d_seq),7)
@@ -338,7 +342,7 @@ class SequenceSetTests(unittest.TestCase):
 
 
     def testgetsubset(self):
-        #print"\n----------------- testgetsubset "
+        log.debug("SequenceSetTests.testgetsubset")
         i_subseq = self.i_seq.getSubset([2,1,3])
         s = "\nNumber of sequences: 3\nSeq 0, length 8, weight 1.0:\n43221111\nSeq 1, length 3, weight 1.0:\n030\nSeq 2, length 5, weight 1.0:\n00021"
         self.assertEqual(i_subseq.verboseStr(),s)
@@ -352,13 +356,12 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(d_subseq.sequenceLength(0),5)
 
     def testwrite(self):
-        #print"\n-----------------testwrite "
+        log.debug("SequenceSetTests.testwrite")
         self.i_seq.write("testdata/ghmmunittests_testwrite.seq")
         self.d_seq.write("testdata/ghmmunittests_testwrite.seq")
 
-
     def testlabelaccess(self):
-        #print "\n ----------------- testlabelaccess"
+        log.debug("SequenceSetTests.testlabelaccess")
         self.i_seq.getSeqLabel(2)
         l = self.d_seq.getSeqLabel(3)
         self.assertEqual(l,-1)
@@ -367,7 +370,7 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(l,8)
 
     def testfilereading(self):
-        #print "\n ----------------- testfilereading"
+        log.debug("SequenceSetTests.testfilereading")
         dom = ghmm.IntegerRange(0,12)
         seqs = ghmm.SequenceSetOpen(dom, 'testdata/d_seq.sqd')
         seqs = ghmm.SequenceSetOpen(self.d_alph, 'testdata/test10.sqd')
@@ -391,7 +394,8 @@ class HMMBaseClassTests(unittest.TestCase):
         self.assertRaises(NotImplementedError, self.model.posterior, "sequence")
 
     def testbaumWelchExeption(self):
-        self.assertRaises(NotImplementedError, self.model.baumWelch, "trainingSequences", "nrSteps", "loglikelihoodCutoff")
+        self.assertRaises(NotImplementedError, self.model.baumWelch, "trainingSequences",
+                          "nrSteps", "loglikelihoodCutoff")
 
     def testbaumWelchSetupExeption(self):
         self.assertRaises(NotImplementedError, self.model.baumWelchSetup, "trainingSequences", "nrSteps")
@@ -508,7 +512,6 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
     def testSample(self):
         log.debug("testSample -- begin")
         seq = self.model.sampleSingle(100, seed=3586662)
-        #print seq
         seq2 = self.model.sample(10, 100, seed=3586662)
 
 
@@ -590,7 +593,6 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
     def testFoBa(self):
         log.debug("testFoBa -- begin")
-        #print self.model
         seq = ghmm.EmissionSequence(self.model.emissionDomain,
                                     ['g','g','g','c','t','g','g','c','g','g',
                                      'g','c','g','g','g','c','c','c','g','c',
@@ -662,13 +664,13 @@ class BackgroundDistributionTests(unittest.TestCase):
         str(self.model)
 
     def testprint(self):
-        #print "*** testprint"
+        log.debug("BackgroundDistributionTests.testprint")
         s = self.bg.verboseStr()
         ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n"
         self.assertEqual(s,ts)
 
     def testmodelbackgroundaccessfunctions(self):
-        #print "***  testmodelbackgroundaccessfunctions"
+        log.debug("BackgroundDistributionTests.testmodelbackgroundaccessfunctions")
         self.model.setBackgrounds(self.bg, [0,-1,1])
         # deleting background
         del(self.bg)
@@ -679,7 +681,6 @@ class BackgroundDistributionTests(unittest.TestCase):
     def testapplybackground(self):
         self.model.setBackgrounds(self.bg,[0, -1, 1])
         self.model.applyBackgrounds([0.1, 0.2, .3])
-        #print self.model
 
         f = lambda x: round(x,15)
         e1 = map(f, self.model.getEmission(0))
@@ -775,12 +776,12 @@ class StateLabelHMMTests(unittest.TestCase):
                                     A, B, pi, None, self.l_domain, LabelList)
 
     def testsample(self):
-        # print"\ntestsample ",
+        log.debug("StateLabelHMMTests.testsample")
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
 
     def testaccessfunctions(self):
-        # print"\ntestaccessfunctions",
+        log.debug("StateLabelHMMTests.testaccessfunctions")
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,4)
 
@@ -944,7 +945,7 @@ class StateLabelHMMTests(unittest.TestCase):
         model2.gradientSearch(train)
 
     def testbaumwelch(self):
-        # print"\ntestbaumwelch ",
+        log.debug("StateLabelHMMTests.testbaumwelch")
         seq = self.model.sample(100,100,seed=3586662)
         self.model.labeledBaumWelch(seq,5,0.01)
 
@@ -952,11 +953,15 @@ class StateLabelHMMTests(unittest.TestCase):
         self.model.labeledBaumWelch(seq,5,0.01)
 
     def testlabeledviterbi(self):
-        seq = ghmm.SequenceSet(ghmm.DNA, [['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'], ['a','c','g','t']])
+        seq = ghmm.SequenceSet(ghmm.DNA, [['a','c','g','t','t','a','a','a','c','g','t',
+                                           'g','a','c','g','c','a','t','t','t'],
+                                          ['a','c','g','t']])
 
         path, logp = self.model.labeledViterbi(seq[0])
 
-        self.assertEqual(path, ['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
+        self.assertEqual(path, ['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst',
+                                'scd', 'thr', 'thr', 'fst', 'thr', 'thr', 'thr',
+                                'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
         self.assertEqual(round(logp,14) ,round(-39.893892710502115,14))
 
         paths, logps = self.model.labeledViterbi(seq)
@@ -970,7 +975,7 @@ class StateLabelHMMTests(unittest.TestCase):
 class GaussianEmissionHMMTests(unittest.TestCase):
 
     def setUp(self):
-        # print"setUp"
+        log.debug("GaussianEmissionHMMTests.setUp")
         F = ghmm.Float()
         self.A = [[0.0,1.0,0],[0.5,0.0,0.5],[0.3,0.3,0.4]]
         self.B = [[0.0,1.0],[-1.0,0.5], [1.0,0.2]]
@@ -982,7 +987,7 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         str(self.model)
 
     def testaccessfunctions(self):
-        # print"\ntestaccessfunctions",
+        log.debug("GaussianEmissionHMMTests.testaccessfunctions")
 
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,1)
@@ -1008,19 +1013,19 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         self.assertEqual(emission, (3.0,0.5))
 
     def testtomatrices(self):
-        # print"\ntesttomatrices ",
+        log.debug("GaussianEmissionHMMTests.testtomatrices")
         tA,tB,tpi = self.model.asMatrices()
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
         self.assertEqual(self.pi,tpi)
 
     def testsample(self):
-        # print"\ntestsample ",
+        log.debug("GaussianEmissionHMMTests.testsample")
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
 
     def testbaumwelch(self):
-        # print"\ntestbaumwelch",
+        log.debug("GaussianEmissionHMMTests.testbaumwelch")
         seq = self.model.sample(100,100,seed=0)
         self.model.baumWelch(seq,5,0.01)
 
@@ -1031,7 +1036,7 @@ class GaussianEmissionHMMTests(unittest.TestCase):
                                     [[1.0]],[[mean, var]], [1.0])
 
     def testdel(self):
-        # print"\ntestdel ",
+        log.debug("GaussianEmissionHMMTests.testdel")
         del(self.model)
 
     def testforward(self):
@@ -1065,7 +1070,7 @@ class GaussianEmissionHMMTests(unittest.TestCase):
 
 class GaussianMixtureHMMTests(unittest.TestCase):
     def setUp(self):
-        # print"setUp"
+        log.debug("GaussianMixtureHMMTests.setUp")
         F = ghmm.Float()
         self.A = [[0.25,0.5,0.25],[0.3,0.2,0.5],[0.3,0.3,0.4]]
         self.B = [[ [0.0,1.0,2.0],[1.0,2.5,5.5], [0.5,0.3,0.2]],
@@ -1080,7 +1085,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         str(self.model)
 
     def testaccessfunctions(self):
-        #print "testaccessfunctions"
+        log.debug("GaussianMixtureHMMTests.testaccessfunctions")
         self.assertEqual(self.model.N, 3)
         self.assertEqual(self.model.M, 3)
 
@@ -1124,7 +1129,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.model.setStateFix(2, 0)
 
     def testprobfunctions(self):
-        #print "testprobfunctions"
+        log.debug("GaussianMixtureHMMTests.testprobfunctions")
         # get probability of emitting value 1.0 in state 0
         p = self.model.getEmissionProbability(1.0, 0)
         self.assertAlmostEqual(p, 0.227744770124)
@@ -1150,7 +1155,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.assertEqual(state.getOutProb(0, 1), 0.2)
 
     def testcomponentfixing(self):
-        #print "testcomponentfixing"
+        log.debug("GaussianMixtureHMMTests.testcomponentfixing")
         f = self.model.getMixtureFix(0)
         self.assertEqual(f,[0,0,0])
         self.model.setMixtureFix(0,[0,1,0])
@@ -1162,7 +1167,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         # XXX check mu,v,u
 
     def testtomatrices(self):
-        #print"\ntesttomatrices "
+        log.debug("GaussianMixtureHMMTests.testtomatrices")
         tA,tB,tpi = self.model.asMatrices()
 
         self.assertEqual(self.A,tA)
@@ -1170,12 +1175,12 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.assertEqual(self.pi,tpi)
 
     def testsample(self):
-        #print"\ntestsample "
+        log.debug("GaussianMixtureHMMTests.testsample")
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
 
     def testviterbi(self):
-        #print "\ntest viterbi"
+        log.debug("GaussianMixtureHMMTests.viterbi")
         seq = self.model.sample(100,100,seed=3586662)
         v = self.model.viterbi(seq)
         # generated from: seq = self.model.sampleSingle(50,seed=3586662)
@@ -1201,7 +1206,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.assertAlmostEqual(loglik, -145.168819756)
 
     def testbaumwelch(self):
-        #print "\ntest baumwelch"
+        log.debug("GaussianMixtureHMMTests.baumwelch")
         seq = self.model.sample(100,100,seed=3586662)
         self.model.setEmission(0,0, (3.3,0.4,0.1) )
         self.model.setEmission(0,1, (2.3,0.7,0.4) )
@@ -1214,7 +1219,6 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.model.setEmission(2,2, (2.0,1,0.3) )
         self.model.normalize()
         self.model.baumWelch(seq,30,0.000001)
-        #print self.model
 
 
 class ContinuousMixtureHMMTests(unittest.TestCase):
@@ -1232,18 +1236,18 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
         self.CMmodel = ghmm.HMMFromMatrices(F,ghmm.ContinuousMixtureDistribution(F), self.A, self.B, self.pi, densities=self.densities)
         
     def test__str__(self):
-        #print "\ntest__str__"
+        log.debug("ContinuousMixtureHMMTests.test__str__")
         # we aren't interested in the output but the function should run fine
         str(self.CMmodel)
         self.CMmodel.verboseStr()
    
     def testsample(self):
-        #print "\ntest sample "
+        log.debug("ContinuousMixtureHMMTests.testsample")
         seq = self.CMmodel.sampleSingle(12,seed=3586662)
         seq2 = self.CMmodel.sample(10,100,seed=3586662)
     
     def testprobfunctions(self):
-        #print "testprobfunctions"
+        log.debug("ContinuousMixtureHMMTests.testprobfunctions")
         # test uniform distribution as emissions
         self.assertEqual(self.CMmodel.getEmissionProbability(0.5, 0), 0)
         self.assertEqual(self.CMmodel.getEmissionProbability(1.5, 0), 1)
@@ -1258,7 +1262,7 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
         self.CMmodel.setEmission(1, 0, ghmmwrapper.normal_left, [6.0, 4.0, 1.0, 5.3])
         
     def testviterbi(self):
-         #print "\ntest viterbi"
+         log.debug("ContinuousMixtureHMMTests.testviterbi")
          #print self.CMmodel.sampleSingle(60, seed=73758).verboseStr()
          rawseq =  [1.10634541744,  6.13712296834, 5.37447253975,   1.72873921716,
                     7.43040070856,  -0.2997816938,  1.63238054793, 10.905074667,
@@ -1358,7 +1362,7 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
                                                  [1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3]])
 
     def testprint(self):
-        # print"\ntestprint ",
+        log.debug("ComplexEmissionSequenceTests.testprint")
         s = ("ComplexEmissionSequence (len=7, discrete=2, continuous=1)\n" +
              "1200034\n" +
              "atgctgc\n" +
@@ -1368,14 +1372,14 @@ class ComplexEmissionSequenceTests(unittest.TestCase):
 
 
     def testattributes(self):
-        # print"\ntestattributes ",
+        log.debug("ComplexEmissionSequenceTests.testattributes")
         self.assertEqual(self.seq.cseq.number_of_alphabets,2)
         self.assertEqual(self.seq.cseq.number_of_d_seqs,1)
         self.assertEqual(self.seq.cseq.length,7)
         self.assertEqual(len(self.seq),7)
 
     def testitemaccess(self):
-        # print"\ntestitemaccess ",
+        log.debug("ComplexEmissionSequenceTests.testitemaccess")
         b = self.seq.getInternalDiscreteSequence(0)
         self.assertEqual(b[5], 3)
 
