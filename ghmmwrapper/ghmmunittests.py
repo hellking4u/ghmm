@@ -1079,6 +1079,63 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         # we aren't interested in the output but the function should run fine
         str(self.model)
 
+    def testaccessfunctions(self):
+        #print "testaccessfunctions"
+        self.assertEqual(self.model.N, 3)
+        self.assertEqual(self.model.M, 3)
+
+        trans = self.model.getTransition(0, 1)
+        self.assertEqual(trans, 0.5)
+        self.model.setTransition(0, 1, 0.6)
+        trans = self.model.getTransition(0, 1)
+        self.assertEqual(trans, 0.6)
+        # restore
+        self.model.setTransition(0, 1, 0.5)
+
+        pi = self.model.getInitial(0)
+        self.assertEqual(pi, 1.0)
+        self.model.setInitial(2, 0.5, fixProb=1)
+        pi = self.model.getInitial(2)
+        self.assertEqual(pi, 0.5)
+        pi = self.model.getInitial(1)
+        self.assertEqual(pi, 0)
+        pi = self.model.getInitial(0)
+        self.assertEqual(pi, 0.5)
+        # restore initial probabilities
+        self.model.setInitial(0, 1.0)
+        self.model.setInitial(2, 0.0)
+        
+
+        old_emission = self.model.getEmission(1, 2)
+        self.assertEqual(old_emission, (1.0, 0.7, 0.4) )
+        # set emission parameters of state 1 component 2
+        self.model.setEmission(1, 2, (3.3, 0.4, 1.1) )
+        new_emission = self.model.getEmission(1, 2)
+        self.assertEqual(new_emission, (3.3, 0.4, 1.1) )
+        # restore model
+        self.model.setEmission(1, 2, old_emission)
+
+        statefix = self.model.getStateFix(2)
+        self.assertEqual(statefix, 0)
+        self.model.setStateFix(2, 1)
+        statefix = self.model.getStateFix(2)
+        self.assertEqual(statefix, 1)
+        # restore model
+        self.model.setStateFix(2, 0)
+
+    def testprobfunctions(self):
+        #print "testprobfunctions"
+        # get probability of emitting value 1.0 in state 0
+        p = self.model.getEmissionProbability(1.0, 0)
+        self.assertAlmostEqual(p, 0.227744770124)
+
+        # generated from:
+        #seq = self.model.sampleSingle(5, seed=3586662)
+        rawseq = [-1.44491116077, 7.4388652602, -2.00813586086, -1.19351833806, 5.769548633]
+        seq = ghmm.EmissionSequence(ghmm.Float(), rawseq)
+        lp = self.model.joined(seq, [0,2,1,2,0,])
+        self.assertAlmostEqual(lp, -26.552408895488998)
+
     def testSMO(self):
         model = ghmm.HMMOpen('testdata/tiny.smo')
 
@@ -1116,6 +1173,49 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         #print"\ntestsample "
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
+
+    def testviterbi(self):
+        #print "\ntest viterbi"
+        seq = self.model.sample(100,100,seed=3586662)
+        v = self.model.viterbi(seq)
+        # generated from: seq = self.model.sampleSingle(50,seed=3586662)
+        seqinput = [-1.44491116077, 7.4388652602, -2.00813586086, -1.19351833806,
+                    5.769548633, -0.0299348626825, 5.16913512582, 2.47047233331,
+                    -1.56652946341, -2.20375608388, -0.544078807922, 3.7648231202,
+                    1.92916868929, 5.3841368104, 4.90730467721, 5.73251862946,
+                    1.98537890491, 8.87079039931, 0.549845190955, 4.4833323309,
+                    5.64369348676, 5.15093211833, 5.55298325108, 0.40802229084,
+                    1.41417638625, 1.11183577038, 2.53160879062, 1.20897982207,
+                    6.05366625929, -0.119225541006, 5.5043904932, 1.3314142884,
+                    5.1714573829, 5.34873253782, 7.87404984173, 3.89308181078,
+                    3.63469202961, 0.0524576668747, -0.638426945936, -1.39516103111,
+                    6.04061711898, 0.249633099145, 0.908077203606, 4.29058819985,
+                    3.36880550569, 6.15300077452, 2.72713083613, 7.04041334509,
+                    0.825709274023, 2.4727376639]
+        seq = ghmm.EmissionSequence(ghmm.Float(), seqinput)
+        stateseq, loglik = self.model.viterbi(seq)
+        truesseq = [0, 1, 0, 0, 1, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 1,
+                    2, 1, 2, 1, 0, 0, 1, 2, 0, 1, 0, 1, 0, 1, 2, 2, 2, 2, 0,
+                    0, 0, 1, 0, 1, 2, 2, 1, 2, 1, 2, 2]
+        self.assertEqual(stateseq, truesseq)
+        self.assertAlmostEqual(loglik, -145.168819756)
+
+    def testbaumwelch(self):
+        #print "\ntest baumwelch"
+        seq = self.model.sample(100,100,seed=3586662)
+        self.model.setEmission(0,0, (3.3,0.4,0.1) )
+        self.model.setEmission(0,1, (2.3,0.7,0.4) )
+        self.model.setEmission(0,2, (0.3,3.4,0.5) )
+        self.model.setEmission(1,0, (1.3,1,0.3) )
+        self.model.setEmission(1,1, (2.3,1,0.3) )
+        self.model.setEmission(1,2, (7.3,1,0.3) )
+        self.model.setEmission(2,0, (0.0,1,0.3) )
+        self.model.setEmission(2,1, (1.0,1,0.3) )
+        self.model.setEmission(2,2, (2.0,1,0.3) )
+        self.model.normalize()
+        self.model.baumWelch(seq,30,0.000001)
+        #print self.model
+
 
 class ContinuousMixtureHMMTests(unittest.TestCase):
     def setUp(self):
