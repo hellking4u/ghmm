@@ -1682,7 +1682,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
 
-            if isinstance(distribution, GaussianMixtureDistribution):
+            elif isinstance(distribution, GaussianMixtureDistribution):
                 # Interpretation of B matrix for the mixture case (Example with three states and two components each):
                 #  B = [
                 #      [ ["mu11","mu12"],["sig11","sig12"],["w11","w12"]   ],
