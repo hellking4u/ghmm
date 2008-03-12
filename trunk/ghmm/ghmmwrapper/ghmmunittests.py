@@ -668,9 +668,7 @@ class BackgroundDistributionTests(unittest.TestCase):
         self.assertEqual(s,ts)
 
     def testmodelbackgroundaccessfunctions(self):
-
         #print "***  testmodelbackgroundaccessfunctions"
-
         self.model.setBackgrounds(self.bg, [0,-1,1])
         # deleting background
         del(self.bg)
@@ -690,15 +688,14 @@ class BackgroundDistributionTests(unittest.TestCase):
 
         self.assertEqual(e1, [0.02, 0.48, 0.46, 0.04])
         self.assertEqual(e2, [0.1,  0.0,  0.8,  0.1])
-        self.assertEqual(e3, [0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12, 0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
-
+        self.assertEqual(e3, [0.205, 0.235, 0.295, 0.265, 0.06, 0.44, 0.38, 0.12,
+                              0.145, 0.075, 0.635, 0.145, 0.07, 0.395, 0.36, 0.175])
 
     def testbackgroundtraining(self):
         # XXX test for background distributions
          self.model.setEmission(2,[0.25,0.25,0.25,0.25])
 
     # XXX ...
-
 
 
 class StateLabelHMMTests(unittest.TestCase):
@@ -712,17 +709,25 @@ class StateLabelHMMTests(unittest.TestCase):
 
 
         self.A = [[0.0,0.5,0.5],[0.4,0.2,0.4],[0.3,0.3,0.4]]
-        self.B = [[0.2,0.1,0.1,0.6],[0.3,0.1,0.1,0.5],
-                  [0.25,0.25,0.25,0.25,   0.0, 0.0, 1.0, 0.0,   0.25,0.25,0.25,0.25,  0.25,0.25,0.25,0.25]]
+        self.B = [[0.2,0.1,0.1,0.6], [0.3,0.1,0.1,0.5],
+                  [0.25,0.25,0.25,0.25,
+                   0.0, 0.0, 1.0, 0.0,
+                   0.25,0.25,0.25,0.25,
+                   0.25,0.25,0.25,0.25]]
         self.pi = [1.0,0,0.0]
 
         self.l_domain2 = ghmm.LabelDomain(['fst','scd','thr'])
-        self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), self.A, self.B, self.pi,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
+        self.model = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA),
+                                          self.A, self.B, self.pi,
+                                          labelDomain=self.l_domain2,
+                                          labelList=['fst','scd','thr'])
 
         sequence = []
         for i in range(slength):
             sequence.append(random.choice(ghmm.DNA.listOfCharacters))
-        self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence, labelDomain=self.l_domain,labelInput=self.labels)
+        self.tSeq  = ghmm.EmissionSequence(ghmm.DNA, sequence,
+                                           labelDomain=self.l_domain,
+                                           labelInput=self.labels)
 
     def test__str__(self):
         # we aren't interested in the output but the function should run fine
@@ -775,9 +780,7 @@ class StateLabelHMMTests(unittest.TestCase):
         seq2 = self.model.sample(10,100,seed=3586662)
 
     def testaccessfunctions(self):
-
         # print"\ntestaccessfunctions",
-
         self.assertEqual(self.model.N,3)
         self.assertEqual(self.model.M,4)
 
@@ -840,7 +843,6 @@ class StateLabelHMMTests(unittest.TestCase):
 
         #compare beta matrizes from backward and labeledBackward (all states share one label)
         self.assertEqual (map(g, b_beta), map(g, bl_beta))
-
 
     def testalldifferentlabelsbackward(self):
         model2 = self.oneModel(self.allLabels)
@@ -906,13 +908,13 @@ class StateLabelHMMTests(unittest.TestCase):
         for i in range(len(alpha)):
             i = len(alpha)-i-1
             for j in range(len(alpha[i])):
-                if model2.labelDomain.internal(labelSequence[i]) == ghmmwrapper.int_array_getitem(model2.cmodel.label, j):
+                if model2.labelDomain.internal(labelSequence[i]) \
+                       == ghmmwrapper.int_array_getitem(model2.cmodel.label, j):
                     self.assertNotEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]) )
                 else:
                     self.assertEqual(alpha[i][j], 0.0, "Zeichen: " + str(i) + ", State: " + str(j)
                                         + ", value: " + str(alpha[i][j]))
-
 
     def testkbest(self):
         seq = ghmm.EmissionSequence(self.model.emissionDomain,
@@ -923,12 +925,10 @@ class StateLabelHMMTests(unittest.TestCase):
                                      'scd', 'thr', 'thr', 'scd', 'thr', 'scd', 'thr',
                                      'thr', 'thr', 'scd', 'fst', 'scd', 'fst'])
 
-
         path = self.model.kbest(seq)
         self.assertEqual(path,(['fst', 'thr', 'thr', 'scd', 'fst', 'scd', 'fst', 'scd',
                                 'thr', 'thr', 'fst', 'thr', 'thr', 'thr', 'thr', 'thr',
                                 'scd', 'fst', 'scd', 'fst'], -35.735009627142446))
-
 
     def testgradientdescent(self):
         A2 = [[0.3,0.2,0.5],[0.1,0.8,0.1],[0.1,0.4,0.5]]
@@ -936,7 +936,9 @@ class StateLabelHMMTests(unittest.TestCase):
              [0.2,0.1,0.1,0.6,   0.25,0.25,0.25,0.25,   0.5,0.1,0.3,0.1, 0.2,0.1,0.1,0.6]]
         pi2 = [0.5,0.5,0.0]
 
-        model2 = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA), A2, B2, pi2,labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
+        model2 = ghmm.HMMFromMatrices(ghmm.DNA,ghmm.DiscreteDistribution(ghmm.DNA),
+                                      A2, B2, pi2,
+                                      labelDomain=self.l_domain2,labelList=['fst','scd','thr'])
 
         train = self.model.sample(10,300,seed=3586662)
         model2.gradientSearch(train)
@@ -948,7 +950,6 @@ class StateLabelHMMTests(unittest.TestCase):
 
         self.model.setEmission(2,[0.25,0.25,0.25,0.25])
         self.model.labeledBaumWelch(seq,5,0.01)
-
 
     def testlabeledviterbi(self):
         seq = ghmm.SequenceSet(ghmm.DNA, [['a','c','g','t','t','a','a','a','c','g','t','g','a','c','g','c','a','t','t','t'], ['a','c','g','t']])
@@ -1009,7 +1010,6 @@ class GaussianEmissionHMMTests(unittest.TestCase):
     def testtomatrices(self):
         # print"\ntesttomatrices ",
         tA,tB,tpi = self.model.asMatrices()
-
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
         self.assertEqual(self.pi,tpi)
@@ -1019,12 +1019,10 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         seq = self.model.sampleSingle(100,seed=3586662)
         seq2 = self.model.sample(10,100,seed=3586662)
 
-
     def testbaumwelch(self):
         # print"\ntestbaumwelch",
         seq = self.model.sample(100,100,seed=0)
         self.model.baumWelch(seq,5,0.01)
-
 
     def oneStateModel(self, mean, var):
         # one state model with N(mean, var)
@@ -1037,11 +1035,9 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         del(self.model)
 
     def testforward(self):
+        f = lambda x: round(x,14)
         seq = self.model.sampleSingle(3,seed=3586662)
         res = self.model.forward(seq)
-        
-        f = lambda x: round(x,14)
-
         self.assertEqual([map(f, v) for v in res[0]],
                          [[1.0, 0.0, 0.0],
                           [0.0, 1.0, 0.0],
@@ -1049,13 +1045,11 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         self.assertEqual(map(f, res[1]),
                          [0.14046138547389, 0.17170494789394, 0.24567463849082999])
 
-
     def testloglikelihoods(self):
         seq = self.model.sampleSingle(100,seed=3586662)
         res = self.model.loglikelihoods(seq)
 
         self.assertEqual(str(res), '[-138.66374870816287]' )
-
 
     def testviterbi(self):
         seq = self.model.sampleSingle(20,seed=3586662)
@@ -1069,19 +1063,15 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         self.assertAlmostEqual(logp, vlogp)
 
 
-
 class GaussianMixtureHMMTests(unittest.TestCase):
     def setUp(self):
         # print"setUp"
         F = ghmm.Float()
         self.A = [[0.25,0.5,0.25],[0.3,0.2,0.5],[0.3,0.3,0.4]]
-
         self.B = [[ [0.0,1.0,2.0],[1.0,2.5,5.5], [0.5,0.3,0.2]],
-             [ [2.0,6.0,1.0],[1.0,0.5,0.7], [0.1,0.5,0.4]],
-             [ [4.0,5.0,1.0],[1.0,2.5,2.0], [0.3,0.3,0.4]] ]
-
+                  [ [2.0,6.0,1.0],[1.0,0.5,0.7], [0.1,0.5,0.4]],
+                  [ [4.0,5.0,1.0],[1.0,2.5,2.0], [0.3,0.3,0.4]] ]
         self.pi = [1.0,0.0,0.0]
-
         self.model = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
         #print "** GaussianMixtureHMMTests **"
 
@@ -1121,7 +1111,6 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.assertEqual(self.A,tA)
         self.assertEqual(self.B,tB)
         self.assertEqual(self.pi,tpi)
-
 
     def testsample(self):
         #print"\ntestsample "
