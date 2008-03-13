@@ -3201,18 +3201,6 @@ class GaussianEmissionHMM(HMM):
     def getEmissionProbability(self, value, state):
         return self.cmodel.calc_b(state, value)
 
-    # XXX no mixture here
-
-    def getMixtureFix(self,state):
-        s = self.cmodel.getState(state)
-        return ghmmwrapper.int_array2list(s.mixture_fix,self.M)
-
-
-    def setMixtureFix(self, state ,flags):
-        s = self.cmodel.getState(state)
-        ghmmwrapper.free(s.mixture_fix)
-        s.mixture_fix = ghmmwrapper.list2int_array(flags)
-
     def getStateFix(self,state):
         s = self.cmodel.getState(state)
         return s.fix
@@ -3570,6 +3558,15 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
         state.setStdDev(comp, float(sigma))
         state.setWeight(comp, float(weight))
+
+    def getMixtureFix(self,state):
+        s = self.cmodel.getState(state)
+        return ghmmwrapper.int_array2list(s.mixture_fix,self.M)
+
+    def setMixtureFix(self, state ,flags):
+        s = self.cmodel.getState(state)
+        ghmmwrapper.free(s.mixture_fix)
+        s.mixture_fix = ghmmwrapper.list2int_array(flags)
 
     # XXX OBSOLETE
     def getPrior(self):
