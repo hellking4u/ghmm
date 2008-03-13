@@ -1683,7 +1683,8 @@ class HMMFromMatricesFactory(HMMFactory):
                 return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
 
             elif isinstance(distribution, GaussianMixtureDistribution):
-                # Interpretation of B matrix for the mixture case (Example with three states and two components each):
+                # Interpretation of B matrix for the mixture case
+                # (Example with three states and two components each):
                 #  B = [
                 #      [ ["mu11","mu12"],["sig11","sig12"],["w11","w12"]   ],
                 #      [  ["mu21","mu22"],["sig21","sig22"],["w21","w22"]  ],
@@ -1721,11 +1722,12 @@ class HMMFromMatricesFactory(HMMFactory):
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
 
             elif isinstance(distribution, ContinuousMixtureDistribution):
-                # Interpretation of B matrix for the mixture case (Example with three states and two components each):
+                # Interpretation of B matrix for the mixture case
+                # (Example with three states and two components each):
                 #  B = [
-                #      [ ["mu11","mu12"],["sig11","sig12"],["a11","a12"],["w11","w12"]   ],
-                #      [  ["mu21","mu22"],["sig21","sig22"],["a21","a22"],["w21","w22"]  ],
-                #      [  ["mu31","mu32"],["sig31","sig32"],["a31","a32"],["w31","w32"]  ],
+                #      [["mu11","mu12"], ["sig11","sig12"], ["a11","a12"], ["w11","w12"]],
+                #      [["mu21","mu22"], ["sig21","sig22"], ["a21","a22"], ["w21","w22"]],
+                #      [["mu31","mu32"], ["sig31","sig32"], ["a31","a32"], ["w31","w32"]],
                 #      ]
                 #
                 # ghmmwrapper.uniform: mu = min, sig = max
