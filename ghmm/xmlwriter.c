@@ -62,12 +62,12 @@
 
 #define DTD_VERSION "1.0"
 
-#define WRITE_DOUBLE_ATTRIBUTE(XMLW, NAME, VALUE)                             \
-          if (0 > xmlTextWriterWriteFormatAttribute(XMLW, BAD_CAST (NAME),    \
-                                                    "%.8f", (VALUE))) {       \
-            estr=ighmm_mprintf(NULL,0, "failed to write attribute %s (%.8f)", \
-                               (NAME), (VALUE));                              \
-            GHMM_LOG(LERROR, estr); m_free(estr); goto STOP;} else
+#define WRITE_DOUBLE_ATTRIBUTE(XMLW, NAME, VALUE)                       \
+    if (0 > xmlTextWriterWriteFormatAttribute(XMLW, BAD_CAST (NAME),    \
+                                              "%.8f", (VALUE))) {       \
+      GHMM_LOG_PRINTF(LERROR, LOC, "failed to write attribute %s (%.8f)", \
+                      (NAME), (VALUE));                                 \
+      goto STOP;} else
 
 
 /* ========================================================================= */
@@ -555,7 +555,6 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
 
   int i;
   int allFixed = 0;
-  char * estr; /* needed for WRITE_DOUBLE_ATTRIBUTE macro */
 
   /* writing continuous distribution */
   if (0 > xmlTextWriterStartElement(writer, BAD_CAST "mixture")) {
@@ -633,15 +632,23 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
   if ((f->model.c[moNo]->s[sNo].xPosition > 0)
       && (f->model.c[moNo]->s[sNo].yPosition > 0)) {
     if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
-      GHMM_LOG(LERROR, "failed to start position element (position)"); goto STOP;}
+      GHMM_LOG(LERROR, "failed to start position element (position)");
+      goto STOP;
+    }
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",
                                           f->model.c[moNo]->s[sNo].xPosition)) {
-      GHMM_LOG(LERROR, "failed to write x position"); goto STOP;    }
+      GHMM_LOG(LERROR, "failed to write x position");
+      goto STOP;
+    }
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "y", "%d",
                                           f->model.c[moNo]->s[sNo].yPosition)) {
-      GHMM_LOG(LERROR, "failed to write y position"); goto STOP;}
+      GHMM_LOG(LERROR, "failed to write y position");
+      goto STOP;
+    }
     if (xmlTextWriterEndElement(writer) < 0) {
-      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (position)"); goto STOP;}
+      GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (position)");
+      goto STOP;
+    }
   }
 
   return 0;
@@ -658,7 +665,6 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
   int rc;
   double w_pi;
   unsigned char * w_desc=NULL;
-  char * estr; /* needed for WRITE_DOUBLE_ATTRIBUTE macro */
 
   /* start state */
   if (0 > xmlTextWriterStartElement(writer, BAD_CAST "state")) {
@@ -723,10 +729,13 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
     rc = writeContinuousStateContents(writer, f, moNo, sNo);
     break;
   default:
-    GHMM_LOG(LCRITIC, "invalid modelType");}
+    GHMM_LOG(LCRITIC, "invalid modelType");
+    goto STOP;
+  }
 
   if (rc) {
-    GHMM_LOG(LERROR, "writing state contents failed");
+      GHMM_LOG_PRINTF(LERROR, LOC, "writing state contents failed. model_type = %s",
+                      strModeltype(f->modelType & PTR_TYPE_MASK));
     goto STOP;
   }
 
@@ -841,7 +850,6 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   double w_prior;
   unsigned char * w_name;
   char * w_type;
-  char * estr; /* needed for WRITE_DOUBLE_ATTRIBUTE macro */
 
   /* start HMM */
   if (0 > xmlTextWriterStartElement(writer, BAD_CAST "HMM")) {
@@ -928,9 +936,9 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   }
 
   if (rc) {
-    estr = ighmm_mprintf(NULL, 0, "writing alphabet for HMM %d (type %d) failed");
-    GHMM_LOG(LERROR, estr);
-    m_free(estr);
+      GHMM_LOG_PRINTF(LERROR, LOC, "writing alphabet for HMM %d (type %s) failed",
+                      number, strModeltype(f->modelType));
+      goto STOP;
   }
 
   /* write label alphabet if applicable */
@@ -950,19 +958,15 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   /* write all states */
   for (i=0; i<N; i++)
     if (writeState(writer, f, number, i)) {
-      estr = ighmm_mprintf(NULL, 0, "writing of state %d in HMM %d failed", i, number);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
+      GHMM_LOG_PRINTF(LERROR, LOC, "writing of state %d in HMM %d failed", i, number);
       goto STOP;
     }
 
   /* write all outgoing transitions */
   for (i=0; i<N; i++)
     if (writeTransition(writer, f, number, i)) {
-      estr = ighmm_mprintf(NULL, 0, "writing transitions of state %d in HMM %d failed",
-                           i, number);
-      GHMM_LOG(LERROR, estr);
-      m_free(estr);
+      GHMM_LOG_PRINTF(LERROR, LOC, "writing transitions of state %d in HMM %d failed",
+                     i, number);
       goto STOP;
     }
 
