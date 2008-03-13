@@ -3503,11 +3503,6 @@ class GaussianEmissionHMM(HMM):
         """ Delete the necessary temporary variables for Baum-Welch-reestimation """
         self.BWcontext = None
 
-
-    def setPrior(self, prior):
-         self.cmodel.prior = prior
-
-
     def asMatrices(self):
         "Return the parameters in matrix form."
         A = []
@@ -3567,14 +3562,6 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         s = self.cmodel.getState(state)
         ghmmwrapper.free(s.mixture_fix)
         s.mixture_fix = ghmmwrapper.list2int_array(flags)
-
-    # XXX OBSOLETE
-    def getPrior(self):
-         return self.cmodel.prior
-
-    # XXX OBSOLETE
-    def setPrior(self, prior):
-         self.cmodel.prior = prior
 
     def __str__(self):
         hmm = self.cmodel
@@ -3794,12 +3781,6 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
         return join(strout,'')
-
-
-    # XXX OBSOLETE
-    def getPrior(self):
-        return self.cmodel.prior
-
 
     def asMatrices(self):
         """Return the parameters in matrix form.
@@ -4421,7 +4402,6 @@ class PairHMMOpenFactory(HMMOpenFactory):
         cmodel = ghmmwrapper.ghmm_dp_init()
         cmodel.N = len(A)
         cmodel.M = -1 # no use anymore len(emissionDomain)
-        cmodel.prior = -1 # No prior by default
 
         # tie groups are deactivated by default
         cmodel.tied_to = None
