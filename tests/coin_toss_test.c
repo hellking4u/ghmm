@@ -64,7 +64,7 @@ int single_state_coin_toss()
   ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
 
   my_output=ghmm_dmodel_generate_sequences(&my_model,0,10,10,100);
-  ghmm_dseq_print(stdout,my_output);
+  ghmm_dseq_print(my_output, stdout);
 
   ghmm_dseq_free(&my_output);
   return 0;
@@ -133,7 +133,7 @@ int two_states_coin_toss()
   ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
 
   my_output=ghmm_dmodel_generate_sequences(&my_model,0,10,10,100);
-  ghmm_dseq_print(stdout,my_output);
+  ghmm_dseq_print(my_output, stdout);
 
   /* try viterbi algorithm in a clear situation */
   viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],

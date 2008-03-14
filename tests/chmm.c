@@ -82,10 +82,10 @@ int single_state_continuous()
 				      0  /* maximal sequence length 0: no limit*/
 				      );
   /* print out sequences */
-  ghmm_cseq_print(stdout,    /* output file */
-		   my_output, /* sequence */
-		   0          /* do not truncate to integer*/
-		   );
+  ghmm_cseq_print(my_output, /* sequence */
+                  stdout,    /* output file */
+                  0          /* do not truncate to integer*/
+                  );
 
 
   /* reproduce the sequence by saving and rereading the model */
@@ -120,10 +120,10 @@ int single_state_continuous()
 					 0   /* maximal sequence length 0: no limit*/
 					 );
 
-    ghmm_cseq_print(stdout,     /* output file */
-		     new_output, /* sequence */
-		     0           /* do not truncate to integer*/
-		     );
+    ghmm_cseq_print(new_output, /* sequence */
+                    stdout,     /* output file */
+                    0           /* do not truncate to integer*/
+		    );
     /* free everything */
     close(descriptor);
     unlink(filename_buffer);
