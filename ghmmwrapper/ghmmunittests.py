@@ -1255,7 +1255,7 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
         self.assertEqual(self.CMmodel.getEmissionProbability(5.2, 1), 0)
         self.assertAlmostEqual(self.CMmodel.getEmissionProbability(5.4, 1), 0.29944210031070617)
         # test right truncated normal distribution as emission
-        self.CMmodel.setEmission(1, 0, ghmmwrapper.normal_left, [-1.0, 1.0, 1.0, 0.0])
+        self.CMmodel.setEmission(1, 0, ghmmwrapper.normal_left, [-1.0, 1.0, 0.0, 1.0])
         self.assertEqual(self.CMmodel.getEmissionProbability( 0.2, 1), 0)
         self.assertAlmostEqual(self.CMmodel.getEmissionProbability(-1.2, 1), 0.46478295110622631)
         # restore model
@@ -1286,7 +1286,170 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
                    2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2]
          self.assertEqual(ss, truess)
          self.assertAlmostEqual(loglik, -73.27162571045973) 
-        
+
+
+class ContinuousMixtureHMM2Tests(unittest.TestCase):
+    def setUp(self):
+        # create a continuous mixture model from matrices
+        F = ghmm.Float()
+        self.A = [[0.25, 0.5, 0.25], [0.3, 0.2, 0.5], [0.3, 0.3, 0.4]]
+        self.B = [[[1.0, 2.5, 0.2], [2.0, 5.5, 0.3], [0, 0, 0], [0.2, 0.4, 0.4]],
+                  [[6.0, 0.5, 0.5], [1.0, 0.7, 0.4], [0, 0, 0], [0.1, 0.8, 0.1]],
+                  [[5.0, 2.5, 0.3], [1.0, 2.0, 0.4], [0, 0, 0], [0.3, 0.3, 0.4]]]
+        self.densities = [[ghmmwrapper.normal]*3]*3
+        self.pi = [1.0,0.0,0.0]
+        self.CMmodel = ghmm.HMMFromMatrices(F, ghmm.ContinuousMixtureDistribution(F),
+                                            self.A, self.B, self.pi,
+                                            densities=self.densities)
+
+        # create a continuous mixture model from matrices with only one mixture component
+        F = ghmm.Float()
+        self.A1 = [[0.0,1.0,0.0], [0.0,0.0,1.0], [1.0,0.0,0.0]]
+        self.B1 = [[[2.0], [1.0], [0.0], [1]],
+                  [[6.0], [4.0], [5.3], [1]],
+                  [[5.0], [9.0], [5.5], [1]]]
+        self.densities1 = [[ghmmwrapper.uniform],
+                           [ghmmwrapper.normal_right],
+                           [ghmmwrapper.normal_left]]
+        self.pi1 = [1.0, 0.0, 0.0]
+        self.CM1model = ghmm.HMMFromMatrices(F, ghmm.ContinuousMixtureDistribution(F),
+                                             self.A1, self.B1, self.pi1,
+                                             densities=self.densities1)
+
+    def test__str__(self):
+        #print "\ntest__str__"
+        # we aren't interested in the output but the function should run fine
+        str(self.CMmodel)
+        str(self.CM1model)
+
+    def testtomatrices(self):
+        #print "\ntesttomatrices"
+        [A,B,pi,densities] = self.CMmodel.asMatrices()
+        self.assertEqual(A, self.A)
+        self.assertEqual(B, self.B)
+        self.assertEqual(pi, self.pi)
+        self.assertEqual(densities, self.densities)
+        [A,B,pi,densities] = self.CM1model.asMatrices()
+        self.assertEqual(A, self.A1)
+        self.assertEqual(B, self.B1)
+        self.assertEqual(pi, self.pi1)
+        self.assertEqual(densities, self.densities1)
+
+    def testaccessfunctions(self):
+        #print "testaccessfunctions"
+        trans = self.CMmodel.getTransition(0,1)
+        self.assertEqual(trans, 0.5)
+        self.CMmodel.setTransition(0,1,0.6)
+        trans = self.CMmodel.getTransition(0,1)
+        self.assertEqual(trans, 0.6)
+
+        self.assertEqual(self.CMmodel.N,3)
+        self.assertEqual(self.CMmodel.M,3)
+
+        pi = self.CMmodel.getInitial(0)
+        self.assertEqual(pi,1.0)
+        self.CMmodel.setInitial(2,0.5,fixProb=1)
+        pi = self.CMmodel.getInitial(2)
+        self.assertEqual(pi,0.5)
+        pi = self.CMmodel.getInitial(1)
+        self.assertEqual(pi,0)
+        pi = self.CMmodel.getInitial(0)
+        self.assertEqual(pi,0.5)
+
+        emission = self.CMmodel.getEmission(1,2)
+        self.assertEqual(emission, (0, 0.5, 0.4, 0.1))
+        # set emission parameters of state 1 component 2
+        self.CMmodel.setEmission(1, 2, ghmmwrapper.normal, (3.3, 4.4, 0.0, 0.2))
+        emission = self.CMmodel.getEmission(1,2)
+        self.assertEqual(emission, (0, 3.3, 4.4, 0.2))
+        self.CMmodel.normalize()
+
+        statefix = self.CMmodel.getStateFix(2)
+        self.assertEqual(statefix,0)
+        self.CMmodel.setStateFix(2,1)
+        statefix = self.CMmodel.getStateFix(2)
+        self.assertEqual(statefix,1)
+
+    def testsample(self):
+        #print "\ntest sample "
+        seq = self.CM1model.sampleSingle(12,seed=3586662)
+        seq2 = self.CM1model.sample(10,100,seed=3586662)
+        seq = self.CMmodel.sampleSingle(12,seed=3586662)
+        seq2 = self.CMmodel.sample(10,100,seed=3586662)
+
+    def testprobfunctions(self):
+        #print "testprobfunctions"
+        # get probability of value 1.0 in state 0
+        p = self.CMmodel.getEmissionProbability(1.0,0)
+        self.assertEqual(round(p,12),round(0.212143793508,12))
+        seq = self.CMmodel.sampleSingle(5,seed=3586662)
+        lp = self.CMmodel.joined(seq,[0,2,1,2,0,])
+        self.assertAlmostEqual(lp, -14.990634258963)
+
+        # test model with uniform and truncated normals as emissions
+        self.assertEqual(self.CM1model.getEmissionProbability(0.5, 0), 0)
+        self.assertEqual(self.CM1model.getEmissionProbability(1.5, 0), 1)
+        self.assertEqual(self.CM1model.getEmissionProbability(5.0, 1), 0)
+        self.assertAlmostEqual(self.CM1model.getEmissionProbability(5.6, 1), 0.30702251317015977)
+
+        self.CM1model.setEmission(1, 0, ghmmwrapper.normal_right, [6.0,1.0,5.5,1.0])
+        self.assertAlmostEqual(self.CM1model.getEmissionProbability(6.3, 1), 0.5515669133474298)
+        self.assertEqual(self.CM1model.getEmissionProbability(5.6, 2), 0)
+        self.assertAlmostEqual(self.CM1model.getEmissionProbability(5.0, 2), 0.23487205475398795)
+
+        self.CM1model.setEmission(2, 0, ghmmwrapper.normal_left, [5.0,1.0,3.5,1.0])
+        self.assertEqual(self.CM1model.getEmissionProbability(2.4,2), 0.20331594462432992)
+
+    def testviterbi(self):
+        #generated from:
+        #seq = self.CMmodel.sampleSingle(50,seed=3586662)
+        rawseq = [-0.888617040017, 4.68138740391, -1.04527925409, -0.687889820628,
+                  0.227326265342, -0.529934862682, 0.940150504807, 6.47047233331,
+                  -0.847786869289, -0.781785901844, -0.390533035426, 1.39522421301,
+                  0.183457369818, -0.228699153034, 5.90730467721, 0.183511774279,
+                  1.48537890491, 1.80467092143, 1.77759852625, 5.4833323309,
+                  0.0784124480926, 2.63499779063, -0.0289173501973, -0.171805889713,
+                  0.914176386248, 0.611835770376, 0.730564848535, 0.708979822072,
+                  3.44242775255, 2.22039132175, -0.0864130766986, 0.448212975517,
+                  -0.480344845288, 2.81191586422, 5.07062832673, 1.50994227335,
+                  1.2788314272, -0.123753813685, 1.00275609564, -0.771942643895,
+                  0.548058823285, -0.0355742796754, 0.408077203606, 5.29058819985,
+                  4.36880550569, 3.53127524398, 0.798295671898, 4.32500117673,
+                  4.43645989596, 0.310407731665]
+        seq = ghmm.EmissionSequence(ghmm.Float(), rawseq)
+        stateseq, loglik = self.CMmodel.viterbi(seq)
+        truess = [0, 2, 0, 1, 2, 0, 1, 2, 0, 1, 0, 1, 0, 1, 2, 0, 1, 0, 1, 2, 1,
+                  0, 1, 0, 1, 2, 0, 1, 2, 0, 1, 0, 1, 2, 2, 0, 1, 0, 1, 0, 1, 0,
+                  1, 2, 2, 2, 1, 2, 2, 1]
+        self.assertEqual(stateseq, truess)
+        self.assertAlmostEqual(loglik, -127.15345407621808)
+
+        # generated from and cutted to 4 significant digits
+        #seq = self.CM1model.sampleSingle(50, seed=3586662)
+        rawseq = [1.150, 6.632, 1.107, 1.549, 5.502, 4.897, 1.355, 6.415, 3.905,
+                  1.019, 7.246, 3.512, 1.072, 8.892, -0.594, 1.363, 9.893, 4.610,
+                  1.756, 5.414, 2.651, 1.833, 5.756, -1.539, 1.839, 5.410, 3.878,
+                  1.377, 7.158, 4.562, 1.234, 6.434, 2.692, 1.667, 5.416, 5.284,
+                  1.390, 7.284, 4.672, 1.526, 7.472, 2.257, 1.451, 6.841, 4.310,
+                  1.469, 9.575, 3.718, 1.185, 7.697]
+        seq = ghmm.EmissionSequence(ghmm.Float(), rawseq)
+        stateseq, loglik = self.CM1model.viterbi(seq)
+        truess = [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
+                  0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
+                  0, 1, 2, 0, 1, 2, 0, 1]
+        self.assertEqual(stateseq, truess)
+        self.assertAlmostEqual(loglik, -55.384480155466925)
+
+    def testbaumwelch(self):
+        #print "\ntest baumwelch"
+        seq = self.CMmodel.sample(100,100,seed=3586662)
+        self.CMmodel.setEmission(0, 0, ghmmwrapper.normal, [5.0,1.0,0.3,0])
+        self.CMmodel.setEmission(1, 0, ghmmwrapper.normal, [1.0,2.0,0.2,0])
+        self.CMmodel.setEmission(2, 0, ghmmwrapper.normal, [6.0,1.0,0.1,0])
+        self.CMmodel.normalize()
+        self.CMmodel.baumWelch(seq,10,0.0000001)
+
+
 class HMMERReadTests(unittest.TestCase):
     def testSingleRead(self):
         model = ghmm.HMMOpen('testdata/tk.hmm')
@@ -1405,6 +1568,7 @@ suiteStateLabelHMM = unittest.makeSuite(StateLabelHMMTests,'test')
 suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
 suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteContinuousMixtureHMM = unittest.makeSuite(ContinuousMixtureHMMTests,'test')
+suiteContinuousMixtureHMM2 = unittest.makeSuite(ContinuousMixtureHMM2Tests,'test')
 suiteHMMER = unittest.makeSuite(HMMERReadTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 suiteComplexSequence = unittest.makeSuite(ComplexEmissionSequenceTests,'test')
@@ -1420,6 +1584,7 @@ runner = unittest.TextTestRunner()
 #runner.run(suiteGaussianEmissionHMM)
 #runner.run(suiteGaussianMixtureHMM)
 #runner.run(suiteContinuousMixtureHMM)
+#runner.run(suiteContinuousMixtureHMM2)
 #runner.run(suiteHMMER)
 #runner.run(suiteXMLIO)
 #runner.run(suiteComplexSequence)
