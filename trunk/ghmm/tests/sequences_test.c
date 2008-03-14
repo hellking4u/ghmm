@@ -32,7 +32,7 @@ void sequence_alloc_print(void)
   for (i=0; i<seq_array->seq_len[0]; i++)
     seq_array->seq[0][i]=1;
 
-  ghmm_dseq_print_xml(stdout,seq_array);
+  ghmm_dseq_print_xml(seq_array, stdout);
 
   ghmm_dseq_free(&seq_array);
 }
