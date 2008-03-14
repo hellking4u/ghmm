@@ -3714,7 +3714,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             a = state.getTruncate(comp)
             return (type, mu, sigma, a, weigth)
 
-    def setEmission(self, i, comp, type, (mu, sigma, weight, a)):
+    def setEmission(self, i, comp, type, (mu, sigma, a, weight)):
         """ Set the emission distributionParameters for component 'comp' in state 'i'. """
 
         # ensure proper indices
@@ -3799,17 +3799,16 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             state = self.cmodel.getState(i)
             pi.append(state.pi)
 
-            B[i].append( ghmmwrapper.double_array2list(state.mue,self.cmodel.M) )
-            B[i].append( ghmmwrapper.double_array2list(state.u,self.cmodel.M) )
-            B[i].append( ghmmwrapper.double_array2list(state.c,self.cmodel.M) )
-            B[i].append( ghmmwrapper.double_array2list(state.a,self.cmodel.M) )
+            B[i].append(ghmmwrapper.double_array2list(state.mue,self.cmodel.M))
+            B[i].append(ghmmwrapper.double_array2list(state.u,self.cmodel.M))
+            B[i].append(ghmmwrapper.double_array2list(state.a,self.cmodel.M))
+            B[i].append(ghmmwrapper.double_array2list(state.c,self.cmodel.M))
 
-            d.append([]);
-
-            d[i].append( ghmmwrapper.double_array2list(state.density,self.cmodel.M) )
+            d.append([ghmmwrapper.density_array_getitem(state.density, x)
+                      for x in range(self.cmodel.M)])
 
             for j in range(state.out_states):
-                state_index = state.out_id[j]
+                state_index = state.getOutState(j)
                 A[i][state_index] = ghmmwrapper.double_matrix_getitem(state.out_a,0,j)
 
         return [A,B,pi,d]
