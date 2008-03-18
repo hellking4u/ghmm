@@ -12,8 +12,6 @@
 int main(int argc, char **argv) {
 
   char *docname, *writename;
-  ghmm_xmlfile* f;
-  int i;
   int mo_number = 0;
   ghmm_cmodel ** smo;
   ghmm_set_loglevel(5+1);
@@ -32,7 +30,7 @@ int main(int argc, char **argv) {
   /* simple test */
   if (smo) {
     writename = argv[2];
-    ghmm_cmodel_xml_write(writename,smo,mo_number);
+    ghmm_cmodel_xml_write(smo, writename, mo_number);
   }
 
 

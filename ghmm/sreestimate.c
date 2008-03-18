@@ -315,9 +315,6 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
   double pi_factor, a_factor_i = 0.0, c_factor_i = 0.0, u_im, mue_im, mue_left, mue_right, A, B, Atil, Btil, fix_w, unfix_w;    /* Q; */
   int a_num_pos, a_denom_pos, c_denom_pos, c_num_pos;
 
-  double p_i=0.0;
-  int g, h;
-
   if (r->pi_denom <= DBL_MIN) {
     GHMM_LOG(LCONVERTED, "pi: denominator == 0.0!\n");
     goto STOP;

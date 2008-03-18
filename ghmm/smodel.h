@@ -158,7 +158,7 @@ extern "C" {
     int k;
 
     /** pointer to class function */
-    int (*get_class) (struct ghmm_cmodel *, double *, int, int);
+    int (*get_class) (struct ghmm_cmodel *, const double *, int, int);
 
 
     /* space for any data necessary for class switch, USER is RESPONSIBLE */

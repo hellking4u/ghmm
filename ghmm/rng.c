@@ -54,7 +54,7 @@ GHMM_RNG *RNG;
 #ifdef GHMM_RNG_MERSENNE_TWISTER
 #include "mt19937ar.c"
 
-static ghmm_rng_state_t ighmm_rng_state;
+static ghmm_rng_state_t *ighmm_rng_state;
 static char ighmm_rng_name[] = "Mersenne Twister";
 
 void ghmm_rng_set(GHMM_RNG * r, unsigned long int seed)
@@ -69,7 +69,7 @@ const char *ghmm_rng_name(GHMM_RNG * r)
 void ghmm_rng_init(void)
 {
   initstate(1, ighmm_rng_state, sizeof(ghmm_rng_state_t));
-  RNG = &ighmm_rng_state;
+  RNG = ighmm_rng_state;
 }
 #endif /* GHMM_RNG_MERSENNE_TWISTER */
 

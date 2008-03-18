@@ -3,13 +3,15 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <ghmm/ghmm.h>
 #include <ghmm/sequence.h>
 #include <ghmm/viterbi.h>
+#include <ghmm/foba.h>
 
 void analyse(ghmm_dmodel *model, ghmm_dseq *seqs, int max_seqlen) {
-    int i, s, seqlen, ml, pathlen;
+    int i, s, seqlen, pathlen;
     int *O, *path;
     double vlogp, flogp, *scale, **alpha;
     

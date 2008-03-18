@@ -14,6 +14,8 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include <ghmm/matrix.h>
 #include <ghmm/vector.h>
 #include <ghmm/rng.h>
