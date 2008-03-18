@@ -595,7 +595,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 /*============================================================================*/
 static int ghmm_dseq_realloc(ghmm_dseq *sq, int seq_number) {
 #define CUR_PROC "ghmm_dseq_realloc"
-  int i;
 
   if (seq_number > GHMM_MAX_SEQ_NUMBER) {
       GHMM_LOG_PRINTF(LERROR, LOC, "Number of sequences %ld exceeds possible range", seq_number);
@@ -1542,24 +1541,30 @@ int ghmm_cseq_mix_like (ghmm_cmodel ** smo, int smo_number, ghmm_cseq * sqd,
 
 static int *preproccess_alphabet(ghmm_alphabet *a) {
 #define CUR_PROC "preprocess_alphabet"
-    unsigned int i;
+    unsigned int i, index;
     int *l = malloc(128*sizeof(*l));
     memset(l, -1, 128*sizeof(*l));
     for (i=0; i<a->size; ++i) {
         if (strlen(a->symbols[i]) == 1) {
-            l[a->symbols[i][0]] = i;
+            index = a->symbols[i][0];
+            if (index < 128)
+                l[index] = i;
+            else
+                goto STOP;
         }
         else {
-            GHMM_LOG(LERROR, "invalid alphabet for ghmm_dseq_open_fasta");
-            free(l);
-            return NULL;
+            goto STOP;
         }
     }
     return l;
+STOP:
+    GHMM_LOG(LERROR, "invalid alphabet for ghmm_dseq_open_fasta");
+    free(l);
+    return NULL;
 #undef CUR_PROC
 }
 
-static int get_internal(int *lookup, char x) {
+static int get_internal(int *lookup, unsigned int x) {
 
     if (x>=0 && x < 128)
         return lookup[x];
