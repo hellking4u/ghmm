@@ -46,7 +46,7 @@
         order CDATA #IMPLIED
         fixed CDATA #IMPLIED
 >
-<!ELEMENT mixture (HMM+ | (normal | normalTruncatedLeft | normalTruncatedRight | uniform)+)>
+<!ELEMENT mixture (HMM+ | (normal | normalLeftTail | normalRightTail | uniform | multinormal)+)>
 <!ATTLIST mixture
         version      CDATA #IMPLIED
         noComponents CDATA #IMPLIED
@@ -61,19 +61,28 @@
         approx   CDATA #IMPLIED
         fixed    CDATA #IMPLIED
 >
-<!ELEMENT normalTruncatedLeft EMPTY>
-<!ATTLIST normalTruncatedLeft
-        mean     CDATA #REQUIRED
-        variance CDATA #REQUIRED
-        min      CDATA #REQUIRED
-        prior    CDATA #IMPLIED
-        fixed    CDATA #IMPLIED
+<!ELEMENT multinormal (mean, variance)>
+<!ATTLIST multinormal
+        dimension CDATA #REQUIRED
+        prior     CDATA #IMPLIED
+        fixed     CDATA #IMPLIED
 >
-<!ELEMENT normalTruncatedRight EMPTY>
-<!ATTLIST normalTruncatedRight
+<!ELEMENT mean (#PCDATA)>
+<!ELEMENT variance (#PCDATA)>
+
+<!ELEMENT normalLeftTail EMPTY>
+<!ATTLIST normalLeftTail
         mean     CDATA #REQUIRED
         variance CDATA #REQUIRED
         max      CDATA #REQUIRED
+        prior    CDATA #IMPLIED
+        fixed    CDATA #IMPLIED
+>
+<!ELEMENT normalRightTail EMPTY>
+<!ATTLIST normalRightTail
+        mean     CDATA #REQUIRED
+        variance CDATA #REQUIRED
+        min      CDATA #REQUIRED
         prior    CDATA #IMPLIED
         fixed    CDATA #IMPLIED
 >

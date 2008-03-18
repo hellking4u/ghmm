@@ -88,6 +88,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
   double log_p, *initial_distribution, **alpha, *scale, p, sum;
   /* aicj */
   int class = -1;
+  int pos;
 
   /* TEMP */
   if (mode == all_viterbi || mode == viterbi_viterbi || mode == viterbi_all) {
@@ -119,7 +120,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
 
   /*---------------main loop over all seqs-------------------------------*/
   for (n = 0; n < sqd_short->seq_number; n++) {
-    ARRAY_CALLOC (sq->seq[n], len);
+    ARRAY_CALLOC (sq->seq[n], len*(smo->dim));
     short_len = sqd_short->seq_len[n];
     if (len < short_len) {
       GHMM_LOG(LCONVERTED, "Error: given sequence is too long\n");
@@ -191,6 +192,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
         i--;
     }
     t = 0;
+    pos = t * smo->dim;
     if (short_len == 0) {
       /* Output in state i */
       p = GHMM_RNG_UNIFORM (RNG);
@@ -206,7 +208,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
         while (m > 0 && smo->s[i].c[m] == 0.0)
           m--;
       }
-      sq->seq[n][t] = ghmm_cmodel_get_random_var (smo, i, m);
+      ghmm_cmodel_get_random_var(smo, i, m, sq->seq[n]+pos);
 
       if (smo->cos == 1) {
         class = 0;
@@ -222,6 +224,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
 
 
       t++;
+      pos += smo->dim;
     }
     /* generate completion for sequence */
     else {
@@ -240,6 +243,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
 
       t = short_len;
     }
+    pos = t * smo->dim;
     while (t < len) {
       if (smo->s[i].out_states == 0)
         /* reached final state, exit while loop */
@@ -291,7 +295,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
           m--;
       }
       /* random variable from density function */
-      sq->seq[n][t] = ghmm_cmodel_get_random_var (smo, i, m);
+      ghmm_cmodel_get_random_var (smo, i, m, sq->seq[n]+pos);
 
       if (smo->cos == 1) {
         class = 0;
@@ -308,6 +312,7 @@ ghmm_cseq *ghmm_sgenerate_extensions (ghmm_cmodel * smo, ghmm_cseq * sqd_short,
 
       up = 0;
       t++;
+      pos += smo->dim;
     }                           /* while (t < len) */
     if (t < len)
       ARRAY_REALLOC (sq->seq[n], t);
@@ -471,7 +476,7 @@ double *ghmm_sgenerate_single_ext (ghmm_cmodel * smo, double *O, const int len,
     }
     /* Output in state i, komp. m */
     /* random variable from density function */
-    new_O[t] = ghmm_cmodel_get_random_var (smo, i, m);
+    ghmm_cmodel_get_random_var(smo, i, m, new_O+(t*smo->dim));
 
     if (smo->cos == 1) {
       class = 0;
@@ -610,7 +615,7 @@ double ghmm_sgenerate_next_value (ghmm_cmodel * smo, double *O, const int len)
   }
   /* Output in state i, komp. m */
   /* random variable from density function */
-  res = ghmm_cmodel_get_random_var (smo, i, m);
+  ghmm_cmodel_get_random_var (smo, i, m, &res);
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ighmm_cmatrix_free (&alpha, len);

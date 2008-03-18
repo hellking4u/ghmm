@@ -1223,7 +1223,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
 
 class ContinuousMixtureHMMTests(unittest.TestCase):
     def setUp(self):
-    
+
         # create a continuous mixture model from matrices
         F = ghmm.Float()
         #self.A = [[0.3,0.3,0.4],[0.4,0.3,0.3],[0.3,0.4,0.3]]
@@ -1450,6 +1450,233 @@ class ContinuousMixtureHMM2Tests(unittest.TestCase):
         self.CMmodel.baumWelch(seq,10,0.0000001)
 
 
+class MultivariateGaussianEmissionHMMTests(unittest.TestCase):
+    def setUp(self):
+        F = ghmm.Float()
+        self.A = [[0.0,1.0,0.0],[0.5,0.0,0.5],[0.3,0.3,0.4]]
+        #self.A = [[0.0,1.0,0.0],[0.0,0.0,1.0],[1.0,0.0,0.0]]
+        self.B = [[ [1.0,-1.0],[0.9,0.4,0.4,0.3]],
+             [ [2.0,6.0],[1.0,0.3,0.3,0.2]],
+             [ [0.0,1.0],[0.4,0.3,0.3,1.0]] ]
+        self.pi = [0.5,0.0,0.5]
+        self.model = ghmm.HMMFromMatrices(F,ghmm.MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
+
+        self.Abig = [[0.0,1.0],[1.0,0.0]]
+        self.Bbig = [ [ [1.0,1.0,1.0],[0.9,0.4,0.2, 0.4,2.2,0.5, 0.2,0.5,1.0] ],
+                      [ [2.0,2.0,2.0],[1.0,0.2,0.8, 0.2,2.0,0.6, 0.8,0.6,0.9] ] ]
+        self.piBig = [1.0,0.0]
+        self.modelBig = ghmm.HMMFromMatrices(F,ghmm.MultivariateGaussianDistribution(F), self.Abig, self.Bbig, self.piBig)
+
+        # a model with negative entries in covariance matrix
+        self.Bn = [ [ [1.0,1.0,1.0],[0.9,-0.4,-0.2, -0.4,2.2,-0.5, -0.2,-0.5,1.0] ],
+                      [ [7.0,7.0,7.0],[1.0,0.2,0.8, 0.2,2.0,0.6, 0.8,0.6,0.9] ] ]
+        self.modelN = ghmm.HMMFromMatrices(F,ghmm.MultivariateGaussianDistribution(F), self.Abig, self.Bn, self.piBig)
+
+    def testaccessfunctions(self):
+        trans = self.model.getTransition(0,1)
+        self.assertEqual(trans, 1.0)
+        self.model.setTransition(0,1,0.6)
+        trans = self.model.getTransition(0,1)
+        self.assertEqual(trans, 0.6)
+
+        self.assertEqual(self.model.N,3)
+        self.assertEqual(self.model.M,1)
+
+        pi = self.model.getInitial(2)
+        self.assertEqual(pi,0.5)
+        self.model.setInitial(2,0.5,fixProb=1)
+        pi = self.model.getInitial(2)
+        self.assertEqual(pi,0.5)
+        pi = self.model.getInitial(1)
+        self.assertEqual(pi,0)
+        pi = self.model.getInitial(0)
+        self.assertEqual(pi,0.5)
+
+        emission = self.model.getEmission(1,0)
+        self.assertEqual(emission, ([2.0,6.0],[1.0,0.3,0.3,0.2]) )
+        self.model.setEmission(2,0, ([1.0,3.3],[0.4,1.0,2.2,3.3]) )
+        emission = self.model.getEmission(2,0)
+        self.assertEqual(emission, ([1.0,3.3],[0.4,1.0,2.2,3.3]) )
+
+        statefix = self.model.getStateFix(2)
+        self.assertEqual(statefix,0)
+        self.model.setStateFix(2,1)
+        statefix = self.model.getStateFix(2)
+        self.assertEqual(statefix,1)
+
+    def testprint(self):
+        str(self.model)
+        str(self.modelBig)
+
+    def testtomatrices(self):
+        tA,tB,tpi = self.model.asMatrices()
+
+        self.assertEqual(self.A,tA)
+        self.assertEqual(self.B,tB)
+        self.assertEqual(self.pi,tpi)
+
+    def testsample(self):
+        seq = self.model.sampleSingle(12,seed=3586662)
+        #seq.write("unittest.txt")
+        seq2 = self.model.sample(10,100,seed=3586662)
+        #seq2.write("unittest.txt")
+        seq = self.modelBig.sampleSingle(12,seed=3586662)
+        seq = self.modelN.sampleSingle(12,seed=3586662)
+
+    def testviterbi(self):
+        seq = ghmm.EmissionSequence(ghmm.Float(), [-0.446764027008, -1.67669258354, 1.54243204186, 5.10291012334, 0.16663584276, -1.08911606914, 1.51323067443, 5.41423654658, 2.75119210291, 0.150056139472, 1.75942438763, 5.27955237255, -0.50950798174, -1.46888515673, 1.47047450768, 5.56208907379, 1.12890512691, -0.807407439164, 2.41946196608, 6.44994015578, 0.90855637552, -0.803921163396, 4.22205173845, 7.71314950408])
+        (ss,loglik) = self.model.viterbi(seq)
+        truess = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+        self.assertEqual(ss,truess)
+        trueloglik = -33.038810793953203
+        self.assertEqual(loglik,trueloglik)
+
+        seq = ghmm.EmissionSequence(ghmm.Float(), [-0.370763085392, 0.134444772573, 2.08363391797, -0.127073265947, 4.17398320102, 0.402649013907, 0.69081704673, 0.695541512162, -0.252178782835, 3.35132375811, 3.82823836258, 3.61971585598, -0.721680303934, 2.35777520392, -0.624824238932, 0.908171404232, 1.36840026088, 0.720099095506, 0.971347324035, 1.51865821976, 0.288360805808, 2.90730467721, 0.479281322341, 2.19183358505, 2.11731465552, 3.40659077698, 4.37235098261, 2.54984519095, 3.00231727097, 2.83427054214, 0.521964649348, 0.0909455176534, 0.841292909463, 1.36782285107, 4.18175117964, 1.73985695906])
+        (ss,loglik) = self.modelBig.viterbi(seq)
+        truess = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+        self.assertEqual(ss,truess)
+        trueloglik = -55.803120721082003
+        self.assertEqual(loglik,trueloglik)
+
+        seq = ghmm.EmissionSequence(ghmm.Float(), [-0.619944178469, 0.790639633002, 2.88691532776, 4.28945461421, 8.69400675736, 5.80379170949, 0.999864691944, 1.37110378231, -0.0794259777465, 8.95026928346, 9.04366026542, 8.98865674342, -0.9732497063, 4.54448981993, -1.13568629153, 5.22418241227, 6.03277214798, 5.55110425433, 0.99740444873, 1.85994098591, -0.0321874498019, 7.36151553553, 5.30151104566, 6.80345463395, 0.933360128975, 1.53348662442, 2.95675092235, 8.06398937464, 8.21643741741, 8.06876320835, 0.708380394308, 0.442809615927, 1.43901750259, 6.15450653445, 8.91718554325, 7.13734866723])
+        ss, loglik = self.modelN.viterbi(seq)
+        truess = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+        self.assertEqual(ss,truess)
+        self.assertAlmostEqual(loglik, -57.096319272206074)
+
+    def testbaumwelch(self):
+        seq = self.model.sample(100,100,seed=3586662)
+        self.model.setEmission(0,0, ([2.0,-2.0],[1.0,0.1,0.1,1.0]) )
+        self.model.setEmission(1,0, ([0.0,4.0],[1.0,0.1,0.1,1.0]) )
+        self.model.setEmission(2,0, ([0.0,0.0],[1.0,0.1,0.1,1.0]) )
+        self.model.baumWelch(seq,10,0.000001)
+
+        seq = self.modelBig.sample(100,100,seed=3586662)
+        self.modelBig.setEmission(0,0, ([0.0,0.0,0.0],[1.0,1.0,1.0, 1.0,1.0,1.0, 1.0,1.0,1.0]) )
+        self.modelBig.setEmission(1,0, ([3.0,3.0,3.0],[1.0,1.0,1.0, 1.0,1.0,1.0, 1.0,1.0,1.0]) )
+        self.modelBig.baumWelch(seq,10,0.000001)
+
+        seq = self.modelN.sample(100,100,seed=3586662)
+        self.modelN.setEmission(0,0, ([0.0,0.0,0.0],[1.0,1.0,1.0, 1.0,1.0,1.0, 1.0,1.0,1.0]) )
+        self.modelN.setEmission(1,0, ([9.0,9.0,9.0],[1.0,1.0,1.0, 1.0,1.0,1.0, 1.0,1.0,1.0]) )
+        self.modelN.baumWelch(seq,10,0.000001)
+
+
+class MultivariateGaussianMixtureHMMTests(unittest.TestCase):
+    def setUp(self):
+        F = ghmm.Float()
+        self.A = [[0.0, 1.0, 0.0], [0.5, 0.0, 0.5], [0.3, 0.3, 0.4]]
+        self.B = [[[1.0,-1.0], [0.9, 0.4, 0.4, 0.3], [2.0,-1.0], [0.9, 0.4, 0.4, 0.3], [0.5, 0.5]],
+                  [[2.0, 6.0], [1.0, 0.3, 0.3, 0.2], [2.0, 4.0], [1.0, 0.3, 0.3, 0.2], [0.2, 0.8]],
+                  [[0.0, 1.0], [0.4, 0.3, 0.3, 1.0], [0.0, 1.0], [0.4, 0.3, 0.3, 1.0], [0.3, 0.7]]]
+        self.pi = [0.5, 0.0, 0.5]
+        self.model = ghmm.HMMFromMatrices(F, ghmm.MultivariateGaussianDistribution(F),
+                                          self.A, self.B, self.pi)
+
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.model)
+
+    def testtomatrices(self):
+        tA,tB,tpi = self.model.asMatrices()
+        self.assertEqual(self.A, tA)
+        self.assertEqual(self.B, tB)
+        self.assertEqual(self.pi, tpi)
+
+    def testsample(self):
+        #print "\ntest sample "
+        seq = self.model.sampleSingle(12,seed=3586662)
+        #seq.write("unittest.txt")
+        seq2 = self.model.sample(10,100,seed=3586662)
+        #seq2.write("unittest.txt")
+
+    def testviterbi(self):
+        rawseq = [-0.446764027008, -1.67669258354, 1.54243204186, 3.6287515533,
+                  0.16663584276, -1.08911606914, 1.51323067443, 3.71855836483,
+                  3.66132669971, -0.125619008695, 1.75942438763, 3.72819817364,
+                  0.56795498945, -1.58109966326, 1.47047450768, 3.75521096273,
+                  2.12229014093, -0.899976686898, 2.41946196608, 4.22564210432,
+                  1.91324896074, -0.961037439421, 4.22205173845, 7.71314950408,
+                  1.79037684266, -0.430948169158, 2.84534038728, 6.07360450609,
+                  0.104305778967, 1.24904614825, 2.2778823249, -0.712324001306,
+                  2.30224288708, 4.0199822538, -0.493589508242, 1.38053056954,
+                  -0.101494179118, 0.403581452089, -0.757486510903, 0.339485322543,
+                  1.26429794073, 3.76652777875, -0.0488408330226, 0.0687371989958,
+                  0.0410208236425, 0.908826328636, 1.44125142911, -1.33389760767,
+                  1.03152924527, 3.6709682424, 0.496442128289, -1.44850135699,
+                  0.383377087845, 3.43381043664, -0.0755440400748, 0.552959434378,
+                  1.84975116618, 3.94011932136, 2.48885931647, -0.859875186429,
+                  2.61018595614, 4.13940934072, 1.08631661429, -0.486202818138,
+                  3.01896939968, 4.37655286598, 0.724312284299, 1.62712398545,
+                  0.8696901325, -0.883873533603, 1.29764236999, 3.7357402402,
+                  0.581267106425, 1.51047267462, 2.81594843196, 4.27718421613,
+                  0.194647650761, -1.20443942553, 2.21067244723, 4.05788042957,
+                  0.135766970467, 0.673359695864, 1.68891247448, 3.66436809392,
+                  -0.308969826424, 0.865361897266, -0.370298780424, -0.0332496203339,
+                  0.249347553034, 3.49106717714, 1.28552067515, -1.45207369504,
+                  4.15475665338, 4.74026602294, -0.520774231925, 0.8765508811,
+                  0.277813098043, 1.37300482684, 1.12953122842, -1.47288053263]
+        seq = ghmm.EmissionSequence(ghmm.Float(), rawseq)
+        ss, loglik = self.model.viterbi(seq)
+        truess = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 2, 2, 2, 1,
+                  2, 2, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 2, 0, 1, 2, 1, 0, 1, 2, 1,
+                  2, 2, 1, 0, 1, 2, 2, 0]
+        self.assertEqual(ss, truess)
+        self.assertAlmostEqual(loglik, -118.28739538763837)
+
+    def testbaumwelch(self):
+        seq = self.model.sample(100,100,seed=3586662)
+        self.model.setEmission(0,0, ([2.0,-2.0],[1.0,0.1,0.1,1.0]) )
+        self.model.setEmission(1,0, ([0.0,4.0],[1.0,0.1,0.1,1.0]) )
+        self.model.setEmission(2,0, ([0.0,0.0],[1.0,0.1,0.1,1.0]) )
+        self.model.baumWelch(seq,10,0.000001)
+
+
+class MultivariateMixtureHMMTests(unittest.TestCase):
+    def setUp(self):
+        # create a continuous multivariate mixture model from matrices
+        F = ghmm.Float()
+        self.A = [[0.25,0.5,0.25],[0.3,0.2,0.5],[0.3,0.3,0.4]]
+        self.B = [[[1.0,-1.0], [0.9,0.4,0.4,0.3],
+                   [2.0,-1.0], [0.9,0.4,0.4,0.3],
+                   [0.2, 0.8]],
+                  [[2.0, 6.0], [1.0,0.3,0.3,0.2],
+                   [2.0, 4.0], [1.0,0.3,0.3,0.2],
+                   [0.1, 0.9]],
+                  [[0.0, 1.0], [0.4,0.3,0.3,1.0],
+                   [0.0, 1.0], [0.4,0.3,0.3,1.0],
+                   [0.7, 0.3]]]
+        self.pi = [1.0,0.0,0.0]
+        self.CMMmodel = ghmm.HMMFromMatrices(F,ghmm.MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
+
+    def test__str__(self):
+        # we aren't interested in the output but the function should run fine
+        str(self.CMMmodel)
+
+    def testtomatrices(self):
+        [A,B,pi] = self.CMMmodel.asMatrices()
+
+    def testsample(self):
+        seq = self.CMMmodel.sampleSingle(12,seed=3586662)
+        seq2 = self.CMMmodel.sample(10,100,seed=3586662)
+
+    def testprobfunctions(self):
+        # get probability of value [1.0, 1.0] in state 0
+        p = self.CMMmodel.getEmissionProbability([1.0,1.0],0)
+        self.assertEqual(round(p,12),round(7.5129999999999992e-09,12))
+        seq = self.CMMmodel.sampleSingle(5, seed=3586662)
+        lp = self.CMMmodel.joined(seq, [0,2,1,2,0])
+        self.assertAlmostEqual(lp, -116.3323742745624)
+
+    def testbaumwelch(self):
+        seq = self.CMMmodel.sample(100,100,seed=3586662)
+        self.CMMmodel.setEmission(0,0, [[0.0, 1.0], [0.4,0.3,0.3,1.0]])
+        self.CMMmodel.setEmission(1,0, [[1.0,-1.0], [0.9,0.4,0.4,0.3]])
+        self.CMMmodel.setEmission(2,0, [[2.0, 6.0], [1.0,0.3,0.3,0.2]])
+        self.CMMmodel.normalize()
+        self.CMMmodel.baumWelch(seq,10,0.0000001)
+
+
 class HMMERReadTests(unittest.TestCase):
     def testSingleRead(self):
         model = ghmm.HMMOpen('testdata/tk.hmm')
@@ -1463,6 +1690,7 @@ class HMMERReadTests(unittest.TestCase):
         self.assertEqual(len(models), 5)
         self.assertEqual(str(models[0]), str(models[3]))
         self.assertEqual(str(models[1]), str(models[4]))
+
 
 class XMLIOTests(unittest.TestCase):
     """ Deprecated """
@@ -1495,6 +1723,42 @@ class XMLIOTests(unittest.TestCase):
         #print "** XMLIOTests **"
         #print self.tSeq
 
+        # GaussianEmissionHMM
+        F = ghmm.Float()
+        self.A = [[0.0,1.0,0.0],[0.5,0.0,0.5],[0.3,0.3,0.4]]
+        self.B = [[0.0,1.0],[-1.0,0.5], [1.0,0.2]]
+        self.pi = [1.0,0.0,0.0]
+        self.Gmodel = ghmm.HMMFromMatrices(F,ghmm.GaussianDistribution(F), self.A, self.B, self.pi)
+
+        # GuassianMixtureModel
+        F = ghmm.Float()
+        self.A = [[0.25,0.5,0.25],[0.3,0.2,0.5],[0.3,0.3,0.4]]
+        self.B = [[ [0.0,1.0,2.0],[1.0,2.5,5.5], [0.5,0.3,0.2]],
+             [ [2.0,6.0,1.0],[1.0,0.5,0.7], [0.1,0.5,0.4]],
+             [ [4.0,5.0,1.0],[1.0,2.5,2.0], [0.3,0.3,0.4]] ]
+        self.pi = [1.0,0.0,0.0]
+        self.GMmodel = ghmm.HMMFromMatrices(F,ghmm.GaussianMixtureDistribution(F), self.A, self.B, self.pi)
+
+        # Multivariate Mixture model
+        F = ghmm.Float()
+        self.A = [[0.0,1.0,0.0],[0.5,0.0,0.5],[0.3,0.3,0.4]]
+        self.B = [[ [1.0,-1.0],[0.9,0.4,0.4,0.3], [2.0,-1.0],[0.9,0.4,0.4,0.3], [0.5,0.5]],
+                  [ [2.0,6.0] ,[1.0,0.3,0.3,0.2], [2.0,4.0] ,[1.0,0.3,0.3,0.2], [0.2,0.8]],
+                  [ [0.0,1.0] ,[0.4,0.3,0.3,1.0], [0.0,1.0] ,[0.4,0.3,0.3,1.0], [0.3,0.7]] ]
+        self.pi = [0.5,0.0,0.5]
+        self.Mmodel = ghmm.HMMFromMatrices(F,ghmm.MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
+
+        # create a continuous mixture model from matrices with only one mixture component
+        F = ghmm.Float()
+        self.A = [[0.0,1.0,0.0], [0.0,0.0,1.0], [1.0,0.0,0.0]]
+        self.B = [ [ [1.0], [2.0], [0.0], [1.0] ],
+                   [ [6.0], [1.0], [5.3], [1.0] ],
+                   [ [5.0], [1.0], [5.5], [1.0] ] ]
+        densities = [[ghmmwrapper.uniform], [ghmmwrapper.normal_right], [ghmmwrapper.normal_left]]
+        self.pi = [1.0, 0.0, 0.0]
+        self.CM1model = ghmm.HMMFromMatrices(F, ghmm.ContinuousMixtureDistribution(F),
+                                             self.A, self.B, self.pi, densities=densities)
+
     def testReadHMMed(self):
         model = ghmm.HMMOpen('testdata/multexon-4.xml')
         del model
@@ -1511,6 +1775,23 @@ class XMLIOTests(unittest.TestCase):
 
         #self.label_model.toXML('testdata/model_label.xml')
         model3 = ghmm.HMMOpen('testdata/model_label.xml')
+
+        self.Gmodel.write('testdata/testwrite_gmodel.xml')
+        newModel = ghmm.HMMOpen('testdata/testwrite_gmodel.xml')
+
+        self.GMmodel.write('testdata/testwrite_gmmodel.xml')
+        newModel = ghmm.HMMOpen('testdata/testwrite_gmmodel.xml')
+
+        self.Mmodel.write('testdata/testwrite_multivariate_model.xml')
+        newModel = ghmm.HMMOpen('testdata/testwrite_multivariate_model.xml')
+
+        self.CM1model.write('testdata/testwrite_continuous_mixture_model.xml')
+        newModel = ghmm.HMMOpen('testdata/testwrite_continuous_mixture_model.xml')
+
+        # write and HMMOpen does not work for kSilentStates discrete models:
+        #self.model.write('testdata/testwrite_discrete_model.xml')
+        #newModel = ghmm.HMMOpen('testdata/testwrite_discrete_model.xml')
+        #print newModel
 
 ########### PAIR HMM TESTS ##############
 
@@ -1569,6 +1850,9 @@ suiteGaussianEmissionHMM = unittest.makeSuite(GaussianEmissionHMMTests,'test')
 suiteGaussianMixtureHMM = unittest.makeSuite(GaussianMixtureHMMTests,'test')
 suiteContinuousMixtureHMM = unittest.makeSuite(ContinuousMixtureHMMTests,'test')
 suiteContinuousMixtureHMM2 = unittest.makeSuite(ContinuousMixtureHMM2Tests,'test')
+suiteMultivariateGaussianEmissionHMM = unittest.makeSuite(MultivariateGaussianEmissionHMMTests,'test')
+suiteMultivariateGaussianMixtureHMM = unittest.makeSuite(MultivariateGaussianMixtureHMMTests,'test')
+suiteMultivariateMixtureHMM = unittest.makeSuite(MultivariateMixtureHMMTests,'test')
 suiteHMMER = unittest.makeSuite(HMMERReadTests,'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests,'test')
 suiteComplexSequence = unittest.makeSuite(ComplexEmissionSequenceTests,'test')
@@ -1585,6 +1869,9 @@ runner = unittest.TextTestRunner()
 #runner.run(suiteGaussianMixtureHMM)
 #runner.run(suiteContinuousMixtureHMM)
 #runner.run(suiteContinuousMixtureHMM2)
+#runner.run(suiteMultivariateGaussianEmissionHMM)
+#runner.run(suiteMultivariateGaussianMixtureHMM)
+#runner.run(suiteMultivariateMixtureHMM)
 #runner.run(suiteHMMER)
 #runner.run(suiteXMLIO)
 #runner.run(suiteComplexSequence)

@@ -99,9 +99,12 @@ extern "C" {
     Contains an array of sequences and corresponding
     data like sequnce label, sequence weight, etc. Sequences may have different
     length.    
+    multi-dimension sequences are linearized
  */
   typedef struct ghmm_cseq {
-  /** sequence array. sequence[i][j] = j-th symbol of i-th seq. */
+  /** sequence array. sequence[i][j] = j-th symbol of i-th seq.
+      sequence[i][D * j] = first dimension of j-th observation of i-th sequence
+  */
     double **seq;
   /** array of sequence length */
     int *seq_len;
@@ -119,6 +122,8 @@ extern "C" {
     long capacity;
   /** sum of sequence weights */
     double total_w;
+  /** total number of dimensions */
+    int D;
 
   /** flags (internal) */
     unsigned int flags;

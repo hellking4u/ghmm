@@ -58,12 +58,51 @@
 #include "sequence.h"
 #include "rng.h"
 #include "randvar.h"
+#include "matrixop.h"
 #include "string.h"
 #include "ghmm_internals.h"
 #include "xmlreader.h"
 #include "xmlwriter.h"
 
 #include "obsolete.h"
+/*----------------------------------------------------------------------------*/
+int ghmm_c_emission_alloc(ghmm_c_emission *emission, int dim)
+{
+# define CUR_PROC "ghmm_c_emission_alloc"
+  int res = -1;
+  char *e_str;
+  if (dim >= 2) {
+    switch (emission->type) {
+    case multinormal:
+      ARRAY_CALLOC(emission->mean.vec, dim);
+      ARRAY_CALLOC(emission->variance.mat, dim*dim);
+      ARRAY_CALLOC(emission->sigmainv, dim*dim);
+      ARRAY_CALLOC(emission->sigmacd, dim*dim);
+      res = 0;
+      break;
+    case binormal:
+      if (dim > 2) return -1;
+      ARRAY_CALLOC(emission->mean.vec, 2);
+      ARRAY_CALLOC(emission->variance.mat, 4);
+      res = 0;
+      break;
+    default:
+      /* don't allocate for single variate densities */
+      res = 0;
+    }
+  }
+  else {
+    e_str = ighmm_mprintf(NULL, 0, "dimension (%d) smaller than 2, "
+                          "ghmm_c_emission_alloc isn't needed", dim);
+    GHMM_LOG(LWARN, e_str);
+    m_free(e_str);
+    res = 0;
+  }
+
+STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
+  return res;
+# undef CUR_PROC
+}
 
 /*----------------------------------------------------------------------------*/
 int ghmm_cstate_alloc (ghmm_cstate * s,
@@ -71,23 +110,13 @@ int ghmm_cstate_alloc (ghmm_cstate * s,
 {
 # define CUR_PROC "ghmm_cstate_alloc"
   int res = -1;
-  int i;
-  ARRAY_CALLOC (s->c, M);
-  ARRAY_CALLOC (s->mue, M);
-  ARRAY_CALLOC (s->u, M);
-  ARRAY_CALLOC (s->a,M);
 
-  ARRAY_CALLOC (s->mixture_fix, M);
-  ARRAY_CALLOC (s->density,M);
+  ARRAY_CALLOC (s->c, M);
+  ARRAY_CALLOC (s->e, M);
+
   s->xPosition = 0.0;
   s->yPosition = 0.0;
    
-
-  /* mixture component fixing deactivated by default */
-  for (i = 0; i < M; i++) {
-    s->mixture_fix[i] = 0;
-  }
-
   if (out_states > 0) {
     ARRAY_CALLOC (s->out_id, out_states);
     s->out_a = ighmm_cmatrix_alloc (cos, out_states);
@@ -120,6 +149,7 @@ ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
   mo->N = N;
   mo->M = 0;
   mo->model_type = modeltype;
+  mo->dim = 1;
   ARRAY_CALLOC(mo->s, N);
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -158,8 +188,8 @@ since it does not take care of het .mixtures densities  */
   smo->s[index].fix = fix[index];
   for (i = 0; i < smo->s[index].M; i++) {
     smo->s[index].c[i] = c_matrix[index][i];
-    smo->s[index].mue[i] = mue_matrix[index][i];
-    smo->s[index].u[i] = u_matrix[index][i];
+    smo->s[index].e[i].mean.val = mue_matrix[index][i];
+    smo->s[index].e[i].variance.val = u_matrix[index][i];
   }
 
   for (i = 0; i < smo->N; i++) {
@@ -613,7 +643,6 @@ ghmm_cmodel *ghmm_cmodel_read_block (scanner_t * s, int *multip)
   /* memory alloc for all transition matrices. If a transition is possible in one
      class --> alloc memory for all classes */
   for (i = 0; i < smo->N; i++) {
-    /*smo->density[i] = density;*/
     for (j = 0; j < smo->N; j++) {
       out = in = 0;
       for (osc = 0; osc < smo->cos; osc++) {
@@ -635,8 +664,7 @@ ghmm_cmodel *ghmm_cmodel_read_block (scanner_t * s, int *multip)
        used constant */
     smo->M = M;
     for (j=0; j < smo->M; j++){
-      smo->s[i].density[j] = (ghmm_density_t)density;
-      smo->s[i].a[j] = -GHMM_EPS_NDT;
+      smo->s[i].e[j].type = density;
       smo->s[i].M = M;
     }
     /* copy values read to smodel */
@@ -646,7 +674,6 @@ ghmm_cmodel *ghmm_cmodel_read_block (scanner_t * s, int *multip)
       GHMM_LOG_QUEUED(LCONVERTED);
       goto STOP;
     }
-
   }
   if (a_3dmatrix)
     for (i = 0; i < smo->cos; i++)
@@ -716,31 +743,49 @@ STOP:
 }
 
 /*============================================================================*/
+void ghmm_c_emission_free (ghmm_c_emission *emission)
+{
+#define CUR_PROC "ghmm_c_emission_free"
+  if (!emission)
+    return;
+  if (emission->dimension > 1) {
+    m_free(emission->mean.vec);
+    m_free(emission->variance.mat);
+    if (emission->type == multinormal) {
+      m_free(emission->sigmainv);
+      m_free(emission->sigmacd);
+    }
+  }
+  return;
+#undef CUR_PROC
+}
+
+/*============================================================================*/
 int ghmm_cmodel_free (ghmm_cmodel ** smo)
 {
 #define CUR_PROC "ghmm_cmodel_free"
-  int i;
+  int i, j;
+  ghmm_cstate *state;
   mes_check_ptr (smo, return (-1));
 
   for (i = 0; i < (*smo)->N && (*smo)->s; i++) {
-    
+    state = (*smo)->s + i;
     /* if there are no out_states field was never allocated */ 
-    if ((*smo)->s[i].out_states > 0){
-      m_free ((*smo)->s[i].out_id);
-    }  
+    if (state->out_states > 0){
+      m_free (state->out_id);
+    }
     /* if there are no in_states field was never allocated */ 
-    if ((*smo)->s[i].in_states > 0){
-      m_free ((*smo)->s[i].in_id);
-    }  
-    ighmm_cmatrix_free (&((*smo)->s[i].out_a), (*smo)->cos);
-    ighmm_cmatrix_free (&((*smo)->s[i].in_a), (*smo)->cos);
-    m_free ((*smo)->s[i].c);
-    m_free ((*smo)->s[i].mue);
-    m_free ((*smo)->s[i].u);
-    m_free ((*smo)->s[i].a);
-    m_free ((*smo)->s[i].mixture_fix);
-    m_free ((*smo)->s[i].density);
-    
+    if (state->in_states > 0){
+      m_free(state->in_id);
+    }
+    ighmm_cmatrix_free(&(state->out_a), (*smo)->cos);
+    ighmm_cmatrix_free(&(state->in_a), (*smo)->cos);
+
+    m_free(state->c);
+    if (((*smo)->model_type & GHMM_kMultivariate) && state->e)
+      for (j=0; j < state->M; ++j)
+        ghmm_c_emission_free(state->e+j);
+    m_free (state->e);
   }
   if ((*smo)->s) m_free ((*smo)->s);
 
@@ -757,12 +802,11 @@ int ghmm_cmodel_free (ghmm_cmodel ** smo)
 #undef CUR_PROC
 }                               /* ghmm_cmodel_free */
 
-
 /*============================================================================*/
 ghmm_cmodel *ghmm_cmodel_copy (const ghmm_cmodel * smo)
 {
 # define CUR_PROC "ghmm_cmodel_copy"
-  int i, k, j, nachf, vorg, m;
+  int i, k, j, nachf, vorg, dim;
   ghmm_cmodel *sm2 = NULL;
   ARRAY_CALLOC (sm2, 1);
   ARRAY_CALLOC (sm2->s, smo->N);
@@ -782,12 +826,8 @@ ghmm_cmodel *ghmm_cmodel_copy (const ghmm_cmodel * smo)
       goto STOP;
     }
     ARRAY_CALLOC (sm2->s[i].c, smo->s[i].M);
-    ARRAY_CALLOC (sm2->s[i].mue, smo->s[i].M);
-    ARRAY_CALLOC (sm2->s[i].u, smo->s[i].M);
-    ARRAY_CALLOC (sm2->s[i].mixture_fix, smo->s[i].M);
-    ARRAY_CALLOC (sm2->s[i].a, smo->s[i].M);
-    ARRAY_CALLOC (sm2->s[i].density, smo->s[i].M);
-    
+    ARRAY_CALLOC (sm2->s[i].e, smo->s[i].M);
+
     /* copy values */
     for (j = 0; j < nachf; j++) {
       for (k = 0; k < smo->cos; k++)
@@ -799,14 +839,24 @@ ghmm_cmodel *ghmm_cmodel_copy (const ghmm_cmodel * smo)
         sm2->s[i].in_a[k][j] = smo->s[i].in_a[k][j];
       sm2->s[i].in_id[j] = smo->s[i].in_id[j];
     }
-    for (m = 0; m < smo->s[i].M; m++) {
-      sm2->s[i].c[m] = smo->s[i].c[m];
-      sm2->s[i].mue[m] = smo->s[i].mue[m];
-      sm2->s[i].u[m] = smo->s[i].u[m];
-      sm2->s[i].mixture_fix[m] = smo->s[i].mixture_fix[m];
-      sm2->s[i].a[m] = smo->s[i].a[m];
-      sm2->s[i].density[m] = smo->s[i].density[m];
-    }
+
+    memcpy(sm2->s[i].c, smo->s[i].c, sizeof(*(smo->s[i].c)) * smo->s[i].M);
+    memcpy(sm2->s[i].e, smo->s[i].e, sizeof(*(smo->s[i].e)) * smo->s[i].M);
+    /* if we have multivariate emissions, we need to copy
+       the mean vector and covariance matrix too */
+    if (smo->model_type & GHMM_kMultivariate)
+      for (j=0; j < smo->s[i].M; j++) {
+        dim = smo->s[i].e[j].dimension;
+
+        ARRAY_CALLOC(sm2->s[i].e[j].mean.vec, dim);
+        memcpy(sm2->s[i].e[j].mean.vec, smo->s[i].e[j].mean.vec,
+               dim * sizeof(*(sm2->s[i].e[j].mean.vec)));
+
+        ARRAY_CALLOC(sm2->s[i].e[j].variance.mat, dim*dim);
+        memcpy(sm2->s[i].e[j].variance.mat, smo->s[i].e[j].variance.mat,
+               dim * sizeof(*(sm2->s[i].e[j].variance.mat)));
+      }
+
     sm2->s[i].M = smo->s[i].M;
     sm2->s[i].pi = smo->s[i].pi;
     sm2->s[i].fix = smo->s[i].fix;
@@ -817,6 +867,7 @@ ghmm_cmodel *ghmm_cmodel_copy (const ghmm_cmodel * smo)
   sm2->N = smo->N;
   sm2->M = smo->M;
   sm2->prior = smo->prior;
+  sm2->dim = smo->dim;
   return (sm2);
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_cmodel_free (&sm2);
@@ -885,6 +936,18 @@ int ghmm_cmodel_check (const ghmm_cmodel * smo)
     }
     /* check mue, u ? */
   }
+  /* do all emissions have the same dimension as specified in smo->dim */
+  for (i = 0; i < smo->N; i++) {
+    for (k = 0; k < smo->s[i].M; k++) {
+      if (smo->dim != smo->s[i].e[k].dimension) {
+        str = ighmm_mprintf (NULL, 0, "dim s[%d].e[%d] != dimension of model\n", i, k);
+        GHMM_LOG(LCONVERTED, str);
+        m_free (str);
+        valid = -1;
+        /* goto STOP; */
+      }
+    }
+  }
 
 /* for lazy-evaluation-like model checking
    uncomment 'goto STOP' statements and 'STOP:' line  */  
@@ -927,22 +990,35 @@ int ghmm_cmodel_check_compatibility (ghmm_cmodel ** smo, int smodel_number)
 
 
 /*============================================================================*/
-double ghmm_cmodel_get_random_var (ghmm_cmodel * smo, int state, int m)
+int ghmm_cmodel_get_random_var(ghmm_cmodel *smo, int state, int m, double *x)
 {
 # define CUR_PROC "ghmm_cmodel_get_random_var"
-  switch (smo->s[state].density[m]) {
+  ghmm_c_emission *emission = smo->s[state].e + m;
+  switch (emission->type) {
   case normal_approx:
   case normal:
-    return (ighmm_rand_normal (smo->s[state].mue[m], smo->s[state].u[m], 0));
+    *x = ighmm_rand_normal(emission->mean.val, emission->variance.val, 0);
+    return 0;
+  case binormal:
+    /*return ighmm_rand_binormal(emission->mean.vec, emission->variance.mat, 0);*/
+  case multinormal:
+    return ighmm_rand_multivariate_normal(emission->dimension, x,
+                                          emission->mean.vec,
+                                          emission->sigmacd, 0);
   case normal_right:
-    return (ighmm_rand_normal_right (smo->s[state].a[m],smo->s[state].mue[m], smo->s[state].u[m], 0));
+    *x = ighmm_rand_normal_right(emission->min, emission->mean.val,
+                                 emission->variance.val, 0);
+    return 0;
   case normal_left:
-    return -(ighmm_rand_normal_right (-smo->s[state].a[m],-smo->s[state].mue[m], smo->s[state].u[m], 0));
+    *x = -ighmm_rand_normal_right(-emission->max, -emission->mean.val,
+                                  emission->variance.val, 0);
+    return 0;
   case uniform:
-	return (ighmm_rand_uniform_cont (0, smo->s[state].mue[m] ,smo->s[state].u[m]));
+    *x = ighmm_rand_uniform_cont(0, emission->max, emission->min);
+    return 0;
   default:
-    ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
-    return (-1);
+    GHMM_LOG(LWARN, "unknown density function specified!");
+    return -1;
   }
 # undef CUR_PROC
 }                               /* ghmm_cmodel_get_random_var */
@@ -970,6 +1046,9 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
     goto STOP;
   }
 
+  /* set dimension of the sequence to match dimension of the model (multivariate) */
+  sq->D = smo->dim;
+
   /* A specific length of the sequences isn't given. As a model should have
      an end state, the konstant MAX_SEQ_LEN is used. */
   if (len <= 0)
@@ -993,11 +1072,20 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
   n = 0;
   reject_os = reject_tmax = 0;
 
+  /* calculate cholesky decomposition of covariance matrix (multivariate case),
+     this needs to be called before ghmm_c_get_random_var */
+  if (smo->dim > 1) {
+    for (i = 0; i < smo->N; i++) {
+      ighmm_cholesky_decomposition(smo->s[i].e[0].sigmacd, smo->dim,
+                                   smo->s[i].e[0].variance.mat);
+    }
+  }
+
   while (n < seq_number) {
     /* Test: A new seed for each sequence */
     /*   ghmm_rng_timeseed(RNG); */
     stillbadseq = badseq = 0;
-    ARRAY_CALLOC (sq->seq[n], len);
+    ARRAY_CALLOC (sq->seq[n], len*(smo->dim));
 
     /* Get a random initial state i */
     p = GHMM_RNG_UNIFORM (RNG);
@@ -1024,8 +1112,9 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
     }
     if (m == smo->s[i].M)
       m--;
+
     /* Get random numbers according to the density function */
-    sq->seq[n][0] = ghmm_cmodel_get_random_var (smo, i, m);
+    ghmm_cmodel_get_random_var(smo, i, m, sq->seq[n]+0);
     pos = 1;
 
     /* The first symbol chooses the start class */
@@ -1045,6 +1134,7 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
         goto STOP;
       }
     }
+
     while (pos < len) {
       /* Get a new state */
       p = GHMM_RNG_UNIFORM (RNG);
@@ -1113,7 +1203,7 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
           m--;
       }
       /* Get a random number from the corresponding density function */
-      sq->seq[n][pos] = ghmm_cmodel_get_random_var (smo, i, m);
+      ghmm_cmodel_get_random_var(smo, i, m, sq->seq[n]+(pos*smo->dim));
 
       /* Decide the class for the next step */
       if (smo->cos == 1) {
@@ -1153,7 +1243,7 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
       if (pos < len)
 
         ARRAY_REALLOC (sq->seq[n], pos);
-      sq->seq_len[n] = pos;
+      sq->seq_len[n] = pos*(smo->dim);
       /* ighmm_cvector_print(stdout, sq->seq[n], sq->seq_len[n]," "," ",""); */
       n++;
     }
@@ -1333,9 +1423,9 @@ void ghmm_cmodel_Mue_print (FILE * file, ghmm_cmodel * smo, char *tab, char *sep
   int i, j;
   for (i = 0; i < smo->N; i++) {
     fprintf (file, "%s", tab);
-    fprintf (file, "%.4f", smo->s[i].mue[0]);
+    fprintf (file, "%.4f", smo->s[i].e[0].mean.val);
     for (j = 1; j < smo->s[i].M; j++)
-      fprintf (file, "%s %.4f", separator, smo->s[i].mue[j]);
+      fprintf (file, "%s %.4f", separator, smo->s[i].e[j].mean.val);
     fprintf (file, "%s\n", ending);
   }
 }                               /* ghmm_cmodel_Mue_print */
@@ -1350,9 +1440,9 @@ void ghmm_cmodel_U_print (FILE * file, ghmm_cmodel * smo, char *tab, char *separ
   int i, j;
   for (i = 0; i < smo->N; i++) {
     fprintf (file, "%s", tab);
-    fprintf (file, "%.4f", smo->s[i].u[0]);
+    fprintf (file, "%.4f", smo->s[i].e[0].variance.val);
     for (j = 1; j < smo->s[i].M; j++)
-      fprintf (file, "%s %.4f", separator, smo->s[i].u[j]);
+      fprintf (file, "%s %.4f", separator, smo->s[i].e[j].variance.val);
     fprintf (file, "%s\n", ending);
   }
 }                               /* ghmm_cmodel_U_print */
@@ -1388,7 +1478,7 @@ void ghmm_cmodel_print (FILE * file, ghmm_cmodel * smo)
   int k;
   fprintf (file,
            "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n\tcos = %d;\n",
-           smo->M, smo->N, (int) smo->s[0].density[0], smo->cos);
+           smo->M, smo->N, (int) smo->s[0].e[0].type, smo->cos);
   /* smo files support only models with a single density */
   fprintf (file, "\tprior = %.5f;\n", smo->prior);
   fprintf (file, "\tPi = vector {\n");
@@ -1419,7 +1509,7 @@ void ghmm_cmodel_print_oneA (FILE * file, ghmm_cmodel * smo)
 /* old function - No support to heterogeneous densities */
   fprintf (file,
            "SHMM = {\n\tM = %d;\n\tN = %d;\n\tdensity = %d;\n\tcos = %d;\n",
-           smo->M, smo->N, (int) smo->s[0].density[0], smo->cos);
+           smo->M, smo->N, (int) smo->s[0].e[0].type, smo->cos);
   fprintf (file, "\tprior = %.3f;\n", smo->prior);
   fprintf (file, "\tPi = vector {\n");
   ghmm_cmodel_Pi_print (file, smo, "\t", ",", ";");
@@ -1442,54 +1532,66 @@ void ghmm_cmodel_print_oneA (FILE * file, ghmm_cmodel * smo)
   fprintf (file, "};\n\n");
 }                               /* ghmm_cmodel_print */
 
+/*===========================================================================*/
+/* defining function with identical signatures for function pointer */
+static double cmbm_normal(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_normal_density(*omega, emission->mean.val,
+                                     emission->variance.val);
+}
+static double cmbm_binormal(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_binormal_density(omega, emission->mean.vec,
+                                       emission->variance.mat);
+}
+static double cmbm_multinormal(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_multivariate_normal_density(emission->dimension, omega,
+                                                  emission->mean.vec,
+                                                  emission->sigmainv,
+                                                  emission->det);
+}
+static double cmbm_normal_right(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_normal_density_trunc(*omega, emission->mean.val,
+                                           emission->variance.val, emission->min);
+}
+static double cmbm_normal_left(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_normal_density_trunc(-(*omega), -emission->mean.val,
+                                           emission->variance.val, -emission->max);
+}
+static double cmbm_normal_approx(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_normal_density_approx(*omega, emission->mean.val,
+                                            emission->variance.val);
+}
+static double cmbm_uniform(ghmm_c_emission* emission, const double *omega) {
+    return ighmm_rand_uniform_density(*omega, emission->max, emission->min);
+}
+
+/* function pointer array for the PDFs of the density types */
+static double (*density_func[])(ghmm_c_emission*, const double*) = {
+    cmbm_normal,
+    cmbm_normal_right,
+    cmbm_normal_approx,
+    cmbm_normal_left,
+    cmbm_uniform,
+    cmbm_binormal,
+    cmbm_multinormal,
+};
 
 /*============================================================================*/
-double ghmm_cmodel_calc_cmbm (ghmm_cmodel * smo, int state, int m, double omega)
+double ghmm_cmodel_calc_cmbm(const ghmm_cstate *state, int m, double *omega)
 {
-  double bm = 0.0;
-  switch (smo->s[state].density[m]) {
-  case normal:
-    bm = ighmm_rand_normal_density (omega, smo->s[state].mue[m],
-                                 smo->s[state].u[m]);
-    break;
-  case normal_right:
-    bm = ighmm_rand_normal_density_trunc (omega, smo->s[state].mue[m],
-                                     smo->s[state].u[m],smo->s[state].a[m]);
-    break;
-  case normal_left:
-    bm = ighmm_rand_normal_density_trunc (-omega, -smo->s[state].mue[m],
-                                     smo->s[state].u[m],-smo->s[state].a[m]);
-    break;
-  case normal_approx:
-    bm = ighmm_rand_normal_density_approx (omega,
-                                        smo->s[state].mue[m],
-                                        smo->s[state].u[m]);
-    break;
-  case uniform:
-    bm = ighmm_rand_uniform_density (omega, 
-                                  smo->s[state].mue[m],
-                                  smo->s[state].u[m]);
-    break;
-  default:
-    ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
-  }
-  if (bm == -1) {
-    ighmm_mes (MES_WIN, "Warning: density function returns -1!\n");
-    bm = 0.0;
-  }
-  return (smo->s[state].c[m] * bm);
-}                               /* ghmm_cmodel_calc_cmbm */
-
+    ghmm_c_emission *emission = state->e+m;
+    return state->c[m] * density_func[emission->type](emission, omega);
+}
 
 /*============================================================================*/
 /* PDF(omega) in a given state */
-double ghmm_cmodel_calc_b (ghmm_cmodel * smo, int state, double omega)
+double ghmm_cmodel_calc_b(ghmm_cstate *state, const double *omega)
 {
   int m;
   double b = 0.0;
-  for (m = 0; m < smo->s[state].M; m++)
-    b += ghmm_cmodel_calc_cmbm (smo, state, m, omega);
-  return (b);
+
+  for (m = 0; m < state->M; m++)
+    b += state->c[m] * density_func[state->e[m].type](state->e+m, omega);
+  return b;
 }                               /* ghmm_cmodel_calc_b */
 
 
@@ -1686,46 +1788,67 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 #undef CUR_PROC
 }
 
+/*===========================================================================*/
+/* defining functions with identical signatures for function pointer */
+static double cmBm_normal(ghmm_c_emission *emission, const double *omega) {
+    return ighmm_rand_normal_cdf(*omega, emission->mean.val, emission->variance.val);
+}
+static double cmBm_normal_approx(ghmm_c_emission *emission, const double *omega) {
+    return ighmm_rand_normal_cdf(*omega, emission->mean.val, emission->variance.val);
+}
+static double cmBm_normal_right(ghmm_c_emission *emission, const double *omega) {
+    return ighmm_rand_normal_right_cdf(*omega, emission->mean.val,
+                                       emission->variance.val, emission->min);
+}
+static double cmBm_normal_left(ghmm_c_emission *emission, const double *omega) {
+    return ighmm_rand_normal_right_cdf(*omega, -emission->mean.val,
+                                       emission->variance.val, -emission->max);
+}
+static double cmBm_uniform(ghmm_c_emission *emission, const double *omega) {
+    return ighmm_rand_uniform_cdf(*omega, emission->min, emission->max);
+}
+static double cmBm_binormal(ghmm_c_emission *emission, const double *omega) {
+#define CUR_PROC "cmBm_binormal"
+    GHMM_LOG(LWARN, "CDF for binormal densities not implemented");
+    return 0.0;
+#undef CUR_PROC
+}
+static double cmBm_multinormal(ghmm_c_emission *emission, const double *omega) {
+#define CUR_PROC "cmBm_multinormal"
+    GHMM_LOG(LWARN, "CDF for multivariate normal densities not implemented");
+    return 0.0;
+#undef CUR_PROC
+}
 
 /*============================================================================*/
-double ghmm_cmodel_calc_cmBm (ghmm_cmodel * smo, int state, int m, double omega)
-{
-  double Bm = 0.0;
-  switch (smo->s[state].density[m]) {
-  case normal_approx:
-  case normal:
-    Bm = ighmm_rand_normal_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]);
-    break;
-  case normal_right:
-    Bm = ighmm_rand_normal_right_cdf (omega, smo->s[state].mue[m],
-                              smo->s[state].u[m],smo->s[state].a[m]);
-    break;
-  case normal_left:
-    Bm = (ighmm_rand_normal_right_cdf (omega, -smo->s[state].mue[m], smo->s[state].u[m],-smo->s[state].a[m]));
-    break;
-  case uniform:
-    Bm = (ighmm_rand_uniform_cdf (omega, smo->s[state].mue[m], smo->s[state].u[m]));
-    break;
-  default:
-    ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
-  }
-  if (Bm == -1) {
-    ighmm_mes (MES_WIN, "Warning: density function returns -1!\n");
-    Bm = 0.0;
-  }
-  return (smo->s[state].c[m] * Bm);
-}                               /* smodel_calc_Bm */
+/* function pointer array for the cdfs of the density types */
+static double (*cdf_func[])(ghmm_c_emission*, const double*) = {
+    cmBm_normal,
+    cmBm_normal_right,
+    cmBm_normal, /* reuse normal for normal_approx*/
+    cmBm_normal_left,
+    cmBm_uniform,
+    cmBm_binormal,
+    cmBm_multinormal,
+};
 
+/*============================================================================*/
+double ghmm_cmodel_calc_cmBm(const ghmm_cstate *state, int m, const double *omega)
+{
+    ghmm_c_emission *emission = state->e+m;
+    return state->c[m] * cdf_func[emission->type](emission, omega);
+}
 
 /*============================================================================*/
 /* CDF(omega) in a given state */
-double ghmm_cmodel_calc_B (ghmm_cmodel * smo, int state, double omega)
+double ghmm_cmodel_calc_B(ghmm_cstate *state, const double *omega)
 {
   int m;
   double B = 0.0;
-  for (m = 0; m < smo->s[state].M; m++)
-    B += ghmm_cmodel_calc_cmBm (smo, state, m, omega);
-  return (B);
+
+  for (m = 0; m < state->M; m++)
+    B += state->c[m] * cdf_func[state->e[m].type](state->e+m, omega);
+  return B;
 }                               /* ghmm_cmodel_calc_B */
 
 /*============================================================================*/
@@ -1772,31 +1895,37 @@ void ghmm_cmodel_get_interval_B (ghmm_cmodel * smo, int state, double *a, double
 {
   int m;
   double mue, delta, max, min;
+  ghmm_c_emission *emission;
+
   *a = DBL_MAX;
   *b = -DBL_MAX;
   for (m = 0; m < smo->s[state].M; m++) {
-    switch (smo->s[state].density[m]) {
+    emission = smo->s[state].e+m;
+    switch (emission->type) {
     case normal:
     case normal_approx:
-      mue = smo->s[state].mue[m];
-      delta = 3 * sqrt (smo->s[state].u[m]);
+      mue = emission->mean.val;
+      delta = 3 * sqrt(emission->variance.val);
       if (*a > mue - delta)
         *a = floor (mue - delta);
       if (*b < mue + delta)
         *b = ceil (mue + delta);
+      /* XXX: does this really work? */
+      break;
     case normal_right:
+      if (*a > emission->min)
+        *a = emission->min;
+      break;
     case normal_left:
-      if (smo->s[state].density[state] == normal_right && *a < smo->s[state].a[m])
-        *a = smo->s[state].a[m];
-      if (smo->s[state].density[state] == normal_left && *b > smo->s[state].a[m])
-        *b = smo->s[state].a[m] ;
-    break;
+      if (*b < emission->max)
+        *b = emission->max;
+      break;
     case uniform:
-      max = smo->s[state].mue[m];
-      min = smo->s[state].u[m];
+      max = emission->max;
+      min = emission->min;
       *a = floor ((0.01 * (max - min))+min);
       *b = ceil ((0.99 * (max - min))+min);
-    break;      
+      break;
     default:
       ighmm_mes (MES_WIN, "Warning: density function not specified!\n");
     }
@@ -1914,9 +2043,9 @@ int ghmm_cmodel_normalize(ghmm_cmodel *smo)
 
 
 /*============================================================================*/
-double ghmm_cmodel_ifunc (ghmm_cmodel * smo, int state, double c, double x)
+double ghmm_cmodel_ifunc(ghmm_cmodel *smo, int state, double c, double x)
 {
-  return (fabs (ghmm_cmodel_calc_B (smo, state, x) - c));
+  return fabs(ghmm_cmodel_calc_B(smo->s+state, &x) - c);
 }
 
 /*============================ TEST =========================================*/

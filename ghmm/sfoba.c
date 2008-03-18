@@ -51,7 +51,7 @@
 
 
 /*----------------------------------------------------------------------------*/
-static int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double omega,
+static int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double *omega,
                               double *scale, double **b)
 {
 # define CUR_PROC "sfoba_initforward"
@@ -60,7 +60,7 @@ static int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double omega,
   scale[0] = 0.0;
   if (b == NULL){
     for (i = 0; i < smo->N; i++) {
-      alpha_1[i] = smo->s[i].pi * ghmm_cmodel_calc_b (smo, i, omega);
+      alpha_1[i] = smo->s[i].pi * ghmm_cmodel_calc_b(smo->s+i, omega);
       scale[0] += alpha_1[i];
     }
   }
@@ -102,12 +102,13 @@ int ghmm_cmodel_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
   int res = -1;
   int i, t = 0, osc = 0;
   double c_t;
+  int pos;
 
   /* calculate alpha and scale for t = 0 */
   if (b == NULL)
-    sfoba_initforward (smo, alpha[0], O[0], scale, NULL);
+    sfoba_initforward(smo, alpha[0], O, scale, NULL);
   else
-    sfoba_initforward (smo, alpha[0], O[0], scale, b[0]);
+    sfoba_initforward(smo, alpha[0], O, scale, b[0]);
   if (scale[0] <= DBL_MIN) {
     /* means f(O[0], mue, u) << 0, first symbol very unlikely */
     /* GHMM_LOG(LCONVERTED, "scale[0] == 0.0!\n"); */
@@ -136,11 +137,12 @@ int ghmm_cmodel_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
 
     for (t = 1; t < T; t++) {
       scale[t] = 0.0;
+      pos = t * smo->dim;
       /* b not calculated yet */
       if (b == NULL) {
         for (i = 0; i < smo->N; i++) {
-          alpha[t][i] = sfoba_stepforward (&smo->s[i], alpha[t - 1], osc,
-                                           ghmm_cmodel_calc_b (smo, i, O[t]));
+          alpha[t][i] = sfoba_stepforward(smo->s+i, alpha[t-1], osc,
+                                          ghmm_cmodel_calc_b(smo->s+i, O+pos));
           scale[t] += alpha[t][i];
         }
       }
@@ -205,6 +207,8 @@ int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
   double *beta_tmp, sum, c_t;
   int i, j, j_id, t, osc;
   int res = -1;
+  int pos;
+
   ARRAY_CALLOC (beta_tmp, smo->N);
 
   for (t = 0; t < T; t++) {
@@ -242,13 +246,15 @@ int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
 
 
   for (t = T - 2; t >= 0; t--) {
+    pos = t * smo->dim;
     if (b == NULL)
       for (i = 0; i < smo->N; i++) {
         sum = 0.0;
         for (j = 0; j < smo->s[i].out_states; j++) {
           j_id = smo->s[i].out_id[j];
-          sum += smo->s[i].out_a[osc][j] * ghmm_cmodel_calc_b (smo, j_id, O[t + 1])
-            * beta_tmp[j_id];
+          sum += smo->s[i].out_a[osc][j]
+              * ghmm_cmodel_calc_b(smo->s+j_id, O+pos+smo->dim)
+              * beta_tmp[j_id];
         }
         beta[t][i] = sum;
       }
@@ -270,7 +276,6 @@ int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
     c_t = 1 / scale[t];
     for (i = 0; i < smo->N; i++)
       beta_tmp[i] = beta[t][i] * c_t;
-
 
     if (smo->cos == 1) {
       osc = 0;
@@ -304,6 +309,7 @@ int ghmm_cmodel_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
 # define CUR_PROC "ghmm_cmodel_logp"
   int res = -1;
   double **alpha, *scale = NULL;
+  int pos;
 
   alpha = ighmm_cmatrix_stat_alloc (T, smo->N);
   if (!alpha) {
@@ -331,13 +337,17 @@ int ghmm_cmodel_logp_joint(ghmm_cmodel *mo, const double *O, int len,
 {
 # define CUR_PROC "ghmm_cmodel_logp_joint"
     int prevstate, state, state_pos=0, pos=0, j, osc=0;
+    int dim = mo->dim;
 
     prevstate = state = S[0];
     *log_p = log(mo->s[state].pi);
     if (!(mo->model_type & GHMM_kSilentStates) || 1 /* XXX !mo->silent[state] */ )
-        *log_p += log(ghmm_cmodel_calc_b(mo, state, O[pos++]));
+    {
+        *log_p += log(ghmm_cmodel_calc_b(mo->s+state, O+pos));
+        pos+=dim;
+    }
         
-    for (state_pos=1; state_pos < slen || pos < len; state_pos++) {
+    for (state_pos=1; state_pos < slen || pos+dim <= len; state_pos++) {
         state = S[state_pos];
         for (j=0; j < mo->s[state].in_states; ++j) {
             if (prevstate == mo->s[state].in_id[j])
@@ -367,14 +377,15 @@ int ghmm_cmodel_logp_joint(ghmm_cmodel *mo, const double *O, int len,
         *log_p += log(mo->s[state].in_a[osc][j]);
 
         if (!(mo->model_type & GHMM_kSilentStates) || 1 /* XXX !mo->silent[state] */) {
-            *log_p += log(ghmm_cmodel_calc_b(mo, state, O[pos++]));
+            *log_p += log(ghmm_cmodel_calc_b(mo->s+state, O+pos));
+            pos+=dim;
         }
         
         prevstate = state;
     }
 
     if (pos < len)
-        GHMM_LOG_PRINTF(LINFO, LOC, "state sequence too short! processed only %d symbols", pos);
+        GHMM_LOG_PRINTF(LINFO, LOC, "state sequence too short! processed only %d symbols", pos/dim);
     if (state_pos < slen)
         GHMM_LOG_PRINTF(LINFO, LOC, "sequence too short! visited only %d states", state_pos);
 

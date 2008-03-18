@@ -70,6 +70,7 @@
 %apply Pointer NONNULL { ghmm_dstate * };
 %apply Pointer NONNULL { ghmm_dpstate * };
 %apply Pointer NONNULL { ghmm_dsstate * };
+%apply Pointer NONNULL { ghmm_c_emission * };
 %apply Pointer NONNULL { ghmm_cseq * };
 %apply Pointer NONNULL { ghmm_cseq ** };
 %apply Pointer NONNULL { ghmm_dseq * };
@@ -125,6 +126,8 @@
 #define kContinuousHMM (1 << 9)
 
 #define kPairHMM (1 << 10)
+
+#define kMultivariate (1 << 11)
 
 
 /* ============== constants ================================================= */

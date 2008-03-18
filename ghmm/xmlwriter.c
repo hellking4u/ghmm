@@ -98,7 +98,7 @@ static unsigned char * replaceXMLEntity(unsigned char* str) {
 
 /* ========================================================================= */
 static char * strModeltype(int modelType) {
-#define CUR_PROC "strModelType"
+#define CUR_PROC "strModeltype"
 
   int end;
   char * mt;
@@ -126,6 +126,8 @@ static char * strModeltype(int modelType) {
       strcat(mt, "continuous ");
     if (modelType & GHMM_kPairHMM)
       strcat(mt, "pair ");
+    if (modelType & GHMM_kMultivariate)
+      strcat(mt, "multivariate ");
   } else {
     GHMM_LOG(LERROR, "can't write models with unspecified modeltype");
     goto STOP;
@@ -548,13 +550,74 @@ STOP:
 #undef CUR_PROC
 }
 
+/*===========================================================================*/
+/* write mean vector and covariance matrix as elements for multinormals */
+static int writeMultiNormal(xmlTextWriterPtr writer, ghmm_c_emission *emission)
+{
+#define CUR_PROC "writeMultiNormal"
+
+    char *tmp=NULL;
+
+    /* writing mean vector*/
+    if (0 > xmlTextWriterStartElement(writer, BAD_CAST "mean")) {
+        GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (mean)");
+        goto STOP;
+    }
+    tmp = doubleArrayToCSV(emission->mean.vec, emission->dimension);
+    if (tmp) {
+        if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST tmp)) {
+            GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw while writing mean vector CSV");
+            goto STOP;
+        }
+        m_free(tmp);
+        tmp = NULL;
+    } else {
+        GHMM_LOG(LERROR, "converting array to CSV failed for mean vector");
+        goto STOP;
+    }
+    if (0 > xmlTextWriterEndElement(writer)) {
+        GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement mean");
+        goto STOP;
+    }
+
+    /* writing covariance matrix*/
+    if (0 > xmlTextWriterStartElement(writer, BAD_CAST "variance")) {
+        GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (variance)");
+        goto STOP;
+    }
+    tmp = doubleArrayToCSV(emission->variance.mat, emission->dimension * emission->dimension);
+    if (tmp) {
+        if (0 > xmlTextWriterWriteRaw(writer, BAD_CAST tmp)) {
+            GHMM_LOG(LERROR, "Error at xmlTextWriterWriteRaw while writing variance matrix CSV");
+            goto STOP;
+        }
+        m_free(tmp);
+        tmp = NULL;
+    } else {
+        GHMM_LOG(LERROR, "converting array to CSV failed for covariance matrix");
+        goto STOP;
+    }
+    if (0 > xmlTextWriterEndElement(writer)) {
+        GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement variance");
+        goto STOP;
+    }
+
+    return 0;
+STOP:
+    free(tmp);
+    return -1;
+#undef CUR_PROC
+}
+
 /* ========================================================================= */
 static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
                                       int moNo, int sNo) {
 #define CUR_PROC "writeContinuousStateContents"
 
   int i;
-  int allFixed = 0;
+  ghmm_cstate *state = f->model.c[moNo]->s + sNo;
+  int allFixed = state->fix;
+  ghmm_c_emission *emission;
 
   /* writing continuous distribution */
   if (0 > xmlTextWriterStartElement(writer, BAD_CAST "mixture")) {
@@ -566,56 +629,77 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
     allFixed = 1;
 
   for(i=0; i < f->model.c[moNo]->s[sNo].M; i++){
-    switch (f->model.c[moNo]->s[sNo].density[i]) {
+    emission = f->model.c[moNo]->s[sNo].e+i;
+    switch (emission->type) {
       case normal:
         if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normal")) {
           GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (normal)");
           goto STOP;
         }
-        WRITE_DOUBLE_ATTRIBUTE(writer, "mean", f->model.c[moNo]->s[sNo].mue[i]);
-        WRITE_DOUBLE_ATTRIBUTE(writer, "variance", f->model.c[moNo]->s[sNo].u[i]);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "mean", emission->mean.val);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "variance", emission->variance.val);
+        break;
+      case multinormal:
+        if (0 > xmlTextWriterStartElement(writer, BAD_CAST "multinormal")) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (multinormal)");
+          goto STOP;
+        }
+        if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "dimension",
+                                                  "%d", emission->dimension)) {
+          GHMM_LOG(LERROR, "failed to write dimension attribute");
+          goto STOP;
+        }
         break;
       case normal_left:
-        if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normalTruncatedLeft")) {
-          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (normalTruncatedLeft)");
+        if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normalLeftTail")) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (normalLeftTail)");
           goto STOP;
         }
-        WRITE_DOUBLE_ATTRIBUTE(writer, "mean", f->model.c[moNo]->s[sNo].mue[i]);
-        WRITE_DOUBLE_ATTRIBUTE(writer, "variance", f->model.c[moNo]->s[sNo].u[i]);
-        WRITE_DOUBLE_ATTRIBUTE(writer, "min", f->model.c[moNo]->s[sNo].a[i]);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "mean", emission->mean.val);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "variance", emission->variance.val);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "max", emission->min);
         break;
       case normal_right:
-        if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normalTruncatedRight")) {
-          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (normalTruncatedRight)");
+        if (0 > xmlTextWriterStartElement(writer, BAD_CAST "normalRightTail")) {
+          GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (normalRightTail)");
           goto STOP;
         }
-        WRITE_DOUBLE_ATTRIBUTE(writer, "mean", f->model.c[moNo]->s[sNo].mue[i]);
-        WRITE_DOUBLE_ATTRIBUTE(writer, "variance", f->model.c[moNo]->s[sNo].u[i]);
-        WRITE_DOUBLE_ATTRIBUTE(writer, "max", f->model.c[moNo]->s[sNo].a[i]);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "mean", emission->mean.val);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "variance", emission->variance.val);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "min", emission->max);
         break;
       case uniform:
         if (0 > xmlTextWriterStartElement(writer, BAD_CAST "uniform")) {
           GHMM_LOG(LERROR, "Error at xmlTextWriterStartElement (uniform)");
           goto STOP;
         }
-        WRITE_DOUBLE_ATTRIBUTE(writer, "min", f->model.c[moNo]->s[sNo].u[i]);
-        WRITE_DOUBLE_ATTRIBUTE(writer, "max", f->model.c[moNo]->s[sNo].mue[i]);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "min", emission->min);
+        WRITE_DOUBLE_ATTRIBUTE(writer, "max", emission->max);
         break;
       default:
-        GHMM_LOG_PRINTF(LERROR, LOC, "invalid density %d at position %d", f->model.c[moNo]->s[sNo].density[i], i);
+        GHMM_LOG_PRINTF(LERROR, LOC, "invalid density %d at position %d", emission->type, i);
         goto STOP;
     }
 
     /*optional values */
-    if (allFixed || f->model.c[moNo]->s[sNo].mixture_fix[i]){
+    if (allFixed || emission->fixed) {
       if (0 > xmlTextWriterWriteAttribute(writer, BAD_CAST "fixed", BAD_CAST "1")) {
         GHMM_LOG(LERROR, "failed to set fixed attribute");
         goto STOP;
       }
     }
-    if (f->model.c[moNo]->s[sNo].M > 1){
-      WRITE_DOUBLE_ATTRIBUTE(writer, "prior", f->model.c[moNo]->s[sNo].c[i]);
+    if (state->M > 1) {
+      WRITE_DOUBLE_ATTRIBUTE(writer, "prior", state->c[i]);
     }
+
+    /* write mean vector and covariance matrix as childs for multinormal */
+    if (emission->type == multinormal) {
+      if (0 > writeMultiNormal(writer, emission)) {
+        GHMM_LOG(LERROR, "failed to write mean and covariance childs");
+        goto STOP;
+      }
+    }
+
     if (0 > xmlTextWriterEndElement(writer)) {
       GHMM_LOG(LERROR, "Error at xmlTextWriterEndElement (all densities)");
       goto STOP;
@@ -629,19 +713,18 @@ static int writeContinuousStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f
   }
 
   /* writing positions */
-  if ((f->model.c[moNo]->s[sNo].xPosition > 0)
-      && (f->model.c[moNo]->s[sNo].yPosition > 0)) {
+  if ((state->xPosition > 0) && (state->yPosition > 0)) {
     if (xmlTextWriterStartElement(writer, BAD_CAST "position") < 0) {
       GHMM_LOG(LERROR, "failed to start position element (position)");
       goto STOP;
     }
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "x", "%d",
-                                          f->model.c[moNo]->s[sNo].xPosition)) {
+                                              state->xPosition)) {
       GHMM_LOG(LERROR, "failed to write x position");
       goto STOP;
     }
     if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "y", "%d",
-                                          f->model.c[moNo]->s[sNo].yPosition)) {
+                                              state->yPosition)) {
       GHMM_LOG(LERROR, "failed to write y position");
       goto STOP;
     }
@@ -695,6 +778,8 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
     break;
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
     w_pi = f->model.c[moNo]->s[sNo].pi;
     w_desc = f->model.c[moNo]->s[sNo].desc;
     break;
@@ -726,6 +811,8 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
     break;
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
     rc = writeContinuousStateContents(writer, f, moNo, sNo);
     break;
   default:
@@ -757,13 +844,12 @@ static int writeTransition(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo,
                            int sNo) {
 #define CUR_PROC "writeTransition"
 
+
   int cos, i, j;
   int out_states, * out_id;
   double * * out_a;
   double * w_out_a;
   char * tmp;
-
-  ARRAY_MALLOC(w_out_a, cos);
 
   /* write state contents for different model types */
   switch (f->modelType & PTR_TYPE_MASK) {
@@ -790,6 +876,8 @@ static int writeTransition(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo,
     break;
   case GHMM_kContinuousHMM:
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
     out_states = f->model.c[moNo]->s[sNo].out_states;
     out_id     = f->model.c[moNo]->s[sNo].out_id;
     out_a      = f->model.c[moNo]->s[sNo].out_a;
@@ -797,6 +885,8 @@ static int writeTransition(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo,
     break;
   default:
     GHMM_LOG(LCRITIC, "invalid modelType");}
+
+  ARRAY_MALLOC(w_out_a, cos);
 
   for (i=0; i<out_states; i++) {
     if (0 > xmlTextWriterStartElement(writer, BAD_CAST "transition")) {
@@ -884,7 +974,9 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
     */
     break;
   case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate):
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
     w_name  = f->model.c[number]->name;
     if (f->model.c[number]->model_type)
       w_type  = strModeltype(f->model.c[number]->model_type);

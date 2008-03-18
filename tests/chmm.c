@@ -29,6 +29,7 @@ int single_state_continuous()
 {
   ghmm_cstate single_state;
   ghmm_cmodel my_model;
+  ghmm_c_emission state_emission;
 
   double trans_prob_single_state[]={1.0};
   double trans_prob_single_state_rev[]={1.0};
@@ -39,12 +40,18 @@ int single_state_continuous()
   double mue[]={0.0};
   double u[]={1.0};
   double a[]={0.0};
-  ghmm_density_t density[] = {0};
   ghmm_cseq* my_output;
 
   /* initialise transition array */
   trans_prob_single_state_array=trans_prob_single_state;
   trans_prob_single_state_rev_array=trans_prob_single_state_rev;
+
+  /* initialise the emission */
+  state_emission.type = normal;
+  state_emission.dimension = 1;
+  state_emission.mean.val = *mue;
+  state_emission.variance.val = *u;
+  state_emission.fixed = 0;
 
   /* initialise this state */
   single_state.pi = 1.0;
@@ -55,16 +62,14 @@ int single_state_continuous()
   single_state.in_id=trans_id_single_state;
   single_state.in_a=&trans_prob_single_state_rev_array;
   single_state.c=c;  /* weight of distribution */
-  single_state.mue=mue; /* mean */
-  single_state.u=u; /* variance */
+  single_state.e=&state_emission;
   single_state.fix=0; /* training of output functions */
-  single_state.density=density;
-  single_state.a=a;
   single_state.M=1;
 
   /* initialise model */
   my_model.N=1; /* states */
   my_model.M=1; /* density functions per state */
+  my_model.dim=1; /* number of dimesions */
   my_model.cos=1; /* class of states */
   my_model.prior=-1; /* a priori probability */
   my_model.s=&single_state; /* states array*/

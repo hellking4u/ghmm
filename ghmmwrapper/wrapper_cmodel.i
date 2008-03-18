@@ -3,15 +3,19 @@
 #include "ghmm/sfoba.h"
 #include "ghmm/sviterbi.h"
 #include "ghmm/sreestimate.h"
+#include "ghmm/randvar.h"
+#include "ghmm/matrixop.h"
 %}
 /*==========================================================================
   ===== continous emission density types =================================== */
 typedef enum {
   normal,
-  normal_right,
+  normal_right, /* right tail */
   normal_approx,
-  normal_left,
+  normal_left, /* left tail */
   uniform,
+  binormal,
+  multinormal,
   density_number
 } ghmm_density_t;
 
@@ -21,6 +25,60 @@ typedef enum {
         void            density_array_setitem(ghmm_density_t* self, size_t index, ghmm_density_t value) { self[index] = value; }
 %}
 
+/*==========================================================================
+  ===== continous emission ================================================= */
+  struct ghmm_c_emission {
+    /** Flag for density function for each component of the mixture
+      0: normal density, 1: truncated normal (right side)
+      density, 2: approximated normal density, 3: truncated normal (left side)
+      4: uniform distribution, 6: multivariate normal */
+    ghmm_density_t type;
+    /** dimension > 1 for multivariate normals */
+    int dimension;
+    /** mean for output functions (pointer to mean vector
+        for multivariate  */
+    union {
+      double val;
+      double *vec;
+    } mean;
+    /** variance or pointer to a covariance matrix
+        for multivariate normals */
+    union {
+      double val;
+      double *mat;
+    } variance;
+    /** pointer to inverse of covariance matrix if multivariate normal
+        else NULL */
+    double *sigmainv;
+    /** determinant of covariance matrix for multivariate normal */
+    double det;
+    /** Cholesky decomposition of covariance matrix A,
+        if A = GG' sigmacd only holds G */
+    double *sigmacd;
+    /** minimum of uniform distribution
+       or left boundary for right-tail gaussians */
+    double min;
+    /** maximum of uniform distribution
+       or right boundary for left-tail gaussians */
+    double max;
+    /** if fixed != 0 the parameters of the density are fixed */
+    int fixed;
+  };
+  typedef struct ghmm_c_emission ghmm_c_emission;
+
+STRUCT_ARRAY(ghmm_c_emission, c_emission)
+REFERENCE_ARRAY(ghmm_c_emission, c_emission_ptr)
+
+%extend ghmm_c_emission {
+        //int alloc(int M, int in_states, int out_states, int cos);
+        //ghmm_c_emission* emission_array_alloc(size_t length) { return malloc(length*sizeof(ghmm_c_emission)); }
+
+        void            setDensity(ghmm_density_t value) { self->type = value; }
+        ghmm_density_t  getDensity() { return self->type; }
+        double *        getMeanVec() { return self->mean.vec; }
+}
+
+extern int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov);
 
 /*==========================================================================
   ===== continous emission states ========================================== */
@@ -45,26 +103,14 @@ typedef struct ghmm_cstate {
   int in_states;
   /** weight vector for output function components */
   double *c;
-  /** mean vector for output functions (normal density and truncated normal
-      density) or max value for uniform distribution */
-  double *mue;
-  /** variance vector for output functions or min value for uniform distribution */
-  double *u;
-  /** value where the normal is truncated (only for truncated distributions) */
-  double *a;
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
   int fix;
-  /** Flag for density function for each component of the mixture
-      0: normal density, 1: truncated normal (right side) 
-      density, 2: approximated normal density, 3: truncated normal (left side)
-      4: uniform distribution */
-  ghmm_density_t *density;
-  /**  array of flags for fixing mixture components in the reestimation
-        mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
-  int *mixture_fix;
+  /** vector of ghmm_c_emission
+      (type and parameters of output function components) */
+  ghmm_c_emission *e;
   /** contains a description of the state (null terminated utf-8)*/
-  char* desc;
+  char *desc;
   /** x coordinate position for graph representation plotting **/
   int xPosition;
   /** y coordinate position for graph representation plotting **/
@@ -74,17 +120,19 @@ typedef struct ghmm_cstate {
 %extend ghmm_cstate {
         int alloc(int M, int in_states, int out_states, int cos);
 
-        void  setDensity(size_t i, ghmm_density_t type) { self->density[i] = type; }
-        void   setWeight(size_t i, double value)        { self->c[i]       = value; }
-        void     setMean(size_t i, double value)        { self->mue[i]     = value; }
-        void   setStdDev(size_t i, double value)        { self->u[i]       = value; }
-        void setTruncate(size_t i, double value)        { self->a[i]       = value; }
+        void  setDensity(size_t i, ghmm_density_t type) { self->e[i].type      = type; }
+        void   setWeight(size_t i, double value)        { self->c[i]           = value; }
+        void     setMean(size_t i, double value)        { self->e[i].mean.val  = value; }
+        void   setStdDev(size_t i, double value)        { self->e[i].variance.val = value; }
+        void      setMin(size_t i, double value)        { self->e[i].min       = value; }
+        void      setMax(size_t i, double value)        { self->e[i].max       = value; }
 
-        ghmm_density_t getDensity(size_t i) { return self->density[i]; }
+        ghmm_density_t getDensity(size_t i) { return self->e[i].type; }
         double          getWeight(size_t i) { return self->c[i]; }
-        double            getMean(size_t i) { return self->mue[i]; }
-        double          getStdDev(size_t i) { return self->u[i]; }
-        double        getTruncate(size_t i) { return self->a[i]; }
+        double            getMean(size_t i) { return self->e[i].mean.val; }
+        double          getStdDev(size_t i) { return self->e[i].variance.val; }
+        double             setMin(size_t i) { return self->e[i].min; }
+        double             setMax(size_t i) { return self->e[i].max; }
 
 
         int getInState(size_t index) { return self->in_id[index]; }
@@ -94,6 +142,22 @@ typedef struct ghmm_cstate {
         double getInProb(size_t index, size_t c)  { return self->in_a[c][index]; }
         double getOutProb(size_t index)           { return self->out_a[0][index]; }
         double getOutProb(size_t index, size_t c) { return self->out_a[c][index]; }
+
+        void  setInProb(size_t index, size_t c, double prob) {self->in_a[c][index]  = prob; }
+        void setOutProb(size_t index, size_t c, double prob) {self->out_a[c][index] = prob; }
+
+        ghmm_c_emission* getEmission(size_t index) {return self->e + index; }
+
+
+        double calc_cmbm(int m, double *omega)
+                { return ghmm_cmodel_calc_cmbm(self, m, omega); }
+        double calc_b(const double *omega)
+                { return ghmm_cmodel_calc_b(self, omega); }
+
+        double calc_cmBm(int m, const double *omega)
+                { return ghmm_cmodel_calc_cmBm(self, m, omega); }
+        double calc_B(const double *omega)
+                { return ghmm_cmodel_calc_B(self, omega); }
 }
 
 STRUCT_ARRAY(ghmm_cstate, cstate)
@@ -161,6 +225,9 @@ typedef struct ghmm_cmodel {
   int N;
   /** Maximun number of components in the states */
   int M;
+  /** Number of dimensions of the emission components.
+    All emissions must have the same number of dimensions */
+  int dim;
   /** ghmm_cmodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
@@ -199,6 +266,7 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
                 mo->M = 1;
                 mo->cos = cos;
                 mo->prior = -1;
+                mo->dim = 1;
                 if (cos > 1) {
                     mo->model_type |= kTransitionClasses;
                     ghmm_cmodel_class_change_alloc(mo);
@@ -222,7 +290,7 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
         //int check_compatibility(ghmm_cmodel **smo, int smodel_number);
 
-        double get_random_var(int state, int m);
+        int get_random_var(int state, int m, double *x);
 
         ghmm_cseq* generate_sequences(int seed, int global_len, long seq_number, int Tmax);
 
@@ -230,15 +298,7 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
         int individual_likelihoods(ghmm_cseq *sqd, double *log_ps);
 
-        double calc_cmbm(int state, int m, double omega);
-
-        double calc_b(int state, double omega);
-
         double prob_distance(ghmm_cmodel *cm, int maxT, int symmetric, int verbose);
-
-        double calc_cmBm(int state, int m, double omega);
-
-        double calc_B(int state, double omega);
 
         //int count_free_parameter(ghmm_cmodel **smo, int smo_number);
 

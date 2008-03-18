@@ -78,6 +78,8 @@ extern "C" {
 
 #define GHMM_kPairHMM (1 << 10)
 
+#define GHMM_kMultivariate (1 << 11)
+
 
 /*@} (Doc++-Group: GHMM-Globals) */
 
