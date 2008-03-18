@@ -60,7 +60,7 @@ extern "C" {
   @return        Viterbi-path 
   @param smo    model
   @param o       double-sequence
-  @param T       sequence length
+  @param T       sequence length (number of samples for multidemsional)
   @param log_p   log(p) of the sequence using the vitberbi path
   */
   int *ghmm_cmodel_viterbi (ghmm_cmodel * smo, double *o, int T, double *log_p);

@@ -56,6 +56,29 @@ extern "C" {
    */
   double ighmm_rand_normal_density (double x, double mean, double u);
 
+/**
+   Calculates the two dimensional density function phi( mean vector, covariance
+   matrix ) for the bivariate normal distribution at point x.
+   @return          function value
+   @param x:        point value (vector of x1 and x2)
+   @param mean:     mean values for the bivariate
+   @param cov:      linearized covariance matrix
+   */
+  double ighmm_rand_binormal_density (double *x, double *mean, double *cov);
+
+/**
+   Calculates the multidimensional density function of a multivariate normal
+   distribution at point x.
+   @return          0 on success
+   @param length    dimension of the multivariate normal
+   @param x         vector of point values
+   @param mean      vector of means
+   @param sigmainv  linearized inverse of covariance matrix
+   @param det       determinant of covariance matrix
+   */
+  double ighmm_rand_multivariate_normal_density(int length, double *x, double *mean,
+                                                double *sigmainv, double det);
+
   /** density function of a uniform distribution in the range [min,max]
    @return          F(x)
    @param x:        point value
@@ -124,6 +147,17 @@ extern "C" {
                      0: returns a standard normal distributed random number 
   */
   double ighmm_rand_normal (double mue, double u, int seed);
+
+/**
+ Generates a N(mue,cov) distributed random vector of a multivariate normal
+        @return        0: success, !0: an error occured
+        @param dim     dimension of multivariate
+        @param x       vector that stores the result
+        @param mue     mean vector of the multivariate normal
+        @param sigmacd linearized cholesky decomposition of variance covariance matrix
+        @param seed    1: only initialization, 0: returns a multivariate normal distributed vector
+  */
+  int ighmm_rand_multivariate_normal (int dim, double *x, double *mue, double *sigmacd, int seed);
 
   /** distribution function of a uniform distribution in the range [min,max]
    @return          F(x)

@@ -48,6 +48,7 @@ libghmm_la_SOURCES= ghmm.h \
 		    ghmmconfig.h \
                     rng.c rng.h \
                     randvar.c randvar.h \
+                    matrixop.c matrixop.h \
                     gauss_tail.c \
                     mes.c mes.h \
                     ghmm_internals.c ghmm_internals.h \

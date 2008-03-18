@@ -49,6 +49,7 @@
 #include "matrix.h"
 #include "vector.h"
 #include "randvar.h"
+#include "matrixop.h"
 #include "ghmm_internals.h"
 
 /* switch: turn off (0)  MESCONTR and MESINFO */
@@ -66,8 +67,8 @@ typedef struct local_store_t {
   double **a_denom;
   double **c_num;
   double *c_denom;
-  double **mue_num;
-  double **u_num;
+  double ***mue_num;
+  double ***u_num;
   double **mue_u_denom;       /* mue-denom. = u-denom. for sym. normal density */
   double **sum_gt_otot;       /* for truncated normal density */
 } local_store_t;
@@ -123,15 +124,29 @@ static local_store_t *sreestimate_alloc (const ghmm_cmodel * smo)
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
-  r->mue_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
+  ARRAY_CALLOC(r->mue_num, smo->N);
   if (!(r->mue_num)) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
   }
-  r->u_num = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
+  for (i = 0; i < smo->N; i++) {
+    r->mue_num[i] = ighmm_cmatrix_stat_alloc(smo->s[i].M, smo->dim);
+    if (!(r->mue_num[i])) {
+      GHMM_LOG_QUEUED(LCONVERTED);
+      goto STOP;
+    }
+  }
+  ARRAY_CALLOC (r->u_num, smo->N);
   if (!(r->u_num)) {
     GHMM_LOG_QUEUED(LCONVERTED);
     goto STOP;
+  }
+  for (i = 0; i < smo->N; i++) {
+    r->u_num[i] = ighmm_cmatrix_stat_alloc(smo->s[i].M, smo->dim * smo->dim);
+    if (!(r->u_num[i])) {
+      GHMM_LOG_QUEUED(LCONVERTED);
+      goto STOP;
+    }
   }
   r->mue_u_denom = ighmm_cmatrix_stat_alloc (smo->N, smo->M);
   if (!(r->mue_u_denom)) {
@@ -167,8 +182,16 @@ static int sreestimate_free (local_store_t ** r, int N)
   /***/
   m_free ((*r)->c_denom);
   ighmm_cmatrix_stat_free (&((*r)->c_num));
-  ighmm_cmatrix_stat_free (&((*r)->mue_num));
-  ighmm_cmatrix_stat_free (&((*r)->u_num));
+  if ((*r)->mue_num) {
+    for (i = 0; i < N; i++)
+      ighmm_cmatrix_stat_free (&((*r)->mue_num[i]));
+    m_free ((*r)->mue_num);
+  }
+  if ((*r)->u_num) {
+    for (i = 0; i < N; i++)
+      ighmm_cmatrix_stat_free (&((*r)->u_num[i]));
+    m_free ((*r)->u_num);
+  }
   ighmm_cmatrix_stat_free (&((*r)->mue_u_denom));
   ighmm_cmatrix_stat_free (&((*r)->sum_gt_otot));
   m_free (*r);
@@ -181,6 +204,7 @@ static int sreestimate_init (local_store_t * r, const ghmm_cmodel * smo)
 {
 # define CUR_PROC "sreestimate_init"
   int i, j, m, osc;
+  int dim_2 = smo->dim * smo->dim;
   r->pi_denom = 0.0;
   for (i = 0; i < smo->N; i++) {
     r->pi_num[i] = 0.0;
@@ -190,10 +214,14 @@ static int sreestimate_init (local_store_t * r, const ghmm_cmodel * smo)
         r->a_num[i][osc][j] = 0.0;
     }
     r->c_denom[i] = 0.0;
-    for (m = 0; m < smo->M; m++) {
+    for (m = 0; m < smo->s[i].M; m++) {
+      for (j = 0; j < smo->dim; j++)
+        r->mue_num[i][m][j] = 0.0;
+
+      for (j = 0; j < dim_2; j++)
+        r->u_num[i][m][j] = 0.0;
+
       r->c_num[i][m] = 0.0;
-      r->mue_num[i][m] = 0.0;
-      r->u_num[i][m] = 0.0;
       r->mue_u_denom[i][m] = 0.0;
       r->sum_gt_otot[i][m] = 0.0;
     }
@@ -258,18 +286,21 @@ static int sreestimate_precompute_b (ghmm_cmodel * smo, double *O, int T,
                                      double ***b)
 {
 # define CUR_PROC "sreestimate_precompute_b"
-  int t, i, m;
+  int t, i, m, pos;
   /* save sum (c_im * b_im(O_t))  in b[t][i][smo->M] */
   for (t = 0; t < T; t++)
     for (i = 0; i < smo->N; i++)
       b[t][i][smo->M] = 0.0;
   /* save c_im * b_im(O_t)  directly in  b[t][i][m] */
   for (t = 0; t < T; t++)
+  {
+    pos = t * smo->dim;
     for (i = 0; i < smo->N; i++)
       for (m = 0; m < smo->s[i].M; m++) {
-        b[t][i][m] = ghmm_cmodel_calc_cmbm (smo, i, m, O[t]);
+          b[t][i][m] = ghmm_cmodel_calc_cmbm(smo->s+i, m, O+pos);
         b[t][i][smo->s[i].M] += b[t][i][m];
       }
+  }
   return (0);
 # undef CUR_PROC
 }                               /* sreestimate_precompute_b */
@@ -280,7 +311,7 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
 {
 # define CUR_PROC "sreestimate_setlambda"
   int res = -1;
-  int i, j, m, l, j_id, osc, fix_flag;
+  int i, j, m, l, j_id, osc, fix_flag, d;
   double pi_factor, a_factor_i = 0.0, c_factor_i = 0.0, u_im, mue_im, mue_left, mue_right, A, B, Atil, Btil, fix_w, unfix_w;    /* Q; */
   int a_num_pos, a_denom_pos, c_denom_pos, c_num_pos;
 
@@ -402,10 +433,11 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
     fix_w = 1.0;
     unfix_w = 0.0;
     fix_flag = 0;
+
     for (m = 0; m < smo->s[i].M; m++) {
 
       /* if fixed continue to next component */
-      if (smo->s[i].mixture_fix[m] == 1) {
+      if (smo->s[i].e[m].fixed) {
         /*printf("state %d, component %d is fixed !\n",i,m);*/
         fix_w = fix_w - smo->s[i].c[m];
         fix_flag = 1;           /* we have to normalize weights -> fix flag is set to one */
@@ -435,9 +467,16 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
 #else
         ;
 #endif
+
       else {
         /* set mue_im */
-        smo->s[i].mue[m] = r->mue_num[i][m] / r->mue_u_denom[i][m];
+        if (smo->model_type & GHMM_kMultivariate) {
+          for (d = 0; d < smo->s[i].e[m].dimension; d++)
+            smo->s[i].e[m].mean.vec[d] = r->mue_num[i][m][d] / r->mue_u_denom[i][m];
+        }
+        else {
+          smo->s[i].e[m].mean.val = r->mue_num[i][m][0] / r->mue_u_denom[i][m];
+        }
       }
 
       /* TEST: u_denom == 0.0 ? */
@@ -449,17 +488,34 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
         /* smo->s[i].u[m]  unchanged! */
       }
       else {
-        u_im = r->u_num[i][m] / r->mue_u_denom[i][m];
-        if (u_im <= GHMM_EPS_U)
-          u_im = (double) GHMM_EPS_U;
-        smo->s[i].u[m] = u_im;
+        if (smo->model_type & GHMM_kMultivariate) {
+          for (d = 0; d < (smo->s[i].e[m].dimension * smo->s[i].e[m].dimension); d++) {
+            u_im = r->u_num[i][m][d] / r->mue_u_denom[i][m];
+            if ( fabs(u_im) <= GHMM_EPS_U ) {
+              if (u_im < 0)
+                u_im = -1.0*GHMM_EPS_U;
+              else
+                u_im = (double) GHMM_EPS_U;
+            }
+            smo->s[i].e[m].variance.mat[d] = u_im;
+          }
+          /* update the inverse and the determinant of covariance matrix */
+          ighmm_invert_det(smo->s[i].e[m].sigmainv, &(smo->s[i].e[m].det),
+                           smo->dim, smo->s[i].e[m].variance.mat);
+        }
+        else {
+          u_im = r->u_num[i][m][0] / r->mue_u_denom[i][m];
+          if (u_im <= GHMM_EPS_U)
+            u_im = (double) GHMM_EPS_U;
+          smo->s[i].e[m].variance.val = u_im;
+        }
       }
 
       /* modification for truncated normal density:
          1-dim optimization for mue, calculate u directly 
          note: if denom == 0 --> mue and u not recalculated above */
-      if (smo->s[i].density[m] == normal_right && fabs (r->mue_u_denom[i][m]) > DBL_MIN) {
-        A = smo->s[i].mue[m];
+      if (smo->s[i].e[m].type == normal_right && fabs (r->mue_u_denom[i][m]) > DBL_MIN) {
+        A = smo->s[i].e[m].mean.val;
         B = r->sum_gt_otot[i][m] / r->mue_u_denom[i][m];
 
         /* A^2 ~ B -> search max at border of EPS_U */
@@ -498,24 +554,21 @@ static int sreestimate_setlambda (local_store_t * r, ghmm_cmodel * smo)
           u_im = Btil - mue_im * Atil;
         }
         /* set modified values of mue and u */
-        smo->s[i].mue[m] = mue_im;
+        smo->s[i].e[m].mean.val = mue_im;
         if (u_im < (double) GHMM_EPS_U)
           u_im = (double) GHMM_EPS_U;
-        smo->s[i].u[m] = u_im;
+        smo->s[i].e[m].variance.val = u_im;
       }                         /* end modifikation truncated density */
 
-
     }                           /* for (m ..) */
-
     /* adjusting weights for fixed mixture components if necessary  */
     if (fix_flag == 1) {
       for (m = 0; m < smo->s[i].M; m++) {
-        if (smo->s[i].mixture_fix[m] == 0) {
+        if (smo->s[i].e[m].fixed == 0) {
           smo->s[i].c[m] = (smo->s[i].c[m] * fix_w) / unfix_w;
         }
       }
     }
-
 #if MCI
     if (!c_num_pos)
       ighmm_mes (MESCONTR, "all numerators c[%d][m] == 0 (denominator=%.4f)!\n", i,
@@ -536,7 +589,8 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
 {
 # define CUR_PROC "sreestimate_one_step"
   int res = -1;
-  int k, i, j, m, t, j_id, valid_parameter, valid_logp, osc;
+  int k, i, j, m, t, j_id, valid_parameter, valid_logp, osc, d, di, dj, pos;
+  ghmm_cstate *state;
   double **alpha = NULL;
   double **beta = NULL;
   double *scale = NULL;
@@ -550,10 +604,10 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
   valid_parameter = valid_logp = 0;
 
   /*scan for max T_k: alloc of alpha, beta, scale and b only once */
-  T_k_max = T[0];
+  T_k_max = T[0]/smo->dim;
   for (k = 1; k < seq_number; k++)
-    if (T[k] > T_k_max)
-      T_k_max = T[k];
+    if (T[k] > T_k_max*smo->dim)
+      T_k_max = T[k]/smo->dim;
   if (sreestimate_alloc_matvek (&alpha, &beta, &scale, &b, T_k_max, smo->N,
                                 smo->M) == -1) {
     GHMM_LOG_QUEUED(LCONVERTED);
@@ -568,7 +622,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
      */
     /* seq. is used for calculation of log_p */
     valid_logp++;
-    T_k = T[k];
+    T_k = T[k]/smo->dim;
     /* precompute output densities */
     sreestimate_precompute_b (smo, O[k], T_k, b);
 
@@ -603,12 +657,15 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
     /* loop over all states */
     for (i = 0; i < smo->N; i++) {
 
+      state = smo->s+i;
+
       /* Pi */
       r->pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i];
       r->pi_denom += seq_w[k] * alpha[0][i] * beta[0][i];       /* sum over all i */
 
       /* loop over t (time steps of seq.)  */
       for (t = 0; t < T_k; t++) {
+        pos = t * smo->dim;
         c_t = 1 / scale[t];
         if (t > 0) {
 
@@ -631,11 +688,11 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
           }
 
           /* A: starts at t=1 !!! */
-          for (j = 0; j < smo->s[i].out_states; j++) {
-            j_id = smo->s[i].out_id[j];
+          for (j = 0; j < state->out_states; j++) {
+            j_id = state->out_id[j];
             
-           contrib_t = (seq_w[k] * alpha[t - 1][i] * smo->s[i].out_a[osc][j] *
-                                    b[t][j_id][smo->s[i].M] * beta[t][j_id] * c_t);   /*  c[t] = 1/scale[t] */
+           contrib_t = (seq_w[k] * alpha[t - 1][i] * state->out_a[osc][j] *
+                                    b[t][j_id][state->M] * beta[t][j_id] * c_t);   /*  c[t] = 1/scale[t] */
             
             r->a_num[i][osc][j] += contrib_t;
             
@@ -650,21 +707,20 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
             
           }
 
-
           /* calculate sum (j=1..N){alp[t-1][j]*a_jc(t-1)i} */
           sum_alpha_a_ji = 0.0;
-          for (j = 0; j < smo->s[i].in_states; j++) {
-            j_id = smo->s[i].in_id[j];
-            sum_alpha_a_ji += alpha[t-1][j_id] * smo->s[i].in_a[osc][j];
+          for (j = 0; j < state->in_states; j++) {
+            j_id = state->in_id[j];
+            sum_alpha_a_ji += alpha[t-1][j_id] * state->in_a[osc][j];
           }
         }                       /* if t>0 */
         else {
           /* calculate sum(j=1..N){alpha[t-1][j]*a_jci}, which is used below
              for (t=1) = pi[i] (alpha[-1][i] not defined) !!! */
-          sum_alpha_a_ji = smo->s[i].pi;
+          sum_alpha_a_ji = state->pi;
         }                       /* if t>0 */
         /* ========= if state fix, continue;====================== */
-        if (smo->s[i].fix)
+        if (state->fix)
           continue;
         /* C-denominator: */
         r->c_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i];
@@ -674,7 +730,7 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
           continue;             /* next t */
 
         /* loop over no of density functions for C-numer., mue and u */
-        for (m = 0; m < smo->s[i].M; m++) {
+        for (m = 0; m < state->M; m++) {
           /*  c_im * b_im  */
 
 
@@ -687,11 +743,27 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
           r->c_num[i][m] += gamma_ct;
 
           /* numerator Mue: */
-          r->mue_num[i][m] += (gamma_ct * O[k][t]);
+          r->mue_num[i][m][0] += (gamma_ct * O[k][pos]);
+          if (smo->model_type & GHMM_kMultivariate) {
+            for (d = 1; d < state->e[m].dimension; d++)
+              r->mue_num[i][m][d] += (gamma_ct * O[k][pos+d]);
+          }
           /* denom. Mue/U: */
           r->mue_u_denom[i][m] += gamma_ct;
           /* numerator U: */
-          r->u_num[i][m] += (gamma_ct * m_sqr (O[k][t] - smo->s[i].mue[m]));
+          if (smo->model_type & GHMM_kMultivariate) {
+            for (di = 0; di < state->e[m].dimension; di++) {
+              for (dj = 0; dj < state->e[m].dimension; dj++ ) {
+                r->u_num[i][m][di*state->e[m].dimension+dj] +=
+                    (gamma_ct
+                     * (O[k][pos+di] - state->e[m].mean.vec[di])
+                     * (O[k][pos+dj] - state->e[m].mean.vec[dj]));
+              }
+            }
+          }
+          else {
+            r->u_num[i][m][0] += (gamma_ct * m_sqr(O[k][t] - state->e[m].mean.val));
+          }
 
           /* sum gamma_ct * O[k][t] * O[k][t] (truncated normal density): */
           r->sum_gt_otot[i][m] += (gamma_ct * m_sqr (O[k][t]));
@@ -774,7 +846,7 @@ int ghmm_cmodel_baum_welch (ghmm_cmodel_baum_welch_context * cs)
      CC_PHI */
   for (i = 0; i < cs->smo->N; i++){
     for (j = 0; j < cs->smo->s[i].M; j++){
-      if (cs->smo->s[i].density[j] == normal_right) {
+      if (cs->smo->s[i].e[j].type == normal_right) {
         C_PHI = ighmm_rand_get_xPHIless1 ();
         CC_PHI = m_sqr (C_PHI);
         break;

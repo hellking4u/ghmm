@@ -61,6 +61,10 @@
 # include <gsl/gsl_sf_erf.h>
 # include <gsl/gsl_randist.h>
 
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
+
 #endif /* DO_WITH_GSL */
 
 
@@ -69,7 +73,6 @@
 static double ighmm_erf (double x);
 static double ighmm_erfc (double x);
 #endif /* check for ISO C99 */
-
 
 /* A list of already calculated values of the density function of a 
    N(0,1)-distribution, with x in [0.00, 19.99] */
@@ -262,6 +265,105 @@ STOP:
 
 
 /*============================================================================*/
+/* covariance matrix is linearized */
+double ighmm_rand_binormal_density (double *x, double *mean, double *cov)
+{
+# define CUR_PROC "ighmm_rand_binormal_density"
+  double rho;
+#ifndef DO_WITH_GSL
+  double numerator,part1,part2,part3;
+#endif
+  if (cov[0] <= 0.0 || cov[2 + 1] <= 0.0) {
+    GHMM_LOG(LCONVERTED, "variance <= 0.0 not allowed\n");
+    goto STOP;
+  }
+  rho = cov[1] / ( sqrt (cov[0]) * sqrt (cov[2 + 1]) );
+  /* The denominator is possibly < EPS??? Check that ? */
+#ifdef DO_WITH_GSL
+  /* double gsl_ran_bivariate_gaussian_pdf (double x, double y, double sigma_x,
+                                            double sigma_y, double rho) */
+  return gsl_ran_bivariate_gaussian_pdf (x[0], x[1], sqrt (cov[0]),
+                                         sqrt (cov[2 + 1]), rho);
+#else
+  part1 = (x[0] - mean[0]) / sqrt (cov[0]);
+  part2 = (x[1] - mean[1]) / sqrt (cov[2 + 1]);
+  part3 = m_sqr (part1) - 2 * part1 * part2 + m_sqr (part2);
+  numerator = exp ( -1 * (part3) / ( 2 * (1 - m_sqr(rho)) ) );
+  return (numerator / ( 2 * PI * sqrt(1 - m_sqr(rho)) ));
+#endif
+
+STOP:
+  return (-1.0);
+# undef CUR_PROC
+}                               /* double ighmm_rand_binormal_density */
+
+/*============================================================================*/
+/* matrices are linearized */
+double ighmm_rand_multivariate_normal_density(int length, double *x, double *mean, double *sigmainv, double det)
+{
+# define CUR_PROC "ighmm_rand_multivariate_normal_density"
+  /* multivariate normal density function    */
+  /*
+   *       length     dimension of the random vetor
+   *       x          point at which to evaluate the pdf
+   *       mean       vector of means of size n
+   *       sigmainv   inverse variance matrix of dimension n x n
+   *       det        determinant of covariance matrix
+   */
+
+#ifdef DO_WITH_GSL
+  int i, j;
+  double ax,ay;
+  gsl_vector *ym, *xm, *gmean;
+  gsl_matrix *inv = gsl_matrix_alloc(length, length);
+
+  for (i=0; i<length; ++i) {
+    for (j=0; j<length; ++j) {
+      gsl_matrix_set(inv, i, j, sigmainv[i*length+j]);
+    }
+  }
+
+  xm = gsl_vector_alloc(length);
+  gmean = gsl_vector_alloc(length);
+  /*gsl_vector_memcpy(xm, x);*/
+  for (i=0; i<length; ++i) {
+    gsl_vector_set(xm, i, x[i]);
+    gsl_vector_set(gmean, i, mean[i]);
+  }
+
+  gsl_vector_sub(xm, gmean);
+  ym = gsl_vector_alloc(length);
+  gsl_blas_dsymv(CblasUpper, 1.0, inv, xm, 0.0, ym);
+  gsl_matrix_free(inv);
+  gsl_blas_ddot(xm, ym, &ay);
+  gsl_vector_free(xm);
+  gsl_vector_free(ym);
+  ay = exp(-0.5*ay) / sqrt(pow((2*M_PI), length) * det);
+
+  return ay;
+#else
+  /* do without GSL */
+  int i, j;
+  double ay, tempv;
+
+  ay = 0;
+  for (i=0; i<length; ++i) {
+    tempv = 0;
+    for (j=0; j<length; ++j) {
+      tempv += (x[j]-mean[j])*sigmainv[j*length+i];
+    }
+    ay += tempv*(x[i]-mean[i]);
+  }
+  ay = exp(-0.5*ay) / sqrt(pow((2*PI), length) * det);
+
+  return ay;
+#endif
+STOP:
+  return (-1.0);
+# undef CUR_PROC
+}                               /* double ighmm_rand_multivariate_normal_density */
+
+/*============================================================================*/
 double ighmm_rand_uniform_density (double x, double max, double min)
 {
 # define CUR_PROC "ighmm_rand_uniform_density"
@@ -396,6 +498,67 @@ double ighmm_rand_normal (double mue, double u, int seed)
 
 # undef CUR_PROC
 }                               /* ighmm_rand_normal */
+
+/*============================================================================*/
+int ighmm_rand_multivariate_normal (int dim, double *x, double *mue, double *sigmacd, int seed)
+{
+# define CUR_PROC "ighmm_rand_multivariate_normal"
+  /* generate random vector of multivariate normal
+   *
+   *     dim     number of dimensions
+   *     x       space to store resulting vector in
+   *     mue     vector of means
+   *     sigmacd linearized cholesky decomposition of cov matrix
+   *     seed    RNG seed
+   *
+   *     see Barr & Slezak, A Comparison of Multivariate Normal Generators */
+  int i, j;
+#ifdef DO_WITH_GSL
+  gsl_vector *y = gsl_vector_alloc(dim);
+  gsl_vector *xgsl = gsl_vector_alloc(dim);
+  gsl_matrix *cd = gsl_matrix_alloc(dim, dim);
+#endif
+  if (seed != 0) {
+    GHMM_RNG_SET (RNG, seed);
+    /* do something here */
+    return 0;
+  }
+  else {
+#ifdef DO_WITH_GSL
+    /* cholesky decomposition matrix */
+    for (i=0;i<dim;i++) {
+      for (j=0;j<dim;j++) {
+        gsl_matrix_set(cd, i, j, sigmacd[i*dim+j]);
+      }
+    }
+    /* generate a random vector N(O,I) */
+    for (i=0;i<dim;i++) {
+      gsl_vector_set(y, i, ighmm_rand_std_normal(seed));
+    }
+    /* multiply cd with y */
+    gsl_blas_dgemv(CblasNoTrans, 1.0, cd, y, 0.0, xgsl);
+    for (i=0;i<dim;i++) {
+      x[i] = gsl_vector_get(xgsl, i) + mue[i];
+    }
+    gsl_vector_free(y);
+    gsl_vector_free(xgsl);
+    gsl_matrix_free(cd);
+#else
+    /* multivariate random numbers without gsl */
+    double randuni;
+    for (i=0;i<dim;i++) {
+      randuni = ighmm_rand_std_normal(seed);
+      for (j=0;j<dim;j++) {
+        if (i==0)
+          x[j] = mue[j];
+        x[j] += randuni * sigmacd[j*dim+i];
+      }
+    }
+#endif
+    return 0;
+  }
+# undef CUR_PROC
+}                               /* ighmm_rand_multivariate_normal */
 
 
 /*============================================================================*/

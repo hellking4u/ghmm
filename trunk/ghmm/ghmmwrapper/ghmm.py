@@ -628,6 +628,10 @@ class ContinuousMixtureDistribution(ContinuousDistribution):
         assert sum(self.weight < 0) == 0
 
 
+class MultivariateGaussianDistribution(ContinuousDistribution):
+    def __init__(self, domain):
+        self.emissionDomain = domain
+
 
 #-------------------------------------------------------------------------------
 #Sequence, SequenceSet and derived  ------------------------------------------
@@ -1263,8 +1267,12 @@ class HMMOpenFactory(HMMFactory):
         # we have a continuous HMM, prepare for hmm creation
         if (modelType & ghmmwrapper.kContinuousHMM):
             emission_domain = Float()
-            distribution = ContinuousMixtureDistribution
-            hmmClass = ContinuousMixtureHMM
+            if (modelType & ghmmwrapper.kMultivariate):
+                distribution = MultivariateGaussianDistribution
+                hmmClass = MultivariateGaussianMixtureHMM
+            else:
+                distribution = ContinuousMixtureDistribution
+                hmmClass = ContinuousMixtureHMM
             getModel = file.get_cmodel
 
         # we have a discrete HMM, prepare for hmm creation
@@ -1665,20 +1673,20 @@ class HMMFromMatricesFactory(HMMFactory):
                     state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
                     state.M = 1
 
-                    # allocate arrays of emmission parameters
+                    # set up emission(s), density type is normal
+                    emissions = ghmmwrapper.c_emission_array_alloc(1)
+                    emission = ghmmwrapper.c_emission_array_getRef(emissions, 0)
+                    emission.type = ghmmwrapper.normal
+                    emission.dimension = 1
                     (mu, sigma) = B[i]
-                    state.mue = ghmmwrapper.list2double_array([mu]) #mu = mue in GHMM C-lib.
-                    state.u = ghmmwrapper.list2double_array([sigma])
+                    emission.mean.val = mu #mu = mue in GHMM C-lib.
+                    emission.variance.val = sigma
+                    emission.fixed = 0  # fixing of emission deactivated by default
+                    emission.setDensity(0)
+
+                    # append emission to state
+                    state.e = emissions
                     state.c = ghmmwrapper.list2double_array([1.0])
-                    state.a = ghmmwrapper.list2double_array([0.0])
-
-                    # mixture fixing deactivated by default
-                    state.mixture_fix = ghmmwrapper.list2int_array([0])
-
-                    # setting densities types (all normal by default)
-                    densities = ghmmwrapper.density_array_alloc(1)
-                    state.density = densities
-                    state.setDensity(0,0)
 
                 return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
 
@@ -1705,19 +1713,24 @@ class HMMFromMatricesFactory(HMMFactory):
                     sigma_list = B[i][1]
                     weight_list = B[i][2]
 
-                    state.mue = ghmmwrapper.list2double_array(mu_list) #mu = mue in GHMM C-lib.
-                    state.u = ghmmwrapper.list2double_array(sigma_list)
                     state.c = ghmmwrapper.list2double_array(weight_list)
-                    state.a = ghmmwrapper.list2double_array([0.0] * state.M)
 
-                    # setting densities types (all normal by default)
-                    densities = ghmmwrapper.density_array_alloc(cmodel.M)
-                    state.density = densities
+                    # set up emission(s), density type is normal
+                    emissions = ghmmwrapper.c_emission_array_alloc(state.M)
+
                     for j in range(state.M):
-                        state.setDensity(j,0)
+                        emission = ghmmwrapper.c_emission_array_getRef(emissions, j)
+                        emission.type = ghmmwrapper.normal
+                        emission.dimension = 1
+                        mu = mu_list[j]
+                        sigma = sigma_list[j]
+                        emission.mean.val = mu #mu = mue in GHMM C-lib.
+                        emission.variance.val = sigma
+                        emission.fixed = 0  # fixing of emission deactivated by default
+                        emission.setDensity(0)
 
-                    # mixture fixing deactivated by default
-                    state.mixture_fix = ghmmwrapper.list2int_array([0] * state.M)
+                    # append emissions to state
+                    state.e = emissions
 
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
 
@@ -1740,33 +1753,112 @@ class HMMFromMatricesFactory(HMMFactory):
                 #initialize states
                 for i in range(cmodel.N):
                     state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
-                    state.M = len(B[0][0])
+                    state.M = len(B[i][0])
 
-                    # allocate arrays of emmission parameters
-                    mu_list = B[i][0]
-                    sigma_list = B[i][1]
-                    a_list = B[i][2]
+                    # set up emission(s), density type is normal
+                    emissions = ghmmwrapper.c_emission_array_alloc(state.M)
                     weight_list = B[i][3]
 
-                    state.mue = ghmmwrapper.list2double_array(mu_list) #mu = mue in GHMM C-lib.
-                    state.u = ghmmwrapper.list2double_array(sigma_list)
+                    combined_B = map(None, densities[i], B[i][0], B[i][1], B[i][2])
+
+                    j = 0
+                    for parameters in combined_B:
+                        emission = ghmmwrapper.c_emission_array_getRef(emissions, j)
+                        emission.type = densities[i][j]
+                        emission.dimension = 1
+                        if (emission.type == ghmmwrapper.normal
+                            or emission.type == ghmmwrapper.normal_approx):
+                            emission.mean.val = parameters[1]
+                            emission.variance.val = parameters[2]
+                        elif emission.type == ghmmwrapper.normal_right:
+                            emission.mean.val = parameters[1]
+                            emission.variance.val = parameters[2]
+                            emission.min = parameters[3]
+                        elif emission.type == ghmmwrapper.normal_left:
+                            emission.mean.val = parameters[1]
+                            emission.variance.val = parameters[2]
+                            emission.max = parameters[3]
+                        elif emission.type == ghmmwrapper.uniform:
+                            emission.max = parameters[1]
+                            emission.min = parameters[2]
+                        else:
+                            raise TypeError("Unknown Distribution type:" + str(emission.type))
+                        j += 1
+
+                    # append emissions to state
+                    state.e = emissions
                     state.c = ghmmwrapper.list2double_array(weight_list)
-                    state.a = ghmmwrapper.list2double_array(a_list)
-
-                    # setting densities types (all normal by default)
-                    densit = ghmmwrapper.density_array_alloc(cmodel.M)
-                    state.density = densit
-
-                    mix_fix = [0] * state.M
-
-                    for j in range(state.M):
-                      state.setDensity(j,densities[i][j])
-                      if densities[i][j] == ghmmwrapper.uniform:
-                        mix_fix[j] = 1
-
-                    state.mixture_fix = ghmmwrapper.list2int_array(mix_fix)
 
                 return ContinuousMixtureHMM(emissionDomain, distribution, cmodel)
+
+            elif isinstance(distribution, MultivariateGaussianDistribution):
+                log.debug( "*** multivariate gaussian distribution model")
+
+                # this is being extended to also support mixtures of multivariate gaussians
+                # Interpretation of B matrix for the multivariate gaussian case
+                # (Example with three states and two mixture components with two dimensions):
+                #  B = [
+                #       [["mu111","mu112"],["sig1111","sig1112","sig1121","sig1122"],
+                #        ["mu121","mu122"],["sig1211","sig1212","sig1221","sig1222"],
+                #        ["w11","w12"] ],
+                #       [["mu211","mu212"],["sig2111","sig2112","sig2121","sig2122"],
+                #        ["mu221","mu222"],["sig2211","sig2212","sig2221","sig2222"],
+                #        ["w21","w22"] ],
+                #       [["mu311","mu312"],["sig3111","sig3112","sig3121","sig3122"],
+                #        ["mu321","mu322"],["sig3211","sig3212","sig3221","sig3222"],
+                #        ["w31","w32"] ],
+                #      ]
+                #
+                # ["mu311","mu312"] is the mean vector of the two dimensional
+                # gaussian in state 3, mixture component 1
+                # ["sig1211","sig1212","sig1221","sig1222"] is the covariance
+                # matrix of the two dimensional gaussian in state 1, mixture component 2
+                # ["w21","w22"] are the weights of the mixture components
+                # in state 2
+                # For states with only one mixture component, a implicit weight
+                # of 1.0 is assumed
+
+                cmodel.addModelTypeFlags(ghmmwrapper.kMultivariate)
+                cmodel.dim = len(B[0][0]) # all states must have same dimension
+
+                #initialize states
+                for i in range(cmodel.N):
+                    # set up state parameterss
+                    state = ghmmwrapper.cstate_array_getRef(cmodel.s, i)
+                    state.M = len(B[i])/2
+                    if state.M > cmodel.M:
+                        cmodel.M = state.M
+
+                    # multiple mixture components
+                    if state.M > 1:
+                        state.c = ghmmwrapper.list2double_array(B[i][state.M*2]) # Mixture weights.
+                    else:
+                        state.c = ghmmwrapper.list2double_array([1.0])
+
+                    # set up emission(s), density type is normal
+                    emissions = ghmmwrapper.c_emission_array_alloc(state.M) # M emission components in this state
+
+                    for em in range(state.M):
+                        emission = ghmmwrapper.c_emission_array_getRef(emissions,em)
+                        emission.dimension = len(B[0][0]) # dimension must be same in all states and emissions
+                        mu = B[i][em*2]
+                        sigma = B[i][em*2+1]
+                        emission.mean.vec = ghmmwrapper.list2double_array(mu)
+                        emission.variance.mat = ghmmwrapper.list2double_array(sigma)
+                        emission.sigmacd = ghmmwrapper.list2double_array(sigma) # just for allocating the space
+                        emission.sigmainv = ghmmwrapper.list2double_array(sigma) # just for allocating the space
+                        emission.fixed = 0  # fixing of emission deactivated by default
+                        emission.setDensity(6)
+                        # calculate inverse and determinant of covariance matrix
+                        determinant = ghmmwrapper.list2double_array([0.0])
+                        ghmmwrapper.ighmm_invert_det(emission.sigmainv, determinant,
+                                                     emission.dimension, emission.variance.mat)
+                        emission.det = ghmmwrapper.double_array_getitem(determinant, 0)
+
+                    # append emissions to state
+                    state.e = emissions
+
+                return MultivariateGaussianMixtureHMM(emissionDomain, distribution, cmodel)
 
             else:
                 raise GHMMError(type(distribution),
@@ -3199,9 +3291,25 @@ class GaussianEmissionHMM(HMM):
         state.setMean(0, float(mu))
         state.setStdDev(0, float(sigma))
 
+    def getEmissionProbability(self, value, i):
+        """ Return probability of emitting value in state i  """
+        # ensure proper index
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
 
-    def getEmissionProbability(self, value, state):
-        return self.cmodel.calc_b(state, value)
+        # value can be float or vector of floats
+        try:
+            assert len(value) == self.cmodel.dim
+        except (TypeError):
+            assert 1 == self.cmodel.dim
+            v = [float(value)]
+        else:
+            v = value
+
+        state = self.cmodel.getState(i)
+        valueptr = ghmmwrapper.list2double_array(v)
+        p = state.calc_b(valueptr)
+        ghmmwrapper.free(valueptr)
+        return p
 
     def getStateFix(self,state):
         s = self.cmodel.getState(state)
@@ -3235,8 +3343,8 @@ class GaussianEmissionHMM(HMM):
             strout.append( "initial= " + f(state.pi) )
             if self.cmodel.cos > 1:
              strout.append(', cos='+ str(self.cmodel.cos))
-            strout.append(", mu= " + f(ghmmwrapper.double_array_getitem(state.mue,0))+', ')
-            strout.append("sigma= " + f(ghmmwrapper.double_array_getitem(state.u,0)) )
+            strout.append(", mu= " + f(state.getMean(0))+', ')
+            strout.append("sigma= " + f(state.getStdDev(0)) )
             strout.append(')\n')
 
 
@@ -3274,8 +3382,8 @@ class GaussianEmissionHMM(HMM):
             u =  ""
 
             weight += str(ghmmwrapper.double_array_getitem(state.c,0))
-            mue += str(ghmmwrapper.double_array_getitem(state.mue,0))
-            u += str(ghmmwrapper.double_array_getitem(state.u,0))
+            mue += str(state.getMean(0))
+            u += str(state.getStdDev(0))
 
             strout.append("  mean: " + str(mue) + "\n")
             strout.append("  variance: " + str(u) + "\n")
@@ -3425,7 +3533,7 @@ class GaussianEmissionHMM(HMM):
                 self.cmodel.class_change.k = i
 
             seq = emissionSequences.cseq.getSequence(i)
-            seq_len = emissionSequences.cseq.getLength(i)
+            seq_len = emissionSequences.cseq.getLength(i)/self.cmodel.dim
 
             try:
                 viterbiPath, log_p = self.cmodel.viterbi(seq, seq_len)
@@ -3516,15 +3624,14 @@ class GaussianEmissionHMM(HMM):
             state = self.cmodel.getState(i)
             pi.append(state.pi)
 
-            B[i][0] = ghmmwrapper.double_array_getitem(state.mue,0)
-            B[i][1] =  ghmmwrapper.double_array_getitem(state.u,0)
+            B[i][0] = state.getMean(0)
+            B[i][1] = state.getStdDev(0)
 
             for j in range(state.out_states):
                 state_index = ghmmwrapper.int_array_getitem(state.out_id, j)
                 A[i][state_index] = ghmmwrapper.double_matrix_getitem(state.out_a,0,j)
 
         return [A,B,pi]
-
 
 
 # XXX - this class will taken over by ContinuousMixtureHMM
@@ -3558,12 +3665,17 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
     def getMixtureFix(self,state):
         s = self.cmodel.getState(state)
-        return ghmmwrapper.int_array2list(s.mixture_fix,self.M)
+        mixfix = []
+        for i in range(s.M):
+            emission = s.getEmission(i)
+            mixfix.append(emission.fixed)
+        return mixfix
 
     def setMixtureFix(self, state ,flags):
         s = self.cmodel.getState(state)
-        ghmmwrapper.free(s.mixture_fix)
-        s.mixture_fix = ghmmwrapper.list2int_array(flags)
+        for i in range(s.M):
+            emission = s.getEmission(i)
+            emission.fixed = flags[i]
 
     def __str__(self):
         hmm = self.cmodel
@@ -3595,10 +3707,11 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             mue = ""
             u =  ""
 
-            for outp in range(hmm.M):
-                weight += f(ghmmwrapper.double_array_getitem(state.c,outp))+", "
-                mue += f(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
-                u += f(ghmmwrapper.double_array_getitem(state.u,outp))+", "
+            for outp in range(state.M):
+                emission = state.getEmission(outp)
+                weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
+                mue += str(emission.mean.val)+", "
+                u += str(emission.variance.val)+", "
 
             strout.append( "    Emissions (")
             strout.append("weights= " + str(weight) + ", ")
@@ -3629,22 +3742,23 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
         strout = ["\nOverview of HMM:"]
         strout.append("\nNumber of states: "+ str(hmm.N))
-        strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
+        strout.append("\nNumber of mixture components: "+ str(hmm.M))
 
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) +":")
             strout.append("\nInitial probability: " + str(state.pi))
-            strout.append("\n"+ str(hmm.M) + " density function(s):\n")
+            strout.append("\n"+ str(state.M) + " mixture component(s):\n")
 
             weight = ""
             mue = ""
             u =  ""
 
-            for outp in range(hmm.M):
+            for outp in range(state.M):
+                emission = state.getEmission(outp)
                 weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
-                mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
-                u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
+                mue += str(emission.mean.val)+", "
+                u += str(emission.variance.val)+", "
 
             strout.append("  pdf component weights : " + str(weight) + "\n")
             strout.append("  mean vector: " + str(mue) + "\n")
@@ -3674,9 +3788,16 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             state = self.cmodel.getState(i)
             pi.append(state.pi)
 
-            B[i].append( ghmmwrapper.double_array2list(state.mue,self.cmodel.M) )
-            B[i].append( ghmmwrapper.double_array2list(state.u,self.cmodel.M) )
-            B[i].append( ghmmwrapper.double_array2list(state.c,self.cmodel.M) )
+            mulist = []
+            siglist = []
+            for j in range(state.M):
+                emission = state.getEmission(j)
+                mulist.append(emission.mean.val)
+                siglist.append(emission.variance.val)
+
+            B[i].append(mulist)
+            B[i].append(siglist)
+            B[i].append(ghmmwrapper.double_array2list(state.c, state.M))
 
             for j in range(state.out_states):
                 state_index = ghmmwrapper.int_array_getitem(state.out_id, j)
@@ -3686,55 +3807,71 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
 
 class ContinuousMixtureHMM(GaussianMixtureHMM):
-    """ HMMs with mixtures of any Continuous Distributions as emissions.
+    """ HMMs with mixtures of any univariate (one dimensional) Continuous Distributions as emissions.
         Optional features:
         - fixing mixture components in training
     """
 
-##     NORMAL = 0
-##     NORMAL_RIGHT =1
-##     NORMAL_LEFT=3
-##     UNIFORM=4
-
     def getEmission(self, i, comp):
         """ Return the paramenters of component 'comp' in state 'i'
-        (type, mu, sigma^2, weight) - for a gaussian component
-        (type, mu, sigma^2,  min, weight) - for a left trunc gaussian
-        (type, mu, sigma^2, max, weight) - for a right trunc gaussian
-        (type, max, mix, weight) - for a uniform
+        (type, mu,  sigma^2, weight)        - for a gaussian component
+        (type, mu,  sigma^2, min,   weight) - for a right tail gaussian
+        (type, mu,  sigma^2, max,   weight) - for a left  tail gaussian
+        (type, max, mix,     weight)        - for a uniform
         """
         state  = self.cmodel.getState(i)
-        mu     = state.getMean(comp)
-        sigma  = state.getStdDev(comp)
-        weigth = state.getWeight(comp)
-        type   = state.getDensity(comp)
-        if ((type == ghmmwrapper.uniform) or (type == ghmmwrapper.normal)):
-            return (type, mu, sigma, weigth)
-        else:
-            a = state.getTruncate(comp)
-            return (type, mu, sigma, a, weigth)
+        emission = state.getEmission(comp)
+        if (emission.type == ghmmwrapper.normal or
+            emission.type == ghmmwrapper.normal_approx):
+            return (emission.type, emission.mean.val, emission.variance.val, state.getWeight(comp))
+        elif emission.type == ghmmwrapper.normal_right:
+            return (emission.type, emission.mean.val, emission.variance.val,
+                    emission.min, state.getWeight(comp))
+        elif emission.type == ghmmwrapper.normal_left:
+            return (emission.type, emission.mean.val, emission.variance.val,
+                    emission.max, state.getWeight(comp))
+        elif emission.type == ghmmwrapper.uniform:
+            return (emission.type, emission.max, emission.min, state.getWeight(comp))
 
-    def setEmission(self, i, comp, type, (mu, sigma, a, weight)):
-        """ Set the emission distributionParameters for component 'comp' in state 'i'. """
+    def setEmission(self, i, comp, distType, (mu, sigma, a, weight)):
+        """ Set the emission distributionParameters for component 'comp' in state 'i'.
+            distType is the distribution type.
+            the other parameters are interpreted depending on distType.
 
+            mu     - mean for normal, normal_approx, normal_right, normal_left
+            mu     - max for uniform
+            sigma  - standard deviation for normal, normal_approx, normal_right, normal_left
+            sigma  - min for uniform
+            a      - cut-off normal_right and normal_left
+            weight - always component weight
+        """
         # ensure proper indices
         if not 0 <= i < self.N:
             raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
-        state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
-        state.setStdDev(comp, float(sigma))
         state.setWeight(comp, float(weight))
-        state.setTruncate(comp, float(a))
-        state.setDensity(comp, int(type))
+        emission = state.getEmission(comp)
+        emission.type = distType
+        if (emission.type == ghmmwrapper.normal or
+            emission.type == ghmmwrapper.normal_approx or
+            emission.type == ghmmwrapper.normal_right or
+            emission.type == ghmmwrapper.normal_left):
+            emission.mean.val = mu
+            emission.variance.val = sigma
+            if emission.type == ghmmwrapper.normal_right:
+                emission.min = a
+            if emission.type == ghmmwrapper.normal_left:
+                emission.max = a
+        elif emission.type == ghmmwrapper.uniform:
+            emission.min = sigma
+            emission.max = mu
+        else:
+            raise TypeError("Unknown distribution type" + str(distType))
 
     def __str__(self):
         """ defines string representation """
-        hmm = self.cmodel
-
-        strout = "<ContinuousMixtureHMM with "+str(hmm.N)+" states>"
-
-        return join(strout,'')
+        return "<ContinuousMixtureHMM with "+str(self.cmodel.N)+" states>"
 
     def verboseStr(self):
         """ Human readable model description """
@@ -3742,46 +3879,50 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
         strout = ["\nOverview of HMM:"]
         strout.append("\nNumber of states: "+ str(hmm.N))
-        strout.append("\nNumber of output distributions per state: "+ str(hmm.M))
+        strout.append("\nMaximum number of output distributions per state: "+ str(hmm.M))
 
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) +":")
-            strout.append("\nInitial probability: " + str(state.pi))
-            strout.append("\n"+ str(hmm.M) + " density function(s):\n")
-
-            weight = ""
-            mue = ""
-            u =  ""
-            a = ""
-            density = ""
+            strout.append("\n  Initial probability: " + str(state.pi))
+            strout.append("\n  "+ str(state.M) + " density function(s):")
 
             for outp in range(state.M):
-                weight += str(ghmmwrapper.double_array_getitem(state.c,outp))+", "
-                mue += str(ghmmwrapper.double_array_getitem(state.mue,outp))+", "
-                u += str(ghmmwrapper.double_array_getitem(state.u,outp))+", "
-                a += str(ghmmwrapper.double_array_getitem(state.a,outp))+", "
-                density += str(ghmmwrapper.density_array_getitem(state.density,outp))+","
+                comp_str = "\n    " + str(state.getWeight(outp)) + " * "
+                emission = state.getEmission(outp)
+                type = emission.type
+                if type == ghmmwrapper.normal:
+                    comp_str += "normal(mean = " + str(emission.mean.val)
+                    comp_str += ", variance = " + str(emission.variance.val) + ")"
+                elif type == ghmmwrapper.normal_right:
+                    comp_str += "normal right tail(mean = " + str(emission.mean.val)
+                    comp_str += ", variance = " + str(emission.variance.val)
+                    comp_str += ", minimum = " + str(emission.min) + ")"
+                elif type == ghmmwrapper.normal_left:
+                    comp_str += "normal left tail(mean = " + str(emission.mean.val)
+                    comp_str += ", variance = " + str(emission.variance.val)
+                    comp_str += ", maximum = " + str(emission.max) + ")"
+                elif type == ghmmwrapper.uniform:
+                    comp_str += "uniform(minimum = " + str(emission.min)
+                    comp_str += ", maximum = " + str(emission.max) + ")"
 
-            strout.append("  component weights : " + str(weight) + "\n")
-            strout.append("  mean vector: " + str(mue) + "\n")
-            strout.append("  variance vector: " + str(u) + "\n")
-            strout.append("  a vector: " + str(a) + "\n")
-            strout.append("  densities types: " + str(density) + "\n")
+                strout.append(comp_str)
 
             for c in range(self.cmodel.cos):
-                strout.append("\n  Class : " + str(c)                )
+                strout.append("\n  Class : " + str(c))
                 strout.append("\n    Outgoing transitions:")
                 for i in range( state.out_states):
                     strout.append("\n      transition to state " + str(state.getOutState(i)) +
-                                  " with probability = " + str(state.getOutProb(c,i)))
+                                  " with probability = " + str(state.getOutProb(i, c)))
 
                 strout.append("\n    Ingoing transitions:")
                 for i in range(state.in_states):
                     strout.append("\n      transition from state " + str(state.getInState(i)) +
-                                  " with probability = "+ str(state.getInProb(c,i)))
+                                  " with probability = "+ str(state.getInProb(i, c)))
 
-            strout.append("\nint fix:" + str(state.fix) + "\n")
+            strout.append("\n  int fix:" + str(state.fix))
+
+        strout.append("\n")
         return join(strout,'')
 
     def asMatrices(self):
@@ -3798,14 +3939,30 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             B.append([])
             state = self.cmodel.getState(i)
             pi.append(state.pi)
+            denList = []
 
-            B[i].append(ghmmwrapper.double_array2list(state.mue,self.cmodel.M))
-            B[i].append(ghmmwrapper.double_array2list(state.u,self.cmodel.M))
-            B[i].append(ghmmwrapper.double_array2list(state.a,self.cmodel.M))
-            B[i].append(ghmmwrapper.double_array2list(state.c,self.cmodel.M))
+            parlist = []
+            for j in range(state.M):
+                emission = state.getEmission(j)
+                denList.append(emission.type)
+                if emission.type == ghmmwrapper.normal:
+                    parlist.append([emission.mean.val, emission.variance.val,
+                                    0, state.getWeight(j)])
+                elif emission.type == ghmmwrapper.normal_right:
+                    parlist.append([emission.mean.val, emission.variance.val,
+                                    emission.min, state.getWeight(j)])
+                elif emission.type == ghmmwrapper.normal_left:
+                    parlist.append([emission.mean.val, emission.variance.val,
+                                    emission.max, state.getWeight(j)])
+                elif emission.type == ghmmwrapper.uniform:
+                    parlist.append([emission.max, emission.min, 0, state.getWeight(j)])
+                else:
+                    raise TypeError("Unsupported distribution" + str(emission.type))
 
-            d.append([ghmmwrapper.density_array_getitem(state.density, x)
-                      for x in range(self.cmodel.M)])
+            for j in range(4):
+                B[i].append([l[j] for l in parlist])
+
+            d.append(denList)
 
             for j in range(state.out_states):
                 state_index = state.getOutState(j)
@@ -3848,6 +4005,124 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
     ghmmwrapper.free(SeqArray)
 
     return HMMDiscriminativePerformance(HMMList, SeqList)
+
+
+class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
+    """ HMMs with Multivariate Gaussian distribution as emissions. States can have multiple mixture components.
+
+    """
+
+    def __init__(self, emissionDomain, distribution, cmodel):
+        HMM.__init__(self, emissionDomain, distribution, cmodel)
+
+        # Baum Welch context, call baumWelchSetup to initalize
+        self.BWcontext = ""
+
+    def getEmission(self, i, m):
+        """ Return mean and covariance matrix of component m in state i  """
+
+        # ensure proper index
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+
+        state = self.cmodel.getState(i)
+        assert 0 <=m < state.M, "Index " + str(m) + " out of bounds."
+
+        emission = state.getEmission(m)
+        mu = ghmmwrapper.double_array2list(emission.mean.vec,emission.dimension)
+        sigma = ghmmwrapper.double_array2list(emission.variance.mat,emission.dimension*emission.dimension)
+        return (mu, sigma)
+
+    def setEmission(self, i, m, (mu, sigma)):
+        """ Set the emission distributionParameters for mixture component m in state i """
+
+        # ensure proper indices
+        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+
+        state = self.cmodel.getState(i)
+        assert 0 <=m < state.M, "Index " + str(m) + " out of bounds."
+
+        emission = state.getEmission(m)
+        emission.mean.vec = ghmmwrapper.list2double_array(mu)
+        emission.variance.mat = ghmmwrapper.list2double_array(sigma)
+
+    def __str__(self):
+        hmm = self.cmodel
+        strout = ["\nHMM Overview:"]
+        strout.append("\nNumber of states: " + str(hmm.N))
+        strout.append("\nmaximum Number of mixture components: " + str(hmm.M))
+        strout.append("\nNumber of dimensions: " + str(hmm.dim))
+
+        for k in range(hmm.N):
+            state = hmm.getState(k)
+            strout.append("\n\nState number "+ str(k) + ":")
+            strout.append("\nInitial probability: " + str(state.pi))
+            strout.append("\nNumber of mixture components: " + str(state.M))
+
+            for m in range(state.M):
+                strout.append("\n\n  Emission number "+ str(m) + ":")
+
+                weight = ""
+                mue = ""
+                u =  ""
+                uinv = ""
+                ucd = ""
+
+                weight += str(ghmmwrapper.double_array_getitem(state.c,m))
+
+                emission = state.getEmission(m)
+                mue += str(ghmmwrapper.double_array2list(emission.mean.vec,emission.dimension))
+                u += str(ghmmwrapper.double_array2list(emission.variance.mat,emission.dimension*emission.dimension))
+                uinv += str(ghmmwrapper.double_array2list(emission.sigmainv,emission.dimension*emission.dimension))
+                ucd += str(ghmmwrapper.double_array2list(emission.sigmacd,emission.dimension*emission.dimension))
+
+                strout.append("\n    emission type: " + str(emission.type))
+                strout.append("\n    emission weight: " + str(weight))
+                strout.append("\n    mean: " + str(mue))
+                strout.append("\n    covariance matrix: " + str(u))
+                strout.append("\n    inverse of covariance matrix: " + str(uinv))
+                strout.append("\n    determinant of covariance matrix: " + str(emission.det))
+                strout.append("\n    cholesky decomposition of covariance matrix: " + str(ucd))
+                strout.append("\n    fix: " + str(state.fix))
+
+            for c in range(self.cmodel.cos):
+                strout.append("\n\n  Class : " + str(c)                )
+                strout.append("\n    Outgoing transitions:")
+                for i in range( state.out_states):
+                    strout.append("\n      transition to state " + str(state.getOutState(i) ) + " with probability = " + str(state.getOutProb(i, c)))
+                strout.append("\n    Ingoing transitions:")
+                for i in range(state.in_states):
+                    strout.append("\n      transition from state " + str(state.getInState(i)) +" with probability = "+ str(state.getInProb(i, c)))
+
+        return join(strout,'')
+
+    def asMatrices(self):
+        "Return the parameters in matrix form."
+        A = []
+        B = []
+        pi = []
+        for i in range(self.cmodel.N):
+            A.append([0.0] * self.N)
+            emissionparams = []
+            state = self.cmodel.getState(i)
+            pi.append(state.pi)
+            for m in range(state.M):
+                emission = state.getEmission(m)
+                mu = ghmmwrapper.double_array2list(emission.mean.vec,emission.dimension)
+                sigma = ghmmwrapper.double_array2list(emission.variance.mat,(emission.dimension*emission.dimension))
+                emissionparams.append(mu)
+                emissionparams.append(sigma)
+
+            if state.M > 1:
+                weights = ghmmwrapper.double_array2list(state.c,state.M)
+                emissionparams.append(weights)
+
+            B.append(emissionparams)
+
+            for j in range(state.out_states):
+                state_index = ghmmwrapper.int_array_getitem(state.out_id, j)
+                A[i][state_index] = ghmmwrapper.double_matrix_getitem(state.out_a,0,j)
+
+        return [A,B,pi]
 
 
 def HMMDiscriminativePerformance(HMMList, SeqList):
@@ -4120,8 +4395,7 @@ class ComplexEmissionSequence(object):
         the sequence in all it's encodings (can be quite long)
         @return: string representation
         """
-        s = ("<ComplexEmissionSequence>")
-        return s
+        return "<ComplexEmissionSequence>"
 
     def verboseStr(self):
         """
@@ -4174,9 +4448,7 @@ class PairHMM(HMM):
         structure ghmm_dpmodel
         @return: string representation
         """
-        hmm = self.cmodel
-        strout = ["<PairHMM with "+str(hmm.N)+" states>"]
-        return join(strout,'')
+        return "<PairHMM with " + str(self.cmodel.N) + " states>"
 
     def verboseStr(self):
         """

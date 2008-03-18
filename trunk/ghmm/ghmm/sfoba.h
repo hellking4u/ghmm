@@ -59,7 +59,7 @@ extern "C" {
   a given double sequence and a given model.
   @param smo      model
   @param O        sequence
-  @param T        length of sequence
+  @param T        length of sequence (O is actually T*smo->dim long)
   @param alpha    alpha[t][i]
   @param scale    scale factors
   @param log_p    log likelihood log( P(O|lambda) )
@@ -73,8 +73,8 @@ extern "C" {
   Calculates beta[t][i] given a double sequence and a model. Scale factors 
   given as parameter (come from sfoba\_forward).
   @param smo      model
-  @param O          sequence
-  @param T        length of sequence
+  @param O        sequence
+  @param T        length of sequence (O is actually T*smo->dim long)
   @param b        matrix with precalculated output probabilities. May be NULL
   @param beta     beta[t][i]
   @param scale    scale factors
@@ -90,7 +90,7 @@ extern "C" {
   ighmm_cmatrix_stat_alloc
   @param smo      model
   @param O        sequence
-  @param T         length of sequence
+  @param T        length of sequence (O is actually T*smo->dim long)
   @param log_p    log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */

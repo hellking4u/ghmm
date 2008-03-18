@@ -55,6 +55,7 @@
 #include "mes.h"
 #include "mprintf.h"
 #include "xmlreader.h"
+#include "matrixop.h"
 
 /* we should not need more than two alphabets, no plan to implement triple HMMs */
 #define MAX_ALPHABETS 2
@@ -98,6 +99,8 @@ static int validModelTypes[] = {
   (GHMM_kDiscreteHMM + GHMM_kTransitionClasses),
   (GHMM_kContinuousHMM),
   (GHMM_kContinuousHMM + GHMM_kTransitionClasses),
+  (GHMM_kContinuousHMM + GHMM_kMultivariate),
+  (GHMM_kContinuousHMM + GHMM_kMultivariate + GHMM_kTransitionClasses),
   (GHMM_kPairHMM + GHMM_kDiscreteHMM),
   (GHMM_kPairHMM + GHMM_kDiscreteHMM + GHMM_kTransitionClasses)
 };
@@ -231,6 +234,9 @@ static int matchModelType(const char * data, unsigned int size) {
 
   if (!strncmp(data, "pair", size))
     return GHMM_kPairHMM;
+
+  if (!strncmp(data, "multivariate", size))
+    return GHMM_kMultivariate;
 
   return INT_MIN;
 #undef CUR_PROC
@@ -375,13 +381,15 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
 
   int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox, label;
   int curX=0, curY=0;
-  double pi, prior;
+  double pi, prior, csv;
   double *emissions = NULL;
   unsigned char *desc = NULL;
   char *s = NULL, *estr;
   int rev, stateFixed=1;
+  ghmm_cstate *newcstate;
+  ghmm_c_emission *emission;
 
-  xmlNodePtr elem, child;
+  xmlNodePtr elem, child, multichild;
 
   state = getIntAttribute(cur, "id", &error);
   pi = getDoubleAttribute(cur, "initial", &error);
@@ -487,6 +495,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
         if ((!xmlStrcmp(child->name, BAD_CAST "normal")) ||
             (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft")) ||
             (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "multinormal")) ||
             (!xmlStrcmp(child->name, BAD_CAST "uniform"))){
           M ++;
 
@@ -494,10 +503,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
         child = child->next;
       }
       ghmm_cstate_alloc(f->model.c[modelNo]->s + state, M, inDegree[state], outDegree[state], f->model.c[modelNo]->cos);
+      newcstate = f->model.c[modelNo]->s + state;
 
-      f->model.c[modelNo]->s[state].desc = desc;
-      f->model.c[modelNo]->s[state].M = M;
-      f->model.c[modelNo]->s[state].pi = pi;
+      newcstate->desc = desc;
+      newcstate->M = M;
+      newcstate->pi = pi;
 
       if( f->model.c[modelNo]->M < M)
         f->model.c[modelNo]->M = M;
@@ -506,76 +516,130 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
 
       i = 0;
       while (child != NULL) {
+
+        emission = newcstate->e+i;
+
+        /* common attributes */
+        if ((!xmlStrcmp(child->name, BAD_CAST "normal")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "multinormal")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "uniform"))){
+          fixed = getIntAttribute(child, "fixed", &error);
+          if (error)
+            fixed = 0;
+          stateFixed = fixed && stateFixed;
+          /* allocate emission */
+          emission->fixed = fixed;
+
+          prior = getDoubleAttribute(child, "prior", &error);
+          if (error)
+            prior = 1.0;
+          newcstate->c[i] = prior;
+        }
+        /* child is not a density, continue with the next child */
+        else {
+          child = child->next;
+          continue;
+        }
+
+        /* density type dependent attributes */
         if ((!xmlStrcmp(child->name, BAD_CAST "normal"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "mean", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "variance", &error);
-          f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          aprox = getIntAttribute(child, "aproximate", &error);
-          f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal;
-          fixed = getIntAttribute(child, "fixed", &error);
-          if (error)
-            fixed = 0;
-          stateFixed = fixed && stateFixed;
-          f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, "prior", &error);
-          if (error)
-            prior = 1.0;
-          f->model.c[modelNo]->s[state].c[i] = prior;
-          i++;
+          emission->mean.val  = getDoubleAttribute(child, "mean", &error);
+          emission->variance.val = getDoubleAttribute(child, "variance", &error);
+          emission->type      = normal;
+          emission->dimension = 1;
+          if (f->model.c[modelNo]->dim > 1) {
+            GHMM_LOG(LERROR, "All emissions must have same dimension.");
+            goto STOP;
+          }
         }
-        if ((!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "mean", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "variance", &error);
-          f->model.c[modelNo]->s[state].a[i] = getDoubleAttribute(child, "min", &error);
-          f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_left;
-          fixed = getIntAttribute(child, "fixed", &error);
-          if (error)
-            fixed = 0;
-          stateFixed = fixed && stateFixed;
-          f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, "prior", &error);
-          if (error)
-            prior = 1.0;
-          f->model.c[modelNo]->s[state].c[i] = prior;
-          i++;
+        if ((!xmlStrcmp(child->name, BAD_CAST "normalLeftTail"))) {
+          emission->mean.val  = getDoubleAttribute(child, "mean", &error);
+          emission->variance.val = getDoubleAttribute(child, "variance", &error);
+          emission->min       = getDoubleAttribute(child, "max", &error);
+          emission->type      = normal_left;
+          emission->dimension = 1;
+          if (f->model.c[modelNo]->dim > 1) {
+            GHMM_LOG(LERROR, "All emissions must have same dimension.");
+            goto STOP;
+          }
         }
-        if ((!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "mean", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "variance", &error);
-          f->model.c[modelNo]->s[state].a[i] = getDoubleAttribute(child, "max", &error);
-          f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)normal_right;
-          fixed = getIntAttribute(child, "fixed", &error);
-          if (error)
-            fixed = 0;
-          stateFixed = fixed && stateFixed;
-          f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, "prior", &error);
-          if (error)
-            prior = 1.0;
-          f->model.c[modelNo]->s[state].c[i] = prior;
-          i++;
+        if ((!xmlStrcmp(child->name, BAD_CAST "normalRightTail"))) {
+          emission->mean.val  = getDoubleAttribute(child, "mean", &error);
+          emission->variance.val = getDoubleAttribute(child, "variance", &error);
+          emission->max       = getDoubleAttribute(child, "min", &error);
+          emission->type      = normal_right;
+          emission->dimension = 1;
+          if (f->model.c[modelNo]->dim > 1) {
+            GHMM_LOG(LERROR, "All emissions must have same dimension.");
+            goto STOP;
+          }
         }
         if ((!xmlStrcmp(child->name, BAD_CAST "uniform"))) {
-          f->model.c[modelNo]->s[state].mue[i] = getDoubleAttribute(child, "max", &error);
-          f->model.c[modelNo]->s[state].u[i] = getDoubleAttribute(child, "min", &error);
-          f->model.c[modelNo]->s[state].density[i] = (ghmm_density_t)uniform;
-          fixed = getIntAttribute(child, "fixed", &error);
-          if (error)
-            fixed = 0;
-          stateFixed = fixed && stateFixed;
-          f->model.c[modelNo]->s[state].mixture_fix[i] = fixed;
-          prior = getDoubleAttribute(child, "prior", &error);
-          if (error)
-            prior = 1.0;
-          f->model.c[modelNo]->s[state].c[i] = prior;
-          i++;
+          emission->max  = getDoubleAttribute(child, "max", &error);
+          emission->min  = getDoubleAttribute(child, "min", &error);
+          emission->type = uniform;
+          emission->dimension = 1;
+          if (f->model.c[modelNo]->dim > 1) {
+            GHMM_LOG(LERROR, "All emissions must have same dimension.");
+            goto STOP;
+          }
         }
+        if ((!xmlStrcmp(child->name, BAD_CAST "multinormal"))) {
+          emission->type = multinormal;
+          emission->dimension = getIntAttribute(child, "dimension", &error);
 
+          /* check that all emissions in all states have same dimension or
+             set when first emission is read*/
+          if (f->model.c[modelNo]->dim <= 1)
+            f->model.c[modelNo]->dim = emission->dimension;
+          else if (f->model.c[modelNo]->dim != emission->dimension) {
+            GHMM_LOG(LERROR, "All emissions must have same dimension.");
+            goto STOP;
+          }
+
+          if (0 != ghmm_c_emission_alloc(emission, emission->dimension)) {
+            GHMM_LOG(LERROR, "Can not allocate multinormal emission.");
+            goto STOP;
+          }
+          multichild = child->children;
+          while (multichild != NULL) {
+            if ((!xmlStrcmp(multichild->name, BAD_CAST "mean"))) {
+              s = (char *)xmlNodeGetContent(multichild);
+              if (-1 == parseCSVList(s, emission->dimension, emission->mean.vec, 0)) {
+                GHMM_LOG(LERROR, "Can not parse mean CSV list.");
+                goto STOP;
+              }
+            }
+            if ((!xmlStrcmp(multichild->name, BAD_CAST "variance"))) {
+              s = (char *)xmlNodeGetContent(multichild);
+              if (-1 == parseCSVList(s, emission->dimension * emission->dimension,
+                                     emission->variance.mat, 0)) {
+                GHMM_LOG(LERROR, "Can not parse variance CSV list.");
+                goto STOP;
+              }
+              if (0 != ighmm_invert_det(emission->sigmainv, &emission->det,
+                                        emission->dimension, emission->variance.mat))
+              {
+                GHMM_LOG(LERROR, "Can not calculate inverse of covariance matrix.");
+                goto STOP;
+              }
+              if (0 != ighmm_cholesky_decomposition(emission->sigmacd,
+                                                    emission->dimension,
+                                                    emission->variance.mat))
+              {
+                GHMM_LOG(LERROR, "Can not calculate cholesky decomposition of covariance matrix.");
+                goto STOP;
+              }
+            }
+            multichild = multichild->next;
+          }
+        }
+        i++;
         child = child->next;
       }
-
-      f->model.c[modelNo]->s[state].fix = stateFixed;
-
+      newcstate->fix = stateFixed;
     }
     free(desc); desc = NULL;
 
@@ -680,6 +744,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
         break;
       case GHMM_kContinuousHMM:
       case GHMM_kContinuousHMM+GHMM_kTransitionClasses:
+      case (GHMM_kContinuousHMM+GHMM_kMultivariate):
+      case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
         f->model.c[modelNo]->s[state].xPosition = curX;
         f->model.c[modelNo]->s[state].yPosition = curY;
         break;
@@ -747,6 +813,7 @@ static int parseSingleTransition(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f,
     f->model.dp[modelNo]->s[target].in_a[in_state][0]   = p;
     break;
   case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate):
     out_state = f->model.c[modelNo]->s[source].out_states++;
     in_state  = f->model.c[modelNo]->s[target].in_states++;
     f->model.c[modelNo]->s[source].out_id[out_state]   = target;
@@ -814,6 +881,7 @@ static int parseMultipleTransition(xmlDocPtr doc, xmlNodePtr cur,
     f->model.dp[modelNo]->s[target].in_a[in_state]    = probs;
     break;
   case (GHMM_kContinuousHMM + GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
     out_state = f->model.c[modelNo]->s[source].out_states++;
     in_state  = f->model.c[modelNo]->s[target].in_states++;
     f->model.c[modelNo]->s[source].out_id[out_state] = target;
@@ -976,7 +1044,9 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
       ARRAY_CALLOC(f->model.dp, f->noModels);
       break;
     case GHMM_kContinuousHMM:
+    case (GHMM_kContinuousHMM+GHMM_kMultivariate):
     case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+    case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
       ARRAY_CALLOC(f->model.c, f->noModels);
       break;
     break;
@@ -1012,11 +1082,14 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
     f->model.dp[modelNo] = NULL;
     break; */
   case GHMM_kContinuousHMM:
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate):
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
+  case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
     f->model.c[modelNo] = ghmm_cmodel_calloc(N,modeltype);
     f->model.c[modelNo]->prior = prior;
     f->model.c[modelNo]->name = modelname;
     f->model.c[modelNo]->cos = cos;
+    f->model.c[modelNo]->dim = 1;
     break;
   default:
     GHMM_LOG(LERROR, "invalid or unimplemented model type");

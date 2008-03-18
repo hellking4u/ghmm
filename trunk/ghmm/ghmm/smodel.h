@@ -60,13 +60,53 @@ extern "C" {
 */
   typedef enum {
     normal,
-    normal_right,
+    normal_right, /* right tail */
     normal_approx,
-    normal_left,
+    normal_left, /* left tail */
     uniform,
+    binormal,
+    multinormal,
     density_number
   } ghmm_density_t;
 
+  /**
+      ghmm_c_emission_s bundles all emission parameters
+  */
+  struct ghmm_c_emission {
+    /** specify the type of the density */
+    ghmm_density_t type;
+    /** dimension > 1 for multivariate normals */
+    int dimension;
+    /** mean for output functions (pointer to mean vector
+        for multivariate  */
+    union {
+      double val;
+      double *vec;
+    } mean;
+    /** variance or pointer to a covariance matrix
+        for multivariate normals */
+    union {
+      double val;
+      double *mat;
+    } variance;
+    /** pointer to inverse of covariance matrix if multivariate normal
+        else NULL */
+    double *sigmainv;
+    /** determinant of covariance matrix for multivariate normal */
+    double det;
+    /** Cholesky decomposition of covariance matrix A,
+        if A = GG' sigmacd only holds G */
+    double *sigmacd;
+    /** minimum of uniform distribution
+       or left boundary for rigth-tail gaussians */
+    double min;
+    /** maximum of uniform distribution
+       or right boundary for left-tail gaussians */
+    double max;
+    /** if fixed != 0 the parameters of the density are fixed */
+    int fixed;
+  };
+  typedef struct ghmm_c_emission ghmm_c_emission;
 
 /** @name ghmm_cstate
     Structure for one state.
@@ -92,24 +132,12 @@ extern "C" {
     int in_states;
   /** weight vector for output function components */
     double *c;
-  /** mean vector for output functions (normal density and truncated normal
-      density) or max value for uniform distribution */
-    double *mue;
-  /** variance vector for output functions or min value for uniform distribution */
-    double *u;
-  /** value where the normal is truncated (only for truncated distributions) */
-    double *a;
   /** flag for fixation of parameter. If fix = 1 do not change parameters of
       output functions, if fix = 0 do normal training. Default is 0. */
     int fix;
-  /** Flag for density function for each component of the mixture
-      0: normal density, 1: truncated normal (right side) 
-      density, 2: approximated normal density, 3: truncated normal (left side)
-      4: uniform distribution */
-    ghmm_density_t *density;
-  /**  array of flags for fixing mixture components in the reestimation
-        mixture_fix[i] = 1 means mu and sigma of component i are fixed.  **/
-    int *mixture_fix;
+  /** vector of ghmm_c_emission
+      (type and parameters of output function components) */
+    ghmm_c_emission *e;
   /** contains a description of the state (null terminated utf-8)*/
   unsigned char * desc;
   /** x coordinate position for graph representation plotting **/
@@ -146,6 +174,9 @@ extern "C" {
     int N;
   /** Maximun number of components in the states */
     int M;
+  /** Number of dimensions of the emission components.
+      All emissions must have the same number of dimensions */
+    int dim;
   /** ghmm_cmodel includes continuous model with one transition matrix 
       (cos  is set to 1) and an extension for models with several matrices
       (cos is set to a positive integer value > 1).*/
@@ -178,6 +209,13 @@ extern "C" {
 
   int ghmm_cmodel_class_change_alloc (ghmm_cmodel * smo);
 
+/** Allocates the multivariate arrays of a ghmm_c_emmission struct
+    @return 0: success, -1: error
+    @param s           address of ghmm_c_emission
+    @param dim         dimension for multivariate emissions
+*/
+  int ghmm_c_emission_alloc(ghmm_c_emission *emissions, int dim);
+
 /** Allocates a cstate 
     @return 0: success, -1: error
     @param s           pointer to the allocated states
@@ -195,6 +233,10 @@ extern "C" {
     @param modeltype type of the model
 */
   ghmm_cmodel * ghmm_cmodel_calloc( int N, int modeltype);
+
+/** Free memory of multivariate ghmm_c_emission arrays
+    @param smo  pointer pointer of ghmm_cmodel */
+  void ghmm_c_emission_free(ghmm_c_emission *emission);
 
 /** Free memory ghmm_cmodel 
     @return 0: success, -1: error
@@ -226,14 +268,15 @@ extern "C" {
 
 /**
    Generates random symbol.
-   Generates one random number for a specified state and specified
+   Generates random number(s) for a specified state and specified
    output component of the given smodel.
-   @return           random number
+   @return           0 on success
    @param smo:       ghmm_cmodel
    @param state:     state
    @param m:         index of output component
+   @param x:         pointer to double to store result
 */
-  double ghmm_cmodel_get_random_var (ghmm_cmodel * smo, int state, int m);
+  int ghmm_cmodel_get_random_var(ghmm_cmodel *smo, int state, int m, double *x);
 
 
 /** 
@@ -375,22 +418,20 @@ extern "C" {
 
 /** Computes the density of one symbol (omega) in a given state and a 
     given output component
-    @return calculated density
-    @param smo ghmm_cmodel
-    @param state state 
-    @param m output component
-    @param omega given symbol
+    @return       calculated density
+    @param state  ghmm_cstate
+    @param m      output component
+    @param omega  given symbol
 */
-  double ghmm_cmodel_calc_cmbm (ghmm_cmodel * smo, int state, int m, double omega);
+  double ghmm_cmodel_calc_cmbm(const ghmm_cstate *state, int m, double *omega);
 
 /** Computes the density of one symbol (omega) in a given state (sums over
     all output components
     @return calculated density
-    @param smo ghmm_cmodel
     @param state state 
     @param omega given symbol
 */
-  double ghmm_cmodel_calc_b (ghmm_cmodel * smo, int state, double omega);
+  double ghmm_cmodel_calc_b(ghmm_cstate *state, const double *omega);
 
 /** Computes probabilistic distance of two models
     @return the distance
@@ -408,24 +449,23 @@ extern "C" {
 
 /** 
     Computes value of distribution function for a given symbol omega, a given
-    ghmm_dstate and a given output component.
-    @return   value of distribution function
-    @param smo   ghmm_cmodel
-    @param state  state
+    ghmm_cstate and a given output component.
+    @return       value of distribution function
+    @param state  ghmm_cstate
     @param m      component
-    @param omega symbol
+    @param omega  symbol
 */
-  double ghmm_cmodel_calc_cmBm (ghmm_cmodel * smo, int state, int m, double omega);
+  double ghmm_cmodel_calc_cmBm(const ghmm_cstate *state, int m, const double *omega);
 
 /** 
     Computes value of distribution function for a given symbol omega and
     a given  state. Sums over all components.
-    @return   value of distribution function
-    @param smo   ghmm_cmodel
-    @param state  state
-    @param omega symbol
+    @return       value of distribution function
+    @param smo    ghmm_cmodel
+    @param state  ghmm_cstate
+    @param omega  symbol
 */
-  double ghmm_cmodel_calc_B (ghmm_cmodel * smo, int state, double omega);
+  double ghmm_cmodel_calc_B(ghmm_cstate *state, const double *omega);
 
 /** Computes the number of free parameters in an array of
    smodels. E.g. if the number of parameter from pi is N - 1.

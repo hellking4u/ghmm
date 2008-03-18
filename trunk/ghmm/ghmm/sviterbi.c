@@ -111,11 +111,13 @@ static void sviterbi_precompute (ghmm_cmodel * smo, double *O, int T,
 #define CUR_PROC "sviterbi_precompute"
   int j, t;
   double cb;
+  int pos;
 
   /* Precomputing of log(b_j(O_t)) */
-  for (j = 0; j < smo->N; j++) {
-    for (t = 0; t < T; t++) {
-      cb = ghmm_cmodel_calc_b(smo, j, O[t]);
+  for (t = 0; t < T; t++) {
+    pos = t * smo->dim;
+    for (j = 0; j < smo->N; j++) {
+      cb = ghmm_cmodel_calc_b(smo->s+j, O+pos);
       if (cb == 0.0)            /* DBL_EPSILON ? */
         v->log_b[j][t] = -DBL_MAX;
       else
@@ -211,6 +213,7 @@ int *ghmm_cmodel_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
     /* sequence can't be build from model, no backtracking possible */
     *log_p = -DBL_MAX;
     GHMM_LOG_QUEUED(LCONVERTED);
+    GHMM_LOG(LERROR, "sequence can't be build from model");
     goto STOP;
     /*
        for (t = T - 2; t >= 0; t--)

@@ -23,11 +23,13 @@ INCLUDES=-I$(top_srcdir)
 
 #these tests will not be installed
 # in progress: test_sdfoba nullmodel ciscreen test_sdmodel 
-noinst_PROGRAMS = root_finder_test \
+noinst_PROGRAMS = randvar_test \
+                  root_finder_test \
                   coin_toss_test \
                   two_states_three_symbols \
                   libxml-test \
                   chmm \
+                  chmm_test \
                   shmm_viterbi_test \
                   test_gsl_ran_gaussian_tail \
                   sequences_test \

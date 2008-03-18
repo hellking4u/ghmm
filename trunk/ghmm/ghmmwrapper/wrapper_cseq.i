@@ -1,6 +1,6 @@
 %{
-#include <ghmm/sequence.h>
-#include <ghmm/obsolete.h>
+#include "ghmm/sequence.h"
+#include "ghmm/obsolete.h"
 %}
 
 /*==========================================================================
@@ -25,6 +25,8 @@ typedef struct ghmm_cseq {
   long capacity;
   /** sum of sequence weights */
   double total_w;
+  /** total number of dimensions */
+  int D;
 
   /** flags (internal) */
   unsigned int flags;
@@ -75,7 +77,8 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
         double getSymbol(int seqno, int index) { return self->seq[seqno][index]; }
         void setSymbol(int seqno, int index, double value) { self->seq[seqno][index] = value; }
 
-        int  getLength(int i) { return self->seq_len[i]; }
+        int  getLength(int i) {
+                return (self->D > 1) ? self->seq_len[i]/self->D : self->seq_len[i]; }
         void setLength(int i, int len) { self->seq_len[i] = len; }
 
         double getWeight(int i) { return self->seq_w[i]; }

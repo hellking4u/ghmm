@@ -1,6 +1,6 @@
 %{
-#include <ghmm/sequence.h>
-#include <ghmm/obsolete.h>
+#include "ghmm/sequence.h"
+#include "ghmm/obsolete.h"
 %}
 
 /*==========================================================================

@@ -143,19 +143,36 @@ double smodel_get_transition(ghmm_cmodel *smo, int i, int j, int cos) {
 }
 
 void smodel_set_mean(ghmm_cmodel *smo, int i, double *mu) {
-  int m;
-  if (smo->s != NULL) {
+  /* if dimension is greater than one: matrix is linearized*/
+  int m, k;
+  if (!smo->s)
+      return;
+
+  if (smo->model_type & GHMM_kMultivariate) {
     for(m = 0; m < smo->M; m++)
-      smo->s[i].mue[m] = mu[m];
+      for(k = 0; k < smo->dim; k++)
+        smo->s[i].e[m].mean.vec[k] = mu[m*(smo->dim)+k];
+    }
+  else {
+    for(m = 0; m < smo->M; m++)
+      smo->s[i].e[m].mean.val = mu[m];
   }
 }
 
 void smodel_set_variance(ghmm_cmodel *smo, int i, double *variance) {
-  int m;
-  if (smo->s != NULL) {
+  int m,k;
+  if (!smo->s)
+      return;
+
+  if (smo->model_type & GHMM_kMultivariate) {
+    for(m = 0; m < smo->M; m++)
+      for (k = 0; k < (smo->dim)*(smo->dim);k++)
+        smo->s[i].e[m].variance.mat[k] = variance[m*(smo->dim)+k];
+  }
+  else {
     for(m = 0; m < smo->M; m++) {
-      smo->s[i].u[m] = variance[m];
-      assert( smo->s[i].u[m] > 0.0 );
+      smo->s[i].e[m].variance.val = variance[m];
+      assert(smo->s[i].e[m].variance.val > 0.0 );
     }
   }
 }
