@@ -86,7 +86,6 @@ static int pdf_stdnormal_exists = 0;
    read in, x in [-9.999, 0] */
 #define X_STEP_PHI 0.001        /* step size */
 #define X_FAKT_PHI 1000         /* equivalent to step size */
-static int PHI_len = 0;
 static double x_PHI_1 = -1.0;
 
 #ifndef M_SQRT1_2
@@ -110,7 +109,7 @@ double ighmm_rand_get_xstepphi ()
 double ighmm_rand_get_philen ()
 {
 #ifdef DO_WITH_GSL
-  return PHI_len;
+  return 0 /*PHI_len*/;
 #else
   return ighmm_rand_get_xPHIless1 () / X_STEP_PHI;
 #endif
@@ -266,7 +265,7 @@ STOP:
 
 /*============================================================================*/
 /* covariance matrix is linearized */
-double ighmm_rand_binormal_density (double *x, double *mean, double *cov)
+double ighmm_rand_binormal_density(const double *x, double *mean, double *cov)
 {
 # define CUR_PROC "ighmm_rand_binormal_density"
   double rho;
@@ -299,7 +298,7 @@ STOP:
 
 /*============================================================================*/
 /* matrices are linearized */
-double ighmm_rand_multivariate_normal_density(int length, double *x, double *mean, double *sigmainv, double det)
+double ighmm_rand_multivariate_normal_density(int length, const double *x, double *mean, double *sigmainv, double det)
 {
 # define CUR_PROC "ighmm_rand_multivariate_normal_density"
   /* multivariate normal density function    */
@@ -358,8 +357,6 @@ double ighmm_rand_multivariate_normal_density(int length, double *x, double *mea
 
   return ay;
 #endif
-STOP:
-  return (-1.0);
 # undef CUR_PROC
 }                               /* double ighmm_rand_multivariate_normal_density */
 

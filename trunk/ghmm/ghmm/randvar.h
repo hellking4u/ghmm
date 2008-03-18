@@ -64,7 +64,7 @@ extern "C" {
    @param mean:     mean values for the bivariate
    @param cov:      linearized covariance matrix
    */
-  double ighmm_rand_binormal_density (double *x, double *mean, double *cov);
+  double ighmm_rand_binormal_density (const double *x, double *mean, double *cov);
 
 /**
    Calculates the multidimensional density function of a multivariate normal
@@ -76,7 +76,7 @@ extern "C" {
    @param sigmainv  linearized inverse of covariance matrix
    @param det       determinant of covariance matrix
    */
-  double ighmm_rand_multivariate_normal_density(int length, double *x, double *mean,
+  double ighmm_rand_multivariate_normal_density(int length, const double *x, double *mean,
                                                 double *sigmainv, double det);
 
   /** density function of a uniform distribution in the range [min,max]

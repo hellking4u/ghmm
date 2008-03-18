@@ -309,7 +309,6 @@ int ghmm_cmodel_logp (ghmm_cmodel * smo, double *O, int T, double *log_p)
 # define CUR_PROC "ghmm_cmodel_logp"
   int res = -1;
   double **alpha, *scale = NULL;
-  int pos;
 
   alpha = ighmm_cmatrix_stat_alloc (T, smo->N);
   if (!alpha) {

@@ -1997,7 +1997,6 @@ int ghmm_cmodel_normalize(ghmm_cmodel *smo)
 #define CUR_PROC "ghmm_cmodel_normalize"
   double pi_sum=0.0;
   int i, j, c, m, j_id, i_id=0, res=0;
-  int size = 1;
 
   for (i = 0; i < smo->N; i++) {
     if (smo->s[i].pi >= 0.0)

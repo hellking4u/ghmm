@@ -14,7 +14,9 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+
 #include <ghmm/matrix.h>
 #include <ghmm/rng.h>
 #include <ghmm/smodel.h>
@@ -39,7 +41,6 @@ int single_state_continuous()
   double c[]={1.0};
   double mue[]={0.0};
   double u[]={1.0};
-  double a[]={0.0};
   ghmm_cseq* my_output;
 
   /* initialise transition array */
