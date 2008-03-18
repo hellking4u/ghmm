@@ -381,7 +381,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
 
   int i, error, order=0, state=-1442, fixed=-985, tied=-9354, M, aprox, label;
   int curX=0, curY=0;
-  double pi, prior, csv;
+  double pi, prior;
   double *emissions = NULL;
   unsigned char *desc = NULL;
   char *s = NULL, *estr;
@@ -547,7 +547,11 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
         if ((!xmlStrcmp(child->name, BAD_CAST "normal"))) {
           emission->mean.val  = getDoubleAttribute(child, "mean", &error);
           emission->variance.val = getDoubleAttribute(child, "variance", &error);
-          emission->type      = normal;
+          /* should the normal distribution be approximated? */
+          aprox = getIntAttribute(child, "approx", &error);
+          if (error)
+            aprox = 0;
+          emission->type      = aprox ? normal_approx : normal;
           emission->dimension = 1;
           if (f->model.c[modelNo]->dim > 1) {
             GHMM_LOG(LERROR, "All emissions must have same dimension.");
