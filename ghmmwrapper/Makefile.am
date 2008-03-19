@@ -8,7 +8,7 @@ SUBDIRS = .
 
 PYTHON=python
 
-PYTHONVER := $(shell $(PYTHON) -V 2>&1 | cut -c 8-10)
+PYTHONVER=$(shell -c $(PYTHON) -V 2>&1 | cut -c 8-10)
 
 SWIG_INTERFACE_FILES = ghmmwrapper.i \
                        wrapper_alphabet.i \
