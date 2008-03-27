@@ -383,7 +383,7 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
   int curX=0, curY=0;
   double pi, prior;
   double *emissions = NULL;
-  unsigned char *desc = NULL;
+  char *desc = NULL;
   char *s = NULL, *estr;
   int rev, stateFixed=1;
   ghmm_cstate *newcstate;
@@ -928,7 +928,7 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
 
   int modeltype=0;
   char * mt;
-  unsigned char * modelname;
+  char *modelname;
 
   int * bg_orders = NULL;
   double * * bg_ptr = NULL;

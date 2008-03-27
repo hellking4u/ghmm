@@ -79,7 +79,7 @@ extern "C" {
     int countme;
 
   /** contains a description of the state (null terminated utf-8)*/
-    unsigned char * desc;
+    char *desc;
   /** Position for graphical editing */
     int xPosition;
     int yPosition;
@@ -106,7 +106,7 @@ extern "C" {
     double prior;
 
   /* contains a arbitrary name for the model (null terminated utf-8) */
-    unsigned char * name;
+    char *name;
 
   /** pointer to class function   */
     int (*get_class) (int *, int);

@@ -52,7 +52,7 @@
    k is the first current sequence index (corresponding to the rows in seq)
    t is the second current sequence index (corresponding to seq[k] )
 */
-int cp_class_change( ghmm_cmodel *smo, double* seq, int k, int t) {
+int cp_class_change(ghmm_cmodel *smo, const double* seq, int k, int t) {
   int res;
   
   if((t%2) == 0){
@@ -71,7 +71,7 @@ int cp_class_change( ghmm_cmodel *smo, double* seq, int k, int t) {
    setSwitchingFunction assigns cp_class_change as switching function in ghmm_dmodel smo.
    Needs to be modified for user defined C switching function.
 */
-void setSwitchingFunction( ghmm_cmodel *smd ) {
+void setSwitchingFunction(ghmm_cmodel *smd) {
   smd->class_change->get_class = cp_class_change;
 }
 
@@ -79,7 +79,7 @@ void setSwitchingFunction( ghmm_cmodel *smd ) {
    Arguments ( which are analogue to cp_class_change (s.a.)) are parsed into Python data structures
    before the call-back.
 */
-int python_class_change( ghmm_cmodel* smo, double *seq, int k, int t ){
+int python_class_change( ghmm_cmodel* smo, const double *seq, int k, int t ){
    char* ModuleName = smo->class_change->python_module;
    char* FunctionName = smo->class_change->python_function;
    int class,i;
@@ -195,7 +195,7 @@ static PyObject *pyCallback = NULL;
      t:   current time step (e.q seq[t] is the current observation)
    
 */
-int executePythonCallback(ghmm_cmodel* smo, double *seq, int k, int t){
+int executePythonCallback(ghmm_cmodel* smo, const double *seq, int k, int t){
    int class,i;
 
    /*printf("k=%d, t=%d\n",k,t); */
