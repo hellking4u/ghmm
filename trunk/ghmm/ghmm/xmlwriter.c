@@ -71,7 +71,7 @@
 
 
 /* ========================================================================= */
-static unsigned char * replaceXMLEntity(unsigned char* str) {
+static char *replaceXMLEntity(char *str) {
 #define CUR_PROC "replaceXMLEntity"
   int i, written = 0;
   int len = strlen(str);
@@ -747,7 +747,7 @@ static int writeState(xmlTextWriterPtr writer, ghmm_xmlfile* f, int moNo, int sN
 
   int rc;
   double w_pi;
-  unsigned char * w_desc=NULL;
+  char *w_desc=NULL;
 
   /* start state */
   if (0 > xmlTextWriterStartElement(writer, BAD_CAST "state")) {
@@ -938,7 +938,7 @@ static int writeHMM(xmlTextWriterPtr writer, ghmm_xmlfile* f, int number) {
   int rc=0, i, N;
   int w_cos;
   double w_prior;
-  unsigned char * w_name;
+  char *w_name;
   char * w_type;
 
   /* start HMM */
