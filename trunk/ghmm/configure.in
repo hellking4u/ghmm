@@ -229,61 +229,6 @@ CFLAGS="$CFLAGS $LIBXML2_CFLAGS"
 dnl final configuration
 SUBDIRS="ghmm tools tests doc"
 
-dnl optional c++ use
-AC_ARG_ENABLE(ghmmXX,
-              AC_HELP_STRING([--enable-ghmmXX],
-                             [enable unsupported C++ wrapper ghmm++ [[default=no]]]),
-              [ if  test "x$enable_ghmmXX" != "xno" ; then
-                  dnl load CXXFLAGS from cache
-                  if test -z "$CXXFLAGS"; then
-                    AC_CACHE_CHECK(for CXXFLAGS, ac_cv_cxxflags,[ac_cv_cxxflags="-O2"]);
-                    CXXFLAGS="$ac_cv_cxxflags"
-                  else
-                    ac_cv_cxxflags="$CXXFLAGS"; 
-                  fi
-
-                  dnl activate C++ language
-                  AC_PROG_CPP
-                  AC_PROG_CXX
-                  AC_PROG_CXXCPP 
-                  AC_LANG_CPLUSPLUS
-                  AC_CXX_HAVE_STL
-                  AC_CXX_NAMESPACES
-                  AC_CHECK_HEADERS(cstdio cstdlib cstring cerrno cmath cstdarg)
-
-                  AC_LANG_CPLUSPLUS
-
-                  XMLIO_CONFIG=""
-                  AC_ARG_WITH(xmlio,
-                    [  --with-xmlio=DIR        with xmlio library available at the given prefix],
-                    [ if test "x$with_xmlio" != "xno" ; then
-                        AC_PATH_PROG(XMLIO_CONFIG,xmlio-config,,"$with_xmlio/bin:$PATH")
-                      fi
-                    ],
-                    [
-                      AC_PATH_PROG(XMLIO_CONFIG,xmlio-config)
-                    ]
-                  )
-                  if test -z "$XMLIO_CONFIG" ; then
-                    AC_MSG_ERROR("for ghmm++ support xmlio is needed")
-                  else
-                    XMLIO_PREFIX=`$XMLIO_CONFIG --prefix`
-                    XMLIO_INCLUDES=`$XMLIO_CONFIG --cppflags`
-                    XMLIO_LIBS=`$XMLIO_CONFIG --libs`
-                    AC_SUBST(XMLIO_PREFIX)
-                    AC_SUBST(XMLIO_INCLUDES)
-                    AC_SUBST(XMLIO_LIBS)
-                  fi
-
-                  if test "$ac_cv_cxx_have_stl" = yes && test -n "$XMLIO_CONFIG" ; then
-                    SUBDIRS="$SUBDIRS ghmm++"
-                    AC_OUTPUT(ghmm++/Makefile \
-	                      ghmm++/examples/Makefile)
-                  fi
-                fi
-              ]
-)
-
 dnl python wrapper can be switched on or off
 AC_ARG_WITH(python,
             [
@@ -325,9 +270,4 @@ AC_OUTPUT(Makefile \
           doc/docu.dxx \
           tools/ghmm-config \
           ghmmwrapper/Makefile \
-          HMMEd/Makefile \
-          VisualC/Makefile \
-          VisualC/coin_toss_test/Makefile \
-          VisualC/coin_toss_test_pp/Makefile \
-          VisualC/ghmm/Makefile \
-          VisualC/ghmmpp/Makefile)
+          HMMEd/Makefile)
