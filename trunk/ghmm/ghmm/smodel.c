@@ -1076,8 +1076,10 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
      this needs to be called before ghmm_c_get_random_var */
   if (smo->dim > 1) {
     for (i = 0; i < smo->N; i++) {
-      ighmm_cholesky_decomposition(smo->s[i].e[0].sigmacd, smo->dim,
-                                   smo->s[i].e[0].variance.mat);
+      for (m=0; m<smo->s[i]->M; m++) {
+        ighmm_cholesky_decomposition(smo->s[i].e[m].sigmacd, smo->dim,
+                                     smo->s[i].e[m].variance.mat);
+      }
     }
   }
 
