@@ -67,12 +67,12 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         if self.sumindi==0:
             addMenu.add_radiobutton(label="Sum-Fkt", command=self.add_sum)
 
-        addMenu.add_radiobutton(label="Box-Fkt", command=self.boxadd)
+        addMenu.add_radiobutton(label="Uniform", command=self.boxadd)
         #addMenu.add_radiobutton(label="Exp-Fkt", command=self.expadd)
         #addMenu.add_radiobutton(label="NegExp-Fkt", command=self.oexpadd)
         addMenu.add_radiobutton(label="Gaussian", command=self.gaussadd)
-        addMenu.add_radiobutton(label="GaussianL", command=self.gaussladd)
-        addMenu.add_radiobutton(label="GaussianR", command=self.gaussradd)
+        addMenu.add_radiobutton(label="Gaussian left tail", command=self.gaussladd)
+        addMenu.add_radiobutton(label="Gaussian right tail", command=self.gaussradd)
         for i in xrange(len(self.plot_list)):
             delMenu.add_radiobutton(label=str(i+1), background = self.plot_list[i].color, command = self.make_del_function(i))
         if self.sumindi==1:
@@ -151,7 +151,7 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.top=Tkinter.Toplevel(self.root)
         label=Tkinter.Frame(self.top)
         
-        Tkinter.Label(label, justify=CENTER, text="Normal density (truncated left):\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x<=tail\n else f(x)=0").grid(row=0, sticky=E)  
+        Tkinter.Label(label, justify=CENTER, text="Normal density (left tail):\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x<=tail\n else f(x)=0").grid(row=0, sticky=E)  
         Tkinter.Label(label, text="mu=").grid(row=1, sticky=E)
         Tkinter.Label(label, text="sigma=").grid(row=2, sticky=E)
         Tkinter.Label(label, text="tail=").grid(row=3, sticky=E)
@@ -181,7 +181,7 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
     def gaussradd(self):
         self.top=Tkinter.Toplevel(self.root)
         label=Tkinter.Frame(self.top)
-        Tkinter.Label(label, justify=CENTER, text="Normal density (truncated right):\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x>=tail\n else f(x)=0").grid(row=0, sticky=E)  
+        Tkinter.Label(label, justify=CENTER, text="Normal density (right tail):\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x>=tail\n else f(x)=0").grid(row=0, sticky=E)  
         Tkinter.Label(label, text="mu=").grid(row=1, sticky=E)
         Tkinter.Label(label, text="sigma=").grid(row=2, sticky=E)
         Tkinter.Label(label, text="tail=").grid(row=3, sticky=E)
