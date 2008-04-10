@@ -441,7 +441,7 @@ class ContinuousEmission(Emission):
     def set(self, value):
         raise
 
-    def edit(self, master, stateId):
+    def edit(self, master, title):
         if len(self.plotList) == 0:
             self.plotList.append(NormalDensity(mu=0,sigma=1,color="LightGreen"))
 
@@ -450,11 +450,11 @@ class ContinuousEmission(Emission):
         d = HMMEditor.ContinuousEmissionEditor(top, tmp)
         d.pack(expand=1,fill=Tkinter.BOTH)
         top.withdraw()
-        top.title( ("State %d emissions" % stateId))        
+        top.title(title)
         top.update_idletasks()
         top.deiconify()
         top.wait_window(top)
-        
+
         if d.success():
             self.plotList = d.plot_list
             self.weights  = [ d.dict[str(i)] for i in xrange(1,len(self.plotList)+1)]
@@ -1095,7 +1095,7 @@ class ObjectHMM(ObjectGraph):
     """
     """
 
-    def __init__(self, stateClass, transitionClass, emissionClass=Emission(), alphabet=None, etype=0):
+    def __init__(self, stateClass, transitionClass, emissionClass=Emission, alphabet=None, etype=0):
         ObjectGraph.__init__(self, stateClass, transitionClass)
         self.simple    = 0
         self.euclidian = 0
