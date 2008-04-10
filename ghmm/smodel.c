@@ -1047,7 +1047,7 @@ ghmm_cseq *ghmm_cmodel_generate_sequences (ghmm_cmodel * smo, int seed,
   }
 
   /* set dimension of the sequence to match dimension of the model (multivariate) */
-  sq->D = smo->dim;
+  sq->dim = smo->dim;
 
   /* A specific length of the sequences isn't given. As a model should have
      an end state, the konstant MAX_SEQ_LEN is used. */
