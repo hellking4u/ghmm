@@ -2171,10 +2171,16 @@ class HMM(object):
         if not isinstance(emissionSequence,EmissionSequence):
             raise TypeError("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
+        seqdim = 1
+        if emissionSequence.emissionDomain == Float():
+            seqdim = emissionSequence.cseq.dim
+            if seqdim < 1:
+                seqdim = 1
+
         t = len(emissionSequence)
         s = len(stateSequence)
 
-        if t != s and not self.hasFlags(kSilentStates):
+        if t/seqdim != s and not self.hasFlags(kSilentStates):
             raise IndexError("sequence and state sequence have different lengths " +
                              "but the model has no silent states.")
 

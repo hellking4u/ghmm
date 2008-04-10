@@ -123,7 +123,7 @@ extern "C" {
   /** sum of sequence weights */
     double total_w;
   /** total number of dimensions */
-    int D;
+    int dim;
 
   /** flags (internal) */
     unsigned int flags;
