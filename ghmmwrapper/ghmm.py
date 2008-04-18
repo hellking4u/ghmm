@@ -912,7 +912,7 @@ class SequenceSet(object):
                 else:
                     tmp = self.seq_read(sequenceSetInput)
                     if len(tmp) > 0:
-                        self.cseq = tmp[0]
+                        self.cseq = ghmmwrapper.ghmm_cseq(tmp[0])
                     else:
                         raise ParseFileError('File ' + str(sequenceSetInput) + ' not valid.')
 
