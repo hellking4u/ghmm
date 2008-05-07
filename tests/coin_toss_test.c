@@ -17,7 +17,6 @@
 #include <stdlib.h>
 
 #include <ghmm/matrix.h>
-#include <ghmm/vector.h>
 #include <ghmm/rng.h>
 #include <ghmm/sequence.h>
 #include <ghmm/model.h>
