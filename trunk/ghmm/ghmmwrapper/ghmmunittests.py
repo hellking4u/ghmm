@@ -1666,7 +1666,7 @@ class MultivariateMixtureHMMTests(unittest.TestCase):
         self.assertEqual(round(p,12),round(7.5129999999999992e-09,12))
         seq = self.CMMmodel.sampleSingle(5, seed=3586662)
         lp = self.CMMmodel.joined(seq, [0,2,1,2,0])
-        self.assertAlmostEqual(lp, -116.3323742745624)
+        self.assertAlmostEqual(lp, -115.70197178468406)
 
     def testbaumwelch(self):
         seq = self.CMMmodel.sample(100,100,seed=3586662)
