@@ -149,23 +149,29 @@ static char * doubleArrayToCSV(double * array, int size) {
 #define CUR_PROC "doubleArrayToCSV"
 
   int i, pos=0;
-  char * csv;
-  int maxlength = (10+2)*size;
+  char *csv=NULL;
+  int singlelength = (2 + /* comma and space */
+                      8 + /* 8 signifcant digits */
+                      1 + /* sign */
+                      5 + /* 'E' and signed mantissa */
+                      3);   /* safety */
+  int maxlength = size * singlelength;
 
   ARRAY_MALLOC(csv, maxlength);
 
-  for (i=0; i<size-1 && pos<maxlength-10; i++) {
-    pos += sprintf(csv+pos, "%.8f, ", array[i]);
+  for (i=0; i < size-1 && pos + singlelength < maxlength; i++) {
+    pos += sprintf(csv+pos, "%.8g, ", array[i]);
   }
-  if (i<size-1) {
+  if (i < size-1 || pos + singlelength > maxlength) {
     GHMM_LOG(LERROR, "writing CSV failed");
     goto STOP;
   } else {
-    pos += sprintf(csv+pos, "%.8f", array[i]);
+    pos += sprintf(csv+pos, "%.8g", array[i]);
   }
   /*printf("%d bytes of %d written\n", pos, maxlength);*/
   return csv;
 STOP:
+  free(csv);
   return NULL;
 #undef  CUR_PROC
 }
