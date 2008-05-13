@@ -124,6 +124,12 @@ AC_CHECK_LIB(m, pow)
 dnl AC_CHECK_FUNCS(tmpnam mkstemp)
 dnl AC_CHECK_FUNCS(gettimeofday)
 
+dnl use internal Mersenne Twister as default RNG
+GHMM_RNG_BSD=0
+GHMM_RNG_GSL=0
+GHMM_RNG_MERSENNE_TWISTER=0
+
+
 dnl check GSL functions and use it instead of ghmm interpolation algorithms
 AC_ARG_ENABLE(gsl,
   AC_HELP_STRING([--enable-gsl], [enable gsl library [[default=no]]]),
@@ -170,6 +176,9 @@ AC_ARG_ENABLE(gsl,
         AC_DEFINE(GSL_HISTOGRAM_SET_RANGES_UNIFORM,1,[gsl_histogram_set_ranges_uniform is defined]),
         AC_MSG_RESULT(no)
       )
+
+    GHMM_RNG_GSL=1
+    AC_MSG_NOTICE(using GSL random number generator)
     fi
   ],
   [
@@ -178,36 +187,45 @@ AC_ARG_ENABLE(gsl,
   ]
 )
 
-dnl use internal Mersenne Twister as default RNG
-GHMM_RNG_BSD=0
-GHMM_RNG_GSL=0
-GHMM_RNG_MERSENNE_TWISTER=1
-
 dnl select random number generator
 AC_ARG_WITH(rng,
             [  --with-rng=XXX          selects random number generator ("mt" (default), "bsd" or "gsl")],
-            [ if test "x$with_rng" = "xbsd"; then
-                GHMM_RNG_BSD=1
-                GHMM_RNG_MERSENNE_TWISTER=0
-                AC_MSG_NOTICE(using BSD random number generator)
-                AC_CHECK_LIB(bsd, random)
-              else
-                if test "x$with_rng" = "xgsl"; then
-                  if test -n "$enable_gsl" && test "x$enable_gsl" != "xno"; then
-                    GHMM_RNG_GSL=1
-                    GHMM_RNG_MERSENNE_TWISTER=0
-                    AC_MSG_NOTICE(using GSL random number generator)
-                  else
-                    AC_MSG_ERROR(the gsl random number generator is only usable then gsl is enabled)
+            [
+              case "$with_rng" in
+                "bsd")
+                  if test $GHMM_RNG_GSL -ne 0; then
+                    AC_MSG_ERROR(the random number generator not selectable with gsl enabled)
                   fi
-                else
-                  if test "x$with_rng" = "xmt"; then
-                    AC_MSG_NOTICE(using internal Mersenne-Twister random number generator)
-                  else
-                    AC_MSG_ERROR(not a valid random number generator)
+
+                  GHMM_RNG_BSD=1
+                  AC_MSG_NOTICE(using BSD random number generator)
+                  AC_CHECK_LIB(bsd, random)
+                ;;
+                "mt")
+                  if test $GHMM_RNG_GSL -ne 0; then
+                    AC_MSG_ERROR(the random number generator not selectable with gsl enabled)
                   fi
-                fi
-              fi])
+
+                  GHMM_RNG_MERSENNE_TWISTER=1
+                  AC_MSG_NOTICE(using internal Mersenne-Twister random number generator)
+                ;;
+                "gsl")
+                  if test $GHMM_RNG_GSL -ne 1; then
+                    AC_MSG_ERROR(gsl random number generator only useable with --enable-gsl)
+                  fi
+                ;;
+                *)
+                  AC_MSG_ERROR(not a valid random number generator)
+                ;;
+
+              esac],
+            [
+              if test $GHMM_RNG_GSL -eq 0; then
+                GHMM_RNG_MERSENNE_TWISTER=1
+                AC_MSG_NOTICE(using internal Mersenne-Twister random number generator)
+              fi
+            ]
+)
 
 
 dnl libxml2 checks
