@@ -478,19 +478,19 @@ double ighmm_rand_std_normal (int seed)
 
 
 /*============================================================================*/
-double ighmm_rand_normal (double mue, double u, int seed)
+double ighmm_rand_normal(double mue, double u, int seed)
 {
 # define CUR_PROC "ighmm_rand_normal"
   if (seed != 0) {
-    GHMM_RNG_SET (RNG, seed);
+    GHMM_RNG_SET(RNG, seed);
   }
 
 #ifdef DO_WITH_GSL
-    return (gsl_ran_gaussian (RNG, sqrt (u)) + mue);
+    return gsl_ran_gaussian(RNG, sqrt (u)) + mue;
 #else
     double x;
-    x = sqrt (u) * ighmm_rand_std_normal (seed) + mue;
-    return (x);
+    x = sqrt(u) * ighmm_rand_std_normal(seed) + mue;
+    return x;
 #endif
 
 # undef CUR_PROC
