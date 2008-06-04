@@ -248,7 +248,7 @@ class DiscreteHMMBackground:
 
             e = self.EmissionClass(alphabet)
             e.order   = bp.getOrder(i)
-            e.weights = ghmmhelper.double_array2list(bp.getWeights(i), M**(e.order+1))
+            e.weights = ghmmwrapper.double_array2list(bp.getWeights(i), M**(e.order+1))
 
             name = bp.getName(i)
 
@@ -386,10 +386,10 @@ class DiscreteEmission(Emission):
         self.weights = values
 
     def writeParameters(self, cstate):
-        cstate.b = ghmmhelper.list2double_array(self.weights)
+        cstate.b = ghmmwrapper.list2double_array(self.weights)
 
     def ReadCState(self, cstate, M):
-        self.weights = ghmmhelper.double_array2list(cstate.b, M)
+        self.weights = ghmmwrapper.double_array2list(cstate.b, M)
 
 
 class DiscreteHigherOrderEmission(DiscreteEmission):
@@ -426,7 +426,7 @@ class DiscreteHigherOrderEmission(DiscreteEmission):
 
     def ReadCState(self, cstate, M):
         self.order   = ValidatingInt(cstate.order)
-        self.weights = ghmmhelper.double_array2list(cstate.b, M**(self.order+1))
+        self.weights = ghmmwrapper.double_array2list(cstate.b, M**(self.order+1))
 
 
 class ContinuousEmission(Emission):
@@ -473,13 +473,13 @@ class ContinuousEmission(Emission):
             ghmmwrapper.density_array_setitem(density_array, i, density)
         cstate.density = density_array
 
-        cstate.mue = ghmmhelper.list2double_array(muL)
-        cstate.u   = ghmmhelper.list2double_array(uL)
-        cstate.a   = ghmmhelper.list2double_array(aL)
-        cstate.c   = ghmmhelper.list2double_array(self.weights)
+        cstate.mue = ghmmwrapper.list2double_array(muL)
+        cstate.u   = ghmmwrapper.list2double_array(uL)
+        cstate.a   = ghmmwrapper.list2double_array(aL)
+        cstate.c   = ghmmwrapper.list2double_array(self.weights)
 
         # editor doesn't supports fixed mixture components
-        cstate.mixture_fix = ghmmhelper.list2int_array([0] * len(self.plotList))
+        cstate.mixture_fix = ghmmwrapper.list2int_array([0] * len(self.plotList))
 
     def ReadCState(self, cstate, M):
         M = cstate.M
@@ -726,13 +726,13 @@ class State(VertexObject):
     def WriteTransitions(self, cstate):
         inID = [edge.tail.num for edge in self.inEdges]
         inA  = [edge.GetEdgeWeight(0) for edge in self.inEdges]
-        cstate.in_id = ghmmhelper.list2int_array(inID)
-        cstate.in_a  = ghmmhelper.list2double_array(inA)
+        cstate.in_id = ghmmwrapper.list2int_array(inID)
+        cstate.in_a  = ghmmwrapper.list2double_array(inA)
 
         outID = [edge.head.num for edge in self.outEdges]
         outA = [edge.GetEdgeWeight(0) for edge in self.outEdges]
-        cstate.out_id = ghmmhelper.list2int_array(outID)
-        cstate.out_a  = ghmmhelper.list2double_array(outA)
+        cstate.out_id = ghmmwrapper.list2int_array(outID)
+        cstate.out_a  = ghmmwrapper.list2double_array(outA)
 
     def ReadCState(self, cmodel, cstate, i):
         self.initial  = ValidatingFloat(cstate.pi)
@@ -750,13 +750,13 @@ class ContinuousState(State):
     def WriteTransitions(self, cstate):
         inID = [edge.tail.id for edge in self.inEdges]
         inA  = [[edge.GetEdgeWeight(0) for edge in self.inEdges]]
-        cstate.in_id = ghmmhelper.list2int_array(inID)
+        cstate.in_id = ghmmwrapper.list2int_array(inID)
         (mat, lens)  = ghmmhelper.list2double_matrix(inA)
         cstate.in_a  = mat
         
         outID = [edge.head.id for edge in self.outEdges]
         outA  = [[edge.GetEdgeWeight(0) for edge in self.outEdges]]
-        cstate.out_id = ghmmhelper.list2int_array(outID)
+        cstate.out_id = ghmmwrapper.list2int_array(outID)
         (mat, lens)   = ghmmhelper.list2double_matrix(outA)
         cstate.out_a  = mat
 
@@ -1087,7 +1087,7 @@ class SwitchedTransition(Transition):
             self.weight[i] = value
 
     def ReadCTransition(self, state, cos, i):
-        self.weight = ghmmhelper.double_array2list(state.out_a[i], cos)
+        self.weight = ghmmwrapper.double_array2list(state.out_a[i], cos)
 
 
 
@@ -1480,7 +1480,7 @@ class ObjectHMM(ObjectGraph):
 
         # fill silent array
         if self.modelType & ghmmwrapper.kSilentStates:
-            cmodel.silent = ghmmhelper.list2int_array([self.vertices[id].silent for id in sortedIDs])
+            cmodel.silent = ghmmwrapper.list2int_array([self.vertices[id].silent for id in sortedIDs])
 
         # fill tied to array
         if self.modelType & ghmmwrapper.kTiedEmissions:
@@ -1501,27 +1501,27 @@ class ObjectHMM(ObjectGraph):
                 first = temp[0]
                 for index in temp:
                     tied_list[index] = first
-            cmodel.tied_to = ghmmhelper.list2int_array(tied_list)
+            cmodel.tied_to = ghmmwrapper.list2int_array(tied_list)
 
         # fill background id arrary
         if self.modelType & ghmmwrapper.kBackgroundDistributions:
             N = self.backgroundDistributions.size()
             M = self.alphabet.size()
-            orders = ghmmhelper.list2int_array(self.backgroundDistributions.getOrders())
+            orders = ghmmwrapper.list2int_array(self.backgroundDistributions.getOrders())
             (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
             cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
             for i,name in enumerate(self.backgroundDistributions.getNames()):
                 cmodel.bp.setName(i, name)
-            cmodel.background_id = ghmmhelper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
+            cmodel.background_id = ghmmwrapper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
         # fill higher order array
         if self.modelType & ghmmwrapper.kHigherOrderEmissions:
-            cmodel.order = ghmmhelper.list2int_array([self.vertices[id].emission.order for id in sortedIDs])
+            cmodel.order = ghmmwrapper.list2int_array([self.vertices[id].emission.order for id in sortedIDs])
 
         # fil label id array
         if self.modelType & ghmmwrapper.kLabeledStates:
             cmodel.label_alphabet = self.label_alphabet.WriteCAlphabet()
-            cmodel.label = ghmmhelper.list2int_array([self.vertices[id].label for id in sortedIDs])
+            cmodel.label = ghmmwrapper.list2int_array([self.vertices[id].label for id in sortedIDs])
 
         cmodel.model_type = self.modelType
 
