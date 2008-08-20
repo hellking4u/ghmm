@@ -35,6 +35,11 @@
 *******************************************************************************/
 #ifndef GHMM_PMODEL_H
 #define GHMM_PMODEL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "model.h" 
 #include "psequence.h"
 
@@ -222,4 +227,9 @@ int ghmm_dpmodel_default_transition_class(ghmm_dpmodel * mo, ghmm_dpseq * X, ghm
 
 void ghmm_dpmodel_set_to_default_transition_class(ghmm_dpmodel_class_change_context * pccc);
 
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* GHMM_PMODEL_H */

@@ -1,5 +1,11 @@
 #ifndef GHMM_PSEQUENCE_H
 #define GHMM_PSEQUENCE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef struct ghmm_dpseq {
   /** for each alphabet in model->number_of_alphabets there is one int seq **/
   int **seq;
@@ -30,4 +36,10 @@ ghmm_dpseq* ghmm_dpseq_slice(ghmm_dpseq *seq_pointer, int start, int stop);
 int ghmm_dpseq_get_char(ghmm_dpseq *seq_pointer, int alphabet, int index);
 
 double ghmm_dpseq_get_double(ghmm_dpseq *seq_pointer, int seq_index, int index);
+
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* GHMM_PSEQUENCE_H */

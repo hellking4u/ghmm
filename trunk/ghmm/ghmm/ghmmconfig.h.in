@@ -37,6 +37,10 @@
 #ifndef GHMMCONFIG_H
 #define GHMMCONFIG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if @GHMM_OBSOLETE@                 /* GHMM_OBSOLETE */
 #define GHMM_OBSOLETE
 #endif
@@ -58,6 +62,10 @@
 
 #if @GHMM_RNG_GSL@                  /* GHMM_RNG_GSL */
 #define GHMM_RNG_GSL
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* GHMMCONFIG_H*/

@@ -3,6 +3,10 @@
 #ifndef GHMM_OBSOLETE_H
 #define GHMM_OBSOLETE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "scanner.h"
 #include "model.h"
 
@@ -388,6 +392,9 @@
   ghmm_cseq *ghmm_cseq_read_alloc (scanner_t * s);
 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* GHMM_OBSOLETE_H */
 
