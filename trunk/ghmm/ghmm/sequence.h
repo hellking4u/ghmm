@@ -41,11 +41,9 @@
 extern "C" {
 #endif
 
-#include "ghmmconfig.h"
+#include <stdio.h>
 
-#ifndef GHMM_OBSOLETE
-#warning "GHMM_OBSOLETE is not defined!"
-#endif
+#include "ghmmconfig.h"
 
 /**@name sequences  (double and int) */
 /*@{ (Doc++-Group: sequence) */
