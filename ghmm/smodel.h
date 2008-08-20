@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+
 #include "ghmm.h"
 #include "scanner.h"
 

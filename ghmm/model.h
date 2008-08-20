@@ -37,11 +37,13 @@
 #ifndef GHMM_MODEL_H
 #define GHMM_MODEL_H
 
-#include "ghmm.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdio.h>
+
+#include "ghmm.h"
 
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
