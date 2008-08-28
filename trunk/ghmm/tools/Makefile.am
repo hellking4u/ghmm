@@ -11,7 +11,9 @@ MAINTAINERCLEANFILES = Makefile.in
 
 BUILT_SOURCES = 
 INCLUDES = -I$(top_srcdir)
-bin_PROGRAMS = probdist cluster scluster smix_hmm smo2xml
+
+bin_PROGRAMS = probdist cluster scluster smix_hmm $(OBSOLETE_TOOLS)
+EXTRA_PROGRAMS = smo2xml
 
 probdist_SORUCES = probdist.c
 cluster_SOURCES  = cluster.c

@@ -72,6 +72,7 @@ AC_PATH_PROG(PKGCONFIG,pkg-config)
 AC_PATH_PROG(EXPECT_FOR_DEJAGNU,expect)
 AC_PATH_PROG(RUNTEST_FOR_DEJAGNU,runtest)
 
+OBSOLETE_TOOLS='smo2xml'
 dnl obsolete features can be switched on or off
 AC_ARG_ENABLE(obsolete,
               AC_HELP_STRING([--disable-obsolete],
@@ -81,11 +82,13 @@ AC_ARG_ENABLE(obsolete,
                   AC_MSG_NOTICE(obsolete features enabled)
               else
                   GHMM_OBSOLETE=0
+                  OBSOLETE_TOOLS=''
                   AC_MSG_NOTICE(obsolete features disabled)
               fi,
               GHMM_OBSOLETE=1
               AC_MSG_NOTICE(obsolete features enabled)
 )
+
 
 dnl unsupported features can be switched on or off
 AC_ARG_ENABLE(unsupported,
@@ -270,6 +273,7 @@ AC_ARG_WITH(python,
 dnl finished
 AC_SUBST(SUBDIRS)
 AC_SUBST(GHMM_OBSOLETE)
+AC_SUBST(OBSOLETE_TOOLS)
 AC_SUBST(GHMM_UNSUPPORTED)
 AC_SUBST(GHMM_RNG_BSD)
 AC_SUBST(GHMM_RNG_GSL)
