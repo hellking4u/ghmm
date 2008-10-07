@@ -535,9 +535,11 @@ class UniformDistribution(ContinuousDistribution):
         self.max = None
         self.min = None
 
-    def set(self, (max, min)):
-        self.max = max
-        self.min = min
+    def set(self, values):
+        """ values is a tuple of maximum, minimum """
+        maximum, minimum = values
+        self.max = maximum
+        self.min = minimum
 
     def get(self):
         return (self.max, self.min)
@@ -549,7 +551,9 @@ class GaussianDistribution(ContinuousDistribution):
         self.mu = None
         self.sigma = None
 
-    def set(self, (mu, sigma)):
+    def set(self, values):
+        """ values is a tuple of mu, sigma, trunc """
+        mu, sigma = values
         self.mu = mu
         self.sigma = sigma
 
@@ -562,7 +566,9 @@ class TruncGaussianDistribution(GaussianDistribution):
         self.GaussianDistribution(self,domain)
         self.trunc = None
 
-    def set(self, (mu, sigma,trunc)):
+    def set(self, values):
+        """ values is a tuple of mu, sigma, trunc """
+        mu, sigma, trunc = values
         self.mu = mu
         self.sigma = sigma
         self.trunc = trunc
@@ -579,7 +585,9 @@ class GaussianMixtureDistribution(ContinuousDistribution):
         self.sigma = []
         self.weight = []
 
-    def set(self, index, (mu, sigma,w)):
+    def set(self, index, values):
+        """ values is a tuple of mu, sigma, w """
+        mu, sigma, w = values
         pass
 
     def get(self):
@@ -3286,8 +3294,12 @@ class GaussianEmissionHMM(HMM):
         sigma = state.getStdDev(0)
         return (mu, sigma)
 
-    def setEmission(self, i, (mu, sigma)):
-        """ Set the emission distributionParameters for state i """
+    def setEmission(self, i, values):
+        """ Set the emission distributionParameters for state i
+
+            values is a tuple of mu, sigma
+        """
+        mu, sigma = values
 
         # ensure proper indices
         if not 0 <= i < self.N:
@@ -3657,8 +3669,12 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         weigth = state.getWeight(comp)
         return (mu, sigma, weigth)
 
-    def setEmission(self, i, comp,(mu, sigma, weight)):
-        """ Set the emission distributionParameters for component 'comp' in state 'i'. """
+    def setEmission(self, i, comp, values):
+        """ Set the emission distributionParameters for component 'comp' in state 'i'.
+
+            values is a tuple of mu, sigma, weight
+        """
+        mu, sigma, weight = values
 
         # ensure proper indices
         if not 0 <= i < self.N:
@@ -3839,10 +3855,12 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         elif emission.type == ghmmwrapper.uniform:
             return (emission.type, emission.max, emission.min, state.getWeight(comp))
 
-    def setEmission(self, i, comp, distType, (mu, sigma, a, weight)):
+    def setEmission(self, i, comp, distType, values):
         """ Set the emission distributionParameters for component 'comp' in state 'i'.
             distType is the distribution type.
             the other parameters are interpreted depending on distType.
+
+            values is a tuple of mu, sigma, a, weight
 
             mu     - mean for normal, normal_approx, normal_right, normal_left
             mu     - max for uniform
@@ -3851,6 +3869,9 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             a      - cut-off normal_right and normal_left
             weight - always component weight
         """
+
+        mu, sigma, a, weight = values
+
         # ensure proper indices
         if not 0 <= i < self.N:
             raise IndexError("Index " + str(i) + " out of bounds.")
@@ -4038,8 +4059,13 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         sigma = ghmmwrapper.double_array2list(emission.variance.mat,emission.dimension*emission.dimension)
         return (mu, sigma)
 
-    def setEmission(self, i, m, (mu, sigma)):
-        """ Set the emission distributionParameters for mixture component m in state i """
+    def setEmission(self, i, m, values):
+        """ Set the emission distributionParameters for mixture component m in state i
+
+            values is a tuple of mu, sigma
+        """
+
+        mu, sigma = values
 
         # ensure proper indices
         assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
