@@ -6,11 +6,10 @@
 
 SUBDIRS = .
 
-PYTHON=python
-
 PYTHON_FILES = HMMEd \
                HMMEditor.py \
-               ObjectHMM.py
+               ObjectHMM.py \
+               EditingContext.py
 
 all: setup.py ${PYTHON_FILES}
 	$(PYTHON) setup.py build
@@ -23,5 +22,3 @@ install: setup.py all
 
 distclean: setup.py
 	$(PYTHON) setup.py clean --all
-
-.PHONY: all clean install distclean
