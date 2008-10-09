@@ -2204,7 +2204,6 @@ class HMM(object):
         ghmmwrapper.free(states)
         return logp
 
-    # XXX Implement in subclasses
     # The functions for model training are defined in the derived classes.
     def baumWelch(self, trainingSequences, nrSteps=ghmmwrapper.MAX_ITER_BW, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         raise NotImplementedError("to be defined in derived classes")
