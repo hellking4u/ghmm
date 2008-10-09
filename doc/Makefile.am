@@ -87,5 +87,3 @@ dist-hook:
 	  fi; \
 	done ; \
 	rm -f $$TMPFILE
-
-

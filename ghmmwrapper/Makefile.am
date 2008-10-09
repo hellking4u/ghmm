@@ -27,7 +27,7 @@ clean: setup.py
 install: setup.py all
 	$(PYTHON) setup.py install --prefix=${prefix}
 
-test: ghmmunittests.py all
+check: ghmmunittests.py all
 	PYTHONPATH=./build/lib.linux-i686-$(PYTHONVER)/:$(PYTHONPATH) LD_LIBRARY_PATH=../ghmm/.libs:$(LD_LIBRARY_PATH) $(PYTHON) ghmmunittests.py
 
 coverage: ghmmunittests.py all
@@ -39,4 +39,4 @@ distclean: setup.py
 	$(PYTHON) setup.py clean --all
 	rm -f message.txt
 
-.PHONY: all clean install distclean test coverage
+.PHONY: coverage
