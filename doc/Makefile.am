@@ -56,7 +56,7 @@ DOCXX_HTML_OPTS  = #-H
 
 #for make (dist)clean
 CLEANFILES = docTEX/$(APP).* -r docHTML
-EXTRA_DIST = docTEX/docxx.sty
+EXTRA_DIST = docTEX/docxx.sty xml_example.xml xml_cont_example.xml
 
 $(HTML)/index.html: $(DOCXX_FILES)
 	test -z "$(DOCXX)" || $(DOCXX) $(DOCXX_OPTS) $(DOCXX_HTML_OPTS) -d $(HTML) $(DOCXX_FILES)

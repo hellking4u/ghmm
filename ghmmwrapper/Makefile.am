@@ -44,7 +44,21 @@ PYTHON_GATO_FILES = ghmm_gato/DataStructures.py \
                     ghmm_gato/__init__.py \
                     ghmm_gato/xmlutil.py
 
-EXTRA_DIST = ${SWIG_INTERFACE_FILES} ${EXTENSION_C_FILES} ${PYTHON_FILES} ${PYTHON_GATO_FILES}
+TESTDATA_FILES = testdata/discrete.xml \
+                 testdata/multexon-4.xml \
+                 testdata/d_seq.sqd \
+                 testdata/tk.hmm \
+                 testdata/multiple_hmmer.hmm \
+                 testdata/tiny.smo \
+                 testdata/xml_cont_multiple.xml \
+                 testdata/es_discrete_testwrite.seq \
+                 testdata/test10.sqd \
+                 testdata/test2.xml \
+                 testdata/model_label.xml \
+                 testdata/tiny.txt.sqd
+
+
+EXTRA_DIST = ${SWIG_INTERFACE_FILES} ${EXTENSION_C_FILES} ${PYTHON_FILES} ${PYTHON_GATO_FILES} ${TESTDATA_FILES}
 
 all: setup.py ghmm.py ${SWIG_INTERFACE_FILES}
 	$(PYTHON) setup.py build
@@ -56,7 +70,7 @@ clean: setup.py
 install: setup.py all
 	$(PYTHON) setup.py install --prefix=${prefix}
 
-check: ghmmunittests.py all
+check: ghmmunittests.py all ${TESTDATA_FILES}
 	PYTHONPATH=./build/lib.linux-i686-$(PYTHONVER)/:$(PYTHONPATH) LD_LIBRARY_PATH=../ghmm/.libs:$(LD_LIBRARY_PATH) $(PYTHON) ghmmunittests.py
 
 coverage: ghmmunittests.py all
