@@ -1767,10 +1767,10 @@ class HMMFromMatricesFactory(HMMFactory):
                     emissions = ghmmwrapper.c_emission_array_alloc(state.M)
                     weight_list = B[i][3]
 
-                    combined_B = map(None, densities[i], B[i][0], B[i][1], B[i][2])
+                    combined_map = [(first, B[i][0][n], B[i][1][n], B[i][2][n])
+                                    for n, first  in enumerate(densities[i])]
 
-                    j = 0
-                    for parameters in combined_B:
+                    for j, parameters in enumerate(combined_map):
                         emission = ghmmwrapper.c_emission_array_getRef(emissions, j)
                         emission.type = densities[i][j]
                         emission.dimension = 1
@@ -1791,7 +1791,6 @@ class HMMFromMatricesFactory(HMMFactory):
                             emission.min = parameters[2]
                         else:
                             raise TypeError("Unknown Distribution type:" + str(emission.type))
-                        j += 1
 
                     # append emissions to state
                     state.e = emissions
