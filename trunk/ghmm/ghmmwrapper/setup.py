@@ -36,24 +36,13 @@
 ################################################################################
 
 from distutils.core import setup,Extension
-
-# BUG: Including 'ghmmwrapper.i' in Extension source list causes
-# 'swig -python -o ghmmwrapper_wrap.c ghmmwrapper.i' to run.
-# We just want: swig -c -python ghmmwrapper.i. Otherwise we get doubly
-# defined symbols in link
-# NOT A BUG ANYMORE? I get only doubly defined symbols if the swig interface file
-#                    and the generated c file are in the extension list.
-#                    I think that is expected behaviour.
-#                    Tested with swig 1.3.19, 1.3.21 and 1.3.25 
    
 setup(name="ghmmwrapper",
       version="0.8",
-      description="Python Distribution Utilities",
+      description="Python wrapper for the GHMM library",
       author="GHMM authors",
       author_email="ghmm-list@lists.sourceforge.net",
       url="http://ghmm.org",
-      py_modules  = ['ghmm','ghmmhelper','ghmmwrapper','modhmmer','class_change'],
-      packages    = ['ghmm_gato'],
       ext_modules = [Extension('_ghmmwrapper',
                                ['sclass_change.c', 'pclasschange.c', 'gql.c', 'ghmmwrapper.i'],
                                include_dirs = ['..'],
@@ -64,7 +53,9 @@ setup(name="ghmmwrapper",
                                           'wrapper_dmodel.i', 'wrapper_dpmodel.i', 'wrapper_dpseq.i',
                                           'wrapper_dseq.i', 'wrapper_xmlfile.i']
                                )
-                     ]
+                     ],
+      py_modules  = ['ghmm','ghmmhelper','modhmmer','class_change','ghmmwrapper'],
+      packages    = ['ghmm_gato'],
      )
 
 # EOF: setup.py

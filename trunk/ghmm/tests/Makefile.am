@@ -5,6 +5,8 @@
 #
 # __copyright__
 
+include $(top_srcdir)/dist_hook.mak
+
 CCLD     = $(CC)   -lstdc++
 
 SUBDIRS = data
@@ -38,26 +40,3 @@ noinst_PROGRAMS = randvar_test \
 		  read_fa
 
 LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
-
-COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
-
-# creates copyright tags and copies some files
-dist-hook:
-	DEJAGNU_FILES=`(cd $(srcdir) && find ghmm.tests lib config -name \*.exp)` ;\
-	for f in $$DEJAGNU_FILES ; do \
-	  dirpart=`dirname $$f`; \
-	  test -d $(distdir)/$$dirpart || mkdir $(distdir)/$$dirpart ; \
-	  cp -p $(srcdir)/$$f $(distdir)/$$dirpart ; \
-	done; \
-	test -z "$(AWK)" && exit 0 ;\
-	TMPFILE="$(distdir)/tmp" ; \
-	for f in $(DISTFILES) $$DEJAGNU_FILES ; do \
-	  distfile=$(distdir)/$$f ; \
-	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
-	    mv $$distfile $$TMPFILE; \
-	    $(AWK) 'BEGIN {nr=0;while(getline < "$(COPYRIGHT)" ==1) copyright[nr++]=$$0;} /__copyright__ *$$/{sub("__copyright__.*","");for(i=0;i<nr;i++) print $$0 copyright[i];} //' \
-	    $$TMPFILE >$$distfile; \
-	    touch -m -a -r $$TMPFILE $$distfile; \
-	  fi; \
-	done ; \
-	rm -f $$TMPFILE
