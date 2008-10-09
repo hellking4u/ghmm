@@ -35,15 +35,51 @@
 #
 #******************************************************************************/
 
+include $(top_srcdir)/dist_hook.mak
+
 SUBDIRS = .
 MAINTAINERCLEANFILES = Makefile.in
+
+# info from http://www.cl.cam.ac.uk/texinfodoc/libtool_6.html#SEC33
+#
+#current 
+#    The most recent interface number that this library implements. 
+#revision 
+#    The implementation number of the current interface. 
+#age The difference between the newest and oldest interfaces that this 
+#    library implements. In other words, the library implements all the 
+#    interface numbers in the range from number current - age to current. 
+#
+#If two libraries have identical current and age numbers, then the dynamic 
+#linker chooses the library with the greater revision number. 
+#
+#Here are a set of rules to help you update your library version information: 
+#
+#  1. Start with version information of `0:0:0' for each libtool library. 
+#  2. Update the version information only immediately before a public release 
+#     of your software. More frequent updates are unnecessary, and only
+#     guarantee that the current interface number gets larger faster. 
+#  3. If the library source code has changed at all since the last update, 
+#     then increment revision (`c:r:a' becomes `c:r+1:a'). 
+#  4. If any interfaces have been added, removed, or changed since the last 
+#     update, increment current, and set revision to 0. 
+#  5. If any interfaces have been added since the last public release, then 
+#     increment age. 
+#  6. If any interfaces have been removed since the last public release, then 
+#     set age to 0. 
+
+LIBGHMM_VERSION_CURRENT = 1
+LIBGHMM_VERSION_REVISION = 0
+LIBGHMM_VERSION_AGE = 0
+
+EXTRA_DIST = mt19937ar.c
 
 INCLUDES  = -I$(top_srcdir)
 AM_CFLAGS = -DDTD_LOC=\"$(datadir)/ghmm/ghmm.dtd.1.0\"
 
 lib_LTLIBRARIES = libghmm.la
 
-libghmm_la_LDFLAGS = -version-info @GHMM_VERSION_CURRENT@:@GHMM_VERSION_REVISION@:@GHMM_VERSION_AGE@
+libghmm_la_LDFLAGS = -version-info ${LIBGHMM_VERSION_CURRENT}:${LIBGHMM_VERSION_REVISION}:${LIBGHMM_VERSION_AGE}
 libghmm_la_SOURCES= ghmm.h \
 		    ghmmconfig.h \
                     rng.c rng.h \
@@ -119,18 +155,4 @@ pkginclude_HEADERS = ghmm.h \
 		  obsolete.h \
 		  unsupported.h
 
-COPYRIGHT = $(top_srcdir)/COPYRIGHT.txt
 
-dist-hook:
-	test -z "$(AWK)" && exit 0 ;\
-	TMPFILE="$(distdir)/tmp"; \
-	for f in $(DISTFILES) ; do \
-	  distfile=$(distdir)/$$f ; \
-	  if grep '__copyright__ *$$' $$distfile >/dev/null ; then \
-	    mv $$distfile $$TMPFILE; \
-	    $(AWK) 'BEGIN {nr=0;while(getline < "$(COPYRIGHT)" ==1) copyright[nr++]=$$0;} /__copyright__ *$$/{sub("__copyright__.*","");for(i=0;i<nr;i++) print $$0 copyright[i];} //' \
-	    $$TMPFILE >$$distfile; \
-	    touch -m -a -r $$TMPFILE $$distfile; \
-	  fi; \
-	done ; \
-	rm -f $$TMPFILE

@@ -4,6 +4,8 @@
 #
 # __copyright__
 
+include $(top_srcdir)/dist_hook.mak
+
 SUBDIRS = .
 
 SWIG_INTERFACE_FILES = ghmmwrapper.i \
@@ -16,6 +18,33 @@ SWIG_INTERFACE_FILES = ghmmwrapper.i \
                        wrapper_dmodel.i \
                        wrapper_dpmodel.i \
                        wrapper_xmlfile.i
+
+EXTENSION_C_FILES = gql.c \
+                    pclasschange.c \
+                    pclasschange.h \
+                    sclass_change.c \
+                    sclass_change.h \
+                    sdclass_change.c \
+                    sdclass_change.h
+
+PYTHON_FILES = class_change.py \
+               ghmmhelper.py \
+               ghmm.py \
+               ghmmunittests.py \
+               mixture.py \
+               modhmmer.py \
+               setup.py
+
+PYTHON_GATO_FILES = ghmm_gato/DataStructures.py \
+                    ghmm_gato/EditObjectAttributesDialog.py \
+                    ghmm_gato/GatoGlobals.py \
+                    ghmm_gato/Graph.py \
+                    ghmm_gato/GraphUtil.py \
+                    ghmm_gato/HMMEd.py \
+                    ghmm_gato/__init__.py \
+                    ghmm_gato/xmlutil.py
+
+EXTRA_DIST = ${SWIG_INTERFACE_FILES} ${EXTENSION_C_FILES} ${PYTHON_FILES} ${PYTHON_GATO_FILES}
 
 all: setup.py ghmm.py ${SWIG_INTERFACE_FILES}
 	$(PYTHON) setup.py build
