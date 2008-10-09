@@ -767,6 +767,10 @@ class EmissionSequence(object):
         else:
             raise IndexError(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
 
+    def hasStateLabels(self):
+        """ Returns wheter the sequence is labeled or not """
+        return self.cseq.state_labels != None
+
     def getGeneratingStates(self):
         """
         Returns the state path from which the sequence was generated as a Python list.
@@ -1073,6 +1077,10 @@ class SequenceSet(object):
             return label
         else:
             raise IndexError(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
+
+    def hasStateLabels(self):
+        """ Returns wheter the sequence is labeled or not """
+        return self.cseq.state_labels != None
 
 
     def merge(self, emissionSequences): # Only allow EmissionSequence?
@@ -3996,42 +4004,6 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         return [A,B,pi,d]
 
 
-def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
-    """ XXX Document me """
-
-    if len(HMMList) != len(SeqList):
-        raise TypeError('Inputs not equally long')
-
-
-    inplen = len(HMMList)
-    if gradient not in [0, 1]:
-       raise UnknownInputType("TrainingType " + gradient + " not supported.")
-
-    for i in range(inplen):
-        if HMMList[i].emissionDomain.CDataType == "double":
-            raise TypeError('discriminative training is at the moment only implemented on discrete HMMs')
-        #initial training with Baum-Welch
-        HMMList[i].baumWelch(SeqList[i], 3, 1e-9)
-
-    HMMArray = ghmmwrapper.dmodel_ptr_array_alloc(inplen)
-    SeqArray = ghmmwrapper.dseq_ptr_array_alloc(inplen)
-
-    for i in range(inplen):
-        ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
-        ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
-
-    ghmmwrapper.ghmm_dmodel_label_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
-
-    for i in range(inplen):
-        HMMList[i].cmodel = ghmmwrapper.dmodel_ptr_array_getitem(HMMArray, i)
-        SeqList[i].cseq   = ghmmwrapper.dseq_ptr_array_getitem(SeqArray, i)
-
-    ghmmwrapper.free(HMMArray)
-    ghmmwrapper.free(SeqArray)
-
-    return HMMDiscriminativePerformance(HMMList, SeqList)
-
-
 class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
     """ HMMs with Multivariate Gaussian distribution as emissions. States can have multiple mixture components.
 
@@ -4155,11 +4127,69 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         return [A,B,pi]
 
 
-def HMMDiscriminativePerformance(HMMList, SeqList):
-    """ XXX Document me """
+def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps = 50, gradient = 0):
+    """ Trains a couple of HMMs to increase the probablistic distance
+        if the the HMMs are used as classifier.
+
+        Arguments:
+        HMMList:    List of labeled HMMs
+        SeqList:    List of labeled sequences, one for each HMM
+
+        note: this method does a initial expectation maximization training
+    """
 
     if len(HMMList) != len(SeqList):
-        raise TypeRrror('Inputs not equally long')
+        raise TypeError('Input list are not equally long')
+
+    if not isinstance(HMMList[0], StateLabelHMM):
+        raise TypeError('Input is not a StateLabelHMM')
+
+    if not SeqList[0].hasStateLabels:
+        raise TypeError('Input sequence has no labels')
+
+    inplen = len(HMMList)
+    if gradient not in [0, 1]:
+       raise UnknownInputType("TrainingType " + gradient + " not supported.")
+
+    for i in range(inplen):
+        if HMMList[i].emissionDomain.CDataType == "double":
+            raise TypeError('discriminative training is at the moment only implemented on discrete HMMs')
+        #initial training with Baum-Welch
+        HMMList[i].baumWelch(SeqList[i], 3, 1e-9)
+
+    HMMArray = ghmmwrapper.dmodel_ptr_array_alloc(inplen)
+    SeqArray = ghmmwrapper.dseq_ptr_array_alloc(inplen)
+
+    for i in range(inplen):
+        ghmmwrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
+        ghmmwrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
+
+    ghmmwrapper.ghmm_dmodel_label_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
+
+    for i in range(inplen):
+        HMMList[i].cmodel = ghmmwrapper.dmodel_ptr_array_getitem(HMMArray, i)
+        SeqList[i].cseq   = ghmmwrapper.dseq_ptr_array_getitem(SeqArray, i)
+
+    ghmmwrapper.free(HMMArray)
+    ghmmwrapper.free(SeqArray)
+
+    return HMMDiscriminativePerformance(HMMList, SeqList)
+
+
+
+def HMMDiscriminativePerformance(HMMList, SeqList):
+    """ Computes the discriminative performce of the HMMs in HMMList
+        under the sequences in SeqList
+    """
+
+    if len(HMMList) != len(SeqList):
+        raise TypeRrror('Input list are not equally long')
+
+    if not isinstance(HMMList[0], StateLabelHMM):
+        raise TypeError('Input is not a StateLabelHMM')
+
+    if not SeqList[0].hasStateLabels:
+        raise TypeError('Input sequence has no labels')
 
     inplen = len(HMMList)
 
