@@ -104,6 +104,8 @@ int ghmm_cmodel_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
   double c_t;
   int pos;
 
+  /* T is length of sequence; divide by dimension to represent the number of time points */
+  T /= smo->dim;
   /* calculate alpha and scale for t = 0 */
   if (b == NULL)
     sfoba_initforward(smo, alpha[0], O, scale, NULL);
@@ -149,7 +151,7 @@ int ghmm_cmodel_forward (ghmm_cmodel * smo, double *O, int T, double ***b,
       /* b precalculated */
       else {
         for (i = 0; i < smo->N; i++) {
-          alpha[t][i] = sfoba_stepforward (&smo->s[i], alpha[t - 1], osc,
+          alpha[t][i] = sfoba_stepforward (smo->s+i, alpha[t - 1], osc,
                                            b[t][i][smo->M]);
           scale[t] += alpha[t][i];
         }
@@ -209,6 +211,9 @@ int ghmm_cmodel_backward (ghmm_cmodel * smo, double *O, int T, double ***b,
   int res = -1;
   int pos;
 
+  /* T is length of sequence; divide by dimension to represent the number of time points */
+  T /= smo->dim;
+  
   ARRAY_CALLOC (beta_tmp, smo->N);
 
   for (t = 0; t < T; t++) {
