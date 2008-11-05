@@ -628,8 +628,8 @@ int sreestimate_one_step (ghmm_cmodel * smo, local_store_t * r, int seq_number,
     }
 
 
-    if ((ghmm_cmodel_forward (smo, O[k], T_k, b, alpha, scale, &log_p_k) == -1) ||
-        (ghmm_cmodel_backward (smo, O[k], T_k, b, beta, scale) == -1)) {
+    if ((ghmm_cmodel_forward (smo, O[k], T[k], b, alpha, scale, &log_p_k) == -1) ||
+        (ghmm_cmodel_backward (smo, O[k], T[k], b, beta, scale) == -1)) {
 #if MCI
       ighmm_mes (MESCONTR, "O(%2d) can't be build from smodel smo!\n", k);
 #endif
