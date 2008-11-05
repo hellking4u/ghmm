@@ -2055,6 +2055,7 @@ class HMM(object):
         likelihoodList = []
 
         for i in range(seqNumber):
+            log.warning("\ngetting likelihood for sequence %i\n"%i)
             seq = emissionSequences.cseq.getSequence(i)
             tmp = emissionSequences.cseq.getLength(i)
 
@@ -3513,7 +3514,7 @@ class GaussianEmissionHMM(HMM):
             ret_val, likelihood = self.cmodel.logp(seq, tmp)
             if ret_val == -1:
 
-                log.warning( "forward returned -1: Sequence"+str(i)+"cannot be build.")
+                log.warning( "forward returned -1: Sequence "+str(i)+" cannot be build.")
                 # XXX TODO: Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
@@ -3557,7 +3558,7 @@ class GaussianEmissionHMM(HMM):
                 self.cmodel.class_change.k = i
 
             seq = emissionSequences.cseq.getSequence(i)
-            seq_len = emissionSequences.cseq.getLength(i)/self.cmodel.dim
+            seq_len = emissionSequences.cseq.getLength(i)
 
             try:
                 viterbiPath, log_p = self.cmodel.viterbi(seq, seq_len)
@@ -3565,7 +3566,7 @@ class GaussianEmissionHMM(HMM):
                 viterbiPath, log_p = (None, float("-infinity"))
 
             if viterbiPath != None:
-                onePath = ghmmwrapper.int_array2list(viterbiPath, seq_len)
+                onePath = ghmmwrapper.int_array2list(viterbiPath, seq_len/self.cmodel.dim)
             else:
                 onePath = []
 
