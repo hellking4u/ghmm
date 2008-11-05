@@ -137,6 +137,9 @@ int *ghmm_cmodel_viterbi (ghmm_cmodel * smo, double *O, int T, double *log_p)
   int t, j, i, osc;
   double value, max_value;
   local_store_t *v;
+  
+  /* T is length of sequence; divide by dimension to represent the number of time points */
+  T /= smo->dim;
 
   v = sviterbi_alloc (smo, T);
   if (!v) {
