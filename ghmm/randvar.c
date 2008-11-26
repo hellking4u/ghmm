@@ -316,6 +316,7 @@ double ighmm_rand_multivariate_normal_density(int length, const double *x, doubl
   gsl_vector *ym, *xm, *gmean;
   gsl_matrix *inv = gsl_matrix_alloc(length, length);
 
+
   for (i=0; i<length; ++i) {
     for (j=0; j<length; ++j) {
       gsl_matrix_set(inv, i, j, sigmainv[i*length+j]);
