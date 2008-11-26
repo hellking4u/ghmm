@@ -57,7 +57,12 @@ int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov)
 
   for (i=0; i<length; ++i) {
     for (j=0; j<length; ++j) {
-      gsl_matrix_set(tmp, i, j, cov[i*length+j]);
+      /* XXX - hack*/
+      if (i == j){
+        gsl_matrix_set(tmp, i, j, cov[i*length+j]);
+      }else{
+        gsl_matrix_set(tmp, i, j, 0.0);
+      }
     }
   }
 
@@ -74,7 +79,6 @@ int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov)
   }
 
   gsl_matrix_free(inv);
-
 #else
   *det = ighmm_determinant(cov, length);
   ighmm_inverse(cov, length, *det, sigmainv);
