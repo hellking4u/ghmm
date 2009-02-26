@@ -2062,7 +2062,7 @@ class HMM(object):
             ret_val,likelihood = self.cmodel.logp(seq, tmp)
             if ret_val == -1:
 
-                log.warning("forward returned -1: Sequence"+str(i)+"cannot be build.")
+                log.warning("forward returned -1: Sequence "+str(i)+" cannot be build.")
                 # XXX TODO Eventually this should trickle down to C-level
                 # Returning -DBL_MIN instead of infinity is stupid, since the latter allows
                 # to continue further computations with that inf, which causes
@@ -2418,9 +2418,8 @@ class HMM(object):
             raise IndexError("Index " + str(i) + " out of bounds.")
         if not 0 <= j < self.N:
             raise IndexError("Index " + str(j) + " out of bounds.")
-
-        if not self.cmodel.check_transition(i, j):
-            raise ValueError("No transition between state " + str(i) + " and " + str(j))
+        if not 0.0 <= prob <= 1.0:
+            raise ValueError("Transition " + str(prop) + " is not a probability.")
 
         self.cmodel.set_transition(i, j, prob)
 
@@ -2514,8 +2513,8 @@ class DiscreteEmissionHMM(HMM):
         strout = [str(self.__class__.__name__)]
         if self.cmodel.name:
             strout.append( " " + str(self.cmodel.name))
-        strout.append(  "(N= "+ str(hmm.N))
-        strout.append(  ", M= "+ str(hmm.M)+')\n')
+        strout.append(  "(N="+ str(hmm.N))
+        strout.append(  ", M="+ str(hmm.M)+')\n')
 
         f = lambda x: "%.2f" % (x,) # float rounding function
 
@@ -2537,10 +2536,10 @@ class DiscreteEmissionHMM(HMM):
             state = hmm.getState(k)
             strout.append( "  state "+ str(k) +' (')
             if order[k] > 0:
-                strout.append( 'order= '+ str(order[k])+',')
+                strout.append( 'order='+ str(order[k])+',')
 
 
-            strout.append( "initial= " + f(state.pi)+')\n')
+            strout.append( "initial=" + f(state.pi)+')\n')
             strout.append( "    Emissions: ")
             for outp in range(hmm.M**(order[k]+1)):
                 strout.append(f(ghmmwrapper.double_array_getitem(state.b,outp)))
@@ -3349,7 +3348,7 @@ class GaussianEmissionHMM(HMM):
         strout = [str(self.__class__.__name__)]
         if self.cmodel.name:
             strout.append( " " + str(self.cmodel.name))
-        strout.append(  "(N= "+ str(hmm.N)+')\n')
+        strout.append(  "(N="+ str(hmm.N)+')\n')
 
         f = lambda x: "%.2f" % (x,)  # float rounding function
 
@@ -3365,11 +3364,11 @@ class GaussianEmissionHMM(HMM):
 
             state = hmm.getState(k)
             strout.append("  state "+ str(k) + " (")
-            strout.append( "initial= " + f(state.pi) )
+            strout.append( "initial=" + f(state.pi) )
             if self.cmodel.cos > 1:
              strout.append(', cos='+ str(self.cmodel.cos))
-            strout.append(", mu= " + f(state.getMean(0))+', ')
-            strout.append("sigma= " + f(state.getStdDev(0)) )
+            strout.append(", mu=" + f(state.getMean(0))+', ')
+            strout.append("sigma=" + f(state.getStdDev(0)) )
             strout.append(')\n')
 
 
@@ -3711,7 +3710,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         strout = [str(self.__class__.__name__)]
         if self.cmodel.name:
             strout.append( " " + str(self.cmodel.name))
-        strout.append(  "(N= "+ str(hmm.N)+')\n')
+        strout.append(  "(N="+ str(hmm.N)+')\n')
 
         f = lambda x: "%.2f" % (x,)  # float rounding function
 
@@ -3727,7 +3726,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
             state = hmm.getState(k)
             strout.append("  state "+ str(k) + " (")
-            strout.append( "initial= " + f(state.pi) )
+            strout.append( "initial=" + f(state.pi) )
             if self.cmodel.cos > 1:
                 strout.append(', cos='+ str(self.cmodel.cos))
             strout.append(')\n')
@@ -3743,9 +3742,9 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 u += str(emission.variance.val)+", "
 
             strout.append( "    Emissions (")
-            strout.append("weights= " + str(weight) + ", ")
-            strout.append("mu= " + str(mue) + ", ")
-            strout.append("sigma= " + str(u) + ")\n")
+            strout.append("weights=" + str(weight) + ", ")
+            strout.append("mu=" + str(mue) + ", ")
+            strout.append("sigma=" + str(u) + ")\n")
 
 
             strout.append( "    Transitions: ")
