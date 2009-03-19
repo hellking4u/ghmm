@@ -43,6 +43,10 @@
 #include <gsl/gsl_linalg.h>
 #endif
 
+#ifdef DO_WITH_ATLAS
+#include <clapack.h>
+#endif
+
 /*============================================================================*/
 int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov)
 {
@@ -74,6 +78,34 @@ int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov)
   }
 
   gsl_matrix_free(inv);
+#elif defined DO_WITH_ATLAS
+  char sign;
+  int info, i;
+  int *ipiv;
+  double det_tmp;
+  
+  ipiv = malloc(length * sizeof *ipiv);
+  
+  /* copy cov. matrix entries to result matrix, the rest is done in-place */
+  memcpy(sigmainv, cov, length * length * sizeof *cov);
+  
+  /* perform in-place LU factorization of covariance matrix */
+  info = clapack_dgetrf(CblasRowMajor, length, length, sigmainv, length, ipiv);
+  
+  /* determinant */
+  sign = 1;
+  for( i=0; i<length; ++i)
+    if( ipiv[i]!=i )
+      sign *= -1;        
+  det_tmp = sigmainv[0];
+  for( i=length+1; i<(length*length); i+=length+1 )
+    det_tmp *= sigmainv[i];
+  *det = det_tmp * sign;
+  
+  /* use the LU factorization to get inverse */
+  info = clapack_dgetri(CblasRowMajor, length, sigmainv, length, ipiv);
+  
+  free(ipiv);
 #else
   *det = ighmm_determinant(cov, length);
   ighmm_inverse(cov, length, *det, sigmainv);
@@ -190,6 +222,11 @@ int ighmm_cholesky_decomposition (double *sigmacd, int dim, double *cov) {
   }
   gsl_matrix_free(tmp);
 
+#elif defined DO_WITH_ATLAS
+  int info;
+  /* copy cov. matrix entries to result matrix, the rest is done in-place */
+  memcpy(sigmacd, cov, dim * dim * sizeof *cov);
+  info = clapack_dpotrf(CblasRowMajor, CblasUpper, dim, sigmacd, dim);
 #else
   int row, j, k;
   double sum;
