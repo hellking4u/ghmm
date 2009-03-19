@@ -78,7 +78,7 @@ int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov)
   }
 
   gsl_matrix_free(inv);
-#elif defined DO_WITH_ATLAS
+#elif defined HAVE_CLAPACK_DGETRF && HAVE_CLAPACK_DGETRI
   char sign;
   int info, i;
   int *ipiv;
@@ -222,7 +222,7 @@ int ighmm_cholesky_decomposition (double *sigmacd, int dim, double *cov) {
   }
   gsl_matrix_free(tmp);
 
-#elif defined DO_WITH_ATLAS
+#elif defined HAVE_CLAPACK_DPOTRF
   int info;
   /* copy cov. matrix entries to result matrix, the rest is done in-place */
   memcpy(sigmacd, cov, dim * dim * sizeof *cov);
