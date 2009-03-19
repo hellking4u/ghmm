@@ -155,6 +155,73 @@ AC_ARG_ENABLE(gsl,
   ]
 )
 
+
+dnl check lapack functions from atlas
+AC_ARG_ENABLE(atlas,
+  AC_HELP_STRING([--enable-atlas], [use matrix operations from atlas lapack [[default=no]]]),
+  [
+    if test "x$enable_lapack" != "xno" ; then
+
+        echo -n "checking for lapack... "
+        if $PKGCONFIG --exists lapack; then
+                AC_DEFINE(DO_WITH_ATLAS,1,[use matrix operations from lapack])
+                AC_MSG_RESULT(yes)
+        else
+                AC_MSG_RESULT(no)
+        fi
+
+        LAPACK_CFLAGS=`$PKGCONFIG --cflags lapack`
+        LAPACK_LIBS=`$PKGCONFIG --libs lapack`
+
+        LIBS="$LIBS $LAPACK_LIBS"
+        CFLAGS="$CFLAGS $LAPACK_CFLAGS"
+
+
+        dnl checking for clapack_dgetrf
+        AC_MSG_CHECKING([for clapack_dgetrf in -llapack])
+        AC_TRY_COMPILE([#include <clapack.h>],
+        [
+                double a;
+                int ipiv;
+                int x = clapack_dgetrf(0, 0, 0, &a, 0, &ipiv);
+        ],
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_CLAPACK_DGETRF,1,[clapack_dgetrf exists]),
+        AC_MSG_RESULT(no)
+        )
+
+        dnl checking for clapack_dgetri
+        AC_MSG_CHECKING([for clapack_dgetri in -llapack])
+        AC_TRY_COMPILE([#include <clapack.h>],
+        [
+                double a;
+                int ipiv;
+                int x = clapack_dgetri(0, 0, &a, 0, &ipiv);
+        ],
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_CLAPACK_DGETRI,1,[clapack_dgetri exists]),
+        AC_MSG_RESULT(no)
+        )
+
+        dnl checking for clapack_dpotrf
+        AC_MSG_CHECKING([for clapack_dpotrf in -llapack])
+        AC_TRY_COMPILE([#include <clapack.h>],
+        [
+                double a;
+                int x = clapack_dpotrf(0, 0, 0, &a, 0);
+        ],
+        AC_MSG_RESULT(yes)
+        AC_DEFINE(HAVE_CLAPACK_DPOTRF,1,[clapack_dpotrf exists]),
+        AC_MSG_RESULT(no)
+        )
+    fi
+  ],
+  [
+    AC_MSG_NOTICE("not lapack")
+  ]
+)
+
+
 dnl select random number generator
 AC_ARG_WITH(rng,
             [  --with-rng=XXX          selects random number generator ("mt" (default), "bsd" or "gsl")],
