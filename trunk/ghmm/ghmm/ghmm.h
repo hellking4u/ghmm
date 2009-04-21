@@ -43,6 +43,48 @@ extern "C" {
 
 #include "ghmmconfig.h"
 
+/*! \mainpage GHMM library
+ *
+ * The General Hidden Markov Model library (GHMM) is a freely available
+ * LGPL-ed C library implementing efficient data structures and algorithms
+ * for basic and extended HMMs. The development is hosted at
+ * <A HREF="http://sourceforge.net/projects/ghmm/">Sourceforge</A>,
+ * where you have access to the Subversion repository, mailing lists and forums.
+ *
+ * The GHMM is developed by the <A HREF="http://algorithmics.molgen.mpg.de/">
+ * Algorithmics group</A> at the <A HREF="http://www.molgen.mpg.de/">
+ * Max Planck Institute for Molecular Genetics</A>.
+ *
+ * \par Features:
+ *  - Discrete and continous emissions
+ *  - Mixtures of PDFs for continous emissions
+ *  - Non-homogenous Markov chains
+ *  - Pair HMMs (contributed by  Genoscope)
+ *  - Clustering and mixture modelling for HMMs
+ *  - Graphical Editor HMMEd
+ *  - Python bindings
+ *  - XML-based file format
+ *
+ * \author Achim Gaedke
+ * \author Alexander Riemer
+ * \author Alexander Schliep
+ * \author Andrea Weisse
+ * \author Barthel Steckemetz
+ * \author Benjamin Georgi
+ * \author Berhard Knab
+ * \author Bernd Wichern
+ * \author Christoph Hafemeister
+ * \author Ivan Costa Filho
+ * \author Janne Grunau
+ * \author Mathias Heinig
+ * \author Peter Pipenbacher
+ * \author Sebastian Meller
+ * \author Thordis Linda Thorarinsdottir
+ * \author Utz Pape
+ * \author Wasinee Rungsarityotin
+ *
+ */
+
 /**@name GHMM-Globals */
 /*@{ (Doc++-Group: globals) */
 

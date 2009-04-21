@@ -38,3 +38,13 @@ win_config.h \
 autogen.sh \
 README.Win \
 ${pkgdata_DATA}
+
+doc: doc/ghmm/Doxyfile doc/ghmmwrapper/Doxyfile
+	@DOXYGEN@ doc/ghmm/Doxyfile
+	@DOXYGEN@ doc/ghmmwrapper/Doxyfile
+
+doc-upload: doc
+	rsync -avP -e ssh --delete doc/ghmm/html/ grunau,ghmm@web.sourceforge.net:htdocs/doc/ghmm
+	rsync -avP -e ssh --delete doc/ghmmwrapper/html/ grunau,ghmm@web.sourceforge.net:htdocs/doc/ghmmwrapper
+
+.PHONY: doc doc-upload
