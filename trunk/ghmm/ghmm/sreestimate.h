@@ -54,15 +54,14 @@ extern "C" {
 	77, no 2, 1989, pp 257--285    
 */
 
-/** @name struct ghmm_cmodel_baum_welch_context
-    structure that combines a continuous model (smo) and an integer
-    sequence struct. Is used by sreestimate\_baum\_welch for 
-    parameter reestimation.
+/** structure that combines a continuous model sequence struct.
+
+    Is used by ghmm_cmodel_baum_welch() for parameter reestimation.
  */
   typedef struct {
   /** pointer of continuous model*/
     ghmm_cmodel *smo;
-  /** sequence\_d\_t pointer */
+  /** ghmm_cseq pointer */
     ghmm_cseq *sqd;
   /** calculated log likelihood */
     double *logp;

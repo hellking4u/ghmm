@@ -51,7 +51,8 @@ extern "C" {
    @param eta:        intial parameter eta (learning rate)
    @param no_steps    number of training steps
  */
-ghmm_dmodel* ghmm_dmodel_label_gradient_descent (ghmm_dmodel* mo, ghmm_dseq * sq, double eta, int no_steps);
+ghmm_dmodel* ghmm_dmodel_label_gradient_descent(ghmm_dmodel* mo, ghmm_dseq * sq,
+                                                double eta, int no_steps);
 
 
 #ifdef __cplusplus

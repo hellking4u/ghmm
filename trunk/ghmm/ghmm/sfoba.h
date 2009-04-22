@@ -60,6 +60,7 @@ extern "C" {
   @param smo      model
   @param O        sequence
   @param T        length of sequence (O is actually T*smo->dim long)
+  @param b        optionally precomputed emission probabilities
   @param alpha    alpha[t][i]
   @param scale    scale factors
   @param log_p    log likelihood log( P(O|lambda) )
@@ -71,7 +72,7 @@ extern "C" {
 /** 
   Backward-Algorithm. 
   Calculates beta[t][i] given a double sequence and a model. Scale factors 
-  given as parameter (come from sfoba\_forward).
+  given as parameter (come from ghmm_cmodel_forward()).
   @param smo      model
   @param O        sequence
   @param T        length of sequence (O is actually T*smo->dim long)
@@ -85,7 +86,7 @@ extern "C" {
 
 /**
   Calculation of  log( P(O|lambda) ). 
-  Done by calling sfoba\_forward. Use this function if only the
+  Done by calling ghmm_cmodel_forward(). Use this function if only the
   log likelihood and not alpha[t][i] is needed, alpha matrix is allocated with
   ighmm_cmatrix_stat_alloc
   @param smo      model
@@ -104,8 +105,9 @@ extern "C" {
   @param O         sequence
   @param len       length of sequence
   @param S         state sequence
-  @param slen      length of state sequence (differs from len only for HMMs with silent states)
-  @param log\_p    log likelihood log( P(O|lambda) )
+  @param slen      length of state sequence (differs from len only for HMMs
+                   with silent states)
+  @param log_p     log likelihood log( P(O|lambda) )
   @return 0 for success, -1 for error
   */
 int ghmm_cmodel_logp_joint(ghmm_cmodel *mo, const double *O, int len,

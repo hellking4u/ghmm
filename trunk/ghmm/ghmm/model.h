@@ -48,7 +48,7 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-/** @name ghmm_dstate
+/**
     The basic structure, keeps all parameters that belong to a state. 
 */
 typedef struct {
@@ -83,7 +83,7 @@ typedef struct {
 
 
 
-/** @name ghmm_dmodel
+/**
     The complete HMM. Contains all parameters, that define a HMM.
 */
 typedef struct {
@@ -220,8 +220,8 @@ extern "C" {
     Produces simple left-right models given sequences. The sequences
     are not read in from file, but exists already as a structur.
     @return vector of models
-    @param s:          scanner
-    @param new_models: number of models to produce */
+    @param sq:         sequence
+    @param mo_number:  number of models to produce */
   ghmm_dmodel **ghmm_dmodel_from_sequence (ghmm_dseq * sq, long *mo_number);
 
 /**
@@ -396,7 +396,6 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
    @param file: output file
    @param mo:   model
    @param tab:  format: leading Tabs
-   @param separator: format: seperator for columns
    @param ending:    format: end of a row  
 */
   void ghmm_dmodel_Pi_print_transp (FILE * file, ghmm_dmodel * mo, char *tab,
@@ -583,7 +582,7 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
 /**
    Reads a xml file and returns an array of dmodel pointer
    @return           :array of dmodels, NULL on error
-   @param file       :filename of the xml file
+   @param filename   :filename of the xml file
    @param mo_number  :address of an int to store the length of the returned array
 */
   ghmm_dmodel** ghmm_dmodel_xml_read(const char *filename, int* mo_number);
