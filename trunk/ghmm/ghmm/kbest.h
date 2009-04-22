@@ -43,6 +43,7 @@ extern "C" {
 /**
    Calculates the most probable labeling for the given sequence in the given
    model using k-best decoding.
+
    Labels must be from interval [0:max_label] without gaps!!! (not checked)
    Model must not have silent states. (checked in Python wrapper)
    @return array of labels (internal representation)

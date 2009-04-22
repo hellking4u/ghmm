@@ -56,7 +56,7 @@ extern "C" {
 
 /**
  */
-  struct cluster_t {
+  typedef struct cluster_t {
   /** 
     Vector of HMM-Model pointers */
     ghmm_dmodel **mo;
@@ -68,16 +68,13 @@ extern "C" {
   /** 
     Number of models read in */
     int mo_number;
-  };
-/**
-*/
-  typedef struct cluster_t cluster_t;
+  } cluster_t;
 
 /**
    Writess out the final models.
    @return 0 for success; -1 for error
    @param cl cluster of models to write
-   @param sq 
+   @param sq sequence
    @param outfile output file
    @param out_filename name of the output file
  */
@@ -117,8 +114,8 @@ extern "C" {
 /**
    Updates a label
    @return number of changes made
-   @param oldlabel label to update
-   @param up to date label for comparison
+   @param oldlabel   label to update
+   @param seq_label  up to date label for comparison
    @param seq_number number of sequences
  */
   long ghmm_cluster_update_label (long *oldlabel, long *seq_label,

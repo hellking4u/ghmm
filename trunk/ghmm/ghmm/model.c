@@ -2214,16 +2214,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }
 
 /*----------------------------------------------------------------------------*/
-/** 
-   Allocates a new ghmm_dbackground struct and assigns
-   the arguments to the respective fields.
-   Note: The arguments need allocation outside of this function.
-   
-   @return:      new pointer to a ghmm_dbackground struct or NULL
-   @param n:     number of distributions
-   @param order: orders of the distribtions (optional)
-   @param B:     matrix of distribution parameters (optional)
-*/
 ghmm_dbackground *ghmm_dbackground_alloc (int n, int m, int *orders, double **B) {
 #define CUR_PROC "ghmm_dbackground_alloc"
   ghmm_dbackground *ptbackground;

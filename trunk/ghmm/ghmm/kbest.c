@@ -141,18 +141,6 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 
 /*============================================================================*/
-/**
-   Calculates the most probable labeling for the given sequence in the given
-   model using k-best decoding.
-   Labels must be from interval [0:max_label] without gaps!!! (not checked)
-   Model must not have silent states. (checked in Python wrapper)
-   @return array of labels (internal representation)
-   @param mo:         pointer to a ghmm_dmodel
-   @param o_seq:      output sequence (array of internal representation chars)
-   @param seq_len:    length of output sequence
-   @param k:          number of hypotheses to keep for each state
-   @param log_p:      variable reference to store the log prob. of the labeling
- */
 int *ghmm_dmodel_label_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, double *log_p)
 {
 #define CUR_PROC "ghmm_dl_kbest"
@@ -192,7 +180,7 @@ int *ghmm_dmodel_label_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, 
 
   ARRAY_CALLOC (h, seq_len);
 
-  /** 1. Initialization (extend empty hypothesis to #labels hypotheses of
+  /* 1. Initialization (extend empty hypothesis to #labels hypotheses of
          length 1): */
 
   /* get number of labels (= maximum label + 1)
@@ -270,7 +258,7 @@ int *ghmm_dmodel_label_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, 
     /* put o_seq[t-1] in emission history: */
     update_emission_history (mo, o_seq[t - 1]);
 
-    /** 2. Propagate hypotheses forward and update gamma: */
+    /* 2. Propagate hypotheses forward and update gamma: */
     no_oldHyps =
       ighmm_hlist_prop_forward (mo, h[t - 1], &(h[t]), no_labels, states_wlabel,
                      label_max_out);
@@ -312,7 +300,7 @@ int *ghmm_dmodel_label_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, 
       hP = hP->next;
     }
 
-    /** 3. Choose the k most probable hypotheses for each state and discard all
+    /* 3. Choose the k most probable hypotheses for each state and discard all
 	   hypotheses that were not chosen: */
 
     /* initialize temporary arrays: */
@@ -381,7 +369,7 @@ int *ghmm_dmodel_label_kbest (ghmm_dmodel * mo, int *o_seq, int seq_len, int k, 
     m_free(log_a[i]);
   m_free(log_a);
 
-  /** 4. Save the hypothesis with the highest probability over all states: */
+  /* 4. Save the hypothesis with the highest probability over all states: */
   hP = h[seq_len - 1];
   argmax = NULL;
   *log_p = 1.0;                 /* log_p will store log of maximum summed probability */

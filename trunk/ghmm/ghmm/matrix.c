@@ -188,7 +188,7 @@ int ighmm_cmatrix_stat_free (double ***matrix)
 /*============================================================================*/
 
 /* allocation of matrices with fixed dimensions  */
-int **ighmm_dmatrix_stat_alloc (int n, int m)
+int **ighmm_dmatrix_stat_alloc(int n, int m)
 {
 #define CUR_PROC "ighmm_dmatrix_stat_alloc"
   int i;
@@ -713,8 +713,8 @@ void ighmm_cmatrix_copy (double **src, double **target, int rows, int cols)
 /**
   Checks whether a quadratic double matrix is stochastic
   @return 0/1 flag for true/false
-  @param  double NxN matrix to be checked
-  @param  matrix dimension N (matrix must be quadaratic)
+  @param  matrix double NxN matrix to be checked
+  @param  N      number of rows/columns (matrix must be quadaratic)
   */
 int ighmm_cmatrix_check_stochasticity (double **matrix, int N)
 {

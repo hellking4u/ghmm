@@ -46,10 +46,10 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-/** @name ghmm_dsstate
-    The basic structure, keeps all parameters that belong to a state. 
+/**
+   The basic structure, keeps all parameters that belong to a state. 
 */
-  struct ghmm_dsstate {
+typedef struct ghmm_dsstate {
   /** Initial probability */
     double pi;
   /** Output probability */
@@ -83,14 +83,12 @@ extern "C" {
   /** Position for graphical editing */
     int xPosition;
     int yPosition;
-  };
+} ghmm_dsstate;
 
-  typedef struct ghmm_dsstate ghmm_dsstate;
-
-/** @name ghmm_dmodel
-    The complete HMM. Contains all parameters, that define a HMM.
+/**
+   The complete HMM. Contains all parameters, that define a HMM.
 */
-  struct ghmm_dsmodel {
+  typedef struct ghmm_dsmodel {
   /** Number of states */
     int N;
   /** Number of outputs */
@@ -184,9 +182,7 @@ extern "C" {
     ghmm_alphabet* label_alphabet;
 
     ghmm_alphabet* alphabet;
-  };
-
-  typedef struct ghmm_dsmodel ghmm_dsmodel;
+  } ghmm_dsmodel;
 
 
 #ifdef __cplusplus
@@ -270,6 +266,7 @@ extern "C" {
      Writes transition matrix of a model.
      @param file: output file
      @param mo:   model
+     @param k     class of the transition matrix to print
      @param tab:  format: leading tabs
      @param separator: format: seperator for columns
      @param ending:    format: end of a row  
@@ -312,16 +309,16 @@ extern "C" {
   /** Forward-Algorithm.
       Calculates alpha[t][i], scaling factors scale[t] and log( P(O|lambda) ) for
       a given double sequence and a given model.
-      @param mo:      model
-      @param O        sequence
-      @param length: length of sequence
+      @param mo:     model
+      @param O       sequence
+      @param len:    length of sequence
       @param alpha:  alpha[t][i]
-      @param scale:   a reference for double type, scale factors
-      @param log\_p:  a reference for double type, log likelihood log( P(O|lambda) )
+      @param scale:  a reference for double type, scale factors
+      @param log_p:  a reference for double type, log likelihood log( P(O|lambda) )
       @return 0 for success, -1 for error
   */
-  int ghmm_dsmodel_forward (ghmm_dsmodel * mo, const int *O, int len, double **alpha,
-                      double *scale, double *log_p);
+  int ghmm_dsmodel_forward (ghmm_dsmodel * mo, const int *O, int len,
+                            double **alpha, double *scale, double *log_p);
 
 
   /** Descale
