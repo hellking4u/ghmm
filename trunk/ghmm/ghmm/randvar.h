@@ -52,7 +52,7 @@ extern "C" {
    @return       function value
    @param x:      point value
    @param mean:   mean value for the normal distribution
-   @param u:      variance for the normal distribution ($\sigma^2$)
+   @param u:      variance for the normal distribution (\f$\sigma^2\f$)
    */
   double ighmm_rand_normal_density (double x, double mean, double u);
 
@@ -95,7 +95,7 @@ extern "C" {
    @return       function value
    @param x:      point value
    @param mean:   mean value for the normal distribution
-   @param u:      variance for the normal distribution ($\sigma^2$)
+   @param u:      variance for the normal distribution (\f$\sigma^2\f$)
    */
   double ighmm_rand_normal_density_approx (double x, double mean, double u);
 
@@ -105,17 +105,17 @@ extern "C" {
    @return       function value
    @param x:      point value
    @param mean:   mean value for the normal distribution
-   @param u:      variance for the normal distribution ($\sigma^2$)
+   @param u:      variance for the normal distribution (\f$\sigma^2\f$)
    */
   double ighmm_rand_normal_density_pos (double x, double mean, double u);
 
 /**
    Calculates the one dimensional Gauss density function phi( mean, u ) 
-   at point x. In this case: phi = 0 for x on the interval ($-\infty$, a).
+   at point x. In this case: phi = 0 for x on the interval (\f$-\infty\f$, a).
    @return       function value
    @param x:      point value
    @param mean:   mean value for the normal distribution
-   @param u:      variance for the normal distribution ($sigma^2$)
+   @param u:      variance for the normal distribution (\f$sigma^2\f$)
    @param a:      left limit for the density function
    */
   double ighmm_rand_normal_density_trunc (double x, double mean, double u,
