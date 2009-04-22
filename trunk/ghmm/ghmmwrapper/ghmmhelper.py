@@ -49,8 +49,9 @@ def double_matrix2list(cmatrix, row, col):
 
 def list2double_matrix(matrix):
     """ Allocation and initialization of a double** based on a
-        two dimensional Python list (list of lists). The number of elements
-        in each column can vary.
+    two dimensional Python list (list of lists).
+
+    The number of elements in each column can vary.
     """
     cols = len(matrix)
 
@@ -65,8 +66,9 @@ def list2double_matrix(matrix):
 
 def list2int_matrix(matrix):
     """ Allocation and initialization of an int** based on a
-        two dimensional Python list (list of lists). The number of elements
-        in each column can vary.
+    two dimensional Python list (list of lists).
+
+    The number of elements in each column can vary.
     """
     rows = len(matrix)
 
@@ -89,13 +91,13 @@ def int_matrix2list(cmatrix,row,col):
 
 def extract_out(lisprobs):
     """ Helper function for building HMMs from matrices: Used for
-        transition matrices without  transition classes.
+    transition matrices without transition classes.
 
-        Extract out-/ingoing transitions from the row-vector resp. the
-        column vector (corresponding to incoming transitions) of the
-        transition matrix
+    Extract out-/ingoing transitions from the row-vector resp. the
+    column vector (corresponding to incoming transitions) of the
+    transition matrix
 
-        Allocates: .[out|in]_id and .[out|in]_a vectors
+    Allocates: .[out|in]_id and .[out|in]_a vectors
     """
     lis = []
     for i in range(len(lisprobs)):
@@ -111,14 +113,14 @@ def extract_out(lisprobs):
 
 
 #def extract_out_probs(lisprobs,cos):
-##    """ Helper function for building HMMs from matrices: Used for
-##        transition matrices with 'cos' transition classes.
-##        Extract out-/ingoing transitions from a matric consiting of
-##        the row-vectors resp. the column vectors (corresponding to
-##        incoming transitions) of the 'cos' transition matrices.
-##        Hence, input is a 'cos' x N matrix.
-##        Allocates: .[out|in]_id vector and .[out|in]_a array (of size cos x N)
-##    """
+#    """ Helper function for building HMMs from matrices: Used for
+#        transition matrices with 'cos' transition classes.
+#        Extract out-/ingoing transitions from a matric consiting of
+#        the row-vectors resp. the column vectors (corresponding to
+#        incoming transitions) of the 'cos' transition matrices.
+#        Hence, input is a 'cos' x N matrix.
+#        Allocates: .[out|in]_id vector and .[out|in]_a array (of size cos x N)
+#    """
 #    lis = []
     # parsing indixes belonging to postive probabilites
 #    for j in range(cos):
@@ -142,12 +144,12 @@ def extract_out(lisprobs):
 
 def extract_out_cos(transmat, cos, state):
     """ Helper function for building HMMs from matrices: Used for
-        transition matrices with 'cos' transition classes.
+    transition matrices with 'cos' transition classes.
 
-        Extract outgoing transitions for 'state' from the complete list
-        of transition matrices
+    Extract outgoing transitions for 'state' from the complete list
+    of transition matrices
 
-        Allocates: .out_id vector and .out_a array (of size cos x N)
+    Allocates: .out_id vector and .out_a array (of size cos x N)
     """
 
     lis = []
@@ -175,12 +177,12 @@ def extract_out_cos(transmat, cos, state):
 
 def extract_in_cos(transmat, cos, state):
     """ Helper function for building HMMs from matrices: Used for
-        transition matrices with 'cos' transition classes.
+    transition matrices with 'cos' transition classes.
 
-        Extract ingoing transitions for 'state' from the complete list
-        of transition matrices
+    Extract ingoing transitions for 'state' from the complete list
+    of transition matrices
 
-        Allocates: .in_id vector and .in_a array (of size cos x N)
+    Allocates: .in_id vector and .in_a array (of size cos x N)
     """
     lis = []
 
@@ -211,10 +213,12 @@ def extract_in_cos(transmat, cos, state):
     return [len(lis),trans_id,probsarray]
 
 class twodim_double_array:
-    "Two-dimensional C-Double Array"
+    """ Two-dimensional C-Double Array """
 
     def __init__(self,array, rows, columns, rowlabels=None, columnlabels=None):
-        "Constructor"
+        """
+        Constructor
+        """
         self.array = array
         self.rows = rows
         self.columns = columns
@@ -223,16 +227,22 @@ class twodim_double_array:
         self.columnlabels = columnlabels
 
     def __getitem__(self,index):
-        "defines twodim_double_array[index[0],index[1]]"
+        """
+        defines twodim_double_array[index[0],index[1]]
+        """
         return ghmmwrapper.double_matrix_getitem(self.array,index[0],index[1])
 
     def __setitem__(self,index,value):
-        "defines twodim_double_array[index[0],index[1]]"
+        """
+        defines twodim_double_array[index[0],index[1]]
+        """
         if (len(index) == 2):
             ghmmwrapper.set_2d_arrayd(self.array,index[0],index[1],value)
 
     def __str__(self):
-        "defines string representation"
+        """
+        defines string representation
+        """
         strout = "\n"
         if (self.columnlabels is not None):
             for k in range(len(self.columnlabels)):
@@ -250,38 +260,38 @@ class twodim_double_array:
         return strout
 
 
-## class double_array:
-##     """A C-double array"""
+# class double_array:
+#     """A C-double array"""
 
-##     def __init__(self, array, columns, columnlabels=None):
-##         """Constructor"""
-##         self.array = array
-##         self.rows = 1
-##         self.columns = columns
-##         self.size = columns
-##         self.columnlabels = columnlabels
+#     def __init__(self, array, columns, columnlabels=None):
+#         """Constructor"""
+#         self.array = array
+#         self.rows = 1
+#         self.columns = columns
+#         self.size = columns
+#         self.columnlabels = columnlabels
 
-##     def __getitem__(self,index):
-##         """defines double_array[index] """
-##         return ghmmwrapper.get_arrayd(self.array,index)
+#     def __getitem__(self,index):
+#         """defines double_array[index] """
+#         return ghmmwrapper.get_arrayd(self.array,index)
 
-##     def __setitem__(self,index,value):
-##         """ double_array[index] = value """
-##         ghmmwrapper.set_arrayd(self.array,index,value)
+#     def __setitem__(self,index,value):
+#         """ double_array[index] = value """
+#         ghmmwrapper.set_arrayd(self.array,index,value)
 
-##     def __str__(self):
-##         """defines string representation"""
-##         strout = "\n"
-##         if (self.columnlabels is not None):
-##             for k in range(len(self.columnlabels)):
-##                 strout+="\t"
-##                 strout+= str(self.columnlabels[k])
-##                 strout += "\n"
-##         for i in range(self.columns):
-##             strout += "%2.4f" % self[i]
-##             strout += "\t"
-##             strout += "\n"
-##         return strout
+#     def __str__(self):
+#         """defines string representation"""
+#         strout = "\n"
+#         if (self.columnlabels is not None):
+#             for k in range(len(self.columnlabels)):
+#                 strout+="\t"
+#                 strout+= str(self.columnlabels[k])
+#                 strout += "\n"
+#         for i in range(self.columns):
+#             strout += "%2.4f" % self[i]
+#             strout += "\t"
+#             strout += "\n"
+#         return strout
 
 
 def classNumber(A):
