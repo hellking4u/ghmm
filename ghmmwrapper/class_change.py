@@ -52,9 +52,9 @@ class testChange:
 def getClass( seq, k,t):
      """ Example of a Python class change function.
      
-         seq: a list of obervations
-         k:  sequence index of seq in the sequence collection seq came from 
-         t: current time step in seq (e.g  we need the class for seq[t] )
+     @param seq list of obervations
+     @param k   sequence index of seq in the sequence collection seq came from
+     @param t   current time step in seq (e.g  we need the class for seq[t] )
      
      """
      # dummy function right now
