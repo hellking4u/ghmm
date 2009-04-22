@@ -50,38 +50,29 @@ extern "C" {
 
 /**
   Viterbi algorithm. Calculates the Viterbi path (the optimal path trough
-  the model) and the Viterbi probability to a given model and a given 
-  sequence. The matrices in the local_store struct are allocated using
-  stat_matrix_d_alloc.
-  @return Viterbi path
-  @param mo:    model
-  @param o:     sequence
-  @param len:   length of the sequence
-  @param log_p: probability of the sequence in the Viterbi path
+  the model) and the Viterbi probability to a given model and given 
+  sequences.
   */
-int *ghmm_dpmodel_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y, double *log_p,
-		     int *path_length);
+int *ghmm_dpmodel_viterbi(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
+                          double *log_p, int *path_length);
 
-int *ghmm_dpmodel_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
-				 double *log_p, int *path_length,
-				 int start_traceback_with);
+int *ghmm_dpmodel_viterbi_variable_tb(ghmm_dpmodel *mo, ghmm_dpseq * X,
+                                      ghmm_dpseq * Y, double *log_p,
+                                      int *path_length,
+                                      int start_traceback_with);
 
 int *ghmm_dpmodel_viterbi_test(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
 			  double *log_p, int *path_length);
 
 /**
   Calculates the logarithmic probability to a given path through the 
-  states (does not have to be the Viterbi path), given sequence and
+  states (does not have to be the Viterbi path), given sequences and
   a model.
-  @param mo:        model
-  @param o:         sequence
-  @param len:       length of the sequence
-  @param state_seq: path through the states
-  @return log P
   */
 
-double ghmm_dpmodel_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X, ghmm_dpseq * Y,
-			    int *state_seq, int state_seq_len);
+double ghmm_dpmodel_viterbi_logp(ghmm_dpmodel *mo, ghmm_dpseq * X,
+                                 ghmm_dpseq * Y,
+                                 int *state_seq, int state_seq_len);
 
 
 #ifdef __cplusplus

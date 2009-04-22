@@ -67,8 +67,9 @@ extern "C" {
 /*==============  declarations for root_finder.c  ===========================*/
 /**
    brent root finding algorithm.
-   wrapps this functioncall to the gsl 1D-root finding interface
+   wrapps this function call to the gsl 1D-root finding interface
    @author Achim G\"adke
+   @param func function pointer
    @param x1 lower bracket value
    @param x2 upper bracket value
    @param tol tolerance for iteration
@@ -110,21 +111,21 @@ double ighmm_cvector_log_sum(double *a, int N);
 
 /*==============  linked list  ===============================================*/
 /**
-   integer element */
-struct i_el {
+   integer element
+*/
+typedef struct i_el {
   int val;
   struct i_el * next;
-};
-typedef struct i_el i_el;
+} i_el;
 
 /**
-   list header */
-struct i_list {
+   list header
+*/
+typedef struct i_list {
   i_el * first;
   i_el * last;
   int length;
-};
-typedef struct i_list i_list;
+} i_list;
 
 /**
    inits an empty list */

@@ -57,11 +57,13 @@ extern "C" {
 /*@{
  */
 
-#define CLASSIFY 0              /* Switch for Classificator: 0 == MD, 1 == MAW */
+  /** Switch for Classificator: 0 == MD, 1 == MAW */
+#define CLASSIFY 0
 
 /**
-   Cluster structure: All models and sequences. */
-  struct scluster_t {
+   Cluster structure: All models and sequences.
+*/
+  typedef struct scluster_t {
   /** 
   Vector of SHMMs pointers */
     ghmm_cmodel **smo;
@@ -81,10 +83,7 @@ extern "C" {
   /** a posteriori probability for the Modelle to calculate the objective
       fucntion in case of a MAW classificator. Is calculated using ghmm_smap_bayes */
     double *smo_Z_MAW;
-  };
-/**
- */
-  typedef struct scluster_t scluster_t;
+  } scluster_t;
 
 
 /**
@@ -98,10 +97,10 @@ extern "C" {
 /**
    Writes out the final models.
    @return 0 for success; -1 for error
-   @param cl cluster of models to write
-   @param sqd
-   @param outfile output file
-   @param out_filename name of the output file
+   @param cl      cluster of models to write
+   @param sqd     sequence
+   @param outfile output file pointer
+   @param argv @todo check name of the output file
  */
   int ghmm_scluster_out (scluster_t * cl, ghmm_cseq * sqd, FILE * outfile,
                     char *argv[]);
@@ -136,9 +135,9 @@ extern "C" {
 /**
    Updates a label
    @return number of changes made
-   @param oldlabel label to update
-   @param up to date label for comparison
-   @param seq_number number of sequences
+   @param oldlabel    label to update
+   @param seq_label   up to date label for comparison
+   @param seq_number  number of sequences
    @param smo_changed tells, which labels have been changed
  */
   long ghmm_scluster_update_label (long *oldlabel, long *seq_label,
@@ -185,10 +184,10 @@ extern "C" {
 /** Calculates the aposteriori prob. \f$\log(p(\lambda_best | O[seq\_id]))\f$, 
     where \f$\lambda_best\f$ is the model with highest apost. prob.
     @return 0 for success; -1 for error
-    @param cl cluster
-    @param sqd the sequence in question
-    @param seq_id the ID of the sequence
-    @param lob_apo the results
+    @param cl      cluster
+    @param sqd     the sequence in question
+    @param seq_id  the ID of the sequence
+    @param log_apo the results
 */
   int ghmm_scluster_log_aposteriori (scluster_t * cl, ghmm_cseq * sqd,
                                 int seq_id, double *log_apo);

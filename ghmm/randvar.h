@@ -154,14 +154,15 @@ extern "C" {
         @param dim     dimension of multivariate
         @param x       vector that stores the result
         @param mue     mean vector of the multivariate normal
-        @param sigmacd linearized cholesky decomposition of variance covariance matrix
-        @param seed    1: only initialization, 0: returns a multivariate normal distributed vector
+        @param sigmacd linearized cholesky decomposition of variance covariance
+                        matrix
+        @param seed    1: only initialization, 0: rng state is unmodified
   */
   int ighmm_rand_multivariate_normal (int dim, double *x, double *mue, double *sigmacd, int seed);
 
-  /** distribution function of a uniform distribution in the range [min,max]
-   @return          F(x)
-   @param x:        point value
+  /** Genrates a uniformly distributed random number from the range [min,max]
+   @return          random number
+   @param seed    1: only initialization, 0: rng state is unmodified
    @param max:      right limit 
    @param min:      left limit
  */
@@ -221,6 +222,7 @@ extern "C" {
    @param x:         point value
    @param mean:      mean value for the normal distribution
    @param u:         variance for the normal distribution
+   @param a          cutoff value
 */
   double ighmm_rand_normal_right_cdf (double x, double mean, double u, double a);
 

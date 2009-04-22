@@ -73,9 +73,9 @@ extern "C" {
   } ghmm_density_t;
 
   /**
-      ghmm_c_emission_s bundles all emission parameters
+      ghmm_c_emission bundles all emission parameters
   */
-  struct ghmm_c_emission {
+  typedef struct ghmm_c_emission {
     /** specify the type of the density */
     ghmm_density_t type;
     /** dimension > 1 for multivariate normals */
@@ -108,8 +108,7 @@ extern "C" {
     double max;
     /** if fixed != 0 the parameters of the density are fixed */
     int fixed;
-  };
-  typedef struct ghmm_c_emission ghmm_c_emission;
+  } ghmm_c_emission;
 
 /**
     Structure for one state.

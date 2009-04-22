@@ -427,9 +427,9 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
     Frees all memory from a ghmm_dstate, sets the pointers to NULL and 
     variables to zero.
     @author Peter Pipenbacher
-    @param my_state  state to clean (\link ghmm_dstate)
+    @param state  state to clean
 */
-  void ghmm_dstate_clean (ghmm_dstate * my_state);
+  void ghmm_dstate_clean (ghmm_dstate *state);
 
 
   ghmm_dseq *ghmm_dmodel_label_generate_sequences (ghmm_dmodel * mo, int seed,
@@ -530,14 +530,14 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
    the respective fields. Note: The arguments need allocation outside of this
    function.
    
-   @return    :               new pointer to a ghmm_dbackground struct
-   @param n   :               number of distributions
-   @param order:              orders of the distribtions
-   @param B:                  matrix of distribution parameters
+   @return                   new pointer to a ghmm_dbackground struct
+   @param n                  number of distributions
+   @param m                  number of symbols per distribution
+   @param orders             orders of the distribtions
+   @param B                  matrix of distribution parameters
 */
-  ghmm_dbackground *ghmm_dbackground_alloc (int n, int m,
-							    int *orders,
-							    double **B);
+  ghmm_dbackground *ghmm_dbackground_alloc(int n, int m, int *orders,
+                                           double **B);
 
   ghmm_dbackground *ghmm_dbackground_copy (ghmm_dbackground * bg);
 
