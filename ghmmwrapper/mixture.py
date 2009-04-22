@@ -43,8 +43,9 @@ import getopt, sys, string
 def Entropy(prob_dist):
     """ Returns Entropy for the discrete prob. distribution 
 
-        Entropy is according to natural logarithm (default)
-        or log with the specified base """
+    Entropy is according to natural logarithm (default)
+    or log with the specified base
+    """
         
     result = 0.0
     for i in xrange(len(prob_dist)):
@@ -59,7 +60,7 @@ def Entropy(prob_dist):
 def sumlogs(a):
     """ Given a numarray.array a of log p_i, return log(sum p_i)
         
-        XXX should be coded in C, check whether part of Numarray
+    XXX should be coded in C, check whether part of Numarray
     """ 
     m = max(a)
     result = 0.0
@@ -77,21 +78,21 @@ def sumlogs(a):
 
 def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
     """ Given a Python-list of models and a SequenceSet seqs
-        perform an nested EM to estimate maximum-likelihood
-        parameters for the models and the mixture coefficients.
-        The iteration stops after max_iter steps or if the
-        improvement in log-likelihood is less than eps.
+    perform an nested EM to estimate maximum-likelihood
+    parameters for the models and the mixture coefficients.
+    The iteration stops after max_iter steps or if the
+    improvement in log-likelihood is less than eps.
 
-        alpha is a numarray of dimension len(models) containing
-        the mixture coefficients. If alpha is not given, uniform
-        values will be chosen.
+    alpha is a numarray of dimension len(models) containing
+    the mixture coefficients. If alpha is not given, uniform
+    values will be chosen.
         
-        Result: The models are changed in place. Return value
-        is (l, alpha, P) where l is the final log likelihood of
-        seqs under the mixture, alpha is a numarray of
-        dimension len(models) containing the mixture coefficients
-        and P is a (#sequences x #models)-matrix containing
-        P[model j| sequence i]
+    Result: The models are changed in place. Return value
+    is (l, alpha, P) where l is the final log likelihood of
+    seqs under the mixture, alpha is a numarray of
+    dimension len(models) containing the mixture coefficients
+    and P is a (|sequences| x |models|)-matrix containing
+    P[model j| sequence i]
         
     """
     done = 0
@@ -155,12 +156,11 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
 
 
 def decode_mixture(P, entropy_cutoff):
-    """ Given P, a (#sequences x #models)-matrix where P_{ij} =
-        P[model j| sequence i] return a list of size (#sequences)
-        which contains j, the model which maximizes  P[model j| sequence i]
-        for a sequence, if the entropy of the discrete distribution
-        { P[ . | sequence i] } is less than the entropy_cutoff
-        and None else.
+    """ Given P, a (|sequences| x |models|)-matrix where P_{ij} =
+    P[model j| sequence i] return a list of size (|sequences|)
+    which contains j, the model which maximizes  P[model j| sequence i]
+    for a sequence, if the entropy of the discrete distribution
+    { P[ . | sequence i] } is less than the entropy_cutoff and None else.
     """
     nr_seqs = numarray.shape(P)[0]
     result = [None] * nr_seqs
