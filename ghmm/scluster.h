@@ -182,8 +182,8 @@ extern "C" {
 */
   int ghmm_scluster_random_labels (ghmm_cseq * sqd, int smo_number);
 
-/** Calculates the aposteriori prob. $\log(p(\lambda_best | O[seq\_id]))$, 
-    where $\lambda_best$ is the model with highest apost. prob.
+/** Calculates the aposteriori prob. \f$\log(p(\lambda_best | O[seq\_id]))\f$, 
+    where \f$\lambda_best\f$ is the model with highest apost. prob.
     @return 0 for success; -1 for error
     @param cl cluster
     @param sqd the sequence in question

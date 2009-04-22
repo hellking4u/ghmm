@@ -427,7 +427,7 @@ int ghmm_dmodel_check_compatibel_models (const ghmm_dmodel * mo, const ghmm_dmod
     Frees all memory from a ghmm_dstate, sets the pointers to NULL and 
     variables to zero.
     @author Peter Pipenbacher
-    @param my_state  state to clean (\Ref{struct ghmm_dstate})
+    @param my_state  state to clean (\link ghmm_dstate)
 */
   void ghmm_dstate_clean (ghmm_dstate * my_state);
 
