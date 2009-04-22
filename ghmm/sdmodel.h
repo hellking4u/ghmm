@@ -233,12 +233,13 @@ extern "C" {
       @return             pointer to an array of sequences
       @param mo:          model
       @param seed:        initial parameter for the random value generator
-      (an integer). If seed == 0, then the random value
-      generator is not initialized.
-      @param global_len:  length of sequences (=0: automatically via final states)
+                          (an integer). If seed == 0, then the random value
+                          generator is not reinitialized.
+      @param global_len:  length of sequences (=0: automatically via final
+                          states)
       @param seq_number:  number of sequences
-      @param T_max:  maximal number of consecutive silent states in model (used to
-	  identify silent circles).
+      @param Tmax:        maximal number of consecutive silent states in model
+                          (used to identify silent circles).
   */
   ghmm_dseq * ghmm_dsmodel_generate_sequences(ghmm_dsmodel * mo, int seed,
 					 int global_len, long seq_number,

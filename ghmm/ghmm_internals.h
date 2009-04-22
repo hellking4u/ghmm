@@ -102,8 +102,8 @@ double ighmm_gtail_pmue_interpol(double mue, double A, double B, double eps);
    Calculates the logarithm of the sum of the probabilities whose logarithms are
    stored in the given array
    @return log of sum of exp(a[i])
-   @param a:          array of logarithms of probabilities (a[i] < 0 for all i)
-   @param length:     length of a
+   @param a     array of logarithms of probabilities (a[i] < 0 for all i)
+   @param N     length of \p a
 */
 double ighmm_cvector_log_sum(double *a, int N);
 
@@ -169,16 +169,16 @@ int ighmm_reestimate_free_matvek(double **alpha, double **beta, double *scale,
    certain parameter from A or B is used)
    computes Baum-Welch variables implicit 
    @return                 0/-1 success/error
-   @param mo:              pointer to a ghmm_dmodel
-   @param alpha:           matrix of forward variables
-   @param backward:        matrix of backward variables
-   @param scale:           scaling vector from forward-backward-algorithm
-   @param seq:             sequence in internal representation
-   @param seq_len:         length of sequence
-   @param matrix_b:        matrix for parameters from B (n_b or m_b)
-   @param matrix_a:        matrix for parameters from A (n_a or m_a)
-   @param vec_pi:          vector for parameters in PI (n_pi or m_pi)
-*/
+   @param mo              pointer to a ghmm_dmodel
+   @param alpha           matrix of forward variables
+   @param beta            matrix of backward variables
+   @param scale           scaling vector from forward-backward-algorithm
+   @param seq             sequence in internal representation
+   @param seq_len         length of sequence
+   @param matrix_b        matrix for parameters from B (n_b or m_b)
+   @param matrix_a        matrix for parameters from A (n_a or m_a)
+   @param vec_pi          vector for parameters in PI (n_pi or m_pi)
+ */
 int ghmm_dmodel_label_gradient_expectations(ghmm_dmodel *mo, double **alpha, double **beta,
                                   double *scale, int *seq, int seq_len,
                                   double **matrix_b, double *matrix_a,

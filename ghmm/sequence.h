@@ -142,9 +142,9 @@ extern "C" {
 /** Truncate double sequences in a given sequence array. 
     Useful for Testing;
    @return truncated sqd_field; 
-   @param sqd\_in sequence arrays for truncation
-   @param sqd\_arrays number of sequence arrays
-   @param  trunc\_ratio 0 means  no truncation, 1 max. truncation
+   @param sqd_in sequence arrays for truncation
+   @param sqd_arrays number of sequence arrays
+   @param  trunc_ratio 0 means  no truncation, 1 max. truncation
    @param seed rng seed
 */
 
@@ -189,7 +189,7 @@ int ghmm_cseq_subseq_free (ghmm_cseq *sqd);
 /**
    Reads a FastA file and returns a ghmm_dseq object
    @param filename filemane of the fasta file
-   @param alfabet  alfabet
+   @param alphabet  alphabet
    @return  ghmm_dseq of the fasta file
 */
 ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
@@ -208,18 +208,18 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
    Choose from the set of models the 
    one with the highest likelihood for the given sequence.
    @param mo            array of models
-   @param model\_number  number of models
+   @param model_number  number of models
    @param sequence      sequence
-   @param seq\_len      length of sequence
-   @param log\_p         log likelihood of the sequence given the best model
-   @return index of best\_model (between 0 and model\_number - 1)
+   @param seq_len      length of sequence
+   @param log_p         log likelihood of the sequence given the best model
+   @return index of best model (between 0 and model_number - 1)
 */
   int ghmm_dseq_best_model (ghmm_dmodel ** mo, int model_number, int *sequence,
                            int seq_len, double *log_p);
 
 /**
    Make sure that the sequences only contain allowed symbols. 
-   (between 0 and max\_symbol - 1)
+   (between 0 and max_symb - 1)
    @param sq          sequences
    @param max_symb    number of different symbols
    @return            -1 for error, 0 for no errors
@@ -312,16 +312,16 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
 
 /**
    Cleans integer sequence pointers in sequence struct. sets 
-   seq\_number to zero.
-   Differs from sequence\_free since memory is not freed here. 
+   seq_number to zero.
+   Differs from sequence_free since memory is not freed here. 
    @param sq sequence structure
   */
   void ghmm_dseq_clean (ghmm_dseq * sq);
 
 /**
    Cleans double sequence pointers in sequence struct. sets 
-   seq\_number to zero.
-   Differs from sequence\_free since memory is not freed here. 
+   seq_number to zero.
+   Differs from sequence_free since memory is not freed here. 
    @param sqd sequence structure
   */
   void ghmm_cseq_clean (ghmm_cseq * sqd);
@@ -349,9 +349,9 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
 
 /**
    Memory allocation for an integer sequence struct. Allocates arrays of lenght
-   seq\_number. NO allocation for the actual sequence, since its length is 
+   seq_number. NO allocation for the actual sequence, since its length is 
    unknown.
-   @param seq\_number:  number of sequences
+   @param seq_number:  number of sequences
    @return:     pointer of sequence struct
 */
   ghmm_dseq *ghmm_dseq_calloc (long seq_number);
@@ -365,9 +365,9 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
 
 /**
    Memory allocation for a double  sequence struct. Allocates arrays of lenght
-   seq\_number. NO allocation for the actual sequence, since its length is 
+   seq_number. NO allocation for the actual sequence, since its length is 
    unknown.
-   @param seq\_number:  number of sequences
+   @param seq_number:  number of sequences
    @return:     pointer of sequence struct
 */
   ghmm_cseq *ghmm_cseq_calloc (long seq_number);
@@ -383,7 +383,7 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
    Copies array of double sequences into an array of integer
    sequences. Truncates positions after decimal point.
    @return       integer sequence struct (target)
-   @param sq    double sequence struct (source)
+   @param sqd    double sequence struct (source)
    */
   ghmm_dseq *ghmm_dseq_create_from_cseq (const ghmm_cseq * sqd);
 
@@ -415,7 +415,7 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
    Missing parts of short sequences are NOT taken into account.
    @return        scatter matrix
    @param sqd     sequence struct
-   @param sqd     (calculated) dimension of scatter matrix
+   @param dim     (calculated) dimension of scatter matrix
   */
   double **ghmm_cseq_scatter_matrix (const ghmm_cseq * sqd, int *dim);
 
@@ -436,9 +436,9 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
     Useful if a training and test set is needed. Memory allocation is done 
     here.
     @param sqd input sequence array
-    @param sqd\_train training sequences
-    @param sqd\_test test sequences
-    @param train\_ratio ratio of number of train vs number of test sequences
+    @param sqd_train training sequences
+    @param sqd_test test sequences
+    @param train_ratio ratio of number of train vs number of test sequences
     @return 0 for success, -1 for error
 */
   int ghmm_cseq_partition (ghmm_cseq * sqd, ghmm_cseq * sqd_train,
@@ -458,9 +458,9 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
 
 /** Log-Likelihood function in a mixture model:
     (mathe mode?)
-    $\sum_k w^k \log( \sum_c (\alpha_c p(O^k | \lambda_c)))$
+    \f$\sum_k w^k \log( \sum_c (\alpha_c p(O^k | \lambda_c)))\f$
     @param smo pointer to array of smodels
-    @param smo\_number number of models
+    @param smo_number number of models
     @param sqd sequence struct
     @param like log likelihood
 */

@@ -130,13 +130,14 @@ extern "C" {
 /*@{ (Doc++-Group: Konstanten) */
 /** 
     Convergence: Halt criterium for Baum-Welch reestimation if the difference
-    of log(P) in two consecutive iterations is smaller than (EPS\_ITER\_BW * log(P))..
+    of log(P) in two consecutive iterations is smaller than
+    (GHMM_EPS_ITER_BW * log(P))..
 */
 #define GHMM_EPS_ITER_BW      0.0001
 
 /**
-  If the absolute difference of two numbers is smaller the EPS_PREC, then the
-  numbers are equal. (Instead of using zero )
+  If the absolute difference of two numbers is smaller the GHMM_EPS_PREC,
+  then the numbers are equal. (Instead of using zero )
   */
 #define GHMM_EPS_PREC         1E-8
 

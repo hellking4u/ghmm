@@ -34,6 +34,9 @@
 *
 *******************************************************************************/
 
+/** \file kbest.c
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "../config.h"
 #endif
@@ -48,27 +51,26 @@
 #include "ghmm_internals.h"
 
 
-/* threshold probability (logarithmized) */
+/** threshold probability (logarithmized) */
 #define KBEST_THRESHOLD -3.50655789732
-  /* log(0.03) => threshold: 3% of most probable partial hypothesis */
+/** log(0.03) => threshold: 3% of most probable partial hypothesis */
 #define KBEST_EPS 1E-15
 
 
 /*============================================================================*/
-/** Data type for linked list of hypotheses
-    Stores the actual label, a link to the parent hypothesis, a counter of the
-    links to this hypothesis and the gamma values */
-struct hypo_List {
-  int hyp_c;
-  int refcount;
+
+/** Data type for single linked list of hypotheses.
+ */
+typedef struct hypo_List {
+  int hyp_c;                /**< hypothesis */
+  int refcount;             /**< counter of the links to this hypothesis */
   int chosen;
   int gamma_states;
   double *gamma_a;
   int *gamma_id;
-  struct hypo_List *next;
-  struct hypo_List *parent;
-};
-typedef struct hypo_List hypoList;
+  struct hypo_List *next;   /**< next list element */
+  struct hypo_List *parent; /**< parent hypothesis */
+} hypoList;
 
 /*============================================================================*/
 /* inserts new hypothesis into list at position indicated by pointer plist */
