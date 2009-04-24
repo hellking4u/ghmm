@@ -34,10 +34,6 @@
 *
 *******************************************************************************/
 
-#ifdef WIN32
-#  include "win_config.h"
-#endif
-
 #ifdef HAVE_CONFIG_H
 #  include "../config.h"
 #endif
