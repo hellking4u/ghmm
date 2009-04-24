@@ -5,10 +5,6 @@
   $Id: chmm.c 1733 2006-10-24 11:42:57Z christoph_mpg $
 *******************************************************************************/
 
-#ifdef WIN32
-#  include "win_config.h"
-#endif
-
 #ifdef HAVE_CONFIG_H
 #  include "../config.h"
 #endif

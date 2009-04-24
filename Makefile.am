@@ -34,9 +34,7 @@ COPYRIGHT.txt \
 GPL.txt \
 LGPL.txt \
 ToDo \
-win_config.h \
 autogen.sh \
-README.Win \
 ${pkgdata_DATA}
 
 doc: doc/ghmm/Doxyfile doc/ghmmwrapper/Doxyfile
