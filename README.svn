@@ -18,10 +18,10 @@ GNU make
 GNU m4
 
 =========================
-Some notes for CVS usage:
+Some notes for SVN usage:
 =========================
 
-Prepare the soruce tree for configuration:
+Prepare the source tree for configuration:
 ==========================================
 
 execute autogen.sh in order to derive all necessary configure tools.
@@ -31,7 +31,7 @@ Then the source tree is ready for normal configuration.
 
 There are some differences:
 
-- The cvs distribution may contain files, that are not included in the normal
+- The svn distribution may contain files, that are not included in the normal
   distribution. This file is an example. Force inclusion of a file by adding
   it to the variable EXTRA_DIST in Makefile.am in this directory.
 
@@ -69,7 +69,7 @@ Build procedure:
 Please notice some pitfalls:
 
 - Edit the right file:
-Make changes only in the cvs tree, all other changes are lost or overridden
+Make changes only in the svn tree, all other changes are lost or overridden
 automatically.
 Make changes in the template file, the other files are derived from that file:
 
