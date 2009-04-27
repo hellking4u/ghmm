@@ -35,6 +35,11 @@ GPL.txt \
 LGPL.txt \
 ToDo \
 autogen.sh \
+doc/xml_example.xml \
+doc/xml_cont_example.xml \
+doc/xml_mix_cont_example.xml \
+doc/xml_switching-example.xml \
+doc/xml_data_structure.fig \
 ${pkgdata_DATA}
 
 doc: doc/ghmm/Doxyfile doc/ghmmwrapper/Doxyfile
