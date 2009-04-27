@@ -67,8 +67,8 @@ extern "C" {
     normal_approx, /**< approximated gaussian */
     normal_left,   /**< left tail */
     uniform,
-    binormal,
-    multinormal,
+    binormal,      /**< two dimensional gaussian */
+    multinormal,   /**< multivariate gaussian */
     density_number /**< number of density types, has to stay last */
   } ghmm_density_t;
 
@@ -81,7 +81,7 @@ extern "C" {
     /** dimension > 1 for multivariate normals */
     int dimension;
     /** mean for output functions (pointer to mean vector
-        for multivariate  */
+        for multivariate) */
     union {
       double val;
       double *vec;
@@ -284,8 +284,8 @@ extern "C" {
 /** 
     Produces sequences to a given model. All memory that is needed for the 
     sequences is allocated inside the function. It is possible to define
-    the length of the sequences global (global_len > 0) or it can be set 
-    inside the function, when a final state in the model is reach (a state
+    the length of the sequences globally (global_len > 0) or it can be set 
+    inside the function, when a final state in the model is reached (a state
     with no output). If the model has no final state, the sequences will
     have length MAX_SEQ_LEN.
     @return             pointer to an array of sequences
@@ -515,7 +515,7 @@ extern "C" {
 /**
     Checks if a non zero transition exists between state 'i' to state 'j'.
     NOTE: No internal checks
-    @return  transition probability from state i to state j
+    @return  0 if there is no non zero transition from state i to state j, 1 else
     @param mo model
     @param i  state index (source)
     @param j  state index (target)
@@ -529,7 +529,7 @@ extern "C" {
     @param mo model
     @param i  state index (source)
     @param j  state index (target)
-    @param prob probabilitys
+    @param prob probability
     @param c  transition class
 */
   void ghmm_cmodel_set_transition (ghmm_cmodel* mo, int i, int j, int c, double prob);
