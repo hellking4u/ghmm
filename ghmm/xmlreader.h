@@ -45,9 +45,10 @@
 extern "C" {
 #endif
 
-/**@name HMM-Model */
 /*@{ (Doc++-Group: xmlreader) */
 
+  /** context struct for reading/writing multiple xml files.
+   */
   typedef struct ghmm_xmlfile {
 
     int noModels;
@@ -55,10 +56,10 @@ extern "C" {
     int modelType;
 
     union {
-      ghmm_cmodel * * c;
-      ghmm_dmodel * * d;
-      ghmm_dpmodel * * dp;
-      ghmm_dsmodel * * ds;
+      ghmm_cmodel  **c;
+      ghmm_dmodel  ** d;
+      ghmm_dpmodel **dp;
+      ghmm_dsmodel **ds;
     } model;
 
   } ghmm_xmlfile;
@@ -71,7 +72,9 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* GHMM_XMLREADER_H */
+
 /*@} (Doc++-Group: xmlreader) */
 
 

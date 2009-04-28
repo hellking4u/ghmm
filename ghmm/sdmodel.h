@@ -46,9 +46,10 @@ extern "C" {
 /**@name HMM-Modell */
 /*@{ (Doc++-Group: model) */
 
-/**
-   The basic structure, keeps all parameters that belong to a state. 
-*/
+/** State struct for discrete emission HMMs with multiple transistion matrices.
+ *
+ * The basic structure, keeps all parameters that belong to a state. 
+ */
 typedef struct ghmm_dsstate {
   /** Initial probability */
     double pi;
@@ -85,9 +86,10 @@ typedef struct ghmm_dsstate {
     int yPosition;
 } ghmm_dsstate;
 
-/**
-   The complete HMM. Contains all parameters, that define a HMM.
-*/
+/** Model struct for discrete emission HMMs with multiple transition matrices.
+ *
+ *  The complete HMM. Contains all parameters, that define a HMM.
+ */
   typedef struct ghmm_dsmodel {
   /** Number of states */
     int N;

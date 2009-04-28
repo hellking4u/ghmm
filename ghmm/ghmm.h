@@ -184,9 +184,8 @@ void ghmm_set_loglevel(int level);
 
 
 /*@{ (Doc++-Group: Common data structures) */
-/** @name ghmm_alphabet
-    keeps a mapping between symbols of the distribution and
-    the integer from 0 until M-1 */ 
+/** Mapping between symbols of the distribution and integers [0,M)
+ */
 typedef struct {
   int id;
   char* description;
@@ -195,11 +194,11 @@ typedef struct {
 } ghmm_alphabet;
 
 
-/** @name ghmm_dbackground
-    A container for background distributions to be used in the reestimation. Model
-    has an ID (== index) to be used for the arrays background_distributions.order
-    and background_distributions.b
-*/
+  /** A container for background distributions to be used in the reestimation.
+   *
+   * Model has an ID (== index) to be used for the arrays
+   * background_distributions.order and background_distributions.b
+   */
 typedef struct {
   /** Number of distributions */
   int n;
@@ -210,7 +209,7 @@ typedef struct {
   /** The probabilities */
   double **b;
   /** string ids of the background distributions */
-  char * * name;
+  char **name;
 } ghmm_dbackground;
 
 /*@} (Doc++-Group: Common data structures) */

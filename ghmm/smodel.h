@@ -111,7 +111,7 @@ extern "C" {
   } ghmm_c_emission;
 
 /**
-    Structure for one state.
+    State struct for continuous emission HMMs.
 */
   typedef struct ghmm_cstate {
   /** Number of output densities per state */
@@ -150,6 +150,8 @@ extern "C" {
 
   struct ghmm_cmodel;
 
+  /** Class change context for continuous emission HMMs.
+   */
   typedef struct ghmm_cmodel_class_change_context {
 
     /* Names of class change module/function (for python callback) */
@@ -168,9 +170,8 @@ extern "C" {
 
   } ghmm_cmodel_class_change_context;
 
-/**
-    continous HMM    
-*/
+/** Model struct for continuous emission HMMs.
+ */
   typedef struct ghmm_cmodel {
   /** Number of states */
     int N;
