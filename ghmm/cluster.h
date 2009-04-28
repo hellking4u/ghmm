@@ -48,13 +48,9 @@
 extern "C" {
 #endif
 
-/**
- @name cluster
- */
-
-/*@{ */
-
-/**
+/** cluster structure for discrete models.
+ *
+ * \obsolete
  */
   typedef struct cluster_t {
   /** 
@@ -127,8 +123,6 @@ extern "C" {
    @param cl cluster of models and sequences
  */
   void ghmm_cluster_print_likelihood (FILE * outfile, cluster_t * cl);
-
-/*@} cluster documentation */
 
 #ifdef __cplusplus
 }
