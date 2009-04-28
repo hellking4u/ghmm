@@ -33,7 +33,7 @@
 #
 ################################################################################
 
-"""@mainpage The Design of ghmm.py
+"""@mainpage GHMM - an open source library for Hidden Markov Models (HMM)
 
 HMMs are stochastic models which encode a probability density over
 sequences of symbols. These symbols can be discrete letters (A,C,G and
@@ -46,6 +46,15 @@ We will always talk about emissions, emission sequence and so
 forth when we refer to the sequence of symbols. Another name
 for the same object is observation resp. observation sequence.
 
+A simple model with a fair and one unfair coin can be created as follows
+
+>> fair = [0.5, 0.5]
+>> loaded = [0.9, 0.1]
+>> A = [[0.9, 0.1], [0.3, 0.7]]
+>> pi = [0.9, 0.1]
+>> B = [fair, loaded]
+>> sigma = ghmm.IntegerRange(0,2)
+>> m = ghmm.HMMFromMatrices(sigma, ghmm.DiscreteDistribution(sigma), A, B, pi)
 
 The objects one has to deal with in HMM modelling are the following
 
@@ -73,8 +82,10 @@ The objects one has to deal with in HMM modelling are the following
    we will use to model emissions in <b>every state</b> of the HMM.
    The \b type of distribution will be identical for all states,
    their \b parameterizations will differ from state to state.
+
 -# We will consider a Sequence of emissions from the same emission
    domain and very often sets of such sequences: SequenceSet
+
 -# The HMM: The HMM consists of two major components: A Markov chain
    over states (implemented as a weighted directed graph with
    adjacency and inverse-adjacency lists) and the emission
@@ -96,28 +107,6 @@ The objects one has to deal with in HMM modelling are the following
    Subclasses of HMM implement specific types of HMM. The type depends
    on the EmissionDomain, the Distribution used, the specific
    extensions to the 'standard' HMMs and so forth
--# HMMFactory: This provides a way of constucting HMMs. Classes derived
-   from HMMFactory allow to read HMMs from files, construct them explicitly
-   from, for a discrete alphabet, transition matrix, emission matrix and prior
-   or serve as the basis for GUI-based model building.
-
-   @par
-   There are several ways of using the HMMFactory.
-
-   @par
-   Static construction:
-
-   @par
-   HMMOpen(fileName) # Calls an object of type HMMOpen instantiated in ghmm\n
-   HMMOpen(fileName, type=HMM.FILE_XML)\n
-   # B is a list of distribution parameters\n
-   HMMFromMatrices(emission_domain, distribution, A, B, pi)\n
-
-   @par
-   Examples:\n
-   hmm = HMMOpen('some-hmm.xml')\n
-   hmm.bla ....
-
 """
 
 import ghmmwrapper
