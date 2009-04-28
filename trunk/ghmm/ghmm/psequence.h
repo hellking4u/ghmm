@@ -5,7 +5,8 @@
 extern "C" {
 #endif
 
-
+  /** Sequence struct for integer/double pairs
+   */
 typedef struct ghmm_dpseq {
   /** for each alphabet in model->number_of_alphabets there is one int seq **/
   int **seq;

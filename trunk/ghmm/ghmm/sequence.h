@@ -47,11 +47,11 @@ extern "C" {
 
 /**@name sequences  (double and int) */
 /*@{ (Doc++-Group: sequence) */
-/** @name struct ghmm_dseq
-    Sequence structure for integer sequences. 
+/** Sequence structure for integer sequences. 
+
     Contains an array of sequences and corresponding
-    data like sequence label, sequence weight, etc. Sequences may have different
-    length.    
+    data like sequence label, sequence weight, etc. Sequences may have
+    different length.    
  */
 
   typedef struct ghmm_dseq {
@@ -92,12 +92,11 @@ extern "C" {
     unsigned int flags;
   } ghmm_dseq;
 
-/** @name struct ghmm_cseq
-    Sequence structure for double sequences. 
+/** Sequence structure for double sequences.
+ 
     Contains an array of sequences and corresponding
-    data like sequnce label, sequence weight, etc. Sequences may have different
-    length.    
-    multi-dimension sequences are linearized
+    data like sequnce label, sequence weight, etc. Sequences may have
+    different length. Multi-dimension sequences are linearized.
  */
   typedef struct ghmm_cseq {
   /** sequence array. sequence[i][j] = j-th symbol of i-th seq.

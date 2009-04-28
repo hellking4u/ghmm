@@ -45,6 +45,10 @@ extern "C" {
 
 struct ghmm_dpmodel;
 
+  /** Class change context for pair HMMs.
+   *
+   * Holds functions pointers for determining the class for switching HMMs.
+   */
 typedef struct ghmm_dpmodel_class_change_context{
 
     /* Names of class change module/function (for python callback) */
@@ -59,6 +63,8 @@ typedef struct ghmm_dpmodel_class_change_context{
     void* user_data;
 } ghmm_dpmodel_class_change_context;
 
+  /** State struct for pair HMMs.
+   */
 typedef struct ghmm_dpstate {
   /** Initial probability */ 
   double pi;
@@ -110,9 +116,10 @@ typedef struct ghmm_dpstate {
   int yPosition;
 } ghmm_dpstate;
 
-/** @name ghmm_dmodel
-    The complete HMM. Contains all parameters, that define a HMM.
-*/
+/** Model struct for pair HMMs.
+ *
+ * Contains all parameters, that define a HMM.
+ */
 typedef struct ghmm_dpmodel {
   /** Number of states */
   int N;
