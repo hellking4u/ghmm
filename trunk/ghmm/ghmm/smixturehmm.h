@@ -52,9 +52,6 @@ extern "C" {
    @name mixture-shmm methods
  */
 
-/*@{ smixturehmm section
- */
-
 /**
  */
   int ghmm_smixturehmm_cluster (FILE * outfile, double **cp, ghmm_cseq * sqd,
@@ -97,8 +94,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-/*@} smixturehmm section */
-#endif                          /* GHMM_SMIXTUREHMM_H */
 
+#endif                          /* GHMM_SMIXTUREHMM_H */
 
 #endif /* GHMM_OBSOLETE */
