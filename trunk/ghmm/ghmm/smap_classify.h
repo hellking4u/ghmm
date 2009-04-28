@@ -34,12 +34,12 @@
 *
 *******************************************************************************/
 
+#ifndef GHMM_SMAP_CLASSIFY_H
+#define GHMM_SMAP_CLASSIFY_H
+
 #include "ghmmconfig.h"
 
 #ifdef GHMM_OBSOLETE
-
-#ifndef GHMM_SMAP_CLASSIFY_H
-#define GHMM_SMAP_CLASSIFY_H
 
 #include "smodel.h"
 
@@ -47,12 +47,10 @@
 extern "C" {
 #endif
 
-/**@name smap functions */
-/*@{ */
-
 /**
-   Maximum A Posteriori Classification Algorithm (MAPCA): 
-   given a field of models and one sequence and suppose the sequence
+   Maximum A Posteriori Classification Algorithm (MAPCA).
+
+   \obsolete given a field of models and one sequence and suppose the sequence
    has been produced by one of these models. This algorithm calculates
    for each model the probability, that the seq. comes from the model.
    This bayesian approach uses a prior for the models. If none is specified
@@ -71,7 +69,9 @@ extern "C" {
                      double *O, int T);
 
 /**
-   Alternative to MAPCA (smap_classify); calculate p[m] directly using 
+   Alternative to MAPCA (smap_classify) using Bayes' theorem.
+
+   \obsolete calculate p[m] directly using 
    Bayes' theorem, instead of recursive over t.
    p(m | O) = p(O | m) * p(m) / (sum_i p(O | i) * p(i))
    @return number of the model, that fits best to the sequence
@@ -87,7 +87,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-/*@} */
-#endif                          /* GHMM_SMAP_CLASSIFY_H */
 
 #endif /* GHMM_OBSOLETE */
+
+#endif                          /* GHMM_SMAP_CLASSIFY_H */

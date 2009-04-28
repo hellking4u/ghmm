@@ -48,9 +48,10 @@ extern "C" {
 #endif
 
 /**
-   @name scanner Structure and methods; the functions handle memory and 
-                 read in the input file, which contains the structure
-		 and the methods. 
+   Structure for reading files.
+
+   \obsolete The functions handle memory and read in the input file, which
+   contains the structure and the methods. 
 */
 
 /*@{ */

@@ -50,18 +50,13 @@
 extern "C" {
 #endif
 
-/**
-   @name scluster
- */
-
-/*@{
- */
-
   /** Switch for Classificator: 0 == MD, 1 == MAW */
 #define CLASSIFY 0
 
 /**
    Cluster structure: All models and sequences.
+
+   \obsolete
 */
   typedef struct scluster_t {
   /** 
