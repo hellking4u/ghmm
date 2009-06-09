@@ -735,7 +735,7 @@ class State(VertexObject):
         cstate.out_a  = ghmmwrapper.list2double_array(outA)
 
     def ReadCState(self, cmodel, cstate, i):
-        self.initial  = ValidatingFloat(cstate.pi)
+        self.initial  = Probability(cstate.pi)
         self.fixed    = ValidatingBool(cstate.fix)
         self.labeling = ValidatingString(cstate.desc)
 
@@ -1031,7 +1031,7 @@ class Transition(EdgeObject):
 
     def __init__(self, tail, head):
         EdgeObject.__init__(self, tail, head)
-        #self.weight = Probability()
+        self.weight = Probability()
         self.editableAttr = {'weight':"Weight"}
 
     def __str__(self):
@@ -1068,7 +1068,7 @@ class Transition(EdgeObject):
 
     def ReadCTransition(self, state, cos, i):
         assert (cos == 1)
-        self.weight = state.getOutProb(i)
+        self.weight = Probability(state.getOutProb(i))
 
 
 class SwitchedTransition(Transition):
