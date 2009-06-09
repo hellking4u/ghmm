@@ -645,7 +645,6 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
       }
       newcstate->fix = stateFixed;
     }
-    free(desc); desc = NULL;
 
     /* ======== pair hmm state ============================================ */
     if ((!xmlStrcmp(elem->name, BAD_CAST "pair"))) {
