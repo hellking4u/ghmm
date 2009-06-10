@@ -108,12 +108,12 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e1.grid(row=1, column=1)
         self.e2.grid(row=2, column=1)
 
-        button1=Tkinter.Button(label, text="OK", command=self.box).grid(row=3)
-        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=3, column=1)
+        button1=Tkinter.Button(label, text="OK", command=self.boxc).grid(row=3)
+        button2=Tkinter.Button(label, text="Cancel", command=self.top.destroy).grid(row=3, column=1)
 
         label.pack()
 
-    def box(self):
+    def boxc(self):
         s1 = string.atof(self.e1.get())
         s2 = string.atof(self.e2.get())
         self.create_new_fkt(
@@ -137,7 +137,7 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e2.grid(row=2, column=1)
 
         button1=Tkinter.Button(label, text="OK", command=self.gauss).grid(row=4)
-        button2=Tkinter.Button(label, text="cancel", command=self.top.destroy).grid(row=4, column=1)
+        button2=Tkinter.Button(label, text="Cancel", command=self.top.destroy).grid(row=4, column=1)
 
         self.label = label
         label.pack()
@@ -179,7 +179,7 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e3.grid(row=3, column=1)
 
         button1=Tkinter.Button(label, text="OK", command=self.gaussl).grid(row=5)
-        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=5, column=1)
+        button2=Tkinter.Button(label,text="Cancel",command=self.top.destroy).grid(row=5, column=1)
 
         self.label = label
         label.pack()
@@ -220,7 +220,7 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e2.grid(row=2, column=1)
         self.e3.grid(row=3, column=1)
         button1=Tkinter.Button(label, text="OK", command=self.gaussr).grid(row=5)
-        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=5, column=1)  
+        button2=Tkinter.Button(label,text="Cancel",command=self.top.destroy).grid(row=5, column=1)  
 
         self.label = label
         label.pack()
