@@ -83,6 +83,18 @@ except:
             return ('defaultdict(%s, %s)' % (self.default_factory,
                                              dict.__repr__(self)))
 
+class UnknownFileTypeException(Exception):
+    def __init__(self,message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
+
+class UnsupportedFileException(Exception):
+    def __init__(self,message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
+
 
 class DiscreteHMMAlphabet:
     def __init__(self, names = [], description = "alphabet_1"):
