@@ -98,9 +98,9 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.top=Tkinter.Toplevel(self.root)
         label=Tkinter.Frame(self.top)
 
-        Tkinter.Label(label, justify=CENTER, text="Uniform density:\nf(x)=1/|start-end| for start<x<end\nelse f(x)=0").grid(row=0)
-        Tkinter.Label(label, text="start=").grid(row=1, sticky=E)
-        Tkinter.Label(label, text="end=").grid(row=2, sticky=E)
+        Tkinter.Label(label, justify=CENTER, text="Uniform density:\nf(x) = 1/|start-end| for start<x<end\nelse f(x) = 0").grid(row=0, columnspan=2)
+        Tkinter.Label(label, text="start = ").grid(row=1, sticky=E)
+        Tkinter.Label(label, text="end = ").grid(row=2, sticky=E)
         self.e1=Tkinter.Entry(label)
         self.e2=Tkinter.Entry(label)
         self.e1.insert(0, -0.5)
@@ -114,18 +114,21 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         label.pack()
 
     def box(self):
-        s1=string.atof(self.e1.get())
-        s2=string.atof(self.e2.get())
-        self.create_new_fkt(ObjectHMM.UniformDensity(start=s1,stop=s2,a=1/math.fabs(s2-s1),color=self.nextColor()))
+        s1 = string.atof(self.e1.get())
+        s2 = string.atof(self.e2.get())
+        self.create_new_fkt(
+            ObjectHMM.UniformDensity(start=s1,stop=s2,a=1/math.fabs(s2-s1),
+                                     color=self.nextColor()))
         self.top.destroy()
 
     def gaussadd(self):
         self.top=Tkinter.Toplevel(self.root)
         label=Tkinter.Frame(self.top) 
         
-        Tkinter.Label(label, justify=CENTER, text="Normal density:\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2)").grid(row=0)  
-        Tkinter.Label(label, text="mu=").grid(row=1, sticky=E)
-        Tkinter.Label(label, text="sigma=").grid(row=2, sticky=E)
+        Tkinter.Label(label, justify=CENTER, text="Normal density:\n f(x) = 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2)").grid(row=0, columnspan=2)  
+        Tkinter.Label(label, text="mu = ").grid(row=1, sticky=E)
+        Tkinter.Label(label, text="sigma = ").grid(row=2, sticky=E)
+        Tkinter.Label(label, text="").grid(row=3, sticky=E)
         self.e1=Tkinter.Entry(label)
         self.e2=Tkinter.Entry(label)
         self.e1.insert(0, 0.0)
@@ -133,17 +136,26 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e1.grid(row=1, column=1)
         self.e2.grid(row=2, column=1)
 
-        button1=Tkinter.Button(label, text="OK", command=self.gauss).grid(row=3)
-        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=3, column=1)
+        button1=Tkinter.Button(label, text="OK", command=self.gauss).grid(row=4)
+        button2=Tkinter.Button(label, text="cancel", command=self.top.destroy).grid(row=4, column=1)
 
+        self.label = label
         label.pack()
 
     def gauss(self):
-        l=len(self.plot_list)
-        s1=string.atof(self.e1.get())
-        s2=string.atof(self.e2.get())
-        
-        self.create_new_fkt(ObjectHMM.NormalDensity(mu=s1,sigma=s2,a=1.0,color=self.nextColor()))
+        mu    = string.atof(self.e1.get())
+        sigma = string.atof(self.e2.get())
+
+        if sigma <= 0:
+            Tkinter.Label(self.label, text="Error! sigma has to be greater than 0,",
+                          foreground="red").grid(row=3, columnspan=2)
+            self.label.pack()
+            return
+
+        self.create_new_fkt(
+            ObjectHMM.NormalDensity(mu=mu,sigma=sigma,a=1.0,color=self.nextColor()))
+
+        del self.label
         self.top.destroy()
         
         
@@ -151,10 +163,11 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.top=Tkinter.Toplevel(self.root)
         label=Tkinter.Frame(self.top)
         
-        Tkinter.Label(label, justify=CENTER, text="Normal density (left tail):\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x<=tail\n else f(x)=0").grid(row=0, sticky=E)  
-        Tkinter.Label(label, text="mu=").grid(row=1, sticky=E)
-        Tkinter.Label(label, text="sigma=").grid(row=2, sticky=E)
-        Tkinter.Label(label, text="tail=").grid(row=3, sticky=E)
+        Tkinter.Label(label, justify=CENTER, text="Normal density (left tail):\n f(x) = 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x<=tail\n else f(x)=0").grid(row=0, columnspan=2, sticky=E)  
+        Tkinter.Label(label, text="mu = ").grid(row=1, sticky=E)
+        Tkinter.Label(label, text="sigma = ").grid(row=2, sticky=E)
+        Tkinter.Label(label, text="tail = ").grid(row=3, sticky=E)
+        Tkinter.Label(label, text="").grid(row=4, sticky=E)
         self.e1=Tkinter.Entry(label)
         self.e2=Tkinter.Entry(label)
         self.e3=Tkinter.Entry(label)
@@ -165,26 +178,38 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e2.grid(row=2, column=1)
         self.e3.grid(row=3, column=1)
 
-        button1=Tkinter.Button(label, text="OK", command=self.gaussl).grid(row=4)
-        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=4, column=1)
+        button1=Tkinter.Button(label, text="OK", command=self.gaussl).grid(row=5)
+        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=5, column=1)
 
+        self.label = label
         label.pack()
 
     def gaussl(self):
-        l=len(self.plot_list)
-        s1=string.atof(self.e1.get())
-        s2=string.atof(self.e2.get())
-        s3=string.atof(self.e3.get())
-        self.create_new_fkt(ObjectHMM.NormalDensityTruncLeft(mu=s1,sigma=s2,tail=s3,a=1.0,color=self.nextColor()))
+        mu    = string.atof(self.e1.get())
+        sigma = string.atof(self.e2.get())
+        tail  = string.atof(self.e3.get())
+
+        if sigma <= 0:
+            Tkinter.Label(self.label, text="Error! sigma has to be greater than 0,",
+                          foreground="red").grid(row=4, columnspan=2)
+            self.label.pack()
+            return
+
+        self.create_new_fkt(
+            ObjectHMM.NormalDensityTruncLeft(mu=mu,sigma=sigma,tail=tail,a=1.0,
+                                             color=self.nextColor()))
+
+        del self.label
         self.top.destroy()
 
     def gaussradd(self):
         self.top=Tkinter.Toplevel(self.root)
         label=Tkinter.Frame(self.top)
-        Tkinter.Label(label, justify=CENTER, text="Normal density (right tail):\n f(x)=\n 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x>=tail\n else f(x)=0").grid(row=0, sticky=E)  
-        Tkinter.Label(label, text="mu=").grid(row=1, sticky=E)
-        Tkinter.Label(label, text="sigma=").grid(row=2, sticky=E)
-        Tkinter.Label(label, text="tail=").grid(row=3, sticky=E)
+        Tkinter.Label(label, justify=CENTER, text="Normal density (right tail):\n f(x) = 1/(sigma*sqrt(2*pi))*exp(-(x-mu)**2/2*(sigma)**2) for x>=tail\n else f(x)=0").grid(row=0, columnspan=2, sticky=E)  
+        Tkinter.Label(label, text="mu = ").grid(row=1, sticky=E)
+        Tkinter.Label(label, text="sigma = ").grid(row=2, sticky=E)
+        Tkinter.Label(label, text="tail = ").grid(row=3, sticky=E)
+        Tkinter.Label(label, text="").grid(row=4, sticky=E)
         self.e1=Tkinter.Entry(label)
         self.e2=Tkinter.Entry(label)
         self.e3=Tkinter.Entry(label)
@@ -194,17 +219,27 @@ class ContinuousEmissionEditor(ProbEditorContinuous.gauss_editor):
         self.e1.grid(row=1, column=1)
         self.e2.grid(row=2, column=1)
         self.e3.grid(row=3, column=1)
-        button1=Tkinter.Button(label, text="OK", command=self.gaussr).grid(row=4)
-        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=4, column=1)  
+        button1=Tkinter.Button(label, text="OK", command=self.gaussr).grid(row=5)
+        button2=Tkinter.Button(label,text="cancel",command=self.top.destroy).grid(row=5, column=1)  
 
+        self.label = label
         label.pack()
 
     def gaussr(self):
-        l=len(self.plot_list)
-        s1=string.atof(self.e1.get())
-        s2=string.atof(self.e2.get())
-        s3=string.atof(self.e3.get())
-        self.create_new_fkt(ObjectHMM.NormalDensityTruncRight(mu=s1,sigma=s2,tail=s3,a=1.0,color=self.nextColor()))
+        mu    = string.atof(self.e1.get())
+        sigma = string.atof(self.e2.get())
+        tail  = string.atof(self.e3.get())
+        
+        if sigma <= 0:
+            Tkinter.Label(self.label, text="Error! sigma has to be greater than 0,",
+                          foreground="red").grid(row=4, columnspan=2)
+            self.label.pack()
+            return
+
+        self.create_new_fkt(
+            ObjectHMM.NormalDensityTruncRight(mu=mu,sigma=sigma,tail=tail,a=1.0,
+                                              color=self.nextColor()))
+        del self.label
         self.top.destroy()
 
     def success(self):
