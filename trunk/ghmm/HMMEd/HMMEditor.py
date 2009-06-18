@@ -416,7 +416,7 @@ class HMMGraphEditor(SAGraphEditor):
         else:
             self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition, etype=d.etype)
 
-        self.G.edit(self)
+        self.G.edit(self.master)
 
         self.graphName = "New"
         self.ShowGraph(self.G, self.graphName)
