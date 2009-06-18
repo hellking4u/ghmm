@@ -283,9 +283,10 @@ class HMMGraphEditor(SAGraphEditor):
         self.modeltype = 0;
         SAGraphEditor.__init__(self, master)
 
-        self.cEdgeDefault   = '#888888'
-        self.cLabelDefault  = 'black' #'#FF8000' # 230 215 0
-        self.cVertexDefault = 'red' #'#007EE0' # 0 125 230
+        GatoGlobals.AnimationParameters.cEdgeDefault   = '#888888'
+        GatoGlobals.AnimationParameters.cLabelDefault  = 'black' #'#FF8000' # 230 215 0
+        GatoGlobals.AnimationParameters.cVertexDefault = 'red' #'#007EE0' # 0 125 230
+
         self.SetTitle("HMMEd _VERSION_")
         
         self.G = ObjectHMM.ObjectHMM(ObjectHMM.State, ObjectHMM.Transition)
