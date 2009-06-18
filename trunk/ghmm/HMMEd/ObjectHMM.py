@@ -1437,23 +1437,23 @@ class ObjectHMM(ObjectGraph):
         if len(initials) == self.Order():
             if isum == 0.0:
                 for vertex in self.vertices.values():
-                    vertex.initial = 1.0 / self.Order()
+                    vertex.initial = Probability(1.0 / self.Order())
             else:
                 factor = 1.0 / isum
                 for vertex in self.vertices.values():
                     if vertex.initial >= 0.0:
-                        vertex.initial *= factor
+                        vertex.initial = Probabilty(factor * vertex.initial)
         else:
             if isum > 1.0:
                 factor = 1.0 / isum
                 for vertex in self.vertices.values():
                     if vertex.initial >= 0.0:
-                        vertex.initial *= factor
+                        vertex.initial = Probabilty(factor * vertex.initial)
             elif isum < 1.0:
                 mean = (1.0-isum) / (self.Order()-len(initials))
                 for vertex in self.vertices.values():
                     if vertex.initial < 0.0:
-                        vertex.initial = mean
+                        vertex.initial = Probability(mean)
 
         # normalize state's transition probablilities
         for vertex in self.vertices.values():
@@ -1545,12 +1545,12 @@ class ObjectHMM(ObjectGraph):
 
         if initial_sum < 1E-14:
             for id in sortedIDs:
-                self.vertices[id].initial = 1.0
+                self.vertices[id].initial = Probabilty(1.0)
             initial_sum = float(self.Order())
 
         for i, id in enumerate(sortedIDs):
             cstate = cmodel.getState(i)
-            self.vertices[id].initial /= initial_sum
+            self.vertices[id].initial = Probability(self.vertices[id].initial / initial_sum)
             self.vertices[id].WriteCState(cstate)
 
         return cmodel
