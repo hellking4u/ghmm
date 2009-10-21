@@ -62,7 +62,15 @@ int ighmm_invert_det(double *sigmainv, double *det, int length, double *cov)
 
   for (i=0; i<length; ++i) {
     for (j=0; j<length; ++j) {
+#ifdef DO_WITH_GSL_DIAGONAL_HACK
+        if (i == j){
+          gsl_matrix_set(tmp, i, j, cov[i*length+j]);
+        }else{
+          gsl_matrix_set(tmp, i, j, 0.0);
+        }
+#else
         gsl_matrix_set(tmp, i, j, cov[i*length+j]);
+#endif
     }
   }
 
