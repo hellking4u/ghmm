@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 project(ghmm)
 
-# where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
+#  where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(GHMM_OBSOLETE "Build ghmm with obsolete functions" 1)
