@@ -1097,7 +1097,7 @@ ghmm_dseq *ghmm_dmodel_generate_sequences(ghmm_dmodel* mo, int seed, int global_
         max_sum = 0.0;
         for (j = 0; j < mo->s[state].out_states; j++) {
           j_id = mo->s[state].out_id[j];
-          if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] < pos)
+          if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] <= pos)
             max_sum += mo->s[state].out_a[j];
         }
         if (j && fabs(max_sum) < GHMM_EPS_PREC) {
@@ -1114,7 +1114,7 @@ ghmm_dseq *ghmm_dmodel_generate_sequences(ghmm_dmodel* mo, int seed, int global_
       sum = 0.0;
       for (j = 0; j < mo->s[state].out_states; j++) {
         j_id = mo->s[state].out_id[j];
-        if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] < pos) {
+        if (!(mo->model_type & GHMM_kHigherOrderEmissions) || mo->order[j_id] <= pos) {
           sum += mo->s[state].out_a[j];
           if (sum >= p)
             break;
