@@ -82,7 +82,7 @@ def getClass( seq, k,t):
      # some cumulative function over the sequence
      seq_sum = 0
      for i in range(t):
-         seq_sum += seq[0]
+         seq_sum += seq[i]
      if seq_sum <= 80:
          return 0
      else:
