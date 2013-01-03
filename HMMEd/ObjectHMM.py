@@ -1442,13 +1442,13 @@ class ObjectHMM(ObjectGraph):
                 factor = 1.0 / isum
                 for vertex in self.vertices.values():
                     if vertex.initial >= 0.0:
-                        vertex.initial = Probabilty(factor * vertex.initial)
+                        vertex.initial = Probability(factor * vertex.initial)
         else:
             if isum > 1.0:
                 factor = 1.0 / isum
                 for vertex in self.vertices.values():
                     if vertex.initial >= 0.0:
-                        vertex.initial = Probabilty(factor * vertex.initial)
+                        vertex.initial = Probability(factor * vertex.initial)
             elif isum < 1.0:
                 mean = (1.0-isum) / (self.Order()-len(initials))
                 for vertex in self.vertices.values():
