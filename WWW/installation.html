@@ -15,30 +15,41 @@
 <p>
 <ul>
 
-<li> Recent GCC, recent, working autoconf and automake.
+<li> Recent GCC, recent, working autoconf and automake. If you are running
+a recent Linux distribution you should be fine. On the MacOS we recommend
+using <a href="http://www.finkproject.org">Fink</A> to install all required
+packages including Python.
 
-<li> <A HREF="http://xmlsoft.org/">Libxml2</A> 
+<li> <A HREF="http://xmlsoft.org/">Libxml2</A>
 
-<li> Optional: The GHMM is self-contained, but can make use of the
-GSL. Note that the GSL is GPL licensed and that will most likely force
-your code under the GPL.  You need to pass <kbd>--enable-gsl</kbd> option
-to configure.
-
+<li> Optional: The GHMM is self-contained, but can make use of the <A
+HREF="http://www.gnu.org/software/gsl/">GSL</A>. Note that the GSL is
+GPL licensed and that will AFAIK force your code under the GPL.  You
+need to pass <kbd>--enable-gsl</kbd> option to configure to use the
+GSL, in particular the nice collection of random number genetration.
+			  
 <li> For the optional Python wrappers you need the following. If
 building without Python wrapper use the <kbd>--without-python</kbd>
 option for configure.
-<ul>
+				<ul>
 
-<li> Python version 2.6.x or 2.7.x GHMM is not yet compatible with
+<li> Python version 2.6.x or 2.7.x. GHMM is not yet compatible with
 Python 3.x releases nor with earlier releases. Note that on many Linux
-distributions the default installs are missing header files.  
-
+distributions the default installs are missing header files. You need
+to add the developer Python packages (which might be called
+python27-dev for example) and shared libs.
+					
 <li> <A HREF="http://www.swig.org/">SWIG</A>, the simplified wrapper
-interface generator.  <li> Optional: If you want to use the editor
-HMMEd you need X11 (or equivalent), Tk and Tkinter.  
+interface generator version 2.0.1. More recent versions (in particular
+2.0.8) cause errors. For the time being please just use 2.0.1.
 
-<li> Optional: If you use the GSL also install the <A HREF="http://pygsl.sf.net">Pygsl</A>
-Python bindings for the GSL.
+<li> Optional: If you want to use the editor HMMEd you need X11 (or
+equivalent), Tk and Tkinter and also the Gato package which you can
+obtain from <A HREF="http://gato.sf.net">Sourceforge</A> or the <A
+HREF="http://pypi.python.org/pypi/Gato/">Python Package Index</A>.
+
+<li> Optional: If you use the GSL also install the <A
+HREF="http://pygsl.sf.net">Pygsl</A> Python bindings for the GSL.
 </ul>
 </ul>
 
@@ -120,13 +131,31 @@ This might require setting your <kbd>PYTHONPATH</kbd> or
 
 </p>
 
-<h4>OS-specific tips</H4>
-<p> <ul>
-<li>Mac OS X: 10.6 ships with a broken libtool which breaks the installation (and it also ships with Python 2.5, so you need an update for that). James Howard posted a solution on the mailing list:  <A HREF="http://sourceforge.net/mailarchive/forum.php?thread_name=AANLkTinGL0D4Oq7x%2Bvw6V7ZPXc6RkH3VNQ2zZz%3DMtpa9%40mail.gmail.com&forum_name=ghmm-list">[Ghmm-list] Compiling in OS X 10.6</A>
-<li>Windows: There is no Windows support. Installing Cygwin should work. Check the mailing list; it seems that some people had success. 
-<li>Linux: various distributions are creative about install locations and the scope what actually is installed. You want the developer/header whatever-they-are-called packages in addition to that. Note that specific distributions also omit part of the Python standard library (Ubuntu and the Python profiler).
-<li>C++: We used to have C++ bindings emulating the semantics of the Python interface, but we lost interest after it became clear that Python plus C is nicer and as fast.
+<h4>OS-specific tips</H4> <p> 
+<ul> 
+
+<li>Mac OS X: 10.6 ships with a broken libtool which breaks the
+installation (and it also ships with Python 2.5, so you need an update
+for that). James Howard posted a solution on the mailing list: <A
+HREF="http://sourceforge.net/mailarchive/forum.php?thread_name=AANLkTinGL0D4Oq7x%2Bvw6V7ZPXc6RkH3VNQ2zZz%3DMtpa9%40mail.gmail.com&forum_name=ghmm-list">[Ghmm-list]
+Compiling in OS X 10.6</A>
+
+<li>Windows: There is no Windows support. Installing Cygwin should
+work. Check the mailing list; it seems that some people had success.
+
+<li>Linux: various distributions are creative about install locations
+and the scope of what actually is installed. You want the
+developer/header whatever-they-are-called packages in addition to
+that. Note that specific distributions also omit part of the Python
+standard library (e.g., Ubuntu omits the Python profiler for licensing
+reasons).
+
+<li>C++: We used to have C++ bindings emulating the semantics of the
+Python interface, but we lost interest after it became clear that
+Python plus C is nicer and as fast.
+
 </ul>
+
 </p>
 
 
@@ -134,13 +163,27 @@ This might require setting your <kbd>PYTHONPATH</kbd> or
 <h4>Troubleshooting</H4>
 
 
-<p> <ul>
-<li>There are more options to configure, check <kbd>configure --help</kbd>. 
-<li>There is anecdotal evidence that adding search paths to <kbd>ghmm/ghmmwrapper/setup.py</kbd>
-is the easiest way to get around install problems in really creative installations. 
-<li>If you don't have
-root access, installing somewhere in your home directory by specifying the <kbd>--prefix</kbd> arguments
-seems to be the path of least resistence. Then you need to set <kbd>PYTHONPATH</kbd>, <kbd>LD_LIBRARY_PATH</kbd> and possibly <kbd>PATH</kbd> accordingly in your <kbd>.bashrc</kbd>.
+<p> <ul> 
+
+</li>If <kbd>autogen.sh</kbd> and <kbd>configure</kbd> run without
+problems but during make you get the error <kbd>libtool: Version
+mismatch error.</kbd> please run <kbd>cautoreconf --force --install</kbd>
+followed by <kbd>configure; make; make install ...</kbd>.
+
+
+<li>There are more options to configure, check <kbd>configure
+--help</kbd>. Note that <kbd>--disable-obsolete</kbd> is currently broken.
+
+<li>There is anecdotal evidence that adding search paths to
+<kbd>ghmm/ghmmwrapper/setup.py</kbd> is the easiest way to get around
+install problems in really creative installations.
+
+<li>If you don't have root access, installing somewhere in your home
+directory by specifying the <kbd>--prefix</kbd> arguments seems to be
+the path of least resistence. Then you need to set
+<kbd>PYTHONPATH</kbd>, <kbd>LD_LIBRARY_PATH</kbd> and possibly
+<kbd>PATH</kbd> accordingly in your <kbd>.bashrc</kbd>.
+
 </ul>
 </p>
 
