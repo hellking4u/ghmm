@@ -44,9 +44,15 @@ interface generator version 2.0.1. More recent versions (in particular
 2.0.8) cause errors. For the time being please just use 2.0.1.
 
 <li> Optional: If you want to use the editor HMMEd you need X11 (or
-equivalent), Tk and Tkinter and also the Gato package which you can
-obtain from <A HREF="http://gato.sf.net">Sourceforge</A> or the <A
-HREF="http://pypi.python.org/pypi/Gato/">Python Package Index</A>.
+equivalent), Tk and Tkinter and also the Gato package. Please use the
+Gato out of svn. You can check it out with 
+<center> 
+<kbd>svn checkout svn://svn.code.sf.net/p/gato/code/trunk Gato</kbd>
+</center>
+The Gato 1.1.2
+package from  <A HREF="http://gato.sf.net">Sourceforge</A> or the
+<A HREF="http://pypi.python.org/pypi/Gato/">Python Package Index</A>
+ contain a bug only affecting HMMEd.
 
 <li> Optional: If you use the GSL also install the <A
 HREF="http://pygsl.sf.net">Pygsl</A> Python bindings for the GSL.
@@ -64,7 +70,7 @@ href="http://sourceforge.net/svn/?group_id=67094">http://sourceforge.net/svn/?gr
 An anonymous checkout can simply be done by
 <center>
 <kbd>
-svn co https://ghmm.svn.sourceforge.net/svnroot/ghmm/trunk/ghmm
+svn checkout svn://svn.code.sf.net/p/ghmm/code/trunk/ghmm ghmm
 </kbd>
 </center>
 </p>
@@ -128,6 +134,16 @@ to use explicitely.
 This might require setting your <kbd>PYTHONPATH</kbd> or
 <kbd>LD_LIBRARY_PATH</kbd> environment variable appropriately.
 </P>
+
+<p>
+The graphical editor can be installed after installing Gato (see above)
+just like the Python bindings in <kbd>ghmmwrapper</kbd>
+<pre><kbd>
+> cd ../HMMEd
+> /some/otherpath/python setup.py build
+> /some/otherpath/python setup.py install --prefix=/yetanotherpath/
+</kbd></pre>
+
 
 </p>
 
