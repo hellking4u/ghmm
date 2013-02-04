@@ -54,8 +54,7 @@ setup(name="ghmmwrapper",
                                           'wrapper_dseq.i', 'wrapper_xmlfile.i']
                                )
                      ],
-      py_modules  = ['ghmm','ghmmhelper','modhmmer','class_change','ghmmwrapper'],
-      packages    = ['ghmm_gato'],
+      py_modules  = ['ghmm','ghmmhelper','modhmmer','class_change','ghmmwrapper']
      )
 
 # EOF: setup.py
