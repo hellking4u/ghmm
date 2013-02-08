@@ -1189,6 +1189,7 @@ class ObjectHMM(ObjectGraph):
         ObjectGraph.AddEdge(self,tail,head)
         edge = self.edges[tail,head]
         edge.SetWeight(1.0)
+        return tail, head
 
     def DeleteEdge(self,tail,head):
         ObjectGraph.DeleteEdge(self,tail,head)
