@@ -1523,8 +1523,10 @@ class ObjectHMM(ObjectGraph):
             orders = ghmmwrapper.list2int_array(self.backgroundDistributions.getOrders())
             (weights,lengths) = ghmmhelper.list2double_matrix(self.backgroundDistributions.getWeights())
             cmodel.bp = ghmmwrapper.ghmm_dbackground(N, M, orders, weights)
-            for i,name in enumerate(self.backgroundDistributions.getNames()):
-                cmodel.bp.setName(i, name)
+##            for i,name in enumerate(self.backgroundDistributions.getNames()):
+##                # At this point cmodel.bp.name is still null. We need to allocate space here.
+##                # On the other hand, there is no support for background names on the Python side
+##                cmodel.bp.setName(i, name)
             cmodel.background_id = ghmmwrapper.list2int_array([(self.vertices[id].background-1) for id in sortedIDs])
 
         # fill higher order array
