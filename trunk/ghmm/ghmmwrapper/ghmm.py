@@ -650,14 +650,18 @@ class EmissionSequence(object):
             # necessary C functions for accessing the ghmm_dseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq
             self.allocSingleSeq = ghmmwrapper.int_array_alloc
-            self.seq_read = ghmmwrapper.ghmm_dseq_read
+            #obsolete
+            if ghmmwrapper.ASCI_SEQ_FILE:
+                self.seq_read = ghmmwrapper.ghmm_dseq_read
             self.seq_ptr_array_getitem = ghmmwrapper.dseq_ptr_array_getitem
             self.sequence_carray = ghmmwrapper.list2int_array
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the ghmm_cseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_cseq
             self.allocSingleSeq = ghmmwrapper.double_array_alloc
-            self.seq_read = ghmmwrapper.ghmm_cseq_read
+	    #obsolete
+            if ghmmwrapper.ASCI_SEQ_FILE:
+                self.seq_read = ghmmwrapper.ghmm_cseq_read
             self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
             self.sequence_carray = ghmmwrapper.list2double_array
         else:
@@ -890,14 +894,18 @@ class SequenceSet(object):
             # necessary C functions for accessing the ghmm_dseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_dseq
             self.allocSingleSeq = ghmmwrapper.int_array_alloc
-            self.seq_read = ghmmwrapper.ghmm_dseq_read
+            #obsolete
+            if ghmmwrapper.ASCI_SEQ_FILE:
+                self.seq_read = ghmmwrapper.ghmm_dseq_read
             self.seq_ptr_array_getitem = ghmmwrapper.dseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2int_matrix
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the ghmm_cseq struct
             self.sequenceAllocationFunction = ghmmwrapper.ghmm_cseq
             self.allocSingleSeq = ghmmwrapper.double_array_alloc
-            self.seq_read = ghmmwrapper.ghmm_cseq_read
+            #obsolete
+            if ghmmwrapper.ASCI_SEQ_FILE:
+                self.seq_read = ghmmwrapper.ghmm_cseq_read
             self.seq_ptr_array_getitem = ghmmwrapper.cseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2double_matrix
         else:
@@ -1181,7 +1189,13 @@ def SequenceSetOpen(emissionDomain, fileName):
     @returns a list of SequenceSet objects.
 
     """
+    #checks if supports asci sequence files, deprecated
+    if not ghmmwrapper.ASCI_SEQ_FILE:
+	raise UnsupportedFeature("asci sequence files are deprecated. Please convert your files"
+                                       + " to the new xml-format or rebuild the GHMM with"
+                                       + " the conditional \"GHMM_OBSOLETE\".")
 
+        
     if not os.path.exists(fileName):
         raise IOError('File ' + str(fileName) + ' not found.')
 
@@ -1232,7 +1246,7 @@ class HMMFactory(object):
     """
 
 
-GHMM_FILETYPE_SMO = 'smo'
+GHMM_FILETYPE_SMO = 'smo' #obsolete
 GHMM_FILETYPE_XML = 'xml'
 GHMM_FILETYPE_HMMER = 'hmm'
 

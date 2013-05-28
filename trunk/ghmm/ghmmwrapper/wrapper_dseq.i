@@ -165,6 +165,8 @@ extern ghmm_dseq* ghmm_dseq_calloc(long number);
     }
 }
 
+#ifdef GHMM_OBSOLETE
 extern ghmm_dseq **ghmm_dseq_read(const char *filename, int *seq_arrays);
+#endif /* GHMM_OBSOLETE */
 
 REFERENCE_ARRAY(ghmm_dseq, dseq_ptr)
