@@ -173,7 +173,10 @@ class EmissionSequenceTests(unittest.TestCase):
         self.d_seq[1] = 8.34
         self.assertEqual(self.d_seq[1],8.34)
 
+    #obsolete test
     def testFileIO(self):
+	if not ghmmwrapper.ASCI_SEQ_FILE:
+            return True;
         log.debug("EmissionSequenceTests.testFileIO")
         self.i_seq.write("testdata/es_discrete_testwrite.seq")
         self.d_seq.write("testdata/es_continuous_testwrite.seq")
@@ -193,8 +196,10 @@ class EmissionSequenceTests(unittest.TestCase):
         self.d_seq.setWeight(2.0)
         w2 = self.d_seq.getWeight()
         self.assertEqual(w2,2.0)
-
+    #obsolete test
     def testlabelaccess(self):
+        if not ghmmwrapper.SEQ_LABEL_FIELD:
+            return True;
         log.debug("EmissionSequenceTests.testlabelaccess")
         self.i_seq.setSeqLabel(8)
         l = self.i_seq.getSeqLabel()
@@ -359,8 +364,10 @@ class SequenceSetTests(unittest.TestCase):
         log.debug("SequenceSetTests.testwrite")
         self.i_seq.write("testdata/ghmmunittests_testwrite.seq")
         self.d_seq.write("testdata/ghmmunittests_testwrite.seq")
-
+    #obsolete test
     def testlabelaccess(self):
+        if not ghmmwrapper.SEQ_LABEL_FIELD:
+            return True;
         log.debug("SequenceSetTests.testlabelaccess")
         self.i_seq.getSeqLabel(2)
         l = self.d_seq.getSeqLabel(3)
@@ -368,8 +375,10 @@ class SequenceSetTests(unittest.TestCase):
         self.d_seq.setSeqLabel(3,8)
         l = self.d_seq.getSeqLabel(3)
         self.assertEqual(l,8)
-
+    #obsolete test
     def testfilereading(self):
+        if not ghmmwrapper.ASCI_SEQ_FILE:
+            return True;
         log.debug("SequenceSetTests.testfilereading")
         dom = ghmm.IntegerRange(0,12)
         seqs = ghmm.SequenceSetOpen(dom, 'testdata/d_seq.sqd')
@@ -1140,8 +1149,10 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         seq = ghmm.EmissionSequence(ghmm.Float(), rawseq)
         lp = self.model.joined(seq, [0,2,1,2,0,])
         self.assertAlmostEqual(lp, -26.552408895488998)
-
+    #obsolete test
     def testSMO(self):
+        if not ghmmwrapper.SMO_FILE_SUPPORT:
+            return True;
         model = ghmm.HMMOpen('testdata/tiny.smo')
 
     def testNewXML(self):

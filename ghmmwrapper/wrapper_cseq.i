@@ -1,6 +1,8 @@
 %{
 #include "ghmm/sequence.h"
+#ifdef GHMM_OBSOLETE
 #include "ghmm/obsolete.h"
+#endif /*GHMM_OBSOLETE*/
 %}
 
 /*==========================================================================
@@ -120,7 +122,7 @@ extern ghmm_cseq* ghmm_cseq_calloc(long number);
         return NULL;
     }
 }
-
+#ifdef GHMM_OBSOLETE
 extern ghmm_cseq **ghmm_cseq_read(const char *filename, int *sqd_number);
-
+#endif /*GHMM_OBSOLETE*/
 REFERENCE_ARRAY(ghmm_cseq, cseq_ptr)
