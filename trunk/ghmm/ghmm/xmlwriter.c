@@ -352,8 +352,12 @@ static int writeDiscreteStateContents(xmlTextWriterPtr writer, ghmm_xmlfile* f,
   if (f->model.d[moNo]->model_type & GHMM_kBackgroundDistributions) {
     bgId = f->model.d[moNo]->background_id[sNo];
     if (bgId != GHMM_kNoBackgroundDistribution) {
-/*       if (f->model.d[moNo]->bp->name[bgId]) { */
-      rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "backgroundKey", "bg_%d", bgId);
+       if (f->model.d[moNo]->bp->name[bgId]) { 
+          rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "backgroundKey", f->model.d[moNo]->bp->name[bgId]);
+       }
+       else{
+           rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "backgroundKey", "bg_%d", bgId);
+       }
 /*                                        BAD_CAST f->model.d[moNo]->bp->name[bgId]); */
       if (rc<0) {
         GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement (backgroundKey)");
@@ -491,10 +495,14 @@ static int writeDiscreteSwitchingStateContents(xmlTextWriterPtr writer,
           GHMM_LOG(LERROR, "Error at xmlTextWriterWriteElement (backgroundKey)");
           goto STOP;
         }
-      } else {
+      } 
+      else{
+        rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "backgroundKey", "bg_%d", bgId);
+      }
+        /*else {
         GHMM_LOG(LERROR, "background name is NULL pointer, invalid model");
         goto STOP;
-      }
+        }*/
     }
   }
 
@@ -610,7 +618,7 @@ static int writeMultiNormal(xmlTextWriterPtr writer, ghmm_c_emission *emission)
 
     return 0;
 STOP:
-    free(tmp);
+    m_free(tmp);
     return -1;
 #undef CUR_PROC
 }

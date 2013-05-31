@@ -1366,7 +1366,7 @@ class HMMOpenFactory(HMMFactory):
             result = result[0]
 
         return result
-
+    #obsolete
     def openOldXML(self, fileName):
         from ghmm_gato import xmlutil
         hmm_dom = xmlutil.HMM(fileName)
