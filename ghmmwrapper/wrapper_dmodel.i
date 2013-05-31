@@ -34,7 +34,12 @@ ghmm_dbackground* ghmm_dbackground_alloc (int n, int m, int* orders, double** B)
         int getOrder(size_t index) { return self->order[index]; }
         double *getWeights(size_t index) { return self->b[index]; }
 	char *getName (size_t index) { return self->name[index]; }
-	void  setName (size_t index, char *value) { self->name[index] = value; }
+	void  setName (size_t index, char *value) {
+          if(index < self->n){
+            self->name[index] = (char*) malloc(sizeof(char) * (strlen(value)+1));
+            strcpy(self->name[index], value); 
+          }//todo error handleing
+        }
 }
 
 

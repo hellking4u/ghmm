@@ -615,10 +615,12 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 static void ghmm_alphabet_free(ghmm_alphabet *a) {
 #define CUR_PROC "ghmm_alphabet_free"
     int i;
-    for (i=0; i<a->size; i++)
-        free(a->symbols[i]);
-    free(a->symbols);
-    free(a);
+    if(a && a->symbols){
+      for (i=0; i<a->size; i++)
+          m_free(a->symbols[i]);
+      m_free(a->symbols);
+      m_free(a);
+    }
 #undef CUR_PROC
 }
 
@@ -668,7 +670,6 @@ int ghmm_dmodel_free(ghmm_dmodel ** mo) {
 int ghmm_dbackground_free(ghmm_dbackground *bg) {
 #define CUR_PROC "ghmm_dbackground_free"
   int i;
-
   if (bg->order)
     m_free(bg->order);
   if (bg->b)
@@ -1737,12 +1738,12 @@ double ghmm_dmodel_prob_distance (ghmm_dmodel * m0, ghmm_dmodel * m, int maxT, i
   }                             /* k = 1,2 */
 
   ghmm_dseq_free (&seq0);
-  free (d1);
+  m_free (d1);
   return d;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
   ghmm_dseq_free (&seq0);
-  free (d1);
+  m_free (d1);
   return (0.0);
 #undef CUR_PROC
 }
@@ -2215,6 +2216,13 @@ ghmm_dbackground *ghmm_dbackground_alloc (int n, int m, int *orders, double **B)
 
   ARRAY_CALLOC(ptbackground, 1);
 
+  //initialize name
+  ARRAY_CALLOC(ptbackground->name, n);
+  int i;
+  for(i = 0; i < n; i++){
+    ptbackground->name[i] = NULL;
+  }
+
   ptbackground->n = n;
   ptbackground->m = m;
   if (orders)
@@ -2247,9 +2255,14 @@ ghmm_dbackground *ghmm_dbackground_copy(ghmm_dbackground * bg)
       new_b[i][j] = bg->b[i][j];
     }
   }
-
-  return ghmm_dbackground_alloc (bg->n, bg->m, new_order,
+  
+  ghmm_dbackground *tmp = ghmm_dbackground_alloc (bg->n, bg->m, new_order,
                                                new_b);
+  
+  for(i = 0; i < bg->n; i++){
+    if(bg->name[i]) strcpy(tmp->name[i], bg->name[i]);
+  }
+  return tmp;
 
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 

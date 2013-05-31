@@ -1104,11 +1104,11 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
   if (modeltype & GHMM_kBackgroundDistributions) {
     switch (f->modelType & PTR_TYPE_MASK) {
     case GHMM_kDiscreteHMM:
-      ARRAY_CALLOC(bg_orders, N);
-      ARRAY_CALLOC(bg_ptr, N);
+      ARRAY_CALLOC(bg_orders, nrBackgrounds);
+      ARRAY_CALLOC(bg_ptr, nrBackgrounds);
       f->model.d[modelNo]->bp = ghmm_dbackground_alloc(nrBackgrounds, M,
                                                         bg_orders, bg_ptr);
-      ARRAY_CALLOC(f->model.d[modelNo]->bp->name, N);
+      ARRAY_CALLOC(f->model.d[modelNo]->bp->name, nrBackgrounds);
       f->model.d[modelNo]->bp->n = 0;
       break;
     default:
