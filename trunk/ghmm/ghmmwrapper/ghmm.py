@@ -2020,12 +2020,14 @@ class BackgroundDistribution(object):
         B = []
         for i in xrange(distNum):
              order = orders[i]
-             size = int(pow(m,(order+1)))
+             size = int(pow(self.m,(order+1)))
              b = [0.0]*size
              for j in xrange(size):
                   b[j] = ghmmwrapper.double_matrix_getitem(self.cbackground.b,i,j)
              B.append(b)
         return (distNum,orders,B)
+
+        
 
 #-------------------------------------------------------------------------------
 #- HMM and derived
