@@ -1108,7 +1108,6 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
       ARRAY_CALLOC(bg_ptr, nrBackgrounds);
       f->model.d[modelNo]->bp = ghmm_dbackground_alloc(nrBackgrounds, M,
                                                         bg_orders, bg_ptr);
-      ARRAY_CALLOC(f->model.d[modelNo]->bp->name, nrBackgrounds);
       f->model.d[modelNo]->bp->n = 0;
       break;
     default:

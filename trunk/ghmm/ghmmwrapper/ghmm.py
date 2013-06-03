@@ -1973,11 +1973,12 @@ class BackgroundDistribution(object):
                 ghmmwrapper.double_matrix_set_col(b, i, b_i)
 
             self.cbackground = ghmmwrapper.ghmm_dbackground(distNum, len(emissionDomain), order, b)
-
-        elif isinstance(bgInput, ghmmwrapper.background_distributions):
+            self.name2id = dict()
+        elif isinstance(bgInput, ghmmwrapper.ghmm_dbackground):
             self.cbackground = bgInput
             self.emissionDomain = emissionDomain
-
+            self.name2id = dict()
+            self.updateName2id()
         else:
             raise TypeError("Input type "+str(type(bgInput)) +" not recognized.")
 
@@ -2011,7 +2012,7 @@ class BackgroundDistribution(object):
         return outstr
 
     def getCopy(self):
-        return self.cbackground.copy()
+        return BackgroundDistribution(self.emissionDomain, self.cbackground.copy())
 
     def toLists(self):
         dim = self.cbackground.m
@@ -2026,6 +2027,21 @@ class BackgroundDistribution(object):
                   b[j] = ghmmwrapper.double_matrix_getitem(self.cbackground.b,i,j)
              B.append(b)
         return (distNum,orders,B)
+
+    def getName(self, i):
+        if i < self.cbackground.n:
+            return self.cbackground.getName(i)
+
+    def setName(self, i, name):
+        if i < self.cbackground.n:
+            self.cbackground.setName(i, name)
+            self.name2id[name] = i
+
+    def updateName2id(self):
+        for i in xrange(self.cbackground.n):
+            tmp = self.cbackground.getName(i)
+            if tmp is not None:
+                self.name2id[tmp] = i
 
         
 
@@ -2810,8 +2826,8 @@ class DiscreteEmissionHMM(HMM):
         if self.background != None:
             del(self.background)
             ghmmwrapper.free(self.cmodel.background_id)
-        self.cmodel.bp = backgroundObject.getCopy()
-        self.background = backgroundObject
+        self.background = backgroundObject.getCopy()
+        self.cmodel.bp = self.background.cbackground
         self.cmodel.background_id = ghmmwrapper.list2int_array(stateBackground)
 
         # updating model type
@@ -2820,7 +2836,7 @@ class DiscreteEmissionHMM(HMM):
     def setBackgroundAssignments(self, stateBackground):
         """ Change all the assignments of background distributions to states.
 
-        Input is a list of background ids or '-1' for no background
+        Input is a list of background ids or '-1' for no background, or list of background names
         """
         if not type(stateBackground) == list:
            raise TypeError("list required got "+ str(type(stateBackground)))
@@ -2829,10 +2845,15 @@ class DiscreteEmissionHMM(HMM):
         assert len(stateBackground) == self.N, "Error: Number of weigths does not match number of states."
         # check for valid background id
         for d in stateBackground:
-            assert d in range(self.cbackground.n), "Error: Invalid background distribution id."
+            if type(d) == str:
+                assert self.background.name2id.has_key(d), "Error:  Invalid background distribution name."
+                d = self.background.name2id[d]
+            assert d in range(self.background.cbackground.n), "Error: Invalid background distribution id."
 
         for i, b_id in enumerate(stateBackground):
-                self.cmodel.background_id[i] = b_id
+                if type(b_id) == str:
+                    b_id = self.background.name2id[b_id]
+                ghmmwrapper.int_array_setitem(self.cmodel.background_id, i, b_id)
 
 
     def getBackgroundAssignments(self):

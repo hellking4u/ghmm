@@ -241,7 +241,7 @@ static int writeBackground(xmlTextWriterPtr writer, ghmm_dbackground* bg) {
       return -1;
     }
 
-    if (!(bg->name)) {
+    if (!(bg->name) || !(bg->name[i])) {
       if (0 > xmlTextWriterWriteFormatAttribute(writer, BAD_CAST "key", "bg_%d", i))
         GHMM_LOG(LERROR, "Error at writing background key");
     }
