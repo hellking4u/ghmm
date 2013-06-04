@@ -158,6 +158,12 @@ typedef struct ghmm_cstate {
                 { return ghmm_cmodel_calc_cmBm(self, m, omega); }
         double calc_B(const double *omega)
                 { return ghmm_cmodel_calc_B(self, omega); }
+
+        char* getDesc(){return self->desc;}
+        void setDesc(char* name){
+            self->desc = (char*) malloc(sizeof(char) * (strlen(name)+1));
+            strcpy(self->desc, name);
+        }
 }
 
 STRUCT_ARRAY(ghmm_cstate, cstate)
@@ -316,6 +322,15 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
 
         void addModelTypeFlags(unsigned int flags) { self->model_type |= flags; return; }
         void removeModelTypeFlags(unsigned int flags) { self->model_type &= ~flags; return; }
+
+        char* getStateName(size_t index){ 
+            if((self->s + index) && index < self->N) return (self->s + index)->desc;
+            else return NULL;
+        }
+        void setStateName(size_t index, char* name){
+            (self->s+index)->desc = (char*) malloc(sizeof(char) * (strlen(name)+1));
+            strcpy((self->s+index)->desc, name);
+        }
 }
 
 extern int ghmm_cmodel_xml_write(ghmm_cmodel** smo, const char* file, int smo_number);

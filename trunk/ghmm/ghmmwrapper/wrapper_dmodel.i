@@ -83,6 +83,12 @@ typedef struct {
 
         double getInProb(size_t index) { return self->in_a[index]; }
         double getOutProb(size_t index) { return self->out_a[index]; }
+
+        char* getDesc(){return self->desc;}
+        void setDesc(char* name){
+            self->desc = (char*) malloc(sizeof(char) * (strlen(name)+1));
+            strcpy(self->desc, name); 
+        }
 }
 
 STRUCT_ARRAY(ghmm_dstate, dstate)
@@ -270,6 +276,15 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
         
         void addModelTypeFlags(unsigned int flags) { self->model_type |= flags; return; }
         void removeModelTypeFlags(unsigned int flags) { self->model_type &= ~flags; return; }
+
+        char* getStateName(size_t index){ 
+            if((self->s + index) && index < self->N) return (self->s + index)->desc;
+            else return NULL;
+        }
+        void setStateName(size_t index, char* name){
+            (self->s+index)->desc = (char*) malloc(sizeof(char) * (strlen(name)+1));
+            strcpy((self->s+index)->desc, name);
+        }
 }
 
 STRUCT_ARRAY(ghmm_dmodel, dmodel)
