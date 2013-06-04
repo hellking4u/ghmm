@@ -415,9 +415,6 @@ class HMMBaseClassTests(unittest.TestCase):
     def testbaumWelchDeleteExeption(self):
         self.assertRaises(NotImplementedError, self.model.baumWelchDelete)
 
-    def teststateExeption(self):
-        self.assertRaises(NotImplementedError, self.model.state, "stateLabel")
-
     def testsetEmissionExeption(self):
         self.assertRaises(NotImplementedError, self.model.setEmission, 1, "blah")
 

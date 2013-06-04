@@ -2068,6 +2068,8 @@ class HMM(object):
 
         self.N = self.cmodel.N  # number of states
         self.M = self.cmodel.M  # number of symbols / mixture components
+        self.name2id = dict()
+        self.updateName2id()
 
 
     def __del__(self):
@@ -2439,7 +2441,7 @@ class HMM(object):
         """ Given a stateLabel return the integer index to the state
 
         """
-        raise NotImplementedError
+        return self.name2id[stateLabel]
 
     def getInitial(self, i):
         """ Accessor function for the initial probability \f$\pi_i\f$ """
@@ -2468,13 +2470,8 @@ class HMM(object):
 
     def getTransition(self, i, j):
         """ Accessor function for the transition a_ij """
-        state = self.cmodel.getState(i)
-
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
-        if not 0 <= j < self.N:
-            raise IndexError("Index " + str(j) + " out of bounds.")
+        i = self.state(i)
+        j = self.state(j)
 
         transition = self.cmodel.get_transition(i, j)
         if transition < 0.0:
@@ -2483,12 +2480,9 @@ class HMM(object):
 
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij. """
+        i = self.state(i)
+        j = self.state(j)
 
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
-        if not 0 <= j < self.N:
-            raise IndexError("Index " + str(j) + " out of bounds.")
         if not 0.0 <= prob <= 1.0:
             raise ValueError("Transition " + str(prop) + " is not a probability.")
 
@@ -2547,6 +2541,19 @@ class HMM(object):
                 strout.append(types[k])
         return ' '.join(strout)
 
+    def updateName2id(self):
+        for i in xrange(self.cmodel.N):
+            self.name2id[i] = i
+            if(self.cmodel.getStateName(i) != None):
+                 self.name2id[self.cmodel.getStateName(i)] = i
+
+    def setStateName(self, index, name):
+        self.cmodel.setStateName(index, name)
+        self.name2id[name] = index
+
+    def getStateName(self, index):
+        return self.cmodel.getStateName(i)
+
 
 def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
     if (fileType == GHMM_FILETYPE_XML):
@@ -2579,7 +2586,6 @@ class DiscreteEmissionHMM(HMM):
         self.model_type = self.cmodel.model_type  # model type
         self.maxorder = self.cmodel.maxorder
         self.background = None
-
 
     def __str__(self):
         hmm = self.cmodel
@@ -2695,6 +2701,7 @@ class DiscreteEmissionHMM(HMM):
                     self.N = self.cmodel.N
 
     def getEmission(self, i):
+        i = self.state(i)
         state = self.cmodel.getState(i)
         if self.hasFlags(kHigherOrderEmissions):
             order = ghmmwrapper.int_array_getitem(self.cmodel.order, i)
@@ -2705,11 +2712,9 @@ class DiscreteEmissionHMM(HMM):
 
     def setEmission(self, i, distributionParameters):
         """ Set the emission distribution parameters for a discrete model."""
+        i = self.state(i)
         if not len(distributionParameters) == self.M:
             raise TypeError
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
 
         state = self.cmodel.getState(i)
 
@@ -2908,6 +2913,7 @@ class DiscreteEmissionHMM(HMM):
 
 
     def getSilentFlag(self,state):
+        state = self.state(state)
         if self.hasFlags(kSilentStates):
             return self.cmodel.getSilent(state)
         else:
@@ -2939,6 +2945,7 @@ class DiscreteEmissionHMM(HMM):
         """
         @returns True if 'state' is silent, False otherwise
         """
+        state = self.state(state)
         if not 0 <= state <= self.N-1:
             raise IndexError("Invalid state index")
 
@@ -2955,6 +2962,8 @@ class DiscreteEmissionHMM(HMM):
             self.cmodel.alphabet = self.emissionDomain.toCstruct()
 
         self.cmodel.write_xml(fileName)
+
+
 
 
 ######################################################
@@ -3364,11 +3373,8 @@ class GaussianEmissionHMM(HMM):
         """ @returns the probability of the transition from state i to state j.
         Raises IndexError if the transition is not allowed
         """
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
-        if not 0 <= j < self.N:
-            raise IndexError("Index " + str(j) + " out of bounds.")
+        i = self.state(i)
+        j = self.state(j)
 
         transition = self.cmodel.get_transition(i, j, 0)
         if transition < 0.0: # Tried to access non-existing edge:
@@ -3378,11 +3384,8 @@ class GaussianEmissionHMM(HMM):
     def setTransition(self, i, j, prob):
         """ Accessor function for the transition a_ij """
 
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
-        if not 0 <= j < self.N:
-            raise IndexError("Index " + str(j) + " out of bounds.")
+        i = self.state(i)
+        j = self.state(j)
 
         if not self.cmodel.check_transition(i, j, 0):
             raise ValueError("No transition between state " + str(i) + " and " + str(j))
@@ -3391,7 +3394,7 @@ class GaussianEmissionHMM(HMM):
 
     def getEmission(self, i):
         """ @returns (mu, sigma^2)  """
-
+        i = self.state(i)
         if not 0 <= i < self.N:
             raise IndexError("Index " + str(i) + " out of bounds.")
 
@@ -3407,10 +3410,7 @@ class GaussianEmissionHMM(HMM):
         @param values tuple of mu, sigma
         """
         mu, sigma = values
-
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
+        i = self.state(i)
 
         state = self.cmodel.getState(i)
         state.setMean(0, float(mu))
@@ -3418,8 +3418,7 @@ class GaussianEmissionHMM(HMM):
 
     def getEmissionProbability(self, value, i):
         """ @returns probability of emitting value in state i  """
-        # ensure proper index
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        i = self.state(i)
 
         # value can be float or vector of floats
         try:
@@ -3437,10 +3436,12 @@ class GaussianEmissionHMM(HMM):
         return p
 
     def getStateFix(self,state):
+        state = self.state(state)
         s = self.cmodel.getState(state)
         return s.fix
 
     def setStateFix(self, state ,flag):
+        state = self.state(state)
         s = self.cmodel.getState(state)
         s.fix = flag
 
@@ -3782,6 +3783,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         """
         @returns (mu, sigma^2, weight) of component 'comp' in state 'i'
         """
+        i = self.state(i)
         state  = self.cmodel.getState(i)
         mu     = state.getMean(comp)
         sigma  = state.getStdDev(comp)
@@ -3796,10 +3798,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         @param values tuple of mu, sigma, weight
         """
         mu, sigma, weight = values
-
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
+        i = self.state(i)
 
         state = self.cmodel.getState(i)
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
@@ -3807,6 +3806,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         state.setWeight(comp, float(weight))
 
     def getMixtureFix(self,state):
+        state = self.state(state)
         s = self.cmodel.getState(state)
         mixfix = []
         for i in range(s.M):
@@ -3815,6 +3815,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         return mixfix
 
     def setMixtureFix(self, state ,flags):
+        state = self.state(state)
         s = self.cmodel.getState(state)
         for i in range(s.M):
             emission = s.getEmission(i)
@@ -3965,6 +3966,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         - (type, mu,  sigma^2, max,   weight) - for a left  tail gaussian
         - (type, max, mix,     weight)        - for a uniform
         """
+        i = self.state(i)
         state  = self.cmodel.getState(i)
         emission = state.getEmission(comp)
         if (emission.type == ghmmwrapper.normal or
@@ -3998,10 +4000,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         """
 
         mu, sigma, a, weight = values
-
-        # ensure proper indices
-        if not 0 <= i < self.N:
-            raise IndexError("Index " + str(i) + " out of bounds.")
+        i = self.state(i)
 
         state = self.cmodel.getState(i)
         state.setWeight(comp, float(weight))
@@ -4141,10 +4140,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         """
         @returns mean and covariance matrix of component m in state i
         """
-
-        # ensure proper index
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
-
+        i = self.state(i)
         state = self.cmodel.getState(i)
         assert 0 <=m < state.M, "Index " + str(m) + " out of bounds."
 
@@ -4163,9 +4159,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         """
 
         mu, sigma = values
-
-        # ensure proper indices
-        assert 0 <= i < self.N, "Index " + str(i) + " out of bounds."
+        i = self.state(i)
 
         state = self.cmodel.getState(i)
         assert 0 <=m < state.M, "Index " + str(m) + " out of bounds."
