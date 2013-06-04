@@ -1429,7 +1429,7 @@ class HMMOpenFactory(HMMFactory):
                 m.extendDurations(durations)
 
             return m
-
+    #obsolete
     def openSMO(self, fileName, modelIndex):
         # MO & SMO Files, format is deprecated
         # check if ghmm is build with smo support
@@ -2656,6 +2656,8 @@ class DiscreteEmissionHMM(HMM):
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append( "\n\nState number "+ str(k) +":")
+            if(state.desc is not None):
+                strout.append("\nState Name: " + state.desc)
             strout.append( "\nState order: " + str(order[k]))
             strout.append( "\nInitial probability: " + str(state.pi))
             #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
@@ -3050,7 +3052,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) +":")
-
+            if(state.desc is not None):
+                strout.append("\nState Name: " + state.desc)
             strout.append("\nState label: "+str(self.labelDomain.external(label[k])))
 
             strout.append("\nState order: " + str(order[k]))
@@ -3501,6 +3504,8 @@ class GaussianEmissionHMM(HMM):
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) + ":")
+            if(state.desc is not None):
+                strout.append("\nState Name: " + state.desc)
             strout.append("\nInitial probability: " + str(state.pi) + "\n")
 
             weight = ""
@@ -3891,6 +3896,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) +":")
+            if(state.desc is not None):
+                strout.append("\nState Name: " + state.desc)
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\n"+ str(state.M) + " mixture component(s):\n")
 
@@ -4037,6 +4044,8 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) +":")
+            if(state.desc is not None):
+                strout.append("\nState Name: " + state.desc)
             strout.append("\n  Initial probability: " + str(state.pi))
             strout.append("\n  "+ str(state.M) + " density function(s):")
 
@@ -4650,6 +4659,8 @@ class PairHMM(HMM):
         for k in range(hmm.N):
             state = hmm.getState(k)
             strout.append("\n\nState number "+ str(k) +":")
+            if(state.desc is not None):
+                strout.append("\nState Name: " + state.desc)
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nOutput probabilites: ")
             #strout.append(str(ghmmwrapper.double_array_getitem(state.b,outp)))
