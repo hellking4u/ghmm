@@ -488,6 +488,13 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(self.model.cmodel.model_type,260)
         self.assertEqual(self.model.getSilentFlag(2),1)
 
+        # state names
+        self.model.setStateName(0, "test0")
+        self.model.setStateName(1, "test1")
+        self.assertEqual(self.model.getStateName(0), "test0")
+        self.assertEqual(self.model.cmodel.getStateName(1), "test1")
+        self.assertEqual(self.model.getTransition("test0", "test1"), self.model.getTransition(0,1))
+
     def testNewXML(self):
         log.debug("testNewXML -- begin")
         model = ghmm.HMMOpen('../doc/xml_example.xml')
@@ -701,7 +708,15 @@ class BackgroundDistributionTests(unittest.TestCase):
     def testbackgroundtraining(self):
         # XXX test for background distributions
          self.model.setEmission(2,[0.25,0.25,0.25,0.25])
-
+    
+    def testnameaccessfunctions(self):
+        self.model.setBackgrounds(self.bg,[0, -1, 1])
+        self.model.background.setName(0, "test0")
+        self.model.background.setName(1, "test1")
+        self.model.setBackgroundAssignments(["test0", "test0", "test1"])
+        self.assertEqual("test0", self.model.background.getName(0))
+        self.assertEqual("test1", self.model.background.getName(1))
+        self.assertEqual(self.model.getBackgroundAssignments(), [0,0,1])
     # XXX ...
 
 

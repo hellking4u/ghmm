@@ -1995,7 +1995,11 @@ class BackgroundDistribution(object):
         f = lambda x: "%.2f" % (x,)  # float rounding function
 
         for i in range(self.cbackground.n):
-            outstr += '  '+str(i+1) + ":(order= " + str(self.cbackground.getOrder(i))+"): "
+            if self.cbackground.getName(i) is not None:
+                outstr +='  '+str(i+1) + ", name = " + self.cbackground.getName(i);
+            else:
+                outstr += '  '+str(i+1)
+            outstr += " :(order= " + str(self.cbackground.getOrder(i))+ "): "
             outstr += " "+join(map(f,d[i]),', ')+"\n"
         return outstr
 
@@ -2029,15 +2033,18 @@ class BackgroundDistribution(object):
         return (distNum,orders,B)
 
     def getName(self, i):
+        """return the name of the ith backgound distrubution"""
         if i < self.cbackground.n:
             return self.cbackground.getName(i)
 
     def setName(self, i, name):
+        """sets the name of the ith background distrubution to name"""
         if i < self.cbackground.n:
             self.cbackground.setName(i, name)
             self.name2id[name] = i
 
     def updateName2id(self):
+        """adds all background names to the dictionary name2id"""
         for i in xrange(self.cbackground.n):
             tmp = self.cbackground.getName(i)
             if tmp is not None:
@@ -2542,17 +2549,20 @@ class HMM(object):
         return ' '.join(strout)
 
     def updateName2id(self):
+        """adds all state names to the dictionary name2id"""
         for i in xrange(self.cmodel.N):
             self.name2id[i] = i
             if(self.cmodel.getStateName(i) != None):
                  self.name2id[self.cmodel.getStateName(i)] = i
 
     def setStateName(self, index, name):
+        """sets the state name of state index to name"""
         self.cmodel.setStateName(index, name)
         self.name2id[name] = index
 
     def getStateName(self, index):
-        return self.cmodel.getStateName(i)
+        """returns the name of the state index"""
+        return self.cmodel.getStateName(index)
 
 
 def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
