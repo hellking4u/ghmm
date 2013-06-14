@@ -129,6 +129,16 @@ extern "C" {
    @param K:         right limit for uniform distribution
   */
   double ighmm_rand_uniform_int (int seed, int K);
+  
+/**
+  Generates a dirichlet distributed random number
+  @return random number
+  @param seed:
+  @param len: length of alpha, theta
+  @param alpha: parameter for dirichlet distrubution
+  @param theta: probability density
+*/
+  double ighmm_rand_dirichlet(int seed, int len, double *alpha, double *theta);
 
 /** 
    Generates a N( 0, 1 ) distributed random number.

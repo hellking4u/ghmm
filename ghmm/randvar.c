@@ -437,7 +437,16 @@ STOP:
   return (-1.0);
 # undef CUR_PROC
 }                               /* double ighmm_rand_normal_density_approx */
-
+double ighmm_rand_dirichlet(int seed, int len, double *alpha, double *theta){
+  if (seed != 0) {
+    GHMM_RNG_SET(RNG, seed);
+  }
+#ifdef DO_WITH_GSL
+   gsl_ran_dirichlet(RNG, len, alpha, theta);
+#else
+  printf("not implemted without gsl. Compile with gsl to use dirichlet");
+#endif
+}
 
 /*============================================================================*/
 double ighmm_rand_std_normal (int seed)

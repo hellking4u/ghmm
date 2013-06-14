@@ -1264,9 +1264,9 @@ class HMMOpenFactory(HMMFactory):
         """ guesses the file format from the filename """
         if filename.endswith('.'+GHMM_FILETYPE_XML):
             return GHMM_FILETYPE_XML
-        elif filename.endswith('.'+GHMM_FILETYPE_SMO):
+        elif filename.endswith('.'+GHMM_FILETYPE_SMO):#obsolete
             return GHMM_FILETYPE_SMO
-        elif filename.endswith('.'+GHMM_FILETYPE_HMMER):
+        elif filename.endswith('.'+GHMM_FILETYPE_HMMER):#obsolete
             return GHMM_FILETYPE_HMMER
         else:
             return None
