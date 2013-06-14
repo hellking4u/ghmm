@@ -120,7 +120,8 @@ libghmm_la_SOURCES= ghmm.h \
                     sdviterbi.c \
                     pmodel.c pmodel.h \
                     pviterbi.c pviterbi.h \
-                    pviterbi_propagate.c pviterbi_propagate.h
+                    pviterbi_propagate.c pviterbi_propagate.h \
+                    fbgibbs.c fbgibbs.h
 
 
 pkginclude_HEADERS = ghmm.h \
@@ -153,6 +154,7 @@ pkginclude_HEADERS = ghmm.h \
 		  rng.h \
 		  scanner.h \
 		  obsolete.h \
-		  unsupported.h
+		  unsupported.h \
+                  fbgibbs.h
 
 
