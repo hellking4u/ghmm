@@ -35,15 +35,6 @@ PYTHON_FILES = class_change.py \
                modhmmer.py \
                setup.py
 
-PYTHON_GATO_FILES = ghmm_gato/DataStructures.py \
-                    ghmm_gato/EditObjectAttributesDialog.py \
-                    ghmm_gato/GatoGlobals.py \
-                    ghmm_gato/Graph.py \
-                    ghmm_gato/GraphUtil.py \
-                    ghmm_gato/HMMEd.py \
-                    ghmm_gato/__init__.py \
-                    ghmm_gato/xmlutil.py
-
 TESTDATA_FILES = testdata/discrete.xml \
                  testdata/multexon-4.xml \
                  testdata/d_seq.sqd \
@@ -51,7 +42,6 @@ TESTDATA_FILES = testdata/discrete.xml \
                  testdata/multiple_hmmer.hmm \
                  testdata/tiny.smo \
                  testdata/xml_cont_multiple.xml \
-                 testdata/es_discrete_testwrite.seq \
                  testdata/test10.sqd \
                  testdata/test2.xml \
                  testdata/model_label.xml \
