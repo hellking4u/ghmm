@@ -31,7 +31,8 @@ noinst_PROGRAMS = randvar_test \
                   sequences_test \
                   sequences_old_format \
                   label_higher_order_test \
-		  read_fa
+		  read_fa \
+                  mcmc
 
 LDADD = $(top_builddir)/ghmm/.libs/libghmm.a
 
@@ -47,4 +48,5 @@ TESTS =           root_finder_test \
 		  sequences_test \
 		  sequences_old_format \
 		  label_higher_order_test \
-		  read_fa
+		  read_fa \
+                  mcmc

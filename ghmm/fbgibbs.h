@@ -6,21 +6,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+//warnining work in progress
+//**uses gsl**
 
+void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q);
 
-/*Foward-Backwards Gibbs
-  Caclulates Q, state sequence
-  @param mo: model
-  @param O:  observation sequence
-  @param len: length of observation sequence
-  @param m: iterations
-  return state sequence 
-  */
-void fbgibbstep (int seed, ghmm_dmodel * mo, int *O, int len, double **A, double **B, double *Pi, double **priorA, double **priorB, double *priorPi, int steps);
-
-
-
-
+void ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q, int burnIn); 
 
 
 
