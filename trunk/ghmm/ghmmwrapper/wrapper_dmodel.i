@@ -6,6 +6,7 @@
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
 #include <ghmm/discrime.h>
+#include <ghmm/fbgibbs.h>
 %}
 
 /*==========================================================================
@@ -253,6 +254,8 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int baum_welch_nstep(ghmm_dseq *sq, int max_step, double likelihood_delta);
 
+        void fbgibbs(int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q, int burnIn); 
+
         int* viterbi(int *o, int len, int *pathlen, double *log_p);
 
         double viterbi_logp(int *o, int len, int *state_seq);
@@ -285,6 +288,9 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
             (self->s+index)->desc = (char*) malloc(sizeof(char) * (strlen(name)+1));
             strcpy((self->s+index)->desc, name);
         }
+        
+
+
 }
 
 STRUCT_ARRAY(ghmm_dmodel, dmodel)

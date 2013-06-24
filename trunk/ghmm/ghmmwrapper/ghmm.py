@@ -2797,6 +2797,13 @@ class DiscreteEmissionHMM(HMM):
 
         self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
+    def fbGibbs(self, seed, trainingSequences, t, pA, pB, pPi,  stateSeq, burnIn = 100):
+        if not isinstance(trainingSequences,EmissionSequence):
+            raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
+
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
+        self.cmodel.fbgibbs(seed, trainingSequences.cseq.getSequence(0), t, pA, pB, pPi, stateSeq, burnIn)
 
     def applyBackgrounds(self, backgroundWeight):
         """
