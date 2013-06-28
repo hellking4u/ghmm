@@ -31,20 +31,6 @@ int sample(int seed, double* dist, int N){
 }
 
 
-//currently sampling from the column of ptrs
-void getCDF(double*** pmats, int t, int state, double* dist, int N){
-#define CUR_PROC "getCDF"
-    //printf("Start getcdf t = %d, state = %d\n", t, state);
-    int j;
-    dist[0] = pmats[t][0][state];
-    //printf("dist 0: %f\n", dist[0]);
-    for(j = 1; j < N; j++){
-      dist[j] = dist[j-1] + pmats[t][j][state];
-      //printf("dist %d: %f\n", j, dist[j]);
-    }
-#undef CUR_PROC
-}
-
 void sampleStatePath(int seed, ghmm_dmodel *mo, double *alpha, double ***pmats, int T, int* states){
 #define CUR_PROC "sampleStatePath"
   //printf("sampleStatePath\n\n");
@@ -58,9 +44,6 @@ double dist[mo->N];
   states[T-1] = sample(seed, temp, mo->N);
   //printf("State T-1 = %d\n", states[T-1]);
   for(i = T-2; i >=0; i--){
-    //get cdf to sample from pmats **could be optimized by makeing cdfs in pmats instead**
-    //getCDF(pmats, i+1, states[i+1], dist, mo->N);
-	//states[i] = sample(seed, dist, mo->N);
     states[i] = sample(seed, pmats[i+1][states[i+1]], mo->N);
   }
 #undef CUR_PROC
