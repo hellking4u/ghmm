@@ -50,17 +50,18 @@ void sampleStatePath(int seed, ghmm_dmodel *mo, double *alpha, double ***pmats, 
   //printf("sampleStatePath\n\n");
   int i, j;
   double temp[mo->N];
+double dist[mo->N];
   temp[0] = alpha[0];
   for(i = 1; i < mo->N; i++)
     temp[i] = temp[i-1] + alpha[i];
   //printf("tmp1 = %f, tmp2 = %f\n", alpha[0], temp[1]);
   states[T-1] = sample(seed, temp, mo->N);
   //printf("State T-1 = %d\n", states[T-1]);
-  double dist[mo->N];
   for(i = T-2; i >=0; i--){
     //get cdf to sample from pmats **could be optimized by makeing cdfs in pmats instead**
-    getCDF(pmats, i+1, states[i+1], dist, mo->N);
-    states[i] = sample(seed, dist, mo->N);
+    //getCDF(pmats, i+1, states[i+1], dist, mo->N);
+	//states[i] = sample(seed, dist, mo->N);
+    states[i] = sample(seed, pmats[i+1][states[i+1]], mo->N);
   }
 #undef CUR_PROC
 }
@@ -140,9 +141,12 @@ double ghmm_dmodel_forwardGibbs_step (ghmm_dstate * s, double *alpha_t, const do
   //printf("%d\n", s->in_states);
   for (i = 0; i < s->in_states; i++) { 
     id = s->in_id[i];
-    pmats[t][i][j] = s->in_a[i] * alpha_t[id];
-    value += pmats[t][i][j];
-    pmats[t][i][j] *= b_symb; //??
+    pmats[t][j][i] = s->in_a[i] * alpha_t[id];
+    value += pmats[t][j][i];
+    pmats[t][j][i] *= b_symb; //??
+    
+    if(i>=1)
+	pmats[t][j][i] += pmats[t][j][i-1];
     //printf("    state %d, value %f, p_symb %f, pmats %f\n",id, value, b_symb, pmats[t][i][j]); 
   }
   value *= b_symb;
