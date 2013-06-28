@@ -18,7 +18,7 @@ int sample(int seed, double* dist, int N){
 
     double total = dist[N-1];
     //printf("total = %f\n", total);
-    double rn = ighmm_rand_uniform_cont(seed, total, 0.0f);
+    double rn = ighmm_rand_uniform_cont(seed, total, 0.0f);//XXX exception handleing
     //printf("rn = %f \n\n", rn);
     int i;
     if(rn <= dist[0])
@@ -29,6 +29,8 @@ int sample(int seed, double* dist, int N){
    }
    return N-1;
 }
+
+
 //currently sampling from the column of ptrs
 void getCDF(double*** pmats, int t, int state, double* dist, int N){
 #define CUR_PROC "getCDF"
@@ -62,7 +64,6 @@ void sampleStatePath(int seed, ghmm_dmodel *mo, double *alpha, double ***pmats, 
   }
 #undef CUR_PROC
 }
-
 
 
 //===========================================================================================
@@ -132,8 +133,8 @@ double ghmm_dmodel_forwardGibbs_step (ghmm_dstate * s, double *alpha_t, const do
   int i, id;
   double value = 0.0;
 
-  //if (b_symb < GHMM_EPS_PREC)
-    //return 0.0;
+  if (b_symb < GHMM_EPS_PREC)
+    return 0.0;
 
   /*printf(" *** fobagibbs_stepforward\n");*/
   //printf("%d\n", s->in_states);
@@ -141,7 +142,7 @@ double ghmm_dmodel_forwardGibbs_step (ghmm_dstate * s, double *alpha_t, const do
     id = s->in_id[i];
     pmats[t][i][j] = s->in_a[i] * alpha_t[id];
     value += pmats[t][i][j];
-    //pmats[t][i][j] *= b_symb;
+    pmats[t][i][j] *= b_symb; //??
     //printf("    state %d, value %f, p_symb %f, pmats %f\n",id, value, b_symb, pmats[t][i][j]); 
   }
   value *= b_symb;
@@ -225,8 +226,9 @@ int ghmm_dmodel_forwardGibbs (ghmm_dmodel * mo, const int *O, int len, double **
 # undef CUR_PROC
 }                               
 			/* ghmm_dmodel_forwardGibbs */
-
+//======================================================================================
 //======================== update parameters ===========================================
+//======================================================================================
 //given states, psueodocount matrices pA, pB, pPi see wiki, calculates new A,B,Pi
 //XXX should use fix in state
 //XXX higher order
@@ -248,7 +250,7 @@ void update(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, 
             obsinstatealpha[i][k] = 0;
         }
     }
-    //count states and transitions
+    //A, B
     for(i=0;i<T;i++){        
         obsinstate[states[i]] += 1;
         obsinstatealpha[states[i]][O[i]] += 1;
@@ -274,7 +276,7 @@ void update(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, 
 	    ghmm_dmodel_set_transition(mo, i, k, tmp_n[k]);//linear search optimize for mo->N>10?
         }        
     }
-
+    //Pi
     for(k=0; k<mo->N; k++){
         obsinstate[k] += pPi[k];
     }
@@ -292,7 +294,7 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
   double* obsinstatealpha[mo->N];
   int l;
   for(l = 0; l < mo->N; l++){
-     obsinstatealpha[l] = malloc(sizeof(double)* ghmm_ipow (mo, mo->M, mo->order[l]));
+     obsinstatealpha[l] = malloc(sizeof(double)*ghmm_ipow (mo, mo->M, mo->order[l]+1));
   }
   //used to get distribution from dirichlet then update states transitions/emissions
   double tmp_n[mo->N];
@@ -304,14 +306,15 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
         for(k=0;k<mo->N;k++){
             transition[i][k] = 0;
         }
-        for(k=0;k<ghmm_ipow (mo, mo->M, mo->order[i]);k++){
+        for(k=0;k<ghmm_ipow (mo, mo->M, mo->order[i]+1);k++){
             obsinstatealpha[i][k] = 0;
         }
     }
   
     //A, B
-    for(i=0;i<T;i++){        
-        obsinstate[states[i]] += 1;
+    for(i=0;i<T;i++){
+        if(mo->order[states[i]] == 0)//only want to count first order states for pi        
+          obsinstate[states[i]] += 1;
         int e_index = get_emission_index (mo, states[i], O[i], i);
         if (-1 != e_index)
             obsinstatealpha[states[i]][e_index] += 1;
@@ -320,22 +323,22 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
     for(i=0;i<T-1;i++){
         transition[states[i]][states[i+1]] += 1;
     }
-    
+
     for(i=0;i<mo->N;i++){
-        for(k=0;k<ghmm_ipow (mo, mo->M, mo->order[i]);k++){
+        for(k=0;k<ghmm_ipow (mo, mo->M, mo->order[i]+1);k++){
             obsinstatealpha[i][k] += pB[i][k];
         }
         for(k=0;k<mo->N;k++){
             transition[i][k] += pA[i][k];
         }
-        double tmp_m[ghmm_ipow (mo, mo->M, mo->order[i])];
-        ighmm_rand_dirichlet(seed, ghmm_ipow (mo, mo->M, mo->order[i]), obsinstatealpha[i], tmp_m);
+        double tmp_m[ghmm_ipow (mo, mo->M, mo->order[i]+1)];
+        ighmm_rand_dirichlet(seed, ghmm_ipow (mo, mo->M, mo->order[i]+1), obsinstatealpha[i], tmp_m);
         ighmm_rand_dirichlet(seed, mo->N, transition[i], tmp_n);
 
         for(k = 0; k < mo->N; k++){
 	    ghmm_dmodel_set_transition(mo, i, k, tmp_n[k]);//linear search optimize for mo->N>10?
         }  
-        for(k = 0; ghmm_ipow (mo, mo->M, mo->order[i]); k++){
+        for(k = 0; k < ghmm_ipow (mo, mo->M, mo->order[i]+1); k++){
             mo->s[i].b[k] = tmp_m[k];
         }      
     }
@@ -343,6 +346,7 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
     for(k=0; k<mo->N; k++){
         obsinstate[k] += pPi[k];
     }
+    
     ighmm_rand_dirichlet(seed, mo->N, obsinstate, tmp_n);
     for(k=0;k<mo->N;k++){
         mo->s[k].pi = tmp_n[k];
@@ -359,15 +363,50 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
 //todo higher order, use a delta liklihood like buam welch? fixed probabilities, compression
 void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi,
                  int *Q){
+#define CUR_PROC "ghmm_dmodel_fbgibbstep"
   //sample state sequence
   //update parameters 
   //printf("fbgibbsStep \n\n");
+  int i,j,k;
+  if(!pA){
+    pA = ighmm_cmatrix_alloc(mo->N, mo->N);
+    for(i=0;i<mo->N;i++){
+      for(j=0;j<mo->N;j++){
+          pA[i][j] = 1;
+      }
+    }
+  }
+  if(!pPi){
+    pPi = malloc(sizeof(double)*mo->N);
+    for(i=0;i<mo->N;i++){
+       pPi[i] = 0;
+    }
+  }
+  if(!pB){
+    if(mo->model_type & GHMM_kHigherOrderEmissions){
+      pB = (double*)malloc(sizeof(double*)*mo->N);
+      for(i = 0; i < mo->N; i++){
+        pB[i] = (double*)malloc(sizeof(double)*ghmm_ipow (mo, mo->M, mo->order[i]+1));
+        for(j = 0; j < ghmm_ipow (mo, mo->M, mo->order[i]+1); j++){
+          pB[i][j] = 1;
+        }
+      }
+    }  
+    else{
+      pB = ighmm_cmatrix_alloc(mo->N, mo->M);
+      for(i=0;i<mo->N;i++){
+        for(j = 0; j < mo->M; j++){
+          pB[i][j] = 1;
+        } 
+      }
+    }
+ }
+
   GHMM_RNG_SET (RNG, seed);
 
   //initilizations
   double **alpha = ighmm_cmatrix_alloc(len, mo->N);
   double ***pmats = ighmm_cmatrix_3d_alloc(len, mo->N, mo->N);
-  int i,j,k;
   for(i = 0; i < len; i++){
     for(j = 0; j < mo->N; j++){
       alpha[i][j] = 0;
@@ -383,15 +422,22 @@ void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double
     //printf("%d ", Q[i]);
   //}
   //printf("\n");
-  update(seed, mo, len, Q, O, pA, pB, pPi);
+   
+  if(mo->model_type & GHMM_kHigherOrderEmissions)
+    updateH(seed, mo, len, Q, O, pA, pB, pPi);
+  else
+    update(seed, mo, len, Q, O, pA, pB, pPi);
+  //clean
   ighmm_cmatrix_3d_free(&pmats, len, mo->N);
   ighmm_cmatrix_free(&alpha, len);
+#undef CUR_PROC
 }
 
 
 void ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q, int burnIn){
   int i;
   for(i = 0; i < burnIn; i++){
+     //printf("step: %d\n", i);
      ghmm_dmodel_fbgibbstep(mo, seed, O, len, pA, pB, pPi, Q);
   }
 }
