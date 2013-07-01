@@ -2804,6 +2804,15 @@ class DiscreteEmissionHMM(HMM):
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         self.cmodel.fbgibbs(seed, trainingSequences.cseq.getSequence(0), t, pA, pB, pPi, stateSeq, burnIn)
+    def cfbGibbs(self, seed, trainingSequences, t, pA, pB, pPi,  stateSeq, R=-1, burnIn = 100):
+        if not isinstance(trainingSequences,EmissionSequence):
+            raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
+
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
+        if R is -1: 
+          R = math.ceil(.5*math.log(math.sqrt(t))) 
+        self.cmodel.cfbgibbs(seed, trainingSequences.cseq.getSequence(0), t, pA, pB, pPi, stateSeq, R, burnIn)
 
     def applyBackgrounds(self, backgroundWeight):
         """

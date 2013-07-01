@@ -18,7 +18,7 @@ int sample(int seed, double* dist, int N){
 
     double total = dist[N-1];
     //printf("total = %f\n", total);
-    double rn = ighmm_rand_uniform_cont(seed, total, 0.0f);//XXX exception handleing
+    double rn = ighmm_rand_uniform_cont(seed, total, 0.0f);//XXX exception handleing what if total=0
     //printf("rn = %f \n\n", rn);
     int i;
     if(rn <= dist[0])
@@ -114,6 +114,7 @@ int ghmm_dmodel_forwardGibbs_init (ghmm_dmodel * mo, double *alpha_1, int symb, 
 
 double ghmm_dmodel_forwardGibbs_step (ghmm_dstate * s, double *alpha_t, const double b_symb, double*** pmats, int t, int j)
 {
+#define CUR_PROC "ghmm_dmodel_forwardGibbs_step"
   int i, id;
   double value = 0.0;
 
@@ -134,7 +135,7 @@ double ghmm_dmodel_forwardGibbs_step (ghmm_dstate * s, double *alpha_t, const do
   }
   value *= b_symb;
   return (value);
-
+#undef CUR_PROC
 }                               /* ghmm_dmodel_forwardGibbs_step */
 
 /*============================================================================*/
@@ -210,7 +211,7 @@ int ghmm_dmodel_forwardGibbs (ghmm_dmodel * mo, const int *O, int len, double **
     }
   }
   return 0;
-# undef CUR_PROC
+#undef CUR_PROC
 }                               
 			/* ghmm_dmodel_forwardGibbs */
 //======================================================================================
@@ -218,9 +219,9 @@ int ghmm_dmodel_forwardGibbs (ghmm_dmodel * mo, const int *O, int len, double **
 //======================================================================================
 //given states, psueodocount matrices pA, pB, pPi see wiki, calculates new A,B,Pi
 //XXX should use fix in state
-//XXX higher order
 //assumes psuedocount preserves structure, ie doesnt add 1 to a zero transition.
 void update(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, double **pB, double *pPi){
+#define CUR_PROC "update"
   double transition[mo->N][mo->N];
   double obsinstate[mo->N]; 
   double obsinstatealpha[mo->N][mo->M]; 
@@ -271,11 +272,12 @@ void update(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, 
     for(k=0;k<mo->N;k++){
         mo->s[k].pi = tmp_n[k];
     }
+#undef CUR_PROC
 }
 
   
 void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, double **pB, double *pPi){
-
+#define CUR_PROC "updateH"
   double transition[mo->N][mo->N];
   double obsinstate[mo->N]; 
   double* obsinstatealpha[mo->N];
@@ -343,6 +345,7 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
   for(l = 0; l < mo->N; l++){
      free(obsinstatealpha[l]);
   }
+#undef CUR_PROC
 }
 //=================================================================================================
 //==============================fbgibbs============================================================
@@ -422,11 +425,13 @@ void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double
 
 
 void ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q, int burnIn){
+#define CUR_PROC "ghmm_dmodel_fbgibbs"
   int i;
   for(i = 0; i < burnIn; i++){
      //printf("step: %d\n", i);
      ghmm_dmodel_fbgibbstep(mo, seed, O, len, pA, pB, pPi, Q);
   }
+#undef CUR_PROC
 }
 
 
