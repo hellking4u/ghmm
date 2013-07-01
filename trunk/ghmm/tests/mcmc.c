@@ -15,6 +15,7 @@
 #include <ghmm/reestimate.h>
 #include <ghmm/obsolete.h>
 
+#include <time.h>//time
 void uniformPsuedoCount(double **pA, double **pB, double *pPi, int N, int M){
         long i, j;
         
@@ -51,9 +52,6 @@ int* getList(char* fileName, int count){
     fclose(fp);
     return list;
 }
-
-
-
 
 
 
@@ -145,6 +143,8 @@ int main() {
 
 //====================tests for fbgibbs==================================================
   printf("fbgibbs \n");
+  clock_t t1, t2;//time
+  t1 = clock();//time
   ghmm_dmodel* mo = ghmm_dmodel_copy(&my_model);
   
   double **pA = ighmm_cmatrix_alloc(my_model.N, my_model.N);
@@ -158,10 +158,10 @@ int main() {
     paths[z] = calloc(my_output->seq_len[0], sizeof(int));
   ghmm_dmodel* new_mos[iter];
   new_mos[0] = ghmm_dmodel_copy(&my_model);
-  ghmm_dmodel_fbgibbstep(new_mos[0], 0, my_output->seq[0], my_output->seq_len[0], pA, pB, pPi, paths[0]);
+  ghmm_dmodel_cfbgibbstep(new_mos[0], 0, my_output->seq[0], my_output->seq_len[0], pA, pB, pPi, paths[0], 2);
   for(z = 1; z < iter; z++){
     new_mos[z] = ghmm_dmodel_copy(new_mos[z-1]);
-    ghmm_dmodel_fbgibbstep( new_mos[z], 0, my_output->seq[0], my_output->seq_len[0],  pA, pB, pPi, paths[z]);
+    ghmm_dmodel_cfbgibbstep( new_mos[z], 0, my_output->seq[0], my_output->seq_len[0],  pA, pB, pPi, paths[z], 2);
   }
   //for(z = 0; z < my_output->seq_len[0]; z++){
     //printf("%d ", paths[iter-1][z]);
@@ -171,13 +171,15 @@ int main() {
 
   ghmm_dmodel_A_print(stdout,new_mos[iter-1],""," ","\n");
   ghmm_dmodel_B_print(stdout,new_mos[iter-1],""," ","\n");
+  t2 = clock();//time
+  printf("time: %f\n", (double)(t2-t1)/CLOCKS_PER_SEC);
+  
 
 //=====================end test fbgibbs================================================
 
 
-  
- 
 //=====================viterbi/em=====================================================
+  t1 = clock();
   printf("Em/viterni\n\n");
   viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],
 				my_output->seq_len[0],&pathlen, &log_p_viterbi);
@@ -212,7 +214,7 @@ int main() {
       ighmm_cmatrix_stat_free(&forward_alpha);
       return 1;
     }
-  ghmm_dmodel_baum_welch_nstep(&my_model, my_output, 100000, 0.0000001);
+  ghmm_dmodel_baum_welch_nstep(&my_model, my_output, 100, 0.0000001);
   viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],
 				my_output->seq_len[0],&pathlen, &log_p_viterbi);
   //print
@@ -222,6 +224,10 @@ int main() {
 	  "(viterbi algorithm): %f\n",
 	  log_p_viterbi);
   printf("likelihood %f \n", ghmm_dmodel_likelihood(&my_model, my_output));
+  t2 = clock();//time
+  printf("time: %f\n", (double)(t2-t1)/CLOCKS_PER_SEC);
+  
+
 //==================================================================================
 
 
