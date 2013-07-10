@@ -347,51 +347,56 @@ void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA,
   }
 #undef CUR_PROC
 }
-//=================================================================================================
-//==============================fbgibbs============================================================
-//=================================================================================================
-//todo higher order, use a delta liklihood like buam welch? fixed probabilities, compression
-void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi,
-                 int *Q){
-#define CUR_PROC "ghmm_dmodel_fbgibbstep"
-  //sample state sequence
-  //update parameters 
-  //printf("fbgibbsStep \n\n");
-  int i,j,k;
-  if(!pA){
-    pA = ighmm_cmatrix_alloc(mo->N, mo->N);
+//================================================================================================
+//=============================fbgibbs============================================================
+//================================================================================================
+
+void init_priors(double ***pA, double ***pB, double **pPi, ghmm_dmodel *mo){
+  int i, j, k;
+  if(!(*pA)){
+    *pA = ighmm_cmatrix_alloc(mo->N, mo->N);
     for(i=0;i<mo->N;i++){
       for(j=0;j<mo->N;j++){
-          pA[i][j] = 1;
+          (*pA)[i][j] = 1;
       }
     }
   }
-  if(!pPi){
-    pPi = malloc(sizeof(double)*mo->N);
+  if(!(*pPi)){
+    *pPi = malloc(sizeof(double)*mo->N);
     for(i=0;i<mo->N;i++){
-       pPi[i] = 0;
+       (*pPi)[i] = 0;
     }
   }
-  if(!pB){
+  if(!(*pB)){
     if(mo->model_type & GHMM_kHigherOrderEmissions){
-      pB = (double*)malloc(sizeof(double*)*mo->N);
+      *pB = (double*)malloc(sizeof(double*)*mo->N);
       for(i = 0; i < mo->N; i++){
-        pB[i] = (double*)malloc(sizeof(double)*ghmm_ipow (mo, mo->M, mo->order[i]+1));
+        (*pB)[i] = (double*)malloc(sizeof(double)*ghmm_ipow (mo, mo->M, mo->order[i]+1));
         for(j = 0; j < ghmm_ipow (mo, mo->M, mo->order[i]+1); j++){
-          pB[i][j] = 1;
+          (*pB)[i][j] = 1;
         }
       }
     }  
     else{
-      pB = ighmm_cmatrix_alloc(mo->N, mo->M);
+      *pB = ighmm_cmatrix_alloc(mo->N, mo->M);
       for(i=0;i<mo->N;i++){
         for(j = 0; j < mo->M; j++){
-          pB[i][j] = 1;
+          (*pB)[i][j] = 1;
         } 
       }
     }
- }
+  }
+}
 
+
+//todo use a delta liklihood like buam welch? fixed probabilities 
+void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB,double *pPi, int *Q){
+#define CUR_PROC "ghmm_dmodel_fbgibbstep"
+  //sample state sequence
+  //update parameters 
+  //printf("fbgibbsStep \n\n");
+  init_priors(&pA, &pB, &pPi, mo);
+  int i,j,k;
   GHMM_RNG_SET (RNG, seed);
 
   //initilizations
