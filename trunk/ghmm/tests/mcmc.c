@@ -16,19 +16,6 @@
 #include <ghmm/obsolete.h>
 
 #include <time.h>//time
-void uniformPsuedoCount(double **pA, double **pB, double *pPi, int N, int M){
-        long i, j;
-        
-        for(i=0;i<N;i++){
-            pPi[i] = 1;
-            for(j=0;j<N;j++){
-                pA[i][j] = 1;
-            }
-            for(j = 0; j < M; j++){
-               pB[i][j] = 1;
-            }
-        }
-    }
 int* getList(char* fileName, int count){
  FILE *fp;
     int c;
@@ -82,11 +69,11 @@ int main() {
 
 
   ghmm_dstate model_states[2];
-  double symbols_vowel_state[27]={0.03906, 0.03537, 0.03537, 0.03909, 0.03583, 0.03630, 0.04048, 0.03537,0.03816, 0.03909, 0.03490, 0.03723, 0.03537, 0.03909, 0.03397, 0.03397, 0.03816, 0.03676, 0.04048, 0.03443, 0.03537, 0.03955, 0.03816, 0.03723, 0.03769, 0.03955, 0.03688};
+  double symbols_vowel_state[27]={0.03906, 0.03537, 0.03537, 0.03909, 0.03583, 0.03630, 0.04048, 0.03537,0.03816, 0.03909, 0.03490, 0.03723, 0.03537, 0.03909, 0.03397, 0.03397, 0.03816, 0.03676, 0.04048, 0.03443, 0.03537, 0.03955, 0.03816, 0.03723, 0.03769, 0.03955, 0.03397};
   double trans_prob_vowel_state[2]={0.47, 0.53};
   double trans_prob_vowel_state_rev[2]={0.47, 0.53};
   int trans_id_vowel_state[2]={0,1};
-  double symbols_consonant_state[27]={0.03732, 0.03408, 0.03455, 0.03828, 0.03782, 0.03922, 0.03688, 0.03408, 0.03875, 0.04062, 0.03735, 0.03968, 0.03548, 0.03735, 0.04062, 0.03595, 0.03641, 0.03408, 0.04062, 0.03548, 0.03922, 0.04062, 0.03455, 0.03595, 0.03408, 0.03408, 0.03397};
+  double symbols_consonant_state[27]={0.03732, 0.03408, 0.03455, 0.03828, 0.03782, 0.03922, 0.03688, 0.03408, 0.03875, 0.04062, 0.03735, 0.03968, 0.03548, 0.03735, 0.04062, 0.03595, 0.03641, 0.03408, 0.04062, 0.03548, 0.03922, 0.04062, 0.03455, 0.03595, 0.03408, 0.03408, 0.03688 };
   double trans_prob_consonant_state[2]={0.51,0.49};
   double trans_prob_consonant_state_rev[2]={0.51,0.49};
   int trans_id_consonant_state[2]={0,1};
@@ -135,7 +122,7 @@ int main() {
   ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
 
   my_output = ghmm_dseq_calloc(1);
-  my_output->seq[0] = charList;  
+  my_output->seq[0] = charList; 
   my_output->seq_len[0] = count;
 
   //ghmm_dseq_print(my_output, stdout);
@@ -147,30 +134,17 @@ int main() {
   t1 = clock();//time
   ghmm_dmodel* mo = ghmm_dmodel_copy(&my_model);
   
-  double **pA = ighmm_cmatrix_alloc(my_model.N, my_model.N);
-  double **pB = ighmm_cmatrix_alloc(my_model.N, my_model.M);
-  double pPi[my_model.N];
-  uniformPsuedoCount(pA, pB, pPi, my_model.N, my_model.M);
-  int z;
+  double **pA = NULL;
+  double **pB = NULL;
+  double *pPi = NULL;
   int iter = 100;
-  int* paths[iter];
-  for(z = 0; z<iter; z++)
-    paths[z] = calloc(my_output->seq_len[0], sizeof(int));
-  ghmm_dmodel* new_mos[iter];
-  new_mos[0] = ghmm_dmodel_copy(&my_model);
-  ghmm_dmodel_cfbgibbstep(new_mos[0], 0, my_output->seq[0], my_output->seq_len[0], pA, pB, pPi, paths[0], 2);
-  for(z = 1; z < iter; z++){
-    new_mos[z] = ghmm_dmodel_copy(new_mos[z-1]);
-    ghmm_dmodel_cfbgibbstep( new_mos[z], 0, my_output->seq[0], my_output->seq_len[0],  pA, pB, pPi, paths[z], 2);
-  }
-  //for(z = 0; z < my_output->seq_len[0]; z++){
-    //printf("%d ", paths[iter-1][z]);
-  //}
-  printf("viterbi prob mcmc%f \n", ghmm_dmodel_viterbi_logp(new_mos[iter-1], my_output->seq[0], my_output->seq_len[0], paths[iter-1]));
-  printf("likelihood mcmc%f \n", ghmm_dmodel_likelihood(new_mos[iter-1], my_output));
+  int * Q =   ghmm_dmodel_cfbgibbs(mo, 0, my_output->seq[0], my_output->seq_len[0],
+                        pA, pB, pPi, 2, iter);
+  printf("viterbi prob mcmc%f \n", ghmm_dmodel_viterbi_logp(mo, my_output->seq[0], my_output->seq_len[0], Q));
+  printf("likelihood mcmc%f \n", ghmm_dmodel_likelihood(mo, my_output));
 
-  ghmm_dmodel_A_print(stdout,new_mos[iter-1],""," ","\n");
-  ghmm_dmodel_B_print(stdout,new_mos[iter-1],""," ","\n");
+  ghmm_dmodel_A_print(stdout,mo,""," ","\n");
+  ghmm_dmodel_B_print(stdout,mo,""," ","\n");
   t2 = clock();//time
   printf("time: %f\n", (double)(t2-t1)/CLOCKS_PER_SEC);
   
@@ -235,11 +209,9 @@ int main() {
   ghmm_dseq_free(&my_output);
   free(viterbi_path);
   ighmm_cmatrix_stat_free(&forward_alpha);
-  for(z = 0; z < iter; z++){
-    free(paths[z]);
-    ghmm_dmodel_free(&new_mos[z]);
-  }
+  ghmm_dmodel_free(&mo);
   ighmm_cmatrix_free(&pA, my_model.N);
   ighmm_cmatrix_free(&pB, my_model.N);
+  free(pPi);
   return 0;
 }

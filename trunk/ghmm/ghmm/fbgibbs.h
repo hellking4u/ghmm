@@ -10,15 +10,13 @@ extern "C" {
 
 int sample(int seed, double* dist, int N);
 
-void init_priors(double ***pA, double ***pB, double **pPi, ghmm_dmodel *mo);
+void init_priors(ghmm_dmodel *mo, double ***pA, double ***pB, double **pPi);
 
-void update(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, double **pB, double *pPi);
+void update(ghmm_dmodel* mo, int T, int *states, int* O, double **pA, double **pB, double *pPi);
 
-void updateH(int seed, ghmm_dmodel* mo, int T, int *states, int* O, double **pA, double **pB, double *pPi);
+void updateH(ghmm_dmodel* mo, int T, int *states, int* O, double **pA, double **pB, double *pPi);
 
-void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q);
-
-void ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q, int burnIn); 
+int* ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int burnIn); 
 
 
 

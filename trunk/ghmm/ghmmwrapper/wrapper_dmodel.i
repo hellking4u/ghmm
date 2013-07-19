@@ -255,11 +255,9 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int baum_welch_nstep(ghmm_dseq *sq, int max_step, double likelihood_delta);
 
-        void fbgibbs(int seed, int *O, int len, double **pA, double **pB, double *pPi, int* Q, int burnIn); 
+        int* fbgibbs(int seed, int *O, int len, double **pA, double **pB, double *pPi, int burnIn); 
 
-        void cfbgibbs (int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int* Q, int R, int burnIn);
-
-
+        int* cfbgibbs (int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int R, int burnIn);
 
         int* viterbi(int *o, int len, int *pathlen, double *log_p);
 

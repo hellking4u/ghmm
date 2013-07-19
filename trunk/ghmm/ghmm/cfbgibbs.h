@@ -7,11 +7,20 @@
 extern "C" {
 #endif
 
-void precompute(int compression, ghmm_dmodel *mo, double ***mats, double**** rmats);
 
-void ghmm_dmodel_cfbgibbstep (ghmm_dmodel *mo, int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int* Q, int R);
-
-void ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int* Q, int R, int burnIn);
+/* runs the forward backward gibbs burnIn times
+ * mo: model
+ * seed: seed 
+ * obs: observation
+ * totalobs: length of observation sequence
+ * pA: prior count for A
+ * pB: prior count for B
+ * pPi: prior count for pi
+ * R: length of compression
+ * burnIn: number of times to run forward backward gibbs 
+ * return int* state path
+ */
+int* ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int R, int burnIn);
 
 
 #ifdef __cplusplus
