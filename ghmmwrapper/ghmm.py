@@ -2425,6 +2425,16 @@ class HMM(object):
         log.debug("HMM.sampleSingle() -- end")
         return EmissionSequence(self.emissionDomain, seqPtr)
 
+    def getStateFix(self,state):
+        state = self.state(state)
+        s = self.cmodel.getState(state)
+        return s.fix
+
+    def setStateFix(self, state ,flag):
+        state = self.state(state)
+        s = self.cmodel.getState(state)
+        s.fix = flag
+
     def clearFlags(self, flags):
         """ Clears one or more model type flags.
         @attention Use with care.
@@ -2797,22 +2807,41 @@ class DiscreteEmissionHMM(HMM):
 
         self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
-    def fbGibbs(self, seed, trainingSequences, t, pA, pB, pPi,  stateSeq, burnIn = 100):
+    def fbGibbs(self, seed, trainingSequences,  pA, pB, pPi, burnIn = 100):
         if not isinstance(trainingSequences,EmissionSequence):
             raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
-        self.cmodel.fbgibbs(seed, trainingSequences.cseq.getSequence(0), t, pA, pB, pPi, stateSeq, burnIn)
-    def cfbGibbs(self, seed, trainingSequences, t, pA, pB, pPi,  stateSeq, R=-1, burnIn = 100):
+        A, i = ghmmhelper.list2double_matrix(pA)
+        if self.hasFlags(kHigherOrderEmissions):
+            B=ghmmwrapper.double_matrix_alloc_row(len(pB))
+            for i in range(len(pB)):
+               ghmmwrapper.double_matrix_set_col(B, i,ghmmwrapper.list2double_array(pB[i]))
+        else:
+            B, j = ghmmhelper.list2double_matrix(pB)
+        Pi = ghmmwrapper.list2double_array(pPi)
+
+        return ghmmwrapper.int_array2list(self.cmodel.fbgibbs(seed, trainingSequences.cseq.getSequence(0), len(trainingSequences), A, B, Pi, burnIn), len(trainingSequences))
+
+    def cfbGibbs(self, seed, trainingSequences, pA, pB, pPi,  R=-1, burnIn = 100):
         if not isinstance(trainingSequences,EmissionSequence):
             raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         if R is -1:
-            R = math.ceil(.5*math.log(math.sqrt(t)))
-        self.cmodel.cfbgibbs(seed, trainingSequences.cseq.getSequence(0), t, pA, pB, pPi, stateSeq, R, burnIn)
+            R = int(math.ceil(.5*math.log(math.sqrt(len(trainingSequences)))))
+            print R
+        A, i = ghmmhelper.list2double_matrix(pA)
+        if self.hasFlags(kHigherOrderEmissions):
+            B=ghmmwrapper.double_matrix_alloc_row(len(pB))
+            for i in range(len(pB)):
+               ghmmwrapper.double_matrix_set_col(B, i,ghmmwrapper.list2double_array(pB[i]))
+        else:
+            B, j = ghmmhelper.list2double_matrix(pB)
+        Pi = ghmmwrapper.list2double_array(pPi)
+        return ghmmwrapper.int_array2list(self.cmodel.cfbgibbs(seed, trainingSequences.cseq.getSequence(0), len(trainingSequences), A, B, Pi, R, burnIn), len(trainingSequences))
 
     def applyBackgrounds(self, backgroundWeight):
         """
@@ -3464,16 +3493,7 @@ class GaussianEmissionHMM(HMM):
         ghmmwrapper.free(valueptr)
         return p
 
-    def getStateFix(self,state):
-        state = self.state(state)
-        s = self.cmodel.getState(state)
-        return s.fix
-
-    def setStateFix(self, state ,flag):
-        state = self.state(state)
-        s = self.cmodel.getState(state)
-        s.fix = flag
-
+    
     def __str__(self):
         hmm = self.cmodel
         strout = [str(self.__class__.__name__)]
