@@ -30,21 +30,21 @@ int sample(int seed, double* dist, int N){
    return N-1;
 }
 
-void sampleStatePath(ghmm_dmodel *mo, double *alpha, double ***pmats, int T, int* states){
+void sampleStatePath(int N, double *alpha, double ***pmats, int T, int* states){
 #define CUR_PROC "sampleStatePath"
   //printf("sampleStatePath\n\n");
   int i, j;
-  double temp[mo->N];
-  double dist[mo->N];
+  double temp[N];
+  double dist[N];
   temp[0] = alpha[0];
-  for(i = 1; i < mo->N; i++)
+  for(i = 1; i < N; i++)
     temp[i] = temp[i-1] + alpha[i];
   //printf("tmp1 = %f, tmp2 = %f\n", alpha[0], temp[1]);
-  states[T-1] = sample(0, temp, mo->N);
+  states[T-1] = sample(0, temp, N);
   //printf("State T-1 = %d\n", states[T-1]);
   for(i = T-2; i >=0; i--){
     //printf("pmats %d, %d, %d = %f\n", i+1, states[i+1], mo->N-1, pmats[i+1][states[i+1]][mo->N-1]);
-    states[i] = sample(0, pmats[i+1][states[i+1]], mo->N);
+    states[i] = sample(0, pmats[i+1][states[i+1]], N);
     //printf("State %d = %d\n", i, states[i]);
   }
 #undef CUR_PROC
@@ -219,6 +219,8 @@ int ghmm_dmodel_forwardGibbs (ghmm_dmodel * mo, const int *O, int len, double **
   return 0;
 #undef CUR_PROC
 }                               
+
+
 			/* ghmm_dmodel_forwardGibbs */
 //======================================================================================
 //======================== update parameters ===========================================
@@ -386,7 +388,7 @@ void init_priors(ghmm_dmodel *mo, double ***pA, double ***pB, double **pPi){
   }
   if(!(*pB)){
     if(mo->model_type & GHMM_kHigherOrderEmissions){
-      *pB = (double*)malloc(sizeof(double*)*mo->N);
+      *pB = malloc(sizeof(double*)*mo->N);
       for(i = 0; i < mo->N; i++){
         (*pB)[i] = (double*)malloc(sizeof(double)*ghmm_ipow (mo, mo->M, mo->order[i]+1));
         for(j = 0; j < ghmm_ipow (mo, mo->M, mo->order[i]+1); j++){
@@ -423,7 +425,7 @@ void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int *O, int len, double **pA, dou
     }
   }
   ghmm_dmodel_forwardGibbs(mo, O, len, alpha, pmats);
-  sampleStatePath(mo, alpha[len-1], pmats, len, Q);
+  sampleStatePath(mo->N, alpha[len-1], pmats, len, Q);
   //printf("done samplestatepath\n\n");
   //for(i = 0; i < len; i++){
     //printf("%d ", Q[i]);
