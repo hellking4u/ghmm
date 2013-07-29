@@ -2808,6 +2808,18 @@ class DiscreteEmissionHMM(HMM):
         self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
     def fbGibbs(self, seed, trainingSequences,  pA, pB, pPi, burnIn = 100):
+        """Reestimates the model and returns a sampled state sequence
+
+        @note uses gsl, silent states not supported
+
+        @param seed int for random seed, 0 default 
+        @param trainingSequences EmissionSequence
+        @param pA prior count for transitions
+        @param pB prior count for emissions
+        @param pPI prior count for initial state
+        @param burnin number of iterations
+        @warning work in progress
+        """
         if not isinstance(trainingSequences,EmissionSequence):
             raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
 
@@ -2825,6 +2837,20 @@ class DiscreteEmissionHMM(HMM):
         return ghmmwrapper.int_array2list(self.cmodel.fbgibbs(seed, trainingSequences.cseq.getSequence(0), len(trainingSequences), A, B, Pi, burnIn), len(trainingSequences))
 
     def cfbGibbs(self, seed, trainingSequences, pA, pB, pPi,  R=-1, burnIn = 100):
+        """Reestimates the model and returns a sampled state sequence
+
+        @note uses gsl, silent states not supported
+
+        @param seed int for random seed, 0 default 
+        @param trainingSequences EmissionSequence
+        @param pA prior count for transitions
+        @param pB prior count for emissions
+        @param pPI prior count for initial state
+        @param R length of uniform compression >0, works best for .5log(sqrt(T)) where T is length of seq
+        @param burnin number of iterations
+        @warning work in progress
+        """
+
         if not isinstance(trainingSequences,EmissionSequence):
             raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
 
@@ -2832,7 +2858,7 @@ class DiscreteEmissionHMM(HMM):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         if R is -1:
             R = int(math.ceil(.5*math.log(math.sqrt(len(trainingSequences)))))
-            print R
+            #print R
         A, i = ghmmhelper.list2double_matrix(pA)
         if self.hasFlags(kHigherOrderEmissions):
             B=ghmmwrapper.double_matrix_alloc_row(len(pB))
