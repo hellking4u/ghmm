@@ -720,6 +720,7 @@ class EmissionSequence(object):
         # if a parent SequenceSet exits, we use cseq.subseq_free() to free memory
         if self.ParentSequenceSet is not None:
             self.cseq.subseq_free()
+        self.ParentSequenceSet = None
 
 
     def __len__(self):
@@ -954,7 +955,7 @@ class SequenceSet(object):
 
         #internal use
         elif isinstance(sequenceSetInput, ghmmwrapper.ghmm_dseq) or isinstance(sequenceSetInput, ghmmwrapper.ghmm_cseq):
-            log.debug("SequenceSet.__init__()", str(sequenceSetInput))
+            log.debug("SequenceSet.__init__()" + str(sequenceSetInput))
             self.cseq = sequenceSetInput
             if labelDomain is not None:
                 self.labelDomain = labelDomain
@@ -1164,7 +1165,7 @@ class SequenceSetSubset(SequenceSet):
     """
     def __init__(self, emissionDomain, sequenceSetInput, ParentSequenceSet , labelDomain = None, labelInput = None):
         # reference on the parent SequenceSet object
-        log.debug("SequenceSetSubset.__init__ -- begin -", str(ParentSequenceSet))
+        log.debug("SequenceSetSubset.__init__ -- begin -" +  str(ParentSequenceSet))
         self.ParentSequenceSet = ParentSequenceSet
         SequenceSet.__init__(self, emissionDomain, sequenceSetInput, labelDomain, labelInput)
 
@@ -1179,6 +1180,7 @@ class SequenceSetSubset(SequenceSet):
 
         # remove reference on parent SequenceSet object
         self.ParentSequenceSet = None
+        self.cseq.thisown = 0
 
 
 
