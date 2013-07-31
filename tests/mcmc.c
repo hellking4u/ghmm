@@ -137,9 +137,10 @@ int main() {
   double **pA = NULL;
   double **pB = NULL;
   double *pPi = NULL;
+  init_priors(mo, &pA, &pB, &pPi);
   int iter = 100;
-  int * Q =   ghmm_dmodel_cfbgibbs(mo, 0, my_output->seq[0], my_output->seq_len[0],
-                        pA, pB, pPi, 2, iter);
+  int * Q =   ghmm_dmodel_fbgibbs(mo, 0, my_output->seq[0], my_output->seq_len[0],
+                        pA, pB, pPi,  iter);
   printf("viterbi prob mcmc%f \n", ghmm_dmodel_viterbi_logp(mo, my_output->seq[0], my_output->seq_len[0], Q));
   printf("likelihood mcmc%f \n", ghmm_dmodel_likelihood(mo, my_output));
 

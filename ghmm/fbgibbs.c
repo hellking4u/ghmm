@@ -9,6 +9,11 @@
 #include "rng.h"
 #include "randvar.h"
 #include "obsolete.h"
+
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
 //===========================================================================================
 //=====================            sampleing           ======================================
 //===========================================================================================
@@ -441,9 +446,9 @@ void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int *O, int len, double **pA, dou
 
 
 int* ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **pA, double **pB, double *pPi, int burnIn){
+#ifdef DO_WITH_GSL
 #define CUR_PROC "ghmm_dmodel_fbgibbs"
   //initilizations
-  ghmm_rng_init();
   GHMM_RNG_SET (RNG, seed);
   double **alpha = ighmm_cmatrix_alloc(len, mo->N);
   double ***pmats = ighmm_cmatrix_3d_alloc(len, mo->N, mo->N);
@@ -459,4 +464,8 @@ int* ghmm_dmodel_fbgibbs (ghmm_dmodel * mo, int seed, int *O, int len, double **
 STOP:
   return NULL;
 #undef CUR_PROC
+#else
+   printf("fbgibbs uses gsl for dirichlete distrubutions, compile with gsl\n");
+   return NULL;
+#endif
 }

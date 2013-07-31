@@ -9,6 +9,12 @@
 #include <math.h>
 #include "fbgibbs.h"
 
+#ifdef HAVE_CONFIG_H
+#  include "../config.h"
+#endif
+
+
+
 /* based on  Speeding Up Bayesian HMM by the Four Russians Method
  *
  * M. Mahmud and A. Schliep
@@ -744,6 +750,7 @@ void ghmm_dmodel_cfbgibbstep(ghmm_dmodel *mo, int *obs, int totalobs,
  * burnIn: number of times to run forward backward gibbs */
 
 int* ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int R, int burnIn){
+#ifdef DO_WITH_GSL
 #define CUR_PROC "ghmm_dmodel_cfbgibbs"
 
     GHMM_RNG_SET (RNG, seed);
@@ -833,6 +840,10 @@ int* ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, int seed, int *obs, int totalobs, dou
 STOP:
    return NULL; 
 #undef CUR_PROC
+#else
+   printf("cfbgibbs uses gsl for dirichlete distrubutions, compile with gsl\n");
+   return NULL;
+#endif
 }
 
 
