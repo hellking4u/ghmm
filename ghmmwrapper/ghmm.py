@@ -2809,7 +2809,7 @@ class DiscreteEmissionHMM(HMM):
 
         self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
-    def fbGibbs(self, seed, trainingSequences,  pA, pB, pPi, burnIn = 100):
+    def fbGibbs(self, trainingSequences,  pA, pB, pPi, burnIn = 100, seed = 0):
         """Reestimates the model and returns a sampled state sequence
 
         @note uses gsl, silent states not supported
@@ -2820,11 +2820,11 @@ class DiscreteEmissionHMM(HMM):
         @param pB prior count for emissions
         @param pPI prior count for initial state
         @param burnin number of iterations
+        @return set of sampled paths for each training sequence
         @warning work in progress
         """
-        if not isinstance(trainingSequences,EmissionSequence):
-            raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
-
+        if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))       
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         A, i = ghmmhelper.list2double_matrix(pA)
@@ -2836,31 +2836,33 @@ class DiscreteEmissionHMM(HMM):
             B, j = ghmmhelper.list2double_matrix(pB)
         Pi = ghmmwrapper.list2double_array(pPi)
 
-        return ghmmwrapper.int_array2list(self.cmodel.fbgibbs(seed, trainingSequences.cseq.getSequence(0), len(trainingSequences), A, B, Pi, burnIn), len(trainingSequences))
+        return ghmmhelper.int_matrix2list(self.cmodel.fbgibbs(trainingSequences.cseq, A, B, Pi, burnIn,seed), trainingSequences.cseq.seq_number, len(trainingSequences))
 
-    def cfbGibbs(self, seed, trainingSequences, pA, pB, pPi,  R=-1, burnIn = 100):
+    def cfbGibbs(self,trainingSequences, pA, pB, pPi,  R=-1, burnIn = 100, seed = 0):
         """Reestimates the model and returns a sampled state sequence
 
         @note uses gsl, silent states not supported
 
         @param seed int for random seed, 0 default 
-        @param trainingSequences EmissionSequence
+        @param trainingSequences EmissionSequence or SequenceSet
         @param pA prior count for transitions
         @param pB prior count for emissions
         @param pPI prior count for initial state
         @param R length of uniform compression >0, works best for .5log(sqrt(T)) where T is length of seq
         @param burnin number of iterations
+        @return set of sampled paths for each training sequence
         @warning work in progress
         """
-
-        if not isinstance(trainingSequences,EmissionSequence):
-            raise TypeError("EmissionSequence required, got " + str(trainingSequences.__class__.__name__))
+        if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))
 
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
         if R is -1:
             R = int(math.ceil(.5*math.log(math.sqrt(len(trainingSequences)))))
             #print R
+        if R <= 1: 
+            R = 2
         A, i = ghmmhelper.list2double_matrix(pA)
         if self.hasFlags(kHigherOrderEmissions):
             B=ghmmwrapper.double_matrix_alloc_row(len(pB))
@@ -2869,7 +2871,7 @@ class DiscreteEmissionHMM(HMM):
         else:
             B, j = ghmmhelper.list2double_matrix(pB)
         Pi = ghmmwrapper.list2double_array(pPi)
-        return ghmmwrapper.int_array2list(self.cmodel.cfbgibbs(seed, trainingSequences.cseq.getSequence(0), len(trainingSequences), A, B, Pi, R, burnIn), len(trainingSequences))
+        return ghmmhelper.int_matrix2list(self.cmodel.cfbgibbs(trainingSequences.cseq, A, B, Pi, R, burnIn, seed), trainingSequences.cseq.seq_number, len(trainingSequences))
 
     def applyBackgrounds(self, backgroundWeight):
         """
@@ -2978,8 +2980,8 @@ class DiscreteEmissionHMM(HMM):
             self.setFlags(kTiedEmissions)
         else:
             log.debug( "tied_to already initialized")
-            for i, in range(self.N):
-                self.cmodel.tied_to[i] = tieList[i]
+            for i in range(self.N):
+                ghmmwrapper.int_array_setitem(self.cmodel.tied_to,i,tieList[i])
 
 
     def removeTieGroups(self):

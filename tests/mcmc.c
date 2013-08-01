@@ -121,9 +121,13 @@ int main() {
   fprintf(stdout,"observation symbol matrix:\n");
   ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
 
-  my_output = ghmm_dseq_calloc(1);
-  my_output->seq[0] = charList; 
-  my_output->seq_len[0] = count;
+  my_output = ghmm_dseq_calloc(2);
+  for(i=0;i< 2; i++){
+      my_output->seq[i] = charList; 
+      my_output->seq_len[i] = count;
+  }
+
+
 
   //ghmm_dseq_print(my_output, stdout);
 
@@ -139,9 +143,9 @@ int main() {
   double *pPi = NULL;
   init_priors(mo, &pA, &pB, &pPi);
   int iter = 100;
-  int * Q =   ghmm_dmodel_fbgibbs(mo, 0, my_output->seq[0], my_output->seq_len[0],
-                        pA, pB, pPi,  iter);
-  printf("viterbi prob mcmc%f \n", ghmm_dmodel_viterbi_logp(mo, my_output->seq[0], my_output->seq_len[0], Q));
+  int * Q =   ghmm_dmodel_cfbgibbs(mo, my_output,
+                        pA, pB, pPi,2, iter, 0);
+  printf("viterbi prob mcmc%f \n", ghmm_dmodel_viterbi_logp(mo, my_output->seq[0], my_output->seq_len[0], Q[0]));
   printf("likelihood mcmc%f \n", ghmm_dmodel_likelihood(mo, my_output));
 
   ghmm_dmodel_A_print(stdout,mo,""," ","\n");
@@ -156,45 +160,11 @@ int main() {
 //=====================viterbi/em=====================================================
   t1 = clock();
   printf("Em/viterni\n\n");
-  viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],
-				my_output->seq_len[0],&pathlen, &log_p_viterbi);
-  if (viterbi_path==NULL)
-    {fprintf(stderr,"viterbi failed!"); return 1;}
-  
-  //for(i=0;i<my_output->seq_len[0];i++){
-    //printf(" %d, ", viterbi_path[i]);
-  //}
-  printf("\n");
-  fprintf(stdout,
-	  "no training (viterbi algorithm): %f\n",
-	  log_p_viterbi);
 
-  /* allocate matrix for forward algorithm */
-  forward_alpha=ighmm_cmatrix_stat_alloc(count,2);
-  if (forward_alpha==NULL)
-    {
-      fprintf(stderr,"\n could not alloc forward_alpha matrix\n");
-      return 1;
-    }
-
-  /* run ghmm_dmodel_forward */
-  if (ghmm_dmodel_forward(&my_model,
-		   my_output->seq[0],
-		   my_output->seq_len[0],
-		   forward_alpha,
-		   forward_scale,
-		   &log_p_forward))
-    {
-      fprintf(stderr,"ghmm_dmodel_logp failed!");
-      ighmm_cmatrix_stat_free(&forward_alpha);
-      return 1;
-    }
-  ghmm_dmodel_baum_welch_nstep(&my_model, my_output, 100, 0.0000001);
+  //ghmm_dmodel_baum_welch_nstep(&my_model, my_output, 100, 0.0000001);
   viterbi_path = ghmm_dmodel_viterbi(&my_model, my_output->seq[0],
 				my_output->seq_len[0],&pathlen, &log_p_viterbi);
   //print
-  ghmm_dmodel_A_print(stdout,&my_model,""," ","\n");
-  ghmm_dmodel_B_print(stdout,&my_model,""," ","\n");
   fprintf(stdout,
 	  "(viterbi algorithm): %f\n",
 	  log_p_viterbi);
@@ -207,9 +177,8 @@ int main() {
 
 
   /* clean up */
-  ghmm_dseq_free(&my_output);
+  //ghmm_dseq_free(&my_output);
   free(viterbi_path);
-  ighmm_cmatrix_stat_free(&forward_alpha);
   ghmm_dmodel_free(&mo);
   ighmm_cmatrix_free(&pA, my_model.N);
   ighmm_cmatrix_free(&pB, my_model.N);

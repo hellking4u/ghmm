@@ -662,6 +662,10 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(em0, [0.0,0.5,0.5,0.0])
         em2 = map(f,self.model.getEmission(2))
         self.assertEqual(em2, [0.15, 0.1, 0.5, 0.25])
+
+        clear = [-1, -1, -1]
+        self.model.setTieGroups(clear) 
+        self.assertEqual(clear, self.model.getTieGroups())
         log.debug("testTiedStates -- end")
 
     def testNormalization(self):

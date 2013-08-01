@@ -76,8 +76,7 @@ int position(int *obs, int start, int end, int *tupleSize, int **preposition){
  * M: alphabet size
  * tupleSize: 0-M -> M, M + M^2, ...
  * preposition: preposition[i][j] = j*M^i */
-void precomputeandstoreposition(int R, int T, int *obs, int *storedpos, int M, int *tupleSize, int **preposition){
-    precomputeposition(R, M, tupleSize, preposition, 1);
+void storeposition(int R, int T, int *obs, int *storedpos, int M, int *tupleSize, int **preposition){
     int j, s, e, pos;
     storedpos[0] = position(obs, 0, R, tupleSize, preposition);
     pos = position(obs, 1, R, tupleSize, preposition);
@@ -108,14 +107,11 @@ void precomputeandstoreposition(int R, int T, int *obs, int *storedpos, int M, i
     }
 }
 
-void precomputeandstorepositionH(int R, int M, int order, int T, int *obs,
+void storepositionH(int R, int M, int order, int T, int *obs,
 	       	int *storedpos,  int *storedfpos, int *tupleSize, int**preposition,
 	       	int *tupleSizeH, int **prepositionH){
     int j, s, e, si ;
     int pos, fpos;
-
-    precomputeposition(R, M, tupleSize, preposition, 1);
-    precomputeposition(order, M, tupleSizeH, prepositionH, 0);
 
     storedpos[0] = position(obs, 0, R, tupleSize, preposition);
     storedfpos[0] = 0;
@@ -735,7 +731,6 @@ void ghmm_dmodel_cfbgibbstep(ghmm_dmodel *mo, int *obs, int totalobs,
         csamplestatepath(totalobs, obs, fwds, R, mats, rmats, Q,
                 storedpos, sneak, mo->N);
         
-        update(mo, totalobs, Q, obs, pA, pB, pPi);
 }
 /* runs the forward backward gibbs burnIn times
  * mo: model
@@ -749,21 +744,29 @@ void ghmm_dmodel_cfbgibbstep(ghmm_dmodel *mo, int *obs, int totalobs,
  * R: length of compression
  * burnIn: number of times to run forward backward gibbs */
 
-int* ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int R, int burnIn){
+int** ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, ghmm_dseq* seq, double **pA, double **pB, double *pPi, int R, int burnIn, int seed){
 #ifdef DO_WITH_GSL
 #define CUR_PROC "ghmm_dmodel_cfbgibbs"
-
     GHMM_RNG_SET (RNG, seed);
-    int *Q;
-    ARRAY_MALLOC (Q ,totalobs);     
-
+    int **Q;
+    ARRAY_CALLOC (Q ,seq->seq_number);     
+    double **transitions, **obsinstatealpha;
+    double *obsinstate;
+    int i;
+    int len = 0;
+    for(i = 0; i < seq->seq_number; i++){
+        ARRAY_CALLOC (Q[i] ,seq->seq_len[i]);     
+        if(len < seq->seq_len[i])
+            len = seq->seq_len[i];
+    }
     if(mo->model_type & GHMM_kHigherOrderEmissions){//higher order
-        int shtsize = totalobs/R+2;
+        //forwards
+        int shtsize = len/R+2;
         double **fwds = ighmm_cmatrix_alloc(shtsize, mo->N);
         double ***sneak = ighmm_cmatrix_3d_alloc(shtsize, mo->N, mo->N);
         double ****mats;
         double *****rmats;
-        int i, j;
+        int j;
         int limit = (pow(mo->M, R+1)-1)/(mo->M-1);  
         int d = (pow(mo->M, mo->maxorder+1)-1)/(mo->M-1);
         ARRAY_MALLOC (mats, limit+1);
@@ -775,24 +778,38 @@ int* ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, int seed, int *obs, int totalobs, dou
             for(j = 0; j < d; j++)
                rmats[i][j] = ighmm_cmatrix_3d_alloc(mo->N, mo->N, mo->N);
         }
+        //positions 
         int tupleSize[R+1];
         int tupleSizeH[mo->maxorder+1];
         int **preposition = ighmm_dmatrix_alloc(R, mo->M);
         int **prepositionH = ighmm_dmatrix_alloc(mo->maxorder, mo->M);
-        int storedpos[totalobs+1];
-        int storedfpos[totalobs+1];
-        
+        int storedpos[seq->seq_number][len+1];//XXX should be different every seq
+        int storedfpos[seq->seq_number][len+1];
+
         //precompute and store positions for matrices cooresponding to observations
-        precomputeandstorepositionH(R, mo->M, mo->maxorder, totalobs, obs, storedpos,
-                storedfpos, tupleSize, preposition, tupleSizeH, prepositionH);
+        precomputeposition(R, mo->M, tupleSize, preposition, 1);
+        precomputeposition(mo->maxorder, mo->M, tupleSizeH, prepositionH, 0);
+        for(i=0;i<seq->seq_number;i++){
+            storepositionH(R, mo->M, mo->maxorder, seq->seq_len[i], seq->seq[i], storedpos[i],
+                    storedfpos[i], tupleSize, preposition, tupleSizeH, prepositionH);
+        }
+
+        //counts
+        allocCountsH(mo, &transitions, &obsinstate, &obsinstatealpha);
 
         for(;burnIn > 0; burnIn--){
-            if(burnIn%100==0)
-                printf("%d\n", burnIn);
-            ghmm_dmodel_cfbgibbstepH(mo, obs, totalobs, pA, pB, pPi, Q, R,
+            //if(burnIn%100==0)
+                //printf("%d\n", burnIn);
+            initCountsH(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
+            for(i = 0; i < seq->seq_number; i++){
+                getCountsH(mo, Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate, obsinstatealpha);
+                ghmm_dmodel_cfbgibbstepH(mo, seq->seq[i], seq->seq_len[i], pA, pB, pPi, Q[i], R,
                     fwds, sneak, mats, rmats, mflag, storedpos, storedfpos);
+            }
+            updateH(mo, transitions, obsinstate, obsinstatealpha);
         }
-         //clean up
+        //clean up
+        freeCountsH(mo, &transitions, &obsinstate, &obsinstatealpha);
         ighmm_cmatrix_3d_free(&sneak, shtsize, mo->N);
         ighmm_dmatrix_free(&preposition, R);
         ighmm_dmatrix_free(&prepositionH, mo->maxorder);
@@ -802,11 +819,12 @@ int* ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, int seed, int *obs, int totalobs, dou
            for(j =0; j < d; j++)
               ighmm_cmatrix_3d_free(&(rmats[i][j]), mo->N, mo->N);
         } 
-            m_free(rmats);
-            m_free(mats);
+        m_free(rmats);
+        m_free(mats);
     }
     else{//not higher order
-        int shtsize = totalobs/R+2;
+        //forwards
+        int shtsize = len/R+2;
         double **fwds = ighmm_cmatrix_alloc(shtsize, mo->N);
         double ***sneak = ighmm_cmatrix_3d_alloc(shtsize, mo->N, mo->N);
         double ***mats;
@@ -819,15 +837,26 @@ int* ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, int seed, int *obs, int totalobs, dou
     	    rmats[i] = ighmm_cmatrix_3d_alloc(mo->N, mo->N, mo->N);
         int tupleSize[R+1];
         int **preposition = ighmm_dmatrix_alloc(R, mo->M);
-        int storedpos[totalobs+1];
+        int storedpos[seq->seq_number][len+1];//XXX dif every seq
 
-        precomputeandstoreposition(R, totalobs, obs, storedpos, mo->M, tupleSize, preposition);
- 
+        //position
+        precomputeposition(R, mo->M, tupleSize, preposition, 1);
+        for(i = 0; i < seq->seq_number; i++){
+            storeposition(R, seq->seq_len[i], seq->seq[i], storedpos[i], mo->M, tupleSize, preposition);
+        }
+        //counts
+        allocCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
         for(;burnIn > 0; burnIn--){
-            ghmm_dmodel_cfbgibbstep(mo, obs, totalobs, pA, pB, pPi, Q, R, 
-                    fwds, sneak, mats, rmats, storedpos);
+            initCounts(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
+            for(i = 0; i < seq->seq_number;i++){
+                ghmm_dmodel_cfbgibbstep(mo, seq->seq[i], seq->seq_len[i], pA, pB, pPi, Q[i], R, 
+                      fwds, sneak, mats, rmats, storedpos[i]);
+                getCounts(Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate, obsinstatealpha);
+            }
+            update(mo, transitions, obsinstate, obsinstatealpha);
         }
         //clean up
+        freeCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
         ighmm_cmatrix_3d_free(&sneak, shtsize, mo->N);
         ighmm_dmatrix_free(&preposition, R);
         ighmm_cmatrix_free(&fwds, shtsize);
@@ -858,5 +887,4 @@ void ghmm_dmodel_cfbgibbstepH(ghmm_dmodel *mo, int *obs, int totalobs,
     csamplestatepathH(totalobs, obs, fwds, R, mo->N,  mats, 
           rmats, Q, storedpos, storedfpos, sneak);
 
-    updateH(mo, totalobs, Q, obs, pA, pB, pPi);
 }
