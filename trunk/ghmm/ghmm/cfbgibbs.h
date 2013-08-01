@@ -20,7 +20,7 @@ extern "C" {
  * burnIn: number of times to run forward backward gibbs 
  * return int* state path
  */
-int* ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, int seed, int *obs, int totalobs, double **pA, double **pB, double *pPi, int R, int burnIn);
+int** ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, ghmm_dseq* seq, double **pA, double **pB, double *pPi, int R, int burnIn, int seed);
 
 
 #ifdef __cplusplus
