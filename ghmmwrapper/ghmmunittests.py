@@ -132,7 +132,15 @@ class AlphabetTests(unittest.TestCase):
         intseq[3] = 5
         self.assertRaises(KeyError, self.dnaAlphabet.externalSequence, intseq)
 
+    def testEquals(self):
+        self.dna2 = ghmm.Alphabet(['a','c','g','t'])
+        self.assertEqual(self.dnaAlphabet == self.dna2, True)
+        self.assertEqual(self.dnaAlphabet == self.binaryAlphabet, False)
 
+    def testToCStruct(self):
+        self.c = self.dnaAlphabet.toCstruct();
+        self.dna3 = ghmm.Alphabet(self.c)
+        self.assertEqual(self.dna3 == self.dnaAlphabet, True)
 
     def testlen(self):
         log.debug("AlphabetTests.testlen()")
