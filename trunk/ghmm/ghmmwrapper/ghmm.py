@@ -297,13 +297,13 @@ class Alphabet(EmissionDomain):
     """ Discrete, finite alphabet
 
     """
-    def __init__(self, listOfCharacters, calphabet = None):
+    def __init__(self, listOfCharacters):
         """
         Creates an alphabet out of a listOfCharacters
         @param listOfCharacters a list of strings (single characters most of
         the time), ints, or other objects that can be used as dictionary keys
         for a mapping of the external sequences to the internal representation
-        @param calphabet can alternatively be a SWIG pointer to a
+        or can alternatively be a SWIG pointer to a
         C alphabet_s struct
 
         @note
@@ -313,10 +313,11 @@ class Alphabet(EmissionDomain):
         """
         self.index = {} # Which index belongs to which character
 
-        if calphabet is None:
-            self.listOfCharacters = listOfCharacters
+        if type(listOfCharacters) is ghmmwrapper.ghmm_alphabet:
+            self.listOfCharacters = [listOfCharacters.getSymbol(i) for 
+                    i in range(listOfCharacters.size)]
         else:
-            self.listOfCharacters = [calphabet.getSymbol(i) for i in range(calphabet.size)]
+            self.listOfCharacters = listOfCharacters
 
         for i,c in enumerate(self.listOfCharacters):
             self.index[c] = i
@@ -368,6 +369,7 @@ class Alphabet(EmissionDomain):
         # => listOfCharacters should be considered immutable
         return id(self)
 
+    #obsolete
     def size(self):
         """ @deprecated use len() instead
         """
@@ -445,16 +447,21 @@ DNA = Alphabet(['a','c','g','t'])
 AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
                        'M','N','P','Q','R','S','T','V','W','Y'])
 def IntegerRange(a,b):
+    """
+    Creates an Alphabet with internal and external representation of range(a,b)
+    @return Alphabet
+    """
     return Alphabet(range(a,b))
 
 
 # To be used for labelled HMMs. We could use an Alphabet directly but this way it is more explicit.
 class LabelDomain(Alphabet):
-    def __init__(self, listOfLabels, calphabet = None):
-        Alphabet.__init__(self, listOfLabels, calphabet)
+    def __init__(self, listOfLabels):
+        Alphabet.__init__(self, listOfLabels)
 
 
 class Float(EmissionDomain):
+    """Continuous Alphabet"""
 
     def __init__(self):
         self.CDataType = "double" # flag indicating which C data type should be used
@@ -1349,9 +1356,9 @@ class HMMOpenFactory(HMMFactory):
         for i in range(nrModels):
             cmodel = getModel(i)
             if emission_domain is 'd':
-                emission_domain = Alphabet([], cmodel.alphabet)
+                emission_domain = Alphabet(cmodel.alphabet)
             if modelType & ghmmwrapper.kLabeledStates:
-                labelDomain = LabelDomain([], cmodel.label_alphabet)
+                labelDomain = LabelDomain(cmodel.label_alphabet)
                 m = hmmClass(emission_domain, distribution(emission_domain), labelDomain, cmodel)
             else:
                 m = hmmClass(emission_domain, distribution(emission_domain), cmodel)
