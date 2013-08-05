@@ -11,7 +11,12 @@ for f in $sep_path ; do
 done
 
 #creates ltmain.sh (Call first!!!)
-libtoolize --automake --force --copy
+if hash libtoolize 2>&-
+then
+    libtoolize --automake --force --copy
+else
+    glibtoolize --automake --force --copy
+fi
 
 #makes aclocal.m4 from acinclude.m4 and other files
 aclocal
