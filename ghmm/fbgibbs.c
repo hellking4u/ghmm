@@ -265,7 +265,7 @@ void freeCountsH(ghmm_dmodel* mo, double ***transitions, double **obsinstate, do
     m_free(*obsinstate);
     int l;
     for(l=0;l<mo->N;l++)
-        m_free(*(obsinstatealpha[l]));
+        m_free((*obsinstatealpha)[l]);
     m_free(*obsinstatealpha);
 #undef CUR_PROC
 }
@@ -370,20 +370,22 @@ void update(ghmm_dmodel* mo, double **transition, double *obsinstate, double **o
 void updateH(ghmm_dmodel* mo, double **transition, double *obsinstate, double **obsinstatealpha){
 #define CUR_PROC "updateH"
     double tmp_n[mo->N];
-    int i,k;
+    double tmp_m[mo->M];
+    double *p;
+    int i,k,l;
     for(i=0;i<mo->N;i++){
-        double tmp_m[ghmm_ipow (mo, mo->M, mo->order[i]+1)];
-        if(!mo->s[i].fix){
-            ighmm_rand_dirichlet(0, ghmm_ipow (mo, mo->M, mo->order[i]+1), obsinstatealpha[i], tmp_m);
-        }
         ighmm_rand_dirichlet(0, mo->N, transition[i], tmp_n);
         for(k = 0; k < mo->N; k++){
 	    ghmm_dmodel_set_transition(mo, i, k, tmp_n[k]);
         }  
         if(!mo->s[i].fix){
-            for(k = 0; k < ghmm_ipow (mo, mo->M, mo->order[i]+1); k++){
-                mo->s[i].b[k] = tmp_m[k];
-            }      
+            p = obsinstatealpha[i];
+            for(k = 0; k < ghmm_ipow(mo, mo->M, mo->order[i]); k++){
+                ighmm_rand_dirichlet(0,mo->M,p+k*mo->M, tmp_m);
+                for(l = 0; l < mo->M; l++){
+                    mo->s[i].b[k*mo->M + l] = tmp_m[l];
+                }
+            }
         }
     }
     ighmm_rand_dirichlet(0, mo->N, obsinstate, tmp_n);
@@ -484,6 +486,7 @@ int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double
       allocCountsH(mo, &transitions, &obsinstate, &obsinstatealpha);
       for(;burnIn > 0; burnIn--){
          initCountsH(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
+         if(burnIn % 100 == 0) printf("iter %d\n", burnIn);
          for(i = 0; i < seq->seq_number; i++){
              ghmm_dmodel_fbgibbstep(mo, seq->seq[i], seq->seq_len[i], Q[i], alpha, pmats);
              getCountsH(mo, Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate, obsinstatealpha);

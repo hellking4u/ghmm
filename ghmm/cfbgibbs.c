@@ -798,8 +798,8 @@ int** ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, ghmm_dseq* seq, double **pA, double 
         allocCountsH(mo, &transitions, &obsinstate, &obsinstatealpha);
 
         for(;burnIn > 0; burnIn--){
-            //if(burnIn%100==0)
-                //printf("%d\n", burnIn);
+            if(burnIn%100==0)
+                printf("iter %d\n", burnIn);
             initCountsH(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
             for(i = 0; i < seq->seq_number; i++){
                 getCountsH(mo, Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate, obsinstatealpha);
@@ -847,6 +847,7 @@ int** ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, ghmm_dseq* seq, double **pA, double 
         //counts
         allocCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
         for(;burnIn > 0; burnIn--){
+            if(burnIn % 100==0) printf("iter %d", burnIn);
             initCounts(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
             for(i = 0; i < seq->seq_number;i++){
                 ghmm_dmodel_cfbgibbstep(mo, seq->seq[i], seq->seq_len[i], pA, pB, pPi, Q[i], R, 
