@@ -382,11 +382,12 @@ class SequenceSetTests(unittest.TestCase):
         self.assertEqual(len(d_subseq),2)
         self.assertEqual(d_subseq.sequenceLength(0),5)
 
+    #obsolete test
     def testwrite(self):
         log.debug("SequenceSetTests.testwrite")
         self.i_seq.write("testdata/ghmmunittests_testwrite.seq")
         self.d_seq.write("testdata/ghmmunittests_testwrite.seq")
-    #obsolete test
+
     def testlabelaccess(self):
         if not ghmmwrapper.SEQ_LABEL_FIELD:
             return True;
