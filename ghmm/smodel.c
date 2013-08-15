@@ -1470,6 +1470,7 @@ void ghmm_cmodel_fix_print (FILE * file, ghmm_cmodel * smo, char *tab, char *sep
 
 
 /*============================================================================*/
+//obsolete
 void ghmm_cmodel_print (FILE * file, ghmm_cmodel * smo)
 {
 /* old function - No support to heterogeneous densities */

@@ -51,7 +51,7 @@
 
 
 /*----------------------------------------------------------------------------*/
-static int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double *omega,
+int sfoba_initforward (ghmm_cmodel * smo, double *alpha_1, double *omega,
                               double *scale, double **b)
 {
 # define CUR_PROC "sfoba_initforward"

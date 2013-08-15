@@ -445,6 +445,19 @@ double ighmm_rand_dirichlet(int seed, int len, double *alpha, double *theta){
    gsl_ran_dirichlet(RNG, len, alpha, theta);
 #else
   printf("not implemted without gsl. Compile with gsl to use dirichlet");
+  return 0;
+#endif
+}
+
+double ighmm_rand_gamma(double a, double b, int seed){
+  if (seed != 0) {
+    GHMM_RNG_SET(RNG, seed);
+  }
+#ifdef DO_WITH_GSL
+   return (gsl_ran_gamma(RNG, a, b));
+#else
+  printf("not implemted without gsl. Compile with gsl to use gamma");
+  return 0;
 #endif
 }
 
