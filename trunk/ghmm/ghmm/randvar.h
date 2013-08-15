@@ -139,6 +139,9 @@ extern "C" {
   @param theta: probability density
 */
   double ighmm_rand_dirichlet(int seed, int len, double *alpha, double *theta);
+  
+  
+  double ighmm_rand_gamma(double a, double b, int seed);
 
 /** 
    Generates a N( 0, 1 ) distributed random number.

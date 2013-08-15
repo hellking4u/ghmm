@@ -10,6 +10,8 @@ extern "C" {
 
 int sample(int seed, double* dist, int N);
 
+void sampleStatePath(int N, double *alpha, double ***pmats, int T, int* states);
+
 void init_priors(ghmm_dmodel *mo, double ***pA, double ***pB, double **pPi);
 
 void update(ghmm_dmodel* mo, double **transistions, double *obsinstate, double **obsinstatealpha);
