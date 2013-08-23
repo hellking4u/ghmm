@@ -181,14 +181,21 @@ void storepositionH(int R, int M, int order, int T, int *obs,
 void precompute(int R, ghmm_dmodel *mo, double ***mats, double**** rmats){
   int i, j, k;
   int limit = (pow(mo->M, R+1)-1)/(mo->M-1) -1;  
+  double sum = 0;
   //mats[i][j][k] i = obs; j,k indice of matrix   M(obs)_ik 
-  for(i = 0; i < mo->N; i++){
+  for(i = 0; i < mo->M; i++){
     for(j = 0; j < mo->N; j++){
-      for(k = 0; k < mo->M; k++){
-        mats[k][i][j] = ghmm_dmodel_get_transition(mo, i,j)*mo->s[j].b[k];
+      for(k = 0; k < mo->N; k++){
+        sum += mats[i][j][k] = ghmm_dmodel_get_transition(mo, j,k)*mo->s[k].b[i];
         //printf("mats(%d, %d, %d) = %f \n",i,j,k, mats[i][j][k]);
       }
-    }  
+    } 
+    for(j = 0; j < mo->N; j++){
+      for(k = 0; k < mo->N; k++){
+          mats[i][j][k] /= sum;
+      }
+    } 
+    sum = 0;
   }
   
  int pos = mo->M;
@@ -298,6 +305,7 @@ void precomputedmatsH(int totalobs, int *obs, int R,
     int *tmp1 = read;
     int *tmp2 = write;
     int *tmp3;
+    double sum=0;
     for(i=0; i<size; i++) 
         for(j=0;j<dsize;j++)
             mflag[i][j] = 0;
@@ -313,30 +321,34 @@ void precomputedmatsH(int totalobs, int *obs, int R,
         {
             for(pos = 0; pos < mo->M; pos++)
             { 
-                
                 for(j=0; j < mo->N; j++)
                 {
                     for (k=0; k < mo->N; k++)
                     {
-                        if(i == 0){
+                        if(i == 0)
+                        {
                             mo->emission_history = 0;
-                            if(mo->order[k] ==0){
-                                mats[pos][fpos][j][k] =
+                            if(mo->order[k] ==0)
+                            {
+                                sum += mats[pos][fpos][j][k] =
                                     //ghmm_dmodel_get_transition(mo, j,k)*mo->s[k].b[pos];
                                     mo->s[k].pi*mo->s[k].b[pos];
                             }
-                            else{
+                            else
+                            {
                                 mats[pos][fpos][j][k] = 0;
                             } 
                         }
-                        else{
+                        else
+                        {
                             mo->emission_history = tmp1[l];
                             e = get_emission_index(mo, k, pos, i);
                             //printf("e = %d, tmp = %d, b = %f ; ", e, tmp1[l], mo->s[k].b[e]);
                             if(e == -1)
                                 mats[pos][fpos][j][k] = 0;
-                            else{
-                                mats[pos][fpos][j][k] =
+                            else
+                            {
+                                sum += mats[pos][fpos][j][k] =
                                     ghmm_dmodel_get_transition(mo, j,k)*mo->s[k].b[e];
                             }
                         }
@@ -347,6 +359,10 @@ void precomputedmatsH(int totalobs, int *obs, int R,
                 update_emission_history(mo, pos);
                 tmp2[n] = mo->emission_history;                    
                 n++;
+                for(j=0;j<mo->N;j++)
+                    for(k=0;k<mo->N;k++)
+                        mats[pos][fpos][j][k] /= sum;
+                sum = 0;
             }
             fpos++;
         }
