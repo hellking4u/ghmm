@@ -86,8 +86,17 @@ static int gradient_descent_galloc (double ***matrix_b, double **matrix_a,
 
   /* first allocate memory for matrix_b */
   ARRAY_MALLOC (*matrix_b, mo->N);
-  for (i = 0; i < mo->N; i++)
-    ARRAY_CALLOC ((*matrix_b)[i], ghmm_ipow (mo, mo->M, mo->order[i] + 1));
+  for (i = 0; i < mo->N; i++){
+      if(mo->model_type & GHMM_kHigherOrderEmissions){
+          ARRAY_CALLOC ((*matrix_b)[i], ghmm_ipow (mo, mo->M, mo->order[i] + 1));
+      }
+      else{
+          ARRAY_CALLOC ((*matrix_b)[i], mo->M);
+      }
+  }
+
+
+
 
   /* matrix_a(i,j) = matrix_a[i*mo->N+j] */
   ARRAY_CALLOC (*matrix_a, mo->N * mo->N);
@@ -124,7 +133,9 @@ int ghmm_dmodel_label_gradient_expectations (ghmm_dmodel* mo, double **alpha,
   for (i = 0; i < mo->N; i++) {
     for (j = 0; j < mo->N; j++)
       matrix_a[i * mo->N + j] = 0;
-    size = ghmm_ipow (mo, mo->M, mo->order[i] + 1);
+    
+    size = mo->model_type & GHMM_kHigherOrderEmissions ?
+        ghmm_ipow (mo, mo->M, mo->order[i] + 1): mo->N;
     for (h = 0; h < size; h++)
       matrix_b[i][h] = 0;
   }
@@ -284,7 +295,7 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
     /* compute n matrices (no labels): */
     if (-1 ==
         ghmm_dmodel_label_gradient_expectations (mo, alpha, beta, scale, sq->seq[k],
-                                         seq_len, m_b, m_a, m_pi))
+                                         seq_len, n_b, n_a, n_pi))
       printf ("Error in sequence %d, length %d (no labels)\n", k, seq_len);
 
     /* calculate forward and backward variables with labels: */
@@ -382,7 +393,9 @@ static int gradient_descent_onestep (ghmm_dmodel * mo, ghmm_dseq * sq, double et
         continue;
 
       /* update */
-      size = ghmm_ipow (mo, mo->M, mo->order[i]);
+      size = mo->model_type & GHMM_kHigherOrderEmissions ?
+        ghmm_ipow (mo, mo->M, mo->order[i]):1;
+
       for (h = 0; h < size; h++) {
         b_block_sum = 0;
         for (g = 0; g < mo->M; g++) {

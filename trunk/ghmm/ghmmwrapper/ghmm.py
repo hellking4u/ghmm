@@ -492,7 +492,6 @@ class Distribution(object):
     # add density, mass, cumuliative dist, quantils, sample, fit pars,
     # moments
 
-
 class DiscreteDistribution(Distribution):
     """ A DiscreteDistribution over an Alphabet: The discrete distribution
     is parameterized by the vectors of probabilities.
@@ -1750,7 +1749,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 return GaussianEmissionHMM(emissionDomain, distribution, cmodel)
 
             elif isinstance(distribution, GaussianMixtureDistribution):
-                # Interpretation of B matrix for the mixture case
+                # Interpretation of B matrix for the Gaussian mixture case 
                 # (Example with three states and two components each):
                 #  B = [
                 #      [ ["mu11","mu12"],["sig11","sig12"],["w11","w12"]   ],
@@ -1794,7 +1793,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 return GaussianMixtureHMM(emissionDomain, distribution, cmodel)
 
             elif isinstance(distribution, ContinuousMixtureDistribution):
-                # Interpretation of B matrix for the mixture case
+                # Interpretation of B matrix for the continuous mixture case
                 # (Example with three states and two components each):
                 #  B = [
                 #      [["mu11","mu12"], ["sig11","sig12"], ["a11","a12"], ["w11","w12"]],
@@ -2871,12 +2870,7 @@ class DiscreteEmissionHMM(HMM):
         if R <= 1: 
             R = 2
         A, i = ghmmhelper.list2double_matrix(pA)
-        if self.hasFlags(kHigherOrderEmissions):
-            B=ghmmwrapper.double_matrix_alloc_row(len(pB))
-            for i in range(len(pB)):
-               ghmmwrapper.double_matrix_set_col(B, i,ghmmwrapper.list2double_array(pB[i]))
-        else:
-            B, j = ghmmhelper.list2double_matrix(pB)
+        B, j = ghmmhelper.list2double_matrix(pB)
         Pi = ghmmwrapper.list2double_array(pPi)
         return ghmmhelper.int_matrix2list(self.cmodel.cfbgibbs(trainingSequences.cseq, A, B, Pi, R, burnIn, seed), trainingSequences.cseq.seq_number, len(trainingSequences))
 
@@ -3308,16 +3302,15 @@ class StateLabelHMM(DiscreteEmissionHMM):
         if not self.hasFlags(kLabeledStates):
             raise NotImplementedError("Error: Model is no labeled states.")
 
-        emissionSequences = emissionSequences.asSequenceSet()
-        seqNumber = len(emissionSequences)
-
         tmp_model = self.cmodel.label_gradient_descent(emissionSequences.cseq, eta, steps)
         if tmp_model is None:
             log.error("Gradient descent finished not successfully.")
             return False
         else:
+            self.cmodel.thisown = 0
             self.cmodel = tmp_model
             return True
+
 
     def labeledlogikelihoods(self, emissionSequences):
         """ Compute a vector ( log( P[s,l| model]) )_{s} of log-likelihoods of the
