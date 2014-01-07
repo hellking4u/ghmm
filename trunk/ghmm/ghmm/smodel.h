@@ -69,6 +69,7 @@ extern "C" {
     uniform,
     binormal,      /**< two dimensional gaussian */
     multinormal,   /**< multivariate gaussian */
+    gamma_density,
     density_number /**< number of density types, has to stay last */
   } ghmm_density_t;
 
@@ -104,7 +105,7 @@ extern "C" {
        or left boundary for rigth-tail gaussians */
     double min;
     /** maximum of uniform distribution
-       or right boundary for left-tail gaussians */
+       or righ]t boundary for left-tail gaussians */
     double max;
     /** if fixed != 0 the parameters of the density are fixed */
     int fixed;
@@ -235,7 +236,7 @@ extern "C" {
     @param N number of states in the model 
     @param modeltype type of the model
 */
-  ghmm_cmodel * ghmm_cmodel_calloc( int N, int modeltype);
+  ghmm_cmodel * ghmm_cmodel_calloc( int N, int modeltype, int dim);
 
 /** Free memory of multivariate ghmm_c_emission arrays
     @param emission pointer of ghmm_c_emission to free */
@@ -282,6 +283,7 @@ extern "C" {
   int ghmm_cmodel_get_random_var(ghmm_cmodel *smo, int state, int m, double *x);
 
 
+  int ghmm_c_emission_get_random_var(ghmm_c_emission *emission, double *x);
 /** 
     Produces sequences to a given model. All memory that is needed for the 
     sequences is allocated inside the function. It is possible to define

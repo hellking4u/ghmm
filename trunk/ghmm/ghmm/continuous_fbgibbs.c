@@ -1,3 +1,41 @@
+/*******************************************************************************
+*
+*       This file is part of the General Hidden Markov Model Library,
+*       GHMM version __VERSION__, see http://ghmm.org
+*
+*       Filename: ghmm/ghmm/model.c
+*       Authors:  Benhard Knab, Bernd Wichern, Benjamin Georgi, Alexander Schliep
+*
+*       Copyright (C) 1998-2004 Alexander Schliep
+*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+*                               Berlin
+*
+*       Contact: schliep@ghmm.org
+*
+*       This library is free software; you can redistribute it and/or
+*       modify it under the terms of the GNU Library General Public
+*       License as published by the Free Software Foundation; either
+*       version 2 of the License, or (at your option) any later version.
+*
+*       This library is distributed in the hope that it will be useful,
+*       but WITHOUT ANY WARRANTY; without even the implied warranty of
+*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*       Library General Public License for more details.
+*
+*       You should have received a copy of the GNU Library General Public
+*       License along with this library; if not, write to the Free
+*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*
+*       This file is version $Revision: 2304 $
+*                       from $Date: 2013-05-31 13:48:13 -0400 (Fri, 31 May 2013) $
+*             last change by $Author: ejb177 $.
+*
+*******************************************************************************/
+
+#ifndef GHMM_CONTINUOUS_FBGIBBS
+#define GHMM_CONTINUOUS_FBGIBBS
 #ifdef HAVE_CONFIG_H
 #  include "../config.h"
 #endif
@@ -10,8 +48,32 @@
 #include "matrix.h"
 #include "randvar.h"
 #include "ghmm_internals.h"
-
+#include "rng.h"
+#include "sfoba.h"
 #include "continuous_fbgibbs.h"
+#include "smodel.h"
+
+//data for each state for posterior
+typedef struct sample_emission_data{
+    int emitted;
+    union{
+        double val;
+        double *vec;
+    }mean;
+    union{
+        double val;
+        double *vec;
+        double **mat;
+    }variance;
+    double a;
+    double b;
+} sample_emission_data;
+
+//data for model posterior
+typedef struct ghmm_sample_data{
+    double **transition;
+    sample_emission_data **state_data;  //[state][mixture] rename to emission_data
+}ghmm_sample_data;
 /*----------------------------------------------------------------------------*/
 /*                     modified forwards to get cdf pmats                     */
 /*----------------------------------------------------------------------------*/
@@ -142,118 +204,13 @@ int ghmm_cmodel_forwardgibbs (ghmm_cmodel * smo, double *O, int T, double ***b,
 STOP:
   *log_p = (double) -DBL_MAX;
   return (res);
-# undef CUR_PROC
+#undef CUR_PROC
 }                               /* ghmm_cmodel_forward */
 //====================================================================================
 //==================================end forwards======================================
 //====================================================================================
 
-//normal data holds information to update a normal hmm
-typedef struct normal_update {
-    double **transitions;
-    double *in_state;
-    double *sample_mean;
-    double *sample_var;
-}normal_update;
 
-
-void alloc_normal_data(ghmm_cmodel* mo, normal_update **update){
-    #define CUR_PROC "allocNormalData"
-    *update = (normal_update*)malloc(sizeof(normal_update));
-    (*update)->transitions = ighmm_cmatrix_alloc(mo->N,mo->N);
-    ARRAY_CALLOC((*update)->in_state, mo->N);
-    ARRAY_CALLOC((*update)->sample_mean, mo->N);
-    ARRAY_CALLOC((*update)->sample_var, mo->N);
-STOP:
-    return;//XXX error handle
-#undef CUR_PROC
-}
-
-void clear_normal_data(ghmm_cmodel*mo, normal_update* update){
-    int i,j;
-    for(i=0;i<mo->N;i++){
-        update->in_state[i] = 0;
-        update->sample_mean[i] = 0;
-        update->sample_var[i] = 0;
-        for(j=0;j<mo->N;j++){
-            update->transitions[i][j] = 0;
-        }
-    }
-}
-
-
-void free_normal_data(ghmm_cmodel* mo, normal_update *update){
-#define CUR_PROC "free_normal_data"
-    m_free(update->sample_var);
-    m_free(update->sample_mean);
-    m_free(update->in_state);
-    ighmm_cmatrix_free(&update->transitions, mo->N);
-#undef CUR_PROC
-}
-
-void get_normal_data(ghmm_cmodel* mo, int *states, double* O, int T, normal_update *update){
-    int i;
-    double tmp;
-    for(i=0;i<T;i++){
-        update->sample_mean[states[i]] += O[i];
-        update->in_state[states[i]]++;
-    }
-    for(i=0;i<mo->N;i++){
-        if(update->in_state[i] > 0){
-            update->sample_mean[i]/=update->in_state[i];
-        }
-    }
-
-    for(i=0;i<T-1;i++)
-        update->transitions[states[i]][states[i+1]]++;
-
-    for(i=0;i<T;i++){
-        tmp = O[i] - update->sample_mean[states[i]];
-        update->sample_var[states[i]] += tmp*tmp;
-    }
-}
-
-void update_normal(ghmm_cmodel *mo, double **pA, normal_hyper **hyperparams, double *pPi, normal_update *update){
-    int i,k;
-    double mue, nu, a, b;
-    double tmp, sum;
-    normal_hyper *p;
-    //B
-    for(i = 0; i < mo->N; i++){
-        p = hyperparams[i];
-        tmp = update->sample_mean[i] - p->mue;
-        sum = p->mue + p->nu;
-
-        mue = ( p->mue*p->nu + update->in_state[i]*update->sample_mean[i] ) / sum; 
-        nu = sum;
-        a = p->a + update->in_state[i]/2;
-        b = p->b + .5*update->sample_var[i] + ( p->mue * p->nu * tmp * tmp) / (2*sum);
-        mo->s[i].e->mean.val = ighmm_rand_normal(mue, nu, 0);
-        mo->s[i].e->variance.val = ighmm_rand_gamma(a, b, 0);  
-        printf("a %f, b %f, var %f, mue %f\n", a, b, mo->s[i].e->variance.val, mo->s[i].e->mean.val);
-    } 
-
-    //A
-    for(i = 0; i < mo->N; i++){
-        update->in_state[i] += pPi[i];
-        for(k = 0; k < mo->N; k++){
-            update->transitions[i][k] += pA[i][k];
-        }
-    }
-    double tmp_n[mo->N];
-    for(i=0;i<mo->N;i++){
-        ighmm_rand_dirichlet(0, mo->N, update->transitions[i], tmp_n);
-        for(k = 0; k < mo->N; k++){
-            ghmm_cmodel_set_transition(mo, i, k, 0,tmp_n[k]);
-        }        
-    }
-
-    //Pi
-    ighmm_rand_dirichlet(0, mo->N, update->in_state, tmp_n);
-    for(k=0;k<mo->N;k++){
-        mo->s[k].pi = tmp_n[k];
-    }
-}
 
 void ghmm_cmodel_fbgibbstep (ghmm_cmodel * mo, double *O, int len,int *Q, double** alpha, double***pmats){
     int i,j,k;
@@ -272,22 +229,181 @@ void ghmm_cmodel_fbgibbstep (ghmm_cmodel * mo, double *O, int len,int *Q, double
     sampleStatePath(mo->N, alpha[len-1], pmats, len, Q);
 }
 
-int* ghmm_cmodel_fbgibbs (ghmm_cmodel * mo, ghmm_cseq* seq,
-        double **pA, normal_hyper **pB, double *pPi, int burnIn){
+
+
+int ghmm_alloc_sample_data(ghmm_bayes_hmm *mo, ghmm_sample_data *data){
+#define CUR_PROC "ghmm_alloc_sample_data"
+//XXX must do alloc matrices for dim >1
+    int i;
+    data->transition = ighmm_cmatrix_alloc(mo->N, mo->N);
+    ARRAY_MALLOC(data->state_data, mo->N);
+    for(i = 0; i < mo->N; i++){
+        ARRAY_MALLOC(data->state_data[i], mo->M[i]);
+        /*for(i = 0; i < mo->M[i]; i++){//only needed for dim >1
+            ghmm_alloc_emission_data(data->state_data[i][j], ghmm_bayes_hmm->params[i][j])
+        }*/
+    }
+    return 0;
+STOP:
+    return -1;
+#undef CUR_PROC
+}
+ 
+void ghmm_clear_emission_data(sample_emission_data *data){
+    data->emitted = 0;
+    data->mean.val = 0;
+    data->variance.val = 0;
+    data->a = 0;
+    data->b = 0;
+}          
+
+void ghmm_clear_sample_data(ghmm_sample_data * data, ghmm_bayes_hmm *bayes){
+    int i, j;
+    for(i = 0; i < bayes->N; i++){
+        for(j = 0; j < bayes->M[i]; j++){
+            ghmm_clear_emission_data(&data->state_data[i][j]);
+        }
+        for(j=0; j<bayes->N; j++){
+            data->transition[i][j] = 0;
+        }
+    }
+}
+       
+void ghmm_get_emission_data_first_pass(sample_emission_data *data, ghmm_density_t type,
+        double *observation){
+    switch(type){
+        case(normal):
+            data->mean.val += *observation;
+            data->emitted++;
+        default://not supported
+            return;
+    }
+}
+
+void ghmm_get_emission_data_second_pass(sample_emission_data *data, ghmm_density_t type,
+        double *observation){
+    double tmp;
+    switch(type){
+        case(normal)://divide by emitted before 2 pass
+            tmp = *observation - data->mean.val;
+            data->variance.val += tmp*tmp;
+        default://not supported
+            return;
+    }
+}
+
+void ghmm_get_sample_data(ghmm_sample_data *data, ghmm_bayes_hmm *bayes,int *Q, double *O, int T){
+    int i;
+    for(i=0; i<T-1; i++){
+        data->transition[Q[i]][Q[i+1]]++;
+        ghmm_get_emission_data_first_pass(&(data->state_data[Q[i]][0]),
+                bayes->params[Q[i]][0].type, O+i);
+    }
+    //when adding other types might need to make this a function
+    ghmm_get_emission_data_first_pass(&data->state_data[Q[T-1]][0],
+            bayes->params[Q[i]][0].type, &O[i]);
+    for(i=0; i< bayes->N; i++){
+        if(data->state_data[i][0].emitted>0)
+            data->state_data[i][0].mean.val /= data->state_data[i][0].emitted;
+    }
+    for(i=0;i<T;i++){
+        ghmm_get_emission_data_second_pass(&data->state_data[Q[i]][0],
+                bayes->params[Q[i]][0].type, &O[i]);
+    }
+}
+
+   
+/* using data colected in sample_emission_data sample from posterior distribution*/
+void ghmm_update_emission(sample_emission_data *data, ghmm_hyperparameters *params,
+        ghmm_c_emission *emission){
+    switch(params->type){
+        case(normal):
+            {
+                double mean, var, a, b;
+                double tmp;
+                //var
+                var = params->emission[0].variance.val + data->emitted;
+                //mean
+                mean = params->emission[0].variance.val * params->emission[0].mean.val;
+                mean += data->emitted*data->mean.val;
+                mean /= var;
+                //a
+                a = params->emission[1].min + data->emitted/2;
+                
+                //b
+                tmp = data->mean.val - params->emission[0].mean.val;
+                b = params->emission[1].max + data->variance.val;
+                b += (data->emitted*params->emission[0].variance.val*tmp*tmp)/(2*var);
+
+                // sample from posterior hyperparameters
+                emission->mean.val = ighmm_rand_normal(mean, (b/var) /
+                        (params->emission[0].variance.val+data->emitted),0);
+                tmp = 1/ighmm_rand_gamma(a, 1/b, 0);
+                emission->variance.val = tmp;
+            }
+        default:
+            return;
+    }
+}
+
+void ghmm_update_model(ghmm_cmodel *mo, ghmm_bayes_hmm *bayes, ghmm_sample_data *data){
+    int i, k;
+    double tmp_n[mo->N];
+    double tmp2_n[mo->N];
+    //emission
+    for(i=0; i<bayes->N; i++){
+        for(k=0; k<bayes->M[k]; k++){
+            ghmm_update_emission(&data->state_data[i][k], &bayes->params[i][k],&mo->s[i].e[k]);
+        }
+    }
+    //add prior for A, Pi
+    for(i = 0; i < bayes->N; i++){
+        tmp_n[i] = 0;
+        for(k=0;k<bayes->M[i];k++){
+            tmp_n[i] += data->state_data[i][k].emitted; 
+        }
+        for(k = 0; k < bayes->N; k++){
+            data->transition[i][k] += bayes->A[i][k];
+            //printf("data %f\n", data->transition[i][k]);
+        }
+    }
+
+    //Pi
+    ighmm_rand_dirichlet(0, mo->N, tmp_n, tmp2_n);
+    for(k=0;k<mo->N;k++){
+        mo->s[k].pi = tmp2_n[k];
+    }
+
+    //A
+    for(i=0;i<mo->N;i++){
+        ighmm_rand_dirichlet(0, mo->N, data->transition[i], tmp_n);
+        for(k = 0; k < mo->N; k++){
+            ghmm_cmodel_set_transition(mo, i, k, 0, tmp_n[k]);
+        }
+    }
+}
+
+
+//only uses first sequence
+int* ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
+         int burnIn, int seed){
 #define CUR_PROC "ghmm_cmodel_fbgibbs"
+    //XXX seed
+    GHMM_RNG_SET (RNG, seed);
     double **alpha = ighmm_cmatrix_alloc(seq->seq_len[0],mo->N);
     double ***pmats = ighmm_cmatrix_3d_alloc(seq->seq_len[0], mo->N, mo->N);
-    int *Q;  
+    int *Q; 
     ARRAY_CALLOC(Q, seq->seq_len[0]);
-    normal_update *update;
-    alloc_normal_data(mo, &update);
+    ghmm_sample_data data;
+    ghmm_alloc_sample_data(bayes, &data);
+    ghmm_clear_sample_data(&data, bayes);//XXX swap parameter 
     for(; burnIn > 0; burnIn--){
-        ghmm_cmodel_fbgibbstep(mo,seq->seq[0],seq->seq_len[0], Q, alpha, pmats);//XXX only using seq 1
-        get_normal_data(mo, Q, seq->seq[0], seq->seq_len[0], update);
-        update_normal(mo, pA, pB, pPi, update);
-        clear_normal_data(mo, update);
+        //XXX only using seq 0
+        ghmm_cmodel_fbgibbstep(mo,seq->seq[0],seq->seq_len[0], Q, alpha, pmats);
+        ghmm_get_sample_data(&data, bayes, Q, seq->seq[0], seq->seq_len[0]); 
+        ghmm_update_model(mo, bayes, &data);
+        ghmm_clear_sample_data(&data, bayes);
     }
-    free_normal_data(mo, update);
     ighmm_cmatrix_free(&alpha, seq->seq_len[0]);
     ighmm_cmatrix_3d_free(&pmats, seq->seq_len[0],mo->N);
     return Q;
@@ -295,3 +411,4 @@ STOP:
     return NULL; //XXX error handle
 #undef CUR_PROC
 }
+#endif

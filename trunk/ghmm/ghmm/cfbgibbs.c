@@ -1,3 +1,39 @@
+/*******************************************************************************
+*
+*       This file is part of the General Hidden Markov Model Library,
+*       GHMM version __VERSION__, see http://ghmm.org
+*
+*       Filename: ghmm/ghmm/model.c
+*       Authors:  Benhard Knab, Bernd Wichern, Benjamin Georgi, Alexander Schliep
+*
+*       Copyright (C) 1998-2004 Alexander Schliep
+*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+*                               Berlin
+*
+*       Contact: schliep@ghmm.org
+*
+*       This library is free software; you can redistribute it and/or
+*       modify it under the terms of the GNU Library General Public
+*       License as published by the Free Software Foundation; either
+*       version 2 of the License, or (at your option) any later version.
+*
+*       This library is distributed in the hope that it will be useful,
+*       but WITHOUT ANY WARRANTY; without even the implied warranty of
+*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*       Library General Public License for more details.
+*
+*       You should have received a copy of the GNU Library General Public
+*       License along with this library; if not, write to the Free
+*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*
+*       This file is version $Revision: 2304 $
+*                       from $Date: 2013-05-31 13:48:13 -0400 (Fri, 31 May 2013) $
+*             last change by $Author: ejb177 $.
+*
+*******************************************************************************/
+
 #include "cfbgibbs.h"
 #include "matrix.h"
 #include "ghmm.h"
@@ -172,12 +208,13 @@ void storepositionH(int R, int M, int order, int T, int *obs,
 }
 
 //=====================================================================
-//=================precomputation matrix ==============================
+//=================precomputating matrices ============================
 //=====================================================================
 /* R: compression length
  * mo: model
  * mats: M^B(X)
- * rmats: cdfs of mats used for sampling B3 */
+ * rmats: cdfs of mats used for sampling B3
+ */
 void precompute(int R, ghmm_dmodel *mo, double ***mats, double**** rmats){
   int i, j, k;
   int limit = (pow(mo->M, R+1)-1)/(mo->M-1) -1;  
@@ -313,25 +350,26 @@ void precomputedmatsH(int totalobs, int *obs, int R,
         for(j=0;j<dsize;j++)
             mflag[i][j] = 1;
 
-    fpos = 0;
+    fpos = 0;//fpos is used to enumerate the previous observations
     n = 0;
-    for(i=0; i <= mo->maxorder;i++)
+
+    /* for every order up to max order, compute all possible combinations for mats */
+    for(i=0; i <= mo->maxorder;i++)//orders
     {
-        for(l = 0; l<pow(mo->M, i); l++)//fpos
+        for(l = 0; l<pow(mo->M, i); l++)//fpos needs to be incremented pow(mo->M, i+1) times
         {
-            for(pos = 0; pos < mo->M; pos++)
+            for(pos = 0; pos < mo->M; pos++)//pos
             { 
-                for(j=0; j < mo->N; j++)
+                for(j=0; j < mo->N; j++)//state starting in
                 {
-                    for (k=0; k < mo->N; k++)
+                    for (k=0; k < mo->N; k++)//state ending in 
                     {
-                        if(i == 0)
+                        if(i == 0)//no history(previous observations) yet
                         {
                             mo->emission_history = 0;
                             if(mo->order[k] ==0)
                             {
                                 sum += mats[pos][fpos][j][k] =
-                                    //ghmm_dmodel_get_transition(mo, j,k)*mo->s[k].b[pos];
                                     mo->s[k].pi*mo->s[k].b[pos];
                             }
                             else
@@ -341,7 +379,7 @@ void precomputedmatsH(int totalobs, int *obs, int R,
                         }
                         else
                         {
-                            mo->emission_history = tmp1[l];
+                            mo->emission_history = tmp1[l];//get history
                             e = get_emission_index(mo, k, pos, i);
                             //printf("e = %d, tmp = %d, b = %f ; ", e, tmp1[l], mo->s[k].b[e]);
                             if(e == -1)
@@ -357,7 +395,7 @@ void precomputedmatsH(int totalobs, int *obs, int R,
                     }
                 }
                 update_emission_history(mo, pos);
-                tmp2[n] = mo->emission_history;                    
+                tmp2[n] = mo->emission_history; //we store previous history for next order
                 n++;
                 for(j=0;j<mo->N;j++)
                     for(k=0;k<mo->N;k++)
@@ -366,6 +404,7 @@ void precomputedmatsH(int totalobs, int *obs, int R,
             }
             fpos++;
         }
+        //swap histories for tmp1 read, tmp2 write
         tmp3 = tmp2;
         tmp2 = tmp1; 
         tmp1 = tmp3;
@@ -379,10 +418,12 @@ void precomputedmatsH(int totalobs, int *obs, int R,
 //===================================================================
 //============= compressed sample state path ========================
 //===================================================================
+
 /* samples a dscrete distribution
  * seed: seed for uniform random sampler
  * distrubution: discrete distribution to sample
- * N: size of distrubution */
+ * N: size of distrubution
+ */
 int samplebinsearch(int seed, double *distribution, int N){
     double total = distribution[N-1];
     double rn = ighmm_rand_uniform_cont(seed, total, 0);
@@ -411,6 +452,7 @@ int samplebinsearch(int seed, double *distribution, int N){
         }
     }
 }
+
 /* samples path 
  * seed: seed for random generator
  * T: length of observation sequence
@@ -422,7 +464,8 @@ int samplebinsearch(int seed, double *distribution, int N){
  * states: states
  * storedpos: get matrix for observation
  * sneak: delta in pavels paper, cdfs of forwards
- * N: number of states */
+ * N: number of states 
+ */
 void csamplestatepath(int T, int *obs,
         double **fwds, int R,
         double ***mats, double ****rmats,
@@ -748,6 +791,8 @@ void ghmm_dmodel_cfbgibbstep(ghmm_dmodel *mo, int *obs, int totalobs,
                 storedpos, sneak, mo->N);
         
 }
+//XXX split into 2 functions that this will call.(higher and not higher order) for readablility
+
 /* runs the forward backward gibbs burnIn times
  * mo: model
  * seed: seed 
@@ -759,7 +804,6 @@ void ghmm_dmodel_cfbgibbstep(ghmm_dmodel *mo, int *obs, int totalobs,
  * Q: states
  * R: length of compression
  * burnIn: number of times to run forward backward gibbs */
-
 int** ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, ghmm_dseq* seq, double **pA, double **pB, double *pPi, int R, int burnIn, int seed){
 #ifdef DO_WITH_GSL
 #define CUR_PROC "ghmm_dmodel_cfbgibbs"
@@ -799,7 +843,7 @@ int** ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, ghmm_dseq* seq, double **pA, double 
         int tupleSizeH[mo->maxorder+1];
         int **preposition = ighmm_dmatrix_alloc(R, mo->M);
         int **prepositionH = ighmm_dmatrix_alloc(mo->maxorder, mo->M);
-        int storedpos[seq->seq_number][len+1];//XXX should be different every seq
+        int storedpos[seq->seq_number][len+1];//XXX should be different every seq not efficient
         int storedfpos[seq->seq_number][len+1];
 
         //precompute and store positions for matrices cooresponding to observations

@@ -136,8 +136,9 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 }                               /* ghmm_cstate_alloc */
 
 /*----------------------------------------------------------------------------*/
-ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
+ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype, int dim) {
 #define CUR_PROC "ghmm_cmodel_calloc"
+  int i;
   ghmm_cmodel * mo;
 
   assert(modeltype & GHMM_kContinuousHMM);
@@ -145,7 +146,7 @@ ghmm_cmodel * ghmm_cmodel_calloc(int N, int modeltype) {
   mo->N = N;
   mo->M = 0;
   mo->model_type = modeltype;
-  mo->dim = 1;
+  mo->dim = dim;
   ARRAY_CALLOC(mo->s, N);
   return mo;
 STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
@@ -990,6 +991,12 @@ int ghmm_cmodel_get_random_var(ghmm_cmodel *smo, int state, int m, double *x)
 {
 # define CUR_PROC "ghmm_cmodel_get_random_var"
   ghmm_c_emission *emission = smo->s[state].e + m;
+  return ghmm_c_emission_get_random_var(emission, x);
+# undef CUR_PROC
+}                               /* ghmm_cmodel_get_random_var */
+
+int ghmm_c_emission_get_random_var(ghmm_c_emission *emission, double *x){
+#define CUR_PROC "ghmm_c_emission_get_random_var"
   switch (emission->type) {
   case normal_approx:
   case normal:
@@ -1017,9 +1024,7 @@ int ghmm_cmodel_get_random_var(ghmm_cmodel *smo, int state, int m, double *x)
     return -1;
   }
 # undef CUR_PROC
-}                               /* ghmm_cmodel_get_random_var */
-
-
+}
 
 /*============================================================================*/
 

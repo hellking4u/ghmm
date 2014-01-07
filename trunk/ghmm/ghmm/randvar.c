@@ -454,7 +454,7 @@ double ighmm_rand_gamma(double a, double b, int seed){
     GHMM_RNG_SET(RNG, seed);
   }
 #ifdef DO_WITH_GSL
-   return (gsl_ran_gamma(RNG, a, b));
+   return (gsl_ran_gamma_knuth(RNG, a, b));
 #else
   printf("not implemted without gsl. Compile with gsl to use gamma");
   return 0;
@@ -499,13 +499,14 @@ double ighmm_rand_std_normal (int seed)
 /*============================================================================*/
 double ighmm_rand_normal(double mue, double u, int seed)
 {
-# define CUR_PROC "ighmm_rand_normal"
+# define CUR_POC "ighmm_rand_normal"
   if (seed != 0) {
     GHMM_RNG_SET(RNG, seed);
   }
 
 #ifdef DO_WITH_GSL
-    return gsl_ran_gaussian(RNG, sqrt (u)) + mue;
+    double x = gsl_ran_gaussian(RNG, sqrt (u)) + mue ;
+    return x;
 #else
     double x;
     x = sqrt(u) * ighmm_rand_std_normal(seed) + mue;
