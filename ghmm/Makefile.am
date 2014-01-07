@@ -122,7 +122,9 @@ libghmm_la_SOURCES= ghmm.h \
                     pviterbi.c pviterbi.h \
                     pviterbi_propagate.c pviterbi_propagate.h \
                     fbgibbs.c fbgibbs.h \
-                    cfbgibbs.c cfbgibbs.h
+                    cfbgibbs.c cfbgibbs.h \
+		    bayesian_hmm.c bayesian_hmm.h \
+		    continuous_fbgibbs.c continuous_fbgibbs.h
 
 
 pkginclude_HEADERS = ghmm.h \
@@ -157,6 +159,8 @@ pkginclude_HEADERS = ghmm.h \
 		  obsolete.h \
 		  unsupported.h \
                   fbgibbs.h \
-                  cfbgibbs.h
+                  cfbgibbs.h \
+		  bayesian_hmm.h \
+		  continuous_fbgibbs.h
 
 

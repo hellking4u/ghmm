@@ -40,8 +40,7 @@ to add the developer Python packages (which might be called
 python27-dev for example) and shared libs.
 					
 <li> <A HREF="http://www.swig.org/">SWIG</A>, the simplified wrapper
-interface generator version 2.0.1. More recent versions (in particular
-2.0.8) cause errors. For the time being please just use 2.0.1.
+interface generator
 
 <li> Optional: If you want to use the editor HMMEd you need X11 (or
 equivalent), Tk and Tkinter and also the Gato package. Please use the
@@ -53,9 +52,6 @@ The Gato 1.1.2
 package from  <A HREF="http://gato.sf.net">Sourceforge</A> or the
 <A HREF="http://pypi.python.org/pypi/Gato/">Python Package Index</A>
  contain a bug only affecting HMMEd.
-
-<li> Optional: If you use the GSL also install the <A
-HREF="http://pygsl.sf.net">Pygsl</A> Python bindings for the GSL.
 </ul>
 </ul>
 
@@ -64,10 +60,10 @@ HREF="http://pygsl.sf.net">Pygsl</A> Python bindings for the GSL.
 
 
 <h4>Download</H4>
-<p>Currently there are no releases. Please use the version out of the
+<p>Please use the version out of the
 SVN. There are detailed instructions at <a
 href="http://sourceforge.net/svn/?group_id=67094">http://sourceforge.net/svn/?group_id=67094</a>.
-An anonymous checkout can simply be done by
+For the most recent version you may do an anonymous checkout by calling
 <center>
 <kbd>
 svn checkout svn://svn.code.sf.net/p/ghmm/code/trunk/ghmm ghmm
@@ -147,6 +143,26 @@ just like the Python bindings in <kbd>ghmmwrapper</kbd>
 
 </p>
 
+<h4>Ubuntu installation walkthrough</H4>
+First make sure you have the prerequisites
+<pre><kbd>
+sudo apt-get update 
+sudo apt-get install build-essential automake autoconf libtool
+sudo apt-get install python-dev
+sudo apt-get install libxml++2.6-dev
+sudo apt-get install swig
+</kbd></pre>
+Then get the tarball and unpack or checkout from svn and run
+<pre><kbd>
+cd ghmm
+sh autogen.sh
+sudo ./configure
+sudo make
+sudo make install
+sudo ldconfig
+</kbd></pre>
+
+
 <h4>OS-specific tips</H4> <p> 
 <ul> 
 
@@ -202,9 +218,6 @@ the path of least resistence. Then you need to set
 
 </ul>
 </p>
-
-
-
 </div>
 
 <div id="Menu">

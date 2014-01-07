@@ -1088,11 +1088,10 @@ static int parseHMM(ghmm_xmlfile* f, xmlDocPtr doc, xmlNodePtr cur, int modelNo)
   case (GHMM_kContinuousHMM+GHMM_kMultivariate):
   case (GHMM_kContinuousHMM+GHMM_kTransitionClasses):
   case (GHMM_kContinuousHMM+GHMM_kMultivariate+GHMM_kTransitionClasses):
-    f->model.c[modelNo] = ghmm_cmodel_calloc(N,modeltype);
+    f->model.c[modelNo] = ghmm_cmodel_calloc(N,modeltype, 1);
     f->model.c[modelNo]->prior = prior;
     f->model.c[modelNo]->name = modelname;
     f->model.c[modelNo]->cos = cos;
-    f->model.c[modelNo]->dim = 1;
     break;
   default:
     GHMM_LOG(LERROR, "invalid or unimplemented model type");
