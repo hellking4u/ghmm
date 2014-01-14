@@ -490,22 +490,31 @@ int* ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* s
 #define CUR_PROC "ghmm_cmodel_fbgibbs"
     //XXX seed
     GHMM_RNG_SET (RNG, seed);
-    double **alpha = ighmm_cmatrix_alloc(seq->seq_len[0],mo->N);
-    double ***pmats = ighmm_cmatrix_3d_alloc(seq->seq_len[0], mo->N, mo->N);
-    int *Q; 
-    ARRAY_CALLOC(Q, seq->seq_len[0]);
+    int max_seq = ghmm_cseq_max_len(seq);
+    double **alpha = ighmm_cmatrix_alloc(max_seq,mo->N);
+    double ***pmats = ighmm_cmatrix_3d_alloc(max_seq, mo->N, mo->N);
+    int **Q; 
+    ARRAY_CALLOC(Q, seq->seq_number);
+    int seq_iter;
+    for(seq_iter = 0; seq_iter < seq->seq_number; seq_iter++){
+        ARRAY_CALLOC(Q[seq_iter], seq->seq_len[seq_iter]);
+    }
+
     ghmm_sample_data data;
     ghmm_alloc_sample_data(bayes, &data);
-    ghmm_clear_sample_data(&data, bayes);//XXX swap parameter 
+    ghmm_clear_sample_data(&data, bayes);//XXX swap parameter
     for(; burnIn > 0; burnIn--){
-        //XXX only using seq 0
-        ghmm_cmodel_fbgibbstep(mo,seq->seq[0],seq->seq_len[0], Q, alpha, pmats, NULL);
-        ghmm_get_sample_data(&data, bayes, Q, seq->seq[0], seq->seq_len[0]); 
-        ghmm_update_model(mo, bayes, &data);
-        ghmm_clear_sample_data(&data, bayes);
+        for(seq_iter = 0; seq_iter < seq->seq_number; seq_iter++){
+            ghmm_cmodel_fbgibbstep(mo,seq->seq[seq_iter],seq->seq_len[seq_iter], Q[seq_iter],
+                    alpha, pmats, NULL);
+            ghmm_get_sample_data(&data, bayes, Q[seq_iter], seq->seq[seq_iter], 
+                    seq->seq_len[seq_iter]); 
+            ghmm_update_model(mo, bayes, &data);
+            ghmm_clear_sample_data(&data, bayes);
+        }
     }
-    ighmm_cmatrix_free(&alpha, seq->seq_len[0]);
-    ighmm_cmatrix_3d_free(&pmats, seq->seq_len[0],mo->N);
+    ighmm_cmatrix_free(&alpha, max_seq);
+    ighmm_cmatrix_3d_free(&pmats, max_seq,mo->N);
     return Q;
 STOP:
     return NULL; //XXX error handle
