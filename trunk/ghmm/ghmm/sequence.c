@@ -1355,6 +1355,39 @@ STOP:     /* Label STOP from ARRAY_[CM]ALLOC */
 
 /*============================================================================*/
 
+double ghmm_cseq_max(const ghmm_cseq *sqd){
+    int i, j;
+    double max = sqd->seq[0][0]; 
+    for(i = 0; i < sqd->seq_number; i++){
+        for(j =0; j <sqd->seq_number; j++){
+            if(max < sqd->seq[i][j]){
+                max = sqd->seq[i][j];
+            }
+        }
+    }
+    return max;
+}
+
+                               /* ghmm_cseq_max */
+
+/*============================================================================*/
+
+double ghmm_cseq_min(const ghmm_cseq *sqd){
+    int i, j;
+    double min = sqd->seq[0][0]; 
+    for(i = 0; i < sqd->seq_number; i++){
+        for(j =0; j <sqd->seq_number; j++){
+            if(min > sqd->seq[i][j]){
+                min = sqd->seq[i][j];
+            }
+        }
+    }
+    return min;
+}
+
+                               /* ghmm_cseq_max */
+
+/*============================================================================*/
 double **ghmm_cseq_scatter_matrix (const ghmm_cseq * sqd, int *dim)
 {
 # define CUR_PROC "ghmm_cseq_scatter_matrix"

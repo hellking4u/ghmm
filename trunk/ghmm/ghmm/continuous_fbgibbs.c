@@ -34,8 +34,6 @@
 *
 *******************************************************************************/
 
-#ifndef GHMM_CONTINUOUS_FBGIBBS
-#define GHMM_CONTINUOUS_FBGIBBS
 #ifdef HAVE_CONFIG_H
 #  include "../config.h"
 #endif
@@ -52,6 +50,7 @@
 #include "sfoba.h"
 #include "continuous_fbgibbs.h"
 #include "smodel.h"
+#include "block_compression.h"
 
 //data for each state for posterior
 typedef struct sample_emission_data{
@@ -122,7 +121,7 @@ int ghmm_cmodel_forwardgibbs (ghmm_cmodel * smo, double *O, int T, double ***b,
     sfoba_initforward(smo, alpha[0], O, scale, b[0]);
   if (scale[0] <= DBL_MIN) {
     /* means f(O[0], mue, u) << 0, first symbol very unlikely */
-    /* GHMM_LOG(LCONVERTED, "scale[0] == 0.0!\n"); */
+    /* GHMM_LOG(LCONVERTED, "scale[0] == .0!\n"); */
     goto STOP;
   }
   else {
@@ -210,9 +209,75 @@ STOP:
 //==================================end forwards======================================
 //====================================================================================
 
+/* XXX mixture */
+//[state][power]
+//assumes normal dist
+void precompute_blocks(ghmm_cmodel *mo, double ** mean, double **std,
+        double **transition, int max_block_len){
+    int i, j;
+    for(i=0; i < mo->N; i++){
+        mean[i][0] = 1;
+        mean[i][1] = (mo->s+i)->e->mean.val * (mo->s+i)->e->mean.val;
+        std[i][0] = sqrt( (mo->s+i)->e->variance.val);
+        std[i][1] = std[i][0] * sqrt( 2 * M_PI  );
+        //printf("std %e\n",  std[i][0]);
+        transition[i][0] = 1;
+        transition[i][1] = (mo->s+i)->out_a[0][i];
+
+        //printf("transition %d %d %e\n", i, 0, transition[i][0]);
+        //printf("transition %d %d %e\n", i, 1, transition[i][1]);
+        for(j = 2; j < max_block_len; j++){
+            std[i][j] = std[i][j-1] * std[i][1];
+            transition[i][j] = transition[i][j-1]*transition[i][1];
+            mean[i][j] = mean[i][j-1]+mean[i][1];
+            //printf("transition %d %d %e\n", i, j, std[i][j]);
+        }
+    }
+}
+
+//assumes normal dist
+//precomputes b for forward algo
+void precompute_block_emission(ghmm_cmodel *mo, block_stats *stats, 
+        int max_block_len, double ***b){
+#define CUR_PROC "precalculate_block_emission"
+    //precompute intermediate values
+    double **mean2, **std, **transition;
+    mean2 = ighmm_cmatrix_alloc(mo->N, max_block_len+1);
+    std = ighmm_cmatrix_alloc(mo->N, max_block_len+1);
+    transition = ighmm_cmatrix_alloc(mo->N, max_block_len+1);
+    precompute_blocks(mo, mean2, std, transition, max_block_len+1);
 
 
-void ghmm_cmodel_fbgibbstep (ghmm_cmodel * mo, double *O, int len,int *Q, double** alpha, double***pmats){
+    int t, i;
+    double exponent;
+    for(t = 0; t < stats->total; t++){
+        for(i = 0; i < mo->N; i++){//flip order
+            //printf("sumsqrs %e\n", stats->moment2[t]);
+            //printf("transition %e\n", transition[i][stats->length[t]]);
+            exponent = -1 * ( stats->moment2[t] - 2*stats->moment1[t] *
+                    (mo->s+i)->e->mean.val + mean2[i][stats->length[t]] ) /
+                    (2 * (mo->s+i)->e->variance.val);
+                    
+            b[t][i][1] = transition[i][stats->length[t]] * exp( exponent ) / 
+                std[i][stats->length[t]];
+            //printf("exp = %e\n", exponent);
+            //printf("b %d %d = %e\n", t, i, b[t][i][1]);
+        }
+    }
+    ighmm_cmatrix_free(&mean2, mo->N);
+    ighmm_cmatrix_free(&std, mo->N);
+    ighmm_cmatrix_free(&transition, mo->N);
+STOP:
+    //XXX ERROR
+    return;
+#undef CUR_PROC
+}
+
+//====================================================================================
+
+//b is precomputed emissions used mainly for block compression
+void ghmm_cmodel_fbgibbstep (ghmm_cmodel * mo, double *O, int len,int *Q, double** alpha, 
+        double***pmats, double***b){
     int i,j,k;
     for(i = 0; i < len; i++){
         for(j = 0; j < mo->N; j++){
@@ -225,7 +290,7 @@ void ghmm_cmodel_fbgibbstep (ghmm_cmodel * mo, double *O, int len,int *Q, double
 
     double scale[len];
     double logP;
-    ghmm_cmodel_forwardgibbs(mo, O, len, NULL, alpha, scale, &logP, pmats);
+    ghmm_cmodel_forwardgibbs(mo, O, len, b, alpha, scale, &logP, pmats);
     sampleStatePath(mo->N, alpha[len-1], pmats, len, Q);
 }
 
@@ -296,22 +361,57 @@ void ghmm_get_sample_data(ghmm_sample_data *data, ghmm_bayes_hmm *bayes,int *Q, 
     int i;
     for(i=0; i<T-1; i++){
         data->transition[Q[i]][Q[i+1]]++;
+    }
+    /* XXX just create cases for dists and make functions for sample mean and variance*/
+    for(i=0; i<T-1; i++){
         ghmm_get_emission_data_first_pass(&(data->state_data[Q[i]][0]),
                 bayes->params[Q[i]][0].type, O+i);
     }
-    //when adding other types might need to make this a function
-    ghmm_get_emission_data_first_pass(&data->state_data[Q[T-1]][0],
-            bayes->params[Q[i]][0].type, &O[i]);
-    for(i=0; i< bayes->N; i++){
+
+    for(i=0; i<bayes->N; i++){
         if(data->state_data[i][0].emitted>0)
             data->state_data[i][0].mean.val /= data->state_data[i][0].emitted;
     }
+
     for(i=0;i<T;i++){
         ghmm_get_emission_data_second_pass(&data->state_data[Q[i]][0],
                 bayes->params[Q[i]][0].type, &O[i]);
     }
 }
 
+//gets data from blocks 
+void ghmm_get_sample_data_compressed(ghmm_sample_data *data, ghmm_bayes_hmm *bayes,
+        int *Q, double *O, int T, block_stats *stats){
+    int i,j,index;
+    for(i=0; i<T-1; i++){
+        data->transition[Q[i]][Q[i+1]]++;
+        data->transition[Q[i]][Q[i]] += stats->length[i];
+    }
+    data->transition[Q[T-1]][Q[T-1]] += stats->length[T-1];
+
+    index = 0;
+    for(i=0; i<T; i++){
+        for(j = 0; j < stats->length[i]; j++){
+            ghmm_get_emission_data_first_pass(&(data->state_data[Q[i]][0]),
+                    bayes->params[Q[i]][0].type, O+index);
+            index++;
+        }
+    }
+
+    for(i=0; i<bayes->N; i++){
+        if(data->state_data[i][0].emitted>0)
+            data->state_data[i][0].mean.val /= data->state_data[i][0].emitted;
+    }
+
+    index = 0;
+    for(i=0;i<T;i++){
+        for(j = 0; j < stats->length[i]; j++){
+            ghmm_get_emission_data_second_pass(&data->state_data[Q[i]][0],
+                    bayes->params[Q[i]][0].type, O+index);
+            index++;
+        }
+    }
+}
    
 /* using data colected in sample_emission_data sample from posterior distribution*/
 void ghmm_update_emission(sample_emission_data *data, ghmm_hyperparameters *params,
@@ -326,20 +426,22 @@ void ghmm_update_emission(sample_emission_data *data, ghmm_hyperparameters *para
                 //mean
                 mean = params->emission[0].variance.val * params->emission[0].mean.val;
                 mean += data->emitted*data->mean.val;
-                mean /= var;
+                mean /= (params->emission[0].variance.val + data->emitted );
                 //a
                 a = params->emission[1].min + data->emitted/2;
                 
                 //b
                 tmp = data->mean.val - params->emission[0].mean.val;
-                b = params->emission[1].max + data->variance.val;
-                b += (data->emitted*params->emission[0].variance.val*tmp*tmp)/(2*var);
+                b = params->emission[1].max;
+                b += .5*data->variance.val;
+                b += (data->emitted*params->emission[0].variance.val/2*tmp*tmp)/
+                    (data->emitted+params->emission[0].variance.val);
 
                 // sample from posterior hyperparameters
-                emission->mean.val = ighmm_rand_normal(mean, (b/var) /
-                        (params->emission[0].variance.val+data->emitted),0);
-                tmp = 1/ighmm_rand_gamma(a, 1/b, 0);
-                emission->variance.val = tmp;
+                tmp = ighmm_rand_gamma(a, 1/b, 0);
+                emission->variance.val = 1/tmp;
+                //if(emission->variance.val < 1 ) emission->variance.val = 1;
+                emission->mean.val = ighmm_rand_normal(mean, 1/(var*tmp),0);
             }
         default:
             return;
@@ -382,8 +484,6 @@ void ghmm_update_model(ghmm_cmodel *mo, ghmm_bayes_hmm *bayes, ghmm_sample_data 
         }
     }
 }
-
-
 //only uses first sequence
 int* ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
          int burnIn, int seed){
@@ -399,7 +499,7 @@ int* ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* s
     ghmm_clear_sample_data(&data, bayes);//XXX swap parameter 
     for(; burnIn > 0; burnIn--){
         //XXX only using seq 0
-        ghmm_cmodel_fbgibbstep(mo,seq->seq[0],seq->seq_len[0], Q, alpha, pmats);
+        ghmm_cmodel_fbgibbstep(mo,seq->seq[0],seq->seq_len[0], Q, alpha, pmats, NULL);
         ghmm_get_sample_data(&data, bayes, Q, seq->seq[0], seq->seq_len[0]); 
         ghmm_update_model(mo, bayes, &data);
         ghmm_clear_sample_data(&data, bayes);
@@ -411,4 +511,47 @@ STOP:
     return NULL; //XXX error handle
 #undef CUR_PROC
 }
-#endif
+
+int* ghmm_bayes_hmm_fbgibbs_compressed(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
+         int burnIn, int seed, double width, double delta, int max_len_permitted){
+#define CUR_PROC "ghmm_cmodel_fbgibbs"
+    //XXX seed
+    GHMM_RNG_SET (RNG, seed);
+
+    block_stats *stats = compress_observations(seq, width*delta, delta);
+    stats = merge_observations(seq, width, max_len_permitted, stats);
+    print_stats(stats, seq->seq_len[0]);
+    //get max_block_len
+    int max_block_len = stats->length[0];
+    int i;
+    for(i = 1; i < stats->total; i++){
+        if(max_block_len < stats->length[i])
+            max_block_len = stats->length[i];
+    }
+    //printf("max b len %d\n", max_block_len);
+    double ***b = ighmm_cmatrix_3d_alloc(stats->total, mo->N, 2);
+    double **alpha = ighmm_cmatrix_alloc(seq->seq_len[0],mo->N);
+    double ***pmats = ighmm_cmatrix_3d_alloc(seq->seq_len[0], mo->N, mo->N);
+    int *Q; 
+    ARRAY_CALLOC(Q, seq->seq_len[0]);//XXX extra length for compressed
+    ghmm_sample_data data;
+    ghmm_alloc_sample_data(bayes, &data);
+    ghmm_clear_sample_data(&data, bayes);//XXX swap parameter 
+    for(; burnIn > 0; burnIn--){
+        //XXX only using seq 0
+        precompute_block_emission(mo, stats, max_block_len, b);//XXX maxlen
+        ghmm_cmodel_fbgibbstep(mo,seq->seq[0], stats->total, Q, alpha, pmats, b);
+        ghmm_get_sample_data_compressed(&data, bayes, Q, seq->seq[0], 
+                stats->total, stats); 
+        ghmm_update_model(mo, bayes, &data);
+        ghmm_clear_sample_data(&data, bayes);
+    }
+    ighmm_cmatrix_free(&alpha, seq->seq_len[0]);
+    ighmm_cmatrix_3d_free(&pmats, seq->seq_len[0],mo->N);
+    ighmm_cmatrix_3d_free(&b, stats->total, mo->N);
+    free_block_stats(&stats);
+    return Q;
+STOP:
+    return NULL; //XXX error handle
+#undef CUR_PROC
+}

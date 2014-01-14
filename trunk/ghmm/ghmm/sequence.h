@@ -410,6 +410,20 @@ ghmm_dseq *ghmm_dseq_open_fasta(const char *filename, ghmm_alphabet *alphabet);
   ghmm_cseq *ghmm_cseq_mean (const ghmm_cseq * sqd);
 
 /**
+ * calculates max of a sequence of a given array of double sequences
+ * @param sqd sequence struct
+ * @return max of sequence 
+ */
+  double ghmm_cseq_max(const ghmm_cseq* sqd);
+
+/**
+ * calculates min of a sequence of a given array of double sequences
+ * @param sqd sequence struct
+ * @return max of sequence 
+ */
+  double ghmm_cseq_min(const ghmm_cseq* sqd);
+
+/**
    Calculates the scatter matrix of an array of double sequences. 
    Missing parts of short sequences are NOT taken into account.
    @return        scatter matrix

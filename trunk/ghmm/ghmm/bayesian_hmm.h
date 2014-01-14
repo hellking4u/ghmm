@@ -90,7 +90,7 @@ void ghmm_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emissio
  */
 double* ghmm_sample_initial(ghmm_bayes_hmm *bayes);
 
-/* samples the tranisition probabilities for a state i
+/* samples the transition probabilities for a state i
  * @params bayes: pointer to bayesian hmm parameters
  * @return state: array of the transition probabilities from state i to state j
  */

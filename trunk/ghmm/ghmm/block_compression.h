@@ -34,13 +34,30 @@
 *
 *******************************************************************************/
 
-#ifndef GHMM_CONTINUOUS_FBGIBBS_H
-#define GHMM_CONTINUOUS_FBGIBBS_H
+#ifndef BLOCK_COMPRESSION_H
+#define BLOCK_COMPRESSION_H
 
-#include "ghmm/smodel.h"
-#include "bayesian_hmm.h"
-int* ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo,  ghmm_cseq* seq,
-         int burnIn, int seed);
-int* ghmm_bayes_hmm_fbgibbs_compressed(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
-         int burnIn, int seed, double width, double delta, int max_len_permitted);
+#include "smodel.h"
+typedef struct block_stats{
+    double *moment1, *moment2;
+    int *length;
+    int total;
+}block_stats;
+
+block_stats *merge_observations(ghmm_cseq* seq, double width,
+        int max_len_permitted, block_stats *stats);
+/* compresses the observation sequence into blocks
+ * @param seq: the data sequence to be compressed
+ * @params width: parameter that controls the size of the compression
+ * @params delta: shrinking ratio
+ * @return statistics for each block to be used in the modified forward algorithm
+ */
+block_stats *compress_observations(ghmm_cseq* seq, double width, double delta);
+
+double median_seq(double *seq, int start, int end);
+double get_moment1(ghmm_cseq* seq, int start, int end);
+double get_moment2(ghmm_cseq* seq, int start, int end);
+int get_largest_gap(ghmm_cseq* seq, int start, int end);
+int small_enough_gap(ghmm_cseq* seq, double size, int start, int end);
+void print_stats(block_stats *stats, int length);
 #endif
