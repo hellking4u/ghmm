@@ -175,7 +175,7 @@ void ghmm_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emissio
             {
                 emission->type = normal;
                 double precision = ighmm_rand_gamma(params->emission[1].min,
-                        params->emission[1].max, 0);
+                        1/params->emission[1].max, 0);
                 emission->mean.val = ighmm_rand_normal(params->emission[0].mean.val, 
                         1/(precision * params->emission[0].variance.val), 0);
                 emission->variance.val = 1/precision;

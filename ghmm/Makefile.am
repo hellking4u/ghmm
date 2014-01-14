@@ -124,7 +124,8 @@ libghmm_la_SOURCES= ghmm.h \
                     fbgibbs.c fbgibbs.h \
                     cfbgibbs.c cfbgibbs.h \
 		    bayesian_hmm.c bayesian_hmm.h \
-		    continuous_fbgibbs.c continuous_fbgibbs.h
+		    continuous_fbgibbs.c continuous_fbgibbs.h \
+		    block_compression.c block_compression.h
 
 
 pkginclude_HEADERS = ghmm.h \
@@ -161,6 +162,5 @@ pkginclude_HEADERS = ghmm.h \
                   fbgibbs.h \
                   cfbgibbs.h \
 		  bayesian_hmm.h \
-		  continuous_fbgibbs.h
-
-
+		  continuous_fbgibbs.h \
+		  block_compression.h

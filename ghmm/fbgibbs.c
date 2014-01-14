@@ -321,7 +321,7 @@ void initCounts(ghmm_dmodel* mo, double **transition, double *obsinstate, double
         }
     }
 }
-
+//XXX perhaps unnessacry
 void initCountsH(ghmm_dmodel* mo, double **transition, double *obsinstate, double **obsinstatealpha, 
         double **pA, double **pB, double *pPi){
     int i,k;
@@ -475,7 +475,8 @@ void init_priors(ghmm_dmodel *mo, double ***pA, double ***pB, double **pPi){
 }
 
 
-void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int* O, int len, int *Q, double** alpha, double***pmats){
+void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int* O, int len, int *Q, double** alpha,
+        double***pmats){
 #define CUR_PROC "ghmm_dmodel_fbgibbstep"
   //sample state sequence
   //update parameters 
@@ -499,7 +500,8 @@ void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int* O, int len, int *Q, double**
 #undef CUR_PROC
 }
 
-int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double **pB, double *pPi, int burnIn, int seed){
+int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double **pB,
+        double *pPi, int burnIn, int seed){
 #ifdef DO_WITH_GSL
 #define CUR_PROC "ghmm_dmodel_fbgibbs"
   //initilizations
@@ -525,7 +527,8 @@ int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double
          if(burnIn % 100 == 0) printf("iter %d\n", burnIn);
          for(i = 0; i < seq->seq_number; i++){
              ghmm_dmodel_fbgibbstep(mo, seq->seq[i], seq->seq_len[i], Q[i], alpha, pmats);
-             getCountsH(mo, Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate, obsinstatealpha);
+             getCountsH(mo, Q[i], seq->seq[i], seq->seq_len[i], transitions,
+                     obsinstate, obsinstatealpha);
          }
          updateH(mo, transitions, obsinstate, obsinstatealpha);
       }
@@ -539,7 +542,8 @@ int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double
          initCounts(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
          for(i = 0; i < seq->seq_number; i++){
              ghmm_dmodel_fbgibbstep(mo, seq->seq[i], seq->seq_len[i], Q[i], alpha, pmats);
-             getCounts(Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate, obsinstatealpha);
+             getCounts(Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate,
+                     obsinstatealpha);
          }
          update(mo, transitions, obsinstate, obsinstatealpha);
       }
