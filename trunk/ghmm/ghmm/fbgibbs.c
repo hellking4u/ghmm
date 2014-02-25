@@ -370,7 +370,6 @@ void getCountsH(ghmm_dmodel* mo, int *states, int* O, int T,
     }
 }
 //given states, psueodocount matrices pA, pB, pPi see wiki, calculates new A,B,Pi
-//XXX should use fix in state
 //assumes psuedocount preserves structure, ie doesnt add 1 to a zero transition.
 void update(ghmm_dmodel* mo, double **transition, double *obsinstate, double **obsinstatealpha){
 #define CUR_PROC "update"
