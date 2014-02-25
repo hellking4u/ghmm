@@ -15,33 +15,33 @@ STOP:
 }
 
 //checks if the gap is small enough to be compressed
-int small_enough_gap(ghmm_cseq* seq, double size, int start, int end){
+int small_enough_gap(double* seq, int len, double size, int start, int end){
     if(end-start < 2)
         return 0; 
-    double max = seq->seq[0][0];
+    double max = seq[0];
     double min = max;
     int i;
     for(i = start; i < end; i++){
-        if(max < seq->seq[0][i])
-            max = seq->seq[0][i];
-        if(min > seq->seq[0][i])
-            min = seq->seq[0][i];
+        if(max < seq[i])
+            max = seq[i];
+        if(min > seq[i])
+            min = seq[i];
     }
     //printf("max - min = %f\n", fabs(max - min));
     return fabs(max-min) < size;
 }
 
 //returns index of largest gap
-int get_largest_gap(ghmm_cseq* seq, int start, int end){
+int get_largest_gap(double* seq, int start, int end){
     int i, index;
     double max;
     if(end-start < 2)
         return start;
-    max = fabs(seq->seq[0][start] - seq->seq[0][start+1]);
+    max = fabs(seq[start] - seq[start+1]);
     index = start;
     for(i = start+1; i < end-1; i++){
-        if(max < fabs(seq->seq[0][i] - seq->seq[0][i+1])){
-            max = fabs(seq->seq[0][i] - seq->seq[0][i+1]);
+        if(max < fabs(seq[i] - seq[i+1])){
+            max = fabs(seq[i] - seq[i+1]);
             index = i;
         }
     }
@@ -49,23 +49,23 @@ int get_largest_gap(ghmm_cseq* seq, int start, int end){
 }
 
 //sum of data
-double get_moment1(ghmm_cseq* seq, int start, int end){
+double get_moment1(double* seq, int start, int end){
     double moment = 0;
     int i;
 
     for(i = start; i < end; i++){
-        moment += seq->seq[0][i];
+        moment += seq[i];
     }
     return moment;
 }
 
 //sum of sqrs of data
-double get_moment2(ghmm_cseq* seq, int start, int end){
+double get_moment2(double* seq, int start, int end){
     double moment = 0;
     int i;
 
     for(i = start; i < end; i++){
-        moment += seq->seq[0][i]*seq->seq[0][i];
+        moment += seq[i]*seq[i];
     }
     return moment;
 }
@@ -95,10 +95,10 @@ double get_median(double *x, int start, int end){
     }
 }
 
-void compress_observations_helper(ghmm_cseq* seq, double width, double delta, 
+void compress_observations_helper(double* seq, int len, double width, double delta, 
         int level, int dimension, block_stats *stats, int start, int end){
 
-    if(end-start == 1 || small_enough_gap(seq, width/pow(delta, level), start, end)){
+    if(end-start == 1 || small_enough_gap(seq, len, width/pow(delta, level), start, end)){
         stats->moment1[stats->total] = get_moment1(seq, start, end);
         stats->moment2[stats->total] = get_moment2(seq, start, end);
         stats->length[stats->total] = end-start;
@@ -107,56 +107,56 @@ void compress_observations_helper(ghmm_cseq* seq, double width, double delta,
     }
     if(dimension == 1){
         int cur_start = start, cur_end = start+1;
-        double median = get_median(seq->seq[0], start, end);
+        double median = get_median(seq, start, end);
         while(cur_end < end){
-            if(cur_end < end && seq->seq[0][cur_end] <= median){
-                while(cur_end < end && seq->seq[0][cur_end] <= median ){
+            if(cur_end < end && seq[cur_end] <= median){
+                while(cur_end < end && seq[cur_end] <= median ){
                     cur_end++;
                 }
-                compress_observations_helper(seq, width, delta, level+1, 0,
+                compress_observations_helper(seq, len,  width, delta, level+1, 0,
                         stats, cur_start, cur_end);
             }
             else{
-                while(cur_end < end && seq->seq[0][cur_end] >= median){
+                while(cur_end < end && seq[cur_end] >= median){
                     cur_end++;
                 }
-                compress_observations_helper(seq, width, delta, level+1, 0, 
+                compress_observations_helper(seq, len,  width, delta, level+1, 0, 
                         stats, cur_start, cur_end);
             }
             cur_start = cur_end;
             cur_end++;
         }
         if(cur_start < end){
-            if(cur_end < end && seq->seq[0][cur_end] <= median){
-                compress_observations_helper(seq, width, delta, level+1, 0,
+            if(cur_end < end && seq[cur_end] <= median){
+                compress_observations_helper(seq, len, width, delta, level+1, 0,
                         stats, cur_start, cur_end);
             }
             else{
-                compress_observations_helper(seq, width, delta, level+1, 0, 
+                compress_observations_helper(seq, len,  width, delta, level+1, 0, 
                                 stats, cur_start, cur_end);
             }
         }
     }
     else{
         int end_index = get_largest_gap(seq, start, end);
-        compress_observations_helper(seq, width, delta, level, 1,  
+        compress_observations_helper(seq, len, width, delta, level, 1,  
                     stats, start, end_index+1);
-        compress_observations_helper(seq, width, delta, level, 1,  
+        compress_observations_helper(seq, len,  width, delta, level, 1,  
                     stats, end_index+1, end);
     }
 }
 
-block_stats *compress_observations(ghmm_cseq* seq, double width, double delta){
+block_stats *compress_observations(double* seq, int len, double width, double delta){
 #define CUR_PROC "compress_observations"
     block_stats *stats;
     ARRAY_MALLOC(stats, 1);
-    ARRAY_MALLOC(stats->moment1, seq->seq_len[0]);
-    ARRAY_MALLOC(stats->moment2, seq->seq_len[0]);
-    ARRAY_MALLOC(stats->length, seq->seq_len[0]);
+    ARRAY_MALLOC(stats->moment1, len);
+    ARRAY_MALLOC(stats->moment2, len);
+    ARRAY_MALLOC(stats->length, len);
     stats->total = 0;
 
-    compress_observations_helper(seq, width, delta, 1, 1,  
-            stats, 0, seq->seq_len[0]);
+    compress_observations_helper(seq, len, width, delta, 1, 1,  
+            stats, 0, len);
     return stats;
 
 STOP:
@@ -165,7 +165,7 @@ STOP:
 }
 
 
-block_stats *merge_observations(ghmm_cseq* seq, double width,
+block_stats *merge_observations(double* seq, int len, double width,
         int max_len, block_stats *stats){
 #define CUR_PROC "merge_obersvations"
 

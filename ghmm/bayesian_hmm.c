@@ -37,18 +37,21 @@
 #include "bayesian_hmm.h"
 #include "mes.h"
 #include "randvar.h"
+#include "math.h"
 
 int ghmm_alloc_hyperparameters(ghmm_hyperparameters *params, ghmm_density_t type, int dim){
 #define CUR_PROC "alloc_hyperparameters"
     switch(type){
+        //postpone boundries until set
         case(normal):
-            //normal-gamma (mean, var, a, b)
+            //normal-gamma (mean, var, a, b) b = scale
             params->type = type;
             params->num = 2;
             ARRAY_MALLOC(params->emission,2);
             params->emission[0].type = normal;
             params->emission[1].type = gamma_density;
             return 0;
+
         default:
             goto STOP;//not supported
     }
@@ -56,34 +59,60 @@ STOP:
    return -1;
 #undef CUR_PROC
 }
+
+//use INFINITY for no boundries
+void ghmm_set_normal_truncated_hyperparameters(ghmm_hyperparameters *params,
+        double normal_lower_boundry, double normal_upper_boundry, 
+        double normal_mean, double normal_variance,
+        double gamma_lower_boundry, double gamma_upper_boundry, double gamma_a, double gamma_b){
+
+    ghmm_set_normal_hyperparameters(params, normal_mean, normal_variance, 
+        gamma_a, gamma_b);
+
+    //mean boundries 
+    if(normal_lower_boundry == -INFINITY && normal_upper_boundry != INFINITY){
+
+        params->emission[0].max = normal_upper_boundry;
+        params->emission[0].type = normal_left;
+    }
+    else if(normal_lower_boundry != -INFINITY && normal_upper_boundry == INFINITY){
+
+        params->emission[0].min = normal_lower_boundry;
+        params->emission[0].type = normal_right;
+    }
+    else if (normal_lower_boundry == -INFINITY && normal_upper_boundry == INFINITY) {
+        params->emission[0].type = normal;
+    }
+    else{
+        params->emission[0].type = truncated_normal;
+        params->emission[0].min = normal_lower_boundry;
+        params->emission[0].max = normal_upper_boundry;
+    }
+
+    //variance boundries
+    if(gamma_lower_boundry == INFINITY && gamma_upper_boundry == INFINITY){
+        params->emission[1].type = gamma_density;
+    }
+    else{
+        params->emission[1].min = gamma_lower_boundry;
+        params->emission[1].max = gamma_upper_boundry;
+        params->emission[1].type = gamma_truncated;
+    }
+
+}
+
 void ghmm_set_normal_hyperparameters(ghmm_hyperparameters *params, double normal_mean,
         double normal_variance, double gamma_a, double gamma_b){
     params->type = normal;
     params->emission[0].mean.val = normal_mean;
     params->emission[0].variance.val = normal_variance;
-    params->emission[1].min = gamma_a;
-    params->emission[1].max = gamma_b;
+    params->emission[1].alpha = gamma_a;
+    params->emission[1].beta = gamma_b;
 }
-/*#include <stdarg.h>
-void ghmm_set_hyperparameters(ghmm_hyperparameters *params, ...){
-    va_list arg;
-    switch(params->type){
-        case(normal):
-            //(mean, var, a, b)
-            va_start(arg, 4);
-            params->emission[0].mean.val = va_arg(arg, double);
-            params->emission[0].variance.val = va_arg(arg, double);
-            params->emission[1].min = va_arg(arg, double);
-            params->emission[1].max = va_arg(arg, double);
-        default:
-            return;
-    }
-}*/
-
 
 ghmm_cmodel* ghmm_sample_model(ghmm_bayes_hmm *mo){
 #define CUR_PROC "ghmm_sample_model"
-    //XXX Mixtures, 1 transitions
+    //XXX Mixtures, 1 transitions, multivariate
     int i,j;
     ghmm_cmodel* hmm;
     hmm = ghmm_cmodel_calloc(mo->N, GHMM_kContinuousHMM, 1);
@@ -160,7 +189,7 @@ STOP:
 void ghmm_free_hyperparameters(ghmm_hyperparameters **params){
 #define CUR_PROC "free_hyperparameters"
     switch((*params)->type){
-        case(normal):
+        case(normal)://XXX ??
             m_free((*params)->emission);
         default:
             return;
@@ -170,18 +199,19 @@ void ghmm_free_hyperparameters(ghmm_hyperparameters **params){
 }
 
 void ghmm_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emission){
+
     switch(params->type){
         case(normal):
             {
                 emission->type = normal;
-                double precision = ighmm_rand_gamma(params->emission[1].min,
-                        1/params->emission[1].max, 0);
+                double precision = ighmm_rand_gamma(params->emission[1].alpha,
+                        1/params->emission[1].beta, 0);
                 emission->mean.val = ighmm_rand_normal(params->emission[0].mean.val, 
                         1/(precision * params->emission[0].variance.val), 0);
                 emission->variance.val = 1/precision;
+            }
 
             break;
-            }
         default:
             return;
     }

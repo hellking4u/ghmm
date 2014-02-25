@@ -42,7 +42,7 @@
 // holds the parameters density type and hyperparameters distrubution
 typedef struct ghmm_hyperparameters{
     ghmm_density_t type; //emission whose parameters we are estimating
-    int num; //number of emissions for example for normal there are 2, normal and inverse gamma
+    int num; //number of emissions for example for normal there are 2, normal and gamma
     ghmm_c_emission *emission;//array of emissions 
 }ghmm_hyperparameters;
 
@@ -70,6 +70,12 @@ int ghmm_alloc_hyperparameters(ghmm_hyperparameters *params, ghmm_density_t type
  */
 void ghmm_set_normal_hyperparameters(ghmm_hyperparameters *params, double normal_mean,
         double normal_variance, double gamma_a, double gamma_b);
+
+void ghmm_set_normal_truncated_hyperparameters(ghmm_hyperparameters *params,
+        double normal_lower_boundry, double normal_upper_boundry, 
+        double normal_mean, double normal_variance,
+        double gamma_lower_boundry, double gamma_upper_boundry, double gamma_a, double gamma_b);
+
 
 /* frees hyperparameters data
  * @param params: pointer to a pointer of a hyperparameter
