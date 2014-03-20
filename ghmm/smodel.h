@@ -72,7 +72,7 @@ extern "C" {
     multinormal,   /**< multivariate gaussian */
     gamma_density,
     gamma_truncated, //XXX used for bayesian stuff not implemented for hmms yet
-    pareto, 
+    discrete, 
     density_number /**< number of density types, has to stay last */
   } ghmm_density_t;
 

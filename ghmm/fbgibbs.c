@@ -536,7 +536,6 @@ int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double
   }
   else{
       allocCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
-
       for(;burnIn > 0; burnIn--){
          initCounts(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
          for(i = 0; i < seq->seq_number; i++){
@@ -559,4 +558,3 @@ STOP:
    return NULL;
 #endif
 }
-

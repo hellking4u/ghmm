@@ -39,7 +39,7 @@
 #include "randvar.h"
 #include "math.h"
 
-int ghmm_alloc_hyperparameters(ghmm_hyperparameters *params, ghmm_density_t type, int dim){
+int ghmm_hyperparameters_alloc(ghmm_hyperparameters *params, ghmm_density_t type, int dim){
 #define CUR_PROC "alloc_hyperparameters"
     switch(type){
         //postpone boundries until set
@@ -47,11 +47,15 @@ int ghmm_alloc_hyperparameters(ghmm_hyperparameters *params, ghmm_density_t type
             //normal-gamma (mean, var, a, b) b = scale
             params->type = type;
             params->num = 2;
-            ARRAY_MALLOC(params->emission,2);
-            params->emission[0].type = normal;
-            params->emission[1].type = gamma_density;
+            ARRAY_CALLOC(params->emission.continuous,2);
+            params->emission.continuous[0].type = normal;
+            params->emission.continuous[1].type = gamma_density;
             return 0;
-
+        case(discrete):
+            ARRAY_CALLOC(params->emission.discrete, 1);
+            params->type = type;
+            params->num = dim;
+            return 0;
         default:
             goto STOP;//not supported
     }
@@ -61,56 +65,128 @@ STOP:
 }
 
 //use INFINITY for no boundries
-void ghmm_set_normal_truncated_hyperparameters(ghmm_hyperparameters *params,
+//XXX need to support sampling from truncated normals in randvar.c
+void ghmm_hyperparameters_set_normal_truncated(ghmm_hyperparameters *params,
         double normal_lower_boundry, double normal_upper_boundry, 
         double normal_mean, double normal_variance,
         double gamma_lower_boundry, double gamma_upper_boundry, double gamma_a, double gamma_b){
 
-    ghmm_set_normal_hyperparameters(params, normal_mean, normal_variance, 
+    ghmm_hyperparameters_set_normal(params, normal_mean, normal_variance, 
         gamma_a, gamma_b);
 
     //mean boundries 
     if(normal_lower_boundry == -INFINITY && normal_upper_boundry != INFINITY){
 
-        params->emission[0].max = normal_upper_boundry;
-        params->emission[0].type = normal_left;
+        params->emission.continuous[0].max = normal_upper_boundry;
+        params->emission.continuous[0].type = normal_left;
     }
     else if(normal_lower_boundry != -INFINITY && normal_upper_boundry == INFINITY){
 
-        params->emission[0].min = normal_lower_boundry;
-        params->emission[0].type = normal_right;
+        params->emission.continuous[0].min = normal_lower_boundry;
+        params->emission.continuous[0].type = normal_right;
     }
     else if (normal_lower_boundry == -INFINITY && normal_upper_boundry == INFINITY) {
-        params->emission[0].type = normal;
+        params->emission.continuous[0].type = normal;
     }
     else{
-        params->emission[0].type = truncated_normal;
-        params->emission[0].min = normal_lower_boundry;
-        params->emission[0].max = normal_upper_boundry;
+        params->emission.continuous[0].type = truncated_normal;
+        params->emission.continuous[0].min = normal_lower_boundry;
+        params->emission.continuous[0].max = normal_upper_boundry;
     }
 
     //variance boundries
     if(gamma_lower_boundry == INFINITY && gamma_upper_boundry == INFINITY){
-        params->emission[1].type = gamma_density;
+        params->emission.continuous[1].type = gamma_density;
     }
     else{
-        params->emission[1].min = gamma_lower_boundry;
-        params->emission[1].max = gamma_upper_boundry;
-        params->emission[1].type = gamma_truncated;
+        params->emission.continuous[1].min = gamma_lower_boundry;
+        params->emission.continuous[1].max = gamma_upper_boundry;
+        params->emission.continuous[1].type = gamma_truncated;
     }
 
 }
 
-void ghmm_set_normal_hyperparameters(ghmm_hyperparameters *params, double normal_mean,
+void ghmm_hyperparameters_set_normal(ghmm_hyperparameters *params, double normal_mean,
         double normal_variance, double gamma_a, double gamma_b){
     params->type = normal;
-    params->emission[0].mean.val = normal_mean;
-    params->emission[0].variance.val = normal_variance;
-    params->emission[1].alpha = gamma_a;
-    params->emission[1].beta = gamma_b;
+    params->emission.continuous[0].mean.val = normal_mean;
+    params->emission.continuous[0].variance.val = normal_variance;
+    params->emission.continuous[1].alpha = gamma_a;
+    params->emission.continuous[1].beta = gamma_b;
 }
 
-ghmm_cmodel* ghmm_sample_model(ghmm_bayes_hmm *mo){
+void ghmm_hyperparameters_set_discrete(ghmm_hyperparameters *params, double *counts, int dim){
+#define CUR_PROC "ghmm_set_discrete_hyperparamters"
+    int i;
+    ARRAY_MALLOC(params->emission.discrete, dim);
+    for(i=0;i<dim;i++){
+        params->emission.discrete[i] = counts[i];
+    }
+STOP: return;
+#undef CUR_PROC
+}
+
+ghmm_dmodel* ghmm_bayes_hmm_sample_model_discrete(ghmm_bayes_hmm *mo){
+#define CUR_PROC "ghmm_sample_model"
+    //XXX Mixtures, 1 transitions, multivariate
+    int i,j;
+    ghmm_dmodel* hmm;
+    int *inDeg;
+    int *outDeg;
+    ARRAY_MALLOC(inDeg, mo->N);
+    ARRAY_MALLOC(outDeg, mo->N);
+    for(i = 0; i < mo->N; i++){
+        inDeg[i] = outDeg[i] = mo->N;
+    }
+    hmm = ghmm_dmodel_calloc(mo->dim, mo->N, GHMM_kDiscreteHMM, inDeg, outDeg);
+   
+    ghmm_dstate *s =  hmm->s; 
+    double **tmp;
+    ARRAY_MALLOC(tmp, mo->N);
+
+    //get sample mats for transition
+    for(i = 0; i < mo->N; i++){
+        tmp[i] = ghmm_bayes_hmm_sample_transistions(mo, i);
+    }
+
+    //get in/out state transitions
+    int out_state;
+    int in_state;
+    for(i=0; i<mo->N; i++){
+        for(j=0; j<mo->N; j++){
+            if(tmp[i][j] != 0){
+                out_state = s[i].out_states++;
+                in_state  = s[j].in_states++;
+                s[i].out_id[out_state] = j;
+                s[i].out_a[out_state] = tmp[i][j];
+                s[j].in_id[in_state] = i;
+                s[j].in_a[in_state]= tmp[i][j];
+            }
+        }
+    }
+
+   hmm->s = s;
+   ighmm_cmatrix_free(&tmp, mo->N);
+
+
+    //params of states
+    double *pi = ghmm_bayes_hmm_sample_initial(mo);
+    double *emission;
+
+    for(i = 0; i < mo->N; i++){
+        ARRAY_MALLOC(emission, mo->dim );
+        ghmm_hyperparameters_sample_emission_discrete(&(mo->params[i][0]), emission, mo->dim);
+        hmm->s[i].b = emission;
+        hmm->s[i].pi = pi[i];
+    }
+
+    return hmm;
+STOP:
+    return NULL;
+#undef CUR_PROC
+}
+
+ghmm_cmodel* ghmm_bayes_hmm_sample_model(ghmm_bayes_hmm *mo){
 #define CUR_PROC "ghmm_sample_model"
     //XXX Mixtures, 1 transitions, multivariate
     int i,j;
@@ -125,7 +201,7 @@ ghmm_cmodel* ghmm_sample_model(ghmm_bayes_hmm *mo){
 
     //get sample mats for transition
     for(i = 0; i < mo->N; i++){
-        tmp[i] = ghmm_sample_transistions(mo, i);
+        tmp[i] = ghmm_bayes_hmm_sample_transistions(mo, i);
     }
 
     //alloc 
@@ -162,7 +238,7 @@ ghmm_cmodel* ghmm_sample_model(ghmm_bayes_hmm *mo){
 
 
     //params of states
-    double *pi = ghmm_sample_initial(mo);
+    double *pi = ghmm_bayes_hmm_sample_initial(mo);
     ghmm_c_emission *emission;
     double *weights;
     for(i = 0; i < mo->N; i++){
@@ -172,7 +248,7 @@ ghmm_cmodel* ghmm_sample_model(ghmm_bayes_hmm *mo){
             ghmm_c_emission_alloc(emission, mo->dim);
         }
         weights[0] = 1.0;
-        ghmm_sample_emission(&(mo->params[i][0]), emission);//M
+        ghmm_hyperparameters_sample_emission(&(mo->params[i][0]), emission);//M
         emission->dimension = mo->dim;
         hmm->s[i].e = emission;
         hmm->s[i].pi = pi[i];
@@ -186,31 +262,33 @@ STOP:
 #undef CUR_PROC
 }
 
-void ghmm_free_hyperparameters(ghmm_hyperparameters **params){
+void ghmm_hyperparameters_free(ghmm_hyperparameters *params){
 #define CUR_PROC "free_hyperparameters"
-    switch((*params)->type){
-        case(normal)://XXX ??
-            m_free((*params)->emission);
+    switch(params->type){
+        case(normal):
+            //m_free(params->emission.continuous);
         default:
             return;
     }
-    *params = NULL;
 #undef CUR_PROC
 }
 
-void ghmm_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emission){
+void ghmm_hyperparameters_sample_emission_discrete(ghmm_hyperparameters *params, double *emission, int dim){
+    ighmm_rand_dirichlet(0, dim, params->emission.discrete, emission);
+}
 
+void ghmm_hyperparameters_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emission){
     switch(params->type){
         case(normal):
             {
+                //printf("%x sample_emission: %f\n", params,  params->emission.continuous[1].beta);
                 emission->type = normal;
-                double precision = ighmm_rand_gamma(params->emission[1].alpha,
-                        1/params->emission[1].beta, 0);
-                emission->mean.val = ighmm_rand_normal(params->emission[0].mean.val, 
-                        1/(precision * params->emission[0].variance.val), 0);
+                double precision = ighmm_rand_gamma(params->emission.continuous[1].alpha,
+                        1/params->emission.continuous[1].beta, 0);
+                emission->mean.val = ighmm_rand_normal(params->emission.continuous[0].mean.val, 
+                        1/(precision * params->emission.continuous[0].variance.val), 0);
                 emission->variance.val = 1/precision;
             }
-
             break;
         default:
             return;
@@ -218,10 +296,10 @@ void ghmm_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emissio
 }
 
 
-double* ghmm_sample_initial(ghmm_bayes_hmm *bayes){
+double* ghmm_bayes_hmm_sample_initial(ghmm_bayes_hmm *bayes){
 #define CUR_PROC "ghmm_sample_initial"
     double *sample;
-    ARRAY_MALLOC(sample, bayes->N);
+    ARRAY_CALLOC(sample, bayes->N);
     ighmm_rand_dirichlet(0, bayes->N, bayes->pi, sample);
     return sample;
 STOP:
@@ -229,7 +307,7 @@ STOP:
 #undef CUR_PROC
 }
 
-double* ghmm_sample_transistions(ghmm_bayes_hmm *bayes, int i){
+double* ghmm_bayes_hmm_sample_transistions(ghmm_bayes_hmm *bayes, int i){
 #define CUR_PROC "ghmm_sample_transitions"
     double *prior = bayes->A[i];
     double *sample;
@@ -241,21 +319,24 @@ STOP:
 #undef CUR_PROC
 }
 
-int ghmm_alloc_bayes_hmm(ghmm_bayes_hmm *mo, int N, int *M){
+//M is mixture for continuous, alphabet size for discrete
+int ghmm_bayes_hmm_alloc(ghmm_bayes_hmm *mo, int N, int *M){
 #define CUR_PROC "ghmm_alloc_bayes_hmm"
     int i;
     mo->N = N;
-    ARRAY_MALLOC(mo->M, N);
+    ARRAY_CALLOC(mo->M, N);
     for(i=0;i<N;i++)
         mo->M[i] = M[i];
-    ARRAY_MALLOC(mo->params, N);
+    ARRAY_CALLOC(mo->params, N);
     for(i=0;i<N;i++){
-        ARRAY_MALLOC(mo->params[i], M[i]);
+        ARRAY_CALLOC(mo->params[i], M[i]);
     }
     mo->A = ighmm_cmatrix_alloc(N,N);
-    ARRAY_MALLOC(mo->pi, N);
+    ARRAY_CALLOC(mo->pi, N);
+
     return 0;
 STOP:
+    printf("error\n");
     return -1;
 #undef CUR_PROC
 }

@@ -8,16 +8,20 @@
 %}
 /*==========================================================================
   ===== continous emission density types =================================== */
-typedef enum {
-  normal,
-  normal_right, /* right tail */
-  normal_approx,
-  normal_left, /* left tail */
-  uniform,
-  binormal,
-  multinormal,
-  density_number
-} ghmm_density_t;
+  typedef enum {
+    normal,        /**< gaussian */
+    normal_right,  /**< right tail */
+    normal_approx, /**< approximated gaussian */
+    normal_left,   /**< left tail */
+    truncated_normal, 
+    uniform,
+    binormal,      /**< two dimensional gaussian */
+    multinormal,   /**< multivariate gaussian */
+    gamma_density,
+    gamma_truncated, //XXX used for bayesian stuff not implemented for hmms yet
+    discrete, 
+    density_number /**< number of density types, has to stay last */
+  } ghmm_density_t;
 
 %inline %{
         ghmm_density_t* density_array_alloc(size_t length) { return malloc(length*sizeof(ghmm_density_t)); }

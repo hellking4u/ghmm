@@ -1947,6 +1947,49 @@ class HMMFromMatricesFactory(HMMFactory):
 
 HMMFromMatrices = HMMFromMatricesFactory()
 
+class Hyperparameters():
+#finished normal
+    def __init__(self, distribution, dimension):
+        self.distribution = distribution
+        if isinstance(distribution, GaussianDistribution):
+            self.parameters = ghmmwrapper.ghmm_hyperparameters(ghmmwrapper.normal, dimension)
+        elif isinstance(distribution, DiscreteDistribution):
+            self.parameters = ghmmwrapper.ghmm_hyperparameters(ghmmwrapper.discrete, dimension)
+    
+    def setParameters(self, **kwargs):
+#normal, truncated normal, discrete...
+        if isinstance(self.distribution, GaussianDistribution):
+            self.parameters.set_normal(kwargs['mean'], kwargs['variance'], kwargs['shape'],
+                    kwargs['inverse_scale'])
+        elif isinstance(self.distribution, DiscreteDistribution):
+            counts = ghmmwrapper.list2double_array(kwargs['counts'])
+            self.parameters.set_discrete(counts, kwargs['dimension'])
+
+    def sampleParameters(self):
+        tmp = ghmmwrapper.ghmm_c_emission()
+        self.parameters.sample_emission(tmp)
+        return tmp
+
+
+class BaysianHMM():
+    def __init__(self, emissionDomain, distribution, dim, n, m, priorInitial, 
+            priorTransitions, hyperparameters):
+        self.emissionDomain = emissionDomain
+        self.distribution = distribution
+        M = ghmmwrapper.list2int_array(m)
+        self.bay = ghmmwrapper.ghmm_bayes_hmm(dim, n, M)
+        self.bay.M = M
+        self.bay.pi = ghmmwrapper.list2double_array(priorInitial)
+        self.bay.A, i = ghmmhelper.list2double_matrix(priorTransitions)
+        for i in range(0,  len(hyperparameters)):
+            self.bay.set_hyperparameter(i, 0, hyperparameters[i])
+
+    def sample(self):
+        if isinstance(self.distribution, GaussianDistribution):
+            return GaussianEmissionHMM(self.emissionDomain, self.distribution, self.bay.sample_model())
+        elif isinstance(self.distribution, DiscreteDistribution):
+            return DiscreteEmissionHMM(self.emissionDomain, self.distribution, self.bay.sample_model_discrete())
+
 #-------------------------------------------------------------------------------
 #- Background distribution
 
