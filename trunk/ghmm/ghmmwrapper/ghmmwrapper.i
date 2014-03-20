@@ -227,7 +227,7 @@ extern double ighmm_rand_normal_density_trunc(double x, double mean, double u, d
 %apply int*    OUTPUT {int *pathlen};
 
 %include wrapper_alphabet.i
-
+%include wrapper_bayes.i
 %include wrapper_cseq.i
 %include wrapper_dseq.i
 %include wrapper_dpseq.i

@@ -15,8 +15,7 @@
 *
 *       This library is free software; you can redistribute it and/or
 *       modify it under the terms of the GNU Library General Public
-*       License as published by the Free Software Foundation; either
-*       version 2 of the License, or (at your option) any later version.
+*       License as published by the Free Software Foundation; either *       version 2 of the License, or (at your option) any later version.
 *
 *       This library is distributed in the hope that it will be useful,
 *       but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -36,19 +35,25 @@
 
 #ifndef GHMM_BAYESIAN_HMM
 #define GHMM_BAYESIAN_HMM
-
-#include "ghmm/smodel.h"
+#include "model.h"
+#include "smodel.h"
 
 // holds the parameters density type and hyperparameters distrubution
 typedef struct ghmm_hyperparameters{
     ghmm_density_t type; //emission whose parameters we are estimating
     int num; //number of emissions for example for normal there are 2, normal and gamma
-    ghmm_c_emission *emission;//array of emissions 
+
+    union{
+        ghmm_c_emission *continuous;//array of emissions 
+        double *discrete;
+    }emission;
+
 }ghmm_hyperparameters;
 
 // All the hyperparameters for a model
 typedef struct ghmm_bayes_hmm{
     //hyperparameters
+    int continuous;//XXX 1 if continuous change later
     int dim;
     int N;
     int *M;
@@ -63,44 +68,47 @@ typedef struct ghmm_bayes_hmm{
  * dim: dimension of the distrubution the hyperparameters are describing
  */
 //XXX only normal implemented
-int ghmm_alloc_hyperparameters(ghmm_hyperparameters *params, ghmm_density_t type, int dim);
+int ghmm_hyperparameters_alloc(ghmm_hyperparameters *params, ghmm_density_t type, int dim);
 
 /* params ~ Normal-gamma(mean, variance, a, b)
  * @params: pointer to hyperparameter
  */
-void ghmm_set_normal_hyperparameters(ghmm_hyperparameters *params, double normal_mean,
+void ghmm_hyperparameters_set_normal(ghmm_hyperparameters *params, double normal_mean,
         double normal_variance, double gamma_a, double gamma_b);
 
-void ghmm_set_normal_truncated_hyperparameters(ghmm_hyperparameters *params,
+void ghmm_hyperparameters_set_normal_truncated(ghmm_hyperparameters *params,
         double normal_lower_boundry, double normal_upper_boundry, 
         double normal_mean, double normal_variance,
         double gamma_lower_boundry, double gamma_upper_boundry, double gamma_a, double gamma_b);
 
+void ghmm_hyperparameters_set_discrete(ghmm_hyperparameters *params, double *counts, int dim);
 
 /* frees hyperparameters data
  * @param params: pointer to a pointer of a hyperparameter
  */
 //XXX only normal implemented
-void ghmm_free_hyperparameters(ghmm_hyperparameters **params);
+void ghmm_hyperparameters_free(ghmm_hyperparameters *params);
+
+void ghmm_hyperparameters_sample_emission_discrete(ghmm_hyperparameters *params, double *emission, int dim);
 
 /* uses hyperparameters to sample an emission
  * @param params: pointer to hyperparameters 
  * @param emission: sampled distribution
  */
 //XXX only normal implemented
-void ghmm_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emission);
+void ghmm_hyperparameters_sample_emission(ghmm_hyperparameters *params, ghmm_c_emission *emission);
 
 /* samples pi from the prior for pi using dirichlet
  * @params bayes: pointer to bayesian model
  * @return distibution for intitial state probabilites
  */
-double* ghmm_sample_initial(ghmm_bayes_hmm *bayes);
+double* ghmm_bayes_hmm_sample_initial(ghmm_bayes_hmm *bayes);
 
-/* samples the transition probabilities for a state i
+/* samples the transition probabilities for state i
  * @params bayes: pointer to bayesian hmm parameters
  * @return state: array of the transition probabilities from state i to state j
  */
-double* ghmm_sample_transistions(ghmm_bayes_hmm *bayes, int i);
+double* ghmm_bayes_hmm_sample_transistions(ghmm_bayes_hmm *bayes, int i);
 
 /* allocates memory for bayes_hmm.
  * @param: N number of states
@@ -108,7 +116,8 @@ double* ghmm_sample_transistions(ghmm_bayes_hmm *bayes, int i);
  * @return -1 fail 0 success
  */
 //XXX only normal implemeted
-int ghmm_alloc_bayes_hmm(ghmm_bayes_hmm *mo, int N, int *M);
+int ghmm_bayes_hmm_alloc(ghmm_bayes_hmm *mo, int N, int *M);
 
-ghmm_cmodel* ghmm_sample_model(ghmm_bayes_hmm *mo);
+ghmm_dmodel* ghmm_bayes_hmm_sample_model_discrete(ghmm_bayes_hmm *mo);
+ghmm_cmodel* ghmm_bayes_hmm_sample_model(ghmm_bayes_hmm *mo);
 #endif

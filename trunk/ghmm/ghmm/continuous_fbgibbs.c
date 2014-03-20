@@ -179,48 +179,48 @@ void ghmm_update_emission(sample_emission_data *data, ghmm_hyperparameters *para
                 double tmp;
 
                 //var
-                var = params->emission[0].variance.val + data->emitted;
+                var = params->emission.continuous[0].variance.val + data->emitted;
 
                 //mean
-                mean = params->emission[0].variance.val * params->emission[0].mean.val;
+                mean = params->emission.continuous[0].variance.val * params->emission.continuous[0].mean.val;
                 mean += data->emitted*data->mean.val;
-                mean /= (params->emission[0].variance.val + data->emitted );
+                mean /= (params->emission.continuous[0].variance.val + data->emitted );
 
                 //alpha
-                a = params->emission[1].alpha + data->emitted/2;
+                a = params->emission.continuous[1].alpha + data->emitted/2;
                 
                 //beta
-                tmp = data->mean.val - params->emission[0].mean.val;
-                b = params->emission[1].beta;
+                tmp = data->mean.val - params->emission.continuous[0].mean.val;
+                b = params->emission.continuous[1].beta;
                 b += .5*data->variance.val;
-                b += (data->emitted*params->emission[0].variance.val/2*tmp*tmp)/
-                    (data->emitted+params->emission[0].variance.val);
+                b += (data->emitted*params->emission.continuous[0].variance.val/2*tmp*tmp)/
+                    (data->emitted+params->emission.continuous[0].variance.val);
 
                 // sample from posterior hyperparameters
-                if(params->emission[1].type == gamma_truncated){//XXX truncated_gamma 
-                    tmp = ighmm_rand_truncated_gamma(params->emission[1].min, 
-                            params->emission[1].max, a, 1/b, 0);
+                if(params->emission.continuous[1].type == gamma_truncated){//XXX truncated_gamma 
+                    tmp = ighmm_rand_truncated_gamma(params->emission.continuous[1].min, 
+                            params->emission.continuous[1].max, a, 1/b, 0);
                 }
                 else{
                     tmp = ighmm_rand_gamma(a, 1/b, 0);
                 }
 
                 emission->variance.val = 1/tmp;
-                if(params->emission[0].type == normal_right){
+                if(params->emission.continuous[0].type == normal_right){
 
-                    emission->mean.val = ighmm_rand_normal_right(params->emission[0].min,
+                    emission->mean.val = ighmm_rand_normal_right(params->emission.continuous[0].min,
                             mean, 1/(var*tmp),0);
 
                 }
-                else if (params->emission[0].type == normal_left) {
-                    emission->mean.val = -ighmm_rand_normal_right(-params->emission[0].max, -mean,
+                else if (params->emission.continuous[0].type == normal_left) {
+                    emission->mean.val = -ighmm_rand_normal_right(-params->emission.continuous[0].max, -mean,
                             1/(var*tmp),0);
 
 
                 }
-                else if (params->emission[0].type == truncated_normal) {
-                     emission->mean.val = ighmm_rand_truncated_normal(params->emission[0].min,
-                             params->emission[0].max, mean,
+                else if (params->emission.continuous[0].type == truncated_normal) {
+                     emission->mean.val = ighmm_rand_truncated_normal(params->emission.continuous[0].min,
+                             params->emission.continuous[0].max, mean,
                             1/(var*tmp),0);
 
                 }
