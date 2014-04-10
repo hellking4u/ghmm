@@ -38,7 +38,7 @@
 #define GHMM_FBGIBBS_H
 
 #include "model.h"
-
+#include "bayesian_hmm.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -98,8 +98,7 @@ void updateH(ghmm_dmodel* mo,double **transistions, double *obsinstate, double *
  * @param burnIn: number of times to run the algorithm
  * @param seed: seed for the random generator.
  */
-int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double **pB, double *pPi, int burnIn, int seed);
-
+int** ghmm_dmodel_fbgibbs(ghmm_dmodel *mo, ghmm_dseq*  seq, ghmm_bayes_hmm *bayes, int burnIn, int seed);
 #ifdef __cplusplus
 }
 #endif

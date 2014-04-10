@@ -295,7 +295,7 @@ void ghmm_cmodel_fbgibbstep (ghmm_cmodel * mo, double *O, int len,int *Q, double
 
 
 
-int** ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
+int** ghmm_cmodel_fbgibbs(ghmm_cmodel *mo, ghmm_bayes_hmm *bayes, ghmm_cseq* seq,
          int burnIn, int seed){
 #define CUR_PROC "ghmm_cmodel_fbgibbs"
     GHMM_RNG_SET (RNG, seed);
@@ -434,7 +434,7 @@ void ghmm_get_sample_data_compressed(ghmm_sample_data *data, ghmm_bayes_hmm *bay
     }
 }
 
-int** ghmm_bayes_hmm_fbgibbs_compressed(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
+int** ghmm_cmodel_cfbgibbs(ghmm_cmodel *mo, ghmm_bayes_hmm *bayes, ghmm_cseq* seq,
          int burnIn, int seed, double width, double delta, int max_len_permitted){
 #define CUR_PROC "ghmm_cmodel_fbgibbs_compressed"
     GHMM_RNG_SET (RNG, seed);
@@ -628,7 +628,6 @@ int ghmm_cmodel_forwardgibbs (ghmm_cmodel * smo, double *O, int T, double ***b,
           goto STOP;
         }		
       }
-
     }
   }
   /* log_p should not be smaller than value used for seqs. that 
