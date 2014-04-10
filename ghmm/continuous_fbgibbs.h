@@ -47,7 +47,7 @@
  * @param seed: 0 for defualt seed non zero for new seed
  * @return sampled state sequence
  */
-int** ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo,  ghmm_cseq* seq,
+int** ghmm_cmodel_fbgibbs(ghmm_cmodel *mo, ghmm_bayes_hmm *bayes,  ghmm_cseq* seq,
          int burnIn, int seed);
 
 
@@ -67,6 +67,6 @@ int** ghmm_bayes_hmm_fbgibbs(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo,  ghmm_cseq*
  * @param max_len_permitted: maximum length of block
  * @return sampled state sequence
  */
-int** ghmm_bayes_hmm_fbgibbs_compressed(ghmm_bayes_hmm *bayes, ghmm_cmodel *mo, ghmm_cseq* seq,
+int** ghmm_cmodel_cfbgibbs( ghmm_cmodel *mo, ghmm_bayes_hmm *bayes, ghmm_cseq* seq,
          int burnIn, int seed, double width, double delta, int max_len_permitted);
 #endif
