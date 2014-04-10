@@ -160,7 +160,7 @@ block_stats *compress_observations(double* seq, int len, double width, double de
     return stats;
 
 STOP:
-    return;
+    return NULL;
 #undef CUR_PROC 
 }
 
@@ -227,7 +227,7 @@ block_stats *merge_observations(double* seq, int len, double width,
     free_block_stats(&stats);
     return merged_stats;
 STOP:
-    return;
+    return NULL;
 #undef CUR_PROC
 }
 
