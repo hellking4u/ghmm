@@ -6,6 +6,7 @@
 #include <ghmm/gradescent.h>
 #include <ghmm/kbest.h>
 #include <ghmm/discrime.h>
+#include <ghmm/bayesian_hmm.h>
 #include <ghmm/fbgibbs.h>
 #include <ghmm/cfbgibbs.h>
 %}
@@ -255,9 +256,9 @@ extern int ghmm_dmodel_free(ghmm_dmodel **mo);
 
         int baum_welch_nstep(ghmm_dseq *sq, int max_step, double likelihood_delta);
 
-        int** fbgibbs(ghmm_dseq* seq, double **pA, double **pB, double *pPi, int burnIn, int seed); 
+        int** fbgibbs(ghmm_dseq* seq, ghmm_bayes_hmm *bayes, int burnIn, int seed); 
 
-        int** cfbgibbs (ghmm_dseq* seq, double **pA, double **pB, double *pPi, int R, int burnIn, int seed);
+        int** cfbgibbs (ghmm_dseq* seq, ghmm_bayes_hmm *bayes,  int R, int burnIn, int seed);
 
         int* viterbi(int *o, int len, int *pathlen, double *log_p);
 

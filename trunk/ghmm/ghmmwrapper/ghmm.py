@@ -1951,6 +1951,7 @@ class Hyperparameters():
 #finished normal
     def __init__(self, distribution, dimension):
         self.distribution = distribution
+        self.dimension = dimension
         if isinstance(distribution, GaussianDistribution):
             self.parameters = ghmmwrapper.ghmm_hyperparameters(ghmmwrapper.normal, dimension)
         elif isinstance(distribution, DiscreteDistribution):
@@ -1963,7 +1964,7 @@ class Hyperparameters():
                     kwargs['inverse_scale'])
         elif isinstance(self.distribution, DiscreteDistribution):
             counts = ghmmwrapper.list2double_array(kwargs['counts'])
-            self.parameters.set_discrete(counts, kwargs['dimension'])
+            self.parameters.set_discrete(counts, self.dimension)
 
     def sampleParameters(self):
         tmp = ghmmwrapper.ghmm_c_emission()
@@ -2858,7 +2859,7 @@ class DiscreteEmissionHMM(HMM):
 
         self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 
-    def fbGibbs(self, trainingSequences,  pA, pB, pPi, burnIn = 100, seed = 0):
+    def fbGibbs(self, trainingSequences,  bayes, burnIn = 100, seed = 0):
         """Reestimates the model and returns a sampled state sequence
 
         @note uses gsl, silent states not supported
@@ -2876,6 +2877,7 @@ class DiscreteEmissionHMM(HMM):
             raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))       
         if self.hasFlags(kSilentStates):
             raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
+        """
         A, i = ghmmhelper.list2double_matrix(pA)
         if self.hasFlags(kHigherOrderEmissions):
             B=ghmmwrapper.double_matrix_alloc_row(len(pB))
@@ -2884,10 +2886,10 @@ class DiscreteEmissionHMM(HMM):
         else:
             B, j = ghmmhelper.list2double_matrix(pB)
         Pi = ghmmwrapper.list2double_array(pPi)
+        """
+        return ghmmhelper.int_matrix2list(self.cmodel.fbgibbs(trainingSequences.cseq, bayes.bay, burnIn,seed), trainingSequences.cseq.seq_number, len(trainingSequences))
 
-        return ghmmhelper.int_matrix2list(self.cmodel.fbgibbs(trainingSequences.cseq, A, B, Pi, burnIn,seed), trainingSequences.cseq.seq_number, len(trainingSequences))
-
-    def cfbGibbs(self,trainingSequences, pA, pB, pPi,  R=-1, burnIn = 100, seed = 0):
+    def cfbGibbs(self,trainingSequences, bayes,  R=-1, burnIn = 100, seed = 0):
         """Reestimates the model and returns a sampled state sequence
 
         @note uses gsl, silent states not supported
@@ -2912,10 +2914,12 @@ class DiscreteEmissionHMM(HMM):
             #print R
         if R <= 1: 
             R = 2
+        """
         A, i = ghmmhelper.list2double_matrix(pA)
         B, j = ghmmhelper.list2double_matrix(pB)
         Pi = ghmmwrapper.list2double_array(pPi)
-        return ghmmhelper.int_matrix2list(self.cmodel.cfbgibbs(trainingSequences.cseq, A, B, Pi, R, burnIn, seed), trainingSequences.cseq.seq_number, len(trainingSequences))
+        """
+        return ghmmhelper.int_matrix2list(self.cmodel.cfbgibbs(trainingSequences.cseq, bayes.bay,  R, burnIn, seed), trainingSequences.cseq.seq_number, len(trainingSequences))
 
     def applyBackgrounds(self, backgroundWeight):
         """
@@ -3839,6 +3843,38 @@ class GaussianEmissionHMM(HMM):
         self.baumWelchDelete()
 
         return likelihood
+
+    def fbGibbs(self, trainingSequences,  bayes, burnIn = 100, seed = 0):
+        """Reestimates the model and returns a sampled state sequence
+
+        @note uses gsl, silent states not supported
+
+        @param seed int for random seed, 0 default 
+        @param trainingSequences EmissionSequence
+        @param pA prior count for transitions
+        @param pB prior count for emissions
+        @param pPI prior count for initial state
+        @param burnin number of iterations
+        @return set of sampled paths for each training sequence
+        @warning work in progress
+        """
+        if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))       
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
+        return ghmmhelper.int_matrix2list(self.cmodel.fbgibbs(bayes.bay, trainingSequences.cseq, burnIn,seed), trainingSequences.cseq.seq_number, len(trainingSequences))
+
+
+    def cfbGibbs(self,trainingSequences, bayes,  width, delta, max_len, burnIn = 100, seed = 0):
+        if not isinstance(trainingSequences,EmissionSequence) and not isinstance(trainingSequences,SequenceSet):
+            raise TypeError("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))       
+        if self.hasFlags(kSilentStates):
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
+        return ghmmhelper.int_matrix2list(self.cmodel.cfbgibbs( bayes.bay,trainingSequences.cseq, burnIn,seed, width, delta, max_len), trainingSequences.cseq.seq_number, len(trainingSequences))
+
+
+
+
 
     def baumWelchSetup(self, trainingSequences, nrSteps, loglikelihoodCutoff=ghmmwrapper.EPS_ITER_BW):
         """ Setup necessary temporary variables for Baum-Welch-reestimation.
