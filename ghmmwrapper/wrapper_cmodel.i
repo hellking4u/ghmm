@@ -5,6 +5,7 @@
 #include "ghmm/sreestimate.h"
 #include "ghmm/randvar.h"
 #include "ghmm/matrixop.h"
+#include "ghmm/continuous_fbgibbs.h"
 %}
 /*==========================================================================
   ===== continous emission density types =================================== */
@@ -321,6 +322,13 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         void   set_transition(int i, int j, int c, double prob);
 
         int* viterbi(double *O, int T, double *log_p);
+
+        int** fbgibbs(ghmm_bayes_hmm *bayes,  ghmm_cseq* seq,
+            int burnIn, int seed);
+
+        int** cfbgibbs(ghmm_bayes_hmm *bayes, ghmm_cseq* seq,
+             int burnIn, int seed, double width, double delta, int max_len_permitted);
+
 
         ghmm_cstate* getState(size_t index) { return self->s + index; }
 
