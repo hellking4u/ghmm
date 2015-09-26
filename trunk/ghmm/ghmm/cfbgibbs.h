@@ -38,7 +38,6 @@
 #define GHMM_CFBGIBBS_H
 
 #include "model.h"
-#include "bayesian_hmm.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,7 +48,7 @@ extern "C" {
  * M. Mahmud and A. Schliep
  *
  * In Algorithms in Bioinformatics, Springer Berlin / Heidelberg, 6833, 188–200, 2011. 
- */
+ * /
 
 /* compressed forward backward gibbs algorithm in Speeding Up 
  * Bayesian HMM by the Four Russians Method
@@ -64,7 +63,7 @@ extern "C" {
  * seed: seed 
  * return int* state path
  */
-int** ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, ghmm_dseq* seq, ghmm_bayes_hmm *bayes, int R, int burnIn, int seed);
+int** ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, ghmm_dseq* seq, double **pA, double **pB, double *pPi, int R, int burnIn, int seed);
 
 
 #ifdef __cplusplus

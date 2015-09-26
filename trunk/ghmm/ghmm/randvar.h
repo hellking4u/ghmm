@@ -143,9 +143,6 @@ extern "C" {
   
   double ighmm_rand_gamma(double a, double b, int seed);
 
-  double ighmm_rand_truncated_gamma(double min, double max, double a, double b, int seed);
-
-  double ighmm_rand_truncated_normal(double min, double max, double mue, double u, int seed);
 /** 
    Generates a N( 0, 1 ) distributed random number.
    @return          random value

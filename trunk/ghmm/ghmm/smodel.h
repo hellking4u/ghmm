@@ -66,13 +66,10 @@ extern "C" {
     normal_right,  /**< right tail */
     normal_approx, /**< approximated gaussian */
     normal_left,   /**< left tail */
-    truncated_normal, 
     uniform,
     binormal,      /**< two dimensional gaussian */
     multinormal,   /**< multivariate gaussian */
     gamma_density,
-    gamma_truncated, //XXX used for bayesian stuff not implemented for hmms yet
-    discrete, 
     density_number /**< number of density types, has to stay last */
   } ghmm_density_t;
 
@@ -112,10 +109,6 @@ extern "C" {
     double max;
     /** if fixed != 0 the parameters of the density are fixed */
     int fixed;
-    
-    /* variables for 2 parameter distribution */
-    double alpha;
-    double beta;
   } ghmm_c_emission;
 
 /**

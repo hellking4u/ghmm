@@ -990,7 +990,6 @@ int ghmm_cmodel_check_compatibility (ghmm_cmodel ** smo, int smodel_number)
 int ghmm_cmodel_get_random_var(ghmm_cmodel *smo, int state, int m, double *x)
 {
 # define CUR_PROC "ghmm_cmodel_get_random_var"
-
   ghmm_c_emission *emission = smo->s[state].e + m;
   return ghmm_c_emission_get_random_var(emission, x);
 # undef CUR_PROC
@@ -1021,7 +1020,6 @@ int ghmm_c_emission_get_random_var(ghmm_c_emission *emission, double *x){
     *x = ighmm_rand_uniform_cont(0, emission->max, emission->min);
     return 0;
   default:
-
     GHMM_LOG(LWARN, "unknown density function specified!");
     return -1;
   }

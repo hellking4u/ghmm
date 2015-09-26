@@ -804,24 +804,15 @@ void ghmm_dmodel_cfbgibbstep(ghmm_dmodel *mo, int *obs, int totalobs,
  * Q: states
  * R: length of compression
  * burnIn: number of times to run forward backward gibbs */
-int** ghmm_dmodel_cfbgibbs (ghmm_dmodel *mo, ghmm_dseq* seq, ghmm_bayes_hmm *bayes, int R, int burnIn, int seed){
+int** ghmm_dmodel_cfbgibbs(ghmm_dmodel* mo, ghmm_dseq* seq, double **pA, double **pB, double *pPi, int R, int burnIn, int seed){
 #ifdef DO_WITH_GSL
 #define CUR_PROC "ghmm_dmodel_cfbgibbs"
-  int i;
-  double **pA = bayes->A;
-  double *pPi = bayes->pi;
-  double **pB;
-  ARRAY_MALLOC(pB, bayes->N);
-  for(i = 0; i < bayes->N; i++){
-      pB[i] = bayes->params[i][0].emission.discrete;
-  }
-
- 
     GHMM_RNG_SET (RNG, seed);
     int **Q;
     ARRAY_CALLOC (Q ,seq->seq_number);     
     double **transitions, **obsinstatealpha;
     double *obsinstate;
+    int i;
     int len = 0;
     for(i = 0; i < seq->seq_number; i++){
         ARRAY_CALLOC (Q[i] ,seq->seq_len[i]);     

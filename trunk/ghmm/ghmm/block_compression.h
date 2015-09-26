@@ -44,7 +44,7 @@ typedef struct block_stats{
     int total;
 }block_stats;
 
-block_stats *merge_observations(double* seq, int len,  double width,
+block_stats *merge_observations(ghmm_cseq* seq, double width,
         int max_len_permitted, block_stats *stats);
 /* compresses the observation sequence into blocks
  * @param seq: the data sequence to be compressed
@@ -52,5 +52,12 @@ block_stats *merge_observations(double* seq, int len,  double width,
  * @params delta: shrinking ratio
  * @return statistics for each block to be used in the modified forward algorithm
  */
-block_stats *compress_observations(double* seq, int len, double width, double delta);
+block_stats *compress_observations(ghmm_cseq* seq, double width, double delta);
+
+double median_seq(double *seq, int start, int end);
+double get_moment1(ghmm_cseq* seq, int start, int end);
+double get_moment2(ghmm_cseq* seq, int start, int end);
+int get_largest_gap(ghmm_cseq* seq, int start, int end);
+int small_enough_gap(ghmm_cseq* seq, double size, int start, int end);
+void print_stats(block_stats *stats, int length);
 #endif

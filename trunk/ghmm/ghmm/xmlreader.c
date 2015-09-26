@@ -493,8 +493,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
       child = elem->children;
       while (child != NULL) {
         if ((!xmlStrcmp(child->name, BAD_CAST "normal")) ||
-            (!xmlStrcmp(child->name, BAD_CAST "normalLeftTail")) ||
-            (!xmlStrcmp(child->name, BAD_CAST "normalRightTail")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight")) ||
             (!xmlStrcmp(child->name, BAD_CAST "multinormal")) ||
             (!xmlStrcmp(child->name, BAD_CAST "uniform"))){
           M ++;
@@ -521,8 +521,8 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
 
         /* common attributes */
         if ((!xmlStrcmp(child->name, BAD_CAST "normal")) ||
-            (!xmlStrcmp(child->name, BAD_CAST "normalLeftTail")) ||
-            (!xmlStrcmp(child->name, BAD_CAST "normalRightTail")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedLeft")) ||
+            (!xmlStrcmp(child->name, BAD_CAST "normalTruncatedRight")) ||
             (!xmlStrcmp(child->name, BAD_CAST "multinormal")) ||
             (!xmlStrcmp(child->name, BAD_CAST "uniform"))){
           fixed = getIntAttribute(child, "fixed", &error);
@@ -570,7 +570,6 @@ static int parseState(xmlDocPtr doc, xmlNodePtr cur, ghmm_xmlfile* f, int * inDe
           }
         }
         if ((!xmlStrcmp(child->name, BAD_CAST "normalRightTail"))) {
-
           emission->mean.val  = getDoubleAttribute(child, "mean", &error);
           emission->variance.val = getDoubleAttribute(child, "variance", &error);
           emission->max       = getDoubleAttribute(child, "min", &error);

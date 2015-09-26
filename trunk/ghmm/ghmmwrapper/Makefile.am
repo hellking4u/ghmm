@@ -11,7 +11,6 @@ SUBDIRS = .
 SWIG_INTERFACE_FILES = ghmmwrapper.i \
                        wrapper_alphabet.i \
 		       wrapper_arrays.i \
-		       wrapper_bayes.i \
                        wrapper_cseq.i \
                        wrapper_dseq.i \
                        wrapper_dpseq.i \

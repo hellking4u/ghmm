@@ -450,45 +450,16 @@ double ighmm_rand_dirichlet(int seed, int len, double *alpha, double *theta){
 }
 
 double ighmm_rand_gamma(double a, double b, int seed){
-    if (seed != 0) {
-        GHMM_RNG_SET(RNG, seed);
-    }
+  if (seed != 0) {
+    GHMM_RNG_SET(RNG, seed);
+  }
 #ifdef DO_WITH_GSL
-    return (gsl_ran_gamma_knuth(RNG, a, b));
+   return (gsl_ran_gamma_knuth(RNG, a, b));
 #else
-    printf("not implemted without gsl. Compile with gsl to use gamma");
-    return 0;
+  printf("not implemted without gsl. Compile with gsl to use gamma");
+  return 0;
 #endif
 }
-
-//XXX just rejection speed up
-double ighmm_rand_truncated_gamma(double min, double max, double a, double b, int seed){
-    if (seed != 0) {
-        GHMM_RNG_SET(RNG, seed);
-    }
-#ifdef DO_WITH_GSL
-
-    double rv = gsl_ran_gamma_knuth(RNG, a, b);
-    while( rv > max || rv < min){
-        rv = gsl_ran_gamma_knuth(RNG, a, b);
-    }
-    return rv;
-#else
-    printf("not implemted without gsl. Compile with gsl to use gamma");
-    return 0;
-#endif
-}
-
-//XXX just rejection speed up
-double ighmm_rand_truncated_normal(double min, double max, double mue, double u, int seed){
-    double rv = ighmm_rand_normal(mue, u, seed);
-    while( rv > max || rv < min){
-        rv = ighmm_rand_normal(seed, mue, u);
-        printf("min = %f, max = %f, rv = %e\n", min, max, rv);
-    }
-    return rv;
-}
-
 
 /*============================================================================*/
 double ighmm_rand_std_normal (int seed)
