@@ -370,6 +370,7 @@ void getCountsH(ghmm_dmodel* mo, int *states, int* O, int T,
     }
 }
 //given states, psueodocount matrices pA, pB, pPi see wiki, calculates new A,B,Pi
+//XXX should use fix in state
 //assumes psuedocount preserves structure, ie doesnt add 1 to a zero transition.
 void update(ghmm_dmodel* mo, double **transition, double *obsinstate, double **obsinstatealpha){
 #define CUR_PROC "update"
@@ -498,7 +499,7 @@ void ghmm_dmodel_fbgibbstep (ghmm_dmodel * mo, int* O, int len, int *Q, double**
   //printf("\n");
 #undef CUR_PROC
 }
-/*
+
 int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double **pB,
         double *pPi, int burnIn, int seed){
 #ifdef DO_WITH_GSL
@@ -536,6 +537,7 @@ int** ghmm_dmodel_fbgibbs(ghmm_dmodel * mo, ghmm_dseq*  seq, double **pA, double
   }
   else{
       allocCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
+
       for(;burnIn > 0; burnIn--){
          initCounts(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
          for(i = 0; i < seq->seq_number; i++){
@@ -558,73 +560,4 @@ STOP:
    return NULL;
 #endif
 }
-*/
-int** ghmm_dmodel_fbgibbs(ghmm_dmodel *mo, ghmm_dseq*  seq, ghmm_bayes_hmm *bayes, int burnIn, int seed){
-#ifdef DO_WITH_GSL
-#define CUR_PROC "ghmm_dmodel_fbgibbs"
-/*  double **pA, double **pB,
-        double *pPi*/
 
-  int i;
-  double **pA = bayes->A;
-  double *pPi = bayes->pi;
-  double **pB;
-  ARRAY_MALLOC(pB, bayes->N);
-  for(i = 0; i < bayes->N; i++){
-      pB[i] = bayes->params[i][0].emission.discrete;
-  }
-
-  //initilizations
-  GHMM_RNG_SET (RNG, seed);
-  int **Q;
-  ARRAY_MALLOC (Q, seq->seq_number);
-  int len = 0;
-  for(i = 0; i < seq->seq_number; i++){
-      ARRAY_MALLOC (Q[i], seq->seq_len[i]);
-      if(len < seq->seq_len[i])
-          len = seq->seq_len[i];
-  }
-  double **alpha = ighmm_cmatrix_alloc(len, mo->N);
-  double ***pmats = ighmm_cmatrix_3d_alloc(len, mo->N, mo->N);
-  double **transitions,**obsinstatealpha;
-  double *obsinstate;
-
-  if(mo->model_type & GHMM_kHigherOrderEmissions){//higher order
-      allocCountsH(mo, &transitions, &obsinstate, &obsinstatealpha);
-      for(;burnIn > 0; burnIn--){
-         initCountsH(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
-         if(burnIn % 100 == 0) printf("iter %d\n", burnIn);
-         for(i = 0; i < seq->seq_number; i++){
-             ghmm_dmodel_fbgibbstep(mo, seq->seq[i], seq->seq_len[i], Q[i], alpha, pmats);
-             getCountsH(mo, Q[i], seq->seq[i], seq->seq_len[i], transitions,
-                     obsinstate, obsinstatealpha);
-         }
-         updateH(mo, transitions, obsinstate, obsinstatealpha);
-      }
-      freeCountsH(mo, &transitions, &obsinstate, &obsinstatealpha);
-
-  }
-  else{
-      allocCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
-      for(;burnIn > 0; burnIn--){
-         initCounts(mo, transitions, obsinstate, obsinstatealpha, pA, pB, pPi);
-         for(i = 0; i < seq->seq_number; i++){
-             ghmm_dmodel_fbgibbstep(mo, seq->seq[i], seq->seq_len[i], Q[i], alpha, pmats);
-             getCounts(Q[i], seq->seq[i], seq->seq_len[i], transitions, obsinstate,
-                     obsinstatealpha);
-         }
-         update(mo, transitions, obsinstate, obsinstatealpha);
-      }
-      freeCounts(mo, &transitions, &obsinstate, &obsinstatealpha);
-  }
-  ighmm_cmatrix_3d_free(&pmats, len, mo->N);
-  ighmm_cmatrix_free(&alpha, len);
-  return Q;
-STOP:
-  return NULL;
-#undef CUR_PROC
-#else
-   printf("fbgibbs uses gsl for dirichlete distrubutions, compile with gsl\n");
-   return NULL;
-#endif
-}

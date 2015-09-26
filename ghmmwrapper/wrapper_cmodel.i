@@ -5,24 +5,19 @@
 #include "ghmm/sreestimate.h"
 #include "ghmm/randvar.h"
 #include "ghmm/matrixop.h"
-#include "ghmm/continuous_fbgibbs.h"
 %}
 /*==========================================================================
   ===== continous emission density types =================================== */
-  typedef enum {
-    normal,        /**< gaussian */
-    normal_right,  /**< right tail */
-    normal_approx, /**< approximated gaussian */
-    normal_left,   /**< left tail */
-    truncated_normal, 
-    uniform,
-    binormal,      /**< two dimensional gaussian */
-    multinormal,   /**< multivariate gaussian */
-    gamma_density,
-    gamma_truncated, //XXX used for bayesian stuff not implemented for hmms yet
-    discrete, 
-    density_number /**< number of density types, has to stay last */
-  } ghmm_density_t;
+typedef enum {
+  normal,
+  normal_right, /* right tail */
+  normal_approx,
+  normal_left, /* left tail */
+  uniform,
+  binormal,
+  multinormal,
+  density_number
+} ghmm_density_t;
 
 %inline %{
         ghmm_density_t* density_array_alloc(size_t length) { return malloc(length*sizeof(ghmm_density_t)); }
@@ -322,13 +317,6 @@ extern int ghmm_cmodel_free(ghmm_cmodel **smo);
         void   set_transition(int i, int j, int c, double prob);
 
         int* viterbi(double *O, int T, double *log_p);
-
-        int** fbgibbs(ghmm_bayes_hmm *bayes,  ghmm_cseq* seq,
-            int burnIn, int seed);
-
-        int** cfbgibbs(ghmm_bayes_hmm *bayes, ghmm_cseq* seq,
-             int burnIn, int seed, double width, double delta, int max_len_permitted);
-
 
         ghmm_cstate* getState(size_t index) { return self->s + index; }
 
