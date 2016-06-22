@@ -160,7 +160,7 @@ block_stats *compress_observations(ghmm_cseq* seq, double width, double delta){
     return stats;
 
 STOP:
-    return;
+    return NULL;
 #undef CUR_PROC 
 }
 
@@ -227,7 +227,7 @@ block_stats *merge_observations(ghmm_cseq* seq, double width,
     free_block_stats(&stats);
     return merged_stats;
 STOP:
-    return;
+    return NULL;
 #undef CUR_PROC
 }
 
